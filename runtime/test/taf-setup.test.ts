@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appDisplayName, runningTool, setupGrants, setupView, type GrantView } from "../src/cloud/taf-setup.js";
+import { appCalls, appDisplayName, runningTool, setupGrants, setupView, type GrantView } from "../src/cloud/taf-setup.js";
 import { avatarRim } from "../src/cloud/home.js";
 import { knobOf } from "../src/cloud/knob.js";
 import type { Run, SessionEvent, VersionState } from "../src/cloud/agents.js";
@@ -32,12 +32,26 @@ describe("a taf's server-composed setup", () => {
     expect(appDisplayName({ ...grant, vendor: "Example Suite" })).toBe("Example Suite");
     expect(appDisplayName(grant)).toBe("Example");
   });
+  it("keeps held sign-ins visible without claiming their unapproved actions are usable", () => {
+    const args = { agent: "agent-example", knob, rules: [], versions: { versions: [] } as VersionState, notes: [], now, calls: [], statsComplete: true };
+    const view = setupView({ ...args, grants: [{ ...grant, status: "pending", signed_in: true }, { ...grant, id: "failed", status: "failed" }] });
+    expect(view.connections).toHaveLength(1);
+    expect(view.connections[0]).toMatchObject({ action_count: 0, action_words: "Choose actions", actions: [] });
+    expect(view.workflow.steps[0]?.grant).toBeUndefined();
+    const reconnect = setupView({ ...args, grants: [{ ...grant, status: "needs_reconnect", status_words: "Signed out by the app" }] });
+    expect(reconnect.connections[0]).toMatchObject({ reconnect: true, status_words: "Signed out by the app" });
+    expect(appDisplayName({ ...grant, vendor: undefined })).toBe("Connected app");
+  });
   it("marks a step running only while its tool call has no result", () => {
     const run = { id: "run-example", status: "RUNNING" } as Run;
     const events = [{ run: run.id, kind: "tool_call", body: { call_id: "call-example", tool: "read_case" } }] as SessionEvent[];
     expect(runningTool(events, run)).toBe("read_case");
     expect(runningTool([...events, { run: run.id, kind: "tool_result", body: { call_id: "call-example" } } as SessionEvent], run)).toBeUndefined();
     expect(runningTool(events, { ...run, status: "COMPLETED" })).toBeUndefined();
+  });
+  it("says statistics are incomplete when their source fails", async () => {
+    const net = (async () => { throw new Error("source unavailable"); }) as typeof fetch;
+    expect(await appCalls("synthetic-session", "agent-example", now, net, "https://api.example")).toEqual({ calls: [], complete: false });
   });
   it("forwards the phone's read proof without signing or granting anything", async () => {
     const proof = "t=synthetic,v1=synthetic,d=device-example";

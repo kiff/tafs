@@ -23,7 +23,7 @@ import java.net.URLEncoder
 
 @Serializable data class ConnectedAction(val name: String, val title: String, val limits: List<String> = emptyList(), val steps: List<Int> = emptyList(), @SerialName("step_words") val stepWords: String = "")
 @Serializable data class ConnectedStats(val calls: Int = 0, val done: Int = 0, val held: Int = 0, val words: String = "", val complete: Boolean = false, @SerialName("activity_query") val activityQuery: String = "")
-@Serializable data class ConnectedApp(val id: String, val name: String, val status: String, @SerialName("action_count") val actionCount: Int = 0,
+@Serializable data class ConnectedApp(val id: String, val name: String, val status: String, @SerialName("status_words") val statusWords: String = "", val reconnect: Boolean = false, @SerialName("action_count") val actionCount: Int = 0,
   @SerialName("action_words") val actionWords: String = "", val actions: List<ConnectedAction> = emptyList(), val steps: List<Int> = emptyList(),
   val running: Boolean = false, val stats: ConnectedStats = ConnectedStats(), @SerialName("workflow_steps") val workflowSteps: List<WorkflowStep> = emptyList())
 @Serializable data class WorkflowStep(val number: Int, val label: String, val words: String, val app: String? = null, val grant: String? = null, val running: Boolean = false)

@@ -62,7 +62,7 @@ function kindOf(c: ActivityCall): ActivityEntry["kind"] {
 export function activityMatches(c: ActivityCall, filter: ActivityFilter): boolean {
   const kind = kindOf(c);
   return filter === "all" || (filter === "done" ? kind === "done" || kind === "approved"
-    : filter === "held" ? kind === "held" || kind === "sending" || kind === "unknown"
+    : filter === "held" ? kind === "held"
       : kind === "refused" || kind === "not_done");
 }
 

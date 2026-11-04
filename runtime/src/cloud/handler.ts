@@ -626,7 +626,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 5 && method === "GET" && action === "requests") {
     // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
     // or a door sender's, is for the people who manage the taf.
-    const run = (await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50))).find((r) => r.id === parts[4]);
+    const run = (await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 100))).find((r) => r.id === parts[4]);
     if (!run) throw new HTTPError(404, "no such request");
     const others = run.requester?.kind === "door" || (run.requester?.kind === "member" && run.requester.id !== me.subject);
     if (others && !(await managesTaf(event, me, taf, deps))) throw new HTTPError(404, "no such request");
@@ -1068,6 +1068,7 @@ function haltNotification(taf: Taf | undefined, halted: boolean): Notification {
 /** A resume, in place of its halt's notification: quiet, since nothing needs the owner. */
 function resumeNotification(taf: Taf | undefined): Notification {
   return {
+    preference: "halted",
     kind: "alert",
     payload: {
       aps: {

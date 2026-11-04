@@ -27,7 +27,7 @@ extension TafsCloud {
     }
     struct ConnectedApp: Decodable, Identifiable {
         struct Stats: Decodable { let calls: Int; let done: Int; let held: Int; let words: String; let complete: Bool; let activity_query: String }
-        let id: String; let name: String; let status: String; let action_count: Int; let action_words: String
+        let id: String; let name: String; let status: String; let status_words: String; let reconnect: Bool; let action_count: Int; let action_words: String
         let actions: [ConnectedAction]; let steps: [Int]; let workflow_steps: [WorkflowStep]; let running: Bool; let stats: Stats
     }
     struct WorkflowStep: Decodable, Identifiable {

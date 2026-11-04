@@ -95,6 +95,13 @@ private struct ConnectedAppSheet: View {
     var body: some View {
         NavStack {
             List {
+                Section {
+                    Text(app.status_words).foregroundColor(app.reconnect ? Theme.amberText : Theme.soft)
+                    if app.reconnect, model.manages(tafID) {
+                        Button("Sign in again") { Task { await model.reconnectApp(app.id); await model.loadTafSetup(tafID) } }
+                    }
+                    if let error = model.reconnectErrors[app.id] { Text(error).foregroundColor(Theme.no) }
+                }
                 Section("What it may do") {
                     ForEach(app.actions) { action in
                         VStack(alignment: .leading, spacing: 5) {
@@ -210,29 +217,33 @@ struct RetainedRuns: View {
     var all = false
     @State private var showAll = false
     var body: some View {
-        let cache = model.runPages[model.runKey(tafID, all)] ?? SourcePages()
-        Panel {
-            Eyebrow(text: cache.pages.first?.title ?? "Its work")
-            ForEach(Array(cache.pages.enumerated()), id: \.offset) { _, page in
-                ForEach(page.requests) { request in
-                    NavigationLink { KnobRequestDetail(tafID: tafID, run: request.id) } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(request.line).scaledFont(14)
-                            ForEach(Array(request.deliveries.enumerated()), id: \.offset) { _, delivery in Text(delivery.line).scaledFont(12).foregroundColor(Theme.dim) }
-                        }
-                    }
-                }
-            }
-            if let error = cache.error { Text(error).foregroundColor(Theme.no); Button("Try again") { Task { await model.loadRunPage(tafID, all: all) } } }
-            if all, let cursor = cache.pages.last?.next_cursor, cache.error == nil {
-                ProgressView().task(id: cursor) { await model.loadRunPage(tafID, all: true, more: true) }
-            } else if !all, let title = cache.pages.first?.more_title { Button(title) { showAll = true } }
-            if cache.loading { ProgressView() }
+        Group {
+            if all { LazyVStack(alignment: .leading, spacing: 14) { content } }
+            else { Panel { content } }
         }
         .task(id: tafID) { await model.loadRunPage(tafID, all: all) }
         .sheet(isPresented: $showAll) {
             NavStack { ScrollView { RetainedRuns(tafID: tafID, all: true).padding(16) }.navigationTitle("Its work") }.environmentObject(model)
         }
+    }
+    @ViewBuilder private var content: some View {
+        let cache = model.runPages[model.runKey(tafID, all)] ?? SourcePages()
+        Eyebrow(text: cache.pages.first?.title ?? "Its work")
+        ForEach(Array(cache.pages.enumerated()), id: \.offset) { _, page in
+            ForEach(page.requests) { request in
+                NavigationLink { KnobRequestDetail(tafID: tafID, run: request.id) } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(request.line).scaledFont(14)
+                        ForEach(Array(request.deliveries.enumerated()), id: \.offset) { _, delivery in Text(delivery.line).scaledFont(12).foregroundColor(Theme.dim) }
+                    }
+                }
+            }
+        }
+        if let error = cache.error { Text(error).foregroundColor(Theme.no); Button("Try again") { Task { await model.loadRunPage(tafID, all: all) } } }
+        if all, let cursor = cache.pages.last?.next_cursor, cache.error == nil {
+            ProgressView().task(id: cursor) { await model.loadRunPage(tafID, all: true, more: true) }
+        } else if !all, let title = cache.pages.first?.more_title { Button(title) { showAll = true } }
+        if cache.loading { ProgressView() }
     }
 }
 

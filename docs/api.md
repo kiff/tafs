@@ -176,7 +176,7 @@ searched on the service. Selecting a zone still uses KIFF's signed
 `GET /v1/tafs/{id}/activity?filter=all&limit=20&cursor=…` returns `entries`, day
 `groups`, `filters: [{id, title}]`, the selected `filter`, a `revision`, and an
 optional `next_cursor`. Filters are `all`, `done`, `held`, or `refused`, applied
-on tafs cloud before a page is made. An allowed call with an unknown tool outcome
+on tafs cloud before a page is made. Held means a call waiting for an owner's answer; an allowed call still sending or with an unknown result stays in All. An allowed call with an unknown tool outcome
 is never labelled done. Entries carry their ready-to-draw `title`, `detail`,
 `time`, `day_title` and optional `amount_text`, plus KIFF's original call and
 signed evidence. `tools` (comma-separated action names) and `from` (an ISO date)
@@ -234,3 +234,9 @@ previously shown holds. Turning off the whole phone removes its registration.
 `DELETE /v1/push` takes `{device_token, platform, environment}` and removes this
 person's matching phone, idempotently, leaving other phones and the account's
 KIFF alert secret in place. The older `DELETE /v1/push/{token}` is unchanged.
+
+Each setup connection also carries `status_words` from planque (or cloud's fallback)
+and `reconnect`. A held sign-in stays visible with zero usable actions until its
+actions are approved. Signed-out connections retain their source status and can
+open the existing device approval and vendor sign-in flow; the cloud never signs
+that approval.

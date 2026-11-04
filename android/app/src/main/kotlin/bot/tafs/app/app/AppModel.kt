@@ -3054,6 +3054,15 @@ class AppModel(
   }
 
   /** A taf page's Sign in again (a connection its vendor signed out), run by the model for the same reason. */
+  /** Re-read the signed grant before opening its existing device approval flow. */
+  fun startReconnectId(id: String) {
+    viewModelScope.launch {
+      val gen = accountGeneration
+      refreshConnections()
+      if (gen == accountGeneration) _state.value.grants.firstOrNull { it.id == id }?.let { startReconnect(it) }
+    }
+  }
+
   fun startReconnect(grant: Grant) {
     scope.launch { reconnect(grant) }
   }

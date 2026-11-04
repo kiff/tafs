@@ -83,7 +83,7 @@ final class TafsCloud {
     /// Keeps the server's representation validator; 304 leaves cached pages intact.
     func representation(_ path: String, etag: String? = nil, headers: [String: String] = [:]) async throws -> (Data?, String?) {
         guard let url = URL(string: path, relativeTo: baseURL), let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(etag, forHTTPHeaderField: "If-None-Match")

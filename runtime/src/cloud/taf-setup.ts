@@ -6,7 +6,7 @@ import { vendorName } from "./steps.js";
 import { type Fetch } from "./kiff.js";
 
 export interface GrantView {
-  id: string; vendor: string; status: string; entry?: string;
+  id: string; vendor?: string; status: string; status_words?: string; signed_in?: boolean; entry?: string;
   request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }> };
 }
 
@@ -24,10 +24,11 @@ export async function setupGrants(base: string, tenant: string, proof: string, n
 
 /** App names are resolved here. Server ids never become labels on either phone. */
 export function appDisplayName(grant: GrantView): string {
-  if (/[A-Z]/.test(grant.vendor) && !/[-_]mcp(?:[-_]|$)/i.test(grant.vendor)) return grant.vendor;
+  const vendor = grant.vendor ?? "";
+  if (/[A-Z]/.test(vendor) && !/[-_]mcp(?:[-_]|$)/i.test(vendor)) return vendor;
   const fromHost = vendorName(grant.request.server);
   if (fromHost) return fromHost;
-  const name = grant.vendor.replace(/(?:[-_ ]mcp(?:[-_ ]server)?|[-_ ]server)$/i, "").replace(/[_-]+/g, " ").trim();
+  const name = vendor.replace(/(?:[-_ ]mcp(?:[-_ ]server)?|[-_ ]server)$/i, "").replace(/[_-]+/g, " ").trim();
   return name ? name.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : "Connected app";
 }
 
@@ -35,15 +36,17 @@ export function appDisplayName(grant: GrantView): string {
 export async function appCalls(token: string, agent: string, now: Date, net: Fetch, base: string): Promise<{ calls: ActivityCall[]; complete: boolean }> {
   const calls: ActivityCall[] = [];
   const cutoff = now.getTime() - 7 * 86400_000;
-  for (let offset = 0; offset < 10000; offset += 100) {
-    const q = new URLSearchParams({ actor: agent, limit: "100", offset: String(offset) });
-    const res = await net(`${base}/v1/me/activity?${q}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
-    if (!res.ok) return { calls, complete: false };
-    const page = await res.json() as { calls?: ActivityCall[]; shown?: number };
-    if (!Array.isArray(page.calls)) return { calls, complete: false };
-    calls.push(...page.calls.filter((c) => c.actor_id === agent && Date.parse(c.created_at) >= cutoff));
-    if (page.calls.length < 100 || offset + page.calls.length >= (page.shown ?? Infinity) || page.calls.some((c) => Date.parse(c.created_at) < cutoff)) return { calls, complete: true };
-  }
+  try {
+    for (let offset = 0; offset < 10000; offset += 100) {
+      const q = new URLSearchParams({ actor: agent, limit: "100", offset: String(offset) });
+      const res = await net(`${base}/v1/me/activity?${q}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
+      if (!res.ok) return { calls, complete: false };
+      const page = await res.json() as { calls?: ActivityCall[]; shown?: number };
+      if (!Array.isArray(page.calls)) return { calls, complete: false };
+      calls.push(...page.calls.filter((c) => c.actor_id === agent && Date.parse(c.created_at) >= cutoff));
+      if (page.calls.length < 100 || offset + page.calls.length >= (page.shown ?? Infinity) || page.calls.some((c) => Date.parse(c.created_at) < cutoff)) return { calls, complete: true };
+    }
+  } catch { return { calls, complete: false }; }
   return { calls, complete: false };
 }
 
@@ -70,7 +73,7 @@ export function runningTool(events: SessionEvent[], run: Run | undefined): strin
 }
 
 export interface SetupView {
-  connections: Array<{ id: string; name: string; status: string; action_count: number; action_words: string;
+  connections: Array<{ id: string; name: string; status: string; status_words: string; reconnect: boolean; action_count: number; action_words: string;
     actions: Array<{ name: string; title: string; limits: string[]; steps: number[]; step_words: string }>;
     workflow_steps: Array<{ number: number; label: string; words: string; running: boolean }>;
     steps: number[]; running: boolean; stats: { calls: number; done: number; held: number; words: string; complete: boolean; activity_query: string } }>;
@@ -82,10 +85,10 @@ export interface SetupView {
 /** All grouping, names, action/step mappings and counts are made once, at their source. */
 export function setupView(input: { agent: string; grants: GrantView[]; knob: Knob; rules: Rule[];
   notes: Array<{ content: string }>; versions: VersionState; calls: ActivityCall[]; now: Date; running?: string; statsComplete: boolean }): SetupView {
-  const grants = input.grants.filter((g) => g.request.agent === input.agent && !["disconnected", "failed", "pending", "approved"].includes(g.status));
+  const grants = input.grants.filter((g) => g.request.agent === input.agent && (["connected", "listed", "signed_in", "needs_reconnect"].includes(g.status) || (g.status === "pending" && g.signed_in === true)));
   const names = new Map(grants.map((g) => [g.id, appDisplayName(g)]));
   const owners = new Map<string, string>();
-  for (const g of grants) for (const t of g.request.tools ?? []) if (!t.setup_reads) owners.set(t.name || t.tool, g.id);
+  for (const g of grants) for (const t of ["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []) if (!t.setup_reads) owners.set(t.name || t.tool, g.id);
   const steps = input.knob.what.filter((s) => s.id !== "what_ask").map((s) => {
     const grant = s.tool ? owners.get(s.tool) : undefined;
     return { number: s.step, label: s.label, words: s.words, ...(grant ? { grant, app: names.get(grant) } : {}), running: Boolean(s.tool && s.tool === input.running) };
@@ -93,7 +96,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
   const cutoff = input.now.getTime() - 7 * 86400_000;
   const calls = input.calls.filter((c) => c.actor_id === input.agent && Date.parse(c.created_at) >= cutoff);
   const connections = grants.map((g) => {
-    const actions = (g.request.tools ?? []).filter((t) => !t.setup_reads).map((t) => {
+    const actions = (["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []).filter((t) => !t.setup_reads).map((t) => {
       const name = t.name || t.tool;
       const used = input.knob.what.filter((s) => s.tool === name);
       const limits = limitsOf(input.rules.filter((r) => r.action === name));
@@ -105,7 +108,9 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     const ownCalls = calls.filter((c) => tools.has(c.action_name));
     const done = ownCalls.filter((c) => activityMatches(c, "done")).length;
     const held = ownCalls.filter((c) => activityMatches(c, "held")).length;
-    return { id: g.id, name: names.get(g.id)!, status: g.status, action_count: actions.length,
+    return { id: g.id, name: names.get(g.id)!, status: g.status,
+      status_words: g.status_words || ({ connected: "Connected", listed: "Signed in · choose its actions", signed_in: "Signed in", needs_reconnect: "Sign in again", pending: "Signed in · actions waiting for approval" } as Record<string, string>)[g.status] || "Read its connection",
+      reconnect: g.status === "needs_reconnect", action_count: actions.length,
       action_words: actions.length ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : "Choose actions",
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),

@@ -48,6 +48,8 @@ describe("Activity pages from the source", () => {
   });
   it("does not call an allowed-but-unknown action done, and never shows another agent's row", async () => {
     expect(activityMatches(call(0, "unknown"), "done")).toBe(false);
+    expect(activityMatches(call(0, "unknown"), "held")).toBe(false);
+    expect(activityMatches(call(0, "sending"), "held")).toBe(false);
     expect(activityMatches(call(0, "refused_by_tool"), "refused")).toBe(true);
     const s = source([{ ...call(0), actor_id: "other-agent" }, call(1)]);
     expect((await activityPage(input(), s.net)).entries).toHaveLength(1);
@@ -82,5 +84,32 @@ describe("Activity's HTTP contract", () => {
     expect((await handle(event, deps)).statusCode).toBe(404); expect(reads).toBe(before);
     tenant = "other-account";
     expect((await handle(event, deps)).statusCode).toBe(404); expect(reads).toBe(before);
+  });
+});
+
+describe("recent work pages", () => {
+  it("pages the retained runs without repeats when a newer run arrives and excludes another member's work", async () => {
+    const id = "taf-01234567890123456789";
+    const runs = Array.from({ length: 60 }, (_, i) => ({ id: `run-${i}`, session: `session-${i}`, status: "COMPLETED", created: new Date(now.getTime() - i * 1000).toISOString(), updated: now.toISOString(), requester: { kind: "member", id: "person-example" } }));
+    runs.unshift({ ...runs[0]!, id: "another-members-run", requester: { kind: "member", id: "other-person" } });
+    const deps = { now: () => now,
+      tafs: { get: async () => ({ id, name: "Example", job: "refunds", kiffAgent: "agent-example" }) },
+      agents: { runs: async (_account: string, _taf: string, _active: boolean, limit: number) => { expect(limit).toBe(100); return runs; } },
+      fetch: (async (url: string | URL | Request) => {
+        const path = new URL(String(url)).pathname;
+        if (path === "/v1/me") return new Response(JSON.stringify({ tenant_id: "account-example", subject: "person-example", api_key: false, capabilities: ["read"] }));
+        if (path === "/v1/me/access") return new Response(JSON.stringify({ agents: { "agent-example": { use: true } } }));
+        throw new Error("unexpected request");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const event: HTTPEvent = { rawPath: `/v1/tafs/${id}/work/runs`, headers: { authorization: "Bearer synthetic-session" }, requestContext: { http: { method: "GET" } } };
+    const first = await handle(event, deps); expect(first.statusCode).toBe(200);
+    const one = JSON.parse(first.body); expect(one.requests).toHaveLength(20); expect(one.requests[0].id).toBe("run-0");
+    runs.unshift({ ...runs[0]!, id: "new-run", created: new Date(now.getTime() + 1000).toISOString(), requester: { kind: "member", id: "person-example" } });
+    const two = JSON.parse((await handle({ ...event, rawQueryString: `cursor=${encodeURIComponent(one.next_cursor)}` }, deps)).body);
+    expect(two.requests).toHaveLength(20); expect(two.requests[0].id).toBe("run-20");
+    const all = [...one.requests, ...two.requests]; expect(new Set(all.map((r) => r.id)).size).toBe(40);
+    expect(all.some((r) => r.id === "another-members-run")).toBe(false);
+    const invalid = await handle({ ...event, rawQueryString: "cursor=invalid" }, deps); expect(invalid.statusCode).toBe(400);
   });
 });

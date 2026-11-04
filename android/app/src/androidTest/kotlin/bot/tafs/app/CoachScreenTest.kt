@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
@@ -130,7 +131,7 @@ class CoachScreenTest {
   @Test fun theMenuHoldsCoachsConversations() {
     show(null)
     rule.onNodeWithText("⋯").performClick()
-    rule.onNodeWithText("New conversation").assertIsDisplayed()
+    rule.onNodeWithContentDescription("New conversation").assertIsDisplayed()
     rule.onNodeWithText("Previous conversations").assertIsDisplayed()
     hold()
   }
@@ -144,8 +145,7 @@ class CoachScreenTest {
         }
       }
     }
-    rule.onNodeWithText("⋯").performClick()
-    rule.onNodeWithText("New conversation").assertIsEnabled().performClick()
+    rule.onNodeWithContentDescription("New conversation").assertIsEnabled().performClick()
     rule.waitForIdle()
     assertEquals(1, opened)
   }
@@ -160,9 +160,8 @@ class CoachScreenTest {
         }
       }
     }
-    rule.onNodeWithText("⋯").performClick()
-    // Never greyed out: a tap is never dead. The empty conversation stays, and no other is opened.
-    rule.onNodeWithText("New conversation").assertIsEnabled().performClick()
+    // The direct button stays enabled even when the conversation is already empty.
+    rule.onNodeWithContentDescription("New conversation").assertIsEnabled().performClick()
     rule.waitForIdle()
     assertEquals(0, opened)
     rule.onNodeWithText("Coach").assertIsDisplayed()

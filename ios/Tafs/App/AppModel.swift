@@ -4817,6 +4817,14 @@ final class AppModel: ObservableObject {
     /// Signs in again to a connection its vendor signed out, from the taf's page: the same
     /// approval as Coach's card, behind one Face ID, then the vendor's own page. Signed in
     /// only once planque answers connected; otherwise the connection says why.
+    /// Resolve the source id to a freshly read signed grant for the device's approval.
+    func reconnectApp(_ id: String) async {
+        let gen = accountGeneration
+        await refreshConnections()
+        guard gen == accountGeneration, let grant = grants.first(where: { $0.id == id }) else { return }
+        await reconnect(grant)
+    }
+
     func reconnect(_ grant: PlanqueClient.Grant) async {
         lastError = nil
         reconnectErrors[grant.id] = nil

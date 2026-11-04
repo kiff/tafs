@@ -125,7 +125,7 @@ fun SettingsSheet(
             Action(ConnectAppsWords.TITLE, Theme.ink, onConnectApps)
           }
           if (state.mode == Mode.kiff) Section("Plan") { PlanRow(state, onUsage) }
-          if (state.mode == Mode.sample) Section("Plan") { Action(UsageWords.TITLE, Theme.ink, onUsage) }
+          if (state.mode == Mode.sample) Section("Usage") { Action(UsageWords.TITLE, Theme.ink, onUsage) }
           if (state.mode == Mode.kiff) {
             Section("Alerts") {
               LockScreenExample(AlertWords.WITH_SOUND, AlertWords.LOUD_EXAMPLE)

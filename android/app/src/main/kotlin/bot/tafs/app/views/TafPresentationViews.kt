@@ -50,7 +50,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
     if (source == null && error == null) CircularProgressIndicator(Modifier.size(24.dp), color = Theme.amber)
     val apps = source?.connections.orEmpty()
     BoxWithConstraints(Modifier.fillMaxWidth().height(280.dp)) {
-      val radius = maxWidth / 2 - 42.dp
+      val radius = minOf(maxWidth, maxHeight) / 2 - 42.dp
       val slots = apps.size + if (onConnect != null) 1 else 0
       val line = Theme.line; val running = Theme.ok
       Canvas(Modifier.fillMaxSize()) {
@@ -102,6 +102,9 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
     ModalBottomSheet(onDismissRequest = { chosen = null }, sheetState = rememberModalBottomSheetState(), containerColor = Theme.background) {
       Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(app.name, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
+        Text(app.statusWords, style = scaled(14, color = if (app.reconnect) Theme.amberText else Theme.soft))
+        if (app.reconnect && state.manages(taf.id)) TextButton({ actions.connections.reconnectId(app.id) }, enabled = state.connecting == null) { Text("Sign in again", color = Theme.amberText) }
+        state.coachNotes[app.id]?.let { Text(it, color = Theme.no) }
         Eyebrow("What it may do")
         app.actions.forEach { action ->
           Text(action.title, style = scaled(16, FontWeight.SemiBold, Theme.ink))
