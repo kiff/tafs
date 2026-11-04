@@ -26,6 +26,8 @@ describe("Activity pages from the source", () => {
     expect(two.groups[0]?.title).toBe("", "the next page continues the day heading");
     const three = await activityPage(input(`cursor=${two.next_cursor}`), s.net);
     expect(three.entries).toHaveLength(5); expect(three.next_cursor).toBeUndefined();
+    expect(one.end_words).toBeUndefined(); expect(two.end_words).toBeUndefined();
+    expect(three.end_words).toBe("Nothing older in this view");
     expect(new Set([...one.entries, ...two.entries, ...three.entries].map((x) => x.id)).size).toBe(45);
   });
   it("filters before paging, even when a hundred nonmatching outcomes come first", async () => {
@@ -34,6 +36,14 @@ describe("Activity pages from the source", () => {
     expect(one.entries).toHaveLength(20); expect(one.entries[0]?.call.proposal_id).toBe("proposal-110");
     const two = await activityPage(input(`filter=done&cursor=${one.next_cursor}`), s.net);
     expect(two.entries).toHaveLength(10);
+  });
+  it("keeps a cursor through a full scan with no matching rows and ends only at the source's last row", async () => {
+    const s = source([...Array.from({ length: 1000 }, (_, i) => call(i, "sending")), call(1000)]);
+    const first = await activityPage(input("filter=done"), s.net);
+    expect(first.entries).toEqual([]); expect(first.next_cursor).toBeTruthy(); expect(first.end_words).toBeUndefined();
+    const last = await activityPage(input(`filter=done&cursor=${first.next_cursor}`), s.net);
+    expect(last.entries.map((e) => e.call.proposal_id)).toEqual(["proposal-1000"]);
+    expect(last.next_cursor).toBeUndefined(); expect(last.end_words).toBe("Nothing older in this view");
   });
   it("invalidates a changed snapshot instead of repeating or skipping entries", async () => {
     const calls = Array.from({ length: 30 }, (_, i) => call(i)); const s = source(calls);

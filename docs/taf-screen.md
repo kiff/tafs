@@ -122,6 +122,13 @@ Card limits, workflow steps and seven-day statistics; its statistics link to
 filtered Activity. Managers can add actions through Coach or disconnect an app.
 Workflow is folded by default, with the cloud's step count and app order. A step's words show under its title only when the cloud sends some.
 
+An action's workflow reference is only its step numbers, since its title is already shown.
+A zero-call Card says **Not allowed by this Card** when it refuses beyond its limit, or
+**Needs your approval for every call** when it holds instead. Consecutive steps in one
+app share one app name in the workflow summary; returning to it after another app remains
+visible. When no numbered version is live, the version summary says **Runs its original
+definition**, matching the definition the service runs.
+
 What it remembers previews the cloud's note count and newest note, limited to
 two lines. See all opens full notes and Forget. Changes to how it runs is on
 Card, with the cloud's live-version and earlier-version summary. Cards behind

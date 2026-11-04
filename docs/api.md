@@ -187,11 +187,15 @@ A page is 20 entries by default, 1–50 when specified. Pass `next_cursor` uncha
 It is bound to the account, person, taf and filters. A changed snapshot returns
 409: refresh from the first page rather than joining inconsistent pages. A page
 can be empty with a cursor when a bounded scan has not reached a matching call yet.
+Only the final page supplies `end_words` ("Nothing older in this view"). Empty
+intermediate pages keep their cursor and never claim that history has ended.
 
 `GET /v1/tafs/{id}/work/runs?limit=20&cursor=…` pages the recent retained runs as
 `requests`, with a `next_cursor` when another page remains. A preview requests
 `limit=3`. This view reads the runtime's latest 100 runs; it is not an archive of
 all past runs. The older `/runs` report endpoint is unchanged. Both new page
+routes supply `end_words` at the end of their available history; for runs it
+says "Nothing older in the retained runs" to make the retention boundary clear. Both page
 routes send an `ETag`; repeating a read with `If-None-Match` returns 304 with no
 body when unchanged. Apps keep previously read pages per account, taf and filter.
 

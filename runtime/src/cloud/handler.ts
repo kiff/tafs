@@ -2663,7 +2663,7 @@ async function runsPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps
   const last = selected.at(-1);
   return conditionalPage(event, { ...workOf(selected, me.timeZone ?? "UTC", now, sent, again),
     ...(remaining.length > limit && last ? { next_cursor: Buffer.from(JSON.stringify({ scope, at: last.created, id: last.id })).toString("base64url") } : {}),
-    title: "Its work", more_title: "Show all runs" });
+    title: "Its work", more_title: "Show all runs", ...(remaining.length <= limit ? { end_words: "Nothing older in the retained runs" } : {}) });
 }
 
 /** Names, counts, limits and summaries are made here, never joined by a phone. */

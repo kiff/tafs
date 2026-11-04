@@ -31,7 +31,7 @@ export interface ActivityEntry {
 
 export interface ActivityPage {
   entries: ActivityEntry[]; groups: Array<{ id: string; title: string; entries: ActivityEntry[] }>;
-  filters: typeof ACTIVITY_FILTERS; filter: ActivityFilter; next_cursor?: string; revision: string;
+  filters: typeof ACTIVITY_FILTERS; filter: ActivityFilter; next_cursor?: string; revision: string; end_words?: string;
 }
 
 interface Cursor { scope: string; offset: number; revision: string; day?: string }
@@ -132,5 +132,5 @@ export async function activityPage(input: { token: string; tenant: string; subje
     group.entries.push(entry);
   }
   return { entries, groups, filters: ACTIVITY_FILTERS, filter: filter as ActivityFilter, revision,
-    ...(more ? { next_cursor: Buffer.from(JSON.stringify({ scope, offset, revision, day: entries.at(-1)?.day ?? cursor?.day })).toString("base64url") } : {}) };
+    ...(more ? { next_cursor: Buffer.from(JSON.stringify({ scope, offset, revision, day: entries.at(-1)?.day ?? cursor?.day })).toString("base64url") } : { end_words: "Nothing older in this view" }) };
 }

@@ -52,6 +52,7 @@ export async function appCalls(token: string, agent: string, now: Date, net: Fet
 
 function limitsOf(rules: Rule[]): string[] {
   return rules.flatMap((r) => {
+    if (r.count_per_window === 0) return [r.outside === "hold" ? "Needs your approval for every call" : "Not allowed by this Card"];
     const money = (m: NonNullable<Rule["per_action"]>) => amountWords({ value: String(m.minor / 10 ** m.scale), unit: m.unit });
     return [r.per_action ? `${money(r.per_action)} per action` : undefined,
       r.per_window ? `${money(r.per_window)} ${r.window_words.each}` : undefined,
@@ -108,7 +109,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
       const limits = limitsOf(input.rules.filter((r) => r.action === name));
       return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || "App action",
         limits: limits.length ? limits : ["See its Card"], steps: used.map((s) => s.step),
-        step_words: used.length ? used.map((s) => `Step ${s.step} · ${s.label}`).join(" · ") : "Not used by the current workflow" };
+        step_words: used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
     });
     const tools = new Set(actions.map((a) => a.name));
     const ownCalls = calls.filter((c) => tools.has(c.action_name));
@@ -126,10 +127,11 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
   });
   const live = input.versions.versions.find((v) => v.live)?.n;
   const earlier = input.versions.versions.filter((v) => live !== undefined && v.n < live).length;
-  const order = steps.map((s) => s.app).filter((s): s is string => Boolean(s));
+  const apps = steps.map((s) => s.app).filter((s): s is string => Boolean(s));
+  const order = apps.filter((app, i) => app !== apps[i - 1]);
   const running = steps.find((s) => s.running)?.number;
   return { connections, workflow: { title: "Workflow", summary: `${steps.length} step${steps.length === 1 ? "" : "s"}${order.length ? ` · ${order.join(" → ")}` : ""}`,
     steps, ...(running ? { running_step: running } : {}) },
     memory: { count: input.notes.length, title: `${input.notes.length} note${input.notes.length === 1 ? "" : "s"}`, ...(input.notes[0] ? { latest: input.notes[0].content } : {}) },
-    versions: { title: "Changes to how it runs", summary: live !== undefined ? `v${live} live · ${earlier} earlier` : "No live version yet", ...(live !== undefined ? { live } : {}), earlier } };
+    versions: { title: "Changes to how it runs", summary: live !== undefined ? `v${live} live · ${earlier} earlier` : "Runs its original definition", ...(live !== undefined ? { live } : {}), earlier } };
 }

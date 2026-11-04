@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { appCalls, appDisplayName, runningTool, setupGrants, setupView, type GrantView } from "../src/cloud/taf-setup.js";
-import { avatarRim } from "../src/cloud/home.js";
+import { avatarRim, summary } from "../src/cloud/home.js";
 import { knobOf } from "../src/cloud/knob.js";
 import type { Run, SessionEvent, VersionState } from "../src/cloud/agents.js";
 
@@ -35,6 +35,25 @@ describe("a taf's server-composed setup", () => {
     const view = setupView({ agent: "agent-example", grants: [grant], knob: same, rules: [], versions: { versions: [] } as VersionState, notes: [], now, calls: [], statsComplete: true });
     expect(view.workflow.steps.map((s) => s.words)).toEqual(["", "Read a case"]);
     expect(view.connections[0]!.workflow_steps[0]!.words).toBe("");
+  });
+  it("keeps step references short and collapses repeated apps without hiding a return to one", () => {
+    const other: GrantView = { ...grant, id: "grant-second", vendor: "Second App", request: { agent: "agent-example", tools: [{ tool: "send_case", title: "Send a case" }] } };
+    const recipe = ["read_case", "read_case", "send_case", "send_case", "read_case"].map((tool, i) => ({ label: `Action ${i + 1}`, words: "Do the next action", tool }));
+    const composed = knobOf({ name: "Example", does: { label: "Read", line: "Read cases" }, unscheduled: true, doors: [], places: ["app"],
+      setting: { wakes: [], busy: "skip", results: ["app"], what: recipe }, zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
+    const view = setupView({ agent: "agent-example", grants: [grant, other], knob: composed, rules: [], versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true });
+    expect(view.workflow.summary).toBe("5 steps · Example → Second App → Example");
+    expect(view.connections[0]!.actions[0]!.step_words).toBe("Step 1 · Step 2 · Step 5");
+    expect(view.workflow.steps.map((s) => s.label)).toEqual(recipe.map((s) => s.label));
+    expect(view.versions).toMatchObject({ summary: "Runs its original definition", earlier: 0 });
+    expect(view.versions.live).toBeUndefined();
+  });
+  it("distinguishes a forbidden zero-count Card from one that asks for every call", () => {
+    const rules = (outside: "refuse" | "hold") => summary([{ id: "card-example", subject: "agent-example", active: true,
+      grants: [{ action: "read_case" }], aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }], on_exceed: outside }]).rules;
+    const args = { agent: "agent-example", grants: [grant], knob, versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true };
+    expect(setupView({ ...args, rules: rules("refuse") }).connections[0]!.actions[0]!.limits).toEqual(["Not allowed by this Card"]);
+    expect(setupView({ ...args, rules: rules("hold") }).connections[0]!.actions[0]!.limits).toEqual(["Needs your approval for every call"]);
   });
   it("keeps vendor-supplied display names and removes a server-id suffix only at the source", () => {
     expect(appDisplayName({ ...grant, vendor: "Example Suite" })).toBe("Example Suite");

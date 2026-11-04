@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- Setup's app actions use short step references and distinguish forbidden actions from calls that need approval every time. Workflow summaries collapse consecutive uses of the same app. A taf without a numbered live version says it runs its original definition. Activity and retained runs supply an end-of-history line.
 - From the v24 walkthrough: a workflow step says its title once (tafs cloud sends its words empty when they'd repeat it); on Android the back key closes an app's sheet and the full notes, and signing in from the sample opens the Tafs tab on the account's list.
 - Phone-specific alert switches, saved Light/Dark/System appearance and searchable account time zones on Android and iOS. Account groups related actions and keeps sign out last.
 - Cloud-paged Activity and recent runs; connected-tool rings with action limits, workflow steps and seven-day statistics; compact memory previews and full notes. Card shows changes to how the taf runs and full wallet-style back cards. Coach returns to the same taf and tab, and chats have a larger single-bubble composer. Android gains the animated door rim.
