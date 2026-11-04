@@ -247,6 +247,7 @@ struct MemorySummaryPanel: View {
                 if let latest = memory.latest { Text(latest).scaledFont(14).foregroundColor(Theme.soft).lineLimit(2) }
                 NavigationLink("See all") {
                     ScrollView { MemoryPanel(tafID: tafID, loadAll: true).padding(16) }.navigationTitle("What it remembers")
+                        .onDisappear { Task { await model.loadTafSetup(tafID) } }
                 }
             } else { ProgressView() }
         }

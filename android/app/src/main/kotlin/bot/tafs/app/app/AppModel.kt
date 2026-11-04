@@ -1970,7 +1970,9 @@ class AppModel(
       if (gen != accountGeneration) return
       val next = if (result.value == null) old else SourcePages(if (more) old.pages + result.value else listOf(result.value), if (more) old.firstEtag else result.etag)
       _state.update { it.copy(activityPages = it.activityPages + (key to next.copy(loading = false))) }
-    } catch (e: CancellationException) { throw e
+    } catch (e: CancellationException) {
+      if (gen == accountGeneration) _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = false))) }
+      throw e
     } catch (e: Exception) {
       if (gen != accountGeneration) return
       if (e is CloudError && e.status == 409 && more) {
@@ -1990,7 +1992,9 @@ class AppModel(
       if (gen != accountGeneration) return
       val next = if (result.value == null) old else SourcePages(if (more) old.pages + result.value else listOf(result.value), if (more) old.firstEtag else result.etag)
       _state.update { it.copy(runPages = it.runPages + (key to next.copy(loading = false))) }
-    } catch (e: CancellationException) { throw e
+    } catch (e: CancellationException) {
+      if (gen == accountGeneration) _state.update { it.copy(runPages = it.runPages + (key to old.copy(loading = false))) }
+      throw e
     } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(runPages = it.runPages + (key to old.copy(error = ErrorWords.of(e)))) } }
   }
 
@@ -2011,7 +2015,7 @@ class AppModel(
     val token = pushToken ?: push.token()?.also { pushToken = it } ?: return
     val generation = accountGeneration
     val handoff = pendingHandoff()
-    if (!alertsWanted() && handoff != null) {
+    if (secrets.load(ALERTS_ON) == "0" && handoff != null) {
       attempt { cloud.keepAlerts(handoff.target) } ?: return
       if (generation == accountGeneration) keepHandoff(null)
       return

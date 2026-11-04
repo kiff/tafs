@@ -60,7 +60,7 @@ class FakeTransport : Transport {
   private val queued = mutableMapOf<String, MutableList<Any>>()
   private val used = mutableMapOf<String, Int>()
 
-  fun answer(key: String, status: Int, body: String = "{}") = queue(key, HttpResponse(status, body.toByteArray()))
+  fun answer(key: String, status: Int, body: String = "{}", headers: Map<String, String> = emptyMap()) = queue(key, HttpResponse(status, body.toByteArray(), headers))
 
   /** The network failing: no answer at all. */
   fun drop(key: String) = queue(key, IOException("The network dropped"))

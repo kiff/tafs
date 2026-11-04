@@ -208,12 +208,13 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
 internal fun MemorySummaryPanel(taf: Taf, state: AppState, actions: TafActions) {
   var all by rememberSaveable(taf.id) { mutableStateOf(false) }
   val summary = state.tafSetups[taf.id]?.memory
+  val scope = rememberCoroutineScope()
   Panel {
     Eyebrow("What it remembers")
     summary?.let { Text(it.title, style = scaled(15, FontWeight.SemiBold, Theme.ink)); it.latest?.let { note -> Text(note, style = scaled(14, color = Theme.soft), maxLines = 2, overflow = TextOverflow.Ellipsis) } }
     TextButton({ all = true }) { Text("See all", color = Theme.amberText) }
   }
-  if (all) ModalBottomSheet(onDismissRequest = { all = false }, containerColor = Theme.background) {
+  if (all) ModalBottomSheet(onDismissRequest = { all = false; scope.launch { actions.loadSetup(taf.id) } }, containerColor = Theme.background) {
     LaunchedEffect(taf.id) { actions.loadAllMemory(taf.id) }
     Column(Modifier.fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(16.dp)) {
       MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions, load = false)

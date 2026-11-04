@@ -43,6 +43,7 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             UserDefaults.standard.set(false, forKey: alertsEnabledKey)
             alertsReady = false
+            phoneAlerts = nil
             await loadPhoneAlerts()
         } catch { if gen == accountGeneration { phoneAlertsError = error.localizedDescription } }
     }

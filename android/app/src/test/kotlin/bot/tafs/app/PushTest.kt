@@ -301,6 +301,19 @@ class PushTest {
     assertNull(secrets.load(AppModel.HANDOFF))
   }
 
+  @Test fun explicitOffKeepsAPendingSecretWithoutRegisteringThisPhone() = runTest {
+    reads(); transport.answer(alertTarget, 200, target)
+    transport.answer(register, 502, """{"error":"later"}""")
+    transport.answer("DELETE /v1/push", 200, """{"removed":true}""")
+    transport.answer("POST /v1/alerts", 200, """{"alerts":true}""")
+    val m = model(); assertFalse(m.turnOnAlerts()); m.turnOffAlerts()
+    val before = transport.requestsTo(register).size
+    m.syncPush()
+    assertEquals(before, transport.requestsTo(register).size)
+    assertEquals("tgt_1", body("POST /v1/alerts").getValue("alert_target").jsonObject.getValue("id").jsonPrimitive.content)
+    assertNull(secrets.load(AppModel.HANDOFF))
+  }
+
   @Test fun aHandOffTafsCloudDidNotTakeIsHandedOverAtLaunchWithNoNewConfirmation() = runTest {
     reads()
     transport.answer(alertTarget, 200, target)

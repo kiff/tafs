@@ -23,7 +23,8 @@ fun AvatarDoorRim(rim: AvatarRim?, color: Color, modifier: Modifier = Modifier) 
   } else 0f
   val tint = when (rim.tint) { "knock" -> Theme.amber; "resting" -> Theme.dim; else -> color }
   Canvas(modifier) {
-    val path = Path().apply { addRoundRect(RoundRect(-4f, -4f, size.width + 4f, size.height + 4f, CornerRadius(size.width * .3f))) }
+    val gap = 4.dp.toPx()
+    val path = Path().apply { addRoundRect(RoundRect(-gap, -gap, size.width + gap, size.height + gap, CornerRadius(size.width * .3f + gap))) }
     val measure = PathMeasure().apply { setPath(path, false) }
     val length = measure.length
     val end = phase + rim.length.coerceIn(0f, 1f)

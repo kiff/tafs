@@ -524,4 +524,4 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var refusedBy: String?
 }
 
-struct AvatarRim: Codable, Equatable { let visible: Bool; let tint: String; let length: Double }
+struct AvatarRim: Codable, Hashable { let visible: Bool; let tint: String; let length: Double }
