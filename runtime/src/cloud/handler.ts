@@ -46,6 +46,7 @@ import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
  *   GET  /v1/usage/ai                   the period's AI use against its bound (kiff/tafs#193)
  *   POST /v1/account/delete             erase what tafs cloud and kiff/agents keep for the account (kiff/tafs#185)
  *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
+ *   GET  /v1/time-zones                 ?q=: the service's IANA zones, searched here, as {zones: [{id, title}]}
  *   GET  /v1/setup                      the account's Setup (Coach), or null
  *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
@@ -90,13 +91,16 @@ import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
  *   POST /v1/tafs/{id}/trial/install    once KIFF has confirmed its draft live: that version goes live, the trial ends
  *   DELETE /v1/tafs/{id}/trial          Go back: KIFF ends its trial Cards, the trial ends, the live version stays
  *   POST /v1/tafs/{id}/improve          {text}: a new conversation with the account's Setup, opening on this taf (kiff/tafs#107)
- *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
+ *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes (?all=true: every shared note and this person's own, with a summary)
+ *   GET  /v1/tafs/{id}/activity         ?filter=all|done|held|refused&limit=&cursor=&tools=&from=: a page of its Activity, filtered here, ready to draw (ETag)
+ *   GET  /v1/tafs/{id}/work/runs        ?limit=&cursor=: a page of its recent retained runs (ETag)
+ *   GET  /v1/tafs/{id}/setup            its Setup, ready to draw: connections, workflow, memory and versions (Planque-Device-Signature forwarded for the grants read)
  *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
- *   GET  /v1/push?device_token=          this phone's registration and server-defined alert choices
+ *   GET  /v1/push                       this phone's registration and server-defined alert choices (Tafs-Device-Token header, or ?device_token=)
  *   DELETE /v1/push                     unregister this phone, by its token in the JSON body
- *   POST /v1/push                       {device_token, platform?, environment, sound?, alert_target?}: this phone gets the account's alerts (platform ios, the default, or android)
+ *   POST /v1/push                       {device_token, platform?, environment, sound?, alert_target?, kinds?}: this phone gets the account's alerts (platform ios, the default, or android)
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/alerts                     {alert_target}: KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206)
  *   GET  /v1/alerts                     whether tafs cloud holds KIFF's alert secret for the account

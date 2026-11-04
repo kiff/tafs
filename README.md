@@ -23,6 +23,8 @@ through KIFF's gateway, which checks the Card before any call reaches a tool.
   <img src="docs/screenshots/setup.png" width="220" alt="A taf's Setup: the job, Starts when, Results go to and what it remembers">
   <img src="docs/screenshots/starts-when.png" width="220" alt="Starts when: its schedule with − and +, Skip it or Run after, an app event to approve, one listening, and its doors">
   <img src="docs/screenshots/results-go-to.png" width="220" alt="Results go to: Reply to the sender, Alert our phones and Email me, then a place in a connected app">
+  <img src="docs/screenshots/account.png" width="220" alt="Account: Alerts, Theme (Light, Dark or System), how it works and Legal">
+  <img src="docs/screenshots/tafs-dark.png" width="220" alt="Tafs in dark">
   <img src="docs/screenshots/setup-dark.png" width="220" alt="Setup in dark">
   <img src="docs/screenshots/new-taf.png" width="220" alt="Starting a new taf">
 </p>
@@ -33,6 +35,7 @@ On iPad:
   <img src="docs/screenshots/ipad-welcome.png" width="340" alt="Welcome on iPad">
   <img src="docs/screenshots/ipad-needs-you.png" width="340" alt="Needs you on iPad: held actions with Approve once and Refuse">
   <img src="docs/screenshots/ipad-setup.png" width="340" alt="A taf's Setup on iPad, beside the list of tafs, with the bar as a rail on the left">
+  <img src="docs/screenshots/ipad-setup-dark.png" width="340" alt="Setup on iPad in dark">
 </p>
 
 On Android: the bar, a taf's Setup and its Starts when, Results go to, Activity and Record
