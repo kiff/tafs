@@ -50,9 +50,11 @@ describe("a taf's server-composed setup", () => {
   });
   it("does not claim an action is unused when the taf has no saved recipe", () => {
     const missing = knobOf({ name: "Example", does: { label: "Read", line: "Read cases" }, unscheduled: true, doors: [], places: ["app"], tools: new Map([["read_case", "Read a case"]]), zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
-    const view = setupView({ agent: "agent-example", grants: [grant], knob: missing, rules: [], versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true });
+    const two: GrantView = { ...grant, request: { agent: "agent-example", tools: [...grant.request.tools!, { tool: "send_case", name: "send_case", title: "Send a case" }] } };
+    const view = setupView({ agent: "agent-example", grants: [two], knob: missing, rules: [], versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true });
     expect(view.workflow).toMatchObject({ steps: [], summary: "Ask Coach to set its workflow" });
-    expect(view.connections[0]!.actions[0]!.step_words).toBe("Ask Coach to set its workflow");
+    // Said once, on the app's first action, not on each (kiff/tafs#467 item 3).
+    expect(view.connections[0]!.actions.map((a) => a.step_words)).toEqual(["Ask Coach to set its workflow", ""]);
   });
   it("distinguishes a forbidden zero-count Card from one that asks for every call", () => {
     const rules = (outside: "refuse" | "hold") => summary([{ id: "card-example", subject: "agent-example", active: true,

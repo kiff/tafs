@@ -127,7 +127,9 @@ private struct ConnectedAppSheet: View {
                         VStack(alignment: .leading, spacing: 5) {
                             Text(action.title).scaledFont(16, weight: .semibold)
                             ForEach(Array(action.limits.enumerated()), id: \.offset) { _, line in Text(line).scaledFont(13).foregroundColor(Theme.soft) }
-                            Text(action.step_words).scaledFont(13).foregroundColor(Theme.dim)
+                            if !action.step_words.isEmpty {
+                                Text(action.step_words).scaledFont(13).foregroundColor(Theme.dim)
+                            }
                         }
                     }
                 }

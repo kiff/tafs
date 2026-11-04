@@ -111,7 +111,7 @@ final class HaltTests: XCTestCase {
         model.resumeConfirmationWait = { while signer.answer == nil { await Task.yield() } }
         let resumed = await model.resumeHalt(rae)
         XCTAssertFalse(resumed)
-        XCTAssertEqual(model.haltError(rae), "\(Biometry.name) didn't open. Try again.")
+        XCTAssertEqual(model.haltError(rae), "\(Biometry.name) timed out. Try again.")
         XCTAssertTrue(signer.cancelled)
         XCTAssertTrue(sent("POST", "/v1/agents/rae-k3f9/resume").isEmpty)
         signer.answer?.resume(returning: "late-signature"); signer.answer = nil

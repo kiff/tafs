@@ -115,7 +115,8 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         app.actions.forEach { action ->
           Text(action.title, style = scaled(16, FontWeight.SemiBold, Theme.ink))
           action.limits.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
-          Text(action.stepWords, style = scaled(13, color = Theme.dim))
+          // Empty after the first when it would repeat the same line on every action ("Ask Coach to set its workflow").
+          if (action.stepWords.isNotEmpty()) Text(action.stepWords, style = scaled(13, color = Theme.dim))
         }
         app.workflowSteps.forEach { step -> Text(workflowLine(step), style = scaled(14, color = Theme.soft)) }
         TextButton({ chosen = null; onActivity(app.stats.activityQuery) }, enabled = app.actions.isNotEmpty()) { Text(app.stats.words + " ›", color = if (app.stats.complete) Theme.amberText else Theme.no) }

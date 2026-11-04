@@ -78,7 +78,9 @@ private const val HALT_POLLS = 60
 fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose: () -> Unit) {
   val h = state.haltOf(tafId)
   val name = tafId?.let { state.taf(it)?.name } ?: "All your tafs"
-  var busy by remember { mutableStateOf(false) }
+  // What's under way, a halt or a resume: each button says its own, even once the sheet has turned to the other's button.
+  var underway by remember { mutableStateOf<Underway?>(null) }
+  val busy = underway != null
   val scope = rememberCoroutineScope()
   val latest by rememberUpdatedState(state)
 
@@ -128,14 +130,14 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
         }
         when {
           h.running -> OutlineButton(
-            if (busy) "Halting…" else if (tafId == null) "Halt all now" else "Halt now",
-            { scope.launch { busy = true; actions.halt(tafId); busy = false; follow() } },
+            if (busy) underway!!.words else if (tafId == null) "Halt all now" else "Halt now",
+            { scope.launch { underway = Underway.Halting; actions.halt(tafId); underway = null; follow() } },
             Modifier.fillMaxWidth(), color = Theme.no, enabled = !busy,
           )
           h.halted -> if (!HaltWords.resumesWithAccount(h, tafId)) ApprovalGate {
             OutlineButton(
-              if (busy) "Resuming…" else "Resume with ${LocalBiometry.current}",
-              { scope.launch { busy = true; actions.resumeHalt(tafId); busy = false } },
+              if (busy) underway!!.words else "Resume with ${LocalBiometry.current}",
+              { scope.launch { underway = Underway.Resuming; actions.resumeHalt(tafId); underway = null } },
               Modifier.fillMaxWidth(), enabled = !busy,
             )
           }
@@ -147,7 +149,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
             // Halt again: a part that didn't take it the first time is asked again.
             OutlineButton(
               "Halt again",
-              { scope.launch { busy = true; actions.halt(tafId); busy = false; follow() } },
+              { scope.launch { underway = Underway.Halting; actions.halt(tafId); underway = null; follow() } },
               Modifier.fillMaxWidth(), color = Theme.no, enabled = !busy,
             )
           }
@@ -158,6 +160,9 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
     }
   }
 }
+
+/** What the Halt screen has under way, in the words its button shows meanwhile. */
+private enum class Underway(val words: String) { Halting("Halting…"), Resuming("Resuming…") }
 
 /** One part of a halt, and whether it holds it yet. */
 @Composable

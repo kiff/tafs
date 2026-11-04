@@ -184,7 +184,7 @@ struct SettingsView: View {
     static func versionLabel(bundle: Bundle = .main) -> String {
         let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
         guard let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String, !build.isEmpty else { return version }
-        return "\(build) (\(version))"
+        return "\(version) (\(build))"
     }
 
     private var modeText: String {

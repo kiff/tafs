@@ -103,13 +103,14 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
   const cutoff = input.now.getTime() - 7 * 86400_000;
   const calls = input.calls.filter((c) => c.actor_id === input.agent && Date.parse(c.created_at) >= cutoff);
   const connections = grants.map((g) => {
-    const actions = (["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []).filter((t) => !t.setup_reads).map((t) => {
+    const actions = (["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []).filter((t) => !t.setup_reads).map((t, i) => {
       const name = t.name || t.tool;
       const used = input.knob.what.filter((s) => s.tool === name);
       const limits = limitsOf(input.rules.filter((r) => r.action === name));
       return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || "App action",
         limits: limits.length ? limits : ["See its Card"], steps: used.map((s) => s.step),
-        step_words: !steps.length ? "Ask Coach to set its workflow" : used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
+        // With no workflow, the first action says so once; the others say nothing (kiff/tafs#467 item 3).
+        step_words: !steps.length ? (i === 0 ? "Ask Coach to set its workflow" : "") : used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
     });
     const tools = new Set(actions.map((a) => a.name));
     const ownCalls = calls.filter((c) => tools.has(c.action_name));

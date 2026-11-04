@@ -6,8 +6,8 @@ import org.junit.Test
 
 /** Account › Version names the build, so a check on a phone says which one it was. */
 class AccountVersionTest {
-  @Test fun theBuildNumberComesFirstThenTheVersion() {
-    assertEquals("25 (1.0)", versionWords(25, "1.0"))
-    assertEquals("25 (–)", versionWords(25, null))
+  @Test fun theVersionComesFirstThenTheBuildNumber() {
+    assertEquals("1.0 (26)", versionWords(26, "1.0"))
+    assertEquals("– (26)", versionWords(26, null))
   }
 }
