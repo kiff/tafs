@@ -97,24 +97,13 @@ interface SigningKeys {
 }
 
 /** Asks the person at the phone to confirm: fingerprint, face or the screen lock. */
-/** The system's fingerprint prompt didn't open: nothing was asked, so nothing was confirmed, and trying again may do. */
+/**
+ * A confirmation that didn't come back in time, the system's prompt most likely never having opened: it was cancelled, so nothing
+ * was confirmed, and trying again may do. Android can't tell whether its prompt is on screen, so the wait itself is bounded.
+ */
 class PromptNotOpened : SignerException(WORDS) {
   companion object {
     const val WORDS = "The fingerprint check didn't open. Try again."
-  }
-}
-
-/**
- * Watches for the system's prompt, which takes this app's focus while it's up: once it has, it waits as long as the person takes;
- * if the app still has its focus after [limitMs], the prompt never opened, and waiting stops.
- */
-class PromptWatch(private val limitMs: Long = 10_000) {
-  private var opened = false
-
-  /** Checked every few hundred milliseconds: true once it's time to stop waiting for a prompt that never opened. */
-  fun gaveUp(elapsedMs: Long, appHasFocus: Boolean): Boolean {
-    if (!appHasFocus) opened = true
-    return !opened && elapsedMs >= limitMs
   }
 }
 

@@ -172,23 +172,17 @@ class HaltTest {
     assertTrue(transport.requestsTo("POST /v1/resume").single().headers.containsKey("KIFF-Device-Signature"))
   }
 
-  @Test fun aFingerprintCheckThatNeverOpenedSaysSoAndSendsNothing() = runTest {
+  @Test fun aResumeConfirmationUnansweredAfterTenSecondsIsCancelledSaysSoAndSendsNothing() = runTest {
     reads()
-    auth.fails = bot.tafs.app.signing.PromptNotOpened()
+    // A prompt that never opened: no answer for a minute, then a yes that must not count.
+    auth.waitMs = 60_000
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
+    assertEquals("It gave up at 10 seconds", 10_000, testScheduler.currentTime)
     assertEquals("The fingerprint check didn't open. Try again.", m.state.value.haltError)
+    testScheduler.advanceTimeBy(60_000)
+    testScheduler.runCurrent()
     assertTrue(transport.requests.none { it.url.endsWith("/resume") || it.method == "DELETE" })
-  }
-
-  @Test fun theWatchStopsWaitingOnlyForAPromptThatNeverOpened() {
-    val never = bot.tafs.app.signing.PromptWatch(limitMs = 10_000)
-    assertFalse(never.gaveUp(9_750, appHasFocus = true))
-    assertTrue("the app kept its focus: the prompt never opened", never.gaveUp(10_000, appHasFocus = true))
-    // Opened (the prompt took the focus): it waits as long as the person takes, even once the focus is back.
-    val opened = bot.tafs.app.signing.PromptWatch(limitMs = 10_000)
-    assertFalse(opened.gaveUp(500, appHasFocus = false))
-    assertFalse(opened.gaveUp(60_000, appHasFocus = true))
   }
 
   @Test fun aResumeNobodyConfirmedSendsNothing() = runTest {

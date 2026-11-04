@@ -5084,13 +5084,27 @@ class AppModel(
     val generation = accountGeneration
     _state.update { it.copy(haltError = null) }
     try {
-      // Resuming gives authority back: the approval key signs KIFF's request, behind its own fingerprint.
-      confirmGrant("tafs.resume.v1|$tenant|${tafId ?: "*"}", name?.let { "Resume $it" } ?: "Resume all your tafs")
+      // Resuming gives authority back: the approval key signs KIFF's request, behind its own fingerprint. A confirmation still
+      // unanswered after 10 seconds is cancelled, the prompt with it, so a late answer sends nothing (#464 item 18).
+      kotlinx.coroutines.withTimeoutOrNull(RESUME_CONFIRM_MS) {
+        confirmGrant("tafs.resume.v1|$tenant|${tafId ?: "*"}", name?.let { "Resume $it" } ?: "Resume all your tafs")
+      } ?: throw bot.tafs.app.signing.PromptNotOpened()
       if (generation != accountGeneration) return false
       kiff.tenant = tenant
       val signer = signer
       kiff.setupSigner = { signer.signConfirmed(it) }
-      kiff.resume(tafId)
+      // With the approval key, its fingerprint is asked as KIFF's request is signed: the same 10 seconds bound it.
+      val confirm = kiff.approvalSigner
+      val bounded: (suspend (() -> ByteArray) -> String)? = confirm?.let { c ->
+        { built -> kotlinx.coroutines.withTimeoutOrNull(RESUME_CONFIRM_MS) { c(built) } ?: throw bot.tafs.app.signing.PromptNotOpened() }
+      }
+      kiff.approvalSigner = bounded
+      try {
+        kiff.resume(tafId)
+      } finally {
+        // Put back only if nothing changed it meanwhile (a sign-out clears it).
+        if (kiff.approvalSigner === bounded) kiff.approvalSigner = confirm
+      }
     } catch (e: SignerException) {
       if (generation == accountGeneration) haltFailed(notSigned(e, "Not resumed: it wasn't confirmed."))
       return false
@@ -5489,6 +5503,8 @@ class AppModel(
     // What alerts keep on this phone: a target's secret not yet handed to tafs cloud, whether alerts were turned on, and the sound.
     const val HANDOFF = "kiff.alert-handoff"
     const val ALERTS_ON = "kiff.alerts-on"
+    /** How long Resume waits for its confirmation before cancelling it. */
+    const val RESUME_CONFIRM_MS = 10_000L
     /** The account whose alerts were on when this phone last signed out of it, so signing in to it again brings them back. */
     const val ALERTS_WERE_ON = "kiff.alerts-were-on"
     const val ALERT_SOUND = "kiff.alert-sound"

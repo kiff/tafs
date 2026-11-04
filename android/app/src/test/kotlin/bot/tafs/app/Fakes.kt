@@ -27,14 +27,18 @@ class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = t
   /** What happens while the prompt is up: time passing, say. */
   var whilePrompted: () -> Unit = {}
 
-  /** What the ask throws instead of answering: a prompt that never opened, say. */
+  /** What the ask throws instead of answering. */
   var fails: Exception? = null
+
+  /** How long the answer takes: a prompt that never opened answers late, if ever. */
+  var waitMs: Long = 0
 
   override val canAuthenticate: Boolean get() = available
 
   override suspend fun authenticate(reason: String): Boolean {
     asked += reason
     whilePrompted()
+    if (waitMs > 0) kotlinx.coroutines.delay(waitMs)
     fails?.let { throw it }
     return confirms
   }
@@ -43,6 +47,7 @@ class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = t
     asked += reason
     whilePrompted()
     fingerprints += reason
+    if (waitMs > 0) kotlinx.coroutines.delay(waitMs)
     fails?.let { throw it }
     return confirms
   }

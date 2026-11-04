@@ -105,9 +105,10 @@ otherwise the app says once that they're off, with **Turn on**. Another account 
 
 **Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
 didn't go through says why there, and the screen never calls a connection by its service's name.
-A fingerprint prompt that hasn't opened 10 seconds after it was asked for (this app still has
-the focus it takes while it's up) is cancelled, and the screen says "The fingerprint check didn't
-open. Try again." (`PromptWatch`); once the prompt is up, it waits as long as the person takes.
+Resume's confirmation is bounded: unanswered after 10 seconds, the fingerprint check is
+cancelled, the prompt with it, so a late answer sends nothing, and the screen says "The fingerprint
+check didn't open. Try again." (`RESUME_CONFIRM_MS`). Android can't tell whether its prompt is on
+screen, so the wait itself is what's bounded, and only for Resume.
 
 **One account per phone, and signing out asks first.** Account ends with **Sign out**: another
 account is signing out, then signing in with it. Sign out, and Sign in again on the line shown
