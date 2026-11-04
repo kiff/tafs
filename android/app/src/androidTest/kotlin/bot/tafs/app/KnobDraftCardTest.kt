@@ -1,7 +1,6 @@
 package bot.tafs.app
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.app.AppState
@@ -25,7 +24,7 @@ import org.junit.Test
 class KnobDraftCardTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "", tools = emptyList(), colorIndex = 1, card = Card(rules = emptyList(), issuedBy = "You"), now = "", cloudId = "taf_1")
   private val card = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"knob","id":"k1","taf_id":"taf_1","version":9}""")

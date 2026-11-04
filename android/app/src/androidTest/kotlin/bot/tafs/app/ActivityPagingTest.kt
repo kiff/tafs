@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import bot.tafs.app.app.AppState
@@ -32,7 +31,7 @@ import org.junit.Test
  */
 class ActivityPagingTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "", tools = emptyList(), colorIndex = 1, card = Card(rules = emptyList(), issuedBy = "You"), now = "", cloudId = "taf_1")
   // As tafs cloud sends a page: its entries, and the same entries grouped by day.

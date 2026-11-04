@@ -5,7 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import bot.tafs.app.app.AppState
@@ -42,7 +41,7 @@ import org.junit.Test
 class ChatFollowTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val t0 = Instant.parse("2026-10-31T08:00:00Z")
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "Refund", tools = emptyList(), colorIndex = 1, card = Card(emptyList(), "You"), cloudId = "taf_1")

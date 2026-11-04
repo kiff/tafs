@@ -49,7 +49,10 @@ cd android
 
 Gradle needs a JDK 17 or later; Android Studio's own (`jbr`) does. On Windows,
 `gradlew.bat`. CI (`.github/workflows/android.yml`) runs the unit tests and the debug
-builds on every pull request that touches `android/`, and the UI tests on an emulator.
+builds on every pull request that touches `android/`, and the UI tests on an emulator. The UI
+tests run in a debug-only `TestHostActivity` (`createStableComposeRule`), which takes configuration
+changes in place: on a just-booted emulator the system settles after the first test starts, and an
+ordinary activity recreated then would drop the test's screen ("No compose hierarchies found").
 
 The application id is `dev.kiff.tafs`; the Kotlin packages are `bot.tafs.app`.
 

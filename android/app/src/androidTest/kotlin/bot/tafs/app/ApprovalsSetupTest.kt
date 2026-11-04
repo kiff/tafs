@@ -4,7 +4,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import bot.tafs.app.app.Mode
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.design.PrimaryButton
@@ -24,7 +23,7 @@ import org.junit.Test
 class ApprovalsSetupTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private var continued = 0
   private var rechecked = 0

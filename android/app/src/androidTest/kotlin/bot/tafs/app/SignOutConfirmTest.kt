@@ -4,7 +4,6 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -21,7 +20,7 @@ import org.junit.Test
 class SignOutConfirmTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val done = mutableListOf<String>()
 

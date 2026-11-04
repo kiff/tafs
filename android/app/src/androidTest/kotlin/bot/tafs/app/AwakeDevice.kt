@@ -6,6 +6,7 @@ import android.os.SystemClock
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.rules.ExternalResource
 
@@ -32,6 +33,13 @@ class AwakeDevice(private val timeoutMs: Long = 30_000) : ExternalResource() {
     shell("am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS")
   }
 }
+
+/**
+ * The UI tests' rule, hosted in [TestHostActivity], which takes configuration changes in place: on a just-booted emulator the
+ * system settles after the first test starts, and an ordinary activity recreated then drops the test's content ("No compose
+ * hierarchies found").
+ */
+fun createStableComposeRule() = createAndroidComposeRule<TestHostActivity>()
 
 /**
  * Sets [content] and waits until its window is up, with a Compose hierarchy to read, before the test reads the screen. On a

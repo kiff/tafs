@@ -2,7 +2,6 @@ package bot.tafs.app
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.design.TafsTheme
@@ -18,7 +17,7 @@ import org.junit.Test
 class RequestSheetTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val detail = KiffClient.json.decodeFromString<RequestDetail>(
     """{"id":"run_2","at":"2026-11-02T22:41:00Z","state":"retrying","line":"Refund $20 · order 4402","from":"By email",

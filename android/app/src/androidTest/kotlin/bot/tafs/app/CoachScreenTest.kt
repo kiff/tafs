@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -39,7 +38,7 @@ class CoachScreenTest {
   // Awake and unlocked before the activity launches: a just-booted emulator may not be yet.
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val t0 = Instant.parse("2026-10-30T05:00:00Z")
   private fun component(json: String) = KiffClient.json.decodeFromString<SetupComponent>(json)
