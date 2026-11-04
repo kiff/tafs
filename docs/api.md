@@ -203,7 +203,8 @@ body when unchanged. Apps keep previously read pages per account, taf and filter
   `calls`, `done`, `held`, ready-to-draw `words`, `complete`, and an `activity_query`.
   Incomplete source reads are explicitly marked; they are never shown as a complete total.
 - `workflow`: its `title`, `summary`, numbered `steps` with app/grant and running
-  state, and `running_step` only while that step's tool call has no result.
+  state, and `running_step` only while that step's tool call has no result. A step's `words`
+  is empty when it would only repeat its `label`, so the apps don't show the title twice.
 - `memory`: its note `count`, `title` and newest note as `latest`.
 - `versions`: `Changes to how it runs`, the live version, earlier count and summary.
 

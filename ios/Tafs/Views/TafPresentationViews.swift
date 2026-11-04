@@ -27,7 +27,7 @@ struct ConnectedToolsRing: View {
                             Text("\(step.number)").foregroundColor(step.running ? Theme.ok : Theme.soft)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(step.label).scaledFont(15, weight: .semibold)
-                                Text(step.words).scaledFont(13).foregroundColor(Theme.soft)
+                                if !step.words.isEmpty { Text(step.words).scaledFont(13).foregroundColor(Theme.soft) }
                                 if let app = step.app { Text(app).scaledFont(12).foregroundColor(Theme.amberText) }
                             }
                         }.padding(.vertical, 4)
@@ -112,7 +112,7 @@ private struct ConnectedAppSheet: View {
                     }
                 }
                 Section("Workflow") {
-                    ForEach(app.workflow_steps) { step in Text("\(step.number) · \(step.label)\n\(step.words)") }
+                    ForEach(app.workflow_steps) { step in Text(step.words.isEmpty ? "\(step.number) · \(step.label)" : "\(step.number) · \(step.label)\n\(step.words)") }
                 }
                 Section {
                     Button(app.stats.words) { activity(app.stats.activity_query) }.disabled(app.actions.isEmpty)

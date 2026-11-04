@@ -83,6 +83,12 @@ export interface SetupView {
 }
 
 /** All grouping, names, action/step mappings and counts are made once, at their source. */
+/** A step's words that only repeat its label say nothing more: they're sent empty, so no app shows the title twice. */
+function repeats(words: string, label: string): boolean {
+  const plain = (t: string) => t.toLowerCase().replace(/\s+/g, " ").replace(/[.\s]+$/, "").trim();
+  return plain(words) === plain(label);
+}
+
 export function setupView(input: { agent: string; grants: GrantView[]; knob: Knob; rules: Rule[];
   notes: Array<{ content: string }>; versions: VersionState; calls: ActivityCall[]; now: Date; running?: string; statsComplete: boolean }): SetupView {
   const grants = input.grants.filter((g) => g.request.agent === input.agent && (["connected", "listed", "signed_in", "needs_reconnect"].includes(g.status) || (g.status === "pending" && g.signed_in === true)));
@@ -91,7 +97,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
   for (const g of grants) for (const t of ["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []) if (!t.setup_reads) owners.set(t.name || t.tool, g.id);
   const steps = input.knob.what.filter((s) => s.id !== "what_ask").map((s) => {
     const grant = s.tool ? owners.get(s.tool) : undefined;
-    return { number: s.step, label: s.label, words: s.words, ...(grant ? { grant, app: names.get(grant) } : {}), running: Boolean(s.tool && s.tool === input.running) };
+    return { number: s.step, label: s.label, words: repeats(s.words, s.label) ? "" : s.words, ...(grant ? { grant, app: names.get(grant) } : {}), running: Boolean(s.tool && s.tool === input.running) };
   });
   const cutoff = input.now.getTime() - 7 * 86400_000;
   const calls = input.calls.filter((c) => c.actor_id === input.agent && Date.parse(c.created_at) >= cutoff);
