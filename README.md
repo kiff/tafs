@@ -38,16 +38,24 @@ On iPad:
   <img src="docs/screenshots/ipad-setup-dark.png" width="340" alt="Setup on iPad in dark">
 </p>
 
-On Android: the bar, a taf's Setup and its Starts when, Results go to, Activity and Record
-by taf in dark:
+On Android: a taf's Setup with its connected tools and workflow, Account's alerts and theme,
+the bar, Activity and Record by taf, light and dark, on a phone and a tablet:
 
 <p>
+  <img src="docs/screenshots/android/v24-setup.png" width="180" alt="A taf's Setup: the job, Starts when, and Connected tools as a ring of apps around the taf, with its workflow in one line">
+  <img src="docs/screenshots/android/v24-workflow-dark.png" width="180" alt="Setup's workflow opened, step by step with each step's app, in dark">
+  <img src="docs/screenshots/android/v24-account-theme.png" width="180" alt="Account: alerts on this phone, what alerts you, and the theme: Light, Dark or System">
+  <img src="docs/screenshots/android/v24-account-dark.png" width="180" alt="Account in dark">
   <img src="docs/screenshots/android/home-bar.png" width="180" alt="Home with the bar: Account, Tafs, Needs you, Record">
-  <img src="docs/screenshots/android/taf-setup.png" width="180" alt="A taf's Setup">
-  <img src="docs/screenshots/android/taf-starts-when.png" width="180" alt="Setup › Starts when">
-  <img src="docs/screenshots/android/taf-results-dark.png" width="180" alt="Setup › Results go to, in dark">
   <img src="docs/screenshots/android/taf-activity-dark.png" width="180" alt="A taf's Activity, in dark">
   <img src="docs/screenshots/android/record-by-taf-dark.png" width="180" alt="Record by taf, in dark">
+</p>
+
+On an Android tablet:
+
+<p>
+  <img src="docs/screenshots/android/v24-setup-tablet.png" width="340" alt="A taf's Setup on an Android tablet">
+  <img src="docs/screenshots/android/v24-account-theme-dark-tablet.png" width="340" alt="Account's alerts and theme on an Android tablet, in dark">
 </p>
 
 Screenshots come from CI, with sample data. On iOS, a run that changes a screen
