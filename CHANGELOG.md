@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Setup:** an action about money whose operation takes no amount field (contesting a claim on a payment, an invoice reminder) gets no made-up amount argument. Its Card limits it by calls a day.
 - Persistent currency-limit requests can appear once in Needs you and Setup, with attempt history and a request for the correct taf in Coach. They remain subject to the normal signed Card approval. Connection refusals use KIFF's typed provenance and words while preserving status, amounts and evidence. Time-zone synchronization reports partial failures in displayable words and rechecks a newer confirmed zone before reporting success.
 - **Cloud and iOS, from the phone check:** recurring schedules can follow KIFF's confirmed account zone, and Card names that zone. Custom tafs use their own saved job and workflow, with no workflow invented from tool order. iOS keeps paging after a refresh, shows the build in Account and a schedule's current How often value, and opens Coach for the taf selected; iPad workflow rows align to the left.
 - Setup's app actions use short step references and distinguish forbidden actions from calls that need approval every time. Workflow summaries collapse consecutive uses of the same app. A taf without a numbered live version says it runs its original definition. Activity and retained runs supply an end-of-history line.
