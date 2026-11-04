@@ -15,12 +15,15 @@ through KIFF's gateway, which checks the Card before any call reaches a tool.
 
 <p>
   <img src="docs/screenshots/welcome.png" width="220" alt="Welcome: They taf. You kiff.">
-  <img src="docs/screenshots/tafs.png" width="220" alt="Tafs: three working, two need you">
+  <img src="docs/screenshots/tafs.png" width="220" alt="Tafs: three working, two need you, with the bar: Account, Tafs, Needs you, Record">
   <img src="docs/screenshots/needs-you.png" width="220" alt="Needs you: held actions with Approve once and Refuse">
-  <img src="docs/screenshots/record.png" width="220" alt="Record: everything the tafs did, newest first">
-  <img src="docs/screenshots/taf.png" width="220" alt="A taf: its job, its runs and its activity">
+  <img src="docs/screenshots/record.png" width="220" alt="Record: a chip for each taf above the filter by kind, each entry starting with its taf">
+  <img src="docs/screenshots/taf.png" width="220" alt="A taf's Activity: what's left today, All, Done, Held and Refused, then its work by day">
   <img src="docs/screenshots/chat.png" width="220" alt="Chat: ask a taf what it did, or tell it what to do differently">
-  <img src="docs/screenshots/dial.png" width="220" alt="A taf's dial on iPhone: When, What and Where around its Why, Refund double charges">
+  <img src="docs/screenshots/setup.png" width="220" alt="A taf's Setup: the job, Starts when, Results go to and what it remembers">
+  <img src="docs/screenshots/starts-when.png" width="220" alt="Starts when: its schedule with − and +, Skip it or Run after, an app event to approve, one listening, and its doors">
+  <img src="docs/screenshots/results-go-to.png" width="220" alt="Results go to: Reply to the sender, Alert our phones and Email me, then a place in a connected app">
+  <img src="docs/screenshots/setup-dark.png" width="220" alt="Setup in dark">
   <img src="docs/screenshots/new-taf.png" width="220" alt="Starting a new taf">
 </p>
 
@@ -29,19 +32,19 @@ On iPad:
 <p>
   <img src="docs/screenshots/ipad-welcome.png" width="340" alt="Welcome on iPad">
   <img src="docs/screenshots/ipad-needs-you.png" width="340" alt="Needs you on iPad: held actions with Approve once and Refuse">
-  <img src="docs/screenshots/ipad-dial.png" width="340" alt="The dial on iPad, beside the list of tafs, with its remote and today's work">
+  <img src="docs/screenshots/ipad-setup.png" width="340" alt="A taf's Setup on iPad, beside the list of tafs, with the bar as a rail on the left">
 </p>
 
-On Android: the taf's dial (When, What and Where around its Why), a stop with its
-size and a change waiting to go live, Coach's card for a dial it drafted, and a
-taf's page with its chat:
+On Android: the bar, a taf's Setup and its Starts when, Results go to, Activity and Record
+by taf in dark:
 
 <p>
-  <img src="docs/screenshots/android/dial-overview.png" width="180" alt="The dial: the Why on the face, When, What and Where around it, an email door with a knock waiting and a closed Slack door">
-  <img src="docs/screenshots/android/dial-stop-size.png" width="180" alt="A stop chosen: Weekdays at 09:00, its size, and Make 1 change live">
-  <img src="docs/screenshots/android/dial-coach-card.png" width="180" alt="Coach's card: the dial it drafted, by connection, with one confirmation">
-  <img src="docs/screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">
-  <img src="docs/screenshots/android/taf-page.png" width="180" alt="A taf's page: one header row, the tabs and the Card's line, then the chat">
+  <img src="docs/screenshots/android/home-bar.png" width="180" alt="Home with the bar: Account, Tafs, Needs you, Record">
+  <img src="docs/screenshots/android/taf-setup.png" width="180" alt="A taf's Setup">
+  <img src="docs/screenshots/android/taf-starts-when.png" width="180" alt="Setup › Starts when">
+  <img src="docs/screenshots/android/taf-results-dark.png" width="180" alt="Setup › Results go to, in dark">
+  <img src="docs/screenshots/android/taf-activity-dark.png" width="180" alt="A taf's Activity, in dark">
+  <img src="docs/screenshots/android/record-by-taf-dark.png" width="180" alt="Record by taf, in dark">
 </p>
 
 Screenshots come from CI, with sample data. On iOS, a run that changes a screen
@@ -72,12 +75,13 @@ tafs cloud and planque. Each feature has a page in [docs/](docs/README.md):
   halting and removing it.
 - **[Chat](docs/chat.md):** ask a taf what it did or tell it what to do; its answer and
   its work stream as it goes, and a held call shows where it was made.
-- **[The dial](docs/dial.md):** each taf's When, What and Where around its Why, with
-  today's work on the rim. − and + change a stop's size, and the changes wait as the
-  taf's next version until you make them live; Pause stops every schedule, follow-ups
-  included.
+- **[The app's screens](docs/taf-screen.md):** a bar with Account, Tafs, Needs you,
+  Record and Coach; the Record filtered by taf; each taf's Chat, Activity, Card and Setup.
+  Setup says what starts it (schedule, app events you approve, doors, follow-ups, Pause)
+  and where its results go. Changes wait as the taf's next version until you make them
+  live. Light and dark.
 - **[Coach mode](docs/coach.md):** say the job; Coach connects the tools, drafts the taf,
-  its Card and its dial, and you confirm with Face ID, Touch ID or your fingerprint. Improve a taf, try a new
+  its Card and how it runs, and you confirm with Face ID, Touch ID or your fingerprint. Improve a taf, try a new
   version under a trial Card, then install it.
 - **[Held calls](docs/approvals.md):** in Needs you, the chat, the lock screen and a push
   alert. Approve once, refuse, or give the Card extra room: each answer is signed on the

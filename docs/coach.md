@@ -208,17 +208,18 @@ this connection don't check out…"), and nothing can be approved. On Android: `
 `AppModel.loadProfileWords`, `ProfileWordsLines`; KIFF's golden vectors are in
 `app/src/test/resources/profile`.
 
-### The dial Coach drafts
+### The next version Coach drafts
 
-Coach sets a taf's dial with its `taf_dial` tool, which makes the taf's next version, and nothing
-runs from it. Then Coach shows `{type: "knob", taf_id, version}` in its chat. The app draws that
+Coach drafts how a taf runs (what starts it, what it does when it's still busy, where its
+results go) with its `taf_dial` tool, which makes the taf's next version, and nothing runs
+from it. Then Coach shows `{type: "knob", taf_id, version}` in its chat. The app draws that
 card from the taf's knob `draft`, in tafs cloud's words. The apps group `draft.groups` by
-connection and This taf, with When, What and Where lines; older responses fall back to
-words by ring.
+connection and This taf; older responses fall back to words by ring.
 **Confirm** makes it live with the usual version switch (with the fingerprint where the Card
 changes) and tells Coach it was approved. **Change** goes back to Coach. When the knob's draft is
-no longer that version, the card says it was replaced. The dial shows the same draft, with **Make
-it live**. On Android: `KnobDraftCard`.
+no longer that version, the card says it was replaced. The same draft also shows in the taf's
+Setup, marked not live, where it can be made live too ([taf-screen.md](taf-screen.md)). On
+Android: `KnobDraftCard`.
 
 ## Improving a taf
 
@@ -301,7 +302,7 @@ under Coach's Cards first.
 | `run_stop` | Stops a run; its held calls are withdrawn |
 | `taf_pause` | Pauses or resumes a taf's schedule |
 | `taf_results` | Sets where a taf's results go, all places at once ([doors.md](doors.md#where-results-go)). KIFF holds every change for the owner, who approves it in tafs |
-| `taf_dial` | Drafts a taf's dial, all its triggers, what it does when busy and where results go, as `PUT /v1/tafs/{id}/knob` takes them ([api.md](api.md)): the taf's next version, nothing running from it. Coach shows `{type: "knob", version, taf_id}` and installs it with `version_install`, held for the owner. Its Card, `coach-taf-dial`, allows 20 a day and holds nothing |
+| `taf_dial` | Drafts how a taf runs, all its triggers, what it does when busy and where results go, as `PUT /v1/tafs/{id}/knob` takes them ([api.md](api.md)): the taf's next version, nothing running from it. Coach shows `{type: "knob", version, taf_id}` and installs it with `version_install`, held for the owner. Its Card, `coach-taf-dial`, allows 20 a day and holds nothing |
 | `version_try` | Tries a version: KIFF decides each of its writes and sends none |
 | `version_install` | Installs a version. KIFF holds this for the owner, who approves it in tafs: the app stops what's in the way, confirms the version's Card and makes it live |
 

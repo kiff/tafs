@@ -148,7 +148,7 @@ message came in. The chat marks the door's reply as answered in Slack.
 
 ## WhatsApp
 
-**What the owner does.** In Doors, turn the dial to Add a door, then WhatsApp. tafs
+**What the owner does.** In the taf's Setup › Starts when, **Add a door…**, then WhatsApp. tafs
 opens WhatsApp's signup: the owner signs in with their business, picks or adds the
 number, and comes back to the app, which finishes the connection with their session.
 Then they pair the numbers that may give work (their own, colleagues'). Everyone else
