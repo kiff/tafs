@@ -31,7 +31,7 @@ struct RecordView: View {
                             if openReads.contains(day.key) { openReads.remove(day.key) } else { openReads.insert(day.key) }
                         } label: {
                             Text("· \(day.reads.count == 1 ? "1 read" : "\(day.reads.count) reads") of data, within its Card · \(openReads.contains(day.key) ? "Hide" : "Show")")
-                                .scaledFont(13).foregroundColor(Theme.dim).padding(.horizontal, 4)
+                                .scaledFont(13).foregroundColor(Theme.ok).padding(.horizontal, 4)
                         }
                         .buttonStyle(.plain)
                     }

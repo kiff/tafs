@@ -15,7 +15,7 @@ struct CoachView: View {
             SetupChatView()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Close") { model.coachOpen = false }.shortcut(.close)
+                        Button { model.coachOpen = false } label: { Label("Back", systemImage: "chevron.left") }.shortcut(.close)
                     }
                     if let fullScreen {
                         ToolbarItem(placement: .navigationBarLeading) {
@@ -110,5 +110,22 @@ struct CoachPanel: View {
             })
         .accessibilityLabel("Coach mode's width")
         .accessibilityHint("Drag to make it wider or narrower")
+    }
+}
+
+/// Slides back to the exact screen beneath it, including that taf's selected tab.
+struct PhoneCoachPanel: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        ZStack {
+            if model.coachOpen {
+                CoachView().background(Theme.background.ignoresSafeArea())
+                    .transition(reduceMotion ? .opacity : .move(edge: .trailing))
+                    .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { value in
+                        if value.startLocation.x < 24 && value.translation.width > 100 && abs(value.translation.height) < 60 { model.coachOpen = false }
+                    })
+            }
+        }.animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: model.coachOpen)
     }
 }

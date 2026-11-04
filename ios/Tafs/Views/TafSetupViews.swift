@@ -34,6 +34,10 @@ struct StartsWhenView: View {
                     events(knob, manages: manages)
                     doors(manages: manages)
                     followUps(knob, manages: manages)
+                    if manages && model.mayUseCoach {
+                        Button("Change when it starts with Coach") { model.improveTaf(tafID); model.coachOpen = true }
+                            .buttonStyle(OutlineButtonStyle())
+                    }
                     pause(knob, manages: manages)
                 } else {
                     Text("Reading what starts it…").scaledFont(15).foregroundColor(Theme.dim)
@@ -278,7 +282,7 @@ private struct DoorsList: View {
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                 }
             }
-            Button("Add a door…", action: add)
+            Button(action: add) { Label("Add a door…", systemImage: "plus") }
                 .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 .disabled(!doors.loaded || doors.addable.isEmpty)
         }

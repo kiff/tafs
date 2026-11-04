@@ -9,6 +9,8 @@ final class AlertsTests: XCTestCase {
     private let token = Data([0xab, 0x01, 0xff])
 
     private func model(signer: ApprovalSigning = StubSigner(), allowed: Bool = true) -> AppModel {
+        UserDefaults.standard.removeObject(forKey: "alerts.enabled|t1")
+        UserDefaults.standard.removeObject(forKey: "alerts.kinds|t1")
         StubProtocol.responses = [:]
         StubProtocol.sent = []
         Keychain.delete(AppModel.alertHandoffAccount)
@@ -182,6 +184,36 @@ final class AlertsTests: XCTestCase {
         StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":false,"alerts":true}"#)
         await model.pushTokenArrived(token)
         XCTAssertEqual(model.canAnswerHolds, false)
+    }
+
+    func testOffUnregistersThePhoneAndRefreshDoesNotRegisterItAgain() async throws {
+        let model = model()
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"answers":true,"alerts":true}"#)
+        await model.pushTokenArrived(token)
+        StubProtocol.responses["DELETE /v1/push"] = (200, #"{"removed":true}"#)
+        let before = sent("POST", "cloud.test", "/v1/push").count
+        await model.turnOffAlerts()
+        await model.syncPush()
+        XCTAssertEqual(model.alertsReady, false)
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/push").count, before)
+        XCTAssertEqual(body(sent("DELETE", "cloud.test", "/v1/push").last)["device_token"] as? String, "ab01ff")
+        UserDefaults.standard.removeObject(forKey: "alerts.enabled|t1")
+    }
+
+    func testAChoiceIsSentToCloudAndReadBackAsItsState() async throws {
+        let model = model()
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"answers":true,"alerts":true}"#)
+        await model.pushTokenArrived(token)
+        let choices = #"{"enabled":true,"sound":true,"kinds":[{"id":"answered","title":"A taf answered someone","words":"Silent","enabled":true},{"id":"needs_you","title":"A taf needs you","words":"Sound","enabled":true}],"answering":{"title":"0 tafs","tafs":[]}}"#
+        StubProtocol.responses["GET /v1/push"] = (200, choices)
+        await model.loadPhoneAlerts()
+        StubProtocol.responses["GET /v1/push"] = (200, choices.replacingOccurrences(of: #""Silent","enabled":true"#, with: #""Silent","enabled":false"#))
+        await model.setAlertKind("answered", enabled: false)
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/push").last)["kinds"] as? [String: Bool], ["answered": false, "needs_you": true])
+        XCTAssertEqual(model.phoneAlerts?.kinds.first?.enabled, false)
+        UserDefaults.standard.removeObject(forKey: "alerts.kinds|t1")
     }
 
     // MARK: Tapping an alert

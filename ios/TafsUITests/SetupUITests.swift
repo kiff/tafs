@@ -7,6 +7,23 @@ final class SetupUITests: XCTestCase {
     }
 
     @MainActor
+    func testThemeChoiceAppliesAndSurvivesRelaunch() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-screenshots", "YES", "-tab", "account"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Account"].waitForExistence(timeout: 30))
+        let dark = app.segmentedControls.buttons["Dark"]
+        for _ in 0..<4 where !dark.isHittable { app.swipeUp() }
+        XCTAssertTrue(dark.waitForExistence(timeout: 10))
+        dark.tap()
+        XCTAssertTrue(dark.isSelected)
+        app.terminate(); app.launch()
+        for _ in 0..<4 where !dark.isHittable { app.swipeUp() }
+        XCTAssertTrue(dark.isSelected, "the explicit appearance is kept")
+        app.segmentedControls.buttons["System"].tap()
+    }
+
+    @MainActor
     func testTheBarOpensEachTab() {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs"]

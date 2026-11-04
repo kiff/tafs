@@ -67,7 +67,6 @@ struct SetupChatView: View {
                 if model.setupTaf == nil || !model.planqueReady {
                     intro
                 } else {
-                    coachBar
                     // Beside the chat, the plan is in the panel.
                     if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
                     thread
@@ -89,8 +88,14 @@ struct SetupChatView: View {
         })
         // Coach mode's own wash (kiff/tafs#138): never a taf's chat.
         .background(Theme.coachWash.ignoresSafeArea())
-        .navigationTitle("Coach mode")
+        .navigationTitle("Coach")
         .inlineTitle()
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Button(action: newConversation) { Image(systemName: "square.and.pencil") }.accessibilityLabel("New conversation")
+                Menu { Button("Previous conversations") { showingChats = true } } label: { Image(systemName: "ellipsis") }.accessibilityLabel("Coach's conversations")
+            }
+        }
         .setupChrome(wide: sizeClass == .regular)
         .sheet(item: $reporting) { ReportAnswerSheet(answer: $0).environmentObject(model) }
         .sheet(isPresented: $showingChats) {
@@ -112,41 +117,11 @@ struct SetupChatView: View {
         }
     }
 
-    /// Coach mode's top, always there (kiff/tafs#138): a new conversation, and the previous
-    /// ones. A new one is on no taf, and offers the taf on screen (item 36).
-    private var coachBar: some View {
-        HStack(spacing: 10) {
-            // Never a dead tap, as in other chat apps: an empty conversation is kept and shown
-            // from its top; any other gives way to a new one.
-            Button {
-                Haptics.tap()
-                pinned = nil
-                if model.coachChatIsEmpty {
-                    toTop += 1
-                } else {
-                    landed = true
-                    following = true
-                    model.newCoachConversation()
-                }
-                typing = true
-            } label: {
-                Label("New conversation", systemImage: "plus")
-                    .scaledFont(14, weight: .semibold)
-                    .foregroundColor(Theme.onFill)
-                    .padding(.horizontal, 12).padding(.vertical, 8)
-                    .background(Theme.coach)
-                    .clipShape(Capsule())
-            }
-            Button { showingChats = true } label: {
-                Text("Previous conversations")
-                    .scaledFont(14, weight: .semibold)
-                    .foregroundColor(Theme.coach)
-                    .padding(.horizontal, 12).padding(.vertical, 8)
-                    .overlay(Capsule().stroke(Theme.coach.opacity(0.4)))
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 16).padding(.vertical, 8)
+    private func newConversation() {
+        Haptics.tap(); pinned = nil
+        if model.coachChatIsEmpty { toTop += 1 }
+        else { landed = true; following = true; model.newCoachConversation() }
+        typing = true
     }
 
     private var intro: some View {
@@ -596,15 +571,14 @@ struct SetupChatView: View {
         let held = model.holdsSend(key, thinking: thinking)
         return VStack(spacing: 0) {
         FileTray(key: key)
-        HStack(alignment: .bottom, spacing: 10) {
-            if model.filesTarget(key) != nil { AttachButton(key: key) }
+        VStack(alignment: .leading, spacing: 4) {
             ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $model.setupDraft, cursor: { model.dictation.cursor = $0 })
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(Theme.panel)
-                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            HStack(alignment: .center, spacing: 10) {
+                if model.filesTarget(key) != nil { AttachButton(key: key) }
+                Spacer()
             // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
             MicButton(dictation: model.dictation, text: $model.setupDraft)
             if thinking && empty {
@@ -635,6 +609,10 @@ struct SetupChatView: View {
                 .accessibilityLabel(held && uploading ? "Send once the files are up" : thinking ? "Send when this answer is done" : "Send")
             }
         }
+            }.padding(.horizontal, 8).padding(.bottom, 8)
+        .background(Theme.panel)
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 12).padding(.vertical, 10)
         }
         .barBackground()

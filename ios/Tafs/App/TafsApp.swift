@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct TafsApp: App {
+    @AppStorage(ThemePreference.key) private var theme = ThemePreference.system.rawValue
     @StateObject private var model = AppModel(store: SampleStore(), remembered: .standard)
     @UIApplicationDelegateAdaptor(PushDelegate.self) private var push
     @Environment(\.scenePhase) private var scenePhase
@@ -12,6 +13,7 @@ struct TafsApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .preferredColorScheme(ThemePreference(rawValue: theme)?.scheme)
                 // The screenshots' narrow iPad window (kiff/tafs#210): Slide Over's width.
                 .modifier(NarrowForScreenshots())
                 .environmentObject(model)
@@ -144,13 +146,12 @@ struct RootView: View {
         .background { if model.signedIn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
-        // A wide screen: a panel beside what's open. A phone: a sheet, with Close, that a drag
-        // down closes too; either way the conversation stays for ✦ to reopen.
-        .overlay { if coachAvailable && sizeClass == .regular { CoachPanel() } }
-        // The whole screen on an iPhone, nothing of the screen behind showing (kiff/tafs#206 6.10).
-        .fullCover(isPresented: Binding(get: { coachAvailable && sizeClass != .regular && model.coachOpen },
-                                        set: { model.coachOpen = $0 })) {
-            CoachView().environmentObject(model)
+        // Both sizes keep the underlying taf and tab mounted while Coach opens.
+        .overlay {
+            if coachAvailable {
+                if sizeClass == .regular { CoachPanel() }
+                else { PhoneCoachPanel() }
+            }
         }
         .onOpenURL { url in
             if url.host == "needs-you" { tab = .needsYou }

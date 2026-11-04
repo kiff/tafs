@@ -21,17 +21,10 @@ struct NotificationSettingsView: View {
             // Alerts come from tafs cloud, which a signed-in account has.
             if model.mode == .kiff {
                 Section {
-                    HStack {
-                        Text("Alerts on this \(ThisDevice.kind)")
-                        Spacer()
-                        Text(model.alertsReady == true ? "On" : "Off").foregroundColor(Theme.soft)
-                    }
-                    if model.alertsReady != true, model.sessionHasKey, model.canAnswerHolds != false {
-                        Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
-                            Task { await model.turnOnAlerts() }
-                        }
-                        .disabled(model.turningOnAlerts)
-                    }
+                    Toggle("Alerts on this \(ThisDevice.kind)", isOn: Binding(
+                        get: { model.phoneAlerts?.enabled ?? (model.alertsReady == true) },
+                        set: { enabled in Task { if enabled { await model.turnOnAlerts() } else { await model.turnOffAlerts() } } }))
+                        .disabled(model.phoneAlertsBusy || model.turningOnAlerts)
                     Toggle(isOn: Binding(get: { model.alertSound }, set: { model.alertSound = $0 })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Sound")
@@ -44,19 +37,15 @@ struct NotificationSettingsView: View {
                          : "When a taf needs you, this \(ThisDevice.kind) tells you even with tafs closed. Nothing is sent until you approve.")
                 }
                 Section("What alerts you") {
-                    level("A taf needs you", sound: true)
-                    level("Every taf halted", sound: true)
-                    NavigationLink {
-                        AlertingTafsView()
-                    } label: {
-                        HStack {
-                            level("A taf answered someone", sound: false)
-                            Spacer()
-                            let n = model.cloudTafs.values.filter(\.alertsPhones).count
-                            Text(n == 1 ? "1 taf" : "\(n) tafs").foregroundColor(Theme.soft)
-                        }
+                    ForEach(model.phoneAlerts?.kinds ?? []) { choice in
+                        Toggle(isOn: Binding(get: { choice.enabled }, set: { enabled in Task { await model.setAlertKind(choice.id, enabled: enabled) } })) {
+                            VStack(alignment: .leading) { Text(choice.title); Text(choice.words).scaledFont(13).foregroundColor(Theme.dim) }
+                        }.disabled(model.phoneAlertsBusy || model.phoneAlerts?.enabled != true)
                     }
-                    level("A reply wasn't sent", sound: false)
+                    if let answering = model.phoneAlerts?.answering {
+                        NavigationLink { AlertingTafsView() } label: { Text(answering.title) }
+                    }
+                    if let error = model.phoneAlertsError { Text(error).foregroundColor(Theme.no) }
                 }
             }
             Section {
@@ -68,6 +57,7 @@ struct NotificationSettingsView: View {
         .scrollContentBackground(.hidden)
         .screenBackground()
         .navigationTitle(Self.title)
+        .task { await model.loadPhoneAlerts() }
     }
 
     /// One kind of alert, with how it arrives: with sound, always, or silent.
@@ -114,13 +104,14 @@ private struct AlertingTafsView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        let tafs = model.tafs.filter { model.cloudTaf(for: $0.id)?.alertsPhones == true }
+        let tafs = model.phoneAlerts?.answering.tafs ?? []
         List {
             Section {
                 ForEach(tafs) { taf in
-                    NavigationLink { ResultsGoToView(tafID: taf.id) } label: {
+                    NavigationLink {
+                        if let id = model.tafs.first(where: { model.cloudTaf(for: $0.id)?.id == taf.id })?.id { ResultsGoToView(tafID: id) }
+                    } label: {
                         HStack(spacing: 10) {
-                            TafAvatar(taf: taf, size: 28)
                             Text(taf.name).foregroundColor(Theme.ink)
                         }
                     }

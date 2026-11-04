@@ -80,6 +80,23 @@ final class TafsCloud {
     var token: String?
     private let session: URLSession
 
+    /// Keeps the server's representation validator; 304 leaves cached pages intact.
+    func representation(_ path: String, etag: String? = nil, headers: [String: String] = [:]) async throws -> (Data?, String?) {
+        guard let url = URL(string: path, relativeTo: baseURL), let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(etag, forHTTPHeaderField: "If-None-Match")
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
+        let (data, response) = try await session.data(for: request)
+        let http = response as? HTTPURLResponse
+        let status = http?.statusCode ?? 0
+        let tag = http?.value(forHTTPHeaderField: "ETag") ?? etag
+        if status == 304 { return (nil, tag) }
+        guard (200..<300).contains(status) else { throw Self.refusal(status, data) }
+        return (data, tag)
+    }
+
     static let defaultURL = URL(string: "https://cloud.tafs.kiff.dev")!
     /// Straight to the function, in eu-west-1: a run streams for minutes, longer than a CDN waits between bytes.
     static let defaultStreamURL = URL(string: "https://ghjfunc5ppretjo22bl5izlnya0zrocm.lambda-url.eu-west-1.on.aws")!
@@ -240,12 +257,14 @@ final class TafsCloud {
         var trial: OpenTrial? = nil
         /// Its doors, for its avatar's rim; absent when it has none.
         var doors: [DoorLight]? = nil
+        var avatarRim: AvatarRim? = nil
         /// Where its results go that tafs cloud delivers (`door_reply`, `app`, `owner_email`), live:
         /// what Results go to's switches show.
         var results: [JSONValue]? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results
+            case avatarRim = "avatar_rim"
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
         }
 
@@ -1167,9 +1186,9 @@ final class TafsCloud {
     }
 
     /// What the taf remembers, newest first.
-    func memory(_ id: String) async throws -> [Note] {
+    func memory(_ id: String, all: Bool = false) async throws -> [Note] {
         struct Response: Decodable { let notes: [Note] }
-        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/memory")
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/memory" + (all ? "?all=true" : ""))
         return r.notes
     }
 
@@ -1365,18 +1384,19 @@ final class TafsCloud {
     /// This phone gets the account's alerts at `deviceToken`. With `target`, also hands over
     /// the KIFF target's signing secret, which checks KIFF's deliveries. `sound` false: this
     /// phone's alerts arrive quietly, with no sound or banner.
-    func registerPush(deviceToken: String, environment: String, sound: Bool = true, target: KIFFClient.AlertTarget? = nil) async throws -> PushStatus {
+    func registerPush(deviceToken: String, environment: String, sound: Bool = true, target: KIFFClient.AlertTarget? = nil, kinds: [String: Bool]? = nil) async throws -> PushStatus {
         struct Target: Encodable {
             let id: String, signingSecret: String
             enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
         }
         struct Body: Encodable {
             let deviceToken: String, environment: String, sound: Bool, alertTarget: Target?
-            enum CodingKeys: String, CodingKey { case environment, sound, deviceToken = "device_token", alertTarget = "alert_target" }
+            let kinds: [String: Bool]?
+            enum CodingKeys: String, CodingKey { case environment, sound, kinds, deviceToken = "device_token", alertTarget = "alert_target" }
         }
         return try await send("POST", "/v1/push", body: Body(
             deviceToken: deviceToken, environment: environment, sound: sound,
-            alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }))
+            alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }, kinds: kinds))
     }
 
     /// Whether tafs cloud holds KIFF's alert secret for the account (kiff/tafs#206).
