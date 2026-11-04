@@ -222,8 +222,8 @@ final class PlanqueClient {
     /// The approve body: the grant's digest, and for a grant with a profile, the digests of
     /// that profile and of KIFF's words for it. The device signs the body, so
     /// its signature covers both.
-    struct ApproveBody: Encodable, Equatable {
-        struct KIFFProfile: Encodable, Equatable {
+    struct ApproveBody: Codable, Equatable {
+        struct KIFFProfile: Codable, Equatable {
             let profileSHA256: String
             let wordsSHA256: String
             enum CodingKeys: String, CodingKey { case profileSHA256 = "profile_sha256", wordsSHA256 = "words_sha256" }
@@ -270,6 +270,12 @@ final class PlanqueClient {
     /// Approves `grant` as shown, with KIFF's words for its profile when it has one.
     func approve(_ grant: Grant, words: ProfileWords? = nil) async throws -> Approved {
         try await send("POST", "grants/\(escaped(grant.id))/approve", body: try Self.approveBody(grant, words: words))
+    }
+
+    /// Approves `grantID` with the body tafs cloud built for it (kiff/tafs#413): sent as it is,
+    /// signed by this device. The phone checks nothing of it; tafs cloud read the grant and decided.
+    func approve(grantID: String, body: ApproveBody) async throws -> Approved {
+        try await send("POST", "grants/\(escaped(grantID))/approve", body: body)
     }
 
     /// Confirms the vendor sign-in with the code it handed back to the app. Only the phone

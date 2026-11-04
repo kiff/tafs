@@ -57,6 +57,9 @@ import bot.tafs.app.kiff.PushStatus
 import bot.tafs.app.push.NoPush
 import bot.tafs.app.push.PushPlatform
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import bot.tafs.app.kiff.ShownComponent
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.kiff.Door
@@ -3210,20 +3213,145 @@ class AppModel(
     scope.launch { reconnect(grant) }
   }
 
+  /**
+   * Approve on a Coach card (kiff/tafs#413): tafs cloud decides. The phone sends that Approve was tapped, with what the card
+   * showed; tafs cloud reads planque's grant (as this phone) and KIFF's draft and says what needs signing, if anything. With
+   * nothing to sign it answers Coach itself (already approved, or failed with why), and the card shows its note. Otherwise the
+   * phone signs exactly the message it's given, under the fingerprint, makes the one call it names as given (planque's approve
+   * and the vendor's sign-in, or KIFF's draft confirm), and reports what came of it, signed as a setup call. tafs cloud checks
+   * the report with KIFF and the service before Coach hears "approved". The phone never builds an approval's answer.
+   */
   suspend fun approveCoach(c: SetupComponent, shownDigest: String?, shownDraft: String?) {
     val grantId = c.grant ?: return
-    when (val result = connect(c.id, grantId, shownDigest, c.draft, shownDraft)) {
-      is Connected.Done -> answerCard("approval", c.id, "approved")
-      is Connected.AlreadyApproved -> {
-        note(c.id, CoachWords.ALREADY_APPROVED)
-        answerCard("approval", c.id, "already approved: ${result.grant.vendor} is connected and its Card is confirmed")
-      }
-      is Connected.Failed -> {
-        note(c.id, result.why)
-        answerCard("approval", c.id, "failed: " + result.told)
-      }
-      Connected.Stopped -> Unit
+    val tenant = kiffTenant
+    val cloudId = _state.value.coachCloudId
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || cloudId == null || !_state.value.planqueReady) {
+      note(c.id, CoachWords.NOT_SET_UP_HERE)
+      return
     }
+    if (_state.value.approvalKeyLost) { note(c.id, KiffClient.APPROVAL_KEY_LOST); return }
+    if (_state.value.connecting != null) { note(c.id, CoachWords.ANOTHER_APPROVAL); return }
+    _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - c.id) }
+    val generation = accountGeneration
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    val sign: (ByteArray) -> String = { signer.signConfirmed(it) }
+    kiff.tenant = tenant
+    val shown = _state.value.coachComponents.lastOrNull { it.id == c.id && it.answer == null } ?: _state.value.coachComponents.lastOrNull { it.id == c.id }
+    val session = shown?.session?.ifEmpty { null } ?: _state.value.coachChat
+    val key = shown?.ref ?: CoachWords.cardKey(session, c.id)
+    try {
+      // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
+      val proof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
+      val words = _state.value.profileWords[grantId]
+      val ask = kotlinx.serialization.json.buildJsonObject {
+        put("grant", grantId)
+        shownDigest?.let { put("shown_digest", it) }
+        c.draft?.let { put("draft", it) }
+        shownDraft?.let { put("shown_draft", it) }
+        words?.let { put("words", it.approval()) }
+        session?.let { put("session", it) }
+      }
+      val decision = cloud.approval(cloudId, c.id, ask, proof)
+      if (generation != accountGeneration) return
+      when (decision.outcome) {
+        "answered" -> { note(c.id, decision.note); coachAnswered(cloudId, key, decision.session, decision.run) }
+        "read_again" -> { note(c.id, decision.note ?: VersionWords.OUT_OF_DATE_CARD); readApprovals() }
+        "sign" -> {
+          val asked = decision.ask ?: return
+          // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
+          // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
+          if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return }
+          try {
+            // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
+            if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
+          } catch (e: SignerException) {
+            note(c.id, notSigned(e, "Not done: it wasn't confirmed."))
+            return
+          }
+          if (generation != accountGeneration) return
+          planque.signer = sign
+          kiff.setupSigner = sign
+          val report = kotlinx.serialization.json.buildJsonObject {
+            when (val came = makeAskedCall(asked)) {
+              is Came.Of -> { put("result", came.result); came.status?.let { put("status", it) }; came.why?.let { put("why", it) } }
+            }
+            session?.let { put("session", it) }
+          }
+          if (generation != accountGeneration) return
+          refreshConnections()
+          val outcome = cloud.approvalReport(cloudId, c.id, asked.id, report, proof, tenant, sign)
+          if (generation != accountGeneration) return
+          note(c.id, outcome.note)
+          coachAnswered(cloudId, key, outcome.session, outcome.run)
+        }
+        else -> note(c.id, "Setup answered something this app doesn't read. Update the app.")
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return
+      note(c.id, "Your answer didn't reach Setup. ${ErrorWords.of(e)}")
+      readThread(COACH_CHAT)
+    } finally {
+      planque.signer = null
+      kiff.setupSigner = null
+      if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+    }
+  }
+
+  /** What came of the call tafs cloud asked for, as the report says it: never an answer, only what happened. */
+  private sealed interface Came {
+    data class Of(val result: String, val status: String? = null, val why: String? = null) : Came
+  }
+
+  /** Makes the one call tafs cloud asked for, as given, and says what came of it. */
+  private suspend fun makeAskedCall(asked: bot.tafs.app.kiff.ApprovalAsk): Came = try {
+    when (asked.step) {
+      "cards" -> {
+        val k = asked.kiff ?: return Came.Of("failed", why = "tafs cloud named no draft to confirm")
+        kiff.confirmDraft(k.draft, k.version)
+        Came.Of("confirmed")
+      }
+      else -> {
+        val p = asked.planque ?: return Came.Of("failed", why = "tafs cloud named no connection to approve")
+        val approved = planque.approveAsAsked(p.grant, p.body)
+        val url = approved.signInUrl
+        if (url == null) {
+          // planque already holds the sign-in: approving connected it, with no second sign-in.
+          if (approved.status == "connected" || approved.status == "listed") Came.Of(approved.status) else Came.Of("not_connected", status = approved.status)
+        } else {
+          val back = vendorSignIn.signIn(url)
+          val signedIn = PlanqueClient.signedIn(back)
+          if (signedIn == null || signedIn.grant != p.grant || signedIn.tenant != planque.tenant) Came.Of("no_code")
+          else {
+            // Back from the vendor: connected only once planque says so, never because the page closed.
+            _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
+            val connected = planque.confirm(p.grant, signedIn.code)
+            if (connected.connected || connected.listed) Came.Of("connected") else Came.Of("failed", why = "the sign-in came back, but the connection is ${connected.status}")
+          }
+        }
+      }
+    }
+  } catch (e: VendorSignInCancelled) {
+    Came.Of("sign_in_closed")
+  } catch (e: CancellationException) {
+    throw e
+  } catch (e: Exception) {
+    Came.Of("failed", why = e.message ?: "it didn't go through")
+  }
+
+  /**
+   * Coach heard the card's answer from tafs cloud: the card shows it's answered until the thread's words for it come, and
+   * the run that paused on it is followed to its end, which reads the thread again.
+   */
+  private suspend fun coachAnswered(cloudId: String, key: String, session: String?, run: String?) {
+    _state.update { it.copy(cardsTaken = it.cardsTaken + key) }
+    session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
+    _state.update { it.copy(chatAwaiting = it.chatAwaiting + (COACH_CHAT to clock()), chatEnded = it.chatEnded - COACH_CHAT) }
+    readThread(COACH_CHAT)
+    run?.let { resumeChat(COACH_CHAT, cloudId, it, again = true) } ?: followChat(COACH_CHAT)
   }
 
   /**
@@ -5471,6 +5599,29 @@ class AppModel(
   }
 
   companion object {
+    /**
+     * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and the
+     * digest the person was shown for the connect step; the card's draft and the version the person was shown for the Cards
+     * step. Null for an ask that names another grant, draft, digest or version, or a step this app doesn't know, and when
+     * nothing was shown: the phone signs nothing it can't rebuild itself from what the person read.
+     */
+    fun expectedApprovalMessage(asked: bot.tafs.app.kiff.ApprovalAsk, c: SetupComponent, tenant: String, shownDigest: String?, shownDraft: String?): String? {
+      return when (asked.step) {
+        "connect" -> {
+          val p = asked.planque ?: return null
+          val digest = runCatching { p.body.jsonObject["digest"]?.jsonPrimitive?.content }.getOrNull() ?: return null
+          // The digest is what the person saw, never the ask's: terms they never read are never signed.
+          if (p.grant != c.grant || shownDigest == null || digest != shownDigest) null else "tafs.connect.v1|$tenant|${c.grant}|$digest"
+        }
+        "cards" -> {
+          val k = asked.kiff ?: return null
+          val draft = c.draft ?: return null
+          if (k.draft != draft || shownDraft == null || k.version != shownDraft) null else "tafs.cards.v1|$tenant|$draft|${k.version}"
+        }
+        else -> null
+      }
+    }
+
     /** How often a thread is read again while a run is at work in it, and how many times at most. */
     const val CHAT_POLL_MS = 2_500L
     const val CHAT_POLL_BUDGET = 150

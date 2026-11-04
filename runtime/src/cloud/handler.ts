@@ -32,6 +32,7 @@ import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { CARD_UNIT_NOTICE, cardUnitExceptions } from "./card-unit.js";
+import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as settleApproval } from "./approval.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -80,7 +81,9 @@ import { CARD_UNIT_NOTICE, cardUnitExceptions } from "./card-unit.js";
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
  *   POST /v1/tafs/{id}/components/{component}/answer  {answer, session?}: the person's answer to a card that waits for it, as data
- *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
+ *   POST /v1/tafs/{id}/components/{component}/approval  {grant, shown_digest?, draft?, shown_draft?, words?, session?}: Approve tapped on an approval card; tafs cloud decides what needs signing, if anything, and answers Coach itself when nothing does (kiff/tafs#413)
+ *   POST /v1/tafs/{id}/components/{component}/approval/{ask}  {result, status?, why?}: what came of the signed call, signed as a setup call (KIFF-Device-Signature); tafs cloud checks it and answers Coach approved or failed
+ *   GET  /v1/tafs/{id}/versions        the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
  *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?, agent?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
  *   POST /v1/tafs/{id}/versions/{n}/switch  {redraft?, stop_blocking?}: begin the switch to version n, with the Card draft it waits for: nothing of the taf runs until it ends. A run in the way is a 409 naming it (blocking); stop_blocking stops it first (kiff/tafs#206)
  *   DELETE /v1/tafs/{id}/switching      drop a switch whose Card isn't confirmed yet
@@ -800,6 +803,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 6 && method === "POST" && action === "components" && parts[5] === "answer") {
     return answerRoute(event, me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 6 && method === "POST" && action === "components" && parts[5] === "approval") {
+    return approvalAskRoute(event, me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 7 && method === "POST" && action === "components" && parts[5] === "approval") {
+    return approvalReportRoute(event, me, taf, parts[4] ?? "", parts[6] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     return message(event, me, taf, deps);
@@ -2243,6 +2252,80 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no card of yours by that id");
     throw agentsFailure(err);
   }
+}
+
+/** An approval's decision and report (kiff/tafs#413) need the ask store, planque and the phone's read proof. */
+function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): import("./approval.js").DecideContext {
+  if (!deps.coach) throw new HTTPError(503, "approvals aren't set up here");
+  if (!deps.planqueBase) throw new HTTPError(503, "Connect apps isn't set up here");
+  if (!component || !/^[A-Za-z0-9_.:-]{1,128}$/.test(component)) throw new HTTPError(404, "no card of yours by that id");
+  return {
+    tenant: me.tenantID, taf: taf.id, component, token: bearer(event), proof: event.headers?.["planque-device-signature"] ?? "",
+    store: deps.coach, planqueBase: deps.planqueBase, kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, now: deps.now?.() ?? new Date(),
+    newID: () => `ask_${randomBytes(9).toString("hex")}`,
+  };
+}
+
+/** Coach hears an approval's outcome from tafs cloud, as the person's answer to the card. */
+async function tellCoach(me: KIFFIdentity, taf: Taf, card: { session: string; run: string }, component: string, answer: string, deps: Deps) {
+  try {
+    const run = await deps.agents.answerCard(me.tenantID, taf.id, card.run, component, answer, member(me));
+    return { session: card.session, run: run.id, status: run.status };
+  } catch (err) {
+    if (refused(err, "card_not_waiting")) throw new HTTPError(409, "the card doesn't wait for an answer any more: read the conversation");
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
+    if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no card of yours by that id");
+    throw agentsFailure(err);
+  }
+}
+
+/**
+ * POST /v1/tafs/{id}/components/{component}/approval: the person tapped Approve on an
+ * approval card (kiff/tafs#413). tafs cloud reads the grant and the draft and says what
+ * needs signing, if anything; with nothing to sign it answers Coach itself. The phone
+ * signs only what it's asked, and never builds an answer.
+ */
+async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
+  const body = parseBody(event);
+  const ask = askOrRefuse(() => askOf(body));
+  const ctx = approvalContext(event, me, taf, component, deps);
+  const card = await shownCard(me, taf, component, "approval", str(body.session).trim(), deps);
+  if (!card) throw new HTTPError(404, "no card of yours by that id");
+  const decision = await decideApproval(ask, ctx).catch(approvalFailure);
+  if (decision.outcome === "answered") {
+    const told = await tellCoach(me, taf, card, component, decision.answer, deps);
+    return { outcome: "answered", answer: decision.answer, note: decision.note, ...told };
+  }
+  return decision;
+}
+
+/**
+ * POST /v1/tafs/{id}/components/{component}/approval/{ask}: what came of the call the phone
+ * made with the signature tafs cloud asked for. The report is signed as a setup call; KIFF says
+ * whether this phone signed it, and planque or KIFF says what holds. Then Coach hears
+ * approved, or failed with why.
+ */
+async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, askID: string, deps: Deps): Promise<unknown> {
+  const body = parseBody(event);
+  const report = askOrRefuse(() => reportOf(body));
+  const ctx = approvalContext(event, me, taf, component, deps);
+  const card = await shownCard(me, taf, component, "approval", str(body.session).trim(), deps);
+  if (!card) throw new HTTPError(404, "no card of yours by that id");
+  const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
+  const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
+  const outcome = await settleApproval(askID, report, { ...ctx, signed }).catch(approvalFailure);
+  const told = await tellCoach(me, taf, card, component, outcome.answer, deps);
+  return { outcome: "answered", answer: outcome.answer, ...(outcome.note ? { note: outcome.note } : {}), ...told };
+}
+
+function askOrRefuse<T>(read: () => T): T {
+  try { return read(); } catch (err) { return approvalFailure(err); }
+}
+
+function approvalFailure(err: unknown): never {
+  if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message);
+  if (err instanceof KIFFError) throw new HTTPError(err.status === 401 ? 401 : 502, err.message);
+  throw err;
 }
 
 /**

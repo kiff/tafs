@@ -28,6 +28,7 @@ class TafsCloud(
   private val transport: Transport,
   val baseUrl: String = DEFAULT_URL,
   var token: String? = null,
+  private val signingTime: SigningTime = SigningTime(),
 ) {
   /**
    * The home list: the account's tafs, its other agents with Cards, and the removals still to finish,
@@ -228,6 +229,33 @@ class TafsCloud(
       session?.let { put("session", it) }
     }
     return KiffClient.json.decodeFromString(String(sendJson("POST", "/v1/tafs/${escaped(id)}/components/${escaped(component)}/answer", body)))
+  }
+
+  /**
+   * Approve tapped on an approval card (kiff/tafs#413): tafs cloud reads planque's grant, as this phone (the signed read
+   * [proof], forwarded), and KIFF's draft, and decides. `answered`: it told Coach itself, and [ApprovalDecision.note] is for
+   * the card. `read_again`: the card is out of date; nothing was told. `sign`: one message for the device's key and the call
+   * it goes into, exactly as the phone must make it.
+   */
+  suspend fun approval(id: String, component: String, body: kotlinx.serialization.json.JsonObject, proof: String?): ApprovalDecision =
+    KiffClient.json.decodeFromString(
+      String(send("POST", "/v1/tafs/${escaped(id)}/components/${escaped(component)}/approval", KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), body).toByteArray(),
+        proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())),
+    )
+
+  /**
+   * What came of the call made with the signature tafs cloud asked for, signed as a setup call to KIFF (`kiff.request.v1`
+   * over this request, in `KIFF-Device-Signature`): KIFF tells tafs cloud this phone signed it, and planque or KIFF what
+   * holds. tafs cloud answers Coach, and says what it answered.
+   */
+  suspend fun approvalReport(id: String, component: String, ask: String, body: kotlinx.serialization.json.JsonObject, proof: String?, tenant: String, sign: (ByteArray) -> String): ApprovalDecision {
+    val path = "/v1/tafs/${escaped(id)}/components/${escaped(component)}/approval/${escaped(ask)}"
+    val payload = KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), body).toByteArray()
+    val signedAt = signingTime.next()
+    val signature = sign(KiffClient.requestMessage(tenant, "POST", path, payload, signedAt))
+    val headers = linkedMapOf("KIFF-Device-Signature" to "t=$signedAt,v1=$signature")
+    proof?.let { headers["Planque-Device-Signature"] = it }
+    return KiffClient.json.decodeFromString(String(send("POST", path, payload, headers)))
   }
 
   /**
@@ -624,10 +652,11 @@ class TafsCloud(
     return response
   }
 
-  internal suspend fun send(method: String, path: String, body: ByteArray? = null): ByteArray {
+  internal suspend fun send(method: String, path: String, body: ByteArray? = null, extra: Map<String, String> = emptyMap()): ByteArray {
     val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
     val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer")
     if (body != null) headers["Content-Type"] = "application/json"
+    headers.putAll(extra)
     val response = transport.send(HttpRequest(method, baseUrl + path, headers, body))
     if (response.status !in 200..299) {
       throw CloudError(response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}", blockingRuns(response.body), field(response.body, "words"))

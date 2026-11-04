@@ -229,6 +229,13 @@ class PlanqueClient(
   }
 
   /**
+   * Approves [grantId] with the body tafs cloud built for it (kiff/tafs#413): sent as it is, signed by the device. The phone
+   * checks nothing of it; tafs cloud read the grant and decided.
+   */
+  suspend fun approveAsAsked(grantId: String, body: kotlinx.serialization.json.JsonElement): Approved =
+    decode(raw("POST", "grants/${escaped(grantId)}/approve", KiffClient.json.encodeToString(kotlinx.serialization.json.JsonElement.serializer(), body).toByteArray()))
+
+  /**
    * Gives an API-key connection its key, as shown, with the same checks as approving: the body carries the digest the owner
    * approved, the key's SHA-256 and `kiff_profile` when it has one, and is signed; the key itself goes once, in
    * `Planque-Vendor-Key`, to planque, which keeps it. Neither the phone nor tafs cloud keeps it.

@@ -649,10 +649,6 @@ class PlanqueTest {
 
   private val answerRoute = "POST /v1/tafs/setup_1/components/a1/answer"
 
-  /** The answer the phone gave Coach's card, as data through tafs cloud's route: never a message in the chat. */
-  private fun told(): String =
-    KiffClient.json.parseToJsonElement(String(transport.requestsTo(answerRoute).last().body!!)).jsonObject.getValue("answer").jsonPrimitive.content
-
   @Test fun readingCoachsThreadReadsWhatItsApprovalsNeed() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
@@ -662,62 +658,220 @@ class PlanqueTest {
     assertTrue(m.state.value.planqueReady)
   }
 
-  @Test fun anApprovalThatWentThroughIsToldToCoachAsApproved() = runTest {
+  private val askRoute = "POST /v1/tafs/setup_1/components/a1/approval"
+  private val reportRoute = "POST /v1/tafs/setup_1/components/a1/approval/ask_1"
+
+  /** tafs cloud asks for one signature: the connection, with the approve body as it built it (its words, not the phone's). */
+  private fun signConnect(profile: String = "") = """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g1|$digest","reason":"Connect Stripe to Refunds",""" +
+    """"planque":{"grant":"g1","body":{"digest":"$digest"$profile}}}}"""
+
+  private fun bodyOf(request: bot.tafs.app.kiff.HttpRequest) = KiffClient.json.parseToJsonElement(String(request.body!!)).jsonObject
+
+  @Test fun approveAsksTafsCloudSignsOnlyWhatItNamesAndReportsBackSigned() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
-    transport.answer(approve, 200, """{"status":"connected"}""")
-    val m = model()
+    val profile = ""","kiff_profile":{"profile_sha256":"${"ab".repeat(32)}","words_sha256":"${"cd".repeat(32)}"}"""
+    transport.answer(askRoute, 200, signConnect(profile))
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
     coachWithCard(m)
-    transport.answer(answerRoute, 200, """{"session":"s1","run":"r1","status":"running"}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
     m.approveCoach(approvalComponent(), digest, null)
-    assertEquals("approved", told())
-    assertTrue(transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
+    // tafs cloud was asked first, as this phone: what the card showed, and the read proof for planque.
+    val ask = transport.requestsTo(askRoute).single()
+    assertEquals("g1", bodyOf(ask).getValue("grant").jsonPrimitive.content)
+    assertEquals(digest, bodyOf(ask).getValue("shown_digest").jsonPrimitive.content)
+    assertTrue(ask.headers.getValue("Planque-Device-Signature").startsWith("t="))
+    // One prompt, in tafs cloud's words; planque gets the body tafs cloud built, as it is, kiff_profile included.
+    assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
+    val sent = bodyOf(transport.requestsTo(approve).single())
+    assertEquals(digest, sent.getValue("digest").jsonPrimitive.content)
+    assertEquals("ab".repeat(32), sent.getValue("kiff_profile").jsonObject.getValue("profile_sha256").jsonPrimitive.content)
+    assertEquals("c0de", bodyOf(transport.requestsTo(confirm).single()).getValue("confirm").jsonPrimitive.content)
+    // The report: what came of it, signed as a setup call by this phone's key over exactly this request. Never an answer.
+    val report = transport.requestsTo(reportRoute).single()
+    assertEquals("connected", bodyOf(report).getValue("result").jsonPrimitive.content)
+    assertNull(bodyOf(report)["answer"])
+    val parts = report.headers.getValue("KIFF-Device-Signature").split(",")
+    val message = KiffClient.requestMessage("t_01", "POST", "/v1/tafs/setup_1/components/a1/approval/ask_1", report.body!!, parts[0].removePrefix("t="))
+    assertTrue(verifies(signer.publicKeyDER, message, parts[1].removePrefix("v1=")))
+    assertTrue("the phone never answers the card itself", transport.requestsTo(answerRoute).isEmpty())
+    assertNull(m.state.value.coachNotes["a1"])
+    assertNull("the signer a confirmed step set is gone", m.state.value.connecting)
   }
 
-  @Test fun anApprovalThatFailedIsToldToCoachWithWhyAndOneNotConfirmedIsNotTold() = runTest {
-    reads()
-    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
-    transport.answer(approve, 409, """{"error":"already approved"}""")
-    val m = model()
-    coachWithCard(m)
-    transport.answer(answerRoute, 200, """{"session":"s1","run":"r1","status":"running"}""")
-    m.approveCoach(approvalComponent(), digest, null)
-    // Coach hears the server's reason, so it can say what went wrong; the owner reads the app's words.
-    assertEquals("failed: Not connected: already approved", told())
-    assertEquals("Not connected. " + bot.tafs.app.model.ErrorWords.CHANGED, m.state.value.coachNotes["a1"])
-    auth.confirms = false
-    val before = transport.requestsTo(answerRoute).size
-    m.approveCoach(approvalComponent(), digest, null)
-    assertEquals("nothing told: the owner didn't confirm", before, transport.requestsTo(answerRoute).size)
-  }
-
-  @Test fun anApprovalOfAConnectionAlreadyConnectedSignsNothingAndIsNeverToldApproved() = runTest {
+  @Test fun whatTafsCloudAnsweredItselfIsOnlyShownAndNothingIsSigned() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    transport.answer(askRoute, 200, """{"outcome":"answered","answer":"already approved: Stripe is connected and its Card is confirmed","note":"Already approved","session":"s1","run":"r1"}""")
     val m = model()
     coachWithCard(m)
-    transport.answer(answerRoute, 200, """{"session":"s1","run":"r1","status":"running"}""")
-    m.approveCoach(approvalComponent(), digest, null)
-    // Nothing was signed, so nothing was approved: Coach hears why, never "approved", and planque is asked nothing.
+    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
     assertTrue(auth.asked.isEmpty())
     assertTrue(transport.requestsTo(approve).isEmpty())
-    assertEquals("failed: mcp.stripe.com is already connected; nothing new to approve", told())
-    assertEquals(bot.tafs.app.model.CoachWords.nothingToApprove("mcp.stripe.com"), m.state.value.coachNotes["a1"])
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").isEmpty())
+    assertTrue(transport.requestsTo(answerRoute).isEmpty())
+    // The card's line is tafs cloud's, as sent.
+    assertEquals("Already approved", m.state.value.coachNotes["a1"])
+    assertEquals("dr_1", bodyOf(transport.requestsTo(askRoute).single()).getValue("draft").jsonPrimitive.content)
+    assertEquals("v3", bodyOf(transport.requestsTo(askRoute).single()).getValue("shown_draft").jsonPrimitive.content)
   }
 
-  @Test fun aCardConfirmedEarlierIsToldToCoachAsAlreadyApprovedNeverFailedNorApproved() = runTest {
+  @Test fun aFailureTafsCloudDecidedIsShownInItsWords() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
-    transport.answer("GET /v1/me/agent-drafts/dr_1", 200, draft.replace("\"draft\"", "\"confirmed\""))
+    transport.answer(askRoute, 200, """{"outcome":"answered","answer":"failed: mcp.stripe.com is already connected; nothing new to approve","note":"Nothing new to approve.","session":"s1","run":"r1"}""")
     val m = model()
     coachWithCard(m)
-    transport.answer(answerRoute, 200, """{"session":"s1","run":"r1","status":"running"}""")
-    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
-    // Approved before, with its own signature: nothing is signed again, and Coach hears it as that.
+    m.approveCoach(approvalComponent(), digest, null)
     assertTrue(auth.asked.isEmpty())
-    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").isEmpty())
-    assertEquals("already approved: mcp.stripe.com is connected and its Card is confirmed", told())
-    assertEquals(bot.tafs.app.model.CoachWords.ALREADY_APPROVED, m.state.value.coachNotes["a1"])
+    assertEquals("Nothing new to approve.", m.state.value.coachNotes["a1"])
+    assertTrue(transport.requestsTo(answerRoute).isEmpty())
+  }
+
+  @Test fun anOutOfDateCardIsReadAgainAndNothingIsSignedOrTold() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, """{"outcome":"read_again","note":"What you're asked to approve changed since it was shown. Read it again, then approve."}""")
+    val m = model()
+    coachWithCard(m)
+    val before = transport.requestsTo(grants).size
+    m.approveCoach(approvalComponent(), "old", null)
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertTrue(transport.requestsTo(answerRoute).isEmpty())
+    assertEquals("What you're asked to approve changed since it was shown. Read it again, then approve.", m.state.value.coachNotes["a1"])
+    assertTrue("the grants are read again", transport.requestsTo(grants).size > before)
+  }
+
+  @Test fun aSignatureNotConfirmedReportsNothing() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    val m = model()
+    coachWithCard(m)
+    auth.confirms = false
+    m.approveCoach(approvalComponent(), digest, null)
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertTrue(transport.requestsTo(reportRoute).isEmpty())
+    assertTrue(transport.requestsTo(answerRoute).isEmpty())
+    assertEquals("Not done: it wasn't confirmed.", m.state.value.coachNotes["a1"])
+    assertNull(m.state.value.connecting)
+  }
+
+  @Test fun aClosedSignInIsReportedAsThatAndTheCardShowsTafsCloudsNote() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"failed: The sign-in was closed. Nothing was connected.","note":"The sign-in was closed. Nothing was connected.","session":"s1","run":"r1"}""")
+    val m = model(FakeSignIn(back = null))
+    coachWithCard(m)
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals("sign_in_closed", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+    assertEquals("The sign-in was closed. Nothing was connected.", m.state.value.coachNotes["a1"])
+    assertTrue(transport.requestsTo(answerRoute).isEmpty())
+  }
+
+  @Test fun planqueRefusingTheApproveIsReportedWithItsReasonNeverDecidedHere() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    transport.answer(approve, 409, """{"error":"already approved"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"failed: Not connected: already approved","note":"Not connected: already approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent(), digest, null)
+    val report = bodyOf(transport.requestsTo(reportRoute).single())
+    assertEquals("failed", report.getValue("result").jsonPrimitive.content)
+    assertTrue(report.getValue("why").jsonPrimitive.content.contains("already approved"))
+    assertEquals("Not connected: already approved", m.state.value.coachNotes["a1"])
+  }
+
+  @Test fun theCardsStepConfirmsKiffsDraftExactlyAsAsked() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    transport.answer(askRoute, 200, """{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|dr_1|v3","reason":"Give refunds-1 its Card","kiff":{"draft":"dr_1","version":"v3"}}}""")
+    transport.answer("POST /v1/me/agent-drafts/dr_1/confirm", 200, draft.replace("\"draft\"", "\"confirmed\""))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+    assertEquals(listOf("Give refunds-1 its Card"), auth.asked)
+    val confirmed = transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").single()
+    assertEquals("v3", bodyOf(confirmed).getValue("version").jsonPrimitive.content)
+    assertTrue(confirmed.headers.containsKey("KIFF-Device-Signature"))
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals("confirmed", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+    assertTrue(transport.requestsTo(answerRoute).isEmpty())
+  }
+
+  @Test fun aMessageThatIsntThisCardsIsRefusedBeforeAnyPrompt() = runTest {
+    // tafs cloud names the message; the phone rebuilds it from what it holds and refuses any other: another grant, another
+    // account, another draft, or a message of another kind behind a plausible prompt.
+    val asks = listOf(
+      """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g2|$digest","reason":"Connect Stripe to Refunds","planque":{"grant":"g2","body":{"digest":"$digest"}}}}""",
+      """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_02|g1|$digest","reason":"Connect Stripe to Refunds","planque":{"grant":"g1","body":{"digest":"$digest"}}}}""",
+      """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.resume.v1|t_01|g1|$digest","reason":"Connect Stripe to Refunds","planque":{"grant":"g1","body":{"digest":"$digest"}}}}""",
+      // The body and the message agree on a digest, but not the one the person was shown.
+      """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g1|${"0".repeat(64)}","reason":"Connect Stripe to Refunds","planque":{"grant":"g1","body":{"digest":"${"0".repeat(64)}"}}}}""",
+      """{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|dr_9|v3","reason":"Give refunds-1 its Card","kiff":{"draft":"dr_9","version":"v3"}}}""",
+      """{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|dr_1|v3","reason":"Give refunds-1 its Card","kiff":{"draft":"dr_1","version":"v3"}}}""",
+    )
+    // A Cards ask at a version other than the one shown (v3), on a card that names the draft.
+    val otherVersion = """{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|dr_1|v4","reason":"Give refunds-1 its Card","kiff":{"draft":"dr_1","version":"v4"}}}"""
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    transport.answer(askRoute, 200, otherVersion)
+    model().also { coachWithCard(it); it.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3") }.let { m ->
+      assertTrue(auth.asked.isEmpty())
+      assertTrue(transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").isEmpty())
+      assertTrue(transport.requestsTo(reportRoute).isEmpty())
+      assertEquals(bot.tafs.app.model.CoachWords.ASK_NOT_THIS_CARDS, m.state.value.coachNotes["a1"])
+    }
+    for (ask in asks) {
+      reads()
+      transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+      transport.answer(askRoute, 200, ask)
+      val m = model()
+      coachWithCard(m)
+      // The last ask is a Cards step for a card that names no draft.
+      m.approveCoach(approvalComponent(), digest, null)
+      assertTrue(ask, auth.asked.isEmpty())
+      assertTrue(ask, transport.requestsTo(approve).isEmpty())
+      assertTrue(ask, transport.requestsTo("POST /v1/me/agent-drafts/dr_9/confirm").isEmpty())
+      assertTrue(ask, transport.requestsTo(reportRoute).isEmpty())
+      assertEquals(bot.tafs.app.model.CoachWords.ASK_NOT_THIS_CARDS, m.state.value.coachNotes["a1"])
+      assertNull(m.state.value.connecting)
+    }
+  }
+
+  @Test fun theExpectedMessageIsRebuiltFromTheCardAndTheAccount() {
+    val connect = bot.tafs.app.kiff.ApprovalAsk("ask_1", "connect", "x", "r", planque = bot.tafs.app.kiff.PlanqueAsk("g1", KiffClient.json.parseToJsonElement("""{"digest":"d1"}""")))
+    assertEquals("tafs.connect.v1|t_01|g1|d1", AppModel.expectedApprovalMessage(connect, approvalComponent(), "t_01", "d1", null))
+    // The digest is the one shown, never the ask's; nothing shown, nothing signed.
+    assertNull(AppModel.expectedApprovalMessage(connect, approvalComponent(), "t_01", "d2", null))
+    assertNull(AppModel.expectedApprovalMessage(connect, approvalComponent(), "t_01", null, null))
+    val cards = bot.tafs.app.kiff.ApprovalAsk("ask_1", "cards", "x", "r", kiff = bot.tafs.app.kiff.KiffAsk("dr_1", "v3"))
+    assertEquals("tafs.cards.v1|t_01|dr_1|v3", AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01", null, "v3"))
+    assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01", null, "v2"))
+    assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01", null, null))
+    assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent(), "t_01", null, "v3"))
+    assertNull(AppModel.expectedApprovalMessage(connect.copy(step = "resume"), approvalComponent(), "t_01", "d1", null))
+  }
+
+  @Test fun tafsCloudUnreachableLeavesTheCardWithAWordAndNothingSigned() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 503, """{"error":"Connect this phone to read its connected apps"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent(), digest, null)
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(m.state.value.coachNotes["a1"]!!.startsWith("Your answer didn't reach Setup."))
+    assertNull(m.state.value.connecting)
   }
 
   private fun approvalComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard)

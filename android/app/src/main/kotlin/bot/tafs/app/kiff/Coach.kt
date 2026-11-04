@@ -143,6 +143,44 @@ data class Reported(val report: AnswerReport)
 @Serializable
 data class CardAnswered(val session: String? = null, val run: String? = null, val status: String? = null)
 
+/**
+ * tafs cloud's decision on an approval card (kiff/tafs#413). [outcome] is `answered` (Coach heard [answer] from tafs cloud;
+ * [note] is the card's line), `read_again` (the card is out of date: [note] says so; nothing was told) or `sign` ([ask]: the
+ * one message to sign and the call it goes into).
+ */
+@Serializable
+data class ApprovalDecision(
+  val outcome: String,
+  val answer: String? = null,
+  val note: String? = null,
+  val ask: ApprovalAsk? = null,
+  val session: String? = null,
+  val run: String? = null,
+  val status: String? = null,
+)
+
+/** One message for the device's key, and the call it goes into: planque's approve body, or KIFF's draft to confirm. */
+@Serializable
+data class ApprovalAsk(
+  val id: String,
+  /** `connect` or `cards`. */
+  val step: String,
+  /** The exact bytes the device's key signs, under the fingerprint. */
+  val message: String,
+  /** What the prompt says. */
+  val reason: String,
+  val planque: PlanqueAsk? = null,
+  val kiff: KiffAsk? = null,
+)
+
+/** planque's approve, its body as tafs cloud built it: the phone sends it as it is. */
+@Serializable
+data class PlanqueAsk(val grant: String, val body: JsonElement)
+
+/** KIFF's draft to confirm, at exactly this version. */
+@Serializable
+data class KiffAsk(val draft: String, val version: String)
+
 @Serializable
 data class ResultOutcome(@SerialName("taf_id") val tafId: String? = null, val version: Int? = null, val failed: String? = null)
 
