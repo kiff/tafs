@@ -156,6 +156,20 @@ class SetupTabTest {
     rule.onAllNodesWithText("2 · List your disputes").assertCountEquals(0)
   }
 
+  @Test fun anAppsSheetSaysAskCoachOnceWhenThereIsNoSavedWorkflow() {
+    // As tafs cloud sends it: the line once, on the first action, and empty after.
+    val noWorkflow = KiffClient.json.decodeFromString<TafSetup>(
+      """{"connections":[{"id":"g1","name":"Stripe","status":"connected","action_words":"2 actions",
+          "actions":[{"name":"list_disputes","title":"List your disputes","step_words":"Ask Coach to set its workflow"},
+                     {"name":"read_dispute","title":"Read a dispute","step_words":""}]}]}""",
+    )
+    show(knob(twoOn), setup = noWorkflow)
+    rule.onNode(hasContentDescription("Stripe. 2 actions")).performScrollTo().performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("Read a dispute").performScrollTo().assertIsDisplayed()
+    rule.onAllNodesWithText("Ask Coach to set its workflow").assertCountEquals(1)
+  }
+
   @Test fun tafsOwnPlacesShowTheLiveTafsNeverAWaitingDrafts() {
     // Live: Reply only. A draft waiting to go live has Alert our phones on too. Turning Email on sends Reply and Email, not the
     // draft's choice.
