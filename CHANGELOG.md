@@ -28,7 +28,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
-- **Docs:** `docs/taf-screen.md`, the app's screens for the person using them (the bar, a taf's four tabs, Setup › Starts when and Results go to, Account › Alerts, dark), replaces `docs/dial.md`. The README shows the v23 screens from CI on iPhone, iPad and Android.
+- **Docs:** `docs/taf-screen.md`, the app's screens for the person using them (the bar, a taf's four tabs, Setup › Starts when and Results go to, Account › Alerts, dark), replaces `docs/dial.md`. The README shows the v24 screens from CI on iPhone and iPad (light and dark, with Account's theme), and Android's from the UI tests.
 
 - **Docs:** `docs/connect-apps.md`, Connect apps for the person running tafs; `docs/dial.md` covers app events' approval, ⏻ off for a taf that works from its chat, and labels cut with "…".
 
