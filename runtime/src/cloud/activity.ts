@@ -2,6 +2,9 @@ import { createHash } from "node:crypto";
 import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 import { dayIn } from "./knob.js";
 import { timeIn } from "./work.js";
+import { connectionRefusalWords } from "./refusal.js";
+import { CARD_UNIT_NOTICE, cardUnitExceptions, collapsedCurrencyDecision, type CardUnitException } from "./card-unit.js";
+import type { Held } from "./home.js";
 
 export const ACTIVITY_FILTERS = [
   { id: "all", title: "All" }, { id: "done", title: "Done" },
@@ -17,7 +20,8 @@ export class ActivityError extends Error {
 export interface ActivityCall {
   proposal_id: string; actor_id?: string | null; action_name: string; title?: string | null;
   outcome: string; created_at: string; held?: boolean;
-  tool_outcome?: { status: string; message?: string | null } | null;
+  tool_outcome?: { status: string; message?: string | null; refused_by?: string; code?: string } | null;
+  detail?: string;
   amount?: { value: string; unit?: string | null } | null;
   read_only?: boolean; entity_id?: string; on_hash?: string; on_arg?: string;
   answer?: unknown; receipt?: unknown; reasons?: string[]; made_at?: string; reason?: string;
@@ -31,7 +35,9 @@ export interface ActivityEntry {
 
 export interface ActivityPage {
   entries: ActivityEntry[]; groups: Array<{ id: string; title: string; entries: ActivityEntry[] }>;
-  filters: typeof ACTIVITY_FILTERS; filter: ActivityFilter; next_cursor?: string; revision: string;
+  filters: typeof ACTIVITY_FILTERS; filter: ActivityFilter; next_cursor?: string; revision: string; end_words?: string;
+  card_unit_exceptions: CardUnitException[];
+  card_unit_exceptions_notice?: string;
 }
 
 interface Cursor { scope: string; offset: number; revision: string; day?: string }
@@ -78,8 +84,10 @@ export function amountWords(amount: ActivityCall["amount"]): string | undefined 
 
 export function activityEntry(c: ActivityCall, zone: string, now: Date): ActivityEntry {
   const kind = kindOf(c);
+  const connection = connectionRefusalWords(c.tool_outcome);
   const details = { done: "Done, within its Card", approved: "Approved, then done", held: "Waiting for you",
-    refused: c.reason ? `Not sent · ${c.reason}` : "Not sent", not_done: c.tool_outcome?.status === "refused_by_tool" ? "The app refused it" : "Nothing reached the app",
+    refused: c.reason ? `Not sent · ${c.reason}` : "Not sent", not_done: connection
+      ? c.detail || connection : c.tool_outcome?.status === "refused_by_tool" ? "The app refused it" : "Nothing reached the app",
     sending: "Sent; waiting for the app's answer", unknown: "The app's answer wasn't recorded; check its records" };
   const raw = hash(c.proposal_id).slice(0, 32);
   const id = `${raw.slice(0, 8)}-${raw.slice(8, 12)}-5${raw.slice(13, 16)}-8${raw.slice(17, 20)}-${raw.slice(20)}`;
@@ -90,7 +98,7 @@ export function activityEntry(c: ActivityCall, zone: string, now: Date): Activit
 }
 
 /** Bounded source scanning: a cursor advances even through a page with no matching outcomes. */
-export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; agent: string; zone: string; now: Date; query: URLSearchParams }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
+export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
   const filter = input.query.get("filter") ?? "all";
   if (!ACTIVITY_FILTERS.some((f) => f.id === filter)) throw new ActivityError(400, "filter is all, done, held or refused");
   const take = Number(input.query.get("limit") ?? 20);
@@ -101,6 +109,10 @@ export async function activityPage(input: { token: string; tenant: string; subje
   if (from && !Number.isFinite(Date.parse(from))) throw new ActivityError(400, "from is an ISO date");
   const scope = hash([input.tenant, input.subject, input.taf, filter, tools, from]);
   const cursor = cursorOf(input.query.get("cursor"), scope);
+  let unitExceptions = (input.unitExceptions ?? []).filter((e) => e.subject === input.agent && e.kind === "card_unit" && e.status === "held");
+  let exceptionRows: CardUnitException[] = [], notice = input.unitExceptionsNotice;
+  try { exceptionRows = cardUnitExceptions({ id: input.taf, name: input.tafName ?? "This taf", kiffAgent: input.agent }, unitExceptions, [], input.zone, input.now); }
+  catch { unitExceptions = []; notice = CARD_UNIT_NOTICE; }
   const read = async (offset: number, limit: number) => {
     const q = new URLSearchParams({ actor: input.agent, limit: String(limit), offset: String(offset) });
     const res = await net(`${base}/v1/me/activity?${q}`, { headers: { authorization: `Bearer ${input.token}`, accept: "application/json" } });
@@ -120,7 +132,8 @@ export async function activityPage(input: { token: string; tenant: string; subje
     if (!source.calls.length) { more = false; break; }
     for (const call of source.calls) {
       offset++;
-      if (call.actor_id === input.agent && (!tools.length || tools.includes(call.action_name)) && (!from || Date.parse(call.created_at) >= Date.parse(from)) && activityMatches(call, filter as ActivityFilter)) entries.push(activityEntry(call, input.zone, input.now));
+      if (call.actor_id === input.agent && (!tools.length || tools.includes(call.action_name)) && (!from || Date.parse(call.created_at) >= Date.parse(from)) && activityMatches(call, filter as ActivityFilter)
+        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now));
       if (entries.length === take) break;
     }
     more = offset < source.shown && !(from && source.calls.some((c) => Date.parse(c.created_at) < Date.parse(from)) && entries.length < take);
@@ -131,6 +144,7 @@ export async function activityPage(input: { token: string; tenant: string; subje
     if (!group) { group = { id: entry.day, title: entry.day === cursor?.day ? "" : entry.day_title, entries: [] }; groups.push(group); }
     group.entries.push(entry);
   }
-  return { entries, groups, filters: ACTIVITY_FILTERS, filter: filter as ActivityFilter, revision,
-    ...(more ? { next_cursor: Buffer.from(JSON.stringify({ scope, offset, revision, day: entries.at(-1)?.day ?? cursor?.day })).toString("base64url") } : {}) };
+  return { entries, groups, filters: ACTIVITY_FILTERS, filter: filter as ActivityFilter, revision, card_unit_exceptions: exceptionRows,
+    ...(notice ? { card_unit_exceptions_notice: notice } : {}),
+    ...(more ? { next_cursor: Buffer.from(JSON.stringify({ scope, offset, revision, day: entries.at(-1)?.day ?? cursor?.day })).toString("base64url") } : { end_words: "Nothing older in this view" }) };
 }

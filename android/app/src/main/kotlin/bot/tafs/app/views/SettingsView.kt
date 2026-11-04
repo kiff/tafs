@@ -94,7 +94,7 @@ fun SettingsSheet(
   var zonePicker by remember { mutableStateOf(false) }
   var zoneQuery by remember { mutableStateOf("") }
   var answeringTafs by remember { mutableStateOf(false) }
-  val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "–" }
+  val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { versionWords(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName) } }.getOrNull() ?: "–" }
   LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) onLoadAlerts() }
   if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
 
@@ -171,8 +171,8 @@ fun SettingsSheet(
           Section("About") { Value("Version", version); Text("They taf. You kiff.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           if (state.canDeleteAccount) Section("Delete account") { Action("Delete account…", Theme.no, onDeleteAccount) }
           Section("Account actions") {
-            if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink) { confirming = SignOut.SwitchAccount }
-            Action(if (state.mode == Mode.kiff) "Sign out of KIFF" else "Clear the sample", Theme.no) {
+            // One account per phone: another account is signing out, then signing in with it.
+            Action(if (state.mode == Mode.kiff) "Sign out" else "Clear the sample", Theme.no) {
               if (state.mode == Mode.kiff) confirming = SignOut.SignOut else scope.launch { if (onSignOut()) onClose() }
             }
             state.signOutError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
@@ -199,7 +199,6 @@ fun SettingsSheet(
     scope.launch { when (way) {
       SignOut.SignOut -> if (onSignOut()) onClose()
       SignOut.SignInAgain -> if (onSignInAgain()) onClose()
-      SignOut.SwitchAccount -> if (onSignOut()) onSignIn()
     } }
   } }
 }
@@ -216,7 +215,6 @@ private fun AccountSwitch(title: String, words: String, checked: Boolean, enable
 enum class SignOut(val title: String, val text: String, val confirm: String) {
   SignOut("Sign out of KIFF?", "This phone stops working for your account until you sign in again. Your tafs keep working.", "Sign out"),
   SignInAgain("Sign in again?", "This phone signs out of KIFF first, then you sign in again in your browser.", "Sign out and sign in"),
-  SwitchAccount("Switch account?", "This phone signs out of KIFF first, then you pick the account to sign in to.", "Sign out and switch"),
 }
 
 /** Asks before this phone signs out of KIFF, so a stray tap never ends the session. Cancel leaves everything as it is. */
@@ -292,3 +290,6 @@ private fun Action(label: String, color: Color, onClick: () -> Unit) {
   )
   HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))
 }
+
+/** The build, as Account shows it: "25 (1.0)", the build number and then the version. */
+internal fun versionWords(build: Long, version: String?): String = "$build (${version ?: "–"})"

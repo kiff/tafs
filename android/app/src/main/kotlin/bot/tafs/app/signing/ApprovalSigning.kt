@@ -97,6 +97,16 @@ interface SigningKeys {
 }
 
 /** Asks the person at the phone to confirm: fingerprint, face or the screen lock. */
+/**
+ * A confirmation that didn't come back in time, the system's prompt most likely never having opened: it was cancelled, so nothing
+ * was confirmed, and trying again may do. Android can't tell whether its prompt is on screen, so the wait itself is bounded.
+ */
+class PromptNotOpened : SignerException(WORDS) {
+  companion object {
+    const val WORDS = "The fingerprint check didn't open. Try again."
+  }
+}
+
 interface Authenticator {
   /** Whether this phone has something to ask with. */
   val canAuthenticate: Boolean

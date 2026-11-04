@@ -86,9 +86,39 @@ is told it's done, and Restore purchases sends again what wasn't.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
-**Signing out asks first.** Sign out of KIFF, Sign in again and Switch account in Settings, and
-Sign in again on the line shown when the phone can't approve, each open a confirmation
-(`ConfirmSignOut`), so one stray tap never ends the session.
+**A Card asked to take another currency** (KIFF's `card_unit` exception, as tafs cloud draws it in
+`card_unit_exceptions`): one panel (`CardUnitExceptionPanel`) with tafs cloud's title, words and
+history, in Needs you (and its count), at the top of the taf's Setup, and above its Activity, where
+the Activity page's rows win over Home's. It is never a held call and never offers Approve once.
+Its Coach button opens a new conversation on the taf with tafs cloud's proposal written in, not
+sent (`discussCardUnit`); Dismiss reads KIFF's exception again and, only while it's still that
+taf's open request, signs KIFF's ordinary refusal against its current version (`dismissCardUnit`). A
+dismissed one leaves at once, from Home, Setup and Activity's cached pages, and a page or Setup read
+already on its way doesn't bring it back, whether it lands as a page, a 304, a failure or a cancel
+(`dismissedCardUnits`). Activity draws the newest page's requests, and its notice when KIFF's
+couldn't be read (`card_unit_exceptions_notice`).
+
+**Alerts after signing out.** Signing out turns this phone's alerts off and remembers whether
+they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers
+this phone again, with no new confirmation, while the account's alerts still reach tafs cloud;
+otherwise the app says once that they're off, with **Turn on**. Another account doesn't get them.
+
+**Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
+didn't go through says why there, and the screen never calls a connection by its service's name.
+Resume's confirmation is bounded: unanswered after 10 seconds, the fingerprint check is
+cancelled, the prompt with it, so a late answer sends nothing, and the screen says "The fingerprint
+check didn't open. Try again." (`RESUME_CONFIRM_MS`). Android can't tell whether its prompt is on
+screen, so the wait itself is what's bounded, and only for Resume.
+
+**One account per phone, and signing out asks first.** Account ends with **Sign out**: another
+account is signing out, then signing in with it. Sign out, and Sign in again on the line shown
+when the phone can't approve, each open a confirmation (`ConfirmSignOut`), so one stray tap
+never ends the session. Account › About › Version names the build, e.g. "25 (1.0)"
+(`versionWords`).
+
+The status and navigation bars follow the app's own Light/Dark/System choice from the first
+frame (`enableEdgeToEdge` with the saved choice in `MainActivity`), and `TafsTheme` keeps their
+icons dark on the light ground and light on the dark one when the choice changes.
 
 ## The packages of `bot.tafs.app`
 
@@ -163,7 +193,10 @@ its count. Coach is a filled button (ink, with the ground's colour as its label)
 someone KIFF lets use Coach, so the bar has four places otherwise. In landscape and on tablets
 the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
 `MainActivity`). Home's header keeps the account's name, and in the sample a new taf; Settings
-and Coach are no longer there.
+and Coach are no longer there. Coach from a taf's page is that taf's conversation: the one
+already open about it, else a new one about it; from anywhere else, the conversation open as
+it was (`AppModel.openCoachOn`). Leaving a conversation stops following it on this phone (work it
+accepted goes on at tafs cloud), and a read of it that lands later doesn't replace the one shown.
 
 **Record** filters by taf too: All tafs, then a chip per taf with its colour, combined with the
 kind filter. Each entry starts with its taf's colour and name, and each day says what its money
@@ -294,7 +327,13 @@ which waits until there's a Compose hierarchy to read before reading it.
 `ThemePreference` and `TafsTheme` apply the saved Light/Dark/System choice.
 `SettingsSheet` exposes source-defined phone alerts and time zones. Alert
 choices are saved for this device and account and sent on registration; Off
-unregisters this phone. Time zone changes keep the existing signed KIFF flow.
+unregisters this phone. Time zone changes keep the existing signed KIFF flow; once KIFF
+has the new zone, `AppModel.applyAccountTimeZone` asks tafs cloud to move the schedules
+(`POST /v1/account/time-zone`), then drops the pages and Setups read in the old zone and reads
+home and each dial again; a page, Setup, dial or work read begun in the old zone is dropped when
+it lands. A 503 shows tafs cloud's words, and choosing again retries it. The Card tab names the
+clock its times are in, in tafs cloud's words (`time_zone_words`), and, while a schedule still
+runs in another zone, what to do about it (`schedule_time_zone_words`).
 Its sheets open at full height, so the back key closes them. Signing in from the
 sample, or switching account, closes what the last account had open (`accountShown`).
 
@@ -302,6 +341,9 @@ sample, or switching account, closes what the last account had open (`accountSho
 `AppModel` cache pages and first-page ETags per taf, filter and app selection.
 The cloud defines outcomes, display names, limits, step mappings and counts.
 `TafPresentationViews` draws the ring, app sheets, Workflow, memory summary,
-Activity and recent runs. `AvatarDoorRim` animates source metadata and respects
+Activity and recent runs. A list asks for its next page whenever it is at its end with a cursor
+and no load running, including when it got there while its first page was refreshing. Under the
+last page it shows tafs cloud's `end_words` ("Nothing older in this view").
+`AvatarDoorRim` animates source metadata and respects
 disabled system animations. Coach overlays the mounted taf so its tab survives.
 The API contracts and recent-run history bound are in [api.md](api.md).

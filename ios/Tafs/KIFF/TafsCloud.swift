@@ -49,10 +49,15 @@ final class TafsCloud {
         var unscheduled: Bool?
         /// Where its results go that tafs cloud delivers: `door_reply`, `app`, `owner_email`.
         var results: [JSONValue]?
+        var timeZoneWords: String? = nil
+        var scheduleTimeZone: String? = nil
+        var scheduleTimeZoneWords: String? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, unscheduled, results
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
+            case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
+            case scheduleTimeZoneWords = "schedule_time_zone_words"
         }
 
         var worksFromChat: Bool { unscheduled == true }
@@ -258,6 +263,9 @@ final class TafsCloud {
         /// Its doors, for its avatar's rim; absent when it has none.
         var doors: [DoorLight]? = nil
         var avatarRim: AvatarRim? = nil
+        var timeZoneWords: String? = nil
+        var scheduleTimeZone: String? = nil
+        var scheduleTimeZoneWords: String? = nil
         /// Where its results go that tafs cloud delivers (`door_reply`, `app`, `owner_email`), live:
         /// what Results go to's switches show.
         var results: [JSONValue]? = nil
@@ -265,6 +273,8 @@ final class TafsCloud {
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results
             case avatarRim = "avatar_rim"
+            case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
+            case scheduleTimeZoneWords = "schedule_time_zone_words"
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
         }
 
@@ -273,7 +283,7 @@ final class TafsCloud {
             // With unscheduled, or the taf page offers Run now and Pause a taf that works from
             // its chat can't take (kiff/tafs#206 section 2).
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
-                              unscheduled: unscheduled, results: results) }
+                              unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords) }
         }
     }
 
@@ -285,8 +295,12 @@ final class TafsCloud {
         let removing: [PendingRemoval]
         /// The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors.
         var doorsOffered: [String]? = nil
+        var cardUnitExceptions: [CardUnitException]? = nil
 
-        enum CodingKeys: String, CodingKey { case tafs, others, removing, doorsOffered = "doors_offered" }
+        enum CodingKeys: String, CodingKey {
+            case tafs, others, removing, doorsOffered = "doors_offered"
+            case cardUnitExceptions = "card_unit_exceptions"
+        }
     }
 
     func home() async throws -> Home {

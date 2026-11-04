@@ -473,6 +473,7 @@ export class Agents {
     return { versions: r.versions, ...(r.switching ? { switching: r.switching } : {}) };
   }
 
+
   /**
    * Begins the switch to version n, waiting for `draft`'s confirmation: from
    * then on nothing of the agent runs (kiff/agents#137). 409 while a run of it

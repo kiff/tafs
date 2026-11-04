@@ -274,6 +274,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A tool that changes data but moves no money is limited by its calls, each day");
     expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
     expect(flat).toContain("named from that operation's fields as the vendor's own docs give them, never one you make up");
+    // An operation about money without an amount field gets none made up (kiff/tafs#464, item 12).
+    expect(flat).toContain("The operation's fields say whether it moves money, not what it is about: one about money that takes no amount field (contesting a claim on a payment, reminding a customer of an invoice) moves no money here. It has no amount argument, and its Card limits its calls a day.");
     // The owner's own limit is the limit (item 44).
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // The schedule is decided before the result, with the owner's case as the example (item 43).

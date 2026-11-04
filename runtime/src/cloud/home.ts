@@ -171,6 +171,9 @@ export interface Mandate {
 /** A held call, as much as the list reads: whose it is. */
 export interface Held {
   subject: string;
+  id?: string; kind?: string; action?: string; title?: string; status?: string; count?: number; proposal_id?: string;
+  created_at?: string; last_at?: string; accounting_version?: number;
+  breaches?: Array<{ outcome?: string; unit?: string; card_unit?: string }>;
 }
 
 /** The colours the app has for tafs (`Theme.tafColors`). */
@@ -187,9 +190,15 @@ async function read<T>(path: string, token: string, doFetch: Fetch, base: string
 export async function readKIFF(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<{ mandates: Mandate[]; held: Held[] }> {
   const [m, e] = await Promise.all([
     read<{ mandates?: Mandate[] }>("/v1/me/mandates?include=use", token, doFetch, base),
-    read<{ exceptions?: Held[] }>("/v1/me/card-exceptions?status=held", token, doFetch, base),
+    readExceptions(token, doFetch, base),
   ]);
-  return { mandates: m.mandates ?? [], held: e.exceptions ?? [] };
+  return { mandates: m.mandates ?? [], held: e };
+}
+
+export async function readExceptions(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Held[]> {
+  const result = await read<{ exceptions?: Held[] }>("/v1/me/card-exceptions?status=held", token, doFetch, base, "the waiting calls");
+  if (!Array.isArray(result.exceptions)) throw new KIFFError(502, "KIFF's waiting calls could not be read");
+  return result.exceptions;
 }
 
 /** What the person may do with an agent, as KIFF answers it. */

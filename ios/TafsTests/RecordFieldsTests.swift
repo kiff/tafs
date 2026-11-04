@@ -6,6 +6,15 @@ import XCTest
 /// answer and the receipt, from the shapes agreed there.
 @MainActor
 final class RecordFieldsTests: XCTestCase {
+    func testAConnectionRefusalKeepsKiffsWordsAndTheOriginalCountingStatus() throws {
+        let raw = #"{"proposal_id":"p-example","action_name":"answer_case","actor_id":"agent-example","outcome":"allowed","held":false,"created_at":"2026-11-04T12:00:00Z","tool_outcome":{"status":"refused_by_tool","refused_by":"connection","code":"halt_unknown"},"detail":"The connection could not check the halt. Nothing was sent. It still counts toward today's limits."}"#
+        let call = try KIFFClient.decoder.decode(KIFFClient.ActivityCall.self, from: Data(raw.utf8))
+        let result = try XCTUnwrap(KIFFMapping.record([call], ids: ["agent-example": UUID()], vendors: ["answer_case": "Example app"]).first)
+        XCTAssertEqual(result.detail, call.detail)
+        XCTAssertEqual(result.refusedBy, "The connection")
+        XCTAssertTrue(result.refusedByTool == true, "KIFF's status and counting interpretation stay intact")
+        XCTAssertEqual(call.toolOutcome?.status, "refused_by_tool")
+    }
     static let calls = #"""
     {"calls":[
     {"proposal_id":"p_a","action_name":"stripe_create_refund","title":"Refund a payment","actor_id":"agt_r","outcome":"allowed","held":false,

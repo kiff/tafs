@@ -106,6 +106,12 @@ data class HomeTaf(
   @SerialName("kiff_agent") val kiffAgent: String,
   /** Where its results go: `door_reply`, `app`, `owner_email` (an action place isn't listed here). */
   val results: List<String> = emptyList(),
+  /** The account's clock its times are in, in tafs cloud's words ("Times in Europe/Paris"), and the zone its schedule runs in. */
+  @SerialName("time_zone") val timeZone: String? = null,
+  @SerialName("time_zone_words") val timeZoneWords: String? = null,
+  @SerialName("schedule_time_zone") val scheduleTimeZone: String? = null,
+  /** Only while its recurring schedule still runs in another zone: what to do about it, in tafs cloud's words. */
+  @SerialName("schedule_time_zone_words") val scheduleTimeZoneWords: String? = null,
   val status: String? = null,
   @SerialName("next_run") @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
   @SerialName("last_run") @Serializable(with = InstantAsString::class) val lastRun: Instant? = null,
@@ -130,6 +136,8 @@ data class Home(
   val removing: List<PendingRemoval> = emptyList(),
   /** The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors. */
   @SerialName("doors_offered") val doorsOffered: List<String>? = null,
+  /** Cards asked to take a currency they have no limit for, for the tafs this person sees: Needs you draws them. */
+  @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
 )
 
 // MARK: tafs cloud's chat
@@ -261,6 +269,8 @@ data class CardException(
   @SerialName("proposal_id") val proposalId: String? = null,
   /** KIFF's answer to whether approving once can pass this call (kiff/tafs#138); absent from an older response. */
   @SerialName("can_approve_once") val canApproveOnce: Boolean? = null,
+  /** What kind of exception: a held call, or `card_unit`, a currency its Card has no limit for, which tafs cloud draws itself. */
+  val kind: String? = null,
 )
 
 @Serializable
@@ -270,7 +280,14 @@ data class CardExceptions(val exceptions: List<CardException> = emptyList())
 
 /** How the call ended at the tool: done, refused_by_tool, not_sent, sending, unknown or not_recorded. */
 @Serializable
-data class ToolOutcome(val status: String, val message: String? = null)
+data class ToolOutcome(
+  val status: String,
+  val message: String? = null,
+  /** Who refused a call KIFF allowed, as KIFF types it: `connection` for the connection, before anything was sent. */
+  @SerialName("refused_by") val refusedBy: String? = null,
+  /** The connection's machine code for why; the words come from [ActivityCall.detail]. */
+  val code: String? = null,
+)
 
 /** The money a call moves, as a decimal string and its unit ("150.00", "EUR"). A gateway call's integer amount has no unit. */
 @Serializable
@@ -297,6 +314,8 @@ data class ActivityCall(
   val reasons: List<String>? = null,
   @SerialName("made_at") @Serializable(with = InstantAsString::class) val madeAt: Instant? = null,
   val reason: String? = null,
+  /** KIFF's words for what happened to the call, when it gives them (a connection's refusal). */
+  val detail: String? = null,
 )
 
 @Serializable

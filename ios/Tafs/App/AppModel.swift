@@ -19,6 +19,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var tafSetupErrors: [UUID: String] = [:]
     @Published private(set) var activityPages: [String: SourcePages<TafsCloud.ActivityPage>] = [:]
     @Published private(set) var runPages: [String: SourcePages<TafsCloud.RunsPage>] = [:]
+    @Published private(set) var cardUnitExceptions: [TafsCloud.CardUnitException] = []
+    @Published private(set) var dismissingCardUnits: Set<String> = []
+    private var presentationGeneration = 0
 
     private var alertsEnabledKey: String { "alerts.enabled|\(kiffTenant ?? "")" }
     private var alertKindsKey: String { "alerts.kinds|\(kiffTenant ?? "")" }
@@ -71,34 +74,39 @@ final class AppModel: ObservableObject {
     }
     func loadTafSetup(_ id: UUID) async {
         guard let taf = cloudTaf(for: id) else { return }
-        let gen = accountGeneration
+        let gen = accountGeneration, presentation = presentationGeneration
         do {
             let signer = self.signer
             planque.tenant = kiffTenant
             let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
             let view = try await cloud.setupView(taf.id, proof: proof)
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             tafSetups[id] = view; tafSetupErrors[id] = nil
-        } catch { if gen == accountGeneration { tafSetupErrors[id] = error.localizedDescription } }
+        } catch { if gen == accountGeneration, presentation == presentationGeneration { tafSetupErrors[id] = error.localizedDescription } }
     }
     func activityKey(_ id: UUID, _ filter: String, _ selection: String = "") -> String { "\(id):\(filter):\(selection)" }
     func loadActivityPage(_ id: UUID, filter: String, more: Bool = false, selection: String = "") async {
         guard let taf = cloudTaf(for: id) else { return }
         let key = activityKey(id, filter, selection)
         var cache = activityPages[key] ?? SourcePages()
-        guard !cache.loading else { return }
+        guard !cache.loading else {
+            if more { cache.moreWhenReady = true; activityPages[key] = cache }
+            return
+        }
         let cursor = more ? cache.pages.last?.next_cursor : nil
         if more && cursor == nil { return }
-        let gen = accountGeneration
-        cache.loading = true; cache.error = nil; activityPages[key] = cache
+        let gen = accountGeneration, presentation = presentationGeneration
+        cache.loading = true; cache.moreWhenReady = false; cache.error = nil; activityPages[key] = cache
         do {
             let (page, tag) = try await cloud.activityPage(taf.id, filter: filter, cursor: cursor, etag: more ? nil : cache.etag, selection: selection)
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             if let page { cache.pages = more ? cache.pages + [page] : [page] }
             if !more { cache.etag = tag }
-            cache.loading = false; activityPages[key] = cache
+            let follow = activityPages[key]?.moreWhenReady == true
+            cache.loading = false; cache.moreWhenReady = false; activityPages[key] = cache
+            if follow { await loadActivityPage(id, filter: filter, more: true, selection: selection) }
         } catch {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             cache.loading = false
             if more, let e = error as? TafsCloud.CloudError, e.status == 409 {
                 activityPages[key] = SourcePages()
@@ -111,19 +119,24 @@ final class AppModel: ObservableObject {
         guard let taf = cloudTaf(for: id) else { return }
         let key = runKey(id, all)
         var cache = runPages[key] ?? SourcePages()
-        guard !cache.loading else { return }
+        guard !cache.loading else {
+            if more { cache.moreWhenReady = true; runPages[key] = cache }
+            return
+        }
         let cursor = more ? cache.pages.last?.next_cursor : nil
         if more && cursor == nil { return }
-        let gen = accountGeneration
-        cache.loading = true; cache.error = nil; runPages[key] = cache
+        let gen = accountGeneration, presentation = presentationGeneration
+        cache.loading = true; cache.moreWhenReady = false; cache.error = nil; runPages[key] = cache
         do {
             let (page, tag) = try await cloud.runsPage(taf.id, cursor: cursor, etag: more ? nil : cache.etag, limit: all ? 20 : 3)
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             if let page { cache.pages = more ? cache.pages + [page] : [page] }
             if !more { cache.etag = tag }
         } catch { cache.error = error.localizedDescription }
-        guard gen == accountGeneration else { return }
-        cache.loading = false; runPages[key] = cache
+        guard gen == accountGeneration, presentation == presentationGeneration else { return }
+        let follow = cache.error == nil && runPages[key]?.moreWhenReady == true
+        cache.loading = false; cache.moreWhenReady = false; runPages[key] = cache
+        if follow { await loadRunPage(id, all: all, more: true) }
     }
     func loadAllMemory(_ id: UUID) async {
         guard let taf = cloudTaf(for: id) else { return }
@@ -234,13 +247,25 @@ final class AppModel: ObservableObject {
         kiff.tenant = tenant
         kiff.setupSigner = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil }
+        var confirmed = false
         do {
             _ = try await kiff.setTimeZone(zone)
             guard gen == accountGeneration else { return }
-            if let account = try? await kiff.me(), gen == accountGeneration { kiffAccount = account }
+            confirmed = true
+            let account = try await kiff.me()
+            guard gen == accountGeneration else { return }
+            kiffAccount = account
+            presentationGeneration += 1
+            activityPages = [:]; runPages = [:]; tafSetups = [:]; knobs = [:]; works = [:]
+            try await cloud.syncTimeZone()
+            guard gen == accountGeneration else { return }
         } catch {
             guard gen == accountGeneration else { return }
-            timeZoneError = "The time zone didn't change: \(error.localizedDescription)"
+            timeZoneError = confirmed ? "The account's zone changed. Its schedules couldn't be updated yet: \(error.localizedDescription)" : "The time zone didn't change: \(error.localizedDescription)"
+        }
+        if confirmed, gen == accountGeneration {
+            await refresh()
+            if let id = tafOnScreen { await loadTafSetup(id); await loadKnob(id) }
         }
     }
     /// Whether this phone's KIFF session holds its signing key. A session from before
@@ -528,6 +553,10 @@ final class AppModel: ObservableObject {
         didSet {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
             tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
+            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil
+            haltErrors = [:]
+            alertsOffered = false
+            remembered?.removeObject(forKey: Self.alertsOfferedKey)
         }
     }
 
@@ -948,6 +977,7 @@ final class AppModel: ObservableObject {
     func signOut() async -> Bool {
         signOutError = nil
         if mode == .kiff {
+            if alertsReady == true { UserDefaults.standard.set(true, forKey: alertsEnabledKey) }
             // Alerts are unregistered with the session, so before KIFF ends it; registered again
             // at once when KIFF doesn't, so a device still signed in never goes without them.
             if let pushToken { try? await cloud.unregisterPush(deviceToken: pushToken) }
@@ -1172,11 +1202,22 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         let handoff = pendingHandoff
         if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool == false {
+            alertsReady = false
             if let handoff, (try? await cloud.keepAlerts(handoff.target)) != nil, gen == accountGeneration { pendingHandoff = nil }
             return
         }
-        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds),
-              gen == accountGeneration else { return }
+        if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool != true && handoff == nil {
+            // A different account must not inherit this phone's earlier alert consent.
+            let previous = try? await cloud.phoneAlerts(token)
+            guard gen == accountGeneration else { return }
+            guard previous?.enabled == true else { alertsReady = false; return }
+            UserDefaults.standard.set(true, forKey: alertsEnabledKey)
+        }
+        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds) else {
+            if gen == accountGeneration { alertsReady = false }
+            return
+        }
+        guard gen == accountGeneration else { return }
         if handoff != nil { pendingHandoff = nil }
         applyPush(status)
     }
@@ -1369,6 +1410,7 @@ final class AppModel: ObservableObject {
         if signer.renewApprovalKeyIfBiometricsChanged() { lostApprovalKey() }
         refreshing = true
         let gen = accountGeneration
+        let presentation = presentationGeneration
         // Dropped before its answer: the list wasn't read, so it isn't shown as loaded (and
         // empty). The next refresh reads it.
         var cancelled = false
@@ -1394,6 +1436,7 @@ final class AppModel: ObservableObject {
             let done = await activity
             let happened = await events
             let account = await me
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             // KIFF and tafs cloud answered: nothing to say, and no retry waiting.
             if gen == accountGeneration {
                 unreachable = nil
@@ -1461,6 +1504,7 @@ final class AppModel: ObservableObject {
     /// agent and a held call its id from KIFF's, so the lock screen notifies once and rows
     /// are not recreated.
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
+        cardUnitExceptions = home.cardUnitExceptions ?? []
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
@@ -1473,7 +1517,7 @@ final class AppModel: ObservableObject {
         // Each open trial is its own entry in the menu, under its taf (kiff/tafs#173).
         for t in home.tafs where t.id != nil { setTrial(t.trial, of: holderID(t.kiffAgent)) }
         let coach = coachWithTools
-        held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject), coach: coach) }
+        held = exceptions.filter { $0.kind != "card_unit" }.map { KIFFMapping.held($0, tafID: holderID($0.subject), coach: coach) }
         unanswerable = unanswerable.filter { id, _ in held.contains { $0.id == id } }
         readAgainAtExpiry()
         showHeldAfterWaiting()
@@ -1864,10 +1908,10 @@ final class AppModel: ObservableObject {
     /// Reads the taf's dial from tafs cloud.
     func loadKnob(_ tafID: UUID) async {
         guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
-        let gen = accountGeneration
+        let gen = accountGeneration, presentation = presentationGeneration
         do {
             var knob = try await cloud.knob(c.id)
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             if let pending = knob.pending {
                 do { knob = try await cloud.knob(c.id, version: pending.version) }
                 catch let error as TafsCloud.CloudError where error.status == 404 {
@@ -1875,13 +1919,13 @@ final class AppModel: ObservableObject {
                     knob = try await cloud.knob(c.id)
                 }
             }
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             knobs[tafID] = knob
             if lastError?.hasPrefix("The dial couldn't be read:") == true { lastError = nil }
             // Its change is live now: nothing left to switch to.
             if let made = knobChanges[tafID], let live = knob.version, live >= made.version { knobChanges[tafID] = nil }
         } catch {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             lastError = "The dial couldn't be read: \(error.localizedDescription)"
         }
     }
@@ -2505,6 +2549,15 @@ final class AppModel: ObservableObject {
     /// Each halt as last read, by the taf's tafs cloud id, "" for the
     /// whole account.
     @Published private(set) var halts: [String: TafsCloud.Halt] = [:]
+    @Published private(set) var haltErrors: [String: String] = [:]
+    var resumeConfirmationWait: @MainActor () async throws -> Void = { try await Task.sleep(nanoseconds: 10_000_000_000) }
+
+    func haltError(_ tafID: UUID?) -> String? { haltKey(tafID).flatMap { haltErrors[$0] } }
+
+    private func recordHaltError(_ key: String, _ words: String) {
+        haltErrors[key] = words
+        lastError = words
+    }
 
     /// The halt of a taf, or with none of the whole account, as last read: running until read.
     func haltState(_ tafID: UUID?) -> TafsCloud.Halt {
@@ -2522,6 +2575,7 @@ final class AppModel: ObservableObject {
     /// kiff/agents, KIFF's gateway and planque all hold it, and halting until then.
     func halt(_ tafID: UUID?) async {
         guard mode == .kiff, let key = haltKey(tafID) else { return }
+        haltErrors[key] = nil
         let gen = accountGeneration
         do {
             let h = try await cloud.halt(key.isEmpty ? nil : key)
@@ -2530,7 +2584,7 @@ final class AppModel: ObservableObject {
             // The list reads it halted at once, not at its next read (kiff/tafs#236, item 13).
             await refresh()
         } catch {
-            lastError = "tafs couldn't halt \(tafID == nil ? "your tafs" : "it"): \(error.localizedDescription). Try again."
+            if gen == accountGeneration { recordHaltError(key, "tafs couldn't halt \(tafID == nil ? "your tafs" : "it"): \(error.localizedDescription). Try again.") }
         }
     }
 
@@ -2774,8 +2828,9 @@ final class AppModel: ObservableObject {
     @discardableResult
     func resumeHalt(_ tafID: UUID?) async -> Bool {
         guard mode == .kiff, let key = haltKey(tafID) else { return false }
+        haltErrors[key] = nil
         guard sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            recordHaltError(key, "Sign in with KIFF again: this sign-in can't sign for the phone.")
             return false
         }
         let agent: String?
@@ -2788,9 +2843,15 @@ final class AppModel: ObservableObject {
         let name = tafID.flatMap { taf($0)?.name }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
-                                      reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", grants: true)
-        } catch { return false }
+            try await ResumeConfirmation.confirm(signer: signer, message: Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
+                reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", wait: resumeConfirmationWait)
+        } catch ResumeConfirmation.Failure.timedOut {
+            if gen == accountGeneration { recordHaltError(key, "\(Biometry.name) didn't open. Try again.") }
+            return false
+        } catch {
+            if gen == accountGeneration { recordHaltError(key, ApprovalReadiness.cancelled(error) ?? "Resume wasn't confirmed on this device. Try again.") }
+            return false
+        }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
         kiff.tenant = tenant
@@ -2799,9 +2860,10 @@ final class AppModel: ObservableObject {
         do {
             try await kiff.resume(agent: agent)
         } catch {
-            lastError = "KIFF didn't resume \(name ?? "your tafs"): \(error.localizedDescription)"
+            if gen == accountGeneration { recordHaltError(key, "KIFF didn't resume \(name ?? "your tafs"): \(error.localizedDescription)") }
             return false
         }
+        guard gen == accountGeneration else { return false }
         do {
             let h = try await cloud.releaseHalt(key.isEmpty ? nil : key)
             guard gen == accountGeneration else { return false }
@@ -2809,7 +2871,7 @@ final class AppModel: ObservableObject {
             await refresh()
             return true
         } catch {
-            lastError = "KIFF resumed \(name ?? "your tafs"), but tafs cloud didn't yet: \(error.localizedDescription). Try again."
+            if gen == accountGeneration { recordHaltError(key, "KIFF resumed \(name ?? "your tafs"), but tafs cloud didn't yet: \(error.localizedDescription). Try again.") }
             return false
         }
     }
@@ -4703,16 +4765,16 @@ final class AppModel: ObservableObject {
     /// Reads where the taf's work stands: its requests and skipped firings, in tafs cloud's words.
     func loadWork(_ tafID: UUID) async {
         guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
-        let gen = accountGeneration
+        let gen = accountGeneration, presentation = presentationGeneration
         do {
             let work = try await cloud.work(c.id)
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             works[tafID] = work
             workErrors[tafID] = nil
         } catch is CancellationError {
         } catch let error as URLError where error.code == .cancelled {
         } catch {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             workErrors[tafID] = "Its work couldn't be read: \(error.localizedDescription)"
         }
     }
@@ -5089,7 +5151,7 @@ final class AppModel: ObservableObject {
         }
         await refreshConnections()
         guard connected.connected || connected.listed else {
-            lastError = "The sign-in at \(grant.vendor) didn't connect: planque has it as \(connected.status.replacingOccurrences(of: "_", with: " ")). Nothing was connected. Try signing in again."
+            lastError = "The sign-in at \(grant.vendor) didn't connect: the connection is \(connected.status.replacingOccurrences(of: "_", with: " ")). Nothing was connected. Try signing in again."
             return nil
         }
         return connected
@@ -5201,6 +5263,8 @@ final class AppModel: ObservableObject {
     /// its first message goes to tafs cloud's improve route, which puts the taf's context in
     /// front. Nil for any other conversation.
     @Published private(set) var setupImproving: TafsCloud.CloudTaf?
+    private var setupContextTafID: String?
+    private var setupConversationGeneration = 0
 
     // MARK: Coach mode (kiff/tafs#138)
 
@@ -5209,10 +5273,10 @@ final class AppModel: ObservableObject {
     /// The taf whose page is on screen, the context Coach mode opens with; nil elsewhere.
     @Published var tafOnScreen: UUID?
 
-    /// Opens Coach mode. Closing never ends a conversation, so one in progress reopens as
-    /// it was; a new one, not yet written in, takes the taf on screen as its context.
+    /// Opens Coach on the taf in view; elsewhere it reopens the current conversation.
+    /// Returning to the same taf keeps its thread. Accepted work continues on the service.
     func openCoach() {
-        if setupFresh && setupThread.messages.isEmpty && setupUnsent.isEmpty, let taf = tafOnScreen {
+        if let taf = tafOnScreen, setupContextTafID != cloudTaf(for: taf)?.id {
             improveTaf(taf)
         }
         coachOpen = true
@@ -5243,15 +5307,75 @@ final class AppModel: ObservableObject {
     func improveTaf(_ tafID: UUID) {
         newSetupChat()
         setupImproving = cloudTaf(for: tafID)
+        setupContextTafID = setupImproving?.id
+    }
+
+    func discussCardUnit(_ ask: TafsCloud.CardUnitException) {
+        guard mode == .kiff, mayUseCoach,
+              let taf = tafs.first(where: { cloudTaf(for: $0.id)?.id == ask.taf }), manages(taf.id) else { return }
+        improveTaf(taf.id)
+        setupDraft = ask.coach_text
+        coachOpen = true
+    }
+
+    func dismissCardUnit(_ exception: TafsCloud.CardUnitException) async {
+        guard mode == .kiff, canAnswerHolds != false, let tenant = kiffTenant,
+              let taf = tafs.first(where: { cloudTaf(for: $0.id)?.id == exception.taf }),
+              let agent = cloudTaf(for: taf.id)?.kiffAgent, dismissingCardUnits.insert(exception.id).inserted else { return }
+        let gen = accountGeneration
+        defer { if gen == accountGeneration { dismissingCardUnits.remove(exception.id) } }
+        do {
+            let current = try await kiff.cardException(exception.id)
+            guard gen == accountGeneration else { return }
+            guard current.kind == "card_unit", current.status == "held", current.subject == agent, let version = current.accountingVersion else {
+                lastError = "This request changed. Read it again before dismissing it."
+                return
+            }
+            let at = SigningTime.next()
+            let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: current.id, answer: Self.kiffAnswer(.refuse), nextStep: nil, accountingVersion: version, signedAt: at)
+            let signature = try await signer.sign(message, reason: "Dismiss \(exception.title)")
+            guard gen == accountGeneration else { return }
+            try await kiff.reject(current.id, signature: .init(signedAt: at, value: signature))
+            guard gen == accountGeneration else { return }
+            // KIFF confirmed the dismissal: cached views stop offering the same answer at once.
+            presentationGeneration += 1
+            cardUnitExceptions.removeAll { $0.id == exception.id }
+            for (key, var view) in tafSetups {
+                view.card_unit_exceptions?.removeAll { $0.id == exception.id }
+                tafSetups[key] = view
+            }
+            for (key, var cache) in activityPages {
+                cache.pages = cache.pages.map { old in
+                    var page = old
+                    page.card_unit_exceptions?.removeAll { $0.id == exception.id }
+                    return page
+                }
+                cache.etag = nil
+                cache.loading = false; cache.moreWhenReady = false
+                activityPages[key] = cache
+            }
+            for (key, var cache) in runPages {
+                cache.loading = false; cache.moreWhenReady = false
+                runPages[key] = cache
+            }
+            await refresh()
+            await loadTafSetup(taf.id)
+        } catch {
+            if gen == accountGeneration { lastError = "The request wasn't dismissed: \(error.localizedDescription)" }
+        }
     }
 
     /// A new Setup conversation: an empty chat, and the next message starts it.
     func newSetupChat() {
+        setupConversationGeneration += 1
+        setupStream?.cancel(); setupStream = nil; setupLive = nil; setupSending = false
+        setupContextTafID = nil
         setupImproving = nil
         setupChat = nil
         setupFresh = true
         setupThread = SetupThread()
         setupSent = []
+        setupQueued = nil
         setupAwaiting = nil
         setupUnsent = []
         setupEnded = nil
@@ -5260,6 +5384,9 @@ final class AppModel: ObservableObject {
 
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
+        setupConversationGeneration += 1
+        setupStream?.cancel(); setupStream = nil; setupLive = nil; setupSending = false
+        setupContextTafID = nil
         setupImproving = nil
         setupChat = session
         setupFresh = false
@@ -5348,23 +5475,24 @@ final class AppModel: ObservableObject {
         // A new conversation has nothing to read until its first message is sent.
         if setupFresh { return }
         let gen = accountGeneration
+        let conversation = setupConversationGeneration
         // No conversation chosen yet (at launch): Coach opens on its newest alone, the earlier
         // ones under Previous conversations, never several together (kiff/tafs#389). Without
         // the list, or with none yet, the thread reads as before.
         if setupChat == nil, let chats = try? await cloud.chats(s.id) {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupChats = chats
             if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
             if setupFresh { return }
         }
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat)
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, conversation == setupConversationGeneration, !setupFresh else { return }
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
         } catch {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupError = "The conversation couldn't be loaded: \(error.localizedDescription)"
             return
         }
@@ -5468,8 +5596,9 @@ final class AppModel: ObservableObject {
         guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         // An improvement's first message carries no files: tafs cloud adds the taf's context to it.
         if !files.isEmpty, setupImproving != nil { return .notTried }
+        let conversation = setupConversationGeneration
         setupSending = true
-        defer { setupSending = false }
+        defer { if conversation == setupConversationGeneration { setupSending = false } }
         let gen = accountGeneration
         setupEnded = nil
         // Shown at once, the way it was sent (kiff/tafs#82), until tafs cloud's copy takes its place.
@@ -5490,10 +5619,10 @@ final class AppModel: ObservableObject {
                 do {
                     sent = try await cloud.improve(improving.id, text: text)
                 } catch {
-                    setupAwaiting = nil
+                    if conversation == setupConversationGeneration { setupAwaiting = nil }
                     throw error
                 }
-                guard gen == accountGeneration else { return .notTried }
+                guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
                 setupImproving = nil
                 if let id = sent.message?.id { markSetupSent(mine.id, serverID: id) }
                 settleSetupChat(sent.session)
@@ -5503,25 +5632,25 @@ final class AppModel: ObservableObject {
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
             if let events = try await openStream(s.id, text: text, to: setupTarget, files: files) {
-                guard gen == accountGeneration else { return .notTried }
+                guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
                 setupAwaiting = clock()
                 setupStreamWorks = true
                 setupLiveBefore = Set(setupThread.items.map(\.id))
                 setupAnsweredCard = SetupThread.Answer(text).map { cardRef($0.id) }
                 setupLive = LiveAnswer(started: clock())
                 let sentID = mine.id
-                setupStream = Task { await self.followSetupStream(events, text: text, gen: gen, sent: sentID) }
+                setupStream = Task { await self.followSetupStream(events, text: text, gen: gen, conversation: conversation, sent: sentID) }
                 return .sent
             }
             let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files)
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
             settleSetupChat(sent.session)
-            guard gen == accountGeneration else { return .notTried }
             if let id = sent.message?.id { markSetupSent(mine.id, serverID: id) }
             setupAwaiting = clock()
             await loadSetupThread()
             return .sent
         } catch {
-            guard gen == accountGeneration else { return .notTried }
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
             setupSent.removeAll { $0.id == mine.id }
             setupThread.messages.removeAll { $0.id == mine.id }
             if !files.isEmpty {
@@ -5720,11 +5849,11 @@ final class AppModel: ObservableObject {
     /// turn's words are recorded, so the thread is reloaded and the bubble starts again.
     /// A stream that drops leaves the conversation to show the rest, as it does without one.
     private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int,
-                                   sent: String? = nil) async {
+                                   conversation: Int, sent: String? = nil) async {
         var ended: String?
         do {
             for try await e in events {
-                guard gen == accountGeneration else { return }
+                guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                 switch e {
                 case .session(let session, _, _, let message):
                     setupLive?.session = session
@@ -5741,16 +5870,19 @@ final class AppModel: ObservableObject {
                     setupLive?.activity = words
                     setupLive?.began(tool, words: words, call: call)
                     await loadSetupThread()
+                    guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                     setupLive?.text = ""
                 case .step(let call, let status):
                     setupLive?.ended(call, LiveStep.Status(stream: status))
                 case .component, .said:
                     await loadSetupThread()
+                    guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                     setupLive?.text = ""
                 case .part:
                     // It went on after a pause: what came before is the thread's, with its work,
                     // and the steps start again (the 870 test, as in a taf's chat).
                     await loadSetupThread()
+                    guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                     setupLive?.newPart()
                     setupLiveBefore = Set(setupThread.items.map(\.id))
                 case .end(let status, _, _):
@@ -5762,14 +5894,14 @@ final class AppModel: ObservableObject {
                 }
             }
         } catch {}
-        guard gen == accountGeneration else { return }
+        guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         // The run is over: Setup is no longer at work, whatever it wrote.
         if ended != nil { setupAwaiting = nil }
         if ended == "ERROR" { setupEnded = .failed(retry: text) }
         if ended == "CANCELLED" { setupEnded = .stopped }
         // The recorded answer first, then the live one goes: no gap between them.
         await loadSetupThread()
-        guard gen == accountGeneration else { return }
+        guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLive = nil
         await sendQueuedIfIdle()
     }
@@ -5982,15 +6114,16 @@ final class AppModel: ObservableObject {
     /// Follows the run a card's answer let go on, as a message's stream is followed: its words
     /// as it writes them, then the thread. A stream that can't open leaves it to the thread.
     private func followAnswered(_ setupID: String, run: String, gen: Int) async {
+        let conversation = setupConversationGeneration
         setupAwaiting = clock()
         guard let events = try? await cloud.resumeRun(setupID, run: run) else {
             await loadSetupThread()
             return
         }
-        guard gen == accountGeneration else { return }
+        guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLiveBefore = Set(setupThread.items.map(\.id))
         setupLive = LiveAnswer(started: clock())
-        setupStream = Task { await self.followSetupStream(events, text: "", gen: gen) }
+        setupStream = Task { await self.followSetupStream(events, text: "", gen: gen, conversation: conversation) }
     }
 
     /// Approve on an approval (contract 4, one Face ID): the vendor's connection, then the

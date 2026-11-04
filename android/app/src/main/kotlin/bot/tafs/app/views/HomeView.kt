@@ -233,7 +233,7 @@ private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit
 @Composable
 private fun Headline(state: AppState) {
   val working = state.workingCount
-  val waiting = state.held.size
+  val waiting = state.held.size + state.cardUnitExceptions.size
   Column {
     // Never "0 tafs working" before the tafs are read (#91).
     if (state.mode == Mode.kiff && !state.listLoaded) {

@@ -589,6 +589,12 @@ class TafsCloud(
    */
   suspend fun exportChats(): ChatExport = ChatExport.of(send("GET", "/v1/me/chats/export"))
 
+  /**
+   * After KIFF has the account's new time zone: tafs cloud moves every recurring schedule to the zone KIFF reports. A 503 says
+   * the account changed but some schedules need another try; trying again moves only those.
+   */
+  suspend fun applyAccountTimeZone() { sendJson("POST", "/v1/account/time-zone", kotlinx.serialization.json.JsonObject(emptyMap())) }
+
   private suspend fun sendJson(method: String, path: String, body: kotlinx.serialization.json.JsonObject): ByteArray =
     send(method, path, KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), body).toByteArray())
 

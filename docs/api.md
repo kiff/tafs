@@ -172,9 +172,24 @@ the route list at the top of `handler.ts`.
 `GET /v1/time-zones?q=` returns `{zones: [{id, title}]}`, from the service's IANA list,
 searched on the service. Selecting a zone still uses KIFF's signed
 `PUT /v1/me/time-zone`; tafs cloud never signs for the person.
+After KIFF confirms it, `POST /v1/account/time-zone` (no body) applies the zone
+KIFF reports to every recurring schedule of this account's tafs. It requires
+`cards.manage`, accepts no zone or account from the caller, and returns
+`{time_zone, updated}`. It preserves the schedules' cron, pause, busy and check
+settings. Absolute one-off times and follow-ups do not move. A partial failure
+returns 503 with words explaining that the account changed but some schedules
+need retry; repeating it updates only schedules still in another zone.
+New tafs use the account's zone when no explicit zone was supplied at creation.
+Home tafs carry `time_zone`, `time_zone_words` and `schedule_time_zone`, so the
+apps can name the account's clock and identify a schedule still using another.
+`schedule_time_zone_words` is present only for that mismatch and gives the next step
+in words. A failed sync sends its sentence in both `error` and `words`. The cloud
+rechecks KIFF's zone after schedule writes: if another confirmed zone overtook the
+request, it applies the newer one before reporting success; repeated changes or
+unfinished writes return the retryable 503.
 
 `GET /v1/tafs/{id}/activity?filter=all&limit=20&cursor=…` returns `entries`, day
-`groups`, `filters: [{id, title}]`, the selected `filter`, a `revision`, and an
+`groups`, `filters: [{id, title}]`, the selected `filter`, `card_unit_exceptions`, a `revision`, and an
 optional `next_cursor`. Filters are `all`, `done`, `held`, or `refused`, applied
 on tafs cloud before a page is made. Held means a call waiting for an owner's answer; an allowed call still sending or with an unknown result stays in All. An allowed call with an unknown tool outcome
 is never labelled done. Entries carry their ready-to-draw `title`, `detail`,
@@ -183,15 +198,25 @@ signed evidence. `tools` (comma-separated action names) and `from` (an ISO date)
 can narrow an app's seven-day Activity. The server supplies that query on the app's
 setup view; the phones do not identify apps from tool names.
 
+A connection refusal is typed by KIFF as `tool_outcome.status: refused_by_tool`,
+`refused_by: connection` and a machine `code`. Its `detail` is drawn as supplied,
+or composed from that code if absent. Text prefixes never establish provenance.
+Old/vendor errors keep their previous behavior. The call's status, amounts,
+approval flags, receipts and counting remain KIFF's unchanged evidence.
+
 A page is 20 entries by default, 1–50 when specified. Pass `next_cursor` unchanged.
 It is bound to the account, person, taf and filters. A changed snapshot returns
 409: refresh from the first page rather than joining inconsistent pages. A page
 can be empty with a cursor when a bounded scan has not reached a matching call yet.
+Only the final page supplies `end_words` ("Nothing older in this view"). Empty
+intermediate pages keep their cursor and never claim that history has ended.
 
 `GET /v1/tafs/{id}/work/runs?limit=20&cursor=…` pages the recent retained runs as
 `requests`, with a `next_cursor` when another page remains. A preview requests
 `limit=3`. This view reads the runtime's latest 100 runs; it is not an archive of
 all past runs. The older `/runs` report endpoint is unchanged. Both new page
+routes supply `end_words` at the end of their available history; for runs it
+says "Nothing older in the retained runs" to make the retention boundary clear. Both page
 routes send an `ETag`; repeating a read with `If-None-Match` returns 304 with no
 body when unchanged. Apps keep previously read pages per account, taf and filter.
 
@@ -207,6 +232,29 @@ body when unchanged. Apps keep previously read pages per account, taf and filter
   is empty when it would only repeat its `label`, so the apps don't show the title twice.
 - `memory`: its note `count`, `title` and newest note as `latest`.
 - `versions`: `Changes to how it runs`, the live version, earlier count and summary.
+
+Optional `card_unit_exceptions` on Home and Setup, and the always-present array on Activity, contain the same display rows from
+KIFF's `GET /v1/me/card-exceptions?status=held`, filtered by the visible taf's subject.
+Each is `{id,kind:"card_unit",taf,name,title,words,history,action_title,coach_text,
+dismiss_title,can_approve_once:false}`. `id` is KIFF's exception id; history carries
+its count and first/last attempts. The Coach action opens that taf with the proposed
+unit limit; it changes no Card. Dismiss re-reads the current KIFF exception and signs
+its ordinary `reject` answer against the current accounting version. Approve once is
+never offered for this kind. Ordinary holds remain separate, and every refused
+decision remains in the Record. KIFF owns deduplication and closure when the action's
+Card gains the currency or a call in that currency is allowed. An unreadable KIFF
+response fails the read instead of claiming no exception waits.
+
+Activity collapses the refused calls in a still-open currency episode beneath that
+exception, matching only KIFF's typed `amount_unit_mismatch` reason, subject, action,
+observed currency and episode times (or first proposal id). Other decisions and past
+episodes remain visible. The original Record is unchanged. The panel is read afresh
+with each page, independently of the history cursor revision: changes to its count or
+closure do not discard older pages. Apps draw the latest page's panel metadata.
+An empty `card_unit_exceptions` array clears an older row. If exceptions cannot be read
+or their data is unreadable, Activity still returns its decisions with an empty panel
+and `card_unit_exceptions_notice`; it does not claim that no requests wait. Normal
+Activity failures still fail the page. Home and Setup retain their existing read errors.
 
 The phone forwards one signed read of planque's account grants using the
 `Planque-Device-Signature` header, signed for planque's `GET

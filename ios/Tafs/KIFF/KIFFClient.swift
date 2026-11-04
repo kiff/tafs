@@ -391,13 +391,17 @@ final class KIFFClient {
         /// KIFF's answer to whether approving once can pass this call (kiff/tafs#138, item 49).
         /// Absent from an older response: then the app offers it, as before.
         var canApproveOnce: Bool? = nil
+        var kind: String? = nil
+        var count: Int? = nil
+        var lastAt: Date? = nil
 
         enum CodingKeys: String, CodingKey {
             case proposalID = "proposal_id", canApproveOnce = "can_approve_once", reasonText = "reason_text"
-            case id, subject, action, title, arguments, status, breaches, parameters, reason
+            case id, subject, action, title, arguments, status, breaches, parameters, reason, kind, count
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
             case createdAt = "created_at", expiresAt = "expires_at"
+            case lastAt = "last_at"
         }
     }
 
@@ -664,6 +668,9 @@ final class KIFFClient {
         struct ToolOutcome: Decodable, Equatable {
             let status: String
             var message: String?
+            var refusedBy: String? = nil
+            var code: String? = nil
+            enum CodingKeys: String, CodingKey { case status, message, code, refusedBy = "refused_by" }
         }
         let proposalID: String
         let actionName: String
@@ -714,8 +721,9 @@ final class KIFFClient {
         var madeAt: Date?
         /// Why it wasn't sent, in KIFF's words, in the app's language.
         var reason: String?
+        var detail: String? = nil
         enum CodingKeys: String, CodingKey {
-            case title, outcome, held, amount, answer, receipt, reasons
+            case title, outcome, held, amount, answer, receipt, reasons, detail
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
@@ -741,6 +749,10 @@ final class KIFFClient {
         struct Response: Decodable { let exceptions: [CardException] }
         let response: Response = try await send("GET", "/v1/me/card-exceptions?status=held")
         return response.exceptions
+    }
+
+    func cardException(_ id: String) async throws -> CardException {
+        try await send("GET", "/v1/me/card-exceptions/\(escaped(id))")
     }
 
     /// The phone's signature on an answer, as KIFF checks it.

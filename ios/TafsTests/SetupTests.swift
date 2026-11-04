@@ -5,6 +5,22 @@ import XCTest
 /// thread of messages and components, and the owner's answers.
 @MainActor
 final class SetupTests: XCTestCase {
+    func testAConversationReadCannotOverwriteANewCoachConversation() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[{"at":"2026-11-01T12:00:00Z","from":"taf","text":"Earlier taf's answer","session":"previous"}],"components":[]}"#)
+        StubProtocol.holdOnce = "GET /v1/tafs/taf-setup/conversation"
+        let old = Task { await model.loadSetupThread() }
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+        model.newSetupChat()
+        StubProtocol.release.signal()
+        await old.value
+        XCTAssertTrue(model.setupThread.messages.isEmpty)
+        XCTAssertTrue(model.setupFresh)
+    }
     private static let setupJSON = #"{"id":"taf-setup","name":"Setup","job":"setup","kiff_agent":"setup","status":"active","next_run":null,"last_run":null}"#
 
     private func model(signer: FaceIDSigner, vendor: StubVendor = StubVendor()) async -> AppModel {

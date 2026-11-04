@@ -50,7 +50,7 @@ struct TafsBar: View {
 
     private func itemButton(_ item: Item) -> some View {
         let selected = tab == item.tab
-        let count = item.tab == .needsYou ? model.held.count : 0
+        let count = item.tab == .needsYou ? model.held.count + model.cardUnitExceptions.count : 0
         return Button { tab = item.tab } label: {
             VStack(spacing: 3) {
                 Image(systemName: selected ? item.selectedIcon : item.icon)

@@ -24,7 +24,7 @@ object HaltWords {
         val since = h.haltedAt?.let { " since ${shortTime(it)}" } ?: ""
         "Halted$since. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
       }
-      else -> "Nothing new starts. Halted shows once KIFF and planque both confirm."
+      else -> "Nothing new starts. Halted shows once KIFF and the connection both confirm."
     }
   }
 

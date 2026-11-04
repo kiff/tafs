@@ -164,10 +164,13 @@ enum KIFFMapping {
             }
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
+            if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool", c.toolOutcome?.refusedBy == "connection", c.toolOutcome?.code != nil {
+                entry.detail = c.detail ?? "The connection refused it before sending. Nothing was sent."
+            }
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
                 entry.refusedByTool = true
-                entry.refusedBy = vendors[c.actionName]
+                entry.refusedBy = c.toolOutcome?.refusedBy == "connection" ? "The connection" : vendors[c.actionName]
             }
             entry.amount = c.amount
             entry.readOnly = c.readOnly

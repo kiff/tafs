@@ -184,7 +184,9 @@ fun NeedsYouView(
     verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
     item { ScreenTitle("Needs you") }
-    if (state.held.isEmpty() && state.unsure.isEmpty()) {
+    // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
+    items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
+    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty()) {
       item {
         Panel {
           Text("Nothing is waiting.", style = scaled(15, FontWeight.SemiBold, Theme.ink))

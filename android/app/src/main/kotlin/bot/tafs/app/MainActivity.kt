@@ -10,7 +10,9 @@ import bot.tafs.app.push.AlertPayload
 import kotlinx.coroutines.CompletableDeferred
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import bot.tafs.app.model.ThemePreference
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -119,7 +121,14 @@ class MainActivity : FragmentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
+    // The bars follow the app's own Light/Dark/System choice from the first frame, not only the phone's setting; TafsTheme
+    // keeps them in step when the choice changes.
+    val bars = when (ThemePreference.from(getSharedPreferences("tafs.display", MODE_PRIVATE).getString("theme", null))) {
+      ThemePreference.Light -> SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+      ThemePreference.Dark -> SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+      ThemePreference.System -> SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+    }
+    enableEdgeToEdge(bars, bars)
     // The prompt for approving shows on this activity while it is on screen.
     app.authenticator.attach(this)
     // So does Google Play's purchase sheet, where buying is on.
@@ -229,6 +238,9 @@ fun RootView(model: AppModel) {
         ),
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
+        bot.tafs.app.views.LocalCardUnitActions provides remember(model) {
+          bot.tafs.app.views.CardUnitActions(discuss = model::discussCardUnit, dismiss = model::dismissCardUnit)
+        },
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
@@ -243,6 +255,17 @@ fun RootView(model: AppModel) {
     }
   }
   if (signingIn) SignInSheet(model, onClose = { signingIn = false })
+  // Alerts were on for this account before this phone signed out, and didn't come back on: said once, with the way back.
+  if (state.alertsOffSinceSignOut && state.lastError == null) {
+    AlertDialog(
+      onDismissRequest = model::dismissAlertsOff,
+      title = { Text("Alerts are off on this phone") },
+      text = { Text("They went off when this phone signed out. Turn them on to get an alert when a taf needs you.") },
+      confirmButton = { TextButton({ model.dismissAlertsOff(); rootScope.launch { model.turnOnAlerts() } }) { Text("Turn on", color = Theme.amber) } },
+      dismissButton = { TextButton(model::dismissAlertsOff) { Text("Not now", color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
   if (confirmingSignInAgain) {
     bot.tafs.app.views.ConfirmSignOut(bot.tafs.app.views.SignOut.SignInAgain, onDismiss = { confirmingSignInAgain = false }) {
       confirmingSignInAgain = false
@@ -475,7 +498,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
 
   // The bar's two places that open rather than switch: Account (today's Settings) and Coach, for whoever may use it.
   val openAccount = { showingSettings = true }
-  val openCoach: (() -> Unit)? = if (state.mayUseCoach) ({ tab = Tab.Tafs; trialTaf = null; coachOpen = true }) else null
+  val openCoach: (() -> Unit)? = if (state.mayUseCoach) ({
+    model.openCoachOn(if (tab == Tab.Tafs) openTaf else null); tab = Tab.Tafs; trialTaf = null; coachOpen = true
+  }) else null
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     // Landscape and tablets: the same places as a rail on the left, Coach at its foot.
     if (wide) {
@@ -731,8 +756,9 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
 @Composable
 private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
   val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
-  if (t == Tab.NeedsYou && state.held.isNotEmpty()) {
-    BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("${state.held.size}") } }) { icon() }
+  val waiting = state.held.size + state.cardUnitExceptions.size
+  if (t == Tab.NeedsYou && waiting > 0) {
+    BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("$waiting") } }) { icon() }
   } else {
     icon()
   }

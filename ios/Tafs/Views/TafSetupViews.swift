@@ -72,7 +72,7 @@ struct StartsWhenView: View {
                     Text(item.words.isEmpty ? item.label : item.words)
                         .scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                     if let size = item.size {
-                        SizeStepper(label: size.label,
+                        SizeStepper(label: size.choices.indices.contains(size.index) ? "\(size.label) · \(size.choices[size.index].label)" : size.label,
                                     canLower: manages && !busy && canMove(knob, item, -1),
                                     canRaise: manages && !busy && canMove(knob, item, 1),
                                     move: { adjust(item, $0) })

@@ -293,6 +293,9 @@ class KiffClient(
   /** The calls KIFF holds for the owner's answer. */
   suspend fun heldCalls(): List<CardException> = call<CardExceptions>("GET", "/v1/me/card-exceptions?status=held").exceptions
 
+  /** One exception as KIFF has it now, read again before it is answered. */
+  suspend fun cardException(id: String): CardException = call("GET", "/v1/me/card-exceptions/${escaped(id)}")
+
   /** The money calls whose outcome KIFF can't prove, newest first, for someone who answers held calls. */
   suspend fun didThisHappen(): List<UnsureCall> = call<UnsureCalls>("GET", "/v1/me/did-this-happen").calls
 

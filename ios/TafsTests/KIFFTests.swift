@@ -1,8 +1,9 @@
 import XCTest
 @testable import Tafs
 
-/// Answers requests from canned responses, and records what was sent.
-final class StubProtocol: URLProtocol {
+/// Answers requests from canned responses, and records what was sent. Each instance completes
+/// one immutable request; shared mutable fixtures are locked, including delayed worker replies.
+final class StubProtocol: URLProtocol, @unchecked Sendable {
     // Each is read and written behind one lock: a test sets them while URL loading reads
     // them on its own thread, and an unguarded dictionary crashed mid-change
     // (testADroppedConnectionKeepsPolling: "unrecognized selector … objectForKey:").
@@ -81,8 +82,18 @@ final class StubProtocol: URLProtocol {
         if Self.holdOnce == key {
             Self.holdOnce = nil
             Self.arrived.signal()
-            Self.release.wait()
+            // Keep URL loading free to serve another request while this response is delayed.
+            // Tests can then confirm a write before releasing an earlier, stale read.
+            DispatchQueue.global().async { [self, request] in
+                Self.release.wait()
+                finishLoading(key, request: request)
+            }
+            return
         }
+        finishLoading(key, request: request)
+    }
+
+    private func finishLoading(_ key: String, request: URLRequest) {
         let (dropped, status, body) = Self.answer(key)
         if let dropped {
             client?.urlProtocol(self, didFailWithError: URLError(dropped))

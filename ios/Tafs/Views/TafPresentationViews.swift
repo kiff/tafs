@@ -1,5 +1,25 @@
 import SwiftUI
 
+struct CardUnitExceptionPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let ask: TafsCloud.CardUnitException
+    private var canDiscuss: Bool {
+        model.mayUseCoach && model.tafs.contains { model.cloudTaf(for: $0.id)?.id == ask.taf && model.manages($0.id) }
+    }
+    var body: some View {
+        Panel {
+            Text(ask.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+            Text(ask.words).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            Text(ask.history).scaledFont(12).foregroundColor(Theme.dim)
+            if canDiscuss { Button(ask.action_title) { model.discussCardUnit(ask) } }
+            if model.canAnswerHolds != false {
+                Button(ask.dismiss_title, role: .destructive) { Task { await model.dismissCardUnit(ask) } }
+                    .disabled(model.dismissingCardUnits.contains(ask.id))
+            }
+        }
+    }
+}
+
 /// The service supplies the names, mappings, counts, limits and summaries for both apps.
 struct ConnectedToolsRing: View {
     @EnvironmentObject private var model: AppModel
@@ -30,7 +50,7 @@ struct ConnectedToolsRing: View {
                                 if !step.words.isEmpty { Text(step.words).scaledFont(13).foregroundColor(Theme.soft) }
                                 if let app = step.app { Text(app).scaledFont(12).foregroundColor(Theme.amberText) }
                             }
-                        }.padding(.vertical, 4)
+                        }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                     }
                     if model.manages(taf.id) { Button("Change the workflow with Coach") { coach() } }
                 } label: {
@@ -149,6 +169,8 @@ struct TafActivityList: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 14) {
                 ForEach(model.heldCalls(for: tafID)) { HeldCallCard(call: $0) }
+                ForEach(cache.pages.last?.card_unit_exceptions ?? model.cardUnitExceptions.filter { $0.taf == model.cloudTaf(for: tafID)?.id }) { exception in CardUnitExceptionPanel(ask: exception) }
+                if let notice = cache.pages.last?.card_unit_exceptions_notice { Text(notice).scaledFont(13).foregroundColor(Theme.dim) }
                 RetainedRuns(tafID: tafID)
                 if !selection.isEmpty { Button("All apps") { selection = "" } }
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -173,6 +195,7 @@ struct TafActivityList: View {
                     ProgressView().frame(maxWidth: .infinity)
                         .task(id: cursor) { await model.loadActivityPage(tafID, filter: filter, more: true, selection: selection) }
                 } else if cache.loading { ProgressView() }
+                else if let words = cache.pages.last?.end_words { Text(words).foregroundColor(Theme.dim) }
                 else if cache.pages.allSatisfy({ $0.entries.isEmpty }) { Text("Nothing here.").foregroundColor(Theme.dim) }
             }.padding(16)
         }
@@ -244,6 +267,7 @@ struct RetainedRuns: View {
             ProgressView().task(id: cursor) { await model.loadRunPage(tafID, all: true, more: true) }
         } else if !all, let title = cache.pages.first?.more_title { Button(title) { showAll = true } }
         if cache.loading { ProgressView() }
+        else if all, cache.error == nil, let words = cache.pages.last?.end_words { Text(words).foregroundColor(Theme.dim) }
     }
 }
 

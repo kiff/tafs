@@ -311,7 +311,7 @@ final class PlanqueClient {
             var id: String?
         }
         let r: Response = try await send("POST", "grants/\(escaped(grantID))/triggers", body: Body(account: account, slug: slug, channels: channels))
-        guard let id = r.id ?? r.trigger else { throw PlanqueError.server(status: 502, message: "planque didn't say which subscription it made") }
+        guard let id = r.id ?? r.trigger else { throw PlanqueError.server(status: 502, message: "The connection didn't say which subscription it made") }
         return id
     }
 

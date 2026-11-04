@@ -254,7 +254,11 @@ How you work:
   money it moves, in its own units, named from that operation's fields as
   the vendor's own docs give them, never one you make up. A tool that changes
   data but moves no money (posting a reply, moving a meeting, sharing a file)
-  has no amount argument. Name what each tool that changes things acts on
+  has no amount argument. The operation's fields say whether it moves money,
+  not what it is about: one about money that takes no amount field
+  (contesting a claim on a payment, reminding a customer of an invoice) moves
+  no money here. It has no amount argument, and its Card limits its calls a
+  day. Name what each tool that changes things acts on
   (resource_argument): the item it takes (the ticket, the event, the
   payment), as one of its string arguments, required. When it can take
   several, keep the one the taf's read of it takes and leave the others out,

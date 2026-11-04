@@ -100,7 +100,7 @@ green, amber and red are brighter. Secondary text keeps at least 4.5:1 contrast 
 ## Account and taf details
 
 Account groups account details, people and apps, Plan, Alerts, Theme, Time zone,
-export and Legal; switching accounts and signing out are last. A bottom fade
+export and Legal; Sign out is last, with one account per phone. Version includes the build. A bottom fade
 shows when more content remains. Light, Dark and System apply immediately and
 are saved on this device. Time zone offers a searchable cloud list, plus this
 device's zone; changing it uses KIFF's signed setup call.
@@ -122,14 +122,51 @@ Card limits, workflow steps and seven-day statistics; its statistics link to
 filtered Activity. Managers can add actions through Coach or disconnect an app.
 Workflow is folded by default, with the cloud's step count and app order. A step's words show under its title only when the cloud sends some.
 
+An action's workflow reference is only its step numbers, since its title is already shown.
+A zero-call Card says **Not allowed by this Card** when it refuses beyond its limit, or
+**Needs your approval for every call** when it holds instead. Consecutive steps in one
+app share one app name in the workflow summary; returning to it after another app remains
+visible. When no numbered version is live, the version summary says **Runs its original
+definition**, matching the definition the service runs.
+
+A workflow is a saved recipe in its original order. A connection's tools are not a
+recipe and their listing order is never presented as one; without a saved recipe,
+Setup asks Coach to set the workflow. A custom taf's job uses its own summary or
+owner notes, rather than the starter template's job description. No live definition
+or account data is changed just by reading either view.
+
 What it remembers previews the cloud's note count and newest note, limited to
 two lines. See all opens full notes and Forget. Changes to how it runs is on
 Card, with the cloud's live-version and earlier-version summary. Cards behind
 the front Card are full faces with their own corners and shadow.
 
 Coach opens from the right and Back restores the same taf and tab. Its
+bar button on a taf keeps a conversation already about that taf, and starts one about
+the new taf when opened from a different taf. Old thread reads and streams cannot replace
+the newly selected conversation. Outside a taf it reopens the current conversation. Its
 new-conversation button uses the square-and-pencil icon; previous conversations
 remain in the adjacent menu. Both chats use one rounded composer, text above
 the attach, mic and send row, growing to six lines. Avatars remain plain letter
 tiles; Android now draws the same animated door rim as iOS, using cloud state.
+
+When KIFF reports a persistent currency exception for a mismatch between work currency and its Card, Needs you
+and Setup show the same cloud-composed question once per action/currency, with its attempt
+history. Managers can open Coach for that taf with the proposed limit request; this does
+not approve a Card or change its limits. Dismiss sends the exception's signed reject answer. Approve once is never offered. KIFF keeps each decision in the
+Record and closes the exception when the Card gains the unit or a call is allowed.
+Activity reads that same exception with each page and collapses only the matching
+typed refusals from its open episode. Other decisions stay visible; Record retains
+all of them. Each Activity page refreshes the panel independently of its history cursor;
+exception changes do not discard older pages. If the panel cannot be read, Activity
+still shows its decisions and the cloud's small notice instead of hiding the history.
+Once KIFF confirms a dismissal, its question also clears from cached views immediately.
+
+Halt names the connection in its status rows. A failed Halt or Resume, including a resume
+that was not confirmed on the device, leaves its reason on that screen beside the control.
+The app checks the session again after each awaited resume step, so an old session cannot
+resume a different account after sign-out.
+Resume stops an unresolved biometric confirmation after ten seconds, invalidates the
+pending authentication, shows a retry message and frees the button. A late confirmation
+cannot send Resume. iOS cannot observe when the system prompt became visible, so its
+deadline covers the unresolved confirmation attempt, including a prompt that never opens.
 

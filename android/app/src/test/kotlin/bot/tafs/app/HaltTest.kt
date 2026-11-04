@@ -85,7 +85,7 @@ class HaltTest {
     transport.answer("POST /v1/tafs/taf_1/halt", 502, """{"error":"kiff/agents is unreachable"}""")
     val m = model()
     m.halt("refunds-1")
-    assertEquals("tafs couldn't halt it. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.lastError)
+    assertEquals("tafs couldn't halt it. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.haltError)
     assertTrue(m.state.value.haltOf("refunds-1").running)
   }
 
@@ -94,7 +94,7 @@ class HaltTest {
     transport.answer("POST /v1/halt", 500, """{"error":"nope"}""")
     val m = model()
     m.halt(null)
-    assertEquals("tafs couldn't halt your tafs. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.lastError)
+    assertEquals("tafs couldn't halt your tafs. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.haltError)
   }
 
   @Test fun anAgentTafsDoesNotRunCannotBeHaltedHere() = runTest {
@@ -123,7 +123,7 @@ class HaltTest {
     assertTrue(m.state.value.haltOf("refunds-1").kiff)
     m.refreshHalt("refunds-1")
     assertTrue("a failed read changes nothing", m.state.value.haltOf("refunds-1").kiff)
-    assertNull(m.state.value.lastError)
+    assertNull(m.state.value.haltError)
   }
 
   // MARK: Resuming
@@ -159,7 +159,7 @@ class HaltTest {
     assertEquals(1, transport.requestsTo("DELETE /v1/tafs/taf_1/halt").size)
     assertTrue(transport.requests.indexOf(resume) < transport.requests.indexOf(transport.requestsTo("DELETE /v1/tafs/taf_1/halt").single()))
     assertTrue(m.state.value.haltOf("refunds-1").running)
-    assertNull(m.state.value.lastError)
+    assertNull(m.state.value.haltError)
   }
 
   @Test fun resumingEveryTafIsKiffsResumeAndTheAccountsRelease() = runTest {
@@ -172,12 +172,25 @@ class HaltTest {
     assertTrue(transport.requestsTo("POST /v1/resume").single().headers.containsKey("KIFF-Device-Signature"))
   }
 
+  @Test fun aResumeConfirmationUnansweredAfterTenSecondsIsCancelledSaysSoAndSendsNothing() = runTest {
+    reads()
+    // A prompt that never opened: no answer for a minute, then a yes that must not count.
+    auth.waitMs = 60_000
+    val m = model()
+    assertFalse(m.resumeHalt("refunds-1"))
+    assertEquals("It gave up at 10 seconds", 10_000, testScheduler.currentTime)
+    assertEquals("The fingerprint check didn't open. Try again.", m.state.value.haltError)
+    testScheduler.advanceTimeBy(60_000)
+    testScheduler.runCurrent()
+    assertTrue(transport.requests.none { it.url.endsWith("/resume") || it.method == "DELETE" })
+  }
+
   @Test fun aResumeNobodyConfirmedSendsNothing() = runTest {
     reads()
     auth.confirms = false
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
-    assertEquals(bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED, m.state.value.lastError)
+    assertEquals(bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED, m.state.value.haltError)
     assertTrue(transport.requests.none { it.url.endsWith("/resume") || it.method == "DELETE" })
   }
 
@@ -186,7 +199,7 @@ class HaltTest {
     transport.answer("POST /v1/agents/refunds-1/resume", 403, """{"error":"not allowed"}""")
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
-    assertEquals("KIFF didn't resume Refunds. Your role on this account doesn't allow this.", m.state.value.lastError)
+    assertEquals("KIFF didn't resume Refunds. Your role on this account doesn't allow this.", m.state.value.haltError)
     assertTrue(transport.requests.none { it.method == "DELETE" })
   }
 
@@ -196,14 +209,14 @@ class HaltTest {
     transport.answer("DELETE /v1/tafs/taf_1/halt", 409, """{"error":"KIFF still halts it"}""")
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
-    assertEquals("KIFF resumed Refunds, but tafs cloud didn't yet. It changed in the meantime. What's shown now is how it is.", m.state.value.lastError)
+    assertEquals("KIFF resumed Refunds, but tafs cloud didn't yet. It changed in the meantime. What's shown now is how it is.", m.state.value.haltError)
   }
 
   @Test fun aSessionWithNoKeyOfThisPhonesCannotSignAResume() = runTest {
     reads()
     val m = model(keyed = false)
     assertFalse(m.resumeHalt("refunds-1"))
-    assertEquals("Sign in with KIFF again: this sign-in can't sign for the phone.", m.state.value.lastError)
+    assertEquals("Sign in with KIFF again: this sign-in can't sign for the phone.", m.state.value.haltError)
     assertTrue(auth.asked.isEmpty())
     assertTrue(transport.requests.none { it.url.endsWith("/resume") })
   }
@@ -236,7 +249,7 @@ class HaltTest {
   @Test fun theExplanationNamesWhoIsStoppedAndWhatDoesNotComeBack() {
     assertTrue(HaltWords.explanation(Halt.Running, all = true).startsWith("Halting stops your tafs:"))
     assertTrue(HaltWords.explanation(Halt.Running, all = false).startsWith("Halting stops it:"))
-    assertEquals("Nothing new starts. Halted shows once KIFF and planque both confirm.", HaltWords.explanation(Halt(state = "halting"), all = false))
+    assertEquals("Nothing new starts. Halted shows once KIFF and the connection both confirm.", HaltWords.explanation(Halt(state = "halting"), all = false))
     val halted = HaltWords.explanation(Halt(state = "halted", haltedAt = Instant.parse("2026-10-28T09:00:00Z")), all = false)
     assertTrue(halted, halted.startsWith("Halted since "))
     assertTrue(halted, halted.endsWith("nothing from before the halt picks up again."))

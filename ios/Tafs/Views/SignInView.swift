@@ -154,13 +154,12 @@ struct SettingsView: View {
                     Link("Privacy policy", destination: Legal.privacy)
                 }
                 Section("About") {
-                    LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
+                    LabeledContent("Version", value: Self.versionLabel())
                     Text("They taf. You kiff.").foregroundColor(Theme.dim)
                 }
                 Section("Account actions") {
                     if model.mode == .sample { Button("Sign in with KIFF") { signingIn = true } }
-                    if model.mode == .kiff { Button("Switch account…") { confirming = .switchAccount } }
-                    Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
+                    Button(model.mode == .kiff ? "Sign out" : "Clear the sample", role: .destructive) {
                         if model.mode == .kiff { confirming = .signOut }
                         else { Task { if await model.signOut() { dismiss() } } }
                     }
@@ -176,13 +175,16 @@ struct SettingsView: View {
             .navigationTitle("Account")
             .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
-            .confirmingSignOut($confirming) { way in
-                switch way {
-                case .switchAccount: signingIn = true
-                case .signOut, .signInAgain: Task { if await model.signOut() { dismiss() } }
-                }
+            .confirmingSignOut($confirming) { _ in
+                Task { if await model.signOut() { dismiss() } }
             }
         }
+    }
+
+    static func versionLabel(bundle: Bundle = .main) -> String {
+        let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
+        guard let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String, !build.isEmpty else { return version }
+        return "\(build) (\(version))"
     }
 
     private var modeText: String {

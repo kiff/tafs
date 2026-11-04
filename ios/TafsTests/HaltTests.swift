@@ -15,7 +15,7 @@ final class HaltTests: XCTestCase {
     private static let halted = #"{"halt":{"state":"halted","halted_at":"2026-10-21T23:00:00Z","runtime":true,"kiff":true,"planque":true,"account":false,"stopped":0}}"#
     private static let running = #"{"halt":{"state":"running","halted_at":"2026-10-21T23:00:00Z","runtime":false,"kiff":false,"planque":false,"account":false,"stopped":0}}"#
 
-    private func signedIn(signer: FaceIDSigner) async throws -> (AppModel, UUID) {
+    private func signedIn(signer: ApprovalSigning) async throws -> (AppModel, UUID) {
         StubProtocol.responses = [:]
         StubProtocol.thenRespond = [:]
         StubProtocol.sent = []
@@ -90,6 +90,7 @@ final class HaltTests: XCTestCase {
         XCTAssertTrue(sent("DELETE", "/v1/tafs/depl_1/halt").isEmpty)
         XCTAssertEqual(model.haltState(rae).state, .halted)
         XCTAssertTrue(model.lastError?.hasPrefix("KIFF didn't resume Rae") == true, model.lastError ?? "")
+        XCTAssertEqual(model.haltError(rae), model.lastError, "the error is available on the Halt screen itself")
     }
 
     func testNoFaceIDNoResume() async throws {
@@ -101,6 +102,21 @@ final class HaltTests: XCTestCase {
         let resumed = await model.resumeHalt(rae)
         XCTAssertFalse(resumed)
         XCTAssertTrue(sent("POST", "/v1/agents/rae-k3f9/resume").isEmpty)
+        XCTAssertNotNil(model.haltError(rae), "a missing or cancelled confirmation explains why Resume did not happen")
+    }
+
+    func testAStalledResumeReleasesTheButtonAndIgnoresLateConfirmation() async throws {
+        let signer = StalledResumeSigner()
+        let (model, rae) = try await signedIn(signer: signer)
+        model.resumeConfirmationWait = { while signer.answer == nil { await Task.yield() } }
+        let resumed = await model.resumeHalt(rae)
+        XCTAssertFalse(resumed)
+        XCTAssertEqual(model.haltError(rae), "\(Biometry.name) didn't open. Try again.")
+        XCTAssertTrue(signer.cancelled)
+        XCTAssertTrue(sent("POST", "/v1/agents/rae-k3f9/resume").isEmpty)
+        signer.answer?.resume(returning: "late-signature"); signer.answer = nil
+        await Task.yield()
+        XCTAssertTrue(sent("POST", "/v1/agents/rae-k3f9/resume").isEmpty, "the timed-out answer never resumes KIFF")
     }
 
     func testHaltsAndResumesEveryTaf() async throws {
@@ -124,4 +140,16 @@ final class HaltTests: XCTestCase {
         XCTAssertFalse(KIFFClient.signsSetup("/v1/agents/rae-k3f9/halt"), "a halt only takes authority away: no signature")
         XCTAssertFalse(KIFFClient.signsSetup("/v1/agents//resume"))
     }
+}
+
+@MainActor
+private final class StalledResumeSigner: ApprovalSigning {
+    var publicKeyDER: Data { Data() }
+    var answer: CheckedContinuation<String, Error>?
+    var cancelled = false
+    func sign(_ message: Data, reason: String) async throws -> String {
+        try await withCheckedThrowingContinuation { answer = $0 }
+    }
+    func signConfirmed(_ message: Data) throws -> String { "current" }
+    func cancelConfirmation() { cancelled = true }
 }

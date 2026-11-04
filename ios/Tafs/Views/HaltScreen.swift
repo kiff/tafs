@@ -33,7 +33,7 @@ struct HaltScreen: View {
                         Eyebrow(text: "Who holds the halt")
                         HoldRow(text: "No run starts", held: h.runtime)
                         HoldRow(text: "KIFF refuses its calls", held: h.kiff)
-                        HoldRow(text: "planque sends nothing to your tools", held: h.planque)
+                        HoldRow(text: "The connection sends nothing to your tools", held: h.planque)
                         if h.account && tafID != nil {
                             Text("Halted with all your tafs. Resume them all to let it run.")
                                 .scaledFont(13).foregroundColor(Theme.dim)
@@ -63,6 +63,9 @@ struct HaltScreen: View {
                         .buttonStyle(OutlineButtonStyle())
                         .disabled(busy)
                     }
+                }
+                if let error = model.haltError(tafID) {
+                    Text(error).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.horizontal, 16)
@@ -107,7 +110,7 @@ struct HaltScreen: View {
         case .running:
             return "Halting stops \(who): no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
         case .halting:
-            return "Nothing new starts. Halted shows once KIFF and planque both confirm."
+            return "Nothing new starts. Halted shows once KIFF and the connection both confirm."
         case .halted:
             let since = h.haltedAt.map { " since \($0.shortTime)" } ?? ""
             return "Halted\(since). Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."

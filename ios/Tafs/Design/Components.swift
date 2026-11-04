@@ -270,13 +270,12 @@ struct UnreachableLine: View {
 /// the session. Cancel leaves everything as it is.
 @MainActor
 enum SignOutWay {
-    case signOut, signInAgain, switchAccount
+    case signOut, signInAgain
 
     var title: String {
         switch self {
         case .signOut: return "Sign out of KIFF?"
         case .signInAgain: return "Sign in again?"
-        case .switchAccount: return "Switch account?"
         }
     }
 
@@ -284,7 +283,6 @@ enum SignOutWay {
         switch self {
         case .signOut: return "This \(ThisDevice.kind) stops working for your account until you sign in again. Your tafs keep working."
         case .signInAgain: return "This \(ThisDevice.kind) signs out of KIFF first, then you sign in again in your browser."
-        case .switchAccount: return "KIFF's sign-in page lists your accounts. This \(ThisDevice.kind) then works for the one you pick."
         }
     }
 
@@ -292,7 +290,6 @@ enum SignOutWay {
         switch self {
         case .signOut: return "Sign out"
         case .signInAgain: return "Sign out and sign in"
-        case .switchAccount: return "Switch"
         }
     }
 }

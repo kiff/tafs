@@ -91,6 +91,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
   }
 
   companion object {
+
     /** A biometric the phone counts as strong, or the screen lock: what signs with the signing key asks with either. */
     const val ALLOWED = BIOMETRIC_STRONG or DEVICE_CREDENTIAL
   }

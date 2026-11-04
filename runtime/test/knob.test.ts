@@ -104,9 +104,9 @@ describe("the dial", () => {
     expect(k.rings.map((r) => r.name)).toEqual(["When", "What", "Where"]);
     expect(k.why).toBe("Refund double charges");
     expect(k.what.map((w) => [w.step, w.label, w.tool])).toEqual([[1, "Check", "stripe_get_charge"], [2, "Refund", undefined]]);
-    // A taf Coach set no recipe for: its tools, by KIFF's title; its Why is what it does.
+    // Connected-tool order is not execution order. A taf without a saved recipe asks Coach.
     const plain = knobOf({ ...base, tools: new Map([["stripe_refund", "Refund a payment"]]) });
-    expect(plain.what.map((w) => w.label)).toEqual(["Refund a payment"]);
+    expect(plain.what.map((w) => w.label)).toEqual(["Ask Coach"]);
     expect(plain.why).toBe("Refund");
   });
 
@@ -128,6 +128,13 @@ describe("the dial", () => {
     // The last place tafs delivers has no size: it can't be turned off.
     const one = knobOf({ ...base, setting: { ...setting, results: ["app"] } });
     expect(one.results.find((r) => r.place === "app")!.size).toBeUndefined();
+  });
+
+  it("supplies the current How often value in full words", () => {
+    const k = knobOf({ ...base, setting: { wakes: [{ kind: "schedule", form: "every", every_minutes: 240 }], busy: "skip", results: ["app"] } });
+    const size = k.wakes.find((w) => w.kind === "schedule")!.size!;
+    expect(size.label).toBe("How often");
+    expect(size.choices[size.index]!.label).toBe("Every 4 hours");
   });
 
   it("tells both apps the same rules: OK on each stop, a door's look, Add a door, and what's pending", () => {

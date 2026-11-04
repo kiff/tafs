@@ -82,7 +82,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
           }
         }
         Text(
-          "Signing a device out ends its sign-in on this account at once. To sign out this phone, use Sign out of KIFF.",
+          "Signing a device out ends its sign-in on this account at once. To sign out this phone, use Sign out in Account.",
           style = scaled(13, color = Theme.dim),
           modifier = Modifier.padding(horizontal = 4.dp),
         )

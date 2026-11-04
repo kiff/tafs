@@ -63,6 +63,7 @@ function expectedSignature(s: Sent): string {
 }
 
 describe("kiff/agents client", () => {
+
   it("signs each request with tafs cloud's role, the tenant header included", async () => {
     const { agents, sent } = server();
     await agents.startRun("t_acme", "taf1", "What's waiting?", { session: "s1" });

@@ -5,6 +5,7 @@ import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
 import java.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -86,6 +87,63 @@ class CoachConversationsTest {
     assertTrue(transport.requestsTo(send).isEmpty())
     assertEquals("s7", m.state.value.coachChat)
     assertNull(m.state.value.coachImproving)
+  }
+
+  @Test fun coachFromATafsPageIsThatTafsConversationAndElsewhereTheOneOpen() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/taf_1/improve", 200, """{"session":"s7","new_session":true}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s7", 200, """{"messages":[]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200, """{"messages":[]}""")
+    val m = model()
+    m.improveTaf("refunds-1")
+    m.deliverChat("How is it going?", COACH_CHAT)
+    // Back on Refunds' page, or from another screen: the conversation about Refunds stays open.
+    m.openCoachOn("refunds-1")
+    assertEquals("s7", m.state.value.coachChat)
+    m.openCoachOn(null)
+    assertEquals("s7", m.state.value.coachChat)
+    // A conversation about something else, then Coach from Refunds' page: a new one about Refunds.
+    m.openCoachChat("s4")
+    m.openCoachOn("refunds-1")
+    assertNull(m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+    assertEquals("refunds-1", m.state.value.coachImproving)
+  }
+
+  @Test fun aReadOfTheConversationLeftDoesNotReplaceTheNewTafsOne() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200,
+      """{"messages":[{"at":"2026-10-27T09:00:00Z","from":"owner","text":"About something else","session":"s4"}]}""")
+    val m = model()
+    transport.hold("GET /v1/tafs/setup_1/conversation/s4")
+    val read = launch { m.openCoachChat("s4") }
+    testScheduler.runCurrent()
+    // Coach from Refunds' page before that read came back: a new conversation about Refunds, which the late read leaves alone.
+    m.openCoachOn("refunds-1")
+    transport.release("GET /v1/tafs/setup_1/conversation/s4")
+    read.join()
+    assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().isEmpty())
+    assertTrue(m.state.value.coachFresh)
+    assertEquals("refunds-1", m.state.value.coachImproving)
+  }
+
+  @Test fun aSendToTheConversationLeftDoesNotBindTheNewOne() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/taf_1/improve", 200, """{"session":"s7","new_session":true}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s7", 200, """{"messages":[]}""")
+    val m = model()
+    m.improveTaf("refunds-1")
+    transport.hold("POST /v1/tafs/taf_1/improve")
+    val send = launch { m.deliverChat("How is it going?", COACH_CHAT) }
+    testScheduler.runCurrent()
+    // Another conversation before tafs cloud answered: the late answer goes on at tafs cloud, and leaves this one alone.
+    m.newCoachChat()
+    transport.release("POST /v1/tafs/taf_1/improve")
+    send.join()
+    assertNull(m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+    assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().isEmpty())
+    assertFalse("the new conversation can be written in", COACH_CHAT in m.state.value.chatSending)
   }
 
   @Test fun changingTheLimitInCoachModeOpensCoachOnTheTaf() = runTest {

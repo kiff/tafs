@@ -27,7 +27,7 @@ Sign in with KIFF's device flow (`AppModel.startSignIn`, `finishSignIn`):
    so KIFF accepts the phone's answers only with that key's signature. The approval key
    is registered next ([approvals.md](approvals.md#how-an-answer-is-signed)).
 
-Each way out asks first: Sign out, Sign in again and Switch account open a confirmation,
+Each way out asks first: Sign out and Sign in again open a confirmation,
 so a stray tap never ends the session (Android `ConfirmSignOut`, iOS `SignOutWay`). Signing out (`POST /v1/auth/device/logout`) or switching account clears everything of the
 earlier session on the phone, including files opened from a chat. The session ends at KIFF
 first: when KIFF doesn't confirm, the phone stays signed in and says so ("Not signed out at
@@ -37,7 +37,13 @@ registered again at once when KIFF doesn't end it, so a device still signed in k
 session KIFF already ended (a 401, or the account deleted) is cleared on the phone at once. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 
-**The session ends at KIFF first.** Sign out, Switch account and Sign in again ask KIFF to
+The phone remembers that alerts were enabled for this account. Signing back in restores
+its token without another unlock when that consent is saved, or when cloud confirms this
+phone is already enrolled for the same person/account. A different account does not inherit
+that consent. If alerts cannot be restored, the sign-in shows **Alerts are off on this
+phone**, with Turn on and Not now; a previous account's declined offer does not suppress it.
+
+**The session ends at KIFF first.** Sign out and Sign in again ask KIFF to
 end the session before anything changes on the phone, so a phone that shows signed out
 never holds a session KIFF still accepts. If KIFF doesn't confirm, the phone stays signed
 in and says "Not signed out at KIFF yet. Try again, or sign this phone out from another
@@ -78,8 +84,9 @@ KIFF sends with no capabilities, keeps everything.
 
 **Which account:** the account's name is always in sight: beside Settings on an iPad and
 beside the mascot on an iPhone (`AppModel.accountLabel`). Someone on more than one
-account uses **Switch account…** in Settings, which goes through KIFF's sign-in, where
-each account is listed.
+account signs out from Account, then signs in to the account they want. There is one
+account on this phone at a time; sessions for several accounts are not kept side by side.
+Account's Version shows the build and version, such as **25 (1.0)**.
 
 Chats are each person's own. Nobody else on the account reads them, not an admin and not
 the account's owner.
@@ -200,6 +207,14 @@ Every time the app shows is in the account's time zone (`AccountTime`), and a Ca
 ends at the account's midnight. When the device's zone differs, the app offers it once:
 "Use Europe/Paris for times in tafs?". Yes sets it in KIFF with a signed call
 (`PUT /v1/me/time-zone`, one Face ID). Not now is remembered for that zone and account.
+
+After KIFF confirms a chosen zone, the phone asks tafs cloud to apply that confirmed zone
+to recurring schedules (`POST /v1/account/time-zone`), then refreshes times and drops its
+cached Activity/run pages. Absolute one-off times and follow-ups keep their instants.
+If scheduling fails, Account says the zone changed but schedules still need retry;
+repeating the change finishes only schedules still in another zone. Card names the
+account's zone. Tafs cloud never signs the person's KIFF change or accepts a zone from
+the caller in the synchronization request.
 
 ## Deleting the account
 

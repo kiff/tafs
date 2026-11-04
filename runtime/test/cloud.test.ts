@@ -5,7 +5,7 @@ import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
-import type { Mandate } from "../src/cloud/home.js";
+import type { Held, Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
@@ -22,7 +22,7 @@ type Drafts = Record<string, { secret: string; key: string; agent: string; statu
 
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
 interface Account {
-  mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[];
+  mandates: Mandate[]; held: Held[]; calls?: ActivityCall[];
   drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number;
   /** Each Card's latest revision, as its statement says (kiff/tafs#107). */
   revisions?: Record<string, number>;
@@ -309,8 +309,42 @@ describe("tafs cloud", () => {
 
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
-    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"] }]);
+    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"], time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC" }]);
     expect(r.body.removing).toEqual([]);
+  });
+
+  it("names a schedule still using another clock without silently changing it on a read", async () => {
+    const w = world();
+    const schedule = w.agents.schedules.get(`t_acme|${RAE}`)!;
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...schedule, time_zone: "Europe/Paris" });
+    const r = await call(w, "GET", "/v1/tafs", { token: "ana" });
+    expect(r.body.tafs[0]).toMatchObject({ time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "Europe/Paris",
+      schedule_time_zone_words: "Its schedule still uses Europe/Paris. Apply the account's time zone again to update it." });
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)?.time_zone).toBe("Europe/Paris");
+  });
+
+  it("composes KIFF currency exceptions only for visible tafs, with the same row in Needs you and Setup", async () => {
+    const w = world();
+    const exception: Held = { id: "exc-example", kind: "card_unit", subject: "rae", action: "answer_case", status: "held", count: 4,
+      created_at: "2026-10-28T12:00:00Z", last_at: "2026-10-29T09:00:00Z", breaches: [{ outcome: "amount_unit_mismatch", unit: "USD", card_unit: "EUR" }] };
+    w.account.held = [exception, { ...exception, id: "other", subject: "max" }, { subject: "rae" }];
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.status).toBe(200); expect(home.body.card_unit_exceptions).toHaveLength(1);
+    expect(home.body.card_unit_exceptions[0]).toMatchObject({ id: "exc-example", taf: RAE, name: "Rae", can_approve_once: false });
+    const setup = await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" });
+    expect(setup.status).toBe(200); expect(setup.body.card_unit_exceptions).toEqual(home.body.card_unit_exceptions);
+    w.account.access = {};
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
+    expect((await call(w, "GET", `/v1/tafs/${MAX}/setup`, { token: "ana" })).status).toBe(404);
+    w.account.access = { rae: { use: true, oversee: true, manage: true } };
+    w.account.held = [{ ...exception, status: "changed" }];
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
+  });
+
+  it("does not claim no currency exceptions wait when KIFF could not be read", async () => {
+    const w = world(); w.account.status = 503;
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(502);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" })).status).toBe(502);
   });
 
   it("counts a chat's run as the taf's last run, never a trial's", async () => {
@@ -564,8 +598,9 @@ describe("the home list", () => {
     expect(await w.slots.held(`present#t_acme`)).toBe(true);
     expect(r.body.tafs).toEqual([{
       id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"],
-      // Its job in words, for its page (kiff/tafs#167).
-      job_summary: "Answers refund requests and issues refunds and credits within the Card.",
+      time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC",
+      // A custom name with no saved job never borrows the starter template's description.
+      job_summary: "Ask Coach to describe this taf's job",
       color: 0, state: "working", waiting: 0,
       // Where its work stands, in words (docs/reliability.md).
       work: { status: "idle", line: "Next run Fri 12:30", needs_you: 0 },
@@ -994,7 +1029,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.agents.setupDrafts.get("drf_s1")?.keyRef).toBe(`kiff/${NEW}`);
     expect(w.keys.held.has(`t_acme#${NEW}`)).toBe(false);
     expect(w.agents.agents.get(`t_acme|${NEW}`)).toMatchObject({ key_ref: `kiff/${NEW}` });
-    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * `, `trigger ${NEW}`]);
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * UTC`, `trigger ${NEW}`]);
     expect(w.claims.held.size).toBe(0);
   });
 
@@ -1005,7 +1040,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(r.status).toBe(200);
     expect(r.body.session).toBeNull();
     expect(r.body.taf).toMatchObject({ id: NEW, status: "active", unscheduled: true, next_run: null });
-    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * `]);
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * UTC`]);
     expect(w.agents.schedules.get(`t_acme|${NEW}`)?.enabled).toBe(false);
     expect(w.tafs.held.get(`t_acme#${NEW}`)?.unscheduled).toBe(true);
     for (const action of ["pause", "resume", "run"]) {
@@ -1023,9 +1058,9 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.tafs.held.get(`t_acme#${NEW}`)?.summary).toBe("Offers a customer who cancels a discount to stay, within its Card.");
     const listed = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs.find((t: { id: string }) => t.id === NEW);
     expect(listed.job_summary).toBe("Offers a customer who cancels a discount to stay, within its Card.");
-    // A taf with none (one from before, or not Coach's) keeps its job's line.
+    // A custom taf without a saved description never shows a different template's job.
     const rae = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs.find((t: { id: string }) => t.id === RAE);
-    expect(rae.job_summary).toBe("Answers refund requests and issues refunds and credits within the Card.");
+    expect(rae.job_summary).toBe("Ask Coach to describe this taf's job");
   });
 
   it("cuts a long summary at a word, never refusing the taf for it", async () => {

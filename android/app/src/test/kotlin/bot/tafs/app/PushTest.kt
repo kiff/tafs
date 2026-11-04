@@ -8,6 +8,7 @@ import bot.tafs.app.push.Alert
 import bot.tafs.app.push.AlertPayload
 import bot.tafs.app.push.PushPlatform
 import java.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -162,6 +163,65 @@ class PushTest {
   }
 
   // MARK: Registering the phone
+
+  // MARK: Signing out and back in (#464 item 16)
+
+  @Test fun signingBackInToTheAccountBringsThisPhonesAlertsBackWithNoConfirmation() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    val before = transport.requestsTo(register).size
+    m.useSession("at_2", "t_01")
+    assertEquals(before + 1, transport.requestsTo(register).size)
+    assertTrue(m.state.value.alertsReady)
+    assertFalse(m.state.value.alertsOffSinceSignOut)
+    assertEquals("1", secrets.load(AppModel.ALERTS_ON))
+    assertTrue("nothing was signed", transport.requestsTo(alertTarget).isEmpty())
+  }
+
+  @Test fun alertsThatCannotComeBackOnSaySoOnce() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":false}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    m.useSession("at_2", "t_01")
+    assertFalse(m.state.value.alertsReady)
+    assertTrue(m.state.value.alertsOffSinceSignOut)
+    assertNull("left off until the owner turns them on", secrets.load(AppModel.ALERTS_ON))
+    m.dismissAlertsOff()
+    assertFalse(m.state.value.alertsOffSinceSignOut)
+  }
+
+  @Test fun anotherAccountDoesNotGetThisAccountsAlerts() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    val before = transport.requestsTo(register).size
+    m.useSession("at_2", "t_02")
+    assertEquals(before, transport.requestsTo(register).size)
+    assertFalse(m.state.value.alertsOffSinceSignOut)
+    assertNull(secrets.load(AppModel.ALERTS_ON))
+  }
+
+  @Test fun aSignInOvertakenByAnotherGivesItNothingOfItsAlerts() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    val before = transport.requestsTo(register).size
+    // Signing in to the account whose alerts were on, still reading, when another account's sign-in overtakes it.
+    val slow = transport.holdNext("GET /v1/home")
+    val first = launch { m.useSession("at_a", "t_01") }
+    testScheduler.runCurrent()
+    m.useSession("at_b", "t_02")
+    slow.complete(Unit)
+    first.join()
+    assertEquals("the other account's phone isn't registered", before, transport.requestsTo(register).size)
+    assertNull(secrets.load(AppModel.ALERTS_ON))
+    assertFalse(m.state.value.alertsOffSinceSignOut)
+  }
 
   @Test fun aPhoneIsRegisteredWithItsFirebaseTokenAndWhatSoundItWants() = runTest {
     reads()
