@@ -7,13 +7,16 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.test.espresso.Espresso
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.LocalBiometry
@@ -21,6 +24,7 @@ import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.kiff.Access
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.KnobWire
+import bot.tafs.app.kiff.TafSetup
 import bot.tafs.app.model.Card
 import bot.tafs.app.model.SetupWords
 import bot.tafs.app.model.Taf
@@ -50,7 +54,7 @@ class SetupTabTest {
         "results":$results,"rim":{}}""",
   )
 
-  private fun show(knob: KnobWire, live: List<String> = emptyList()) = rule.setShown {
+  private fun show(knob: KnobWire, live: List<String> = emptyList(), setup: TafSetup? = null) = rule.setShown {
     val taf = taf.copy(results = live)
     val actions = TafActions(
       answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
@@ -69,7 +73,8 @@ class SetupTabTest {
         Column(Modifier.verticalScroll(rememberScrollState())) {
           SetupTab(
             taf,
-            AppState(mode = Mode.kiff, ready = true, tafs = listOf(taf), access = mapOf("refunds-1" to Access(use = true, oversee = true, manage = true)), knobs = mapOf("refunds-1" to knob)),
+            AppState(mode = Mode.kiff, ready = true, tafs = listOf(taf), access = mapOf("refunds-1" to Access(use = true, oversee = true, manage = true)), knobs = mapOf("refunds-1" to knob),
+              tafSetups = setup?.let { mapOf("refunds-1" to it) } ?: emptyMap()),
             actions, onVersions = { log += "versions" }, onConnectApps = { log += "connect" }, onRemove = { log += "remove" },
           )
         }
@@ -128,6 +133,27 @@ class SetupTabTest {
     rule.waitForIdle()
     rule.onNode(hasContentDescription(SetupWords.placeTitle("door_reply"))).assertIsNotEnabled()
     rule.onNode(hasContentDescription(SetupWords.placeTitle("app"))).assertIsEnabled()
+  }
+
+  // As tafs cloud sends it: a step's words are empty when they'd only repeat its label.
+  private val stripe = KiffClient.json.decodeFromString<TafSetup>(
+    """{"connections":[{"id":"g1","name":"Stripe","status":"connected","action_words":"1 action",
+        "actions":[{"name":"list_disputes","title":"List your disputes","step_words":"Step 2"}],
+        "workflow_steps":[{"number":2,"label":"List your disputes","words":""}]}],
+        "workflow":{"summary":"1 step · Stripe","steps":[{"number":2,"label":"List your disputes","words":"","app":"Stripe"}]}}""",
+  )
+
+  @Test fun aStepSaysItsTitleOnceAndTheBackKeyClosesAnAppsSheet() {
+    show(knob(twoOn), setup = stripe)
+    rule.onNodeWithText("Workflow · 1 step · Stripe").performScrollTo().performClick()
+    rule.waitForIdle()
+    rule.onAllNodesWithText("List your disputes").assertCountEquals(1)
+    rule.onNode(hasContentDescription("Stripe. 1 action")).performScrollTo().performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("2 · List your disputes").performScrollTo().assertIsDisplayed()
+    Espresso.pressBack()
+    rule.waitForIdle()
+    rule.onAllNodesWithText("2 · List your disputes").assertCountEquals(0)
   }
 
   @Test fun tafsOwnPlacesShowTheLiveTafsNeverAWaitingDrafts() {
