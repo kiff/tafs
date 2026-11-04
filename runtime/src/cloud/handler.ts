@@ -3876,10 +3876,18 @@ async function forget(me: KIFFIdentity, taf: Taf, escapedName: string, deps: Dep
 async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule, read?: { runs: Run[] | undefined }) {
   // The taf's recent runs when the caller read them already (the home list): never read twice.
   const runs = read ? Promise.resolve(read.runs) : deps.agents.runs(me.tenantID, taf.id, false, LAST_RUN_LOOK).catch(() => undefined);
-  const [s, last] = await Promise.all([
+  let [s, last] = await Promise.all([
     schedule ? Promise.resolve(schedule) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
     runs.then((r) => r?.find((x) => x.trigger !== "trial")),
   ]);
+  // A recurring schedule saved before the account had a zone, or before it changed, follows the
+  // account's zone by itself (kiff/tafs#467 item 1), once, when someone who manages Cards reads it.
+  // Its hours stay as written. A write that fails leaves the words below, to apply it by hand.
+  const zone = me.timeZone ?? "UTC";
+  if (s && s.kind !== "once" && !s.follow_up && (s.time_zone || "UTC") !== zone && me.timeZone && me.capabilities.includes("cards.manage")) {
+    const moved = { ...s, time_zone: zone };
+    s = await deps.agents.updateSchedule(me.tenantID, moved).then(() => moved, () => s);
+  }
   return {
     id: taf.id,
     name: taf.name,

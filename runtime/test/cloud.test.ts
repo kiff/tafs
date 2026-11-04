@@ -212,7 +212,7 @@ function depsOf(w: World): Deps {
     apns: { send: async (d, n) => { w.pushed.push({ token: d.token, n }); return "sent" as const; } },
     forward: async () => undefined,
     sleep: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account,
+    fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, ana_paris: { ...ME, time_zone: "Europe/Paris" }, viewer_paris: { ...VIEWER, time_zone: "Europe/Paris" }, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account,
       () => [...[...w.tafs.held.values()].map((t) => t.kiffAgent), ...w.account.mandates.map((m) => m.subject), ...w.account.held.map((h) => h.subject)]),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
     events: {
@@ -321,6 +321,22 @@ describe("tafs cloud", () => {
     expect(r.body.tafs[0]).toMatchObject({ time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "Europe/Paris",
       schedule_time_zone_words: "Its schedule still uses Europe/Paris. Apply the account's time zone again to update it." });
     expect(w.agents.schedules.get(`t_acme|${RAE}`)?.time_zone).toBe("Europe/Paris");
+  });
+
+  it("moves an older schedule to the account's zone when someone who manages Cards reads it, hours as written", async () => {
+    const w = world();
+    const before = w.agents.schedules.get(`t_acme|${RAE}`)!;
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...before, time_zone: "UTC" });
+    // A viewer's read changes nothing, and is told how to apply it.
+    const seen = await call(w, "GET", "/v1/tafs", { token: "viewer_paris" });
+    expect(seen.body.tafs[0]).toMatchObject({ time_zone: "Europe/Paris", schedule_time_zone: "UTC" });
+    expect(seen.body.tafs[0].schedule_time_zone_words).toBeDefined();
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)?.time_zone).toBe("UTC");
+    // A manager's read moves it once: same cron, the account's zone, no words left.
+    const r = await call(w, "GET", "/v1/tafs", { token: "ana_paris" });
+    expect(r.body.tafs[0]).toMatchObject({ time_zone: "Europe/Paris", schedule_time_zone: "Europe/Paris" });
+    expect(r.body.tafs[0].schedule_time_zone_words).toBeUndefined();
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)).toMatchObject({ cron: before.cron, time_zone: "Europe/Paris" });
   });
 
   it("composes KIFF currency exceptions only for visible tafs, with the same row in Needs you and Setup", async () => {
