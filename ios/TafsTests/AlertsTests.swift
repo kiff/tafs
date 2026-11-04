@@ -12,6 +12,8 @@ final class AlertsTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "alerts.enabled|t1")
         UserDefaults.standard.removeObject(forKey: "alerts.kinds|t1")
         StubProtocol.responses = [:]
+        // A legacy phone already enrolled for this account may restore its token without a new unlock.
+        StubProtocol.responses["GET /v1/push"] = (200, #"{"enabled":true,"sound":true,"kinds":[],"answering":{"title":"Answered tafs","tafs":[]}}"#)
         StubProtocol.sent = []
         Keychain.delete(AppModel.alertHandoffAccount)
         let config = URLSessionConfiguration.ephemeral
@@ -145,10 +147,46 @@ final class AlertsTests: XCTestCase {
         XCTAssertEqual(model.mode, .kiff)
         XCTAssertEqual(model.alertsReady, true)
         let order = StubProtocol.sent.compactMap { r -> String? in
-            guard let path = r.url?.path, path.hasPrefix("/v1/push") || path == "/v1/auth/device/logout" else { return nil }
+            guard r.httpMethod != "GET", let path = r.url?.path, path.hasPrefix("/v1/push") || path == "/v1/auth/device/logout" else { return nil }
             return "\(r.httpMethod ?? "") \(path)"
         }
         XCTAssertEqual(order, ["POST /v1/push", "DELETE /v1/push/ab01ff", "POST /v1/auth/device/logout", "POST /v1/push"])
+    }
+
+    func testSigningBackInRestoresOnlyThisAccountsPreviouslyEnabledAlerts() async {
+        let signer = FaceIDSigner()
+        let model = model(signer: signer)
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
+        StubProtocol.responses["DELETE /v1/push/ab01ff"] = (200, #"{"removed":true}"#)
+        await model.pushTokenArrived(token)
+        XCTAssertEqual(model.alertsReady, true)
+        model.answerAlertsOffer()
+        let prompts = signer.prompts
+        _ = await model.signOut()
+        await signedIn(model)
+        XCTAssertEqual(model.alertsReady, true)
+        XCTAssertEqual(signer.prompts, prompts, "restoring the same account's alerts asks for no new unlock")
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/push").count, 2)
+
+        _ = await model.signOut()
+        UserDefaults.standard.removeObject(forKey: "alerts.enabled|another-account")
+        StubProtocol.responses["GET /v1/push"] = (200, #"{"enabled":false,"sound":true,"kinds":[],"answering":{"title":"Answered tafs","tafs":[]}}"#)
+        await model.useSession("synthetic-other-session", tenant: "another-account")
+        XCTAssertEqual(model.alertsReady, false)
+        XCTAssertTrue(model.offerAlertsUpFront, "the new account plainly learns alerts are off")
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/push").count, 2, "the other account never inherits consent")
+        UserDefaults.standard.removeObject(forKey: "alerts.enabled|another-account")
+    }
+
+    func testAFailedAlertRestorationSaysTheyAreOffAfterSignIn() async {
+        let model = model()
+        UserDefaults.standard.set(true, forKey: "alerts.enabled|t1")
+        StubProtocol.responses["POST /v1/push"] = (503, #"{"error":"busy"}"#)
+        await signedIn(model)
+        await model.pushTokenArrived(token)
+        XCTAssertEqual(model.alertsReady, false)
+        XCTAssertTrue(model.offerAlertsUpFront)
     }
 
     /// KIFF replaced the account's target and showed its new secret once; the hand-over to

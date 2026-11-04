@@ -109,7 +109,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
       const limits = limitsOf(input.rules.filter((r) => r.action === name));
       return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || "App action",
         limits: limits.length ? limits : ["See its Card"], steps: used.map((s) => s.step),
-        step_words: used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
+        step_words: !steps.length ? "Ask Coach to set its workflow" : used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
     });
     const tools = new Set(actions.map((a) => a.name));
     const ownCalls = calls.filter((c) => tools.has(c.action_name));

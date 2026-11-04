@@ -295,12 +295,11 @@ final class TafsCloud {
         let removing: [PendingRemoval]
         /// The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors.
         var doorsOffered: [String]? = nil
-        var needsYouAsks: [CardUnitAsk]? = nil
-        var asksError: String? = nil
+        var cardUnitExceptions: [CardUnitException]? = nil
 
         enum CodingKeys: String, CodingKey {
             case tafs, others, removing, doorsOffered = "doors_offered"
-            case needsYouAsks = "needs_you_asks", asksError = "asks_error"
+            case cardUnitExceptions = "card_unit_exceptions"
         }
     }
 

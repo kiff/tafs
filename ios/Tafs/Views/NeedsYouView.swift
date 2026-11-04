@@ -15,9 +15,8 @@ struct NeedsYouView: View {
                 let knocked = model.tafs.filter { knocks($0) > 0 }
                 // A money call whose outcome KIFF can't prove: the owner says whether it happened.
                 ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
-                ForEach(model.cardUnitAsks) { ask in CardUnitAskPanel(ask: ask) }
-                if let error = model.cardUnitAsksError { Text(error).foregroundColor(Theme.no) }
-                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitAsks.isEmpty && model.cardUnitAsksError == nil {
+                ForEach(model.cardUnitExceptions) { ask in CardUnitExceptionPanel(ask: ask).id(ask.id) }
+                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty {
                     Panel {
                         Text("Nothing is waiting.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("When a taf asks for something outside its Card, it shows up here and on your lock screen.")
@@ -53,6 +52,7 @@ struct NeedsYouView: View {
         // A hold opened from its notification is brought into view (kiff/tafs#210).
         .onChange(of: model.requestedHold) { request in scroll(to: request, reader) }
         .onChange(of: model.held) { _ in scroll(to: model.requestedHold, reader) }
+        .onChange(of: model.cardUnitExceptions) { _ in scroll(to: model.requestedHold, reader) }
         .onAppear { scroll(to: model.requestedHold, reader) }
         }
         .refreshable {
@@ -66,8 +66,9 @@ struct NeedsYouView: View {
     private func knocks(_ taf: Taf) -> Int { (taf.doors ?? []).reduce(0) { $0 + $1.knocks } }
 
     private func scroll(to request: AppModel.HoldRequest?, _ reader: ScrollViewProxy) {
-        guard let request, let call = model.held.first(where: { $0.kiffID == request.kiffID }) else { return }
-        withMotion { reader.scrollTo(call.id, anchor: .top) }
+        guard let request else { return }
+        if let call = model.held.first(where: { $0.kiffID == request.kiffID }) { withMotion { reader.scrollTo(call.id, anchor: .top) } }
+        else if let exception = model.cardUnitExceptions.first(where: { $0.id == request.kiffID }) { withMotion { reader.scrollTo(exception.id, anchor: .top) } }
     }
 }
 
@@ -392,7 +393,7 @@ struct AlertsOfferSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: "bell.badge").scaledFont(40, weight: .semibold).foregroundColor(Theme.amber)
                 .accessibilityHidden(true)
-            Text("Know the moment a taf needs you").scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
+            Text("Alerts are off on this \(ThisDevice.kind)").scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
             Text("When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this \(ThisDevice.kind) and its lock screen, even with tafs closed.")
                 .scaledFont(16).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             Text("iOS asks next. Confirming with \(Biometry.name) sets them up for your account.")

@@ -90,6 +90,7 @@ final class HaltTests: XCTestCase {
         XCTAssertTrue(sent("DELETE", "/v1/tafs/depl_1/halt").isEmpty)
         XCTAssertEqual(model.haltState(rae).state, .halted)
         XCTAssertTrue(model.lastError?.hasPrefix("KIFF didn't resume Rae") == true, model.lastError ?? "")
+        XCTAssertEqual(model.haltError(rae), model.lastError, "the error is available on the Halt screen itself")
     }
 
     func testNoFaceIDNoResume() async throws {
@@ -101,6 +102,7 @@ final class HaltTests: XCTestCase {
         let resumed = await model.resumeHalt(rae)
         XCTAssertFalse(resumed)
         XCTAssertTrue(sent("POST", "/v1/agents/rae-k3f9/resume").isEmpty)
+        XCTAssertNotNil(model.haltError(rae), "a missing or cancelled confirmation explains why Resume did not happen")
     }
 
     func testHaltsAndResumesEveryTaf() async throws {

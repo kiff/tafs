@@ -122,6 +122,7 @@ function kiff(byToken: Record<string, object>, agentsOf: () => string[] = () => 
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     const me = byToken[token];
+    if (me && new URL(String(url)).pathname === "/v1/me/card-exceptions") return new Response(JSON.stringify({ exceptions: [] }));
     if (String(url).endsWith("/v1/me/usage")) return new Response("{}", { status: 404 });
     if (me && String(url).endsWith("/v1/me/access")) {
       // Who may manage Cards manages every taf here; a viewer only uses them.

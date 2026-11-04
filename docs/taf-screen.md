@@ -149,9 +149,17 @@ remain in the adjacent menu. Both chats use one rounded composer, text above
 the attach, mic and send row, growing to six lines. Avatars remain plain letter
 tiles; Android now draws the same animated door rim as iOS, using cloud state.
 
-When agents reports a persistent mismatch between work currency and its Card, Needs you
+When KIFF reports a persistent currency exception for a mismatch between work currency and its Card, Needs you
 and Setup show the same cloud-composed question once per action/currency, with its attempt
 history. Managers can open Coach for that taf with the proposed limit request; this does
-not approve a Card or change its limits. Agents owns stopping repeated attempts and
-clearing or revalidating the standing refusal after a confirmed Card change.
+not approve a Card or change its limits. Dismiss sends the exception's signed reject answer. Approve once is never offered. KIFF keeps each decision in the
+Record and closes the exception when the Card gains the unit or a call is allowed.
+Activity reads that same exception with each page and collapses only the matching
+typed refusals from its open episode. Other decisions stay visible; Record retains
+all of them. When the exception changes or closes, Activity refreshes its pages.
+
+Halt names the connection in its status rows. A failed Halt or Resume, including a resume
+that was not confirmed on the device, leaves its reason on that screen beside the control.
+The app checks the session again after each awaited resume step, so an old session cannot
+resume a different account after sign-out.
 

@@ -1,8 +1,8 @@
 import SwiftUI
 
-struct CardUnitAskPanel: View {
+struct CardUnitExceptionPanel: View {
     @EnvironmentObject private var model: AppModel
-    let ask: TafsCloud.CardUnitAsk
+    let ask: TafsCloud.CardUnitException
     private var canDiscuss: Bool {
         model.mayUseCoach && model.tafs.contains { model.cloudTaf(for: $0.id)?.id == ask.taf && model.manages($0.id) }
     }
@@ -12,6 +12,10 @@ struct CardUnitAskPanel: View {
             Text(ask.words).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             Text(ask.history).scaledFont(12).foregroundColor(Theme.dim)
             if canDiscuss { Button(ask.action_title) { model.discussCardUnit(ask) } }
+            if model.canAnswerHolds != false {
+                Button(ask.dismiss_title, role: .destructive) { Task { await model.dismissCardUnit(ask) } }
+                    .disabled(model.dismissingCardUnits.contains(ask.id))
+            }
         }
     }
 }
@@ -165,6 +169,7 @@ struct TafActivityList: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 14) {
                 ForEach(model.heldCalls(for: tafID)) { HeldCallCard(call: $0) }
+                ForEach(cache.pages.first?.card_unit_exceptions ?? model.cardUnitExceptions.filter { $0.taf == model.cloudTaf(for: tafID)?.id }) { exception in CardUnitExceptionPanel(ask: exception) }
                 RetainedRuns(tafID: tafID)
                 if !selection.isEmpty { Button("All apps") { selection = "" } }
                 ScrollView(.horizontal, showsIndicators: false) {

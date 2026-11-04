@@ -12,7 +12,7 @@ final class RecordFieldsTests: XCTestCase {
         let result = try XCTUnwrap(KIFFMapping.record([call], ids: ["agent-example": UUID()], vendors: ["answer_case": "Example app"]).first)
         XCTAssertEqual(result.detail, call.detail)
         XCTAssertEqual(result.refusedBy, "The connection")
-        XCTAssertTrue(result.refusedByTool, "KIFF's status and counting interpretation stay intact")
+        XCTAssertTrue(result.refusedByTool == true, "KIFF's status and counting interpretation stay intact")
         XCTAssertEqual(call.toolOutcome?.status, "refused_by_tool")
     }
     static let calls = #"""

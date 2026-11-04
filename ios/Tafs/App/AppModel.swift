@@ -19,8 +19,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var tafSetupErrors: [UUID: String] = [:]
     @Published private(set) var activityPages: [String: SourcePages<TafsCloud.ActivityPage>] = [:]
     @Published private(set) var runPages: [String: SourcePages<TafsCloud.RunsPage>] = [:]
-    @Published private(set) var cardUnitAsks: [TafsCloud.CardUnitAsk] = []
-    @Published private(set) var cardUnitAsksError: String?
+    @Published private(set) var cardUnitExceptions: [TafsCloud.CardUnitException] = []
+    @Published private(set) var dismissingCardUnits: Set<String> = []
     private var presentationGeneration = 0
 
     private var alertsEnabledKey: String { "alerts.enabled|\(kiffTenant ?? "")" }
@@ -553,7 +553,10 @@ final class AppModel: ObservableObject {
         didSet {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
             tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
-            cardUnitAsks = []; cardUnitAsksError = nil; setupContextTafID = nil
+            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil
+            haltErrors = [:]
+            alertsOffered = false
+            remembered?.removeObject(forKey: Self.alertsOfferedKey)
         }
     }
 
@@ -974,6 +977,7 @@ final class AppModel: ObservableObject {
     func signOut() async -> Bool {
         signOutError = nil
         if mode == .kiff {
+            if alertsReady == true { UserDefaults.standard.set(true, forKey: alertsEnabledKey) }
             // Alerts are unregistered with the session, so before KIFF ends it; registered again
             // at once when KIFF doesn't, so a device still signed in never goes without them.
             if let pushToken { try? await cloud.unregisterPush(deviceToken: pushToken) }
@@ -1198,11 +1202,22 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         let handoff = pendingHandoff
         if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool == false {
+            alertsReady = false
             if let handoff, (try? await cloud.keepAlerts(handoff.target)) != nil, gen == accountGeneration { pendingHandoff = nil }
             return
         }
-        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds),
-              gen == accountGeneration else { return }
+        if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool != true && handoff == nil {
+            // A different account must not inherit this phone's earlier alert consent.
+            let previous = try? await cloud.phoneAlerts(token)
+            guard gen == accountGeneration else { return }
+            guard previous?.enabled == true else { alertsReady = false; return }
+            UserDefaults.standard.set(true, forKey: alertsEnabledKey)
+        }
+        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds) else {
+            if gen == accountGeneration { alertsReady = false }
+            return
+        }
+        guard gen == accountGeneration else { return }
         if handoff != nil { pendingHandoff = nil }
         applyPush(status)
     }
@@ -1487,7 +1502,7 @@ final class AppModel: ObservableObject {
     /// agent and a held call its id from KIFF's, so the lock screen notifies once and rows
     /// are not recreated.
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
-        cardUnitAsks = home.needsYouAsks ?? []; cardUnitAsksError = home.asksError
+        cardUnitExceptions = home.cardUnitExceptions ?? []
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
@@ -1500,7 +1515,7 @@ final class AppModel: ObservableObject {
         // Each open trial is its own entry in the menu, under its taf (kiff/tafs#173).
         for t in home.tafs where t.id != nil { setTrial(t.trial, of: holderID(t.kiffAgent)) }
         let coach = coachWithTools
-        held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject), coach: coach) }
+        held = exceptions.filter { $0.kind != "card_unit" }.map { KIFFMapping.held($0, tafID: holderID($0.subject), coach: coach) }
         unanswerable = unanswerable.filter { id, _ in held.contains { $0.id == id } }
         readAgainAtExpiry()
         showHeldAfterWaiting()
@@ -2532,6 +2547,14 @@ final class AppModel: ObservableObject {
     /// Each halt as last read, by the taf's tafs cloud id, "" for the
     /// whole account.
     @Published private(set) var halts: [String: TafsCloud.Halt] = [:]
+    @Published private(set) var haltErrors: [String: String] = [:]
+
+    func haltError(_ tafID: UUID?) -> String? { haltKey(tafID).flatMap { haltErrors[$0] } }
+
+    private func recordHaltError(_ key: String, _ words: String) {
+        haltErrors[key] = words
+        lastError = words
+    }
 
     /// The halt of a taf, or with none of the whole account, as last read: running until read.
     func haltState(_ tafID: UUID?) -> TafsCloud.Halt {
@@ -2549,6 +2572,7 @@ final class AppModel: ObservableObject {
     /// kiff/agents, KIFF's gateway and planque all hold it, and halting until then.
     func halt(_ tafID: UUID?) async {
         guard mode == .kiff, let key = haltKey(tafID) else { return }
+        haltErrors[key] = nil
         let gen = accountGeneration
         do {
             let h = try await cloud.halt(key.isEmpty ? nil : key)
@@ -2557,7 +2581,7 @@ final class AppModel: ObservableObject {
             // The list reads it halted at once, not at its next read (kiff/tafs#236, item 13).
             await refresh()
         } catch {
-            lastError = "tafs couldn't halt \(tafID == nil ? "your tafs" : "it"): \(error.localizedDescription). Try again."
+            if gen == accountGeneration { recordHaltError(key, "tafs couldn't halt \(tafID == nil ? "your tafs" : "it"): \(error.localizedDescription). Try again.") }
         }
     }
 
@@ -2801,8 +2825,9 @@ final class AppModel: ObservableObject {
     @discardableResult
     func resumeHalt(_ tafID: UUID?) async -> Bool {
         guard mode == .kiff, let key = haltKey(tafID) else { return false }
+        haltErrors[key] = nil
         guard sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            recordHaltError(key, "Sign in with KIFF again: this sign-in can't sign for the phone.")
             return false
         }
         let agent: String?
@@ -2817,7 +2842,10 @@ final class AppModel: ObservableObject {
         do {
             _ = try await signer.sign(Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
                                       reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", grants: true)
-        } catch { return false }
+        } catch {
+            if gen == accountGeneration { recordHaltError(key, ApprovalReadiness.cancelled(error) ?? "Resume wasn't confirmed on this device. Try again.") }
+            return false
+        }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
         kiff.tenant = tenant
@@ -2826,9 +2854,10 @@ final class AppModel: ObservableObject {
         do {
             try await kiff.resume(agent: agent)
         } catch {
-            lastError = "KIFF didn't resume \(name ?? "your tafs"): \(error.localizedDescription)"
+            if gen == accountGeneration { recordHaltError(key, "KIFF didn't resume \(name ?? "your tafs"): \(error.localizedDescription)") }
             return false
         }
+        guard gen == accountGeneration else { return false }
         do {
             let h = try await cloud.releaseHalt(key.isEmpty ? nil : key)
             guard gen == accountGeneration else { return false }
@@ -2836,7 +2865,7 @@ final class AppModel: ObservableObject {
             await refresh()
             return true
         } catch {
-            lastError = "KIFF resumed \(name ?? "your tafs"), but tafs cloud didn't yet: \(error.localizedDescription). Try again."
+            if gen == accountGeneration { recordHaltError(key, "KIFF resumed \(name ?? "your tafs"), but tafs cloud didn't yet: \(error.localizedDescription). Try again.") }
             return false
         }
     }
@@ -5116,7 +5145,7 @@ final class AppModel: ObservableObject {
         }
         await refreshConnections()
         guard connected.connected || connected.listed else {
-            lastError = "The sign-in at \(grant.vendor) didn't connect: planque has it as \(connected.status.replacingOccurrences(of: "_", with: " ")). Nothing was connected. Try signing in again."
+            lastError = "The sign-in at \(grant.vendor) didn't connect: the connection is \(connected.status.replacingOccurrences(of: "_", with: " ")). Nothing was connected. Try signing in again."
             return nil
         }
         return connected
@@ -5275,12 +5304,38 @@ final class AppModel: ObservableObject {
         setupContextTafID = setupImproving?.id
     }
 
-    func discussCardUnit(_ ask: TafsCloud.CardUnitAsk) {
+    func discussCardUnit(_ ask: TafsCloud.CardUnitException) {
         guard mode == .kiff, mayUseCoach,
               let taf = tafs.first(where: { cloudTaf(for: $0.id)?.id == ask.taf }), manages(taf.id) else { return }
         improveTaf(taf.id)
         setupDraft = ask.coach_text
         coachOpen = true
+    }
+
+    func dismissCardUnit(_ exception: TafsCloud.CardUnitException) async {
+        guard mode == .kiff, canAnswerHolds != false, let tenant = kiffTenant,
+              let taf = tafs.first(where: { cloudTaf(for: $0.id)?.id == exception.taf }),
+              let agent = cloudTaf(for: taf.id)?.kiffAgent, dismissingCardUnits.insert(exception.id).inserted else { return }
+        let gen = accountGeneration
+        defer { if gen == accountGeneration { dismissingCardUnits.remove(exception.id) } }
+        do {
+            let current = try await kiff.cardException(exception.id)
+            guard gen == accountGeneration else { return }
+            guard current.kind == "card_unit", current.status == "held", current.subject == agent, let version = current.accountingVersion else {
+                lastError = "This request changed. Read it again before dismissing it."
+                return
+            }
+            let at = SigningTime.next()
+            let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: current.id, answer: Self.kiffAnswer(.refuse), nextStep: nil, accountingVersion: version, signedAt: at)
+            let signature = try await signer.sign(message, reason: "Dismiss \(exception.title)")
+            guard gen == accountGeneration else { return }
+            try await kiff.reject(current.id, signature: .init(signedAt: at, value: signature))
+            guard gen == accountGeneration else { return }
+            await refresh()
+            await loadTafSetup(taf.id)
+        } catch {
+            if gen == accountGeneration { lastError = "The request wasn't dismissed: \(error.localizedDescription)" }
+        }
     }
 
     /// A new Setup conversation: an empty chat, and the next message starts it.

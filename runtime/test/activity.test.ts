@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { activityPage, activityEntry, activityMatches, representationTag, type ActivityCall } from "../src/cloud/activity.js";
 import { handle, type Deps, type HTTPEvent } from "../src/cloud/handler.js";
+import type { Held } from "../src/cloud/home.js";
 
 const now = new Date("2026-11-01T12:00:00Z");
 const call = (n: number, status = "done"): ActivityCall => ({ proposal_id: `proposal-${n}`, actor_id: "agent-example", action_name: "read_case", title: "Read a case", outcome: "allowed", created_at: new Date(now.getTime() - n * 1000).toISOString(), tool_outcome: { status } });
@@ -17,6 +18,34 @@ function source(calls: ActivityCall[]) {
 }
 
 describe("Activity pages from the source", () => {
+  it("collapses only the typed refusals in an open currency episode and leaves Record calls intact", async () => {
+    const exception: Held = { id: "exc-example", kind: "card_unit", status: "held", subject: "agent-example", action: "read_case", title: "Read a case",
+      count: 3, proposal_id: "proposal-10", created_at: call(9).created_at, last_at: call(2).created_at,
+      breaches: [{ outcome: "amount_unit_mismatch", unit: "USD", card_unit: "EUR" }] };
+    const mismatch = (n: number): ActivityCall => ({ ...call(n), outcome: "blocked", reasons: ["amount_unit_mismatch"], amount: { value: "12", unit: "USD" } });
+    const calls = [mismatch(2), mismatch(5), mismatch(10), mismatch(20), { ...mismatch(4), reasons: ["other_reason"] },
+      { ...mismatch(4), amount: { value: "12", unit: "GBP" } }, { ...mismatch(4), outcome: "owner_required" }, call(6)];
+    const s = source(calls);
+    const page = await activityPage({ ...input(), tafName: "Example", unitExceptions: [exception] }, s.net);
+    expect(page.card_unit_exceptions).toHaveLength(1);
+    expect(page.card_unit_exceptions[0]).toMatchObject({ id: "exc-example", title: "Example needs a USD limit", action_title: "Add a USD limit to Read a case" });
+    expect(page.entries.map((e) => e.call)).toEqual(calls.slice(3));
+    expect(calls).toHaveLength(8); expect(calls[0]!.outcome).toBe("blocked");
+    expect((await activityPage(input(), s.net)).entries).toHaveLength(8, "closed exceptions restore all decisions");
+  });
+  it("advances through hidden calls and invalidates a cursor if the currency exception changes or closes", async () => {
+    const exception: Held = { id: "exc-example", kind: "card_unit", status: "held", subject: "agent-example", action: "read_case",
+      count: 110, created_at: call(109).created_at, last_at: call(0).created_at, breaches: [{ outcome: "amount_unit_mismatch", unit: "USD" }] };
+    const calls = [...Array.from({ length: 110 }, (_, i) => ({ ...call(i), outcome: "blocked", reasons: ["amount_unit_mismatch"], amount: { value: "12", unit: "USD" } })),
+      ...Array.from({ length: 30 }, (_, i) => call(110 + i))];
+    const s = source(calls), firstInput = { ...input(), unitExceptions: [exception] };
+    const page = await activityPage(firstInput, s.net);
+    expect(page.entries).toHaveLength(20); expect(page.entries[0]!.call.proposal_id).toBe("proposal-110");
+    const nextInput = { ...input(`cursor=${page.next_cursor}`), unitExceptions: [exception] };
+    expect((await activityPage(nextInput, s.net)).entries).toHaveLength(10);
+    await expect(activityPage({ ...nextInput, unitExceptions: [{ ...exception, count: 111 }] }, s.net)).rejects.toMatchObject({ status: 409 });
+    await expect(activityPage({ ...nextInput, unitExceptions: [] }, s.net)).rejects.toMatchObject({ status: 409 });
+  });
   it("attributes a typed connection refusal without parsing vendor text or changing status, evidence or what counts", () => {
     const original = { ...call(0, "refused_by_tool"), held: true, amount: { value: "12.30", unit: "EUR" },
       tool_outcome: { status: "refused_by_tool", refused_by: "connection", code: "halt_unknown", message: "arbitrary text" } };
@@ -88,7 +117,7 @@ describe("Activity pages from the source", () => {
 describe("Activity's HTTP contract", () => {
   it("returns 304 without a body and checks account and agent access before reading calls", async () => {
     const id = "taf-01234567890123456789";
-    let tenant = "account-example", allowed = true, reads = 0;
+    let tenant = "account-example", allowed = true, reads = 0, exceptionReads = 0;
     const deps = {
       now: () => now,
       tafs: { get: async (account: string) => account === "account-example" ? { id, name: "Example", job: "refunds", kiffAgent: "agent-example" } : undefined },
@@ -96,6 +125,7 @@ describe("Activity's HTTP contract", () => {
         const u = new URL(String(url));
         if (u.pathname === "/v1/me") return new Response(JSON.stringify({ tenant_id: tenant, subject: "person-example", api_key: false, capabilities: ["read"], time_zone: "UTC" }));
         if (u.pathname === "/v1/me/access") return new Response(JSON.stringify({ agents: allowed ? { "agent-example": { use: true } } : {} }));
+        if (u.pathname === "/v1/me/card-exceptions") { exceptionReads++; return new Response(JSON.stringify({ exceptions: [] })); }
         if (u.pathname === "/v1/me/activity") { reads++; return new Response(JSON.stringify({ calls: [call(0)], shown: 1 })); }
         throw new Error("unexpected request");
       }) as typeof fetch,
@@ -104,10 +134,12 @@ describe("Activity's HTTP contract", () => {
     const first = await handle(event, deps); expect(first.statusCode).toBe(200); expect(first.headers.etag).toBeTruthy();
     const unchanged = await handle({ ...event, headers: { ...event.headers, "if-none-match": first.headers.etag } }, deps);
     expect(unchanged.statusCode).toBe(304); expect(unchanged.body).toBe("");
-    const before = reads; allowed = false;
+    const before = reads, beforeExceptions = exceptionReads; allowed = false;
     expect((await handle(event, deps)).statusCode).toBe(404); expect(reads).toBe(before);
+    expect(exceptionReads).toBe(beforeExceptions);
     tenant = "other-account";
     expect((await handle(event, deps)).statusCode).toBe(404); expect(reads).toBe(before);
+    expect(exceptionReads).toBe(beforeExceptions);
   });
 });
 

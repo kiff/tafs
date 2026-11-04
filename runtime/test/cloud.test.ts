@@ -5,7 +5,7 @@ import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
-import type { Mandate } from "../src/cloud/home.js";
+import type { Held, Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
@@ -22,7 +22,7 @@ type Drafts = Record<string, { secret: string; key: string; agent: string; statu
 
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
 interface Account {
-  mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[];
+  mandates: Mandate[]; held: Held[]; calls?: ActivityCall[];
   drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number;
   /** Each Card's latest revision, as its statement says (kiff/tafs#107). */
   revisions?: Record<string, number>;
@@ -323,32 +323,28 @@ describe("tafs cloud", () => {
     expect(w.agents.schedules.get(`t_acme|${RAE}`)?.time_zone).toBe("Europe/Paris");
   });
 
-  it("reads persistent currency asks only for visible tafs and uses the same row in Needs you and Setup", async () => {
-    const w = world(); const reads: string[] = [];
-    w.agents.api.asks = async (tenant, id) => {
-      reads.push(`${tenant}:${id}`);
-      return [{ id: "ask-example", kind: "card_unit", tool: "answer_case", unit: "USD", card_unit: "EUR", first_at: "2026-10-28T12:00:00Z", last_at: "2026-10-29T09:00:00Z", count: 4 }];
-    };
+  it("composes KIFF currency exceptions only for visible tafs, with the same row in Needs you and Setup", async () => {
+    const w = world();
+    const exception: Held = { id: "exc-example", kind: "card_unit", subject: "rae", action: "answer_case", status: "held", count: 4,
+      created_at: "2026-10-28T12:00:00Z", last_at: "2026-10-29T09:00:00Z", breaches: [{ outcome: "amount_unit_mismatch", unit: "USD", card_unit: "EUR" }] };
+    w.account.held = [exception, { ...exception, id: "other", subject: "max" }, { subject: "rae" }];
     const home = await call(w, "GET", "/v1/home", { token: "ana" });
-    expect(home.status).toBe(200); expect(home.body.needs_you_asks).toHaveLength(1);
-    expect(home.body.needs_you_asks[0]).toMatchObject({ id: `${RAE}:ask-example`, taf: RAE, name: "Rae" });
+    expect(home.status).toBe(200); expect(home.body.card_unit_exceptions).toHaveLength(1);
+    expect(home.body.card_unit_exceptions[0]).toMatchObject({ id: "exc-example", taf: RAE, name: "Rae", can_approve_once: false });
     const setup = await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" });
-    expect(setup.status).toBe(200); expect(setup.body.asks).toEqual(home.body.needs_you_asks);
-    expect(reads).toEqual([`t_acme:${RAE}`, `t_acme:${RAE}`]);
+    expect(setup.status).toBe(200); expect(setup.body.card_unit_exceptions).toEqual(home.body.card_unit_exceptions);
     w.account.access = {};
-    const hidden = await call(w, "GET", "/v1/home", { token: "ana" });
-    expect(hidden.body.needs_you_asks).toBeUndefined(); expect(reads).toHaveLength(2);
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
     expect((await call(w, "GET", `/v1/tafs/${MAX}/setup`, { token: "ana" })).status).toBe(404);
-    expect(reads).toHaveLength(2);
+    w.account.access = { rae: { use: true, oversee: true, manage: true } };
+    w.account.held = [{ ...exception, status: "changed" }];
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
   });
 
-  it("says when standing requests could not be read instead of claiming that none wait", async () => {
-    const w = world();
-    w.agents.api.asks = async () => { throw new Error("unavailable"); };
-    const home = await call(w, "GET", "/v1/home", { token: "ana" });
-    expect(home.status).toBe(200); expect(home.body.asks_error).toContain("could not be read");
-    const setup = await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" });
-    expect(setup.status).toBe(200); expect(setup.body.asks_error).toContain("could not be read");
+  it("does not claim no currency exceptions wait when KIFF could not be read", async () => {
+    const w = world(); w.account.status = 503;
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(502);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" })).status).toBe(502);
   });
 
   it("counts a chat's run as the taf's last run, never a trial's", async () => {

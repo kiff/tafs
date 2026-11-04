@@ -48,6 +48,12 @@ describe("a taf's server-composed setup", () => {
     expect(view.versions).toMatchObject({ summary: "Runs its original definition", earlier: 0 });
     expect(view.versions.live).toBeUndefined();
   });
+  it("does not claim an action is unused when the taf has no saved recipe", () => {
+    const missing = knobOf({ name: "Example", does: { label: "Read", line: "Read cases" }, unscheduled: true, doors: [], places: ["app"], tools: new Map([["read_case", "Read a case"]]), zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
+    const view = setupView({ agent: "agent-example", grants: [grant], knob: missing, rules: [], versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true });
+    expect(view.workflow).toMatchObject({ steps: [], summary: "Ask Coach to set its workflow" });
+    expect(view.connections[0]!.actions[0]!.step_words).toBe("Ask Coach to set its workflow");
+  });
   it("distinguishes a forbidden zero-count Card from one that asks for every call", () => {
     const rules = (outside: "refuse" | "hold") => summary([{ id: "card-example", subject: "agent-example", active: true,
       grants: [{ action: "read_case" }], aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }], on_exceed: outside }]).rules;

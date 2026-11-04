@@ -291,12 +291,6 @@ export interface VersionState {
   switching?: Switching;
 }
 
-/** A standing refusal kept across runs; a display request, never an authorization. */
-export interface AgentAsk {
-  id: string; kind: "card_unit"; tool: string; unit: string; card_unit?: string;
-  first_at: string; last_at: string; count: number;
-}
-
 /** A trial write: what KIFF would decide, nothing sent (kiff/tafs#107). */
 export interface TrialWrite {
   tool: string;
@@ -479,12 +473,6 @@ export class Agents {
     return { versions: r.versions, ...(r.switching ? { switching: r.switching } : {}) };
   }
 
-  async asks(tenant: string, id: string): Promise<AgentAsk[]> {
-    const out = await this.call<{ asks: AgentAsk[] }>("GET", tenant, ["agents", id, "asks"]).catch(notFound);
-    if (out === undefined) return []; // A runtime predating persistent asks.
-    if (!Array.isArray(out.asks)) throw new AgentsError(502, "The taf's requests could not be read");
-    return out.asks;
-  }
 
   /**
    * Begins the switch to version n, waiting for `draft`'s confirmation: from

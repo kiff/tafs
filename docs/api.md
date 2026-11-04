@@ -189,7 +189,7 @@ request, it applies the newer one before reporting success; repeated changes or
 unfinished writes return the retryable 503.
 
 `GET /v1/tafs/{id}/activity?filter=all&limit=20&cursor=…` returns `entries`, day
-`groups`, `filters: [{id, title}]`, the selected `filter`, a `revision`, and an
+`groups`, `filters: [{id, title}]`, the selected `filter`, `card_unit_exceptions`, a `revision`, and an
 optional `next_cursor`. Filters are `all`, `done`, `held`, or `refused`, applied
 on tafs cloud before a page is made. Held means a call waiting for an owner's answer; an allowed call still sending or with an unknown result stays in All. An allowed call with an unknown tool outcome
 is never labelled done. Entries carry their ready-to-draw `title`, `detail`,
@@ -233,20 +233,24 @@ body when unchanged. Apps keep previously read pages per account, taf and filter
 - `memory`: its note `count`, `title` and newest note as `latest`.
 - `versions`: `Changes to how it runs`, the live version, earlier count and summary.
 
-Optional `asks` lists persistent currency-limit requests. Home supplies the same
-rows as `needs_you_asks`, only for tafs visible to that person. Each is
-`{id, kind:"card_unit", taf, name, title, words, history, action_title, coach_text}`.
-The stable id is taf-scoped; the history includes first/last attempts and count.
-`asks_error` means some requests could not be read, rather than that none wait.
-The action opens Coach on that taf with the supplied request; it grants nothing
-and the ordinary signed Card/version change is still required.
+Optional `card_unit_exceptions` on Home and Setup, and the always-present array on Activity, contain the same display rows from
+KIFF's `GET /v1/me/card-exceptions?status=held`, filtered by the visible taf's subject.
+Each is `{id,kind:"card_unit",taf,name,title,words,history,action_title,coach_text,
+dismiss_title,can_approve_once:false}`. `id` is KIFF's exception id; history carries
+its count and first/last attempts. The Coach action opens that taf with the proposed
+unit limit; it changes no Card. Dismiss re-reads the current KIFF exception and signs
+its ordinary `reject` answer against the current accounting version. Approve once is
+never offered for this kind. Ordinary holds remain separate, and every refused
+decision remains in the Record. KIFF owns deduplication and closure when the action's
+Card gains the currency or a call in that currency is allowed. An unreadable KIFF
+response fails the read instead of claiming no exception waits.
 
-The source is kiff/agents' tenant-scoped `GET /agents/{id}/asks`, returning typed
-`{asks:[{id,kind:"card_unit",tool,unit,card_unit?,first_at,last_at,count}]}`. It owns
-deduplication, suppression and revalidation/clearing when the Card changes. A runtime
-that predates this endpoint (404) supplies no asks. Other failures remain visible.
-Rollout needs this endpoint for persistent requests and KIFF's typed connection
-metadata for refusal attribution; older records are not retroactively inferred.
+Activity collapses the refused calls in a still-open currency episode beneath that
+exception, matching only KIFF's typed `amount_unit_mismatch` reason, subject, action,
+observed currency and episode times (or first proposal id). Other decisions and past
+episodes remain visible. The original Record is unchanged. The exception snapshot is
+part of the Activity cursor revision: a changed count or closed exception forces a
+refresh. An empty `card_unit_exceptions` array clears an older row on that view.
 
 The phone forwards one signed read of planque's account grants using the
 `Planque-Device-Signature` header, signed for planque's `GET

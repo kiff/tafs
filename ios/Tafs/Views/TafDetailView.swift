@@ -270,8 +270,7 @@ struct TafDetailView: View {
         let cloud = model.cloudTaf(for: taf.id)
         let manages = model.manages(taf.id)
         let screenshot = Screenshots.enabled && model.mode == .sample
-        ForEach(model.tafSetups[taf.id]?.asks ?? []) { ask in CardUnitAskPanel(ask: ask) }
-        if let error = model.tafSetups[taf.id]?.asks_error { Text(error).foregroundColor(Theme.no) }
+        ForEach(model.tafSetups[taf.id]?.card_unit_exceptions ?? []) { ask in CardUnitExceptionPanel(ask: ask) }
         Panel {
             Eyebrow(text: "The job")
             Text(taf.job).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)

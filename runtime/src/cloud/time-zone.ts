@@ -8,6 +8,7 @@ export async function syncScheduleZone(agents: Pick<Agents, "listSchedules" | "u
   for (const taf of tafs) {
     let schedules: Schedule[];
     try { schedules = await agents.listSchedules(tenant, taf.id); } catch { failed++; continue; }
+    if (!Array.isArray(schedules)) { failed++; continue; }
     for (const schedule of schedules) {
       if (schedule.agent !== taf.id || schedule.follow_up || schedule.kind === "once" || (schedule.time_zone || "UTC") === zone) continue;
       try {

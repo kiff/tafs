@@ -10,7 +10,7 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, readAccess, readExceptions, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
@@ -31,7 +31,7 @@ import { activityPage, ActivityError, representationTag } from "./activity.js";
 import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { cardUnitAsks } from "./attention.js";
+import { cardUnitExceptions } from "./card-unit.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -142,7 +142,7 @@ export interface HTTPResult {
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
-  "versions" | "asks" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
+  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
   "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
@@ -620,7 +620,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase);
     if (!listable(access, taf.kiffAgent)) throw new HTTPError(404, "no such taf");
     if (action === "activity") return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
-      taf: taf.id, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? "") }, deps.fetch, deps.kiffBase));
+      taf: taf.id, tafName: taf.name, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? ""),
+      unitExceptions: await readExceptions(bearer(event), deps.fetch, deps.kiffBase) }, deps.fetch, deps.kiffBase));
     if (action === "work") return runsPage(event, me, taf, deps, access.get(taf.kiffAgent)?.manage === true);
     return setupPage(event, me, taf, deps);
   }
@@ -2694,7 +2695,7 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const now = deps.now?.() ?? new Date();
   const token = bearer(event);
   const proof = event.headers?.["planque-device-signature"] ?? "";
-  const [knob, memory, versions, cards, stats, runs, grants, asks] = await Promise.all([
+  const [knob, memory, versions, cards, stats, runs, grants] = await Promise.all([
     knobRoute(event, me, taf, deps), notes(me, taf, deps, true),
     agentsCall(() => deps.agents.versions(me.tenantID, taf.id)),
     readKIFF(token, deps.fetch, deps.kiffBase),
@@ -2703,17 +2704,14 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     deps.planqueBase && proof ? setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch).then((grants) => ({ grants, error: undefined as string | undefined }),
       () => ({ grants: [], error: "Connected apps could not be read; try again" }))
       : Promise.resolve({ grants: [], error: "Connect this phone to read its connected apps" }),
-    Promise.resolve().then(() => deps.agents.asks(me.tenantID, taf.id)).then((asks) => ({ asks, error: false }), () => ({ asks: [], error: true })),
   ]);
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
   const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent)).rules;
-  let attention: ReturnType<typeof cardUnitAsks> = [];
-  try { attention = cardUnitAsks(taf, asks.asks, rules, me.timeZone ?? "UTC", now); }
-  catch { asks.error = true; }
+  const unitExceptions = cardUnitExceptions(taf, cards.held, rules, me.timeZone ?? "UTC", now);
   return { ...setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
     versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete }),
-    ...(attention.length ? { asks: attention } : {}), ...(asks.error ? { asks_error: "Its requests could not be read; try again" } : {}),
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
     ...(grants.error ? { connections_error: grants.error } : {}) };
 }
 
@@ -3946,10 +3944,6 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
-  const attention = await Promise.all(tafs.map(async (taf) => {
-    try { return { asks: cardUnitAsks(taf, await deps.agents.asks(me.tenantID, taf.id), summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now), error: false }; }
-    catch { return { asks: [], error: true }; }
-  }));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
@@ -3980,9 +3974,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
   // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
   const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
-  const asks = attention.flatMap((a) => a.asks);
+  const unitExceptions = tafs.flatMap((taf) => cardUnitExceptions(taf, kiff.held, summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now));
   return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
-    ...(asks.length ? { needs_you_asks: asks } : {}), ...(attention.some((a) => a.error) ? { asks_error: "Some taf requests could not be read; try again" } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}) };
 }
 
 /** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */
