@@ -310,7 +310,7 @@ function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting):
       w.size = { label: "Time", index: values.indexOf(t.at), choices: values.map((v) => ({ label: v, setting: withWake(i, { ...t, at: v }) })) };
     } else if (t.form === "every" && t.every_minutes) {
       const values = [...new Set([...EVERY, t.every_minutes])].sort((a, b) => a - b);
-      const say = (n: number) => (n < 60 ? `Every ${n} min` : `Every ${n / 60} h`);
+      const say = (n: number) => n < 60 ? `Every ${n} minutes` : `Every ${n / 60} hour${n === 60 ? "" : "s"}`;
       w.size = { label: "How often", index: values.indexOf(t.every_minutes), choices: values.map((v) => ({ label: say(v), setting: withWake(i, { ...t, every_minutes: v }) })) };
     }
   }
@@ -327,10 +327,9 @@ function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting):
   }
 }
 
-/** The What ring: Coach's recipe, in order; for a taf Coach set none for, each of its tools, by KIFF's title. */
+/** Only a saved recipe says what runs first. The order of connected tools says nothing about execution. */
 function whatOf(k: KnobInput): Knob["what"] {
-  const steps: Step[] = k.setting?.what?.length ? k.setting.what
-    : [...(k.tools ?? new Map()).entries()].map(([tool, title]) => ({ label: title, words: title, tool }));
+  const steps: Step[] = k.setting?.what ?? [];
   if (!steps.length) return [{ id: "what_ask", kind: "step", step: 1, label: "Ask Coach", words: "Ask Coach to set what it does", on: true, state: "Ask", tap: "Tap to ask Coach", ok: "coach" }];
   return steps.map((s, i) => ({ id: `what_${i + 1}`, kind: "step", step: i + 1, label: s.label, words: s.words, on: true, state: `Step ${i + 1}`,
     ...(s.tool ? { tool: s.tool } : {}) }));

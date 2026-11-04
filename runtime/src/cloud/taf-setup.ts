@@ -130,7 +130,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
   const apps = steps.map((s) => s.app).filter((s): s is string => Boolean(s));
   const order = apps.filter((app, i) => app !== apps[i - 1]);
   const running = steps.find((s) => s.running)?.number;
-  return { connections, workflow: { title: "Workflow", summary: `${steps.length} step${steps.length === 1 ? "" : "s"}${order.length ? ` · ${order.join(" → ")}` : ""}`,
+  return { connections, workflow: { title: "Workflow", summary: steps.length ? `${steps.length} step${steps.length === 1 ? "" : "s"}${order.length ? ` · ${order.join(" → ")}` : ""}` : "Ask Coach to set its workflow",
     steps, ...(running ? { running_step: running } : {}) },
     memory: { count: input.notes.length, title: `${input.notes.length} note${input.notes.length === 1 ? "" : "s"}`, ...(input.notes[0] ? { latest: input.notes[0].content } : {}) },
     versions: { title: "Changes to how it runs", summary: live !== undefined ? `v${live} live · ${earlier} earlier` : "Runs its original definition", ...(live !== undefined ? { live } : {}), earlier } };

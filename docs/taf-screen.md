@@ -129,6 +129,12 @@ app share one app name in the workflow summary; returning to it after another ap
 visible. When no numbered version is live, the version summary says **Runs its original
 definition**, matching the definition the service runs.
 
+A workflow is a saved recipe in its original order. A connection's tools are not a
+recipe and their listing order is never presented as one; without a saved recipe,
+Setup asks Coach to set the workflow. A custom taf's job uses its own summary or
+owner notes, rather than the starter template's job description. No live definition
+or account data is changed just by reading either view.
+
 What it remembers previews the cloud's note count and newest note, limited to
 two lines. See all opens full notes and Forget. Changes to how it runs is on
 Card, with the cloud's live-version and earlier-version summary. Cards behind

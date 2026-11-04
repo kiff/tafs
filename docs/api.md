@@ -172,6 +172,16 @@ the route list at the top of `handler.ts`.
 `GET /v1/time-zones?q=` returns `{zones: [{id, title}]}`, from the service's IANA list,
 searched on the service. Selecting a zone still uses KIFF's signed
 `PUT /v1/me/time-zone`; tafs cloud never signs for the person.
+After KIFF confirms it, `POST /v1/account/time-zone` (no body) applies the zone
+KIFF reports to every recurring schedule of this account's tafs. It requires
+`cards.manage`, accepts no zone or account from the caller, and returns
+`{time_zone, updated}`. It preserves the schedules' cron, pause, busy and check
+settings. Absolute one-off times and follow-ups do not move. A partial failure
+returns 503 with words explaining that the account changed but some schedules
+need retry; repeating it updates only schedules still in another zone.
+New tafs use the account's zone when no explicit zone was supplied at creation.
+Home tafs carry `time_zone`, `time_zone_words` and `schedule_time_zone`, so the
+apps can name the account's clock and identify a schedule still using another.
 
 `GET /v1/tafs/{id}/activity?filter=all&limit=20&cursor=…` returns `entries`, day
 `groups`, `filters: [{id, title}]`, the selected `filter`, a `revision`, and an

@@ -29,6 +29,8 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag } from "./activity.js";
 import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
+import { syncScheduleZone } from "./time-zone.js";
+import { tafPurpose } from "./taf-purpose.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -47,6 +49,7 @@ import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
  *   POST /v1/account/delete             erase what tafs cloud and kiff/agents keep for the account (kiff/tafs#185)
  *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
  *   GET  /v1/time-zones                 ?q=: the service's IANA zones, searched here, as {zones: [{id, title}]}
+ *   POST /v1/account/time-zone          reapply KIFF's confirmed account zone to recurring taf schedules; no zone accepted from the caller
  *   GET  /v1/setup                      the account's Setup (Coach), or null
  *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
@@ -532,6 +535,15 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The phone's signed intent: tafs cloud drives the whole deletion. Without one, the app's
     // earlier way, where the phone drives planque and KIFF itself.
     return body.intent === undefined ? deleteAccount(me, deps) : deleteByIntent(me, body, bearer(event), deps);
+  }
+  if (parts[1] === "account" && parts.length === 3 && parts[2] === "time-zone" && method === "POST") {
+    const me = await person(event, deps);
+    need(me, "cards.manage");
+    const zone = me.timeZone ?? "UTC";
+    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    const result = await syncScheduleZone(deps.agents, me.tenantID, tafs, zone);
+    if (result.failed) throw new HTTPError(503, "The account's time zone changed, but some schedules could not follow it yet. Try again.");
+    return { time_zone: zone, updated: result.updated };
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
@@ -1123,7 +1135,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   const cron = body.cron === undefined ? job.cron : str(body.cron).trim();
   if (!calmEnough(cron)) throw new HTTPError(400, "a taf runs at most every 15 minutes");
-  const timezone = body.timezone === undefined ? "" : str(body.timezone).trim();
+  const timezone = body.timezone === undefined ? me.timeZone ?? "UTC" : str(body.timezone).trim();
   const notesText = body.notes === undefined ? undefined : str(body.notes).trim();
   // What it does, from Coach's result: one line, never a reason to refuse the taf.
   const summary = body.summary === undefined ? undefined : oneLine(str(body.summary), MAX_SUMMARY);
@@ -2729,7 +2741,7 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const job = JOBS.find((j) => j.id === taf.job);
   return knobOf({
     name: taf.name,
-    does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
+    does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: tafPurpose(taf, job) },
     unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools, addDoor: manages,
     ...(taf.appEvents ? { appEvents: taf.appEvents } : {}),
     ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
@@ -3862,6 +3874,9 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     last_run: last ? iso(last.created) : null,
     /** Where its results go (docs/reliability.md). */
     results: placesOf(taf),
+    time_zone: me.timeZone ?? "UTC",
+    time_zone_words: `Times in ${me.timeZone ?? "UTC"}`,
+    ...(s ? { schedule_time_zone: s.time_zone || "UTC" } : {}),
   };
 }
 
@@ -3920,7 +3935,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count: what Coach said this taf does, else its
     // job's fixed line. A taf Coach made on the nearest job (a cancel saver on refunds) never shows another job's line.
-    const words = t.summary || JOBS.find((j) => j.id === v.job)?.summary;
+    const words = tafPurpose(t, JOBS.find((j) => j.id === v.job));
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now) : undefined;

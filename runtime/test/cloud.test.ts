@@ -309,7 +309,7 @@ describe("tafs cloud", () => {
 
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
-    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"] }]);
+    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"], time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC" }]);
     expect(r.body.removing).toEqual([]);
   });
 
@@ -564,8 +564,9 @@ describe("the home list", () => {
     expect(await w.slots.held(`present#t_acme`)).toBe(true);
     expect(r.body.tafs).toEqual([{
       id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"],
-      // Its job in words, for its page (kiff/tafs#167).
-      job_summary: "Answers refund requests and issues refunds and credits within the Card.",
+      time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC",
+      // A custom name with no saved job never borrows the starter template's description.
+      job_summary: "Ask Coach to describe this taf's job",
       color: 0, state: "working", waiting: 0,
       // Where its work stands, in words (docs/reliability.md).
       work: { status: "idle", line: "Next run Fri 12:30", needs_you: 0 },
@@ -994,7 +995,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.agents.setupDrafts.get("drf_s1")?.keyRef).toBe(`kiff/${NEW}`);
     expect(w.keys.held.has(`t_acme#${NEW}`)).toBe(false);
     expect(w.agents.agents.get(`t_acme|${NEW}`)).toMatchObject({ key_ref: `kiff/${NEW}` });
-    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * `, `trigger ${NEW}`]);
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * UTC`, `trigger ${NEW}`]);
     expect(w.claims.held.size).toBe(0);
   });
 
@@ -1005,7 +1006,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(r.status).toBe(200);
     expect(r.body.session).toBeNull();
     expect(r.body.taf).toMatchObject({ id: NEW, status: "active", unscheduled: true, next_run: null });
-    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * `]);
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * UTC`]);
     expect(w.agents.schedules.get(`t_acme|${NEW}`)?.enabled).toBe(false);
     expect(w.tafs.held.get(`t_acme#${NEW}`)?.unscheduled).toBe(true);
     for (const action of ["pause", "resume", "run"]) {
@@ -1023,9 +1024,9 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.tafs.held.get(`t_acme#${NEW}`)?.summary).toBe("Offers a customer who cancels a discount to stay, within its Card.");
     const listed = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs.find((t: { id: string }) => t.id === NEW);
     expect(listed.job_summary).toBe("Offers a customer who cancels a discount to stay, within its Card.");
-    // A taf with none (one from before, or not Coach's) keeps its job's line.
+    // A custom taf without a saved description never shows a different template's job.
     const rae = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs.find((t: { id: string }) => t.id === RAE);
-    expect(rae.job_summary).toBe("Answers refund requests and issues refunds and credits within the Card.");
+    expect(rae.job_summary).toBe("Ask Coach to describe this taf's job");
   });
 
   it("cuts a long summary at a word, never refusing the taf for it", async () => {
