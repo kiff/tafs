@@ -148,6 +148,15 @@ fun TafsTheme(content: @Composable () -> Unit) {
   }
   val dark = Theme.preference.dark(isSystemInDarkTheme())
   if (Theme.dark != dark) Theme.dark = dark
+  // The status and navigation bars' icons: dark on the light ground, light on the dark one.
+  val view = androidx.compose.ui.platform.LocalView.current
+  if (!view.isInEditMode) androidx.compose.runtime.SideEffect {
+    (view.context as? android.app.Activity)?.window?.let { window ->
+      androidx.core.view.WindowCompat.getInsetsController(window, view).run {
+        isAppearanceLightStatusBars = !dark; isAppearanceLightNavigationBars = !dark
+      }
+    }
+  }
   val colors = if (dark) {
     androidx.compose.material3.darkColorScheme(
       primary = Theme.amber,

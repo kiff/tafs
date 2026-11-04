@@ -144,7 +144,9 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
   LaunchedEffect(taf.id, filter, selection) { actions.loadActivity(taf.id, filter, false, selection) }
   val next = cache?.pages?.lastOrNull()?.nextCursor
   val atEnd by remember { derivedStateOf { (list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= list.layoutInfo.totalItemsCount - 3 } }
-  LaunchedEffect(atEnd, next, filter, selection) { if (atEnd && next != null) actions.loadActivity(taf.id, filter, true, selection) }
+  // Asked again once a load ends: reaching the end while the first page refreshes would otherwise never ask for the next one.
+  val loading = cache?.loading == true
+  LaunchedEffect(atEnd, next, loading, filter, selection) { if (atEnd && next != null && !loading) actions.loadActivity(taf.id, filter, true, selection) }
   LazyColumn(modifier, state = list, contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     item { state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) } }
     item { RetainedRuns(taf, state, actions) }
@@ -161,6 +163,7 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     cache?.error?.let { error -> item { Text(error, color = Theme.no); TextButton({ scope.launch { actions.loadActivity(taf.id, filter, false, selection) } }) { Text("Try again", color = Theme.amberText) } } }
     if (cache == null || cache.loading) item { CircularProgressIndicator(Modifier.size(24.dp), color = Theme.amber) }
     if (cache != null && cache.pages.isNotEmpty() && cache.pages.all { it.entries.isEmpty() } && next == null) item { Text("Nothing yet.", color = Theme.dim) }
+    else if (next == null && !loading) cache?.pages?.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
   }
 }
 
@@ -202,11 +205,13 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
     LaunchedEffect(taf.id) { actions.loadRuns(taf.id, false, true) }
     val next = cache?.pages?.lastOrNull()?.nextCursor
     val end by remember { derivedStateOf { (list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= list.layoutInfo.totalItemsCount - 3 } }
-    LaunchedEffect(end, next) { if (end && next != null) actions.loadRuns(taf.id, true, true) }
+    val loading = cache?.loading == true
+    LaunchedEffect(end, next, loading) { if (end && next != null && !loading) actions.loadRuns(taf.id, true, true) }
     LazyColumn(Modifier.fillMaxWidth().heightIn(min = 160.dp, max = 600.dp), state = list, contentPadding = PaddingValues(16.dp)) {
       item { Text("Its work", style = scaled(24, FontWeight.Bold, Theme.ink)) }
       cache?.pages?.forEach { page -> items(page.requests, key = { it.id }) { run -> TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) } } }
       if (cache?.loading != false) item { CircularProgressIndicator(color = Theme.amber) }
+      else if (next == null) cache?.pages?.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
       cache?.error?.let { item { Text(it, color = Theme.no); TextButton({ scope.launch { actions.loadRuns(taf.id, false, true) } }) { Text("Try again", color = Theme.amberText) } } }
     }
   }

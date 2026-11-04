@@ -10,7 +10,9 @@ import bot.tafs.app.push.AlertPayload
 import kotlinx.coroutines.CompletableDeferred
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import bot.tafs.app.model.ThemePreference
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -119,7 +121,14 @@ class MainActivity : FragmentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
+    // The bars follow the app's own Light/Dark/System choice from the first frame, not only the phone's setting; TafsTheme
+    // keeps them in step when the choice changes.
+    val bars = when (ThemePreference.from(getSharedPreferences("tafs.display", MODE_PRIVATE).getString("theme", null))) {
+      ThemePreference.Light -> SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+      ThemePreference.Dark -> SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+      ThemePreference.System -> SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+    }
+    enableEdgeToEdge(bars, bars)
     // The prompt for approving shows on this activity while it is on screen.
     app.authenticator.attach(this)
     // So does Google Play's purchase sheet, where buying is on.

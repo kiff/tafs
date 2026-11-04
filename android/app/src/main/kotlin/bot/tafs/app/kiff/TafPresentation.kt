@@ -17,9 +17,11 @@ import java.net.URLEncoder
   val time: String, @SerialName("amount_text") val amountText: String? = null, val call: ActivityCall)
 @Serializable data class TafActivityGroup(val id: String, val title: String, val entries: List<TafActivityEntry> = emptyList())
 @Serializable data class TafActivityPage(val entries: List<TafActivityEntry> = emptyList(), val groups: List<TafActivityGroup> = emptyList(),
-  val filters: List<ActivityChoice> = emptyList(), val filter: String = "all", val revision: String = "", @SerialName("next_cursor") val nextCursor: String? = null)
+  val filters: List<ActivityChoice> = emptyList(), val filter: String = "all", val revision: String = "", @SerialName("next_cursor") val nextCursor: String? = null,
+  /** Under the last page, in tafs cloud's words: "Nothing older in this view". */
+  @SerialName("end_words") val endWords: String? = null)
 @Serializable data class TafRunsPage(val requests: List<WorkRequest> = emptyList(), @SerialName("next_cursor") val nextCursor: String? = null,
-  val title: String = "Its work", @SerialName("more_title") val moreTitle: String = "Show all runs")
+  val title: String = "Its work", @SerialName("more_title") val moreTitle: String = "Show all runs", @SerialName("end_words") val endWords: String? = null)
 
 @Serializable data class ConnectedAction(val name: String, val title: String, val limits: List<String> = emptyList(), val steps: List<Int> = emptyList(), @SerialName("step_words") val stepWords: String = "")
 @Serializable data class ConnectedStats(val calls: Int = 0, val done: Int = 0, val held: Int = 0, val words: String = "", val complete: Boolean = false, @SerialName("activity_query") val activityQuery: String = "")

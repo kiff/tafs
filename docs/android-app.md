@@ -86,9 +86,15 @@ is told it's done, and Restore purchases sends again what wasn't.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
-**Signing out asks first.** Sign out of KIFF, Sign in again and Switch account in Settings, and
-Sign in again on the line shown when the phone can't approve, each open a confirmation
-(`ConfirmSignOut`), so one stray tap never ends the session.
+**One account per phone, and signing out asks first.** Account ends with **Sign out**: another
+account is signing out, then signing in with it. Sign out, and Sign in again on the line shown
+when the phone can't approve, each open a confirmation (`ConfirmSignOut`), so one stray tap
+never ends the session. Account › About › Version names the build, e.g. "25 (1.0)"
+(`versionWords`).
+
+The status and navigation bars follow the app's own Light/Dark/System choice from the first
+frame (`enableEdgeToEdge` with the saved choice in `MainActivity`), and `TafsTheme` keeps their
+icons dark on the light ground and light on the dark one when the choice changes.
 
 ## The packages of `bot.tafs.app`
 
@@ -302,6 +308,9 @@ sample, or switching account, closes what the last account had open (`accountSho
 `AppModel` cache pages and first-page ETags per taf, filter and app selection.
 The cloud defines outcomes, display names, limits, step mappings and counts.
 `TafPresentationViews` draws the ring, app sheets, Workflow, memory summary,
-Activity and recent runs. `AvatarDoorRim` animates source metadata and respects
+Activity and recent runs. A list asks for its next page whenever it is at its end with a cursor
+and no load running, including when it got there while its first page was refreshing. Under the
+last page it shows tafs cloud's `end_words` ("Nothing older in this view").
+`AvatarDoorRim` animates source metadata and respects
 disabled system animations. Coach overlays the mounted taf so its tab survives.
 The API contracts and recent-run history bound are in [api.md](api.md).

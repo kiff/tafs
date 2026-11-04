@@ -1,6 +1,9 @@
 package bot.tafs.app
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,7 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
-/** Every way out of KIFF in Settings asks first: one tap never signs the phone out, Cancel leaves it, and confirming does. */
+/** One account per phone, and every way out of KIFF in Account asks first: one tap never signs the phone out, Cancel leaves it, and confirming does. */
 class SignOutConfirmTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
@@ -35,28 +38,27 @@ class SignOutConfirmTest {
     }
   }
 
-  @Test fun signOutOfKiffAsksFirstAndCancelLeavesItSignedIn() {
+  // The row and the dialog's button share the words: the dialog's window is the newest, so its button is the last.
+  private fun inDialog(text: String) = rule.onAllNodesWithText(text).onLast()
+
+  @Test fun signOutAsksFirstAndCancelLeavesItSignedIn() {
     show()
-    rule.onNodeWithText("Sign out of KIFF").performScrollTo().performClick()
+    rule.onNodeWithText("Sign out").performScrollTo().performClick()
     rule.onNodeWithText(SignOut.SignOut.title).assertIsDisplayed()
     assertEquals("one tap doesn't sign out", emptyList<String>(), done)
     rule.onNodeWithText("Cancel").performClick()
     rule.waitForIdle()
     assertEquals(emptyList<String>(), done)
-    rule.onNodeWithText("Sign out of KIFF").performScrollTo().performClick()
-    rule.onNodeWithText(SignOut.SignOut.confirm).performClick()
+    rule.onNodeWithText("Sign out").performScrollTo().performClick()
+    inDialog(SignOut.SignOut.confirm).performClick()
     rule.waitUntil(5_000) { done.isNotEmpty() }
     assertEquals(listOf("sign out", "close"), done)
   }
 
-  @Test fun switchAccountAsksFirst() {
+  @Test fun onePhoneHasOneAccountSoThereIsNoSwitchAccount() {
     show()
-    rule.onNodeWithText("Switch account…").performScrollTo().performClick()
-    rule.onNodeWithText(SignOut.SwitchAccount.title).assertIsDisplayed()
-    assertEquals(emptyList<String>(), done)
-    rule.onNodeWithText(SignOut.SwitchAccount.confirm).performClick()
-    rule.waitUntil(5_000) { done.size == 2 }
-    assertEquals(listOf("sign out", "sign in"), done)
+    rule.onNodeWithText("Sign out").performScrollTo().assertIsDisplayed()
+    rule.onAllNodesWithText("Switch account…").assertCountEquals(0)
   }
 
   @Test fun signInAgainAsksFirst() {
