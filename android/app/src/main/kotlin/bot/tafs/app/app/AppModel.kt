@@ -1126,6 +1126,7 @@ class AppModel(
       lostApprovalKey()
       e.message!!
     }
+    e is bot.tafs.app.signing.PromptNotOpened -> e.message!!
     e.message == DeviceSigner.NO_FINGERPRINT -> e.message!!
     e.message == DeviceSigner.NOT_RECOGNIZED -> e.message!!
     else -> otherwise
@@ -2083,27 +2084,31 @@ class AppModel(
     } catch (e: Exception) { if (gen == shownGeneration()) _state.update { it.copy(tafSetupErrors = it.tafSetupErrors + (tafId to ErrorWords.of(e))) } }
   }
 
+  /** Activity's cached pages as written, with any request KIFF took a Dismiss for left out: a 304, a failure or a cancel included. */
+  private fun SourcePages<bot.tafs.app.kiff.TafActivityPage>.without(dismissed: Set<String>) =
+    if (dismissed.isEmpty()) this else copy(pages = pages.map { p -> p.copy(cardUnitExceptions = p.cardUnitExceptions.filterNot { it.id in dismissed }) })
+
   suspend fun loadActivityPage(tafId: String, filter: String, more: Boolean = false, selection: String = "") {
     val id = _state.value.taf(tafId)?.cloudId ?: return
     val key = "$tafId:$filter:$selection"
     val old = _state.value.activityPages[key] ?: SourcePages()
     if (old.loading || (more && old.pages.lastOrNull()?.nextCursor == null)) return
     val gen = shownGeneration()
-    _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = true, error = null))) }
+    _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = true, error = null).without(it.dismissedCardUnits))) }
     try {
       val result = cloud.activityPage(id, filter, if (more) old.pages.lastOrNull()?.nextCursor else null, if (more) null else old.firstEtag, selection)
       if (gen != shownGeneration()) return
       val page = result.value?.let { p -> p.copy(cardUnitExceptions = p.cardUnitExceptions.filterNot { it.id in _state.value.dismissedCardUnits }) }
       val next = if (page == null) old else SourcePages(if (more) old.pages + page else listOf(page), if (more) old.firstEtag else result.etag)
-      _state.update { it.copy(activityPages = it.activityPages + (key to next.copy(loading = false))) }
+      _state.update { it.copy(activityPages = it.activityPages + (key to next.copy(loading = false).without(it.dismissedCardUnits))) }
     } catch (e: CancellationException) {
-      if (gen == shownGeneration()) _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = false))) }
+      if (gen == shownGeneration()) _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = false).without(it.dismissedCardUnits))) }
       throw e
     } catch (e: Exception) {
       if (gen != shownGeneration()) return
       if (e is CloudError && e.status == 409 && more) {
         _state.update { it.copy(activityPages = it.activityPages - key) }; loadActivityPage(tafId, filter, false, selection)
-      } else _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(error = ErrorWords.of(e)))) }
+      } else _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(error = ErrorWords.of(e)).without(it.dismissedCardUnits))) }
     }
   }
 

@@ -95,6 +95,26 @@ class CardUnitTest {
     assertTrue(m.state.value.cardUnitExceptions.isEmpty())
   }
 
+  @Test fun aPageUnchanged304OnItsWayDoesNotBringADismissedRequestBack() = runTest {
+    reads()
+    transport.answer(exception, 200, kiffException())
+    transport.answer(reject, 200, "{}")
+    val page = """{"entries":[],"groups":[],"filters":[],"filter":"all","revision":"r1","card_unit_exceptions":[$row]}"""
+    transport.answer("GET /v1/tafs/taf_1/activity", 200, page, mapOf("etag" to "\"r1\""))
+    transport.answer("GET /v1/tafs/taf_1/activity", 304, "")
+    val m = model()
+    m.refresh()
+    m.loadActivityPage("chargebacks-1", "all")
+    // Read again while it's dismissed: tafs cloud says nothing changed, and the page kept is the one from before.
+    transport.hold("GET /v1/tafs/taf_1/activity")
+    val again = launch { m.loadActivityPage("chargebacks-1", "all") }
+    testScheduler.runCurrent()
+    m.dismissCardUnit(m.state.value.cardUnitExceptions.single())
+    transport.release("GET /v1/tafs/taf_1/activity")
+    again.join()
+    assertTrue(m.state.value.activityPages.values.single().pages.single().cardUnitExceptions.isEmpty())
+  }
+
   @Test fun aRequestThatChangedMeanwhileIsNotDismissed() = runTest {
     reads()
     transport.answer(exception, 200, kiffException(status = "changed"))

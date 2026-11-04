@@ -152,9 +152,11 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
   }
   LazyColumn(modifier, state = list, contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     item { state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) } }
-    // Its open currency requests, as this Activity page has them (ahead of what Home last said); their refused calls are folded
-    // under them by tafs cloud, and every one stays in the Record.
-    items(cache?.pages?.firstOrNull()?.cardUnitExceptions.orEmpty(), key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
+    // Its open currency requests, as the newest page read has them (ahead of what Home last said): loading older pages updates them
+    // without dropping history. Their refused calls are folded under them by tafs cloud, and every one stays in the Record.
+    val latest = cache?.pages?.lastOrNull()
+    items(latest?.cardUnitExceptions.orEmpty(), key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
+    latest?.cardUnitExceptionsNotice?.let { notice -> item { Text(notice, style = scaled(13, color = Theme.dim)) } }
     item { RetainedRuns(taf, state, actions) }
     if (selection.isNotBlank()) item { TextButton(clearSelection) { Text("All apps", color = Theme.amberText) } }
     item {

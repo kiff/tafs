@@ -27,11 +27,15 @@ class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = t
   /** What happens while the prompt is up: time passing, say. */
   var whilePrompted: () -> Unit = {}
 
+  /** What the ask throws instead of answering: a prompt that never opened, say. */
+  var fails: Exception? = null
+
   override val canAuthenticate: Boolean get() = available
 
   override suspend fun authenticate(reason: String): Boolean {
     asked += reason
     whilePrompted()
+    fails?.let { throw it }
     return confirms
   }
 
@@ -39,6 +43,7 @@ class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = t
     asked += reason
     whilePrompted()
     fingerprints += reason
+    fails?.let { throw it }
     return confirms
   }
 }

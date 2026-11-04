@@ -94,7 +94,9 @@ Its Coach button opens a new conversation on the taf with tafs cloud's proposal 
 sent (`discussCardUnit`); Dismiss reads KIFF's exception again and, only while it's still that
 taf's open request, signs KIFF's ordinary refusal against its current version (`dismissCardUnit`). A
 dismissed one leaves at once, from Home, Setup and Activity's cached pages, and a page or Setup read
-already on its way doesn't bring it back (`dismissedCardUnits`).
+already on its way doesn't bring it back, whether it lands as a page, a 304, a failure or a cancel
+(`dismissedCardUnits`). Activity draws the newest page's requests, and its notice when KIFF's
+couldn't be read (`card_unit_exceptions_notice`).
 
 **Alerts after signing out.** Signing out turns this phone's alerts off and remembers whether
 they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers
@@ -103,6 +105,9 @@ otherwise the app says once that they're off, with **Turn on**. Another account 
 
 **Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
 didn't go through says why there, and the screen never calls a connection by its service's name.
+A fingerprint prompt that hasn't opened 10 seconds after it was asked for (this app still has
+the focus it takes while it's up) is cancelled, and the screen says "The fingerprint check didn't
+open. Try again." (`PromptWatch`); once the prompt is up, it waits as long as the person takes.
 
 **One account per phone, and signing out asks first.** Account ends with **Sign out**: another
 account is signing out, then signing in with it. Sign out, and Sign in again on the line shown

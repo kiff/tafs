@@ -27,6 +27,8 @@ import java.net.URLEncoder
   val filters: List<ActivityChoice> = emptyList(), val filter: String = "all", val revision: String = "", @SerialName("next_cursor") val nextCursor: String? = null,
   /** The taf's open currency requests, as of this page: drawn above its entries, ahead of what Home last said. */
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException> = emptyList(),
+  /** Why no requests show, when KIFF's couldn't be read for this page; its history is still there. */
+  @SerialName("card_unit_exceptions_notice") val cardUnitExceptionsNotice: String? = null,
   /** Under the last page, in tafs cloud's words: "Nothing older in this view". */
   @SerialName("end_words") val endWords: String? = null)
 @Serializable data class TafRunsPage(val requests: List<WorkRequest> = emptyList(), @SerialName("next_cursor") val nextCursor: String? = null,

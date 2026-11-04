@@ -57,6 +57,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
       .setAllowedAuthenticators(ALLOWED)
       .build()
     prompt.authenticate(info)
+    watch(host, prompt, cont)
     cont.invokeOnCancellation { prompt.cancelAuthentication() }
   }
 
@@ -87,10 +88,37 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
       .setNegativeButtonText("Cancel")
       .build()
     prompt.authenticate(info, BiometricPrompt.CryptoObject(signature))
+    watch(host, prompt, cont)
     cont.invokeOnCancellation { prompt.cancelAuthentication() }
   }
 
+  /**
+   * A prompt that never opens (the system didn't show it) would leave the button waiting with nothing said: if this activity still
+   * has its focus [PromptWatch]'s 10 seconds after asking, the prompt is cancelled and the ask fails with words saying so.
+   */
+  private fun watch(host: FragmentActivity, prompt: BiometricPrompt, cont: kotlinx.coroutines.CancellableContinuation<Boolean>) {
+    val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    val watch = PromptWatch()
+    val started = android.os.SystemClock.uptimeMillis()
+    val check = object : Runnable {
+      override fun run() {
+        if (!cont.isActive) return
+        if (watch.gaveUp(android.os.SystemClock.uptimeMillis() - started, host.hasWindowFocus())) {
+          // Answered first, so the cancellation's own error callback finds nothing left to answer.
+          if (cont.isActive) cont.resumeWith(Result.failure(PromptNotOpened()))
+          prompt.cancelAuthentication()
+        } else {
+          handler.postDelayed(this, CHECK_MS)
+        }
+      }
+    }
+    handler.postDelayed(check, CHECK_MS)
+    cont.invokeOnCancellation { handler.removeCallbacks(check) }
+  }
+
   companion object {
+    private const val CHECK_MS = 250L
+
     /** A biometric the phone counts as strong, or the screen lock: what signs with the signing key asks with either. */
     const val ALLOWED = BIOMETRIC_STRONG or DEVICE_CREDENTIAL
   }
