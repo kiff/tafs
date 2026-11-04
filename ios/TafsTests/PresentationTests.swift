@@ -132,7 +132,7 @@ final class PresentationTests: XCTestCase {
         XCTAssertEqual(runs.end_words, "Nothing older in the retained runs")
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–"
-        XCTAssertEqual(SettingsView.versionLabel(), build.map { "\($0) (\(version))" } ?? version)
+        XCTAssertEqual(SettingsView.versionLabel(), build.map { "\(version) (\($0))" } ?? version)
     }
     func testConditionalActivityKeepsItsValidatorAndOpaqueCursor() async throws {
         StubProtocol.responses = [:]; StubProtocol.sent = []

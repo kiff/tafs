@@ -6,6 +6,7 @@ version headings refer to releases, not merely to merged pull requests.
 ## Unreleased
 
 - **v26, tafs cloud:** a schedule saved before the account's time zone changed now follows it by itself, hours as written, the first time someone who manages Cards opens the tafs (a viewer's read changes nothing and still says how to apply it). An app's sheet with no saved workflow says "Ask Coach to set its workflow" once, not on every action.
+- **iOS, from the v25 phone check (v26):** a Resume not answered in time says "Face ID timed out. Try again." (or Touch ID). Account › Version reads the version first, then the build ("1.0 (26)"). An app's sheet skips an empty step line.
 - **Android, from the v25 phone check (v26):** the Halt button says "Halting…" while a halt goes, never "Resuming…". A Resume not answered in time says "The fingerprint check timed out. Try again." Account › Version reads "1.0 (26)", the version first.
 - Currency-request panel failures leave Activity readable with a notice, and panel updates preserve history cursors. Dismissed requests clear from cached views. Resume stops a stalled biometric check after ten seconds and ignores late completion. On iOS, previously enabled alerts return for the same account or show an off notice, and Halt/Resume failures stay on screen.
 - **Setup:** an action about money whose operation takes no amount field (contesting a claim on a payment, an invoice reminder) gets no made-up amount argument. Its Card limits it by calls a day.

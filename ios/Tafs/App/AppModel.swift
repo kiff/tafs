@@ -2846,7 +2846,7 @@ final class AppModel: ObservableObject {
             try await ResumeConfirmation.confirm(signer: signer, message: Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
                 reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", wait: resumeConfirmationWait)
         } catch ResumeConfirmation.Failure.timedOut {
-            if gen == accountGeneration { recordHaltError(key, "\(Biometry.name) didn't open. Try again.") }
+            if gen == accountGeneration { recordHaltError(key, "\(Biometry.name) timed out. Try again.") }
             return false
         } catch {
             if gen == accountGeneration { recordHaltError(key, ApprovalReadiness.cancelled(error) ?? "Resume wasn't confirmed on this device. Try again.") }
