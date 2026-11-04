@@ -484,7 +484,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
 
   // The bar's two places that open rather than switch: Account (today's Settings) and Coach, for whoever may use it.
   val openAccount = { showingSettings = true }
-  val openCoach: (() -> Unit)? = if (state.mayUseCoach) ({ tab = Tab.Tafs; trialTaf = null; coachOpen = true }) else null
+  val openCoach: (() -> Unit)? = if (state.mayUseCoach) ({
+    model.openCoachOn(if (tab == Tab.Tafs) openTaf else null); tab = Tab.Tafs; trialTaf = null; coachOpen = true
+  }) else null
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     // Landscape and tablets: the same places as a rail on the left, Coach at its foot.
     if (wide) {

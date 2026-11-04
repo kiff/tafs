@@ -312,6 +312,8 @@ data class AppState(
   val coachFresh: Boolean = false,
   /** The taf a new Coach conversation improves (kiff/tafs#107), by its id here: its first message goes to the improve route. */
   val coachImproving: String? = null,
+  /** The taf the Coach conversation on screen is about, when it was opened on one; null for one about the account. */
+  val coachContext: String? = null,
   /** Coach's past conversations, newest first, and the archived ones (kiff/tafs#97). */
   val coachChats: List<TafsCloud.Chat> = emptyList(),
   val coachArchived: List<TafsCloud.Chat> = emptyList(),
@@ -1412,7 +1414,7 @@ class AppModel(
   fun newCoachChat() {
     _state.update { s ->
       s.copy(
-        coachChat = null, coachFresh = true, coachImproving = null, coachComponents = emptyList(), coachLines = emptyList(),
+        coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachLines = emptyList(),
         chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
         chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT,
         chatErrors = s.chatErrors - COACH_CHAT,
@@ -1423,7 +1425,16 @@ class AppModel(
   /** A new Coach conversation on one taf, to improve it: its first message goes to the improve route. */
   fun improveTaf(tafId: String) {
     newCoachChat()
+    _state.update { it.copy(coachContext = tafId) }
     if (_state.value.taf(tafId)?.cloudId != null) _state.update { it.copy(coachImproving = tafId) }
+  }
+
+  /**
+   * Opens Coach from the bar. On a taf's page it's that taf's conversation: the one already open about it, else a new one.
+   * Elsewhere, the conversation open as it was.
+   */
+  fun openCoachOn(tafId: String?) {
+    if (tafId != null && _state.value.coachContext != tafId) improveTaf(tafId)
   }
 
   /** Improves a taf from wherever its hold is ("Change the limit in Coach mode"): Coach opens on a new conversation about it. */
@@ -1439,7 +1450,7 @@ class AppModel(
   suspend fun openCoachChat(session: String) {
     _state.update { s ->
       s.copy(
-        coachChat = session, coachFresh = false, coachImproving = null,
+        coachChat = session, coachFresh = false, coachImproving = null, coachContext = null,
         chatSent = s.chatSent - COACH_CHAT, chatEnded = s.chatEnded - COACH_CHAT, chatErrors = s.chatErrors - COACH_CHAT,
       )
     }

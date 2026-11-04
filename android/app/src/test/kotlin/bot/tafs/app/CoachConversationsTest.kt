@@ -88,6 +88,27 @@ class CoachConversationsTest {
     assertNull(m.state.value.coachImproving)
   }
 
+  @Test fun coachFromATafsPageIsThatTafsConversationAndElsewhereTheOneOpen() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/taf_1/improve", 200, """{"session":"s7","new_session":true}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s7", 200, """{"messages":[]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200, """{"messages":[]}""")
+    val m = model()
+    m.improveTaf("refunds-1")
+    m.deliverChat("How is it going?", COACH_CHAT)
+    // Back on Refunds' page, or from another screen: the conversation about Refunds stays open.
+    m.openCoachOn("refunds-1")
+    assertEquals("s7", m.state.value.coachChat)
+    m.openCoachOn(null)
+    assertEquals("s7", m.state.value.coachChat)
+    // A conversation about something else, then Coach from Refunds' page: a new one about Refunds.
+    m.openCoachChat("s4")
+    m.openCoachOn("refunds-1")
+    assertNull(m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+    assertEquals("refunds-1", m.state.value.coachImproving)
+  }
+
   @Test fun changingTheLimitInCoachModeOpensCoachOnTheTaf() = runTest {
     reads()
     val m = model()

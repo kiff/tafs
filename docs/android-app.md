@@ -169,7 +169,9 @@ its count. Coach is a filled button (ink, with the ground's colour as its label)
 someone KIFF lets use Coach, so the bar has four places otherwise. In landscape and on tablets
 the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
 `MainActivity`). Home's header keeps the account's name, and in the sample a new taf; Settings
-and Coach are no longer there.
+and Coach are no longer there. Coach from a taf's page is that taf's conversation: the one
+already open about it, else a new one about it; from anywhere else, the conversation open as
+it was (`AppModel.openCoachOn`).
 
 **Record** filters by taf too: All tafs, then a chip per taf with its colour, combined with the
 kind filter. Each entry starts with its taf's colour and name, and each day says what its money
