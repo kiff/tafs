@@ -24,6 +24,12 @@ object ConnectionWords {
   /** What planque last did, as it writes it ("Approved from tafs on Android phone"). */
   fun lastEvent(g: Grant): String? = g.events.lastOrNull()?.what?.takeIf { it.isNotBlank() }
 
-  fun disconnectBody(g: Grant, taf: String): String =
-    "${g.vendor}'s tools leave KIFF and the sign-in is revoked at the vendor, so $taf can't use them. Connecting again asks you to approve and sign in again."
+  /** Disconnect's question, naming the one taf it ends ([taf], or none once its taf was removed); the fingerprint prompt says the same. */
+  fun disconnectTitle(g: Grant, taf: String?): String = taf?.let { "Disconnect ${g.vendor} from $it?" } ?: "Disconnect ${g.vendor}?"
+
+  /** What stops and what doesn't: only this taf's connection ends, and other tafs' connections to the vendor stay. */
+  fun disconnectBody(g: Grant, taf: String?): String =
+    (taf?.let { "$it's ${g.vendor} tools stop working." } ?: "No taf uses this ${g.vendor} connection now. Its tools leave KIFF.") +
+      " Other tafs' ${g.vendor} connections stay connected. If no other taf uses this sign-in, it's revoked at ${g.vendor}." +
+      " Connecting again asks you to approve and sign in again."
 }

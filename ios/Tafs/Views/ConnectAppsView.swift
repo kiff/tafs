@@ -107,6 +107,22 @@ struct ConnectAppsView: View {
     }
 }
 
+/// Disconnect's words, the same on every screen and in the Face ID prompt: it names the one taf
+/// it ends, and says other tafs' connections to the vendor stay.
+enum DisconnectWords {
+    static let footer = "Disconnecting one removes its tools from that taf only. Other tafs keep theirs."
+
+    static func title(_ vendor: String, taf: String?) -> String {
+        taf.map { "Disconnect \(vendor) from \($0)?" } ?? "Disconnect \(vendor)?"
+    }
+
+    static func message(_ vendor: String, taf: String?) -> String {
+        (taf.map { "\($0)'s \(vendor) tools stop working." } ?? "No taf uses this \(vendor) connection now. Its tools leave KIFF.")
+            + " Other tafs' \(vendor) connections stay connected. If no other taf uses this sign-in, it's revoked at \(vendor)."
+            + " Connecting again asks you to approve and sign in again."
+    }
+}
+
 /// A connected app's connections: which taf each was set up for (or that its taf was removed),
 /// any other taf whose Card covers it, and
 /// Disconnect, which removes its tools from KIFF and signs tafs out of the app (Face ID first).
@@ -114,6 +130,8 @@ struct AppConnectionsView: View {
     @EnvironmentObject private var model: AppModel
     let app: TafsCloud.ConnectApps.App
     @State private var busy: String?
+    /// The connection whose Disconnect waits for the owner's yes.
+    @State private var confirming: PlanqueClient.Grant?
 
     var body: some View {
         List {
@@ -133,11 +151,7 @@ struct AppConnectionsView: View {
                         Spacer()
                         if model.canManageCards {
                             Button(busy == g.id ? "Disconnecting…" : "Disconnect", role: .destructive) {
-                                busy = g.id
-                                Task {
-                                    if await model.disconnect(grantID: g.id) { await model.loadConnectApps() }
-                                    busy = nil
-                                }
+                                confirming = g
                             }
                             .buttonStyle(.borderless)
                             .disabled(busy != nil)
@@ -148,7 +162,7 @@ struct AppConnectionsView: View {
                 }
             } footer: {
                 if model.canManageCards {
-                    Text("Disconnecting removes its tools from KIFF and signs tafs out of the app. A taf that used it stops being able to.")
+                    Text(DisconnectWords.footer)
                 }
             }
             if let error = model.lastError, error.hasPrefix("Not disconnected") {
@@ -157,6 +171,24 @@ struct AppConnectionsView: View {
         }
         .navigationTitle("Your \(app.title) connections")
         .navigationBarTitleDisplayMode(.inline)
+        // Asked first, naming the one taf it ends; only then Face ID, in the same words.
+        .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0)) } ?? "",
+                            isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
+                            titleVisibility: .visible, presenting: confirming) { g in
+            Button("Disconnect", role: .destructive) { disconnect(g) }
+            Button("Cancel", role: .cancel) { confirming = nil }
+        } message: { g in
+            Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g)))
+        }
+    }
+
+    private func disconnect(_ g: PlanqueClient.Grant) {
+        confirming = nil
+        busy = g.id
+        Task {
+            if await model.disconnect(grantID: g.id) { await model.loadConnectApps() }
+            busy = nil
+        }
     }
 }
 

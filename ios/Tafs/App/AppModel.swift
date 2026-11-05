@@ -5221,8 +5221,14 @@ final class AppModel: ObservableObject {
     /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
     /// who uses it.
     func setUpFor(_ grant: PlanqueClient.Grant) -> String {
-        guard let t = holderIDs[grant.request.agent].flatMap({ taf($0) }), t.state != .revoked else { return "Its taf was removed" }
-        return "Set up for \(t.name)"
+        guard let name = tafOf(grant) else { return "Its taf was removed" }
+        return "Set up for \(name)"
+    }
+
+    /// The taf a connection was set up for, by name; nil once that taf was removed.
+    func tafOf(_ grant: PlanqueClient.Grant) -> String? {
+        guard let t = holderIDs[grant.request.agent].flatMap({ taf($0) }), t.state != .revoked else { return nil }
+        return t.name
     }
 
     /// The other tafs whose live Card has a rule on one of its tools, as a warning above
@@ -5285,7 +5291,7 @@ final class AppModel: ObservableObject {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant, let grant = grants.first(where: { $0.id == grantID }) else { return false }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.disconnect.v1|\(tenant)|\(grantID)".utf8), reason: "Disconnect \(grant.vendor)")
+            _ = try await signer.sign(Data("tafs.disconnect.v1|\(tenant)|\(grantID)".utf8), reason: DisconnectWords.title(grant.vendor, taf: tafOf(grant)))
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
