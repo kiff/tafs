@@ -139,7 +139,6 @@ object CoachWords {
   const val NOT_ALLOWED = "Coach is for the people KIFF lets use it, by default the account's admins."
 
   /** Where a new conversation can start (kiff/tafs#138), as iOS offers them. */
-  val EXAMPLES = listOf("Make sure customers can get their refunds", "Answer customer questions about orders", "Connect my payment provider")
 
   /** Ways to start improving a taf (kiff/tafs#107). */
   val IMPROVE_EXAMPLES = listOf("How is it going?", "Why was something refused or held?", "It can't find the work it should do")

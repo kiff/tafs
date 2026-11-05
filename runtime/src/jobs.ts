@@ -1,7 +1,8 @@
 /**
- * The five jobs a taf can do. Each taf is its own agent on kiff/agents, built
- * from its job (cloud/tafdef.ts), acting as its own KIFF agent, so under its
- * own Cards.
+ * The five starter jobs, kept for the tafs that have one; a new taf carries its own job, drafted
+ * by Coach from the owner's words (`ownJob`, kiff/tafs#476), and the five are recipes now
+ * (recipes/). Each taf is its own agent on kiff/agents, built from its job (cloud/tafdef.ts),
+ * acting as its own KIFF agent, so under its own Cards.
  *
  * The Card is enforced by KIFF, not by these prompts. The prompts tell the
  * taf how to work inside a Card: what to do when a call is held or refused.
@@ -198,6 +199,25 @@ export function jobById(id: string): Job {
   const job = JOBS.find((j) => j.id === id);
   if (!job) throw new Error(`no job "${id}"; jobs: ${JOBS.map((j) => j.id).join(", ")}`);
   return job;
+}
+
+/** The job id of a taf whose job Coach drafted from the owner's words (kiff/tafs#476): its own, not one of JOBS. */
+export const CUSTOM = "custom";
+
+/**
+ * A taf's own job (kiff/tafs#476), as Coach drafted it: its name, what it does in one line, what
+ * each run is asked to do (its kickoff, the first instruction), and how it works, in the owner's
+ * words. Its schedule is the taf's own, so `cron` is empty: a job of its own says when it runs
+ * when it starts, or works from its chat.
+ */
+export function ownJob(own: { name: string; summary: string; kickoff: string; instructions?: string }): Job {
+  const summary = own.summary.trim();
+  const how = own.instructions?.trim();
+  return {
+    id: CUSTOM, name: own.name, summary, kickoff: own.kickoff, cron: "",
+    instructions: [summary ? `What this job does: ${summary}` : "", how].filter(Boolean).join("\n\n")
+      || `You do this job for the company: ${own.name}.`,
+  };
 }
 
 export function systemPrompt(job: Job): string {

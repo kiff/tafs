@@ -2,7 +2,7 @@
 
 A door is a place where work reaches a taf from outside the app, with the answer
 going back through the same door. A taf can have an email address, a WhatsApp
-number and a Slack channel. A taf has no door until its owner turns one on in its **Doors** tab, where
+number, a Slack channel and a Telegram bot. A taf has no door until its owner turns one on in its **Doors** tab, where
 they also pair senders and close doors. The app shows Doors only where the
 deployment offers a door; WhatsApp is offered only once it's set up.
 
@@ -19,6 +19,8 @@ deployment offers a door; WhatsApp is offered only once it's set up.
     From is treated as anyone else;
   - **WhatsApp**: WhatsApp gives the sender's number;
   - **Slack**: Slack gives the sender's member ID (such as `U012AB3CD`), which is what the owner pairs.
+  - **Telegram**: Telegram gives the sender's user id, a number, which is what the owner pairs; a
+    @username can change, so it's never a key.
 - **The owner's own sign-in email, proven, is the owner writing** (kiff/tafs#423). It's taken
   as their message, in their own live chat, as if they'd typed it in the app: it shows there as
   theirs, marked as by email, and an open chat reads it at the next change. The answer also goes
@@ -122,7 +124,7 @@ Nothing here is on until the deployment sets it up. tafs cloud reads:
 - `DOORS_SECRET_ID`: one secret, JSON, with the providers' keys:
   `email_api_key`, `email_webhook_secret`; `whatsapp_app_id`, `whatsapp_app_secret`,
   `whatsapp_config_id`, `whatsapp_verify_token`; `planque_handoff_secret`, the value
-  planque signs Slack messages with. A provider whose keys aren't there isn't offered.
+  planque signs Slack and Telegram messages with. A provider whose keys aren't there isn't offered.
 - `DOORS_WHATSAPP_REGION`: where WhatsApp stores a number's message content, set at
   its registration.
 
@@ -145,6 +147,31 @@ planque sends again only on a 5xx or no answer.
 **How it answers.** tafs cloud holds no Slack token, so the taf posts its answer itself, with its
 Slack bot's send-message tool, a write through KIFF inside its Card, in the channel and thread the
 message came in. The chat marks the door's reply as answered in Slack.
+
+## Telegram
+
+**What the owner does.** Connect the taf's own Telegram bot from Connect apps, with the token
+BotFather gave for it; the connection keeps the token, and tafs cloud never has it. Then, in the taf's
+Setup › Starts when, **Add a door…**, then Telegram, and pick the bot: the Slack door's step with no
+channel, since every chat with the bot comes through its one door. The app adds the door with
+`{app: "telegram", grant, bot?, trigger?}` (`bot` its @name, `trigger` planque's subscription, if
+there is one); it signs nothing, as there's nothing for it to subscribe. A Telegram bot is one door:
+a second door on the same bot is refused. tafs cloud offers the Telegram app with `bot: {provider, words: {none, pick}}`: the app lists the
+connections planque shows with that `provider`, names each by planque's `telegram.username` (sent as
+`bot`), and draws the step's words as they come. It keeps no Telegram words or provider of its own.
+
+**Pairing.** From a knock first: the person writes to the bot, their message knocks in Activity
+with **Pair**, and pairing keeps their Telegram user id. Pair someone by hand takes the id as a
+number.
+
+**How it arrives.** planque hands each message to `POST /v1/doors/planque`, signed like the Slack
+handoff, as `planque.door.v1` with `app: "telegram"`: `{id, tenant, agent, grant, chat, sender, thread?,
+message_id?, name?, text, timestamp}`. `chat` is the chat's id (negative for a group), `sender` the
+user id, `thread` a forum topic. The door is found by its grant (`telegram:<grant>`).
+
+**How it answers.** As Slack's: the taf posts its answer itself with its Telegram bot's send-message
+tool, a write through KIFF inside its Card, in the chat (and topic) it came from, replying to the
+message. The owner is told it was handled in Telegram.
 
 ## WhatsApp
 
@@ -231,7 +258,9 @@ registration country by country.
 
 Each door carries `words` (`doorWords` in `doors.ts`): `state` (open, closed, or resting until
 tomorrow, with its address), `tap` (what a tap on it does), and `settings` (that paired senders and
-today's limits are below). The apps show them as they are.
+today's limits are below). A door that holds keys also has `pair_hint` (the hint for pairing by
+hand) and, where pairing starts from the sender's own message, `pair_from_knock` (Telegram's). The
+apps show them as they are.
 
 ## Answering someone outside
 

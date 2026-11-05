@@ -12,7 +12,16 @@ Memory and Stopping sections of `AppModel`.
 
 ## Its job
 
-Every taf does one of five jobs (`runtime/src/jobs.ts`):
+A taf's job is its own, as Coach drafted it from the owner's words (kiff/tafs#476,
+`ownJob` in `runtime/src/jobs.ts`): what it does in one line (`summary`), what each run is
+asked to do (`kickoff`, the first instruction), how it works (`instructions`), and when it runs
+(`cron`), or that it works from its chat (`unscheduled`). Its record keeps them (`Taf.work`,
+`summary`), under the job id `custom`, so its definition can be built again. Any job at all,
+with whatever the account has connected, under a Card: nothing limits it to a template.
+
+The five jobs tafs began with are recipes now ([coach.md](coach.md#recipes)), and stay as the
+starter jobs for the tafs that have one, each with its own instructions, kickoff and default
+schedule:
 
 | Job | What it does | Runs by default |
 |---|---|---|
@@ -23,8 +32,9 @@ Every taf does one of five jobs (`runtime/src/jobs.ts`):
 | Chargebacks | Answers disputes with evidence, or accepts small ones, within the Card | every 4 hours |
 
 A job gives the taf its instructions, what each scheduled run is asked to do (its
-kickoff) and its default schedule. What the owner says about the work when it is made
-goes into the taf's instructions too, as their notes (at most 2,000 characters).
+kickoff) and, for a starter job, its default schedule. What the owner says about the work
+when it is made goes into the taf's instructions too, as their notes (at most 2,000
+characters).
 
 A taf made by Coach for work its tools can't find on their own is **unscheduled**: it
 has no schedule and no first run, and works from its chat. Pause, resume and Run now

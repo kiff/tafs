@@ -79,7 +79,7 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
   }
 
   if (req.path === "/v1/doors/planque" && req.method === "POST") {
-    // A Slack message planque took from its Slack bot connection and hands over, signed (planque.door.v1):
+    // A Slack or Telegram message planque took from a bot connection and hands over, signed (planque.door.v1):
     // the route is the grant and channel planque's own records name, never anything the message says.
     if (!cfg.planqueHandoffSecret) return fail(404, "not found");
     const signed = signedWebhook({
@@ -97,7 +97,7 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
       if (!taf || taf.kiffAgent !== a.agent) return fail(404, "no such door");
       outcome = await arrive(a.arrival, ctx);
     } catch (err) {
-      console.error("slack door:", err instanceof Error ? err.message : "error");
+      console.error("planque door:", err instanceof Error ? err.message : "error");
       return fail(502, "try again");
     }
     if (outcome === "unknown") return fail(404, "no such door");
@@ -140,10 +140,14 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
   return fail(404, "not found");
 }
 
-/** planque's handover, as an arrival on the Slack door its grant and channel name; undefined when it isn't one. */
+/**
+ * planque's handover, as an arrival on the door its grant names: a Slack door's grant and channel, or a Telegram
+ * door's grant (`app: "telegram"`, kiff/tafs#472). Undefined when it isn't one.
+ */
 export function planqueArrival(v: unknown, eventID: string): { tenant: string; agent: string; route: string; arrival: Arrival } | undefined {
   const b = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
   const s = (k: string) => (typeof b[k] === "string" ? (b[k] as string) : "");
+  if (b.app === "telegram") return telegramArrival(b, s, eventID);
   if (b.v !== "planque.door.v1" || !s("id") || s("id") !== eventID || !s("tenant") || !s("agent") || !s("grant") || !s("channel") || !s("sender")) return undefined;
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(s("grant")) || !/^[CGD][A-Z0-9]{2,30}$/.test(s("channel").toUpperCase())) return undefined;
   const channel = s("channel").toUpperCase();
@@ -156,6 +160,28 @@ export function planqueArrival(v: unknown, eventID: string): { tenant: string; a
     arrival: {
       route, id: s("id"), from: s("sender").toLowerCase(), proven: true, text: s("text").slice(0, 40_000), attachments: 0,
       thread: { slack_channel: channel, ...(thread ? { slack_thread: thread } : {}) }, threadKey: thread || s("id"), at,
+    },
+  };
+}
+
+/**
+ * A Telegram message planque took from the owner's bot connection. The sender is the Telegram user id (stable, unlike a
+ * @username), the chat is where the answer goes, and a forum group's topic and the message are kept for the reply.
+ */
+function telegramArrival(b: Record<string, unknown>, s: (k: string) => string, eventID: string): { tenant: string; agent: string; route: string; arrival: Arrival } | undefined {
+  if (b.v !== "planque.door.v1" || !s("id") || s("id") !== eventID || !s("tenant") || !s("agent")) return undefined;
+  const grant = s("grant"), chat = s("chat"), sender = s("sender"), topic = s("thread"), message = s("message_id");
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(grant) || !/^-?[1-9][0-9]{0,19}$/.test(chat) || !/^[1-9][0-9]{0,19}$/.test(sender)
+    || (topic && !/^[1-9][0-9]{0,19}$/.test(topic)) || (message && !/^[1-9][0-9]{0,19}$/.test(message))) return undefined;
+  const route = `telegram:${grant}`;
+  const at = typeof b.timestamp === "number" ? new Date(b.timestamp * 1000).toISOString() : s("timestamp") || new Date().toISOString();
+  const name = s("name").replace(/[\]\n]/g, " ").slice(0, 80);
+  return {
+    tenant: s("tenant"), agent: s("agent"), route,
+    arrival: {
+      route, id: s("id"), from: sender, ...(name ? { name } : {}), proven: true, text: s("text").slice(0, 40_000), attachments: 0,
+      thread: { telegram_chat: chat, ...(topic ? { telegram_thread: topic } : {}), ...(message ? { telegram_message: message } : {}) },
+      threadKey: topic ? `${chat}:${topic}` : chat, at,
     },
   };
 }

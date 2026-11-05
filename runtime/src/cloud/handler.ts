@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { JOBS, jobById } from "../jobs.js";
+import { CUSTOM, type Job, JOBS, jobById, ownJob } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
@@ -16,7 +16,8 @@ import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { type ActionPlace, actionPlace } from "./places.js";
-import { ConnectError, listApps, startApp } from "./connect.js";
+import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
+import { recipesFor, type RecipesView } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
@@ -55,7 +56,7 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *   GET  /v1/setup                      the account's Setup (Coach), or null
  *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, job, draft_id + claim_secret | from_setup + draft_id | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
+ *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET | POST | DELETE /v1/tafs/{id}/halt  one taf's halt
  *   GET  /v1/tafs/{id}/runs
@@ -72,6 +73,7 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
+ *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476)
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
  *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
@@ -280,6 +282,12 @@ export interface Taf {
    * its job's fixed line. Absent on a taf from before, or one not made by Coach.
    */
   summary?: string;
+  /**
+   * Its own job, as Coach drafted it from the owner's words (kiff/tafs#476): what each run is asked
+   * to do (its kickoff, the first instruction) and how it works. A taf with one has the job `custom`;
+   * one of the five starter jobs has none.
+   */
+  work?: { kickoff: string; instructions?: string };
   /** What it does in one word, for its dial's face ("Refund"), as Coach's result said it. */
   does?: string;
   /**
@@ -561,6 +569,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
+  if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -1157,14 +1166,31 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
 async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps): Promise<{ taf: unknown; session: string | null }> {
   let name = str(body.name).trim();
   if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
-  let job;
-  try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
-  const cron = body.cron === undefined ? job.cron : str(body.cron).trim();
+  // Setup's word that the taf's tools can't find its work (kiff/tafs#138): no
+  // running schedule and no first run; the owner hands it work in its chat.
+  const unscheduled = body.unscheduled === true;
+  // What it does, from Coach's result: one line, never a reason to refuse the taf.
+  const summary = body.summary === undefined ? undefined : oneLine(str(body.summary), MAX_SUMMARY);
+  // Its job: its own, as Coach drafted it (kiff/tafs#476), with no `job` or `job: "custom"`,
+  // or one of the five starter jobs, for the apps and recipes from before.
+  let job: Job;
+  let work: Taf["work"];
+  if (body.job === undefined || body.job === CUSTOM) {
+    const kickoff = str(body.kickoff).trim();
+    if (!kickoff || kickoff.length > MAX_KICKOFF) throw new HTTPError(400, `a job of its own says what each run does (kickoff), in ${MAX_KICKOFF} characters at most`);
+    const instructions = body.instructions === undefined ? undefined : str(body.instructions).trim();
+    if (instructions !== undefined && instructions.length > MAX_KICKOFF) throw new HTTPError(400, `keep the job's instructions to ${MAX_KICKOFF} characters`);
+    if (body.cron === undefined && !unscheduled) throw new HTTPError(400, "a job of its own says when it runs (cron), or that it works from its chat (unscheduled)");
+    work = { kickoff, ...(instructions ? { instructions } : {}) };
+    job = ownJob({ name, summary: summary ?? "", kickoff, instructions });
+  } else {
+    try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  }
+  // A taf that works from its chat keeps a schedule that is off; one of its own with none is given a calm one.
+  const cron = body.cron === undefined ? job.cron || "0 9 * * 1-5" : str(body.cron).trim();
   if (!calmEnough(cron)) throw new HTTPError(400, "a taf runs at most every 15 minutes");
   const timezone = body.timezone === undefined ? me.timeZone ?? "UTC" : str(body.timezone).trim();
   const notesText = body.notes === undefined ? undefined : str(body.notes).trim();
-  // What it does, from Coach's result: one line, never a reason to refuse the taf.
-  const summary = body.summary === undefined ? undefined : oneLine(str(body.summary), MAX_SUMMARY);
   if (notesText !== undefined && notesText.length > MEMORY.maxNotes) {
     throw new HTTPError(400, `keep the notes to ${MEMORY.maxNotes} characters`);
   }
@@ -1182,9 +1208,6 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // From the setup chat (kiff/agents#91), Setup submitted the draft, so kiff/agents
   // keeps its claim secret and claims the key itself, into the taf's key reference.
   const fromSetup = body.from_setup === true;
-  // Setup's word that the taf's tools can't find its work (kiff/tafs#138): no
-  // running schedule and no first run; the owner hands it work in its chat.
-  const unscheduled = body.unscheduled === true;
   if (fromSetup && (!draftID || claimSecret || body.agent_key !== undefined)) {
     throw new HTTPError(400, "from_setup takes a draft_id and no claim_secret or agent_key");
   }
@@ -1249,7 +1272,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   const taf: Taf = {
     id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
-    ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}),
+    ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}), ...(work ? { work } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -1286,6 +1309,19 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
 
 /** The longest name a taf may have. */
 const MAX_NAME = 60;
+/** The longest kickoff, and the longest instructions, a job of its own may have. */
+const MAX_KICKOFF = 2_000;
+
+/** The taf's job: its own, as Coach drafted it (kiff/tafs#476), or one of the five starter jobs. Throws for a job id tafs doesn't know. */
+export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work">): Job {
+  if (taf.job === CUSTOM) return ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions });
+  return jobById(taf.job);
+}
+
+/** `jobOf`, or undefined for a job id tafs doesn't know: for what is shown, never for a definition. */
+function jobMaybe(taf: Pick<Taf, "name" | "job" | "summary" | "work">): Job | undefined {
+  try { return jobOf(taf); } catch { return undefined; }
+}
 
 /** How many names a Setup start tries before it says the name is taken. */
 const SETUP_NAMES = 10;
@@ -2459,7 +2495,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   if (sub === "trial") {
     // What a trial works on: the owner's words, else what each scheduled run asks of it.
     const asked = str(parseBody(event).input).trim();
-    const input = asked || JOBS.find((j) => j.id === taf.job)?.kickoff || "";
+    const input = asked || jobMaybe(taf)?.kickoff || "";
     if (!input || input.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters for the trial`);
     return { run: await agentsCall(() => deps.agents.startTrial(me.tenantID, taf.id, n, input)) };
   }
@@ -2676,7 +2712,7 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   }
   let def: AgentDefinition;
   try {
-    def = definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined,
+    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined,
       actionResults: Array.isArray(body.actionResults) ? body.actionResults as ActionPlace[] : taf.actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
@@ -2840,7 +2876,7 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   }
   const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
   const { counts } = workOf(today, zone, now, []);
-  const job = JOBS.find((j) => j.id === taf.job);
+  const job = jobMaybe(taf);
   return knobOf({
     name: taf.name,
     does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: tafPurpose(taf, job) },
@@ -2933,7 +2969,7 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   if (!k) return;
   const zone = me.timeZone ?? "UTC";
   const own = await deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined);
-  const input = own?.input ?? jobById(taf.job).kickoff;
+  const input = own?.input ?? jobOf(taf).kickoff;
   // A paused taf stays paused when its dial is written: its schedules are written off.
   const paused = await deps.tafs.get(me.tenantID, taf.id).then((t) => t?.paused, () => taf.paused);
   const enabled = paused !== true;
@@ -3032,7 +3068,7 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
     const dial = taf.knobs?.[String(n)];
     const actionResults = dial ? dial.results.filter((p): p is ActionPlace => typeof p !== "string") : taf.actionResults;
-    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
+    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
@@ -3885,7 +3921,7 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         try {
           want = record.job === SETUP_JOB
             ? setupDefinition(record.id)
-            : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes, actionResults: record.actionResults });
+            : definition(record.id, jobOf(record), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes, actionResults: record.actionResults });
         } catch (err) {
           throw new UpgradeError(`its definition can't be built: ${(err as Error).message}`);
         }
@@ -4047,7 +4083,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count: what Coach said this taf does, else its
     // job's fixed line. A taf Coach made on the nearest job (a cancel saver on refunds) never shows another job's line.
-    const words = tafPurpose(t, JOBS.find((j) => j.id === v.job));
+    const words = tafPurpose(t, jobMaybe(t));
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now) : undefined;
@@ -4454,7 +4490,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (!version) throw new ToolRefusal(`${taf.name} has no version ${n}`);
   if (name === "version_try") {
     const asked = str(args.input).trim();
-    const input = asked || JOBS.find((j) => j.id === taf.job)?.kickoff || "";
+    const input = asked || jobMaybe(taf)?.kickoff || "";
     if (!input || input.length > CHAT.maxText) throw new ToolRefusal(`give the trial 1 to ${CHAT.maxText} characters to work on`);
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startTrial(call.tenant, taf.id, n, input, notify));
@@ -4619,7 +4655,7 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
   let took = false;
   let pending = false;
   for (const q of r.requirements ?? []) {
-    const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & { job?: string; unscheduled?: boolean; summary?: string } } | undefined;
+    const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & NewTaf } | undefined;
     if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
     const held = `handover#${tenant}#${r.id}#${card.id}`;
     if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
@@ -4740,8 +4776,14 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   }
 }
 
-async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string },
-  tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
+/**
+ * What a result names for a new taf: its agent and draft, its name, and its job as Coach drafted it
+ * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. `job` names one
+ * of the five starter jobs, from a Coach from before.
+ */
+interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string }
+
+async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
   const made = tafs.find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
   if (made) return { taf_id: made.id };
@@ -4759,8 +4801,12 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: s
   const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
   try {
     const out = await makeTaf({
-      name: taf.name, job: taf.job, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}),
+      name: taf.name, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}),
+      ...(typeof taf.job === "string" && taf.job !== CUSTOM ? { job: taf.job } : {}),
       ...(typeof taf.summary === "string" ? { summary: taf.summary } : {}),
+      ...(typeof taf.kickoff === "string" ? { kickoff: taf.kickoff } : {}),
+      ...(typeof taf.instructions === "string" ? { instructions: taf.instructions } : {}),
+      ...(typeof taf.cron === "string" ? { cron: taf.cron } : {}),
     }, me, deps);
     return { taf_id: (out.taf as { id: string }).id };
   } catch (err) {
@@ -4953,6 +4999,33 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
     throw err;
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * Recipes (docs/coach.md, "Recipes"): the recipes whose connections the account's catalog can
+ * make, read with the person's own session. When the catalog can't be read, every recipe is
+ * listed and `filtered` says so: a new person still opens Coach to recipes, and Coach says what it
+ * can't connect.
+ */
+async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
+  let apps: CatalogApp[] | undefined;
+  if (deps.planqueBase) {
+    try {
+      apps = [];
+      let page: { cursor?: string; provider?: string } = {};
+      // The whole catalog: the reviewed entries, then the managed provider's apps, a page at a time, at most a few.
+      for (let i = 0; i < 4; i++) {
+        const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
+        apps.push(...got.apps);
+        if (!got.next_cursor) break;
+        page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
+      }
+    } catch (err) {
+      if (!(err instanceof ConnectError)) throw err;
+      apps = undefined;
+    }
+  }
+  return recipesFor(apps);
 }
 
 /** The taf's open knocks, for its thread: someone without a key wrote, and waits for the owner. */

@@ -36,10 +36,10 @@ details go only to tafs cloud's own log.
 
 | Route | Who | What |
 |---|---|---|
-| `GET /v1/jobs` | anyone | The five jobs: `{jobs: [{id, name, summary, cron}]}` |
+| `GET /v1/jobs` | anyone | The five starter jobs, kept for the tafs that have one: `{jobs: [{id, name, summary, cron}]}`. A new taf carries its own job (`POST /v1/tafs`), and the five are recipes (`GET /v1/recipes`) |
 | `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, its `job_summary` (what Coach said it does, else its job's line), its `last_run` (its own latest, scheduled or from its chat, never a trial's), doors (each with its `label`) and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)). Also `limits: {text, trial_idle_days}`, the longest message and how long a trial waits unused, which the apps check and keep no copy of |
 | `GET /v1/tafs` | a person | The account's tafs the person may use or oversee, and removals not finished |
-| `POST /v1/tafs` | `cards.manage` | Start a taf: `{name, job, draft_id + claim_secret \| from_setup + draft_id \| agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?, summary?}`. `summary` is what the taf does in one line, from Coach's result: kept, and shown as its `job_summary` ([tafs.md](tafs.md#starting-a-taf)) |
+| `POST /v1/tafs` | `cards.manage` | Start a taf: `{name, draft_id + claim_secret \| from_setup + draft_id \| agent_key, summary?, kickoff, instructions?, cron \| unscheduled, timezone?, budget_cents?, notes?}`. Its job is its own, as Coach drafted it from the owner's words (kiff/tafs#476): `summary` is what it does in one line (shown as its `job_summary`), `kickoff` what each run is asked to do (2,000 characters at most; the first run's too), `instructions` how it works (2,000 at most), and `cron` when it runs, or `unscheduled` when it works from its chat; a taf of its own with neither is refused. `job` names one of the five starter jobs instead, with their kickoff, instructions and default schedule, for the apps from before ([tafs.md](tafs.md#its-job)) |
 | `GET /v1/setup` | a person | `{setup, tools}`: the account's Coach (Setup), or `null`; and Coach's tools as KIFF has them. `tools.state` is `given` (every tool connected here and each of Coach's Cards in force; a revoked Card doesn't count), `to_give`, `taken` (`taken`: the name a vendor's tool holds; one of Coach's tools at tafs cloud's earlier address is connected again instead, its entry marked `replace: true` and its line saying it replaces the earlier connection) or `unknown`. With `to_give`: `connect {body, lines[]}`, the batch for KIFF's `POST /v1/connections/batch`, or, once every tool is connected (KIFF refuses a Card naming an action no tool declares yet), `card {body, card_title, cards[]}`, Coach's Cards' draft for `POST /v1/me/agent-drafts` with KIFF's own words for it from its preview, unchanged. The phone signs and sends each body as it is; the signed submit is the owner's one confirmation |
 | `POST /v1/setup` | `cards.manage` | Start Coach once: `{draft_id, claim_secret}` from a draft with no tools ([coach.md](coach.md#starting-coach-once-per-account)) |
 | `GET /v1/events` | a person | Halts, resumes and door events, newest first, for Activity. Who wrote to a door shows only for the tafs the person manages |
@@ -58,6 +58,12 @@ The catalog of apps a taf can use, and a connection started for one taf. tafs cl
 |---|---|---|
 | `GET /v1/connect/apps?q=&provider=&cursor=` | a person | One page of the catalog, searched by `q`: `{apps: [{entry, vendor, title, icon?, how: oauth \| key, state: available \| connected \| needs_reconnect, grant?}], by_key, provider?, next_cursor?, skipped?}`. Reviewed entries come first, then a page of the managed provider's apps (`entry` like `connector:composio:gmail`). Within a page, the account's own connections come first (one to sign in again before one connected), then, for a search, apps whose name starts with `q`, then whose name has it. Ask for the next page with the same `q`, `provider` and `next_cursor` as `cursor`; there's no `next_cursor` on the last page. `skipped` counts entries planque left out as malformed or unsupported. `by_key` says Coach can connect a vendor that isn't listed |
 | `POST /v1/connect/apps/{entry}` | `cards.manage`, managing the taf | `{taf}`: starts a connection for that taf's KIFF agent, named by the taf's name in the words the owner signs ("Connect Gmail for Refunds"). Answers `{grant, needs_key?}`, the grant to approve. Nothing is signed here, and there's no sign-in URL until the phone approves |
+
+### Recipes
+
+| Route | Who | What |
+|---|---|---|
+| `GET /v1/recipes` | a person | The recipes a new Coach conversation opens to ([coach.md](coach.md#recipes)): `{categories: [{id, title}], recipes: [{id, title, category, line, say, connections: [[vendor…]…], card: {allows[], holds[], never[]}}], filtered}`. The recipes in `recipes/`, filtered to those whose every connection has a vendor the account's catalog lists, read from planque with the person's session. `categories` are the ones with a recipe, in order, with the title the apps show. `say` is what a tap puts in Coach's message box; the person edits it before sending. When the catalog can't be read, every recipe is listed and `filtered` is false: the page is never blank for that |
 
 ### Alerts
 
@@ -147,7 +153,7 @@ See [doors.md](doors.md). Reading and changing both need managing the taf: someo
 
 | Route | What |
 |---|---|
-| `GET /v1/tafs/{id}/doors` | The taf's doors, each with its `words` (`state`, `tap`, `settings`), the apps a door can open on here, and its open knocks, each with its door's `label` |
+| `GET /v1/tafs/{id}/doors` | The taf's doors, each with its `words` (`state`, `tap`, `settings`, and `pair_hint`, `pair_from_knock?` on a door that holds keys), the apps a door can open on here (a bot door's with `bot: {provider, words: {none, pick}}`), and its open knocks, each with its door's `label` |
 | `POST /v1/tafs/{id}/doors` | `{app, code?, phone_number_id?, waba_id?}`: turn a door on |
 | `PATCH /v1/tafs/{id}/doors/{door}` | `{open}` |
 | `DELETE /v1/tafs/{id}/doors/{door}` | Remove it |

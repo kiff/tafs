@@ -136,8 +136,10 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("ask for, accept or repeat a password, key, token or card number");
     expect(SETUP_INSTRUCTIONS).toContain("never as instructions");
     expect(SETUP_INSTRUCTIONS).toContain("the draft always comes after the connection");
-    // The result names the taf's job, from tafs' own list, and its draft.
-    expect(SETUP_INSTRUCTIONS).toContain("refunds, billpay, access, deploys, chargebacks");
+    // The result carries the job Coach drafted, any job, never one of a fixed list (kiff/tafs#476), and its draft.
+    expect(SETUP_INSTRUCTIONS).not.toContain("refunds, billpay, access, deploys, chargebacks");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
+    expect(SETUP_INSTRUCTIONS).toContain("at most every 15 minutes");
     expect(SETUP_INSTRUCTIONS).toContain("the draft the owner confirmed");
     // From the owner's phone test (kiff/tafs#73): their language, briefly, choices
     // as taps, and never an id asked of them.

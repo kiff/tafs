@@ -992,14 +992,14 @@ class PlanqueTest {
     """{"id":"gs","status":"connected","account":"ca_1","entry":"connector:composio:slackbot","text":"Slack bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[]}}"""
   private val slackApp = bot.tafs.app.kiff.DoorApp(id = "slack", label = "Slack", kind = "slack", proof = "proven")
 
-  private suspend fun slackModel(): AppModel {
+  private suspend fun slackModel(bots: String = slackBot): AppModel {
     transport.answer("GET /v1/me", 200, me)
     transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
     transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
-    transport.answer(grants, 200, """{"grants":[$slackBot,${grant("g1")}]}""")
+    transport.answer(grants, 200, """{"grants":[$bots,${grant("g1")}]}""")
     val m = model()
     m.refresh()
     m.refreshConnections()
@@ -1058,5 +1058,58 @@ class PlanqueTest {
     val sub = transport.requestsTo("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9").single()
     val door = transport.requestsTo("DELETE /v1/tafs/taf_1/doors/door_s").single()
     assertTrue(transport.requests.indexOf(sub) < transport.requests.indexOf(door))
+  }
+
+  // MARK: A bot door (Telegram): the provider and every word are tafs cloud's; the bot's connection, as its door; nothing to subscribe
+
+  private val telegramBot =
+    """{"id":"gt","status":"connected","provider":"telegram","entry":"api:telegram","telegram":{"id":7001,"username":"refunds_desk_bot"},"text":"Telegram bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[],"api":{"url":"https://core.telegram.org/bots/api"}}}"""
+  /** The door's app as tafs cloud offers it: the provider to list and the step's words come with it. */
+  private val telegramApp = KiffClient.json.decodeFromString<bot.tafs.app.kiff.DoorApp>(
+    """{"id":"telegram","label":"Telegram","kind":"telegram","proof":"proven","how":"","bot":{"provider":"telegram","words":{"none":"Connect it first.","pick":"Which bot?"}}}""",
+  )
+
+  private suspend fun telegramModel(): AppModel {
+    return slackModel("$telegramBot,$slackBot")
+  }
+
+  @Test fun aBotDoorListsTheConnectionsFromTheProviderTafsCloudNamesNeverByName() = runTest {
+    val m = telegramModel()
+    val provider = telegramApp.bot!!.provider
+    assertEquals(listOf("gt"), m.state.value.bots("refunds-1", provider).map { it.id })
+    assertEquals("@refunds_desk_bot", m.state.value.bots("refunds-1", provider).single().botName)
+    assertTrue("another provider lists none of them", m.state.value.bots("refunds-1", "other").isEmpty())
+    val noToken = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g2","status":"connected","provider":"telegram","request":{"agent":"refunds-1"}}""")
+    assertNull("no token given yet: no bot to name", noToken.botName)
+    val named = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g3","status":"connected","vendor":"Telegram","request":{"agent":"refunds-1"}}""")
+    assertFalse("a vendor name isn't a provider", named.isFrom(provider))
+  }
+
+  @Test fun aBotDoorIsAddedOnTheBotsGrantWithNothingSubscribedOrSigned() = runTest {
+    val m = telegramModel()
+    transport.answer("POST /v1/tafs/taf_1/doors", 200, """{"door":{"id":"telegram","app":"telegram","kind":"telegram","label":"Telegram","proof":"proven","grant":"gt"}}""")
+    val door = m.addBotDoor("refunds-1", telegramApp, m.state.value.bots("refunds-1", "telegram").single())
+    assertEquals("telegram", door?.id)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/taf_1/doors").single().body!!)).jsonObject
+    assertEquals(KiffClient.json.parseToJsonElement("""{"grant":"gt","bot":"@refunds_desk_bot","app":"telegram"}"""), body)
+    assertTrue("nothing asked", auth.asked.isEmpty())
+    assertTrue("nothing subscribed at planque", transport.requests.none { it.url.contains("/triggers") })
+    assertTrue(m.state.value.doors.getValue("refunds-1").doors.any { it.id == "telegram" })
+  }
+
+  @Test fun aBotDoorTafsCloudRefusesIsNotAdded() = runTest {
+    val m = telegramModel()
+    transport.answer("POST /v1/tafs/taf_1/doors", 400, """{"error":"connect the Telegram bot first"}""")
+    assertNull(m.addBotDoor("refunds-1", telegramApp, m.state.value.bots("refunds-1", "telegram").single()))
+    assertNotNull(m.state.value.doors.getValue("refunds-1").error)
+    assertTrue(m.state.value.doors.getValue("refunds-1").doors.isEmpty())
+  }
+
+  @Test fun pairingWordsAreTafsClouds() {
+    val door = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Door>(
+      """{"id":"telegram","app":"telegram","kind":"telegram","label":"Telegram","proof":"proven","words":{"pair_hint":"Their user id","pair_from_knock":"Ask them to write first."}}""",
+    )
+    assertEquals("Their user id", bot.tafs.app.model.DoorWords.pairHint(door))
+    assertEquals("Ask them to write first.", door.words?.pairFromKnock)
   }
 }
