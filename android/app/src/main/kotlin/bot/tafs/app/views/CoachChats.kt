@@ -137,10 +137,11 @@ private fun ChatRow(chat: TafsCloud.Chat, action: String, onOpen: () -> Unit, on
 
 /**
  * Coach's empty chat (kiff/tafs#138, #107): what the conversation is about, and ways to start it. Improving a taf, it names the
- * taf and starts from what it did; otherwise it's anything about the account's tafs.
+ * taf and starts from what it did; otherwise it's anything about the account's tafs, and tafs cloud's recipes by category
+ * (kiff/tafs#476): a tap puts a recipe's words in the message box, to edit and send, never sends them.
  */
 @Composable
-fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, send: (String) -> Unit) {
+fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, fill: (String) -> Unit = {}, send: (String) -> Unit) {
   val improving = state.coachImproving?.let { state.taf(it)?.name }
   val sending = COACH_CHAT in state.chatSending
   Column(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -156,7 +157,14 @@ fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, send: (String) 
         )
       }
     }
-    (if (improving != null) CoachWords.IMPROVE_EXAMPLES else CoachWords.EXAMPLES).forEach { example ->
+    if (improving == null) {
+      state.recipes?.byCategory?.forEach { (category, recipes) ->
+        bot.tafs.app.design.Eyebrow(category.title)
+        recipes.forEach { recipe -> RecipeRow(recipe, enabled = !sending) { fill(recipe.say) } }
+      }
+      return@Column
+    }
+    CoachWords.IMPROVE_EXAMPLES.forEach { example ->
       val shape = RoundedCornerShape(14.dp)
       Text(
         example,
@@ -170,6 +178,25 @@ fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, send: (String) 
           .padding(horizontal = 14.dp, vertical = 12.dp),
       )
     }
+  }
+}
+
+/** One recipe, as tafs cloud words it: its title, and its line under it. */
+@Composable
+private fun RecipeRow(recipe: bot.tafs.app.kiff.Recipe, enabled: Boolean, onTap: () -> Unit) {
+  val shape = RoundedCornerShape(14.dp)
+  Column(
+    Modifier
+      .fillMaxWidth()
+      .clip(shape)
+      .background(Theme.panel)
+      .border(BorderStroke(1.dp, Theme.line), shape)
+      .clickable(enabled = enabled, onClick = onTap)
+      .padding(horizontal = 14.dp, vertical = 12.dp),
+    verticalArrangement = Arrangement.spacedBy(2.dp),
+  ) {
+    Text(recipe.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    if (recipe.line.isNotBlank()) Text(recipe.line, style = scaled(13, color = Theme.soft))
   }
 }
 

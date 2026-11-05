@@ -1,5 +1,5 @@
-import { generateKeyPairSync, verify } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { generateKeyPairSync, type KeyObject, verify } from "node:crypto";
+import { beforeAll, describe, expect, it } from "vitest";
 import { fcmMessage, fcmSender, type ServiceAccount } from "../src/cloud/fcm.js";
 import { apsFor } from "../src/cloud/levels.js";
 import { type Device, type Notification, quietFor, silencing } from "../src/cloud/push.js";
@@ -97,14 +97,29 @@ function google(opts: { tokenStatus?: number; fcm?: () => { status: number; body
   return { calls, fetch: f, tokens: () => tokens };
 }
 
-function account() {
+/**
+ * The test service account: one RSA key for the whole file, made before the tests start.
+ * A 2048-bit key takes from milliseconds to seconds to generate (the search for primes is
+ * random) and it's pure CPU, so made inside a test, up to four times in one, it could pass
+ * alone and run past the 5 s test timeout when the full suite loads the machine. Nothing
+ * here tests the key itself, only that what's sent is signed by it.
+ */
+let key: { service: ServiceAccount; publicKey: KeyObject } | undefined;
+beforeAll(() => {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-  const service: ServiceAccount = {
-    client_email: "push@tafs-test.iam.gserviceaccount.com",
-    private_key: privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
-    token_uri: "https://oauth2.example/token",
+  key = {
+    service: {
+      client_email: "push@tafs-test.iam.gserviceaccount.com",
+      private_key: privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+      token_uri: "https://oauth2.example/token",
+    },
+    publicKey,
   };
-  return { service, publicKey };
+}, 60_000);
+
+function account() {
+  if (!key) throw new Error("the test key is made in beforeAll");
+  return key;
 }
 
 describe("fcmSender", () => {

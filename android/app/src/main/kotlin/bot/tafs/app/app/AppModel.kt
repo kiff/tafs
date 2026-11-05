@@ -336,6 +336,8 @@ data class AppState(
   val coachRequested: Boolean = false,
   /** Coach's tools as KIFF has them, from tafs cloud; null until read. And why giving them didn't go. */
   val coachTools: bot.tafs.app.kiff.CoachTools? = null,
+  /** The recipes a new Coach conversation opens to, from tafs cloud; null until read, or when they couldn't be. */
+  val recipes: bot.tafs.app.kiff.Recipes? = null,
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
@@ -2282,6 +2284,21 @@ class AppModel(
       val (coach, tools) = setup
       _state.update { it.copy(coachCloudId = coach?.id, coachAgent = coach?.kiffAgent, coachChecked = true, coachTools = tools, chatErrors = it.chatErrors - COACH_CHAT) }
     }
+    loadRecipes()
+  }
+
+  /** Reads the recipes a new Coach conversation opens to. Not read, the conversation opens without them; Coach still takes any job. */
+  suspend fun loadRecipes() {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    val recipes = try {
+      cloud.recipes()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(recipes = recipes) }
   }
 
   /**
