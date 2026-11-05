@@ -183,9 +183,13 @@ The Activity tab shows where the taf's work stands, from `GET /v1/tafs/{id}/work
 summary line, then its recent requests and skipped firings, newest first, each in tafs cloud's
 words (`Chat.workRows`). A request that needs the owner is amber, a failed one red; a skipped
 firing ("Skipped the 9:00 run: the last one was still working", `skipped[]`) isn't a failure, so
-it's dim. A door reply given up on after its tries shows **Send again** to whoever manages the taf
-(`AppModel.sendAgain`): it sends once more, does no work and signs nothing, and the work is read
-again after. A `taf` live update reads it again where the page has.
+it's dim. A delivery given up on after its tries shows **Send again** to whoever manages the taf
+(`AppModel.sendAgain`), by its own place (`WorkDelivery.sendPlace`): a door reply sends once more;
+a place of the taf's own (an app's action, another taf) goes by its `key`, retried as the taf's
+task. It signs nothing, and the work is read again after. One still not delivered offers **Ask
+Coach** (`open_coach`): a new conversation about the taf with tafs cloud's `coach_words` in the
+message box, sent only by the owner (`askCoachAbout`). The request sheet's **Try the reply now**
+is the door reply's alone. A `taf` live update reads it again where the page has.
 
 ## When something doesn't go through
 
@@ -239,8 +243,8 @@ Four tabs, each with one job (`TafDetailView`):
   - **Results go to**, the places on, opening its sheet (`ResultsSheet`): tafs' own places (Reply
     to the sender, Alert our phones, Email me), each a switch sent through `PUT …/results`; each
     place in a connected app by its name, a switch from its own on/off choice; **Add a place from
-    a connected app…** (Coach). The last place on can't be turned off. A reply given up on shows
-    under **Not sent** with **Send again**.
+    a connected app…** (Coach). The last place on can't be turned off. A delivery given up on shows
+    under **Not sent**, with the place's name for one of the taf's own, and **Send again** by its place.
   - **What it remembers**, **Versions**, Pause (in the sample) and **Remove for good**.
 
 A change to the dial's setting (a size, Skip it / Run after, a place in an app) makes the taf's
@@ -266,8 +270,11 @@ the section titles and tafs' own three places, which are the app's (`SetupWords`
 (`GET /v1/tafs/{id}/requests/{run}`). It shows the request's line, where it came from, and what
 happened, each step marked done, failed, not made, waiting or next, every line and time as tafs
 cloud wrote it. A run waiting for an app's event (the slow-tools design) says what it waits for in
-the connection's words, tafs cloud's `waiting_for`; that step is drawn as not needing the owner,
-never in the amber of a hold (`RequestWords.waitsOnApp`). **Try the reply now** sends a reply given up on again, for whoever manages the
+the connection's words, tafs cloud's `waiting_for`; the step tafs cloud marks `waits_on: "app"` is
+drawn as not needing the owner, never in the amber of a hold (`RequestWords.waitsOnApp`). On the
+home list, a taf whose work is `waiting_on_app` reads as its work's line, not "Waiting on you" nor
+its next run, and a home state the app doesn't know reads as that line too (`KiffMapping`).
+**Try the reply now** sends a reply given up on again, for whoever manages the
 taf, and **Ask Coach** opens a conversation about the taf.
 
 <p>

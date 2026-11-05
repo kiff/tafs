@@ -4,6 +4,7 @@
  * account's zone. The apps draw the steps as they are.
  */
 import type { Run, SessionEvent } from "./agents.js";
+import type { DeliveryView } from "./delivery.js";
 import type { Sent } from "./doors/model.js";
 import { stepWords, type ToolTitles } from "./steps.js";
 import { requestOf, type RequestView, timeIn } from "./work.js";
@@ -14,6 +15,8 @@ export interface RequestStep {
   line?: string;
   /** done, failed, not made (refused back unsent), waiting on someone, or still to come. */
   state: "done" | "failed" | "not_made" | "waiting" | "next";
+  /** "app" when the wait is for a connected app's event (the slow-tools design), not for the owner: the apps draw it as the app's, never as needing them. */
+  waits_on?: "app";
 }
 
 export interface RequestDetail extends RequestView {
@@ -39,8 +42,8 @@ function callsOf(body: unknown): Array<{ tool: string; error: boolean; notMade: 
   return waited.filter((w) => typeof w?.tool === "string").map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true }));
 }
 
-export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>()): RequestDetail {
-  const view = requestOf(r, zone, now, sent, again);
+export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>(), own: DeliveryView[] = []): RequestDetail {
+  const view = requestOf(r, zone, now, sent, again, own);
   const from = fromOf(r);
   const at = (t: string) => timeIn(t, zone, now);
   const steps: RequestStep[] = [{ label: "Received", line: `${from}, ${at(r.created)}`, state: "done" }];
@@ -57,13 +60,18 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
       if (b.state === "held") steps.push({ label: "Held for your approval", line: `Over its Card · ${at(e.time)}`, state: "waiting" });
     }
   }
-  for (const d of view.deliveries) steps.push({ label: d.state === "sent" ? "Replied" : "Reply not delivered", line: d.line, state: d.state === "sent" ? "done" : "failed" });
+  for (const d of view.deliveries) {
+    if (d.place === "door_reply") { steps.push({ label: d.state === "sent" ? "Replied" : "Reply not delivered", line: d.line, state: d.state === "sent" ? "done" : "failed" }); continue; }
+    // The taf's own places (delivery.ts): delivered, handed on, trying again, or not delivered.
+    const label = d.state === "sent" ? "Delivered" : d.state === "handed" ? "Handed on" : d.state === "retrying" ? "Delivering" : "Not delivered";
+    steps.push({ label, line: d.line, state: d.state === "sent" || d.state === "handed" ? "done" : d.state === "retrying" ? "waiting" : "failed" });
+  }
   switch (view.state) {
     case "retrying":
       steps.push({ label: r.next_at ? `Next try ${at(r.next_at)}` : "Next try soon", line: r.try && r.of && r.try >= r.of ? "If it fails again, this needs you" : `Try ${(r.try ?? 0) + 1}${r.of ? ` of ${r.of}` : ""}`, state: "next" });
       break;
     case "needs_you": steps.push({ label: "Needs you", line: view.line, state: "waiting" }); break;
-    case "waiting": steps.push({ label: view.line, state: "waiting" }); break;
+    case "waiting": steps.push({ label: view.line, state: "waiting", ...(view.waiting_for ? { waits_on: "app" as const } : {}) }); break;
     case "working": steps.push({ label: "Working on it", state: "next" }); break;
     case "done": steps.push({ label: "Done", line: at(r.updated), state: "done" }); break;
     case "stopped": steps.push({ label: "Stopped", line: at(r.updated), state: "failed" }); break;

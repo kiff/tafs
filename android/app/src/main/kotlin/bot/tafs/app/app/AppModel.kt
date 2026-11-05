@@ -1525,6 +1525,15 @@ class AppModel(
     _state.update { it.copy(coachRequested = true) }
   }
 
+  /**
+   * A delivery still not made, asked about in Coach: a new conversation about the taf, with tafs cloud's words for it in the
+   * message box, for the owner to edit and send. Nothing is sent.
+   */
+  fun askCoachAbout(tafId: String, words: String) {
+    improveInCoach(tafId)
+    setDraft(COACH_CHAT, words)
+  }
+
   /** The tab screen opened Coach. */
   fun coachOpened() = _state.update { it.copy(coachRequested = false) }
 
@@ -1708,16 +1717,16 @@ class AppModel(
   }
 
   /**
-   * Send again: a door reply given up on after its tries goes once more (`POST …/deliveries/door_reply/send`). It does no work
-   * and signs nothing. The work is read again after, whatever came of it.
+   * Send again: a delivery given up on goes once more, by its place (`POST …/deliveries/{place}/send`): the door reply, or a place
+   * of the taf's own by its key, which tafs cloud retries as the taf's task. It signs nothing. The work is read again after.
    */
-  suspend fun sendAgain(tafId: String, run: String) {
+  suspend fun sendAgain(tafId: String, run: String, place: String = "door_reply") {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     if (run in _state.value.sendingAgain) return
     _state.update { it.copy(sendingAgain = it.sendingAgain + run, workErrors = it.workErrors - tafId) }
     val generation = accountGeneration
     val failed = try {
-      cloud.sendAgain(cloudId, run)
+      cloud.sendAgain(cloudId, run, place)
       null
     } catch (e: CancellationException) {
       throw e
