@@ -354,12 +354,16 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
         unsent.forEach { r ->
           Text(r.line, style = scaled(14, color = Theme.ink))
           if (manages) {
-            OutlineButton(
-              if (r.id in state.sendingAgain) "Sending again…" else SetupWords.SEND_AGAIN,
-              { scope.launch { actions.sendAgain(taf.id, r.id) } },
-              Modifier.fillMaxWidth(),
-              enabled = r.id !in state.sendingAgain,
-            )
+            r.deliveries.filter { it.sendAgain }.forEach { d ->
+              // A place of the taf's own says which, in tafs cloud's words; the door reply is the request's line.
+              d.name?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+              OutlineButton(
+                if (r.id in state.sendingAgain) "Sending again…" else SetupWords.SEND_AGAIN,
+                { scope.launch { actions.sendAgain(taf.id, r.id, d.sendPlace) } },
+                Modifier.fillMaxWidth(),
+                enabled = r.id !in state.sendingAgain,
+              )
+            }
           }
         }
       }

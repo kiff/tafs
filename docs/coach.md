@@ -279,8 +279,11 @@ the phone already checks covers it. Before the owner approves:
 **Approve** waits until the words are on screen, and approving signs `kiff_profile`
 (`profile_sha256`, `words_sha256`) into planque's approve body, so one signature covers the
 connection, the profile and the words. Words that don't check out are said ("KIFF's words for
-this connection don't check out…"), and nothing can be approved. On Android: `ProfileWords`,
-`AppModel.loadProfileWords`, `ProfileWordsLines`; KIFF's golden vectors are in
+this connection don't check out…"), and nothing can be approved. The words are read once per
+profile, not per connection: tools added to an approved connection change its profile under the
+same grant id, so the words read for the earlier profile aren't shown or signed, and the new
+profile's are read (`AppState.profileWordsFor`, by the profile's digest). On Android:
+`ProfileWords`, `AppModel.loadProfileWords`, `ProfileWordsLines`; KIFF's golden vectors are in
 `app/src/test/resources/profile`.
 
 ### The next version Coach drafts

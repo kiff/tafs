@@ -268,6 +268,16 @@ held call was answered, then `end`.
 - On `part`, the app starts a fresh live answer (`LiveAnswer.newPart`). The steps and the
   held card from before the pause stay with the answer written then, never shown again as
   the resumed run's work.
+- The live answer leaves in the same update that brings its words into the thread, at a
+  `part` and at the end (`readThread`'s `alongside`). Never both at once, nor neither: the
+  chat's end would grow by a row and shrink again, and on Android the thread jumped back and
+  forth while Coach wrote. Where the thread can't be read, the live answer goes all the same.
+- On Android each row keeps one key from its first frame to its last, so the list updates it in
+  place (`Chat.rowKeys`, `Chat.liveKey`): an owner's message by tafs cloud's id, which the
+  stream gives at once (`<run>.in`); a taf's message `<run>.<seq>` by its run and its place
+  among that run's messages. The live answer has the key its words will have in the thread, so
+  the answer lands in the live answer's own row. The thread follows its end on the last row's
+  height as well as on the words arriving, at once and only while the owner is at the end.
 
 ## The thread and the chats list
 

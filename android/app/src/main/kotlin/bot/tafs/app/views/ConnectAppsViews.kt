@@ -247,9 +247,9 @@ fun ConnectApprovalSheet(
         Text(grant.text, style = scaled(15, color = Theme.ink))
         Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
         val profiled = grant.request.profile != null
-        val words = state.profileWords[grant.id]
+        val words = state.profileWordsFor(grant)
         if (profiled) {
-          LaunchedEffect(grant.id) { loadWords(grant.id) }
+          LaunchedEffect(grant.id, state.profileDigest(grant)) { loadWords(grant.id) }
           when {
             words != null -> ProfileWordsLines(words)
             state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))

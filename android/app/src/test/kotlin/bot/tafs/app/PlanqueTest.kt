@@ -343,6 +343,42 @@ class PlanqueTest {
     assertEquals(expected["words_sha256"], signed["words_sha256"])
   }
 
+  @Test fun aProfileChangedUnderTheSameConnectionIsReadAgainAndOnlyItsWordsAreApproved() = runTest {
+    reads()
+    // Tools added to a connection change its profile under the same grant id (planque merges the addition into it).
+    val slackProfile = resource("slack-messages")
+    val changedRequest = request.dropLast(1) + ""","profile":""" + slackProfile + "}"
+    val changedGrant = """{"id":"g1","status":"pending","text":"Connect Stripe: refund a payment.","digest":"${digestOf(changedRequest)}","request":$changedRequest}"""
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    transport.answer(words, 200, resource("stripe-refunds.expected"))
+    transport.answer(words, 200, resource("slack-messages.expected"))
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refreshConnections()
+    m.loadProfileWords("g1")
+    assertTrue(m.state.value.profileWordsFor(m.state.value.grants.single()) != null)
+    // The profile changes: the words read for the earlier one aren't this one's, and nothing can be approved with them.
+    transport.answer(grants, 200, """{"grants":[$changedGrant]}""")
+    m.refreshConnections()
+    assertNull(m.state.value.profileWordsFor(m.state.value.grants.single()))
+    val early = m.connect("a1", "g1", digestOf(changedRequest))
+    assertTrue(early.toString(), early is AppModel.Connected.Failed)
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    // Read again, for the profile as it is now.
+    m.loadProfileWords("g1")
+    assertEquals(2, transport.requestsTo(words).size)
+    assertEquals(Jcs.canonical(slackProfile), Jcs.canonical(String(transport.requestsTo(words).last().body!!)))
+    val result = m.connect("a1", "g1", digestOf(changedRequest))
+    assertTrue(result.toString(), result is AppModel.Connected.Done)
+    val signed = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject.getValue("kiff_profile").jsonObject
+    val expected = KiffClient.json.parseToJsonElement(resource("slack-messages.expected")).jsonObject
+    assertEquals(expected["profile_sha256"], signed["profile_sha256"])
+    // Read once per profile: asking again reads nothing more.
+    m.loadProfileWords("g1")
+    assertEquals(2, transport.requestsTo(words).size)
+  }
+
   @Test fun aConnectionWithAProfileIsNeverApprovedBeforeItsWordsAreRead() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")

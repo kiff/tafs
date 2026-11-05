@@ -221,13 +221,49 @@ object Chat {
   fun withKnocks(items: List<ChatItem>, knocks: List<bot.tafs.app.kiff.Knock>): List<Row> {
     val out = mutableListOf<Row>()
     val waiting = knocks.sortedBy { it.at }.toMutableList()
+    val keys = rowKeys(items)
     items.forEachIndexed { i, item ->
       while (waiting.isNotEmpty() && waiting.first().at < item.at) out += Row.Knock(waiting.removeAt(0))
-      out += Row.Item(i, item.id)
+      out += Row.Item(i, keys[i])
     }
     waiting.forEach { out += Row.Knock(it) }
     return out
   }
+
+  /**
+   * Each item's key in the list, the same from its first frame to its last, so a row is updated in place, never taken out and
+   * put back (the thread jumped when one was). An owner's message is keyed by tafs cloud's id once it has one, which the stream
+   * gives as soon as the run starts (`<run>.in`), whatever its session says meanwhile. A taf's message `<run>.<seq>` is keyed by
+   * its run and its place among that run's messages: the key the live answer had while it was written ([liveKey]), so the answer
+   * lands in the live answer's row. Anything else keeps its id. A key that would repeat gets its place appended.
+   */
+  fun rowKeys(items: List<ChatItem>): List<String> {
+    val perRun = mutableMapOf<String, Int>()
+    val seen = mutableSetOf<String>()
+    return items.mapIndexed { i, item ->
+      val m = (item as? ChatItem.Message)?.message
+      val server = m?.serverId
+      val key = when {
+        server == null -> item.id
+        m.from == ChatMessage.From.owner -> "o|$server"
+        else -> runOf(server)?.let { run -> "t|$run|${perRun.merge(run, 1, Int::plus)!! - 1}" } ?: item.id
+      }
+      if (seen.add(key)) key else "$key#$i".also { seen.add(it) }
+    }
+  }
+
+  /**
+   * The live answer's key: the key its words will have once they're in the thread, the run's next message; [fallback] until the
+   * stream names the run.
+   */
+  fun liveKey(items: List<ChatItem>, live: LiveAnswer?, fallback: String): String {
+    val run = live?.run ?: return fallback
+    val written = items.count { (it as? ChatItem.Message)?.message?.let { m -> m.from == ChatMessage.From.taf && m.serverId?.let(::runOf) == run } == true }
+    return "t|$run|$written"
+  }
+
+  /** The run a thread message's id `<run>.<seq>` names, or null for an id of another shape. */
+  private fun runOf(serverId: String): String? = serverId.substringBeforeLast('.', "").takeIf { it.isNotEmpty() }
 
   /**
    * The live line to show now, or none: tafs cloud's while its stream sends one (none at `done`); before that, the step at work,

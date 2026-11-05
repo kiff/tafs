@@ -376,7 +376,10 @@ data class AppState(
   val listApprovalNeedsKey: Boolean = false,
   /** A connection from Connect apps that just came back signed in or connected: said at once, over the list. */
   val connectedNow: bot.tafs.app.kiff.Grant? = null,
-  /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
+  /**
+   * KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). A grant's profile can change
+   * under the same id (tools added to a connection): read them through [profileWordsFor], which holds only the current profile's.
+   */
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
   val profileWordsErrors: Map<String, String> = emptyMap(),
@@ -675,6 +678,13 @@ data class AppState(
    * message twice in a thread) shows once.
    */
   fun chatItems(tafId: String): List<ChatItem> = chatItemsAsRead(tafId).distinctBy { it.id }
+
+  /** The digest of [grant]'s profile as planque sends it now, or null for a grant with none. */
+  fun profileDigest(grant: bot.tafs.app.kiff.Grant): String? = grant.request.profile?.let(bot.tafs.app.kiff.ProfileWords::digest)
+
+  /** KIFF's words for [grant]'s profile as it is now: none while the words read are an earlier profile's. */
+  fun profileWordsFor(grant: bot.tafs.app.kiff.Grant): bot.tafs.app.kiff.ProfileWords? =
+    profileDigest(grant)?.let { digest -> profileWords[grant.id]?.takeIf { it.profileSha256 == digest } }
 
   private fun chatItemsAsRead(tafId: String): List<ChatItem> {
     val messages = chats[tafId] ?: emptyList()
@@ -1525,6 +1535,15 @@ class AppModel(
     _state.update { it.copy(coachRequested = true) }
   }
 
+  /**
+   * A delivery still not made, asked about in Coach: a new conversation about the taf, with tafs cloud's words for it in the
+   * message box, for the owner to edit and send. Nothing is sent.
+   */
+  fun askCoachAbout(tafId: String, words: String) {
+    improveInCoach(tafId)
+    setDraft(COACH_CHAT, words)
+  }
+
   /** The tab screen opened Coach. */
   fun coachOpened() = _state.update { it.copy(coachRequested = false) }
 
@@ -1708,16 +1727,16 @@ class AppModel(
   }
 
   /**
-   * Send again: a door reply given up on after its tries goes once more (`POST …/deliveries/door_reply/send`). It does no work
-   * and signs nothing. The work is read again after, whatever came of it.
+   * Send again: a delivery given up on goes once more, by its place (`POST …/deliveries/{place}/send`): the door reply, or a place
+   * of the taf's own by its key, which tafs cloud retries as the taf's task. It signs nothing. The work is read again after.
    */
-  suspend fun sendAgain(tafId: String, run: String) {
+  suspend fun sendAgain(tafId: String, run: String, place: String = "door_reply") {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     if (run in _state.value.sendingAgain) return
     _state.update { it.copy(sendingAgain = it.sendingAgain + run, workErrors = it.workErrors - tafId) }
     val generation = accountGeneration
     val failed = try {
-      cloud.sendAgain(cloudId, run)
+      cloud.sendAgain(cloudId, run, place)
       null
     } catch (e: CancellationException) {
       throw e
@@ -1916,7 +1935,11 @@ class AppModel(
     _state.value.coachComponents.any { it.run == run && it.component.type == "result" && it.answer == null }
 
   /** Reads a taf's thread from tafs cloud and shows it; what the owner sent that it doesn't have yet stays, dimmed. */
-  private suspend fun readThread(tafId: String) {
+  /**
+   * [alongside] changes the state in the same update that brings the thread: the live answer leaving as its words land in the thread,
+   * so the chat's end never grows by a row and shrinks again, which moved the thread about while Coach wrote.
+   */
+  private suspend fun readThread(tafId: String, alongside: ((AppState) -> AppState)? = null) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     // A new Coach conversation has nothing to read until its first message is sent.
     if (tafId == COACH_CHAT && _state.value.coachFresh) return
@@ -1943,7 +1966,8 @@ class AppModel(
     }
     if (!current() || _state.value.mode != Mode.kiff) return
     val now = clock()
-    _state.update { s ->
+    _state.update { read ->
+      val s = alongside?.invoke(read) ?: read
       // What the owner sent stays on screen until the thread has it (kiff/tafs#138, 48).
       val (messages, waiting) = SentMessages.merge(thread.messages, s.chatSent[tafId].orEmpty(), now)
       // The wait ends once tafs cloud says the taf is at work, once it answered after the owner wrote, or after
@@ -3089,9 +3113,8 @@ class AppModel(
         _state.update { s -> s.copy(grants = s.grants.map { if (it.id == grant.id) grant else it }) }
         return false.also { note(noteKey, VersionWords.OUT_OF_DATE_CARD) }
       }
-      val words = grant.request.profile?.let { profile ->
-        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
-          ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
+      val words = grant.request.profile?.let {
+        _state.value.profileWordsFor(grant) ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
       }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Give ${grant.vendor} its key for ${grant.request.agent}")
@@ -3119,8 +3142,13 @@ class AppModel(
    * the card shows them before any approval. Nothing is read for a grant with no profile.
    */
   suspend fun loadProfileWords(grantId: String) {
-    if (_state.value.mode != Mode.kiff || grantId in _state.value.profileWords) return
-    val profile = _state.value.grants.firstOrNull { it.id == grantId }?.request?.profile ?: return
+    if (_state.value.mode != Mode.kiff) return
+    val grant = _state.value.grants.firstOrNull { it.id == grantId } ?: return
+    val profile = grant.request.profile ?: return
+    // Read once per profile, not per connection: tools added to it change its profile under the same id.
+    if (_state.value.profileWordsFor(grant) != null) return
+    // An earlier profile's refusal isn't this one's.
+    _state.update { it.copy(profileWordsErrors = it.profileWordsErrors - grantId) }
     val generation = accountGeneration
     val result = try {
       Result.success(kiff.profileWords(profile))
@@ -3206,9 +3234,8 @@ class AppModel(
         return Connected.Stopped
       }
       // A connection with a profile is approved only with KIFF's words for exactly that profile, as the owner read them.
-      val words = grant.request.profile?.let { profile ->
-        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
-          ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
+      val words = grant.request.profile?.let {
+        _state.value.profileWordsFor(grant) ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
       }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Connect ${grant.vendor} to ${grant.request.agent}")
@@ -3321,7 +3348,8 @@ class AppModel(
     try {
       // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
       val proof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
-      val words = _state.value.profileWords[grantId]
+      // The words for the profile as it is now: an earlier profile's would name another digest, and tafs cloud refuses it.
+      val words = _state.value.grants.firstOrNull { it.id == grantId }?.let { _state.value.profileWordsFor(it) }
       val ask = kotlinx.serialization.json.buildJsonObject {
         put("grant", grantId)
         shownDigest?.let { put("shown_digest", it) }
@@ -4008,8 +4036,8 @@ class AppModel(
             }
             StreamEvent.Taken, StreamEvent.Said, StreamEvent.Component -> readThread(tafId)
             StreamEvent.Part -> {
-              live { it.newPart() }
-              readThread(tafId)
+              // The part's words leave the live row in the update that brings them into the thread, never a frame before.
+              readThread(tafId) { s -> s.chatLive[tafId]?.let { a -> s.copy(chatLive = s.chatLive + (tafId to a.newPart())) } ?: s }
             }
             is StreamEvent.End -> {
               ended = e
@@ -4038,9 +4066,12 @@ class AppModel(
       }
       // Over, or paused on a held call: KIFF is read at once, so the hold shows and the Card's amounts are today's.
       if (end != null) refresh()
-      readThread(tafId)
+      // The live answer goes in the update that brings the answer into the thread: one row takes the other's place.
+      val settle: (AppState) -> AppState = { s -> s.copy(chatLive = s.chatLive - tafId, chatAwaiting = if (end != null) s.chatAwaiting - tafId else s.chatAwaiting) }
+      readThread(tafId, settle)
       if (!current()) return@launch
-      _state.update { it.copy(chatLive = it.chatLive - tafId, chatAwaiting = if (end != null) it.chatAwaiting - tafId else it.chatAwaiting) }
+      // Where the thread couldn't be read, the live answer goes all the same.
+      _state.update(settle)
       // This stream no longer holds the chat. What goes on after it is read on a timer: a stream that dropped with no end, or a
       // run that paused and went on with no stream open, as Coach's does once tafs cloud answers its result. Its end must show.
       if (followers[tafId] === coroutineContext[kotlinx.coroutines.Job]) followers.remove(tafId)
