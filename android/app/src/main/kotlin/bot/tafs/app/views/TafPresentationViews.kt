@@ -172,6 +172,8 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     val latest = cache?.pages?.lastOrNull()
     items(latest?.cardUnitExceptions.orEmpty(), key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     latest?.cardUnitExceptionsNotice?.let { notice -> item { Text(notice, style = scaled(13, color = Theme.dim)) } }
+    // When it runs, with Run now and Pause, ahead of what it did.
+    item(key = "runs") { RunsPanel(taf, taf.id in state.runsInFlight, actions) }
     item { RetainedRuns(taf, state, actions) }
     if (selection.isNotBlank()) item { TextButton(clearSelection) { Text("All apps", color = Theme.amberText) } }
     item {
