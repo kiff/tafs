@@ -38,7 +38,7 @@ describe("a taf's definition on kiff/agents", () => {
     expect(definition(ID, jobById("refunds")).key_ref).toBe(`kiff/${ID}`);
   });
 
-  it("runs on Sonnet 5.5 at its price and low effort, never fast, with a cost cap from the budget", () => {
+  it("runs on Sonnet 5.5 at its price and medium effort, never fast, with a cost cap from the budget", () => {
     const d = definition(ID, jobById("refunds"));
     expect(d.model).toBe(MODEL);
     expect(MODEL).toBe("claude-sonnet-5-5");
@@ -46,9 +46,9 @@ describe("a taf's definition on kiff/agents", () => {
     // Sonnet 5.5 has no fast output: a taf's definition never asks for it.
     expect(d.speed).toBeUndefined();
     expect(d.price_fast).toBeUndefined();
-    expect(d.effort).toBe("low");
+    expect(d.effort).toBe("medium");
     expect(d.thinking).toBe("updates"); // the person waiting sees its progress notes, never its reasoning
-    expect(EFFORT).toBe("low");
+    expect(EFFORT).toBe("medium");
     expect(d.price).toEqual(PRICE);
     // An hour's cache write at 2× input, so kiff/agents keeps the shared prefix an hour (kiff/agents#171).
     expect(d.price.CacheWrite1h).toBe(2 * PRICE.Input);
