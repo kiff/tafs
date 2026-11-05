@@ -62,6 +62,26 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     expect(long).not.toMatch(/\s…$/);
   });
 
+  it("leaves nothing that could be a secret or a person's own in the line (qa-kiff's probe): a table", () => {
+    const cases: Array<[string, string | undefined]> = [
+      ["Stripe refused the key sk_live_0123456789abcdefXYZ: no such account", "Stripe refused the key it: no such account"],
+      ["Unauthorized: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abc123DEF456 was rejected", "Unauthorized: it was rejected"],
+      ["Basic dXNlcjpwYXNzd29yZA== isn't accepted here", "it isn't accepted here"],
+      ["The sheet at https://docs.example.com/sheets/1AbC?token=s3cr3tT0k3n was not found", "The sheet at it was not found"],
+      ["Slack answered 401 for xoxb-123456789012-abcdefghijkl", "Slack answered 401 for it"],
+      ["AWS refused the key id AKIAIOSFODNN7EXAMPLE", "AWS refused the key id it"],
+      ["No order 123e4567-e89b-12d3-a456-426614174000 on this account", "No order it on this account"],
+      ["Operation op-7f3a9c2e-4b1d-4e8f-9a2b-1c3d5e7f9a1b failed upstream", "Operation it failed upstream"],
+      ["The card 4242 4242 4242 4242 was declined", "The card it was declined"],
+      ["The customer ana.lopez+shop@example.co.uk has no open invoice", "The customer it has no open invoice"],
+      ["planque answered 502: the vendor behind planque timed out", "the vendor behind timed out"],
+      ["The charge ch_1AbCdEfGhIjKlMnOp is already refunded", "The charge it is already refunded"],
+      ["Rate limited: try again in 30 seconds", "Rate limited: try again in 30 seconds"],
+      ["sk_live_0123456789abcdefXYZ", undefined],
+    ];
+    for (const [text, want] of cases) expect(whyOf(text), text).toBe(want);
+  });
+
   it("marks a failed step, with its reason only when there is one", () => {
     expect(failedStep("The sheet was renamed.")).toEqual({ failed: true, why: "The sheet was renamed." });
     expect(failedStep("grt_Abc123xyz")).toEqual({ failed: true });

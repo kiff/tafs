@@ -110,25 +110,42 @@ export class Steps {
 /**
  * Why a step failed, in one line the owner can read, from what the tool answered
  * (kiff/tafs#476, gap 9): the words after a service's "answered NNN:", the first line only,
- * with ids, codes and long hashes left out, at most 160 characters. Undefined when nothing
- * readable is left: the app then says only that the step failed.
+ * with anything that could be a secret or a person's own left out, at most 160 characters.
+ * Undefined when nothing readable is left: the app then says only that the step failed.
+ *
+ * The line goes to everyone who reads the taf's thread and is kept for 30 days, so what's
+ * scrubbed is wide: emails, URLs, Bearer and Basic credentials, UUIDs, long runs of digits (a
+ * card number, an account number), tokens that mix letters and digits (keys, JWTs, ids of any
+ * prefix), long hashes, snake_case codes, and the name of the service that relayed the call.
  */
 export function whyOf(text: unknown): string | undefined {
   if (typeof text !== "string") return undefined;
   let line = text.split("\n").map((l) => l.trim()).find(Boolean) ?? "";
   line = line.replace(/^(?:planque|kiff|tafs cloud|the (?:vendor|provider|tool)) answered \d{3}:\s*/i, "");
   line = line
-    // A service's id with its prefix ("grt_Abc123xyz", "ch_1AbC…") reads as "it"; a bare hash or code goes.
+    // A person's email, a URL (with whatever it carries), a credential and what follows it.
+    .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, "it")
+    .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, "it")
+    .replace(/\b(?:bearer|basic)\s+\S+/gi, "it")
+    // A token: 16 or more characters that mix letters and digits (a key, a JWT, a UUID, an id
+    // of any prefix), with _, - and . allowed inside; then a UUID of digits alone, a long run
+    // of digits (spaces or dashes inside), a long hash, and a service's short id with its prefix.
+    .replace(/\b(?=[A-Za-z0-9_.-]*[A-Za-z])(?=[A-Za-z0-9_.-]*\d)[A-Za-z0-9][A-Za-z0-9_.-]{15,}\b/g, "it")
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "it")
+    .replace(/\b\d(?:[ -]?\d){11,}\b/g, "it")
+    .replace(/\b[0-9a-f]{16,}\b/gi, "it")
     .replace(/\b[a-z]{1,5}_(?=[A-Za-z0-9]*[A-Z0-9])[A-Za-z0-9]{4,}\b/g, "it")
-    .replace(/\b[0-9a-f]{16,}\b/gi, "")
+    // A code, with its label; and the service that relayed the call, which the owner never sees.
     .replace(/\b(?:code|error|status|reason)\s+[a-z]+(?:_[a-z]+)+\b/g, "")
     .replace(/\b[a-z]+(?:_[a-z]+)+\b/g, "")
-    // What's left of a bracket that held only ids and codes.
+    .replace(/\bplanque\b/gi, "")
+    // What's left of a bracket that held only ids and codes, and doubled "it"s.
     .replace(/\(\s*(?:(?:[a-z]+\s+)?it[\s,]*)*\)/g, "").replace(/,\s*(?=[).;])/g, "")
+    .replace(/\bit(?:\s+it)+\b/g, "it")
     .replace(/\s{2,}/g, " ").replace(/\s+([,.;:)])/g, "$1").trim();
   if (line.length > 160) line = `${line.slice(0, 159).replace(/\s+\S*$/, "")}…`;
   line = line.replace(/[\s,;:]+$/, "");
-  return /[A-Za-z]{3,}/.test(line) ? line : undefined;
+  return /[A-Za-z]{3,}/.test(line.replace(/\bit\b/g, "")) ? line : undefined;
 }
 
 /** A failed step as the apps draw it: `failed`, and `why` when the tool said something readable. */
