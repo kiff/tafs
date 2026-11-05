@@ -16,7 +16,7 @@ import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { type VendorPlace, vendorPlace } from "./places.js";
-import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
+import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { recipesFor, type RecipesView } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
@@ -685,8 +685,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const zone = me.timeZone ?? "UTC";
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
-    // The taf's own places (delivery.ts): settled on this read, then shown under each request.
-    const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone);
+    // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
+    const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false));
     return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own), skipped: skippedOf(fired, zone, now) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
@@ -703,7 +703,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       titlesOf(event, me, taf, deps),
     ]);
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
-    const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC");
+    const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC", others || await managesTaf(event, me, taf, deps).catch(() => false));
     return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? []);
   }
   if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
@@ -4799,10 +4799,16 @@ export async function sweepReplies(deps: Deps): Promise<Array<{ ref: string; wai
   return sweepDoorReplies(doorContext(deps));
 }
 
-/** The deliveries sweep (delivery.ts): every taf with a retry waiting, settled. */
+/**
+ * The deliveries sweep (delivery.ts): every taf whose live version has a place of its own, its
+ * latest runs settled (a hand-off and a retry happen on the sweep's cadence, read or not), then
+ * every retry waiting.
+ */
 export async function sweepDeliveries(deps: Deps): Promise<Array<{ run: string; waiting: boolean }>> {
   if (!deps.coach) return [];
-  return sweepRunDeliveries(deliveryContext(deps));
+  const ctx = deliveryContext(deps);
+  await settleEveryTaf(ctx, () => deps.tafs.tenants());
+  return sweepRunDeliveries(ctx);
 }
 
 function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): DeliveryContext {
@@ -4810,11 +4816,11 @@ function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): Delivery
   return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };
 }
 
-/** The taf's own deliveries for these runs, settled first (delivery.ts), as the apps draw them. */
-async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
+/** The taf's own deliveries for these runs, settled first (delivery.ts; `act`: a manager's read starts a hand-off or a retry, a viewer's doesn't), as the apps draw them. */
+async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string, act: boolean): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
   if (!deps.coach) return new Map();
   const ctx = deliveryContext(deps, now);
-  await settleRuns(ctx, tenant, taf, runs).catch((err) => console.error("deliveries not settled:", err instanceof Error ? err.message : "error"));
+  await settleRuns(ctx, tenant, taf, runs, act).catch((err) => console.error("deliveries not settled:", err instanceof Error ? err.message : "error"));
   const kept = await deliveriesOf(deps.coach, tenant, taf.id, runs.map((r) => r.id));
   return new Map(runs.map((r) => [r.id, deliveryViews(kept.get(r.id), taf.name, zone, now)]));
 }
