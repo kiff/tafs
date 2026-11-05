@@ -212,6 +212,8 @@ export const doorKeys = {
   knocks: (tenant: string, taf: string) => `${tenant}#door-knocks#${taf}`,
   /** An app's event that completes a call no run waits on yet, by what the run will wait on (the slow-tools design). */
   earlyEvent: (tenant: string, grant: string, event: string, key: string) => `${tenant}#app-event-early#${grant}#${event}#${key}`,
+  /** An app's event that answered a run's wait, by planque's event id: a delivery repeated answers the same, and starts no run. */
+  answeredEvent: (tenant: string, id: string) => `${tenant}#app-event-answered#${id}`,
   bound: (tenant: string) => `${tenant}#door-ai`,
 };
 
