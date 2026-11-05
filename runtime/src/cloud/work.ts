@@ -109,6 +109,8 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
       return { ...base, state: "working", line: "Working on it" };
     case "PAUSED": {
       if (r.requirements?.some((q) => q.exception && !q.answered)) return { ...base, state: "waiting", line: "Waiting for your approval" };
+      // An open card is the owner's to answer: it comes before any wait on the app, so an owner's question is never drawn as the app's.
+      if (r.requirements?.some((q) => q.kind === "card" && !q.answered)) return { ...base, state: "waiting", line: "Waiting for an answer" };
       const wait = r.requirements?.find((q) => q.kind === "event" && !q.answered && q.wait)?.wait;
       if (wait) {
         const words = wait.words?.trim() || `Waiting for the app's ${wait.event} event`;
@@ -142,7 +144,10 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   // A run waiting for a connected app's event (the slow-tools design): the taf isn't idle, and the line is the
   // connection's words for the wait. A run that also needs the owner was counted above. Named apart from the
   // home item's `state: "waiting"`, which means a call held for the owner.
-  const waiting = runs.find((r) => r.status === "PAUSED" && r.requirements?.some((q) => q.kind === "event" && !q.answered && q.wait));
+  const waiting = runs.find((r) => {
+    const open = (r.requirements ?? []).filter((q) => !q.answered);
+    return r.status === "PAUSED" && open.length > 0 && open.every((q) => q.kind === "event" && q.wait);
+  });
   if (waiting) return { status: "waiting_on_app", line: requestOf(waiting, zone, now).line, needs_you: 0 };
   if (paused) return { status: "paused", line: "Paused", needs_you: 0 };
   if (unscheduled) return { status: "idle", line: "Works from its chat", needs_you: 0 };

@@ -46,6 +46,11 @@ describe("a request, step by step", () => {
     const d = requestDetail({ ...run, status: "PAUSED", requirements: [wait] }, [], [], "UTC", now);
     expect(d.waiting_for).toBe("The desk answers when the customer replies.");
     expect(d.steps.at(-1)).toEqual({ label: "The desk answers when the customer replies.", state: "waiting", waits_on: "app" });
+    // An open card for the owner beside the wait: the step is the owner's, with nothing on the app.
+    const card = { call_id: "c3", tool: "show", input: { type: "confirm", id: "which" }, operation: "", expires: "2026-11-02T23:00:00Z", kind: "card" };
+    const withCard = requestDetail({ ...run, status: "PAUSED", requirements: [wait, card] }, [], [], "UTC", now);
+    expect(withCard.waiting_for).toBeUndefined();
+    expect(withCard.steps.at(-1)).toEqual({ label: "Waiting for an answer", state: "waiting" });
     // Answered, the run goes on: nothing waits on the app any more.
     expect(requestDetail({ ...run, status: "RUNNING", requirements: [{ ...wait, answered: "2026-11-02T22:50:00Z" }] }, [], [], "UTC", now).steps.at(-1)).toEqual({ label: "Working on it", state: "next" });
   });
