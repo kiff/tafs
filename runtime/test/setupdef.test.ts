@@ -386,7 +386,7 @@ describe("Setup's definition on kiff/agents", () => {
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
     expect(flat).toContain("say so as a line of the rules notice (\"a day ends at midnight in your account's time zone\"), not in a message: messages stay short");
-    expect(flat).toContain("as a line of the rules notice (\"test mode, no real money\" or \"live mode, real money\"), not again in every message");
+    expect(flat).toContain("The rules notice says the choice as a choice (\"chosen: test mode\"), never that money can't move, unless the connection reports the mode");
     expect(flat).not.toContain("in every message about those tools");
     expect(flat).not.toContain("KIFF's settings");
   });
