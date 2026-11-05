@@ -32,7 +32,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are ten, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => s.name)).toEqual(["cards-and-holds", "connect-an-app", "draft-the-card", "halting", "improve-a-taf", "name-the-tools", "set-up-a-taf", "the-dial", "the-tafs", "usage-and-plans"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "improve-a-taf@1", "name-the-tools@2", "set-up-a-taf@1", "the-dial@1", "the-tafs@1", "usage-and-plans@1"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -40,8 +40,8 @@ describe("Coach's skills, as files", () => {
       expect(s.body).toContain("## Verification");
       expect(s.description).toMatch(/\. Use (when|for|whenever) /);
       expect(s.description).not.toMatch(/\b(I|you can use)\b/);
-      // A skill is at most 1,600 tokens (the design says 1,500; two cut word for word sit just over).
-      expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(1700);
+      // A skill is about 1,500 tokens (the design); two cut word for word sit just over, name-the-tools@2 at 1,800.
+      expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
   });
@@ -72,6 +72,14 @@ describe("Coach's core", () => {
     expect(SETUP_CORE).toContain("Ask each thing once. What the owner already told you, a limit included");
   });
 
+  // No skill tells Coach what the core forbids: a mode or "no real money" stated as fact (qa-kiff, recipe 3).
+  it("has no skill that states a mode or no real money as fact", () => {
+    for (const s of COACH_SKILLS) {
+      expect(s.body, s.name).not.toContain("no real money");
+      expect(s.body, s.name).not.toContain("real money)");
+    }
+  });
+
   it("names its skills in the definition, each at its stored version", () => {
     const d = setupDefinition("taf-0123456789abcdef0123");
     expect(d.skills).toEqual(COACH_SKILLS.map((s) => ({ name: s.name, version: s.version })));
@@ -92,6 +100,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
 
   // One test per entry point: the skill it needs is named, in the definition's order, as a stored version.
   const SETUP = ["connect-an-app", "draft-the-card", "name-the-tools", "set-up-a-taf", "usage-and-plans"];
+  // name-the-tools is at its second version: the first stated the owner's mode as fact (never stored; kept in the lock).
   for (const [entry, want] of [
     ["free", SETUP], ["recipe", SETUP], ["door", SETUP], ["improve", ["improve-a-taf"]],
     ["coach_lines", ["the-tafs"]], ["delivery", ["the-dial"]], ["did_this_happen", ["cards-and-holds"]],
@@ -102,7 +111,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "name-the-tools@1", "set-up-a-taf@1", "usage-and-plans@1"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "name-the-tools@2", "set-up-a-taf@1", "usage-and-plans@1"]);
     expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "improve-a-taf@1"]);
   });
 

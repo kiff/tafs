@@ -214,13 +214,15 @@ describe("Setup's definition on kiff/agents", () => {
     // The owner's phone test (#89): Setup chose live mode itself, said "connected"
     // before checking, and showed a declined step as failed.
     expect(flat).toContain("Test or live is the owner's choice, never yours");
-    expect(flat).toContain('"Test mode (no real money), recommended to start" or "Live mode (real money)"');
+    // The owner picks the mode; Coach states it as fact only when the connection reports it (recipe 3, 5 Nov).
+    expect(flat).toContain('"Test mode, recommended to start" or "Live mode"');
+    expect(flat).toContain("what the account is, you say as fact only when the connection reports it");
     expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time: ask again");
     // Nothing is read from the owner's account before they approve its tools
     // (kiff/planque#23, describe removed): Setup asks the mode, always.
     expect(flat).not.toContain("describe");
     expect(flat).toContain("so don't try to read what the sign-in covers first: ask");
-    expect(flat).toContain("Before you propose tools that move money or change data, ask: \"Test mode (no real money), recommended to start\"");
+    expect(flat).toContain("Before you propose tools that move money or change data, ask: \"Test mode, recommended to start\"");
     expect(flat).toContain("as one of the questions you ask together, or with confirm when it's the only one, and pin exactly what they chose");
     // The money argument and read-only tools are part of looking, not of the mode rule.
     expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only: reading in the owner's account is open, with no limits\.\s+- Test or live/);

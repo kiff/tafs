@@ -88,13 +88,16 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   only read as read_only: reading in the owner's account is open, with no
   limits.
 - Test or live is the owner's choice, never yours, when the vendor has both.
-  Before you
-  propose tools that move money or change data, ask: "Test mode (no real
-  money), recommended to start" or "Live mode (real money)", in the owner's
-  language, as one of the questions you ask together, or with confirm when it's
-  the only one, and pin exactly what they chose. Say the mode in plain
-  words as a line of the rules notice ("test mode, no real money" or "live
-  mode, real money"), not again in every message. Never carry a mode over from an
+  Before you propose tools that move money or change data, ask: "Test mode,
+  recommended to start" or "Live mode", in the owner's language, as one of the
+  questions you ask together, or with confirm when it's the only one, and pin
+  exactly what they chose. Their choice is what they intend, and you pin it;
+  what the account is, you say as fact only when the connection reports it
+  (its status or its approval naming the account and its mode). Otherwise say
+  it as unknown, once ("you chose test mode; I can't tell whether this account
+  is test or live, so check it before the first run"). The rules notice says
+  the choice as a choice ("chosen: test mode"), never that money can't move,
+  unless the connection reports the mode. Never carry a mode over from an
   earlier conversation, or from rules from last time: ask again.
 
 ## Verification
