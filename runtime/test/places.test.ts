@@ -73,8 +73,8 @@ describe("result places at connected apps", () => {
       { subject: "other", subjects: ["other", "rae"], active: true, grants: [{ action: "stripe_refund" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
     ];
     expect([...moneyActions(cards, "rae")]).toEqual([["refund_k1", "EUR"], ["note_k2", "EUR"], ["post_k3", "USD"], ["stripe_refund", "EUR"]]);
-    expect(() => checkNoMoneyPlace([place("stripe_refund")], cards, "rae")).toThrow("moves money");
     const place = (action: string) => actionPlace({ place: "action", grant: "grt_1", action, args: {}, name: "Stripe · Refunds" });
+    expect(() => checkNoMoneyPlace([place("stripe_refund")], cards, "rae")).toThrow("moves money");
     expect(() => checkNoMoneyPlace([place("refund_k1")], cards, "rae")).toThrow("Stripe · Refunds can't be a place: refund_k1 moves money (counted in EUR on the taf's Card), and a place moves no money");
     expect(() => checkNoMoneyPlace([place("POST_K3")], cards, "rae")).toThrow("counted in USD");
     expect(() => checkNoMoneyPlace([place("read_k4"), place("old_k5"), place("pay_k6"), tafPlace({ place: "taf", taf: "taf_x", name: "Invoices" })], cards, "rae")).not.toThrow();
