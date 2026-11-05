@@ -16,6 +16,9 @@ object DidThisHappenWords {
     else -> "Its answer was lost, so KIFF can't tell whether it went through."
   }
 
+  /** The link to the vendor's own record of the call, where KIFF gives one. */
+  fun record(vendor: String?): String = vendor?.takeIf { it.isNotBlank() }?.let { "See it at $it" } ?: "See the vendor's record"
+
   /** What the prompt says while the owner answers. */
   fun reason(happened: Boolean): String = if (happened) "Answer: yes, it happened" else "Answer: no, it didn't happen"
 }

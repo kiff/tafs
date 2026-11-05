@@ -175,6 +175,9 @@ class TafsCloud(
   /** Opens a new conversation with the account's Coach on this taf (kiff/tafs#107): tafs cloud puts the taf's job, Card and latest calls in front of the owner's words. */
   suspend fun improve(id: String, text: String): Sent = post("/v1/tafs/${escaped(id)}/improve", mapOf("text" to text))
 
+  /** A new conversation with Coach on one "Did this happen?" call, after KIFF took "Not sure": the owner still answers the card. */
+  suspend fun checkCall(proposal: String): Sent = post("/v1/setup/check-call", mapOf("proposal" to proposal))
+
   /** How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until Coach reads it on its next turn. */
   @kotlinx.serialization.Serializable
   data class CoachLine(
