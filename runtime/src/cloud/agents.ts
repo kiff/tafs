@@ -99,8 +99,11 @@ export interface AgentDefinition {
   max_tokens: number;
   /** How hard the model works on each turn ("low" to "max"); absent is the provider's default. */
   effort?: Effort;
-  /** "summarized": a summary of the model's thinking streams as the run goes (kiff/tafs#285). */
-  thinking?: "summarized";
+  /**
+   * "summarized": a summary of the model's thinking streams as the run goes (kiff/tafs#285);
+   * "updates": only its short progress notes between tool calls, each whole, as `update` deltas.
+   */
+  thinking?: "summarized" | "updates";
   /**
    * "fast": the turns run at the provider's fast output, at price_fast, when someone waits on the
    * run (kiff/agents#197); a conversation keeps one speed. Absent: standard.

@@ -57,22 +57,27 @@ final class WorkLogTests: XCTestCase {
         XCTAssertFalse(AppModel.sharedWithMe(nil))
     }
 
-    /// One readable line of the thinking: the latest sentence, plain, not a list or code.
-    func testTheThinkingLineIsOneCalmSentence() {
-        XCTAssertEqual(WorkLog.thinkingLine("The customer asks for a refund. The order is **paid** in full."),
-                       "The order is paid in full.")
-        // The next sentence is still a fragment: the last complete one shows.
-        XCTAssertEqual(WorkLog.thinkingLine("I should check the [order](https://x.test) first. Then the"),
-                       "I should check the order first.")
-        // Lists, code and a line that opens a list are skipped.
-        XCTAssertEqual(WorkLog.thinkingLine("Checking what the Card allows.\nThe steps:\n- refund\n- {\"amount\": 20}"),
-                       "Checking what the Card allows.")
-        XCTAssertEqual(WorkLog.thinkingLine(""), "")
-        XCTAssertEqual(WorkLog.thinkingLine("ok"), "")
-        let long = WorkLog.thinkingLine(String(repeating: "refund the order now ", count: 20) + "please.")
-        XCTAssertLessThanOrEqual(long.count, 141)
-        XCTAssertTrue(long.hasSuffix("…"))
-        XCTAssertFalse(long.hasSuffix(" …"))
+    /// The live line reads as Android's: tafs cloud's state once it comes, with a step's
+    /// words or Coach's own progress note while working; before it, the step at work, else
+    /// "Thinking…" or "Writing…". The thinking text is never in it.
+    func testTheLiveLineIsTafsCloudsAsOnAndroid() {
+        var live = AppModel.LiveAnswer()
+        live.thinking = "The owner wants refunds capped, I should"
+        XCTAssertEqual(live.line(current: nil), "Thinking…")
+        XCTAssertEqual(live.line(current: "Reading your payments…"), "Reading your payments…")
+        live.state = .init(state: "working", words: "Miro las últimas ejecuciones de Reembolsos")
+        XCTAssertEqual(live.line(current: nil), "Miro las últimas ejecuciones de Reembolsos…")
+        live.state = .init(state: "working")
+        XCTAssertEqual(live.line(current: nil), "Working…")
+        live.state = .init(state: "waiting_for_you")
+        XCTAssertEqual(live.line(current: "Refunding"), "Waiting for you")
+        live.state = .init(state: "something new")
+        XCTAssertEqual(live.line(current: nil), "Thinking…")
+        live.state = .init(state: "done")
+        live.text = "Done."
+        XCTAssertEqual(live.line(current: nil), "Writing…")
+        live.newPart()
+        XCTAssertNil(live.state)
     }
 
     func testHowLongItWorkedReads() {

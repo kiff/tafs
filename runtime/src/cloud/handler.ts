@@ -1958,6 +1958,9 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       }
     }
     const seenRun = new Set<string>();
+    // A run's line before its tool calls (one short line, which its calls follow) is shown on the live line
+    // while the run goes, never as a message: the run's work, on its next message, holds it (docs/chat.md).
+    const lines = preToolLines(r.events);
     // Each run's work, shown once, on its first message (the 845 test): when the run started,
     // the tools it called, in order, and when it last wrote. The app's live block sits there too,
     // under the owner's message, so it folds in place when the run ends. A run that paused on a
@@ -2022,6 +2025,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         continue;
       }
       if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
+      if (lines.has(`${e.run}.${e.seq}`)) continue;
       const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
       const attached = e.kind === "owner_message" ? attachmentsOf(e.body) : [];
       if (!text && !attached.length) continue;
@@ -3752,10 +3756,11 @@ export interface StreamResult {
  *                     owner, at this point of the answer (kiff/tafs#206)
  *   event: component  {component}: a component the agent showed
  *   event: state      {state, words?}: the one line the app shows while the taf works, as tafs
- *                     cloud paces it: "thinking", "working" with the step's words, "waiting_for_you",
- *                     then "done". Sent only when it changes, a line held at least a second
- *                     (STATE_HOLD_MS) unless it waits for the person or ends. The model's thinking
- *                     text is never in it: an app shows this line, and draws no `thinking` text
+ *                     cloud paces it: "thinking", "working" with the step's words or the model's
+ *                     own short progress note (noteWords), "waiting_for_you", then "done". Sent
+ *                     only when it changes, a line held at least a second (STATE_HOLD_MS) unless
+ *                     it waits for the person or ends, or a note replaces "thinking". Nothing else
+ *                     of the model's is in it: an app shows this line, and draws no `thinking` text
  *   event: end        {status, stop}: where the run stopped
  *   event: error      {error}: the stream broke; the conversation has the rest
  *
@@ -3976,6 +3981,59 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
 /** How long the stream's `state` line holds before it changes, unless it waits for the person or ends. */
 export const STATE_HOLD_MS = 1000;
 
+/** The most of a progress note the live line keeps, in characters. */
+export const MAX_NOTE = 90;
+
+/**
+ * A progress note as the live line's words: one line, cut at a word past MAX_NOTE, without its closing
+ * mark (". … ... ! ?"), since an app adds "…" after a working line's words as after a step's. None when
+ * nothing is left.
+ */
+export function noteWords(note: string): string | undefined {
+  let line = note.replace(/[\u0000-\u001f\u007f-\u009f\s]+/g, " ").trim();
+  const chars = [...line];
+  if (chars.length > MAX_NOTE) {
+    const cut = chars.slice(0, MAX_NOTE).join("");
+    const space = cut.lastIndexOf(" ");
+    line = space > MAX_NOTE / 2 ? cut.slice(0, space) : cut;
+  }
+  line = line.replace(/[\s.…!?,;:–—-]+$/u, "").trim();
+  return line || undefined;
+}
+
+/**
+ * Whether a turn's text is still one short line: no line break inside it, at most MAX_NOTE characters. A
+ * line before a reply's tool calls (Coach's rule) is one; an answer soon isn't.
+ */
+export function heldLine(text: string): boolean {
+  const t = text.trim();
+  return !t.includes("\n") && [...t].length <= MAX_NOTE;
+}
+
+/**
+ * The taf's messages that were lines before tool calls, by `<run>.<seq>`: a message one short line long
+ * (heldLine) whose next message, component or call in its run is a call. kiff/agents records a turn's text
+ * before its calls.
+ */
+export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
+  const out = new Set<string>();
+  const pending = new Map<string, string>(); // run → its latest message, while nothing has followed it
+  for (const e of events) {
+    if (e.kind === "tool_call") {
+      const id = pending.get(e.run);
+      if (id) out.add(id);
+      pending.delete(e.run);
+      continue;
+    }
+    // Anything else the owner sees between them makes the message the answer, as the stream sends it.
+    if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message" && e.kind !== "component") continue;
+    pending.delete(e.run);
+    const text = (e.body as { text?: unknown } | undefined)?.text;
+    if (e.kind === "agent_message" && typeof text === "string" && text.trim() && heldLine(text)) pending.set(e.run, `${e.run}.${e.seq}`);
+  }
+  return out;
+}
+
 /** The card types a run waits on the person for: while one shows, the line says it waits for them. */
 const WAITS_FOR_YOU = new Set(["confirm", "questions", "approval", "sign_in"]);
 
@@ -3989,10 +4047,21 @@ class Pace {
   private pending?: { state: string; words?: string };
   constructor(private readonly now: () => number) {}
 
-  /** The `state` event to send now for this line, if any. */
-  set(state: string, words?: string): string | undefined {
+  /** The `state` event to send now for this line, if any; `now` sends it whatever the hold. */
+  set(state: string, words?: string, now = false): string | undefined {
     this.pending = { state, ...(words ? { words } : {}) };
-    return this.flush(state === "waiting_for_you" || state === "done");
+    return this.flush(now || state === "waiting_for_you" || state === "done");
+  }
+
+  /** Whether the line the app has now is this state. */
+  showing(state: string): boolean {
+    return this.sent?.key.startsWith(`${state}|`) === true;
+  }
+
+  /** Whether these working words only go on from the ones the app has now: the same line, growing. */
+  grows(words: string): boolean {
+    const now = this.sent?.key.startsWith("working|") ? this.sent.key.slice("working|".length) : undefined;
+    return now !== undefined && words !== now && words.startsWith(now);
   }
 
   /** The line held back, once its hold is over (or at once, when `now`). */
@@ -4139,6 +4208,12 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (e.event === "end") return pace.set("done");
     if (e.event === "run") return pace.set("thinking");
     if (kind === "thinking" || kind === "text") return pace.set("thinking");
+    // Coach's own short progress note before a tool call (kiff/agents' `update`): its first words. It
+    // replaces "Thinking…" at once, and holds like a step's words otherwise.
+    if (kind === "update" && typeof b.text === "string") {
+      const words = noteWords(b.text);
+      return words ? pace.set("working", words, pace.showing("thinking")) : pace.flush();
+    }
     if (kind === "tool_call" && typeof b.tool === "string") {
       return pace.set("working", steps.call(b.tool, b.input)?.replace(/…$/, ""));
     }
@@ -4152,21 +4227,58 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     }
     return pace.flush();
   };
+  // A turn's text is held while it is still one short line (heldLine): a tool call after it makes it a line
+  // before the tools, which goes on the live line, as a progress note does, and never as answer text. Anything
+  // else makes it the answer: the line goes to thinking first, at once, so the words don't show twice, then the
+  // held words go as written, and the rest streams. A started run's only: a resumed one sends no text.
+  let held = "";
+  let holding = true;
+  const release = (): string => {
+    if (!held) return "";
+    const s = (pace.set("thinking", undefined, true) ?? "") + sse("text", { text: held });
+    held = "";
+    holding = false;
+    return s;
+  };
+  const step = (e: RunStreamEvent): string => {
+    const d = (e.data ?? {}) as Record<string, unknown>;
+    const as = (): string => (out(e) ?? "") + (line(e) ?? "");
+    if (!at || (e.event !== "delta" && e.event !== "end")) return as();
+    if (e.event === "end") return release() + as();
+    if (d.kind === "text" && typeof d.text === "string") {
+      if (!holding) return as();
+      held += d.text;
+      if (!heldLine(held)) return release();
+      const words = noteWords(held);
+      // A few words in before it shows, so the line doesn't start as one word.
+      return words && words.split(" ").length >= 3 ? pace.set("working", words, pace.showing("thinking") || pace.grows(words)) ?? "" : "";
+    }
+    if (d.kind === "tool_call") {
+      // The held words were the turn's line: the live line had them, and the step's words come next.
+      held = "";
+      holding = true;
+      return as();
+    }
+    if (d.kind === "tool_result") {
+      holding = true; // the next turn's text is held again
+      return as();
+    }
+    if (d.kind === "thinking" || d.kind === "update") return as();
+    return release() + as();
+  };
   try {
     if (first && !first.done) {
-      const s = out(first.value);
+      const s = step(first.value);
       if (s) yield s;
-      const l = line(first.value);
-      if (l) yield l;
     }
     for await (const e of run) {
-      const s = out(e);
+      const s = step(e);
       if (s) yield s;
-      const l = line(e);
-      if (l) yield l;
     }
   } catch (err) {
     console.error(err);
+    const words = release(); // what it wrote so far, as it would have shown
+    if (words) yield words;
     yield sse("error", { error: "the stream broke; the conversation has the rest" });
   }
 }

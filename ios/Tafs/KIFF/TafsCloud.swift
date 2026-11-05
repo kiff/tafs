@@ -1000,8 +1000,13 @@ final class TafsCloud {
         /// How a call ended: "done", "error" or "not_made", refused back unmade beside a read
         /// (kiff/tafs#285). A held call is `held`.
         case step(call: String, status: String)
-        /// More of the summary of what the taf is thinking (kiff/tafs#285).
+        /// More of the summary of what the taf is thinking (kiff/tafs#285). Kept, never drawn:
+        /// the live line (`state`) says what it's doing.
         case thinking(String)
+        /// The one line to show while it works (docs/chat.md, "The live line"): `thinking`,
+        /// `working` with the step's words or Coach's own progress note, `waiting_for_you` or
+        /// `done`. tafs cloud paces it, so the app draws it as it comes.
+        case state(String, words: String? = nil)
         /// A run picked back up wrote a message: the conversation has it (kiff/tafs#285).
         case said
         /// A run picked back up went on after a pause, a held call the owner answered: what it
@@ -1099,6 +1104,8 @@ final class TafsCloud {
         case "activity": return (o["tool"] as? String).map { .activity($0, step: o["step"] as? String, call: o["call_id"] as? String) }
         case "step": return (o["call_id"] as? String).map { .step(call: $0, status: o["status"] as? String ?? "done") }
         case "thinking": return (o["text"] as? String).map(StreamEvent.thinking)
+        case "state":
+            return (o["state"] as? String).map { .state($0, words: (o["words"] as? String).flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }) }
         case "said": return .said
         case "part": return .part
         case "component": return .component

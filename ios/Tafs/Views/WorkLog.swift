@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// What a taf does while it answers, and what it did once it has (kiff/tafs#285): the step
-/// in progress on top, one calm line of what it's thinking, and the steps done under it.
+/// What a taf does while it answers, and what it did once it has (kiff/tafs#285): the live
+/// line on top, and the steps done under it.
 /// Once the answer is in, the steps fold into "Worked for 12 s", which opens them again.
 enum WorkLog {
     /// One row of steps: a step, or the tries of the same step one after another.
@@ -29,78 +29,17 @@ enum WorkLog {
         return running || rows.contains { $0.status == .done } ? rows.filter { $0.status != .error } : rows
     }
 
-    /// One readable line of what the model is thinking, as plain text: the last complete
-    /// sentence while the next is still a fragment, otherwise the sentence in progress. Lists,
-    /// code and lines that introduce a list are skipped; a long sentence is cut at a word.
-    static func thinkingLine(_ text: String, max: Int = 140) -> String {
-        var sentences: [String] = []
-        for raw in text.components(separatedBy: "\n") {
-            let line = raw.trimmingCharacters(in: .whitespaces)
-                .replacingOccurrences(of: #"\[([^\]]+)\]\([^)]*\)"#, with: "$1", options: .regularExpression)
-            guard !line.isEmpty, !isNoise(line) else { continue }
-            for s in split(plain(line)) where !s.hasSuffix(":") && wordy(s) { sentences.append(s) }
-        }
-        guard var line = sentences.last else { return "" }
-        if sentences.count > 1, line.count < 40, !(line.last.map { ".!?…".contains($0) } ?? false) {
-            line = sentences[sentences.count - 2]
-        }
-        guard line.count > max else { return line }
-        let cut = String(line.prefix(max))
-        let word = cut.lastIndex(of: " ").map { String(cut[..<$0]) } ?? cut
-        return word.trimmingCharacters(in: CharacterSet(charactersIn: " ,;:.–-")) + "…"
-    }
-
     /// "12 s", "1 min 5 s".
     static func duration(ms: Int) -> String {
         let s = Swift.max(1, Int((Double(ms) / 1000).rounded()))
         return s < 60 ? "\(s) s" : "\(s / 60) min \(s % 60) s"
     }
-
-    /// A list item, a mapping or code: noise on one line.
-    private static func isNoise(_ line: String) -> Bool {
-        if MarkdownBlock.groups(line, #"^([-*•+]|\d+[.)])\s"#) != nil { return true }
-        return line.contains("->") || line.contains("→") || line.contains("=>") || line.rangeOfCharacter(from: CharacterSet(charactersIn: "{}[]<>=")) != nil
-    }
-
-    /// The line without its Markdown (its links already their text): no emphasis, heading or code marks.
-    private static func plain(_ line: String) -> String {
-        var s = line
-        for mark in ["**", "__", "`", "~~"] { s = s.replacingOccurrences(of: mark, with: "") }
-        s = s.replacingOccurrences(of: #"^#+\s*"#, with: "", options: .regularExpression)
-        return s.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression).trimmingCharacters(in: .whitespaces)
-    }
-
-    /// Sentences, each ending at . ! ? or … followed by a space, the last one as it stands.
-    private static func split(_ line: String) -> [String] {
-        var out: [String] = []
-        var current = ""
-        var ended = false
-        for ch in line {
-            if ended, ch == " " {
-                out.append(current.trimmingCharacters(in: .whitespaces))
-                current = ""
-                ended = false
-                continue
-            }
-            current.append(ch)
-            ended = ".!?…".contains(ch)
-        }
-        let rest = current.trimmingCharacters(in: .whitespaces)
-        if !rest.isEmpty { out.append(rest) }
-        return out
-    }
-
-    /// Three words or more, mostly letters.
-    private static func wordy(_ s: String) -> Bool {
-        guard s.split(separator: " ").count >= 3 else { return false }
-        let letters = s.unicodeScalars.filter { CharacterSet.letters.contains($0) || $0 == " " }.count
-        return Double(letters) / Double(Swift.max(1, s.unicodeScalars.count)) >= 0.75
-    }
 }
 
-/// The work of the answer streaming now: the step in progress, or what it's at ("Thinking",
-/// "Writing"), the line of what it's thinking while it hasn't started writing, and the
-/// steps done so far. Nothing while it only writes, with no step taken.
+/// The work of the answer streaming now: the live line on top, as Android draws it (tafs
+/// cloud's `state`, with a step's words or Coach's own progress note; before it comes, the
+/// step in progress, or what it's at), and the steps done so far. Nothing while it only
+/// writes, with no step taken. The model's thinking text is never drawn (`LiveAnswer.line`).
 struct LiveWork: View {
     @EnvironmentObject private var model: AppModel
     let live: AppModel.LiveAnswer
@@ -115,12 +54,11 @@ struct LiveWork: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.mini).tint(Theme.dim)
-                    Text(current.map { Self.words($0, model) } ?? (writing ? "Writing…" : "Thinking…"))
+                    Text(live.line(current: current.map { Self.words($0, model) }))
                         .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .accessibilityElement(children: .combine)
-                if !writing { ThinkingLine(source: live.thinking) }
                 if !rows.isEmpty { StepList(rows: rows) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -131,43 +69,6 @@ struct LiveWork: View {
 
     static func words(_ step: AppModel.LiveStep, _ model: AppModel) -> String {
         step.words ?? model.tafActivityWords(step.tool) ?? step.tool
-    }
-}
-
-/// One calm line of what the taf is thinking, shown once it has thought for a few seconds
-/// (a quick answer's thinking is noise) and changed at most every second and a half, so it
-/// can be read. Gone when there's nothing to say.
-struct ThinkingLine: View {
-    let source: String
-    /// How long before the line shows, and how often it may change.
-    static let showAfter: TimeInterval = 3
-    static let refresh: TimeInterval = 1.5
-    @State private var line = ""
-    @State private var since = Date()
-
-    var body: some View {
-        Group {
-            if !line.isEmpty {
-                Text(line)
-                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, 22)
-                    .transition(.opacity)
-                    .id(line)
-                    .accessibilityLabel("Thinking: \(line)")
-            }
-        }
-        .task {
-            since = Date()
-            while !Task.isCancelled {
-                if Date().timeIntervalSince(since) >= Self.showAfter {
-                    let next = WorkLog.thinkingLine(source)
-                    if !next.isEmpty, next != line { withMotion(.easeOut(duration: 0.3)) { line = next } }
-                }
-                try? await Task.sleep(nanoseconds: UInt64(Self.refresh * 1_000_000_000))
-            }
-        }
     }
 }
 

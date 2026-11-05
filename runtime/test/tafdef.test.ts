@@ -47,7 +47,7 @@ describe("a taf's definition on kiff/agents", () => {
     expect(d.speed).toBeUndefined();
     expect(d.price_fast).toBeUndefined();
     expect(d.effort).toBe("low");
-    expect(d.thinking).toBe("summarized"); // the person waiting sees what it considers (kiff/tafs#285)
+    expect(d.thinking).toBe("updates"); // the person waiting sees its progress notes, never its reasoning
     expect(EFFORT).toBe("low");
     expect(d.price).toEqual(PRICE);
     // An hour's cache write at 2× input, so kiff/agents keeps the shared prefix an hour (kiff/agents#171).
