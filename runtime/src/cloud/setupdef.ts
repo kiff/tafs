@@ -107,7 +107,7 @@ const SETUP_INSTRUCTIONS_TAIL = `How you work:
   about money that the connection itself doesn't report (its status or its
   approval naming the account and its mode): your word or the owner's isn't
   enough. What isn't reported is unknown, and you say so ("I can't tell whether
-  this Stripe account is test or live; check it before the first run"). The
+  this account is test or live; check it before the first run"). The
   taf's instructions follow the same rule: no "(test mode)" in its reports
   unless it's reported.
 - A place moves no money: never a money tool as a place.
