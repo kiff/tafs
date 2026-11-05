@@ -299,8 +299,12 @@ export interface ReportContext extends DecideContext {
  * (`POST /v1/me/device-signature`): tafs cloud holds no device key and checks
  * no signature itself. Each signed report is taken once. KIFF also says which
  * key signed and, for a signature made inside an approval window, whether that
- * window is open (kiff/tafs#494): a critical ask signed by the device key, or a
- * window that has ended, is refused, since what the call went to refused it too.
+ * window is open (kiff/tafs#494). The report itself is the device key's, as it
+ * always was: the fingerprint went on the call it reports (KIFF takes a draft's
+ * confirm only from the approval key, planque its approvals as its kind says),
+ * and `settle` reads what holds there. What's refused here is a report signed
+ * inside a window for a critical ask, since that phone took the window path for
+ * a critical call, and a window that has ended.
  */
 export async function checkSigned(ctx: ReportContext, key: "window" | "critical" = "window"): Promise<void> {
   const { signed } = ctx;
@@ -324,8 +328,9 @@ export async function checkSigned(ctx: ReportContext, key: "window" | "critical"
   // it, so only `signed` is read; the grant is dropped here and never kept or passed on.
   const out = (await res.json().catch(() => ({}))) as { signed?: unknown; key?: unknown; window?: { open?: unknown } };
   if (out.signed !== true) throw new ApprovalError(403, "this phone didn't sign that answer");
-  if (key === "critical" && out.key === "device") throw new ApprovalError(403, WORDS.criticalKey, "critical_key_required");
-  if (out.key === "device" && out.window && out.window.open !== true) throw new ApprovalError(403, WORDS.windowClosed, "window_required");
+  if (!out.window) return; // signed outside a window: as every report before (the device key's, v1)
+  if (key === "critical") throw new ApprovalError(403, WORDS.criticalKey, "critical_key_required");
+  if (out.key === "device" && out.window.open !== true) throw new ApprovalError(403, WORDS.windowClosed, "window_required");
 }
 
 /** The outcome of a reported approval: Coach's answer and the card's note. */
