@@ -13,6 +13,8 @@ export interface GrantView {
   on_demand?: boolean;
   /** planque's provider for the connection: `browser` for a browser grant (kiff/planque#86). */
   provider?: string;
+  /** A managed connection's vendor account, as the provider names it, and its mode in planque's words ("Live", "Test", ...). */
+  account_name?: string; mode_words?: string;
   request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }> };
 }
 
@@ -23,6 +25,18 @@ export function custodyWords(custody: GrantView["custody"]): string | undefined 
     case "planque": return "Your sign-in is kept by tafs' connection service; the taf never sees it.";
     default: return undefined;
   }
+}
+
+/** Which vendor account a connection works in, and in which mode, one line as planque words them; none when it says neither. */
+export function accountWords(g: Pick<GrantView, "account_name" | "mode_words">): string | undefined {
+  // The account's name is the vendor's: one line, at most 60 characters, so it can't crowd the sheet.
+  const line = (s: unknown, max: number) => {
+    const t = typeof s === "string" ? s.replace(/\s+/g, " ").trim() : "";
+    const chars = [...t];
+    return chars.length > max ? chars.slice(0, max - 1).join("").trimEnd() + "…" : t;
+  };
+  const parts = [line(g.account_name, 60), line(g.mode_words, 120)].filter(Boolean);
+  return parts.length ? parts.join(" · ") : undefined;
 }
 
 /**
@@ -148,6 +162,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
       status_words: g.status_words || ({ connected: "Connected", listed: "Signed in · choose its actions", signed_in: "Signed in", needs_reconnect: "Sign in again", pending: "Signed in · actions waiting for approval" } as Record<string, string>)[g.status] || "Read its connection",
       reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: "Ask Coach to set its workflow" } : {}),
       ...(custodyWords(g.custody) ? { custody_words: custodyWords(g.custody) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
+      ...(accountWords(g) ? { account_words: accountWords(g) } : {}),
       ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: { ...SITE_SIGN_IN } } : {}),
       action_words: actions.length ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : "Choose actions",
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),

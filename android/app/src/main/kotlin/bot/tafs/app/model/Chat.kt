@@ -115,6 +115,8 @@ data class ChatMessage(
   val serverId: String? = null,
   /** The card this owner's message answered: they wrote while it waited. */
   val answers: String? = null,
+  /** On a job run's report: where its result went, tafs cloud's line, shown above the taf's words. */
+  val delivered: String? = null,
 ) {
   enum class From { owner, taf }
   enum class Kind { kickoff, message }

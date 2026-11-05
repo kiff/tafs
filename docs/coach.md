@@ -416,6 +416,13 @@ lookup means No, a list that doesn't show it proves nothing. Coach never answers
 the owner signs on their phone; what Coach reads can confirm a call went through, never that it
 didn't (the core rule).
 
+## Where the work comes from
+
+When Coach asks where a taf's work comes from and the owner named no app for it, the first option
+is that the owner hands it to the taf in its chat; the apps search finds come after, and one is
+connected only when the owner picks it (`set-up-a-taf@2`). A connection the owner didn't ask for
+is proposed, never assumed.
+
 ## Skills
 
 Coach's know-how is in skills (`runtime/skills/coach/<name>/<version>/SKILL.md`, the Agent Skills

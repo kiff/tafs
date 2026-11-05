@@ -83,6 +83,15 @@ describe("a taf's server-composed setup", () => {
     expect(own.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept by tafs' connection service; the taf never sees it." });
     expect(own.connections[0]).not.toHaveProperty("on_demand");
     expect(view.connections[0]).not.toHaveProperty("custody_words");
+    // Which account and mode, one line as planque words them; a part it doesn't send is left out, and with neither, no line.
+    const account = setupView({ ...args, grants: [{ ...grant, account_name: "Demo  Shop\n", mode_words: "Mode not known yet: treated as live" }] });
+    expect(account.connections[0]).toMatchObject({ account_words: "Demo Shop · Mode not known yet: treated as live" });
+    const nameOnly = setupView({ ...args, grants: [{ ...grant, account_name: "Demo Shop", mode_words: " " }] });
+    expect(nameOnly.connections[0]).toMatchObject({ account_words: "Demo Shop" });
+    expect(view.connections[0]).not.toHaveProperty("account_words");
+    // A vendor's long account name is cut to one short line.
+    const long = setupView({ ...args, grants: [{ ...grant, account_name: "x".repeat(200), mode_words: "Live" }] });
+    expect(long.connections[0]?.account_words).toBe("x".repeat(59) + "… · Live");
     // A connected browser connection offers its own sign-in to a site, in tafs cloud's words; no other connection does.
     const browser = setupView({ ...args, grants: [{ ...grant, provider: "browser" }] });
     expect(browser.connections[0]).toMatchObject({ site_sign_in: { title: "Sign in to a site", words: expect.stringContaining("never to the taf") } });

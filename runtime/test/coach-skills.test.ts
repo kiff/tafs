@@ -23,6 +23,14 @@ describe("Coach's skills, as files", () => {
     for (const s of fromFiles) expect(lock[`${s.name}@${s.version}`], `${s.name}@${s.version} in the lock`).toBe(digestOf(s.skill_md));
   });
 
+  // kiff/agents refuses a definition naming more skills than its cap (skill.MaxPerAgent, 16 since
+  // kiff/agents#316): #525 named ten against a cap of eight, and tafs cloud's fake never applied it.
+  it("are no more than kiff/agents takes on one definition", () => {
+    const KIFF_AGENTS_MAX_SKILLS = 16;
+    expect(COACH_SKILLS.length).toBeLessThanOrEqual(KIFF_AGENTS_MAX_SKILLS);
+    expect(setupDefinition("taf-0123456789abcdef0123").skills?.length).toBe(COACH_SKILLS.length);
+  });
+
   it("never changes a stored version: a changed body under the same version is refused, a new version is added", () => {
     const [one] = readSkills(ROOT);
     const lock = { [`${one.name}@${one.version}`]: digestOf(one.skill_md) };
@@ -32,7 +40,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are eleven, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@1", "did-this-happen@1", "draft-the-card@1", "halting@1", "improve-a-taf@1", "name-the-tools@2", "set-up-a-taf@1", "the-dial@1", "the-tafs@1", "usage-and-plans@1"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@1", "did-this-happen@1", "draft-the-card@1", "halting@1", "improve-a-taf@1", "name-the-tools@2", "set-up-a-taf@2", "the-dial@1", "the-tafs@1", "usage-and-plans@1"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -73,6 +81,14 @@ describe("Coach's core", () => {
   });
 
   // No skill tells Coach what the core forbids: a mode or "no real money" stated as fact (qa-kiff, recipe 3).
+  // A setup that asked where the work comes from offered the owner's inbox to connect first, and the
+  // owner took it (the Eval, 5 Nov): with no app named, the taf's own chat comes first.
+  it("offers the taf's chat first when the owner named no app for where the work comes from", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("When you ask where the work comes from and the owner named no app for it, the first option is that they hand it to the taf in its chat");
+    expect(body).toContain("A connection the owner didn't ask for is proposed, never assumed.");
+  });
+
   it("has no skill that states a mode or no real money as fact", () => {
     for (const s of COACH_SKILLS) {
       expect(s.body, s.name).not.toContain("no real money");
@@ -113,7 +129,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "name-the-tools@2", "set-up-a-taf@1", "usage-and-plans@1"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "name-the-tools@2", "set-up-a-taf@2", "usage-and-plans@1"]);
     expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "improve-a-taf@1", "name-the-tools@2"]);
   });
 
