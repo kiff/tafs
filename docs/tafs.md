@@ -45,7 +45,9 @@ answer 409 for it.
 tafs cloud stores one agent definition per taf in kiff/agents
 (`runtime/src/cloud/tafdef.ts`):
 
-- **Model:** `claude-opus-5-5`, at medium effort, at most 16,000 tokens a turn. The
+- **Model:** `claude-sonnet-5-5`, at low effort, at standard output (Sonnet 5.5 has no fast
+  output), at most 16,000 tokens a turn. Coach runs on `claude-opus-5-5` at low effort
+  (`setupdef.ts`). The owner's choice of 5 Nov 2026, measured through kiff/agents' Eval. The
   model's thinking streams to the owner as a summary while it works.
 - **Instructions:** the shared tafs instructions, the job's, the owner's notes, how its
   notes work, how it makes a call under its Card (one request is one call, never split

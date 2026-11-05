@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { COACH_SKILLS } from "../src/coach-skills.js";
-import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, SETUP_SPEED, setupDefinition } from "../src/cloud/setupdef.js";
+import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, SETUP_MODEL, SETUP_PRICE, SETUP_SPEED, setupDefinition } from "../src/cloud/setupdef.js";
 
 /** Coach's know-how as a whole: the core and every skill (the Coach skills design), where a line is pinned wherever it lives. */
 const COACH_TEXT = [SETUP_INSTRUCTIONS, ...COACH_SKILLS.map((s) => s.body)].join("\n");
-import { definition, KIFF_GATEWAY, MODEL, PRICE } from "../src/cloud/tafdef.js";
+import { definition, KIFF_GATEWAY, MODEL } from "../src/cloud/tafdef.js";
 import { jobById } from "../src/jobs.js";
 
 const ID = "taf-0123456789abcdef0123";
@@ -36,11 +36,16 @@ describe("Setup's definition on kiff/agents", () => {
   it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));
-    expect(d.model).toBe(MODEL);
-    // Setup plans and judges more than a taf's steps (kiff/tafs#102): it keeps high.
+    // Coach plans with the owner on Opus 5.5, at low; a taf runs on Sonnet 5.5 (the owner's choice of 5 Nov 2026).
+    expect(d.model).toBe("claude-opus-5-5");
+    expect(SETUP_MODEL).toBe("claude-opus-5-5");
+    expect(taf.model).toBe(MODEL);
+    expect(d.model).not.toBe(taf.model);
+    expect(d.price).toEqual(SETUP_PRICE);
+    expect(d.price).toEqual({ Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 });
     expect(d.effort).toBe(SETUP_EFFORT);
     expect(d.thinking).toBe("summarized"); // the person waiting sees what it considers (kiff/tafs#285)
-    expect(SETUP_EFFORT).toBe("high");
+    expect(SETUP_EFFORT).toBe("low");
     expect(d.keep).toEqual(taf.keep);
     expect(d.max_cost_micro_usd).toBe(SETUP_BUDGET_CENTS * 10_000);
   });
@@ -52,8 +57,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.speed).toBe("standard");
     expect(SETUP_SPEED).toBe("standard");
     expect(d.price_fast).toEqual({
-      Input: 2 * PRICE.Input, Output: 2 * PRICE.Output, CacheRead: 2 * PRICE.CacheRead, CacheWrite: 2 * PRICE.CacheWrite,
-      CacheWrite1h: 2 * PRICE.CacheWrite1h,
+      Input: 2 * SETUP_PRICE.Input, Output: 2 * SETUP_PRICE.Output, CacheRead: 2 * SETUP_PRICE.CacheRead, CacheWrite: 2 * SETUP_PRICE.CacheWrite,
+      CacheWrite1h: 2 * SETUP_PRICE.CacheWrite1h,
     });
     expect(SETUP_BUDGET_CENTS).toBe(600);
     const taf = definition(ID, jobById("refunds"));
