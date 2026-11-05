@@ -128,7 +128,7 @@ jobs:
   # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad, since the
   # iPhone's list pushes a taf instead. A job of its own, beside test, so neither runs past
   # its time. The tests run once; they run again only when the simulator failed to launch the
-  # app, and any other failure fails the job at once.
+  # app or to turn it, and any other failure fails the job at once.
   ipad:
     needs: changes
     if: github.event_name != 'pull_request' || (!github.event.pull_request.draft && needs.changes.outputs.ipad == 'true')
@@ -165,12 +165,12 @@ jobs:
               CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/ipad-list-$1.log"
           }
           list 1 && exit 0
-          # Only a failed launch is tried again.
-          # Any test error that isn't a launch or a background assertion is a real failure.
+          # Only the simulator failing is tried again: a launch, or a turn to landscape it never
+          # confirmed. Any other test error is a real failure.
           log="$RUNNER_TEMP/ipad-list-1.log"
-          real() { awk '/\.swift:[0-9]+: error/ && !/Failed to launch|Failed to get background assertion/ { f = 1 } END { exit !f }' "$log"; }
-          if grep -q "Failed to launch" "$log" && ! real; then
-            echo "::warning::The iPad simulator failed to launch the app; running the list tests once more."
+          real() { awk '/\.swift:[0-9]+: error/ && !/Failed to launch|Failed to get background assertion|Failed to set device orientation/ { f = 1 } END { exit !f }' "$log"; }
+          if grep -Eq "Failed to launch|Failed to set device orientation" "$log" && ! real; then
+            echo "::warning::The iPad simulator failed to launch the app or to turn it; running the list tests once more."
             list 2
           else
             exit 1

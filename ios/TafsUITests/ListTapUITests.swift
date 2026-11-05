@@ -43,9 +43,11 @@ final class ListTapUITests: XCTestCase {
         tap(row(app, open), on: .name)
         RunLoop.current.run(until: Date().addingTimeInterval(1))
         // The list settles when the app comes back, as on a device: its last taf moves to the top.
-        // No clock to race on a slow simulator.
+        // No clock to race on a slow simulator: the app settles only after it was in the
+        // background, so it's brought back once it got there, not after a fixed wait.
         XCUIDevice.shared.press(.home)
-        RunLoop.current.run(until: Date().addingTimeInterval(2))
+        XCTAssertTrue(within(30, every: 1) { [.runningBackground, .runningBackgroundSuspended].contains(app.state) },
+                      "the app went to the background; state: \(app.state.rawValue)")
         app.activate()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 30), "the app came back")
         XCTAssertTrue(within(60, every: 3) { name(rows.firstMatch.label) != open },
