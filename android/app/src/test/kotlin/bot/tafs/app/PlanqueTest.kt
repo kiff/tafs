@@ -922,7 +922,7 @@ class PlanqueTest {
     val m = model()
     m.refreshConnections()
     assertTrue(m.disconnect("g1"))
-    assertEquals(listOf("Disconnect mcp.stripe.com"), auth.asked)
+    assertEquals("no taf listed: the question names the vendor alone", listOf("Disconnect mcp.stripe.com?"), auth.asked)
     assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
     assertTrue("read again", transport.requestsTo(grants).size >= 2)
     auth.confirms = false
