@@ -1902,8 +1902,9 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     w.tafs.held.set(`t_acme#taf_inv1`, { id: "taf_inv1", name: "Refunds II", job: "refunds", kiffAgent: "refunds-ii", nameClaim: "c", created: "2026-10-15T09:00:00Z" } as Taf);
     const ok = await put(["app", { place: "taf", taf: "taf_inv1", name: "Invoices", fill: { what: "the invoice and the amount" } }]);
     expect(ok.status).toBe(200);
-    expect(ok.body.words).toContain("Refunds II");
+    expect(JSON.stringify(ok.body.words)).toContain("Refunds II");
     expect(JSON.stringify(ok.body.words)).not.toContain("Invoices");
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${ok.body.version}/live`, { token: "ana" });
     const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(knob.body.setting.results).toEqual(["app", { place: "taf", taf: "taf_inv1", name: "Refunds II", fill: { what: "the invoice and the amount" } }]);
     expect(knob.body.results.find((r: { place: string }) => r.place === "taf")).toMatchObject({ taf: "taf_inv1", label: "Refunds II", words: "Each result is handed to Refunds II: the invoice and the amount" });
