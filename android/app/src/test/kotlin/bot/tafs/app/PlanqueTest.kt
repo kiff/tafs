@@ -930,6 +930,77 @@ class PlanqueTest {
     assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
   }
 
+  // MARK: A removed taf takes its connections with it (the owner, 5 Nov: they stayed connected and Coach offered them again)
+
+  @Test fun removingATafDisconnectsItsConnectionsUnderTheSameConfirmation() = runTest {
+    reads()
+    transport.answer(
+      "GET /v1/home", 200,
+      """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""",
+    )
+    // Two of the taf's (one live, one already gone) and another taf's, which stays.
+    val other = """{"server":"mcp.stripe.com","agent":"chargebacks-1","tools":[]}"""
+    transport.answer(
+      grants, 200,
+      """{"grants":[${grant("g1", "connected")},${grant("g2", "disconnected")},{"id":"g3","status":"connected","text":"","digest":"","request":$other,"events":[]}]}""",
+    )
+    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
+    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
+    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
+    val m = model()
+    m.refresh()
+    m.refreshConnections()
+    val words = m.removeTaf("refunds-1")
+    // One confirmation, the removal's: the connection is signed under it, with no second prompt.
+    assertEquals(listOf("Remove Refunds for good"), auth.asked)
+    assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
+    assertTrue("a gone grant isn't asked again", transport.requestsTo("DELETE /v1/accounts/t_01/grants/g2").isEmpty())
+    assertTrue("another taf's stays", transport.requestsTo("DELETE /v1/accounts/t_01/grants/g3").isEmpty())
+    val order = transport.requests.map { "${it.method} ${java.net.URI.create(it.url).path}" }
+    assertTrue(order.indexOf("DELETE /v1/accounts/t_01/grants/g1") < order.indexOf("DELETE /v1/tafs/taf_1"))
+    assertTrue(words!!.startsWith("Its Cards are revoked in KIFF. Its connections are disconnected."))
+  }
+
+  @Test fun aConnectionThatWontDisconnectIsNamedAndTheRemovalGoesOn() = runTest {
+    reads()
+    transport.answer(
+      "GET /v1/home", 200,
+      """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""",
+    )
+    transport.answer(grants, 200, """{"grants":[${grant("g1", "connected")}]}""")
+    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
+    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 502, """{"error":"the vendor didn't answer"}""")
+    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
+    val m = model()
+    m.refresh()
+    m.refreshConnections()
+    val words = m.removeTaf("refunds-1")!!
+    assertTrue(words, words.contains("1 of its connections couldn't be disconnected: disconnect them in Connect apps."))
+    assertEquals(1, transport.requestsTo("DELETE /v1/tafs/taf_1").size)
+  }
+
+  @Test fun aConnectedAppListsItsConnectionsEachWithItsTafOrNone() = runTest {
+    reads()
+    transport.answer(
+      "GET /v1/home", 200,
+      """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""",
+    )
+    val gone = """{"server":"","agent":"invoice-reminders-x","tools":[]}"""
+    transport.answer(
+      grants, 200,
+      """{"grants":[${grant("g1", "connected", extra = ",\"entry\":\"connector:composio:stripe\"")},{"id":"g4","status":"connected","text":"","digest":"","entry":"connector:composio:stripe","request":$gone,"events":[]},{"id":"g5","status":"disconnected","text":"","digest":"","entry":"connector:composio:stripe","request":$gone,"events":[]}]}""",
+    )
+    val m = model()
+    m.refresh()
+    m.refreshConnections()
+    val app = bot.tafs.app.kiff.ConnectApps.App(entry = "connector:composio:stripe", title = "Stripe", state = "connected")
+    val listed = bot.tafs.app.views.connectionsOf(m.state.value, app)
+    // The live ones: Refunds', and one whose taf is gone (no taf uses it); a disconnected one isn't listed.
+    assertEquals(listOf("g1", "g4"), listed.map { it.id })
+    assertEquals("Refunds", m.state.value.tafs.firstOrNull { it.id == listed[0].request.agent }?.name)
+    assertNull(m.state.value.tafs.firstOrNull { it.id == listed[1].request.agent })
+  }
+
   @Test fun planquesOwnRefusalsSayWhatHappened() {
     assertNotNull(PlanqueError.NotSigning.message)
   }

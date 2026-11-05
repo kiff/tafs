@@ -50,7 +50,19 @@ object ConnectAppsWords {
   const val NOT_LISTED_WHY = "Coach can connect an app that isn't here, from its own docs."
   const val NONE = "No app by that name. Coach can connect one that isn't listed."
   const val MORE = "Show more apps"
+  const val DISCONNECT = "Disconnect"
+  const val NO_TAF = "No taf uses it"
+
+  /** The title over an app's connections. */
+  fun yourConnections(app: String) = "Your $app connections"
+
+  /** What disconnecting one does, said before the fingerprint. */
+  const val DISCONNECT_WHY = "Disconnecting removes its tools from KIFF and signs tafs out of the app. A taf that used it stops being able to."
 }
+
+/** The account's live connections to [app]: by its catalog entry, or the grant tafs cloud named for it. */
+fun connectionsOf(state: AppState, app: ConnectApps.App): List<bot.tafs.app.kiff.Grant> =
+  state.grants.filter { (it.entry == app.entry || it.id == app.grant) && it.status !in setOf("disconnected", "failed") }
 
 /**
  * Connect apps (A1): tafs cloud's catalog, first as it orders it, then KIFF's own apps for Google, Microsoft and Slack. Each
@@ -68,6 +80,8 @@ fun ConnectAppsSheet(
   onClose: () -> Unit,
   /** A signed-in app's next step: its taf's Coach, to choose its actions (the app, and its grant's taf when known). */
   onChooseActions: (ConnectApps.App) -> Unit = { onAskCoach() },
+  /** Disconnects one of a connected app's connections (signed, with the owner's fingerprint); null for someone who can't. */
+  onDisconnect: ((String) -> Unit)? = null,
   /** The connection that just came back signed in, and leaving that note. */
   onConnectedNow: (bot.tafs.app.kiff.Grant) -> Unit = {},
   dismissConnectedNow: () -> Unit = {},
@@ -75,6 +89,8 @@ fun ConnectAppsSheet(
   var query by rememberSaveable { mutableStateOf("") }
   // An app is connected for a taf: with several, the owner picks which first; with none, there's nothing to connect it for.
   var picking by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
+  // A connected app's connections, each with the taf it serves (or none, once its taf was removed) and Disconnect.
+  var managing by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
     { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
@@ -115,6 +131,36 @@ fun ConnectAppsSheet(
         },
       )
     }
+    managing?.let { app ->
+      val connections = connectionsOf(state, app)
+      androidx.compose.material3.AlertDialog(
+        onDismissRequest = { managing = null },
+        containerColor = Theme.background,
+        title = { Text(ConnectAppsWords.yourConnections(app.title), style = scaled(20, FontWeight.Bold, Theme.ink)) },
+        text = {
+          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
+            connections.forEach { g ->
+              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.weight(1f)) {
+                  Text(state.tafs.firstOrNull { it.id == g.request.agent }?.name ?: ConnectAppsWords.NO_TAF, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+                  g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+                }
+                if (onDisconnect != null) Text(
+                  ConnectAppsWords.DISCONNECT,
+                  style = scaled(15, FontWeight.SemiBold, Theme.no),
+                  modifier = Modifier.heightIn(min = 44.dp).clickable { onDisconnect(g.id) }.padding(top = 10.dp),
+                )
+              }
+            }
+          }
+        },
+        confirmButton = {},
+        dismissButton = {
+          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { managing = null }.padding(12.dp))
+        },
+      )
+    }
     // Which taf: asked over the list, wherever Connect was tapped, before anything starts.
     picking?.let { app ->
       androidx.compose.material3.AlertDialog(
@@ -152,7 +198,7 @@ fun ConnectAppsSheet(
         if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
-        apps?.apps?.forEach { app -> AppRow(app, connect, onChooseActions) }
+        apps?.apps?.forEach { app -> AppRow(app, connect, onChooseActions, onManage = { managing = it }.takeIf { connectionsOf(state, app).isNotEmpty() }) }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
         // The managed provider's catalog comes a page at a time.
         if (apps?.nextCursor != null) {
@@ -179,7 +225,7 @@ fun ConnectAppsSheet(
 }
 
 @Composable
-private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}) {
+private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}, onManage: ((ConnectApps.App) -> Unit)? = null) {
   Panel {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
       // The app's initial on a tile; tafs cloud names the app, the tile is only a marker.
@@ -192,7 +238,12 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
         app.words?.takeIf { app.needsSetup && it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
       }
       when {
-        app.connected -> Text(ConnectAppsWords.CONNECTED, style = scaled(14, FontWeight.SemiBold, Theme.ok))
+        // Connected: its connections, each with Disconnect, a tap away.
+        app.connected -> Text(
+          ConnectAppsWords.CONNECTED,
+          style = scaled(14, FontWeight.SemiBold, Theme.ok),
+          modifier = if (onManage != null) Modifier.heightIn(min = 44.dp).clickable(onClickLabel = "Manage") { onManage(app) }.padding(top = 12.dp) else Modifier,
+        )
         // Not set up yet: nothing to tap, only tafs cloud's line under the name.
         app.needsSetup -> Unit
         // Signed in, its actions still to choose: the next step is the taf's Coach, not Connect again.

@@ -1843,7 +1843,16 @@ class AppModel(
       }
     }
     if (generation != accountGeneration) return null
-    val cards = if (cardsLeft == 0) "Its Cards are revoked in KIFF." else "KIFF didn't revoke $cardsLeft of its Cards: revoke them in KIFF."
+    // Its connections go with it: each grant its agent asked for is disconnected in planque (its tools out of KIFF, its
+    // sign-in revoked at the vendor), signed under the confirmation just given. Left connected, they stayed live and Coach
+    // offered them to the next taf as "already connected".
+    val (connectionsDone, connectionsLeft) = disconnectGrantsOf(taf.id, generation) ?: return null
+    val cards = (if (cardsLeft == 0) "Its Cards are revoked in KIFF." else "KIFF didn't revoke $cardsLeft of its Cards: revoke them in KIFF.") +
+      when {
+        connectionsLeft > 0 -> " $connectionsLeft of its connections couldn't be disconnected: disconnect them in Connect apps."
+        connectionsDone > 0 -> " Its connections are disconnected."
+        else -> ""
+      }
     val removal = try {
       cloud.remove(cloudId)
     } catch (e: CancellationException) {
@@ -2643,6 +2652,8 @@ class AppModel(
   suspend fun loadConnectApps(q: String? = null) {
     if (_state.value.mode != Mode.kiff) return
     connectAppsQuery = q
+    // The account's connections too, so a connected app lists each one, with its taf and Disconnect.
+    if (q == null) refreshConnections()
     // Only the newest search's answer is shown: an earlier one that comes back late (the first, unfiltered read) is dropped.
     val asked = ++connectAppsAsked
     val generation = accountGeneration
@@ -3708,6 +3719,41 @@ class AppModel(
 
   /** The taf an improvement result improves, as this phone lists it: by its tafs id, else by its agent's. */
   private fun improvedTaf(c: SetupComponent): Taf? = c.taf?.let { t -> _state.value.tafs.firstOrNull { it.cloudId == t.improves || it.id == t.improves || it.id == t.agent } }
+
+  /**
+   * Disconnects every live grant [agent] asked for, signed by the device key under a confirmation the caller already took
+   * (removing the taf). Returns how many were disconnected and how many couldn't be, or null when the account changed
+   * meanwhile. Without planque here, there's nothing to disconnect from this phone.
+   */
+  private suspend fun disconnectGrantsOf(agent: String, generation: Int): Pair<Int, Int>? {
+    val tenant = kiffTenant ?: return 0 to 0
+    if (!_state.value.planqueReady) return 0 to 0
+    refreshConnections()
+    if (generation != accountGeneration) return null
+    val grants = _state.value.grants.filter { it.request.agent == agent && it.status !in setOf("disconnected", "failed") }
+    if (grants.isEmpty()) return 0 to 0
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    planque.signer = { signer.signConfirmed(it) }
+    var left = 0
+    try {
+      for (g in grants) {
+        if (generation != accountGeneration) return null
+        try {
+          planque.disconnect(g.id)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          left += 1
+        }
+      }
+    } finally {
+      planque.signer = null
+    }
+    refreshConnections()
+    return (grants.size - left) to left
+  }
 
   /** Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at the vendor. Asks for the owner's confirmation. */
   suspend fun disconnect(grantId: String): Boolean {

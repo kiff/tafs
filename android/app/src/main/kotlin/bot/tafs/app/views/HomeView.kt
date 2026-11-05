@@ -1,6 +1,7 @@
 package bot.tafs.app.views
 
 import bot.tafs.app.model.HomeWords
+import bot.tafs.app.model.TafState
 import bot.tafs.app.model.ListOrder
 import androidx.compose.runtime.SideEffect
 import bot.tafs.app.model.shortTime
@@ -77,6 +78,8 @@ fun HomeView(
   /** Opens the calendar of the tafs' scheduled work (kiff/tafs#534); null when there's none to open (the sample, or no tafs). */
   onCalendar: (() -> Unit)? = null,
   onHaltAll: () -> Unit,
+  /** A halted taf's chip: Halt, where it's resumed ("Halted · resume it from Halt"). */
+  onHalted: (String) -> Unit = {},
   /** Opens Plan & usage, from the plan's line when it needs the owner. */
   onUsage: () -> Unit = {},
   modifier: Modifier = Modifier,
@@ -130,7 +133,7 @@ fun HomeView(
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
         }
-        item { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { state.tafs.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } } } }
+        item { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { state.tafs.forEach { taf -> TafRow(taf, onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } } } }
         item { OutlineButton("Play the next sample actions", { pullScope.launch { onPlayNext() } }, Modifier.fillMaxWidth(), color = Theme.soft) }
         item {
           Text(
@@ -284,7 +287,8 @@ private fun NeedsYouStrip(call: HeldCall, taf: Taf, onClick: () -> Unit) {
 }
 
 @Composable
-fun TafRow(taf: Taf, signedOut: String? = null, onClick: () -> Unit) {
+/** [onHalted]: a halted taf's chip opens Halt, where it's resumed; the rest of the row opens the taf. */
+fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, onClick: () -> Unit) {
   val shape = RoundedCornerShape(18.dp)
   Column(
     Modifier
@@ -312,7 +316,7 @@ fun TafRow(taf: Taf, signedOut: String? = null, onClick: () -> Unit) {
         // A connection its vendor signed out says so, in planque's words, in place of what it's doing: it waits on the owner.
         Text(signedOut ?: taf.now, style = scaled(13, color = if (signedOut != null) Theme.amberText else Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
       }
-      StateChip(taf.state)
+      StateChip(taf.state, onClick = onHalted?.takeIf { taf.state == TafState.halted })
     }
     val rule = taf.card.rules.firstOrNull { it.perWindow != null }
     val limit = rule?.perWindow

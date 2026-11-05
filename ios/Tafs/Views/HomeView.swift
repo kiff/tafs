@@ -10,6 +10,15 @@ struct HomeView: View {
     @State private var openingFirst = false
     /// The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from the bar.
     @State private var showingCalendar = false
+    /// Halt, opened from a halted taf's chip: the account's when the account is halted (that's
+    /// what resumes it), else the taf's.
+    @State private var showingHalt = false
+    @State private var haltTaf: UUID?
+
+    private func openHalt(_ tafID: UUID) {
+        haltTaf = model.haltState(nil).state == .running ? tafID : nil
+        showingHalt = true
+    }
 
     var body: some View {
         ScrollView {
@@ -44,7 +53,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: "Other agents with Cards")
                         ForEach(model.otherAgents) { taf in
-                            NavigationLink(value: taf.id) { TafRow(taf: taf) }
+                            NavigationLink(value: taf.id) { TafRow(taf: taf, onHalted: { openHalt(taf.id) }) }
                                 .buttonStyle(.plain)
                         }
                     }
@@ -111,6 +120,7 @@ struct HomeView: View {
         .refreshable { await model.refresh() }
         .screenBackground()
         .navigationDestination(isPresented: $showingCalendar) { CalendarView() }
+        .navigationDestination(isPresented: $showingHalt) { HaltScreen(tafID: haltTaf) }
         .navigationDestination(for: UUID.self) { id in
             if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
         }
@@ -180,7 +190,7 @@ struct HomeView: View {
 
     /// A taf in the list, and its open trial under it (kiff/tafs#173).
     @ViewBuilder private func tafLinks(_ taf: Taf) -> some View {
-        NavigationLink(value: taf.id) { TafRow(taf: taf) }
+        NavigationLink(value: taf.id) { TafRow(taf: taf, onHalted: { openHalt(taf.id) }) }
             .buttonStyle(.plain)
         if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
             NavigationLink(value: chat) { TafRow(taf: trying) }
@@ -233,6 +243,9 @@ struct HomeView: View {
 struct TafRow: View {
     @EnvironmentObject private var model: AppModel
     let taf: Taf
+    /// A halted taf's chip opens Halt, where it's resumed ("Halted · resume it from Halt");
+    /// the rest of the row opens the taf.
+    var onHalted: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -256,7 +269,15 @@ struct TafRow: View {
                     }
                 }
                 Spacer(minLength: 8)
-                StateChip(state: taf.state)
+                if taf.state == .halted, let onHalted {
+                    // Its own tap, over the row's: a borderless button takes it inside the link.
+                    Button(action: onHalted) { StateChip(state: taf.state) }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("Halted. Open Halt")
+                        .accessibilityIdentifier("taf.halted.\(taf.name)")
+                } else {
+                    StateChip(state: taf.state)
+                }
             }
             if let rule = taf.card.rules.first(where: { $0.perWindow != nil }), let limit = rule.perWindow {
                 let used = taf.used[rule.action] ?? .zero

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Column
@@ -107,6 +108,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.draw.clip
 
 /** A FragmentActivity: the system's biometric prompt shows on one. */
@@ -511,6 +513,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
   // A tablet, either way up, or a large phone on its side: the list and what's open side by side.
   val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= WIDE_DP
+  // The list beside what's open, folded away by the owner: kept across rotation.
+  var listFolded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
   // The bar's two places that open rather than switch: Account (today's Settings) and Coach, for whoever may use it.
   val openAccount = { showingSettings = true }
@@ -538,6 +542,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onNewTaf = { showingNew = true },
               onCalendar = if (state.mode == Mode.kiff && state.tafs.isNotEmpty() && !wide) ({ coachOpen = false; trialTaf = null; calendarOpen = true }) else null,
               onHaltAll = { haltTaf = null; haltOpen = true },
+              // A halted taf's chip: the account's Halt when the account is halted (that's what resumes it), else the taf's.
+              onHalted = { id -> haltTaf = if (!state.haltOf(null).running) null else id; haltOpen = true },
               onUsage = { usageTaf = null; usageOpen = true },
             )
           }
@@ -587,7 +593,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             // A tablet (as iOS's HomeSplitView): the list beside what's open. It opens on the list's first taf until another is
             // picked.
             Row(Modifier.fillMaxSize()) {
-              androidx.compose.foundation.layout.Column(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight()) {
+              // The list can fold away so what's open takes the width (the owner, 5 Nov), and comes back from the handle.
+              if (!listFolded) androidx.compose.foundation.layout.Column(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight()) {
                 Box(Modifier.weight(1f)) { home() }
                 // Overview: today across the tafs, at the foot of the list (as iOS's sidebar row).
                 Box(Modifier.fillMaxWidth().height(1.dp).background(Theme.line))
@@ -598,7 +605,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
               }
-              Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
+              FoldHandle(folded = listFolded) { listFolded = !listFolded }
               Box(Modifier.weight(1f).fillMaxHeight()) {
                 when {
                   open != null -> open()
@@ -677,6 +684,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           showingConnectApps = false
           state.grants.firstOrNull { it.id == app.grant }?.request?.agent?.let(model::improveInCoach) ?: run { coachOpen = true }
         },
+        // One connection disconnected (the fingerprint asked first), then the list read again with the account's connections.
+        onDisconnect = if (state.canManageCards) ({ id -> scope.launch { if (model.disconnect(id)) model.loadConnectApps(null) } }) else null,
         onConnectedNow = { grant -> model.dismissConnectedNow(); showingConnectApps = false; model.improveInCoach(grant.request.agent) },
         dismissConnectedNow = model::dismissConnectedNow,
       )
@@ -739,7 +748,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
       selected = false,
       onClick = onAccount,
       icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
-      label = { Text(ACCOUNT, style = scaled(11)) },
+      label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
       colors = barColors(),
     )
     Tab.entries.forEach { t ->
@@ -747,7 +756,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
         selected = tab == t,
         onClick = { onTab(t) },
         icon = { TabIcon(t, state) },
-        label = { Text(t.title, style = scaled(11)) },
+        label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
         colors = barColors(),
       )
     }
@@ -758,15 +767,16 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
 /** The same places as a rail, for landscape and tablets: Account, the three tabs, then Coach at the foot. */
 @Composable
 private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> Unit, onAccount: () -> Unit, onCoach: (() -> Unit)?) {
+  // A thin rail (the owner, 5 Nov: landscape's was a fifth of the screen): a fixed width, one-line labels, Coach compact.
   androidx.compose.material3.NavigationRail(
-    Modifier.fillMaxHeight().navigationBarsPadding().statusBarsPadding(),
+    Modifier.width(RAIL_WIDTH).fillMaxHeight().navigationBarsPadding().statusBarsPadding(),
     containerColor = Theme.background,
   ) {
     androidx.compose.material3.NavigationRailItem(
       selected = false,
       onClick = onAccount,
       icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
-      label = { Text(ACCOUNT, style = scaled(11)) },
+      label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
       colors = railColors(),
     )
     Tab.entries.forEach { t ->
@@ -774,12 +784,32 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
         selected = tab == t,
         onClick = { onTab(t) },
         icon = { TabIcon(t, state) },
-        label = { Text(t.title, style = scaled(11)) },
+        label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
         colors = railColors(),
       )
     }
     Spacer(Modifier.weight(1f))
-    onCoach?.let { CoachButton(it, Modifier.padding(bottom = 12.dp)) }
+    onCoach?.let { CoachButton(it, Modifier.padding(bottom = 12.dp), compact = true) }
+  }
+}
+
+/** The rail's width: room for an icon and a one-line label, whatever the text size. */
+private val RAIL_WIDTH = 72.dp
+
+/** The line between the list and what's open, with the control that folds the list away or brings it back. */
+@Composable
+private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
+  Box(Modifier.width(24.dp).fillMaxHeight()) {
+    Box(Modifier.align(Alignment.Center).width(1.dp).fillMaxHeight().background(Theme.line))
+    Text(
+      if (folded) "›" else "‹",
+      style = scaled(18, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.dim),
+      modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp).size(24.dp, 44.dp)
+        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).background(Theme.panel)
+        .clickable(onClickLabel = if (folded) "Show the list" else "Hide the list", onClick = onToggle)
+        .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = if (folded) "Show the list" else "Hide the list" }
+        .wrapContentSize(Alignment.Center),
+    )
   }
 }
 
@@ -797,13 +827,15 @@ private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
 
 /** Coach, at the bar's end: filled, ink with a white label, so it reads as the one place to make or change a taf. */
 @Composable
-private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
   Text(
     COACH,
-    style = scaled(13, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.background),
+    style = scaled(if (compact) 11 else 13, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.background),
+    maxLines = 1,
+    softWrap = false,
     modifier = modifier.heightIn(min = 40.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.ink)
       .clickable(onClick = onClick).semantics { role = androidx.compose.ui.semantics.Role.Button }
-      .padding(horizontal = 14.dp, vertical = 10.dp),
+      .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 10.dp),
   )
 }
 
