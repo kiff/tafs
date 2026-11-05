@@ -24,6 +24,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const notified = new Map<string, Notify>();
   /** The runs requests with a key started, by tenant, agent and key. */
   const requests = new Map<string, Run>();
+  /** Skills stored (name@version → SKILL.md), and each session's loaded skills in order (kiff/agents#101, the Coach skills design). */
+  const skills = new Map<string, string>();
+  const sessionSkills = new Map<string, string[]>();
   const fairUse = (tenant: string, ai: AIBound | undefined) => {
     aiSent.push(ai);
     if (ai && ai.bound_micro_usd > 0 && (spent.get(`${tenant} ${ai.period}`) ?? 0) >= ai.bound_micro_usd) {
@@ -264,6 +267,28 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!r) throw gone();
       return { run: { ...r }, writes: trialWrites.get(run) ?? [] };
     },
+    async putSkill(tenant, name, version, skillMD) {
+      calls.push(`putSkill ${name}@${version}`);
+      failing("putSkill");
+      const key = `${tenant}#${name}@${version}`;
+      const had = skills.get(key);
+      if (had !== undefined && had !== skillMD) throw new AgentsError(409, `${name}@${version} is stored with other content: a version never changes, so store a new one`);
+      skills.set(key, skillMD);
+      return { name, version };
+    },
+    async addSessionSkills(tenant, agent, session, add) {
+      calls.push(`addSessionSkills ${agent} ${session} ${add.join(",")}`);
+      failing("addSessionSkills");
+      const def = agents.get(k(tenant, agent));
+      if (!def) throw gone();
+      const named = new Set((def.skills ?? []).map((s) => `${s.name}@${s.version}`));
+      for (const ref of add) if (!named.has(ref)) throw new AgentsError(400, `the definition names no skill ${ref}`);
+      const key = `${tenant}#${session}`;
+      const have = sessionSkills.get(key) ?? [];
+      for (const ref of add) if (!have.includes(ref)) have.push(ref);
+      sessionSkills.set(key, have);
+      return [...have];
+    },
     async putAgent(tenant, id, def) {
       calls.push(`putAgent ${id}`);
       failing("putAgent");
@@ -321,7 +346,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       return { ...f.ref, created: now().toISOString(), sent: f.sent, url: `https://s3.test/${id}?signed`, url_expires: now().toISOString() };
     },
     async startRun(tenant, agent, input, at = {}, ai, notify) {
-      calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}`);
+      calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}${at.skills?.length ? ` skills=${at.skills.join(",")}` : ""}`);
       failing("startRun");
       if (!agents.has(k(tenant, agent))) throw gone();
       fairUse(tenant, ai);
@@ -599,7 +624,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

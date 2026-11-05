@@ -1,0 +1,102 @@
+---
+name: name-the-tools
+description: Chooses and names a connection's tools from the vendor's catalog: the reads and the write the job needs, fixed arguments, one name per operation, setup reads, the amount, what a tool acts on, its unit, read-only tools, test or live. Use when tools are picked, read or named for a connection.
+---
+
+## When to use
+
+Chooses and names a connection's tools from the vendor's catalog: the reads and the write the job needs, fixed arguments, one name per operation, setup reads, the amount, what a tool acts on, its unit, read-only tools, test or live. Use when tools are picked, read or named for a connection.
+
+## Procedure
+
+- Look before you propose. Once planque says the grant is listed, read its
+  catalog: the vendor's tools, their arguments, and the account the sign-in acts
+  in. Nothing is read from the owner's account before they approve the tools
+  that read it, so don't try to read what the sign-in covers first: ask.
+  A long catalog is never a reason to stop: catalog {grant, q} searches it by
+  words from the job ("find page", "list invoices") across its pages and
+  answers the matches in full; catalog {grant, cursor} reads on. Never say a
+  list was too long to read.
+  Choose, from the vendor's own catalog, the tools the whole job needs:
+  to find the work (list or search), to check one item (read it), and to act
+  (the write). Nothing more, and nothing less: a taf that can't find or check
+  its work can't do the job well. Choose each read by what the job asks of it:
+  the operation whose fields answer the job's question, not the first one
+  named after the thing. For a payment to refund, the read that says how
+  much was paid and how much was already refunded, not one that says only
+  that it was paid; for a ticket to answer, the read that has its messages,
+  not only its status. Pin with fixed_arguments what must never
+  change: the account, and the mode, on every tool that takes them, reads
+  included, as the vendor's own descriptions ask,
+  and the operation that makes a tool the job's. A taf then never looks them
+  up: a lookup is a wait on every message (kiff/tafs#138, item 58). When one
+  vendor tool runs many operations chosen by an argument (an operation id, a
+  method, a path or an endpoint), connect it once for each operation the job
+  needs, each under its own name with that argument pinned to that operation:
+  its Card then covers that operation alone. Never leave the operation to the taf:
+  a Card's limit on one write doesn't stop another write made through the
+  same tool. Such an operation's own fields aren't in the catalog, and their
+  names aren't the thing's (a read of one item can take it as id): never guess
+  or rename them. When the vendor has a read-only tool that
+  lists an operation's fields, given its id, ask for it
+  first, as the first tools of the taf's one connection to that vendor
+  (tools {grant, tools} once it's listed, or added to the taf's connection
+  when improving it), read_only with setup_reads: true, so
+  you can read it yourself: it reads the vendor's documentation, not the
+  owner's account. Once it's connected, it isn't among your tools until you
+  look for it: search for it by its name in KIFF, as planque's status lists
+  it (such as api_details_k3f9), then call it. setup_reads goes on that tool only, never on the taf's
+  own reads: those read the owner's account. It needs no question of its own: the owner already agreed
+  to connect, and its approval is enough. The one exception: when you must
+  pin the account and the vendor has a read-only tool that lists the
+  accounts the sign-in covers, put that tool in the same first tools, with
+  setup_reads: true, and ask the owner's OK to read that list (only the
+  accounts' names, and whether each is test or live) among your first
+  questions, beside the one to connect. Never in a connection of its own:
+  each new connection is one more approval and vendor sign-in for the owner. The job's own tools are then added to that same
+  connection (tools on a connected grant adds them), with one approval and
+  no sign-in. Once it's connected, read every
+  operation you will connect with planque read {grant, tool (as the grant
+  lists it), arguments}, and place each argument you name (the amount, what the call
+  acts on, the read's argument in unit_lookup) at the path its fields give,
+  such as parameters.id. Keep that tool as one of the taf's reads, so it
+  looks up the fields you left open before its first call. Reading first
+  doesn't split the owner's questions: ask the ones that don't depend on each
+  other together, in one questions card. Without such a
+  tool, leave the operation's fields open, and name only arguments the
+  vendor's own input schema declares.
+  Leave every other argument for the taf to decide (arguments): its Card limits
+  what changes things, so don't narrow a tool's arguments to stand in for a
+  limit. Name the argument that moves money, with its unit and scale,
+  and make it required: only an argument the vendor's operation takes for the
+  money it moves, in its own units, named from that operation's fields as
+  the vendor's own docs give them, never one you make up. A tool that changes
+  data but moves no money (posting a reply, moving a meeting, sharing a file)
+  has no amount argument. The operation's fields say whether it moves money,
+  not what it is about: one about money that takes no amount field
+  (contesting a claim on a payment, reminding a customer of an invoice) moves
+  no money here. It has no amount argument, and its Card limits its calls a
+  day. Name what each tool that changes things acts on
+  (resource_argument): the item it takes (the ticket, the event, the
+  payment), as one of its string arguments, required. When it can take
+  several, keep the one the taf's read of it takes and leave the others out,
+  so the owner's record and KIFF's checks name one thing. For a tool that
+  moves money, name the read that says its unit (unit_lookup: that read's
+  name, the read's argument that takes the same id, and where the unit is in
+  its answer, such as currency): KIFF refuses a call in another unit than the
+  Card's. Mark tools that
+  only read as read_only: reading in the owner's account is open, with no
+  limits.
+- Test or live is the owner's choice, never yours, when the vendor has both.
+  Before you
+  propose tools that move money or change data, ask: "Test mode (no real
+  money), recommended to start" or "Live mode (real money)", in the owner's
+  language, as one of the questions you ask together, or with confirm when it's
+  the only one, and pin exactly what they chose. Say the mode in plain
+  words as a line of the rules notice ("test mode, no real money" or "live
+  mode, real money"), not again in every message. Never carry a mode over from an
+  earlier conversation, or from rules from last time: ask again.
+
+## Verification
+
+What this skill says is done only when the owner saw it: the card shown, the result or version answered by tafs, the grant's status read. Nothing is done because it was said.

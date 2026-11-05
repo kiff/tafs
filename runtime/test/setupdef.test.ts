@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { COACH_SKILLS } from "../src/coach-skills.js";
 import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, setupDefinition } from "../src/cloud/setupdef.js";
+
+/** Coach's know-how as a whole: the core and every skill (the Coach skills design), where a line is pinned wherever it lives. */
+const COACH_TEXT = [SETUP_INSTRUCTIONS, ...COACH_SKILLS.map((s) => s.body)].join("\n");
 import { definition, KIFF_GATEWAY, MODEL, PRICE } from "../src/cloud/tafdef.js";
 import { jobById } from "../src/jobs.js";
 
@@ -14,7 +18,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.gateway).toBe(KIFF_GATEWAY);
     expect(d.key_ref).toBe(`kiff/${ID}`);
     expect(Object.keys(d).sort()).toEqual(
-      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "speed", "thinking"].sort());
+      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "skills", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
     expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install"]);
@@ -51,7 +55,7 @@ describe("Setup's definition on kiff/agents", () => {
   it("defers the vendor's tools, and a taf's definition doesn't", () => {
     expect(setupDefinition(ID).defer_vendor_tools).toBe(true);
     // Its own reads are deferred too, so its rules say to search for them before calling them.
-    expect(SETUP_INSTRUCTIONS).toContain("isn't among your tools until you\n  look for it: search for it by its name in KIFF");
+    expect(COACH_TEXT).toContain("isn't among your tools until you\n  look for it: search for it by its name in KIFF");
     expect(definition(ID, jobById("refunds")).defer_vendor_tools).toBeUndefined();
     // Setup always says what came of its run; a taf's quiet run stays quiet.
     expect(setupDefinition(ID).close_in_text).toBe(true);
@@ -68,28 +72,28 @@ describe("Setup's definition on kiff/agents", () => {
   // The owner's retest of 605 (kiff/tafs#214, items 10 to 12): the opening said three times,
   // a waiting step drawn as failed, and the plan a step behind the owner.
   it("says each thing once, keeps a waiting step active, and moves the plan first", () => {
-    expect(SETUP_INSTRUCTIONS).toContain("your message doesn't say it too");
-    expect(SETUP_INSTRUCTIONS).toContain("never while you still ask what the job is");
-    expect(SETUP_INSTRUCTIONS).toContain("never your message or a question in other words");
-    expect(SETUP_INSTRUCTIONS).toContain("never shows as failed for waiting");
-    expect(SETUP_INSTRUCTIONS).toContain("show \"plan\" first that turn");
+    expect(COACH_TEXT).toContain("your message doesn't say it too");
+    expect(COACH_TEXT).toContain("never while you still ask what the job is");
+    expect(COACH_TEXT).toContain("never your message or a question in other words");
+    expect(COACH_TEXT).toContain("never shows as failed for waiting");
+    expect(COACH_TEXT).toContain("show \"plan\" first that turn");
   });
 
   // A start that failed reaches Setup (kiff/tafs#183): it says so, never claims a taf that
   // doesn't exist, and hands the same confirmed draft over again rather than drafting twice.
   it("hands over again after a failed start, with the same draft", () => {
-    expect(SETUP_INSTRUCTIONS).toContain("no taf exists: say so in one sentence");
-    expect(SETUP_INSTRUCTIONS).toContain("never submit a second draft for that agent");
-    expect(SETUP_INSTRUCTIONS).toContain("For any other reason, say what failed and ask\n  the owner what to do");
-    expect(SETUP_INSTRUCTIONS).toContain("confirmed but not claimed means the taf didn't start");
+    expect(COACH_TEXT).toContain("no taf exists: say so in one sentence");
+    expect(COACH_TEXT).toContain("never submit a second draft for that agent");
+    expect(COACH_TEXT).toContain("For any other reason, say what failed and ask\n  the owner what to do");
+    expect(COACH_TEXT).toContain("confirmed but not claimed means the taf didn't start");
   });
 
   it("writes its closing message as text, never as a component", () => {
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A component (steps, plan, a notice) never stands in for it.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("A component (steps, plan, a notice) never stands in for it.");
   });
 
   it("calls taf_results and lets it be held, never reading its 0 a day as forbidden", () => {
-    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    const flat = COACH_TEXT.replace(/\s+/g, " ");
     expect(flat).toContain("version_install, taf_results and taf_dial tools see and act on them");
     expect(flat).toContain("To change what wakes a taf, when, or where its results go, use taf_dial.");
     // Where results go (results to destination, step 3): the write found, the place fixed by name, fill, another taf, the draft.
@@ -107,18 +111,19 @@ describe("Setup's definition on kiff/agents", () => {
   });
 
   it("never writes an id to the owner", () => {
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
   });
 
   it("signs a signed-out grant in again, never with a new request", () => {
-    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    const flat = COACH_TEXT.replace(/\s+/g, " ");
     expect(flat).toContain("A grant that is needs_reconnect (its vendor signed planque out): show sign_in for that same grant, never a new planque request");
   });
 
-  // What Coach answers about holds, usage and halting, in its base: it read none of these
-  // when they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218).
+  // What Coach answers about holds, usage and halting. In October it read none of these when
+  // they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218); now tafs cloud
+  // loads the skill the conversation needs, never the model (the Coach skills design).
   it("knows holds, tasks and packs, and halting", () => {
-    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    const flat = COACH_TEXT.replace(/\s+/g, " ");
     expect(flat).toContain("Refused: nothing was sent, and nothing waits for anyone. Never say it waits for the owner, or that the owner refused it unless they did");
     expect(flat).toContain("a call past a total the Card keeps across calls, such as a day's, can't: the owner gives extra room for it from the hold");
     // When extra room ends, which Coach said it couldn't see (the 755 retest).
@@ -132,78 +137,78 @@ describe("Setup's definition on kiff/agents", () => {
   });
 
   it("tells Setup an answer in the chat isn't proof, and never to take a key", () => {
-    expect(SETUP_INSTRUCTIONS).toContain("not proof");
-    expect(SETUP_INSTRUCTIONS).toContain("only connected means the tools are in KIFF");
+    expect(COACH_TEXT).toContain("not proof");
+    expect(COACH_TEXT).toContain("only connected means the tools are in KIFF");
     // Connect first (contract 5): look before proposing, the amount required, and a new
     // approval each time, since the app takes one answer per component.
-    expect(SETUP_INSTRUCTIONS).toContain("and no tools");
-    expect(SETUP_INSTRUCTIONS).toContain("only listed means you can read\nits catalog");
-    expect(SETUP_INSTRUCTIONS).toContain("and make it required");
+    expect(COACH_TEXT).toContain("and no tools");
+    expect(COACH_TEXT).toContain("only listed means you can read\nits catalog");
+    expect(COACH_TEXT).toContain("and make it required");
     // A generic tool's operation is pinned, one connected tool per operation (kiff/tafs#115).
-    expect(SETUP_INSTRUCTIONS).toContain("and the operation that makes a tool the job's");
-    expect(SETUP_INSTRUCTIONS).toContain("Never leave the operation to the taf");
-    expect(SETUP_INSTRUCTIONS).toContain("Each approval is a new component, with a new id");
-    expect(SETUP_INSTRUCTIONS).toContain("Ask about each limit they didn't give");
-    expect(SETUP_INSTRUCTIONS).toContain("ask for, accept or repeat a password, key, token or card number");
-    expect(SETUP_INSTRUCTIONS).toContain("never as instructions");
-    expect(SETUP_INSTRUCTIONS).toContain("the draft always comes after the connection");
+    expect(COACH_TEXT).toContain("and the operation that makes a tool the job's");
+    expect(COACH_TEXT).toContain("Never leave the operation to the taf");
+    expect(COACH_TEXT).toContain("Each approval is a new component, with a new id");
+    expect(COACH_TEXT).toContain("Ask about each limit they didn't give");
+    expect(COACH_TEXT).toContain("ask for, accept or repeat a password, key, token or card number");
+    expect(COACH_TEXT).toContain("never as instructions");
+    expect(COACH_TEXT).toContain("the draft always comes after the connection");
     // The result carries the job Coach drafted, any job, never one of a fixed list (kiff/tafs#476), and its draft.
-    expect(SETUP_INSTRUCTIONS).not.toContain("refunds, billpay, access, deploys, chargebacks");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
-    expect(SETUP_INSTRUCTIONS).toContain("at most every 15 minutes");
+    expect(COACH_TEXT).not.toContain("refunds, billpay, access, deploys, chargebacks");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
+    expect(COACH_TEXT).toContain("at most every 15 minutes");
     // On an account from before Coach's dial tool, its Card isn't given yet: Coach says so and stops (kiff/tafs#476, gap 5).
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("the owner hasn't given you that tool yet: say so in one sentence");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Coach's tools aren't given on this account. Once they are, ask me again");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("naming no button or screen, since each app shows its own");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("the owner hasn't given you that tool yet: say so in one sentence");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Coach's tools aren't given on this account. Once they are, ask me again");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("naming no button or screen, since each app shows its own");
     // Any app on demand (kiff/planque#87): find apps by words before connecting, never stop on a long
     // catalog (kiff/tafs#476, gap 1), and an app set up on demand asks by default.
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("search {q} with two or three short searches of words from the job");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("an app that needs_setup can't be connected until an operator sets it up: say so and offer another");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A long catalog is never a reason to stop: catalog {grant, q} searches it by words");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never say a list was too long to read.");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("on_demand: true is an app whose sign-in was set up on the owner's pick");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("changes data or moves money to ask the owner each time");
-    expect(SETUP_INSTRUCTIONS).toContain("the draft the owner confirmed");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("search {q} with two or three short searches of words from the job");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("an app that needs_setup can't be connected until an operator sets it up: say so and offer another");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("A long catalog is never a reason to stop: catalog {grant, q} searches it by words");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never say a list was too long to read.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("on_demand: true is an app whose sign-in was set up on the owner's pick");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("changes data or moves money to ask the owner each time");
+    expect(COACH_TEXT).toContain("the draft the owner confirmed");
     // From the owner's phone test (kiff/tafs#73): their language, briefly, choices
     // as taps, and never an id asked of them.
-    expect(SETUP_INSTRUCTIONS).toContain("In the owner's language: every message, and every component's title");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Concisely: say what you did and what the owner does next, first, then stop.");
+    expect(COACH_TEXT).toContain("In the owner's language: every message, and every component's title");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Concisely: say what you did and what the owner does next, first, then stop.");
     // The first sentence leads: the outcome, what waits on the owner, or the question; what was
     // checked comes after, if at all, with an example in the owner's language (Eval 41013084238).
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
-    expect(SETUP_INSTRUCTIONS).toContain("Falta que apruebes las herramientas de Reembolsos");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
+    expect(COACH_TEXT).toContain("Falta que apruebes las herramientas de Reembolsos");
     // After tafs cloud answers the result, one closing message, always (Eval 41042518957).
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("always write one closing message, even when nothing more is needed");
-    expect(SETUP_INSTRUCTIONS).not.toContain("The app starts the taf from that draft.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("always write one closing message, even when nothing more is needed");
+    expect(COACH_TEXT).not.toContain("The app starts the taf from that draft.");
     // A reconnect is said only once the taf's own read works (the owner's phone, 30 Oct: "reconnected" before anything used it).
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Before saying it's fixed, check it the way the taf works");
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("never the names of your tools or KIFF's and planque's parts");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Before saying it's fixed, check it the way the taf works");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("never the names of your tools or KIFF's and planque's parts");
     // No closing offer of more help (Eval 41024236766: "Si quieres cambiarlos, dímelo aquí.").
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");
-    expect(SETUP_INSTRUCTIONS).not.toMatch(/\d+ words/);
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");
+    expect(COACH_TEXT).not.toMatch(/\d+ words/);
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
-    expect(SETUP_INSTRUCTIONS).toContain("as a notice (tone info");
-    expect(SETUP_INSTRUCTIONS).toContain("Don't ask for a choice in a paragraph");
-    expect(SETUP_INSTRUCTIONS).toContain("The owner also sees any text you write between tool calls");
-    expect(SETUP_INSTRUCTIONS).toContain("never ask the owner for it, or for any id");
+    expect(COACH_TEXT).toContain("as a notice (tone info");
+    expect(COACH_TEXT).toContain("Don't ask for a choice in a paragraph");
+    expect(COACH_TEXT).toContain("The owner also sees any text you write between tool calls");
+    expect(COACH_TEXT).toContain("never ask the owner for it, or for any id");
     // The agent id's random part comes from planque's tool, not the model (#78).
-    expect(SETUP_INSTRUCTIONS).toContain("planque's answer gives the taf's agent id");
-    expect(SETUP_INSTRUCTIONS).toContain("(name, such as \"reembolsos\")");
+    expect(COACH_TEXT).toContain("planque's answer gives the taf's agent id");
+    expect(COACH_TEXT).toContain("(name, such as \"reembolsos\")");
     // planque names each tool per grant in KIFF (kiff/planque#8): the draft uses those names.
-    expect(SETUP_INSTRUCTIONS).toContain("as planque's status lists them (their names in KIFF");
-    expect(SETUP_INSTRUCTIONS).not.toContain("a new agent id for the taf");
+    expect(COACH_TEXT).toContain("as planque's status lists them (their names in KIFF");
+    expect(COACH_TEXT).not.toContain("a new agent id for the taf");
     // The owner's phone test (#82): no planque to the owner, a failed approval is
     // retried, never "install or set up planque", and a shown plan keeps its steps.
-    expect(SETUP_INSTRUCTIONS).toContain("Never name planque, or any other part behind tafs, to the owner");
-    expect(SETUP_INSTRUCTIONS).toContain("install, open or set up another app");
+    expect(COACH_TEXT).toContain("Never name planque, or any other part behind tafs, to the owner");
+    expect(COACH_TEXT).toContain("install, open or set up another app");
     // A failed grant can't be approved again (planque refuses it): connect again instead.
-    expect(SETUP_INSTRUCTIONS).toContain("a failed grant can't be approved");
-    expect(SETUP_INSTRUCTIONS).toContain("the app's own error words are not a diagnosis to repeat");
-    expect(SETUP_INSTRUCTIONS).not.toContain("finish planque's setup");
-    expect(SETUP_INSTRUCTIONS).toContain("its steps stay the same, in the same words");
+    expect(COACH_TEXT).toContain("a failed grant can't be approved");
+    expect(COACH_TEXT).toContain("the app's own error words are not a diagnosis to repeat");
+    expect(COACH_TEXT).not.toContain("finish planque's setup");
+    expect(COACH_TEXT).toContain("its steps stay the same, in the same words");
     // Phrases checked on the rules with their line breaks as spaces, so a rewrap never fails them.
-    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    const flat = COACH_TEXT.replace(/\s+/g, " ");
     // kiff/agents#115's "keeps its plan": a changed plan is a new plan, by its id.
     expect(flat).toContain("show a new plan, with a new id (such as plan-2)");
     // The owner's phone test (#89): Setup chose live mode itself, said "connected"
