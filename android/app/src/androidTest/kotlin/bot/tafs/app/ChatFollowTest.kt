@@ -147,6 +147,47 @@ class ChatFollowTest {
   }
 
   /**
+   * The thread as tafs cloud and the app change it while Coach answers: the owner's message on its way (`pending`), then the
+   * thread read again with it under tafs cloud's id, Coach's work streaming, the live row leaving as the answer lands in the
+   * thread. At no frame does the list go back to its top.
+   */
+  @Test fun coachsThreadNeverJumpsToItsTopAsItsMessagesSettle() {
+    val sent = ChatMessage(t0.plusSeconds(1900), ChatMessage.From.owner, "Coach message 31", "pending")
+    val settled = sent.copy(session = "s1", at = t0.plusSeconds(1901), serverId = "s1.m31")
+    val answer = ChatMessage(t0.plusSeconds(1990), ChatMessage.From.taf, "Here is the Card I'd give Refunds.", "s1")
+    fun with(thread: List<ChatMessage>, working: Boolean, live: LiveAnswer?) = coach(working, live).copy(chats = mapOf(COACH_CHAT to thread))
+    var current by mutableStateOf(with(coachThread, false, null))
+    rule.setShown {
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(current, actions, loadCoach = {}, onBack = {}) } }
+    }
+    rule.onNodeWithText("Coach message 30").assertIsDisplayed()
+
+    rule.mainClock.autoAdvance = false
+    var sawTop = false
+    val tops = mutableListOf<Float?>()
+    fun frames(n: Int = 2) = repeat(n) {
+      rule.mainClock.advanceTimeByFrame()
+      if (rule.onAllNodesWithText("Coach message 1").fetchSemanticsNodes().isNotEmpty()) sawTop = true
+      tops += rule.onAllNodesWithText("Coach message 29").fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
+    }
+    current = with(coachThread + sent, true, null); frames(6)
+    var live = LiveAnswer(started = t0.plusSeconds(1900), session = "s1", state = LiveState("thinking", "Reading your payments"))
+    current = with(coachThread + sent, true, live); frames(4)
+    // The thread read again: the owner's message under tafs cloud's id and time.
+    current = with(coachThread + settled, true, live); frames(4)
+    for (word in "Stripe is connected, so here is the Card I'd give Refunds.".split(" ")) {
+      live = live.copy(text = live.text + "$word ")
+      current = with(coachThread + settled, true, live); frames(2)
+    }
+    // The run ended: the answer comes into the thread in the update that takes the live row away (AppModel's stream end).
+    current = with(coachThread + settled + answer.copy(text = live.text.trim()), false, null); frames(6)
+    rule.mainClock.autoAdvance = true
+    rule.waitForIdle()
+    assertTrue("Coach's thread jumped to its top as its messages settled: $tops", !sawTop)
+    assertFollowedForward(tops)
+  }
+
+  /**
    * Following the end, an earlier message only ever moves up the screen, or off its top for good: never down again (the
    * list scrolling back), nor back on screen once it left.
    */

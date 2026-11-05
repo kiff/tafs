@@ -1925,7 +1925,11 @@ class AppModel(
     _state.value.coachComponents.any { it.run == run && it.component.type == "result" && it.answer == null }
 
   /** Reads a taf's thread from tafs cloud and shows it; what the owner sent that it doesn't have yet stays, dimmed. */
-  private suspend fun readThread(tafId: String) {
+  /**
+   * [alongside] changes the state in the same update that brings the thread: the live answer leaving as its words land in the thread,
+   * so the chat's end never grows by a row and shrinks again, which moved the thread about while Coach wrote.
+   */
+  private suspend fun readThread(tafId: String, alongside: ((AppState) -> AppState)? = null) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     // A new Coach conversation has nothing to read until its first message is sent.
     if (tafId == COACH_CHAT && _state.value.coachFresh) return
@@ -1952,7 +1956,8 @@ class AppModel(
     }
     if (!current() || _state.value.mode != Mode.kiff) return
     val now = clock()
-    _state.update { s ->
+    _state.update { read ->
+      val s = alongside?.invoke(read) ?: read
       // What the owner sent stays on screen until the thread has it (kiff/tafs#138, 48).
       val (messages, waiting) = SentMessages.merge(thread.messages, s.chatSent[tafId].orEmpty(), now)
       // The wait ends once tafs cloud says the taf is at work, once it answered after the owner wrote, or after
@@ -4017,8 +4022,8 @@ class AppModel(
             }
             StreamEvent.Taken, StreamEvent.Said, StreamEvent.Component -> readThread(tafId)
             StreamEvent.Part -> {
-              live { it.newPart() }
-              readThread(tafId)
+              // The part's words leave the live row in the update that brings them into the thread, never a frame before.
+              readThread(tafId) { s -> s.chatLive[tafId]?.let { a -> s.copy(chatLive = s.chatLive + (tafId to a.newPart())) } ?: s }
             }
             is StreamEvent.End -> {
               ended = e
@@ -4047,9 +4052,12 @@ class AppModel(
       }
       // Over, or paused on a held call: KIFF is read at once, so the hold shows and the Card's amounts are today's.
       if (end != null) refresh()
-      readThread(tafId)
+      // The live answer goes in the update that brings the answer into the thread: one row takes the other's place.
+      val settle: (AppState) -> AppState = { s -> s.copy(chatLive = s.chatLive - tafId, chatAwaiting = if (end != null) s.chatAwaiting - tafId else s.chatAwaiting) }
+      readThread(tafId, settle)
       if (!current()) return@launch
-      _state.update { it.copy(chatLive = it.chatLive - tafId, chatAwaiting = if (end != null) it.chatAwaiting - tafId else it.chatAwaiting) }
+      // Where the thread couldn't be read, the live answer goes all the same.
+      _state.update(settle)
       // This stream no longer holds the chat. What goes on after it is read on a timer: a stream that dropped with no end, or a
       // run that paused and went on with no stream open, as Coach's does once tafs cloud answers its result. Its end must show.
       if (followers[tafId] === coroutineContext[kotlinx.coroutines.Job]) followers.remove(tafId)
