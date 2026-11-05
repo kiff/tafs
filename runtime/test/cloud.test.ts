@@ -1888,6 +1888,27 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(knob.body.results.find((r: { place: string }) => r.place === "action")).toMatchObject({ grant: "grt_n1", action: "notion_add_page_k3f9", tap: "Turn to stop: each result goes to Notion · Support log" });
   });
 
+  it("takes another taf as a place only by this account's record, named as the record names it (qa-kiff on #507)", async () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const put = (results: unknown[]) => call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results } });
+    // Another account's taf, an unknown id, Coach, and the taf itself: refused.
+    w.tafs.held.set(`t_acme#taf_coach1`, { id: "taf_coach1", name: "Coach", job: "setup", kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-15T09:00:00Z" } as Taf);
+    for (const id of [MAX, "taf_nope", "taf_coach1", RAE]) {
+      const r = await put(["app", { place: "taf", taf: id, name: "Invoices" }]);
+      expect(r.status, id).toBe(400);
+    }
+    // A taf of this account, asked for as "Invoices" while its record says another name: the record's name.
+    w.tafs.held.set(`t_acme#taf_inv1`, { id: "taf_inv1", name: "Refunds II", job: "refunds", kiffAgent: "refunds-ii", nameClaim: "c", created: "2026-10-15T09:00:00Z" } as Taf);
+    const ok = await put(["app", { place: "taf", taf: "taf_inv1", name: "Invoices", fill: { what: "the invoice and the amount" } }]);
+    expect(ok.status).toBe(200);
+    expect(ok.body.words).toContain("Refunds II");
+    expect(JSON.stringify(ok.body.words)).not.toContain("Invoices");
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.setting.results).toEqual(["app", { place: "taf", taf: "taf_inv1", name: "Refunds II", fill: { what: "the invoice and the amount" } }]);
+    expect(knob.body.results.find((r: { place: string }) => r.place === "taf")).toMatchObject({ taf: "taf_inv1", label: "Refunds II", words: "Each result is handed to Refunds II: the invoice and the amount" });
+  });
+
   it("records the Cards a version runs under when it goes live", async () => {
     const w = twoVersions();
     w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];

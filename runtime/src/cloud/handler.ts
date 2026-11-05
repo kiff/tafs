@@ -2947,6 +2947,14 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     const all = Array.isArray(body.results) ? body.results : [];
     let vendor: VendorPlace[];
     try { vendor = all.filter((p) => typeof p !== "string").map((p) => vendorPlace(p, taf.id)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    // A taf place names a taf of this account, by its record: its name is the record's, never the
+    // request's, so the words the owner approves name the taf the hand-over goes to.
+    vendor = await Promise.all(vendor.map(async (p) => {
+      if (p.place !== "taf") return p;
+      const to = await deps.tafs.get(me.tenantID, p.taf);
+      if (!to || to.job === SETUP_JOB) throw new HTTPError(400, `no taf of this account takes results by that id (${p.taf})`);
+      return { ...p, name: to.name };
+    }));
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
   }
   let what: KnobSetting["what"];
