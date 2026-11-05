@@ -172,6 +172,10 @@ things (`runtime/src/cloud/approval.ts`):
   otherwise (no such connection, a connection planque failed, a request whose digest isn't its
   hash, a connection already connected with no Card to confirm, a draft KIFF dropped). The
   card shows tafs cloud's `note` ("Already approved", or why).
+  An app set up on demand (kiff/planque#87) asks the owner for every change: a draft
+  that would let one of its write or money tools run without asking is answered
+  `failed: …` too, naming the tool, so Coach drafts it again with that tool held (0 a
+  day); the owner widens it later as a version.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.

@@ -31,7 +31,36 @@ export interface ApprovalGrant {
   digest: string;
   vendor?: string;
   reason?: string;
-  request: { agent?: string; server?: string; profile?: unknown } & Record<string, unknown>;
+  /** The app's sign-in was set up on the owner's pick, not by an operator (kiff/planque#87). */
+  on_demand?: boolean;
+  request: { agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }> } & Record<string, unknown>;
+}
+
+/**
+ * An app set up on demand asks the owner for every change: a Card drafted over its tools lets
+ * no write or money tool run without asking. KIFF's draft shows each Card's actions, what
+ * happens past its limits (`on_exceed`) and its totals; a write tool of the connection is held
+ * for the owner only when every Card covering it holds past 0 calls. The first tool the draft
+ * lets run outright is named, so Coach redrafts; a tool no Card covers can't run at all.
+ */
+export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string | undefined {
+  if (grant.on_demand !== true) return undefined;
+  const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
+  // KIFF matches a Card's action to a tool ignoring case, and trims a quantity: so does this.
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  for (const t of writes) {
+    const name = fold(t.name || t.tool);
+    if (!name) continue;
+    for (const raw of cards) {
+      const card = raw as { on_exceed?: unknown; grants?: unknown; aggregates?: unknown };
+      const actions = Array.isArray(card.grants) ? card.grants.map((g) => fold((g as { action?: unknown }).action)) : [];
+      if (!actions.includes(name)) continue;
+      const asks = card.on_exceed === "owner" && Array.isArray(card.aggregates)
+        && card.aggregates.some((a) => fold((a as { quantity?: unknown }).quantity) === "count" && (a as { limit?: unknown }).limit === 0);
+      if (!asks) return t.title || t.name || t.tool || name;
+    }
+  }
+  return undefined;
 }
 
 /** What the phone sends with Approve: the card's grant and what it rendered. */
@@ -85,6 +114,8 @@ export const WORDS = {
   digestMismatch: "This request doesn't match what it asks for. Nothing was approved.",
   noGrant: "There's no connection with that id.",
   cardsNotIssued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
+  cardsUnread: "The Card couldn't be checked yet. Read it again, then approve.",
+  onDemandLetsRun: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   signInClosed: "The sign-in was closed. Nothing was connected.",
   noCode: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
   cameBack: (status: string) => `The connection came back ${status.replace(/_/g, " ")} with no sign-in link. Nothing was connected.`,
@@ -175,6 +206,15 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     if (issued(draft.status)) return { outcome: "answered", answer: `already approved: ${vendor} is connected and its Card is confirmed`, note: WORDS.alreadyApproved };
     if (draft.status !== "draft") return { outcome: "answered", answer: `failed: the Card draft is ${draft.status}`, note: `The Card draft is ${draft.status}. Ask Coach for a new one.` };
     if (!draft.version || draft.version !== ask.shown_draft) return { outcome: "read_again", note: WORDS.outOfDate };
+    // An app set up on demand asks for every change (kiff/planque#87): a draft that lets one of its
+    // writes run outright isn't signed, and Coach hears why, so the default holds here, not only in its words.
+    // The check needs the Cards as KIFF shows them: a draft read without them isn't signed on trust.
+    if (grant.on_demand === true && !draft.cards) return { outcome: "read_again", note: WORDS.cardsUnread };
+    const letsRun = onDemandLetsRun(grant, draft.cards ?? []);
+    if (letsRun) {
+      const why = WORDS.onDemandLetsRun(vendor, letsRun);
+      return { outcome: "answered", answer: `failed: ${vendor} was set up on demand, so every write and money tool of it must ask the owner each time (0 a day, held); the draft lets "${letsRun}" run without asking. Draft it again with that tool held.`, note: why };
+    }
     const id = ctx.newID();
     const pending: Pending = { step: "cards", grant: grant.id, vendor, draft: ask.draft, version: draft.version, made: ctx.now.toISOString() };
     await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));

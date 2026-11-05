@@ -28,7 +28,7 @@ function grant(over: Record<string, unknown> = {}, request: Record<string, unkno
 
 interface Services {
   grants: unknown[];
-  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string }>;
+  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[] }>;
   /** What KIFF answers the device-signature check: signed, or a status. */
   signed: true | number;
   /** Every signature check KIFF was asked, as sent. */
@@ -209,6 +209,39 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "cards", message: "tafs.cards.v1|t_acme|drf_1|v3", reason: "Give refunds-x its Card", kiff: { draft: "drf_1", version: "v3" } } });
     expect(r.body.ask).not.toHaveProperty("planque");
     expect(w.told()).toBeUndefined();
+  });
+
+  it("an app set up on demand asks for every change: a draft that lets one of its writes run outright isn't signed (kiff/planque#87)", async () => {
+    const s = services();
+    const tools = [{ tool: "send", name: "send_x", title: "Send an email" }, { tool: "list", name: "list_x", title: "List emails", read_only: true }];
+    s.grants = [grant({ status: "connected", on_demand: true }, { tools })];
+    const card = (over: Record<string, unknown>) => ({ id: "c1", subject: "refunds-x", grants: [{ action: "send_x" }], on_exceed: "owner", aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }], ...over });
+    // Allowed outright: refused in words, Coach hears why, nothing to sign.
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [card({ aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })] };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(r.body).toMatchObject({ outcome: "answered", note: WORDS.onDemandLetsRun("Stripe", "Send an email") });
+    expect(String(r.body.answer)).toMatch(/^failed: Stripe was set up on demand.*"Send an email" run without asking/);
+    expect(w.told()).toMatchObject({ answer: String(r.body.answer) });
+    // KIFF matches an action ignoring case and trims a quantity: so does the check, each way.
+    s.drafts.drf_1.cards = [card({ grants: [{ action: "SEND_X" }], aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", note: WORDS.onDemandLetsRun("Stripe", "Send an email") });
+    s.drafts.drf_1.cards = [card({ grants: [{ action: "Send_X" }], aggregates: [{ quantity: " count ", limit: 0, window: "calendar_day" }] })];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign" });
+    // A draft read without its Cards can't be checked: read again, never signed on trust.
+    delete s.drafts.drf_1.cards;
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", note: WORDS.cardsUnread });
+    // Refused past the limit rather than held: not asking either.
+    s.drafts.drf_1.cards = [card({ on_exceed: "refuse" })];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered" });
+    // Held for every call, reads open: signed as any other Card.
+    s.drafts.drf_1.cards = [card({}), { id: "c2", subject: "refunds-x", grants: [{ action: "list_x" }], on_exceed: "refuse", aggregates: [{ quantity: "count", limit: 1000, window: "calendar_day" }] }];
+    const ok = await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(ok.body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
+    // Not on demand: the Card is the owner's to read, whatever it allows.
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1.cards = [card({ aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign" });
   });
 
   it("a draft KIFF dropped, or has no more, is told as failed", async () => {
