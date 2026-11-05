@@ -457,20 +457,23 @@ describe("the approval window (kiff/tafs#494): which key an ask takes, and the r
     expect(widening.body).toMatchObject({ outcome: "sign", ask: { step: "cards", key: "critical" } });
   });
 
-  it("refuses a critical ask the device key signed, with the code and the words, and the ask stays", async () => {
+  it("takes a critical ask's report signed by the device key outside a window, as every app does, and refuses one signed inside a window", async () => {
     const s = services();
     s.grants = [grant({ status: "connected" })];
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
     const w = await world(s, { draft: "drf_1" });
     const r = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
     const id = (r.body.ask as { id: string }).id;
+    // The phone took the window path for a critical call: refused, with the code and the words, and the ask stays.
     s.signedKey = "device";
-    const refused = await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIG);
+    s.signedWindow = { id: "win_abcdefghijklmnopqrstuvwxyz", open: true };
+    const refused = await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, WIN);
     expect(refused.status).toBe(403);
     expect(refused.body).toEqual({ error: WORDS.criticalKey, code: "critical_key_required" });
     expect(w.told()).toBeUndefined();
-    // The fingerprint: taken, and the draft confirmed means approved.
-    s.signedKey = "critical";
+    // The report as the apps sign it (the device key, v1): the fingerprint went on KIFF's confirm, and the
+    // draft confirmed is the proof (dev-android's point on the apps installed today).
+    s.signedWindow = undefined;
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
     expect((await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIG)).body).toMatchObject({ answer: "approved" });
   });
