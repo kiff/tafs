@@ -1232,7 +1232,7 @@ describe("a connected app's event, through planque", () => {
     w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
     waiting(w, "t_acme", REFUNDS, "run_stale", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_s" });
     // The first delivery claimed and died before it answered.
-    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_stale"), { run: "", at: NOW.toISOString() }, new Date(NOW.getTime() + 10 * 60_000));
+    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_stale"), { run: "", at: NOW.toISOString(), token: "first" }, new Date(NOW.getTime() + 10 * 60_000));
     // Its retry inside thirty seconds defers to it.
     w.at(new Date(NOW.getTime() + 20_000));
     expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered" });
@@ -1244,6 +1244,31 @@ describe("a connected app's event, through planque", () => {
     // A claim with its run is never taken over, however old.
     w.at(new Date(NOW.getTime() + 5 * 60_000));
     expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered", run: "run_stale" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+  });
+
+  it("two late deliveries take a stale claim over once, and a slow first delivery's answer is the retry's answer too (agentgabo's probe on #523)", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_race2", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_r2" });
+    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_race2"), { run: "", at: NOW.toISOString(), token: "dead" }, new Date(NOW.getTime() + 10 * 60_000));
+    w.at(new Date(NOW.getTime() + 31_000));
+    const runsBefore = w.agents.runs.length;
+    const both = await Promise.all([appEvent(w, { id: "ev_race2", key: "reply_r2" }), appEvent(w, { id: "ev_race2", key: "reply_r2" })]);
+    expect(both.map((r) => r.body.outcome)).toEqual(["answered", "answered"]);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+    expect(w.agents.runs.length).toBe(runsBefore);
+    // A first delivery that was slow, not dead: its answer landed, and its claim, past thirty seconds, is what its
+    // retry finds. The wait reads as answered, so the retry answers "answered" and starts nothing; the record stays
+    // the claim, which only a run can answer again. (A 409 on the retry's own answer reads the run the same way.)
+    waiting(w, "t_acme", REFUNDS, "run_slow", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_slow" });
+    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_slow"), { run: "", at: new Date(NOW.getTime() + 31_000).toISOString(), token: "slow" }, new Date(NOW.getTime() + 10 * 60_000));
+    const slow = w.agents.runs.find((x) => x.id === "run_slow")!.requirements![0]!;
+    slow.answered = new Date(NOW.getTime() + 60_000).toISOString(); // the slow delivery's answer landed
+    w.at(new Date(NOW.getTime() + 70_000));
+    expect((await appEvent(w, { id: "ev_slow", key: "reply_slow" })).body).toEqual({ outcome: "answered" });
+    expect(w.agents.runs.length).toBe(runsBefore);
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
   });
 
