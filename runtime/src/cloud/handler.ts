@@ -2434,14 +2434,18 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     // Only the approval key, behind the fingerprint, starts a drive: never the device key, never a window's tap.
     await checkSigned({ tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: "", store, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase,
       fetch: deps.fetch ?? fetch, now, newID: () => "", signed }, "approval").catch(approvalFailure);
-    // The card first: a start for a card that isn't there starts nothing (qa-kiff on #554).
+    // The card first: a start for a card that isn't there starts nothing (qa-kiff on #554). Without
+    // one, the session must be one of the person's own chats with Coach (agentgabo on #554).
     const component = str(body.component).trim();
+    const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+    if (!setup) throw new HTTPError(404, "no Coach on this account");
     let shown: { setup: Taf; card: { session: string; run: string } } | undefined;
     if (component) {
-      const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
-      const card = setup && await shownCard(me, setup, component, "drive", str(body.session).trim(), deps);
-      if (!setup || !card) throw new HTTPError(404, "no drive card of yours by that id");
+      const card = await shownCard(me, setup, component, "drive", str(body.session).trim(), deps);
+      if (!card) throw new HTTPError(404, "no drive card of yours by that id");
       shown = { setup, card };
+    } else {
+      await ownChat(me, setup, str(body.session).trim(), deps);
     }
     const drive = await startDrive(store, me.tenantID, me.subject, body.session, body.task, now).catch(fail);
     await logEvent(deps.events, me.tenantID, { kind: "drive_started", title: "Coach started driving", detail: drive.task }, now);
@@ -4964,6 +4968,15 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   } catch (err) {
     if (err instanceof DriveRefusal) return refuse(`Refused by tafs: ${err.message}. Nothing was sent.`);
     throw err;
+  }
+  // Coach's done ends the drive whatever the phone answered, or if it didn't (agentgabo on #554).
+  if (name === "app_act" && args.action === "done" && on && !on.ended) {
+    const still = await currentDrive(store, call.tenant, person, now());
+    if (still?.id === on.id && !still.ended) {
+      await endDrive(store, call.tenant, person, "done", now(), on.id);
+      const steps = await driveSteps(store, call.tenant, on.id);
+      await logEvent(deps.events, call.tenant, { kind: "drive_ended", title: "Coach finished driving", detail: `${on.task} · ${steps.length} steps` }, now());
+    }
   }
   const { content, isError } = answerContent(a);
   const words = content.filter((c) => c.type === "text").map((c) => String(c.text)).join("\n");

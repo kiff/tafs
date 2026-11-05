@@ -365,3 +365,40 @@ describe("a drive's end holds, and its record is the app's", () => {
     expect(await w.coach.get(`${T}#drive-q#${(await currentDrive(w.coach, T, ANA, NOW))!.id}`)).toBeUndefined();
   });
 });
+
+// agentgabo's points on #554.
+describe("a request Coach gave up on never runs, and done always ends", () => {
+  it("the stream never sends a request Coach has given up on, and gives the app the time left to start the others", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    const until = new Date(NOW.getTime() + 60_000);
+    await r.store.append(`${T}#drive-q#${d.id}`, { id: "stale", tool: "app_act", args: {}, at: new Date(NOW.getTime() - DRIVE.holdMs).toISOString() }, until);
+    await r.store.append(`${T}#drive-q#${d.id}`, { id: "nearly", tool: "app_act", args: {}, at: new Date(NOW.getTime() - DRIVE.holdMs + 1_000).toISOString() }, until);
+    await r.store.append(`${T}#drive-q#${d.id}`, { id: "fresh", tool: "app_act", args: {}, at: new Date(NOW.getTime() - 5_000).toISOString() }, until);
+    const out: string[] = [];
+    let polls = 0;
+    for await (const chunk of driveStream(r.store, T, ANA, d.id, r.now, async (ms) => {
+      await r.wait(ms);
+      if (++polls === 1) await endDrive(r.store, T, ANA, "stopped", r.now(), d.id);
+    })) out.push(chunk);
+    const sent = out.filter((c) => c.startsWith("event: request")).map((c) => JSON.parse(c.split("data: ")[1]!) as { id: string; start_within_ms: number });
+    expect(sent.map((x) => x.id)).toEqual(["fresh"]);
+    expect(sent[0]!.start_within_ms).toBe(DRIVE.holdMs - 5_000 - 2_000);
+  });
+
+  it("Coach's done ends the drive even when the app refuses it or doesn't answer", async () => {
+    const w = await world();
+    w.working();
+    const d = await startDrive(w.coach, T, ANA, w.session, "Run Chargebacks", NOW);
+    await coachTool("app_act", { action: "done", line: "Done" }, w.coachCall, w.deps);
+    expect((await currentDrive(w.coach, T, ANA, NOW))).toMatchObject({ id: d.id, ended: { why: "done" } });
+    expect(w.events.filter((e) => e.kind === "drive_ended")).toHaveLength(1);
+  });
+
+  it("a start without a card names one of the person's own chats with Coach", async () => {
+    const w = await world();
+    const r = await w.call("POST", "/v1/coach/drive", { session: "not-theirs", task: "Run Chargebacks" }, SIGNED);
+    expect(r.status).toBe(404);
+    expect(await currentDrive(w.coach, T, ANA, NOW)).toBeUndefined();
+  });
+});

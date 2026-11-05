@@ -85,7 +85,16 @@ export interface DriveRequest {
   tool: DriveTool;
   args: Record<string, unknown>;
   at: string;
+  /**
+   * As sent on the stream: how long the app still has to start it, by its own clock. Past
+   * that, Coach has given up on it and may have sent its next step: the app answers it
+   * refused ("too late") and never does it (agentgabo on #554).
+   */
+  start_within_ms?: number;
 }
+
+/** A request this close to Coach giving up isn't sent: the app couldn't start it in time. */
+export const SEND_MARGIN_MS = 2_000;
 
 /** The phone's answer to one request, as checked. */
 export interface DriveResult {
@@ -376,7 +385,11 @@ export async function* driveStream(store: CoachStore, tenant: string, person: st
     const d = await currentDrive(store, tenant, person, now());
     if (!d || d.id !== drive) { yield sse("ended", { why: "replaced", words: END_WORDS.replaced }); return; }
     if (d.ended) { yield sse("ended", { why: d.ended.why, words: END_WORDS[d.ended.why] }); return; }
-    for (const r of (await store.take(driveKeys.queue(tenant, drive))) as DriveRequest[]) yield sse("request", r);
+    for (const r of (await store.take(driveKeys.queue(tenant, drive))) as DriveRequest[]) {
+      // A request Coach has given up on, or nearly, is never sent: a reconnecting stream doesn't do stale steps.
+      const left = Date.parse(r.at) + DRIVE.holdMs - now().getTime();
+      if (left > SEND_MARGIN_MS) yield sse("request", { ...r, start_within_ms: left - SEND_MARGIN_MS });
+    }
     const t = now().getTime();
     if (t - opened >= DRIVE.streamMs) { yield sse("reopen", {}); return; }
     if (t - pinged >= DRIVE.pingMs) { pinged = t; yield ": ping\n\n"; }

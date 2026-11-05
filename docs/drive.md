@@ -80,7 +80,7 @@ All of these are the person's, signed in as always:
 
 | Route | What |
 |---|---|
-| `POST /v1/coach/drive {session, task, component?}` | Start, signed with the approval key (above). Answers `{drive: {id, session, task, started}}`. |
+| `POST /v1/coach/drive {session, task, component?}` | Start, signed with the approval key (above). `session` is one of the person's chats with Coach (404 otherwise). Answers `{drive: {id, session, task, started}}`. |
 | `GET /v1/coach/drive/{drive}/stream` | The drive's requests, on the **streaming** function's address, as server-sent events (below). |
 | `POST /v1/coach/drive/{drive}/results/{request}` | The app's answer to one request (below). |
 | `POST /v1/coach/drive/stop {drive, why}` | End it. `why` is one of the ends below. |
@@ -92,7 +92,12 @@ The app opens the stream as soon as the drive starts, and keeps it open while th
 in front. The stream sends these events:
 
 - `drive {drive}`: first.
-- `request {id, tool, args, at}`: one step for the app to do. Do it, then post the result.
+- `request {id, tool, args, at, start_within_ms}`: one step for the app to do. Do it, then
+  post the result. **Start it within `start_within_ms`, by the app's own clock from when the
+  event came, or never:** past that, Coach has given up on it and may have sent its next
+  step. Answer a late one `outcome: refused`, `line: "Too late"`, and don't do it. tafs
+  cloud never sends a request Coach has given up on, or will within 2 seconds, so a stream
+  that reconnects late doesn't replay stale steps.
 - `ended {why, words}`: the drive is over. Stop at once: drop the border, the caption and
   the dot, and say `words` in the caption.
 - `reopen`: the stream lived its 14 minutes. Open it again.
@@ -134,7 +139,8 @@ a drive with `ended` is over.
   - `scroll` in `direction`, in `element` when named;
   - `type`: `text` into the focused field;
   - `back`;
-  - `done`: the task is done. Answer it, then the drive ends.
+  - `done`: the task is done. Answer it. The drive ends whatever the app answers, or if it
+    doesn't.
 - Before any touch, show the dot at the target for a moment.
 - **Hit-test every touch before dispatching it.** One that lands on a control with the
   confirm mark is refused, and nothing is dispatched: `outcome: refused`, `line: "That's
@@ -169,8 +175,9 @@ a drive with `ended` is over.
 
 - `touched` is what the step touched, in the words on screen, and the taf whose screen it
   was. It's the record's words ("Coach: Tapping Run now · Run now · Chargebacks").
-- Coach's call waits at most 20 seconds for the answer. A late answer is dropped, and
-  Coach looks again.
+- Coach's call waits at most 20 seconds for the answer. An answer that comes later still
+  makes its step in the record, if the app started it in time, but Coach doesn't read it:
+  it looks again.
 
 ## Coach never confirms
 
