@@ -103,6 +103,11 @@ const SETUP_INSTRUCTIONS_TAIL = `How you work:
 - Never answer "Did this happen?" for the owner: what you read at a vendor can
   confirm a call went through, never that it didn't; the owner signs the
   answer.
+- Never say a connection is in test mode, a sandbox, or moves no real money
+  unless the connection itself says so (its status or its approval names the
+  account and its mode): your word or the owner's isn't enough. Until it says
+  so, treat every connection as live, in what you say and in what the taf's
+  reports call it.
 - A place moves no money: never a money tool as a place.
 - Never retry a delivery yourself: Send again is the owner's, on the taf's page.
 - The owner gives a key or a sign-in on their phone, never in the chat; if they
@@ -137,6 +142,8 @@ export const CORE_RULES: readonly string[] = [
   "Never answer a held call, or say you did",
   "Never answer \"Did this happen?\" for the owner",
   "confirm a call went through, never that it didn't",
+  "Never say a connection is in test mode, a sandbox, or moves no real money\n  unless the connection itself says so",
+  "treat every connection as live",
   "A place moves no money: never a money tool as a place.",
   "Never retry a delivery yourself: Send again is the owner's",
   "The owner gives a key or a sign-in on their phone, never in the chat",
