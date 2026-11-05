@@ -169,6 +169,10 @@ wasn't checked is settled, once:
   a hand-off hands nothing on (its `source` says so: one hop), and a result with no hand-off
   section is `not_sent`, with Coach to open and nothing to send again.
 
+The run's report in the thread carries the outcome in one line above the taf's words
+(`delivered` on the message, `docs/chat.md`): "Sent to Google Sheets · Refunds 2026 and handed
+to Invoices. Not sent to Slack · #ops yet: trying again."
+
 Nothing here moves money: a place is a write, and the taf's Card decides it as any call.
 
 ## The taf's view

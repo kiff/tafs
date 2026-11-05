@@ -16,7 +16,7 @@ import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
-import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
+import { deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills } from "./coach-skills.js";
 import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
@@ -1846,6 +1846,8 @@ export interface ThreadMessage {
   attachments?: AttachmentRef[];
   /** The card the owner's message answered, by id: they wrote while it waited, and their words were its answer. */
   answers?: string;
+  /** On a run's report: where its result went, in tafs cloud's words, above the taf's own (delivery.ts). */
+  delivered?: string;
   /**
    * A taf's message that called tools first (kiff/tafs#285): how long it worked on it, from the
    * message before, and the tools it called, by name, in order, with the ones that failed. From
@@ -2068,6 +2070,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (p.first && p.tools.length > 0 && p.last !== undefined && !Number.isNaN(p.start)) {
           p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps };
         }
+      }
+    }
+    // Where a job run's result went (delivery.ts): one line on its report, the run's last words.
+    if (r.session.kind === "run" && deps.coach && taf.actionResults?.length) {
+      const kept = await deliveriesOf(deps.coach, me.tenantID, taf.id, [...runs.keys()]);
+      for (const [id] of runs) {
+        const line = deliveredLine(kept.get(id));
+        const report = messages.filter((m) => m.from === "taf" && m.session === r.session.id && m.id.startsWith(`${id}.`)).at(-1);
+        if (line && report) report.delivered = line;
       }
     }
   }
