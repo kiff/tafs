@@ -292,6 +292,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     async putAgent(tenant, id, def) {
       calls.push(`putAgent ${id}`);
       failing("putAgent");
+      // As kiff/agents checks it (skill.CheckRefs): a definition names at most 16 skills.
+      if ((def.skills?.length ?? 0) > 16) throw new AgentsError(400, "registry: skill: at most 16 skills an agent");
       agents.set(k(tenant, id), { ...def, tenant, id });
       return { ...def, tenant, id };
     },
