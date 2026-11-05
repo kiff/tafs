@@ -172,7 +172,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       ) {
         if (items.isEmpty() && tafId == COACH_CHAT && !thinking) {
           // Coach's empty chat: what it's about, and ways to start (kiff/tafs#138, #107).
-          item(key = "empty") { CoachStarts(state, actions.coach.improve) { example -> following = true; actions.sendChat(example, tafId, false) { } } }
+          item(key = "empty") { CoachStarts(state, actions.coach.improve, fill = setDraft) { example -> following = true; actions.sendChat(example, tafId, false) { } } }
         } else if (items.isEmpty()) {
           item(key = "empty") {
             Text(
