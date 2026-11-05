@@ -33,6 +33,23 @@ describe("a request, step by step", () => {
     expect(requestDetail({ ...run, status: "RUNNING", state: "retrying", try: 1, of: 3 }, [], [], "UTC", now).steps.at(-1)).toMatchObject({ label: "Next try soon", line: "Try 2 of 3" });
   });
 
+  it("a call that failed and was retried with the same tool and input shows the retry's outcome only; a later call with other input keeps its own step", () => {
+    const events = [
+      usage(1, "2026-11-02T22:41:20Z", [{ tool: "stripe_charge_k3f9", is_error: true, input_hash: "c1" }]),
+      usage(2, "2026-11-02T22:42:00Z", [{ tool: "stripe_charge_k3f9", input_hash: "c1" }, { tool: "stripe_refund_k3f9", is_error: true, input_hash: "r1" }]),
+      usage(3, "2026-11-02T22:42:30Z", [{ tool: "stripe_refund_k3f9", input_hash: "r2" }]),
+    ];
+    const titles = new Map([["stripe_charge_k3f9", "Look up a charge"], ["stripe_refund_k3f9", "Refund a payment"]]);
+    const d = requestDetail(run, events, [], "UTC", now, titles);
+    expect(d.steps.map((s) => [s.label, s.state])).toEqual([
+      ["Received", "done"],
+      ["Look up a charge", "done"],
+      ["Refund a payment", "failed"],
+      ["Refund a payment", "done"],
+      ["Done", "done"],
+    ]);
+  });
+
   it("a held call waits for the owner", () => {
     const held: SessionEvent = { session: "s1", run: "run_1", seq: 1, time: "2026-11-02T22:41:30Z", kind: "tool_result", body: { state: "held", hold: { exception: "x" } } };
     const d = requestDetail({ ...run, status: "PAUSED", requirements: [{ exception: "x" } as never] }, [held], [], "UTC", now);

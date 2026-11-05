@@ -24,7 +24,7 @@ import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { attachWhys, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -1932,7 +1932,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     // held call and went on once the owner answered has its work in parts, each on the part's
     // first message: the time it waited for the owner isn't work, and what it did before the
     // pause isn't shown again after it (the 859 test).
-    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; words?: string; error?: true; not_made?: true }>; first?: ThreadMessage; last?: number };
+    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; words?: string; error?: true; not_made?: true; inputHash?: string }>; first?: ThreadMessage; last?: number };
     const runs = new Map<string, { parts: Part[]; turns: number }>();
     const runOf = (id: string, at: number) => {
       let w = runs.get(id);
@@ -1959,7 +1959,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         // A call refused back unmade (an act beside a read) isn't failed work: it shows as not made.
         for (const t of turn?.waited ?? []) {
           const words = stepWords(t.tool, titles);
-          part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}) });
+          part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}), ...(t.inputHash ? { inputHash: t.inputHash } : {}) });
         }
         continue;
       }
@@ -2038,7 +2038,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     for (const [id, w] of runs) {
       const whys = [...(whysOf.get(id) ?? [])];
       for (const p of w.parts) {
-        const steps = attachWhys(p.tools, whys);
+        const steps = foldRetried(attachWhys(p.tools, whys)).map(({ inputHash: _hash, ...step }) => step);
         if (p.first && p.tools.length > 0 && p.last !== undefined && !Number.isNaN(p.start)) {
           p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps };
         }
@@ -3840,9 +3840,20 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   // What it's doing, in a few words: only these, never the call's arguments.
   const toolOf = new Map<string, string>(); // call id → tool, for a failed step's reason
   let runID = resumed;
+  // A step that failed is held, not sent: Coach often retries, and a retry that goes through
+  // shouldn't have shown the owner "failed" meanwhile (kiff-cloud#1487). A later call of the
+  // same tool drops the held failure (its own outcome stands); the run's end sends what's
+  // still held, so a failure Coach gave up on is said then, with its why.
+  const heldFailures = new Map<string, string>(); // call id → its step event
+  const inputOf = new Map<string, string>(); // call id → its input, as sent, to tell a retry from other work
   const call = (tool: string, input: unknown, callID: unknown): string => {
     const id = typeof callID === "string" ? callID : undefined;
     if (id) toolOf.set(id, tool);
+    const sent = JSON.stringify(input ?? null);
+    if (id) inputOf.set(id, sent);
+    for (const [heldID] of heldFailures) {
+      if (toolOf.get(heldID) === tool && inputOf.get(heldID) === sent) heldFailures.delete(heldID);
+    }
     const step = steps.call(tool, input, id);
     return sse("activity", { tool, ...(step === undefined ? {} : { step }), ...(id ? { call_id: id } : {}) });
   };
@@ -3869,7 +3880,10 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (status !== "error") return sse("step", { call_id: id, status });
     const failed = failedStep(r.text);
     keepWhy(id, failed.why);
-    return sse("step", { call_id: id, status, ...failed });
+    const event = sse("step", { call_id: id, status, ...failed });
+    if (!id) return event;
+    heldFailures.set(id, event);
+    return "";
   };
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
@@ -3909,8 +3923,11 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         }
         return undefined;
       }
-      case "end":
-        return sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
+      case "end": {
+        const given = [...heldFailures.values()].join("");
+        heldFailures.clear();
+        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
+      }
       default:
         return undefined;
     }
@@ -4300,15 +4317,15 @@ export function wentThrough(done: unknown): Array<{ tool: string; resource?: str
  * of the turn before whose results it read, each with whether it failed or was refused back
  * unmade. Undefined for a usage record with no timing (a summary's).
  */
-export function turnTiming(body: unknown): { ms: number; resumed: boolean; waited: Array<{ tool: string; error: boolean; notMade: boolean }> } | undefined {
+export function turnTiming(body: unknown): { ms: number; resumed: boolean; waited: Array<{ tool: string; error: boolean; notMade: boolean; inputHash?: string }> } | undefined {
   const t = (body as { timing?: { ms?: unknown; resumed?: unknown; waited?: unknown } } | undefined)?.timing;
   if (!t || typeof t !== "object") return undefined;
-  const waited = Array.isArray(t.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown; not_made?: unknown }>) : [];
+  const waited = Array.isArray(t.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown; not_made?: unknown; input_hash?: unknown }>) : [];
   return {
     ms: typeof t.ms === "number" && t.ms > 0 ? t.ms : 0,
     resumed: t.resumed === true,
     waited: waited.filter((w) => typeof w?.tool === "string")
-      .map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true })),
+      .map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true, ...(typeof w.input_hash === "string" && w.input_hash ? { inputHash: w.input_hash } : {}) })),
   };
 }
 

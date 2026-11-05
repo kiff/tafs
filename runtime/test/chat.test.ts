@@ -100,8 +100,8 @@ describe("conversation", () => {
     const usage = (s: number, waited: object[]) =>
       list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(s), kind: "usage", body: { cost_micro_usd: 1, timing: { ms: 900, waited } } });
     usage(2, []);
-    usage(7, [{ tool: "get_order", ms: 300, is_error: true }]);
-    usage(12, [{ tool: "get_order", ms: 200 }, { tool: "create_refund", ms: 900, result_bytes: 40 }]);
+    usage(7, [{ tool: "get_order", ms: 300, is_error: true, input_hash: "o42" }]);
+    usage(12, [{ tool: "get_order", ms: 200, input_hash: "o42" }, { tool: "create_refund", ms: 900, result_bytes: 40 }]);
     w.agents.say(chat, "Refunded $20.", at(12));
     w.agents.say(chat, "Anything else?", at(14));
     // Why the first try failed, as the stream kept it (stream.test.ts): the thread says it on that step.
@@ -111,7 +111,8 @@ describe("conversation", () => {
     expect(refunded.text).toBe("Refunded $20.");
     // The whole run, on its first message, where the app's work block sat (the 845 test): from
     // the owner's message to the run's last words. A failed step says `failed` and why (gap 9).
-    expect(refunded.work).toEqual({ ms: 14_000, steps: [{ tool: "get_order", error: true, failed: true, why: "The order wasn't found." }, { tool: "get_order" }, { tool: "create_refund" }] });
+    // The order look-up failed once and was retried: the owner sees the retry's outcome, not the failure.
+    expect(refunded.work).toEqual({ ms: 14_000, steps: [{ tool: "get_order" }, { tool: "create_refund" }] });
     expect(after.work).toBeUndefined(); // the run's work is shown once
     expect(JSON.stringify(r.body)).not.toContain("result_bytes");
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachWhys, failedStep, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
+import { attachWhys, failedStep, foldRetried, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
   it("names a vendor from its server's host, and none from a cloud's own URL", () => {
@@ -97,5 +97,23 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
       { tool: "create_refund", error: true, failed: true },
     ]);
     expect(whys).toEqual([]); // consumed: a run's parts share one list
+  });
+
+  it("folds a failed call into a real retry only: the same tool with the same input digest", () => {
+    const steps = [
+      { tool: "version_install", error: true as const, inputHash: "d1" },
+      { tool: "get_order", inputHash: "o1" },
+      { tool: "version_install", inputHash: "d1" },
+      { tool: "create_refund", error: true as const, inputHash: "r1" },
+    ];
+    // The retried install is done; the refund's failure stands, since nothing retried it.
+    expect(foldRetried(steps)).toEqual([{ tool: "get_order", inputHash: "o1" }, { tool: "version_install", inputHash: "d1" }, { tool: "create_refund", error: true, inputHash: "r1" }]);
+    // A later call of the same tool with other input is other work: A's failure stays (agentgabo's case).
+    expect(foldRetried([{ tool: "send_reminder", error: true as const, inputHash: "A" }, { tool: "send_reminder", inputHash: "B" }]))
+      .toEqual([{ tool: "send_reminder", error: true, inputHash: "A" }, { tool: "send_reminder", inputHash: "B" }]);
+    // A retry that failed again: one failure, the last.
+    expect(foldRetried([{ tool: "a", error: true as const, inputHash: "x" }, { tool: "a", error: true as const, inputHash: "x" }])).toEqual([{ tool: "a", error: true, inputHash: "x" }]);
+    // No digest (a record from before kiff/agents wrote one): nothing folds.
+    expect(foldRetried([{ tool: "a", error: true as const }, { tool: "a" }])).toEqual([{ tool: "a", error: true }, { tool: "a" }]);
   });
 });
