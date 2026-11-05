@@ -437,7 +437,7 @@ The owner says: I want a taf that chases overdue invoices
 ```
 
 A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
-keeps that line first. The thread shows only the owner's words. What planque can't answer is left out,
+keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,
 and Coach reads planque's grants itself. For a vendor the account already connects, Coach offers the
 same kind first, named with the taf that uses it, and asks for it the same way for the new taf; another
 kind comes only when the owner picks it (`connect-an-app@2`). A mode is said only as the connection gives

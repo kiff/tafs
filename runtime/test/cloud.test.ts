@@ -3095,6 +3095,8 @@ describe("the account's connections a Coach conversation starts with", () => {
   ];
   const setUp = () => {
     const w = world();
+    // kiff/agents' live chat and tafs cloud's read of it keep the same time.
+    w.agents = fakeAgents(() => w.now);
     w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
     w.tafs.held.set(`t_acme#${CHARGEBACKS}`, { id: CHARGEBACKS, name: "Chargebacks", job: "chargebacks", kiffAgent: "chargebacks-k1", nameClaim: "c-cb", created: "2026-10-16T09:00:00Z" });
     w.tafs.held.set(`t_acme#${BO}`, { id: BO, name: "Bo", job: "refunds", kiffAgent: "bo", nameClaim: "claim-bo", created: "2026-10-16T09:00:00Z" });
@@ -3139,6 +3141,31 @@ describe("the account's connections a Coach conversation starts with", () => {
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);
+  });
+
+  // The apps name no session for the live chat (kiff/tafs#543 read it as a new chat each time): a message that goes
+  // on in it reads nothing more and carries no lines; one after it went quiet opens a new chat, with them.
+  it("adds them only when a live message opens a new chat, not to each message after it", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const asked: string[] = [];
+    const deps = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }), asked);
+    const first = await send(deps, `/v1/tafs/${COACH}/messages`, { text: "I want a taf that chases overdue invoices" });
+    expect(asked).toHaveLength(1);
+    expect((await firstMessage(w, first.session))!.startsWith("[tafs connections]\n")).toBe(true);
+    w.now = new Date(w.now.getTime() + 60_000);
+    const next = await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice" });
+    expect(next.session).toBe(first.session);
+    expect(asked).toHaveLength(1);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} ${first.session}`);
+    const said = (await w.agents.api.session("t_acme", first.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
+    expect(said.at(-1)).toBe("and remind them twice");
+    // Half an hour later the chat has gone quiet: the next message opens a new one, with its lines.
+    w.now = new Date(w.now.getTime() + 31 * 60_000);
+    const later = await send(deps, `/v1/tafs/${COACH}/messages`, { text: "one more taf" });
+    expect(later.session).not.toBe(first.session);
+    expect(asked).toHaveLength(2);
+    expect((await firstMessage(w, later.session))!.startsWith("[tafs connections]\n")).toBe(true);
   });
 
   it("keeps an improvement's first line first, and leaves out the tafs the person may not see", async () => {
