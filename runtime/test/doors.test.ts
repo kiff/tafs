@@ -1206,6 +1206,26 @@ describe("a connected app's event, through planque", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
   });
 
+  it("a completing event delivered twice answers the wait once, and the repeat is the same answer, never a new run", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_dup", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_d" });
+    const runsBefore = w.agents.runs.length;
+    expect((await appEvent(w, { id: "ev_dup", key: "reply_d" })).body).toEqual({ outcome: "answered", run: "run_dup" });
+    // The same delivery again (the provider or planque sent it twice): the wait is answered, and the repeat is the same answer, not a new run.
+    const again = await appEvent(w, { id: "ev_dup", key: "reply_d" });
+    expect(again.status).toBe(202);
+    expect(again.body).toEqual({ outcome: "answered", run: "run_dup" });
+    expect(w.agents.runs.length).toBe(runsBefore);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+    // A different delivery with the same key, after the wait: an ordinary event, as before.
+    expect((await appEvent(w, { id: "ev_dup_other", key: "reply_d" })).body.outcome).toBe("run");
+    // The memory is ten minutes: past it, the id is an ordinary event again.
+    w.at(new Date(NOW.getTime() + 11 * 60_000));
+    expect((await appEvent(w, { id: "ev_dup", key: "reply_d" })).body.outcome).toBe("run");
+  });
+
   it("answers no wait for another key, another connection, a wait that ran out, or another account's run", async () => {
     const w = world();
     const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;

@@ -364,6 +364,20 @@ export async function doorRunEnded(note: Note, ctx: DoorsContext): Promise<boole
 /** How long an app's event that completes no run yet is kept, for a run that pauses on it right after (a fast vendor). */
 export const EARLY_EVENT_KEPT_MS = 10 * 60_000;
 
+/** How long the receiver remembers that an event answered a run's wait, so the same delivery again answers the same and starts no run. */
+export const ANSWERED_EVENT_KEPT_MS = 10 * 60_000;
+
+/** What an event that answered a wait is remembered as: the run it answered. */
+export interface AnsweredEvent {
+  run: string;
+  at: string;
+}
+
+/** Remembers that planque's event id answered run's wait (dependable runs: a delivery repeated is the same outcome, never new work). */
+export async function rememberAnswered(ctx: DoorsContext, tenant: string, id: string, run: string): Promise<void> {
+  await ctx.doors.store.put(doorKeys.answeredEvent(tenant, id), { run, at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+}
+
 /** An app's event kept for the run that will wait on it: planque's event id, and the call's result it is (inbound.ts appEventOf), as JSON text. */
 export interface KeptEvent {
   id: string;
@@ -388,6 +402,7 @@ export async function answerKeptEvents(note: Note, ctx: DoorsContext): Promise<v
     if (!kept) continue;
     try {
       await ctx.agents.answerWait(tenant, note.agent, note.run, w.call, parse(kept.result) ?? { truncated: true, payload: kept.result });
+      await rememberAnswered(ctx, tenant, kept.id, note.run);
       await ctx.doors.store.remove(key);
     } catch (err) {
       console.error("app event kept:", err instanceof Error ? err.message : "error");
