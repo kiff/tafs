@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COACH_SKILLS } from "../src/coach-skills.js";
-import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, setupDefinition } from "../src/cloud/setupdef.js";
+import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, SETUP_SPEED, setupDefinition } from "../src/cloud/setupdef.js";
 
 /** Coach's know-how as a whole: the core and every skill (the Coach skills design), where a line is pinned wherever it lives. */
 const COACH_TEXT = [SETUP_INSTRUCTIONS, ...COACH_SKILLS.map((s) => s.body)].join("\n");
@@ -36,11 +36,12 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.max_cost_micro_usd).toBe(SETUP_BUDGET_CENTS * 10_000);
   });
 
-  // Coach answers someone who waits: its turns run at the fast output, at its price, and its cost
-  // cap keeps the same room (kiff/agents#197). A taf's runs stay at standard speed.
-  it("runs fast, at the fast price, with the room its cap gave", () => {
+  // Coach runs at the standard output, as the tafs do (the owner's decision of 5 Nov 2026, with the
+  // lighter Coach): the fast output costs several times it. Its fast price stays on the definition.
+  it("runs standard, with its fast price on record and the room its cap gave", () => {
     const d = setupDefinition(ID);
-    expect(d.speed).toBe("fast");
+    expect(d.speed).toBe("standard");
+    expect(SETUP_SPEED).toBe("standard");
     expect(d.price_fast).toEqual({
       Input: 2 * PRICE.Input, Output: 2 * PRICE.Output, CacheRead: 2 * PRICE.CacheRead, CacheWrite: 2 * PRICE.CacheWrite,
       CacheWrite1h: 2 * PRICE.CacheWrite1h,
