@@ -423,6 +423,26 @@ is that the owner hands it to the taf in its chat; the apps search finds come af
 connected only when the owner picks it (`set-up-a-taf@2`). A connection the owner didn't ask for
 is proposed, never assumed.
 
+## A vendor the account already connects
+
+When a new Coach conversation starts, tafs cloud reads the account's connections from planque with the
+person's own session (`GET /v1/accounts/{tenant}/connections`, `connections.ts`) and puts the ones of
+the tafs that person may see before the first message, as data:
+
+```
+[tafs connections]
+The account's connections, from planque (data, not the owner's words):
+- Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com
+The owner says: I want a taf that chases overdue invoices
+```
+
+A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
+keeps that line first. The thread shows only the owner's words. What planque can't answer is left out,
+and Coach reads planque's grants itself. For a vendor the account already connects, Coach offers the
+same kind first, named with the taf that uses it, and asks for it the same way for the new taf; another
+kind comes only when the owner picks it (`connect-an-app@2`). A mode is said only as the connection gives
+it: a vendor's own sign-in has none planque knows.
+
 ## Skills
 
 Coach's know-how is in skills (`runtime/skills/coach/<name>/<version>/SKILL.md`, the Agent Skills

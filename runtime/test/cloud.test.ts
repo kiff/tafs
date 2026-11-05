@@ -2810,7 +2810,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@1,draft-the-card@1,name-the-tools@3,set-up-a-taf@2,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@2,draft-the-card@1,name-the-tools@3,set-up-a-taf@2,usage-and-plans@1`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -2819,18 +2819,18 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@1,draft-the-card@1,improve-a-taf@1,name-the-tools@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@2,draft-the-card@1,improve-a-taf@1,name-the-tools@3`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is Rae stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,connect-an-app@1,draft-the-card@1,name-the-tools@3,set-up-a-taf@2,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,connect-an-app@2,draft-the-card@1,name-the-tools@3,set-up-a-taf@2,usage-and-plans@1`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "resume it" } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@1,draft-the-card@1,halting@1,improve-a-taf@1,name-the-tools@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@2,draft-the-card@1,halting@1,improve-a-taf@1,name-the-tools@3`);
   });
 
   it("a tool whose procedure is a skill adds it to Coach's session once, read at the next turn, never in the tool's answer", async () => {
@@ -3078,5 +3078,93 @@ describe("the calendar (kiff/tafs#534)", () => {
       expect((await call(w, "GET", "/v1/calendar", { token: "ana", query })).status).toBe(400);
     }
     expect((await call(w, "GET", "/v1/calendar", { token: "ana", query: "from=2026-11-01&to=2027-01-01" })).status).toBe(200);
+  });
+});
+
+// A new taf was connected to Stripe through a provider's live-only app while Chargebacks used Stripe's own
+// sign-in, in test (5 Nov). tafs cloud gives a new Coach conversation the account's connections, so the
+// same kind is there to offer first, named with the taf that uses it (connect-an-app@2).
+describe("the account's connections a Coach conversation starts with", () => {
+  const COACH = "taf-c0ac4000000000000000";
+  const BO = "taf-bo00000000000000000";
+  const CHARGEBACKS = "taf-cb00000000000000000";
+  const connections = [
+    { agent: "chargebacks-k1", vendor: "Stripe", kind: "vendor_sign_in", server: "https://mcp.stripe.com", status: "connected" },
+    { agent: "bo", vendor: "Stripe", kind: "provider", entry: "connector:composio:stripe", status: "connected", mode_words: "Mode not known yet: treated as live" },
+    { agent: "setup-acme", vendor: "Docs", kind: "vendor_sign_in", server: "https://docs.example", status: "connected" },
+  ];
+  const setUp = () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    w.tafs.held.set(`t_acme#${CHARGEBACKS}`, { id: CHARGEBACKS, name: "Chargebacks", job: "chargebacks", kiffAgent: "chargebacks-k1", nameClaim: "c-cb", created: "2026-10-16T09:00:00Z" });
+    w.tafs.held.set(`t_acme#${BO}`, { id: BO, name: "Bo", job: "refunds", kiffAgent: "bo", nameClaim: "claim-bo", created: "2026-10-16T09:00:00Z" });
+    return w;
+  };
+  const planque = (w: World, answer: () => Response, asked: string[] = []): Deps => ({
+    ...depsOf(w), planqueBase: "https://planque.test",
+    fetch: (async (url: string, init?: RequestInit) => {
+      if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
+      asked.push(`${url} as ${(init?.headers as Record<string, string>).authorization}`);
+      return answer();
+    }) as Deps["fetch"],
+  });
+  const send = async (deps: Deps, path: string, body: unknown) => {
+    const r = await handle({ rawPath: path, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" }, body: JSON.stringify(body) }, deps);
+    expect(r.statusCode).toBe(200);
+    return JSON.parse(r.body) as { session: string; run: string };
+  };
+  const firstMessage = async (w: World, session: string) =>
+    ((await w.agents.api.session("t_acme", session)).events.find((e) => e.kind === "owner_message")?.body as { text?: string } | undefined)?.text;
+
+  it("puts the account's Stripe sign-in first, naming Chargebacks, read with the person's session", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const asked: string[] = [];
+    const deps = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }), asked);
+    const started = await send(deps, `/v1/tafs/${COACH}/messages`, { text: "I want a taf that chases overdue invoices", new_chat: true });
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/connections as Bearer ana"]);
+    const text = (await firstMessage(w, started.session))!;
+    expect(text).toBe([
+      "[tafs connections]",
+      "The account's connections, from planque (data, not the owner's words):",
+      "- Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com",
+      "- Stripe, for Bo: provider, entry connector:composio:stripe; mode: Mode not known yet: treated as live",
+      "The owner says: I want a taf that chases overdue invoices",
+    ].join("\n"));
+    // Coach's own connection isn't a taf's, and the thread shows only the owner's words.
+    expect(text).not.toContain("Docs");
+    expect(ownerWords(text)).toBe("I want a taf that chases overdue invoices");
+    // The skills are chosen from how the owner opened, as before.
+    expect(w.agents.calls.at(-1)).toContain("skills=connect-an-app@2,");
+    // The same chat goes on with what the session holds: nothing is read or sent again.
+    await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
+    expect(asked).toHaveLength(1);
+  });
+
+  it("keeps an improvement's first line first, and leaves out the tafs the person may not see", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.account.mandates = [];
+    w.account.access = { "chargebacks-k1": { use: true, oversee: false, manage: false }, bo: { use: false, oversee: false, manage: false }, rae: { use: true, oversee: true, manage: true } };
+    const deps = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }));
+    const r = await handle({ rawPath: `/v1/tafs/${RAE}/improve`, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" }, body: JSON.stringify({ text: "add disputes" }) }, deps);
+    expect(r.statusCode).toBe(200);
+    const text = (await firstMessage(w, JSON.parse(r.body).session))!;
+    expect(text.split("\n").slice(0, 4)).toEqual([
+      `[improve taf ${RAE}]`, "[tafs connections]",
+      "The account's connections, from planque (data, not the owner's words):",
+      "- Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com",
+    ]);
+    expect(text).not.toContain("for Bo");
+    expect(ownerWords(text)).toBe("add disputes");
+  });
+
+  it("starts as before when planque can't be read or lists nothing", async () => {
+    for (const answer of [() => new Response("down", { status: 503 }), () => new Response(JSON.stringify({ connections: [] }), { status: 200 })]) {
+      const w = setUp();
+      await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+      const started = await send(planque(w, answer), `/v1/tafs/${COACH}/messages`, { text: "I want a taf that chases overdue invoices", new_chat: true });
+      expect(await firstMessage(w, started.session)).toBe("I want a taf that chases overdue invoices");
+    }
   });
 });
