@@ -16,6 +16,7 @@ import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { type VendorPlace, vendorPlace } from "./places.js";
+import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { recipesFor, type RecipesView } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
@@ -684,7 +685,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const zone = me.timeZone ?? "UTC";
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again), skipped: skippedOf(fired, zone, now) };
+    // The taf's own places (delivery.ts): settled on this read, then shown under each request.
+    const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone);
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own), skipped: skippedOf(fired, zone, now) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
     // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
@@ -700,7 +703,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       titlesOf(event, me, taf, deps),
     ]);
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
-    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again);
+    const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC");
+    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? []);
   }
   if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
     // A follow-up the taf set itself, removed by someone who manages it (docs/api.md, "The knob"). Only a
@@ -759,7 +763,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
     // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
     await needTaf(event, me, taf, deps);
-    if (parts[6] !== "door_reply") throw new HTTPError(400, "only a door's reply is sent again");
+    if (parts[6] !== "door_reply") {
+      // A place of the taf's own (delivery.ts): the taf's retry task, now, by hand.
+      const out = deps.coach ? await sendDeliveryAgain(deliveryContext(deps), me.tenantID, taf, parts[4] ?? "", decodeURIComponent(parts[6] ?? "")) : undefined;
+      if (!out) throw new HTTPError(400, "only a door's reply, or a place of the taf's own that wasn't delivered, is sent again");
+      return out;
+    }
     try {
       return await sendAgain(doorContext(deps), me.tenantID, taf.id, parts[4] ?? "");
     } catch (err) {
@@ -4788,6 +4797,26 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
 export async function sweepReplies(deps: Deps): Promise<Array<{ ref: string; waiting: boolean }>> {
   if (!deps.doors) return [];
   return sweepDoorReplies(doorContext(deps));
+}
+
+/** The deliveries sweep (delivery.ts): every taf with a retry waiting, settled. */
+export async function sweepDeliveries(deps: Deps): Promise<Array<{ run: string; waiting: boolean }>> {
+  if (!deps.coach) return [];
+  return sweepRunDeliveries(deliveryContext(deps));
+}
+
+function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): DeliveryContext {
+  if (!deps.coach) throw new HTTPError(404, "not found");
+  return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };
+}
+
+/** The taf's own deliveries for these runs, settled first (delivery.ts), as the apps draw them. */
+async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
+  if (!deps.coach) return new Map();
+  const ctx = deliveryContext(deps, now);
+  await settleRuns(ctx, tenant, taf, runs).catch((err) => console.error("deliveries not settled:", err instanceof Error ? err.message : "error"));
+  const kept = await deliveriesOf(deps.coach, tenant, taf.id, runs.map((r) => r.id));
+  return new Map(runs.map((r) => [r.id, deliveryViews(kept.get(r.id), taf.name, zone, now)]));
 }
 
 /** Where the hand-overs a server error left undone wait for the sweep: one list for all accounts. */

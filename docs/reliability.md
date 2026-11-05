@@ -137,6 +137,31 @@ The work of delivering is split in two:
 - Trying a delivery again never repeats the work. A refund that went through stays one
   refund while its reply is tried again.
 
+### The taf's own places
+
+A result place at a connected app, or another taf (`docs/api.md`, the knob), is delivered by the
+taf itself or handed over by tafs cloud, and tafs cloud checks what became of it from the run's
+record, never from the taf's report (`runtime/src/cloud/delivery.ts`). When the taf's page or a
+request is read, and by the sweep, each run that ended and wasn't checked is settled, once:
+
+- **an action at a connected app**: the run's usage record says whether the taf called the
+  action and whether the tool took it. Called and taken: `sent`. Not called, or refused: the taf
+  **retries once itself**, as a task with the result and the action by its id, 10 minutes later
+  (the taf may pick a renamed sheet or page again by its name, never change the action). The
+  retry's run is settled the same way: taken, `sent`; still not, `not_sent`, with the reason the
+  stream kept (`steps.ts`, the failed step's `why`), and **one silent note to the people who
+  manage the taf** ("Rae didn't deliver to Google Sheets · Refunds 2026: the sheet was renamed.
+  Send it again from Rae's page, or open Coach for help."), none more for that place while it
+  stays broken; a later delivery clears it. The request shows **Send again** (the same task, now)
+  and Coach's words to open it with (`open_coach`, `coach_words`);
+- **another taf**: the "Hand-off" section the taf ended its result with becomes a run of the
+  receiving taf, as its work under its own Card (`handed`, with the run), once per run (a dedup
+  key). The receiver is checked again then: removed, or Coach, is `not_sent`. A run that came as
+  a hand-off hands nothing on (its `source` says so: one hop), and a result with no hand-off
+  section is `not_sent`, with Coach to open and nothing to send again.
+
+Nothing here moves money: a place is a write, and the taf's Card decides it as any call.
+
 ## The taf's view
 
 **Landed:** `work` on `GET /v1/home`'s tafs and `GET /v1/tafs/{id}/work` (`runtime/src/cloud/work.ts`), from the runs' `state` as kiff/agents gives it, in the account's time zone from KIFF. **Send again** too (`sendAgain` in `doors.ts`): a door reply given up on is kept for 30 days, and its delivery says `send_again: true`.
