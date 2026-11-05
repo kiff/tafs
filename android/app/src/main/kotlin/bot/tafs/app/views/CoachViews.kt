@@ -256,9 +256,20 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   val busy = state.connecting != null
   var details by remember { mutableStateOf(false) }
   // Answered, it keeps one line saying what it was: several in a row each say what was approved. One line, whatever the words'
-  // length: with no title, planque's text can run to paragraphs.
+  // length: with no title, planque's text can run to paragraphs. With a Card, a tap opens it again to read the Card that was
+  // approved, KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown
+  // there: it reads as it is now, and a later approval can widen it past what this one approved.
   if (answered != null) {
-    Text(CoachWords.answeredApproval(answered, c, grant?.text, draft?.label), style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    val line = CoachWords.answeredApproval(answered, c, grant?.text, draft?.label)
+    if (draft == null) {
+      Text(line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+      return
+    }
+    var open by remember(c.id) { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      Text((if (open) "▾ " else "▸ ") + line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = if (open) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
+      if (open) DraftCardsView(draft)
+    }
     return
   }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
