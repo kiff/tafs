@@ -2544,7 +2544,7 @@ async function coachStartState(me: KIFFIdentity, event: HTTPEvent, deps: Deps): 
 
 /** Stores Coach's skills in kiff/agents, each at its version, before a definition that names them is written. */
 async function storeCoachSkills(tenant: string, deps: Deps): Promise<void> {
-  for (const f of skillFiles()) await agentsCall(() => deps.agents.putSkill(tenant, f.name, f.version, f.skillMD));
+  await Promise.all(skillFiles().map((f) => agentsCall(() => deps.agents.putSkill(tenant, f.name, f.version, f.skillMD))));
 }
 
 /**

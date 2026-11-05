@@ -2817,7 +2817,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=improve-a-taf@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@1,draft-the-card@1,improve-a-taf@1,name-the-tools@2`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -2828,7 +2828,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "resume it" } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=halting@1,improve-a-taf@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@1,draft-the-card@1,halting@1,improve-a-taf@1,name-the-tools@2`);
   });
 
   it("a tool whose procedure is a skill adds it to Coach's session once, read at the next turn, never in the tool's answer", async () => {

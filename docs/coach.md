@@ -417,8 +417,9 @@ change moves the text to a new version directory (`runtime/scripts/coach-skills.
 
 Which skills a conversation loads is tafs cloud's decision, never the model's
 (`runtime/src/cloud/coach-skills.ts`): by the entry point and the account's state before the
-first turn (an improvement loads `improve-a-taf`; a recipe, a door's knock or a free start the
-setup's five, `set-up-a-taf`, `connect-an-app`, `name-the-tools`, `draft-the-card` and
+first turn (an improvement loads `improve-a-taf` with `connect-an-app`, `name-the-tools` and
+`draft-the-card`, since improving often adds a tool and drafts its Card; a recipe, a door's knock or
+a free start the setup's five, `set-up-a-taf`, `connect-an-app`, `name-the-tools`, `draft-the-card` and
 `usage-and-plans`, since planque's and KIFF's tools go through KIFF's gateway and never reach tafs
 cloud; a delivery note `the-dial`; lines about a task `the-tafs`; a call held for the owner adds
 `cards-and-holds`, a halt `halting`), sent as the run's `skills`, which kiff/agents keeps on the

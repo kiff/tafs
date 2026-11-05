@@ -102,7 +102,9 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   const SETUP = ["connect-an-app", "draft-the-card", "name-the-tools", "set-up-a-taf", "usage-and-plans"];
   // name-the-tools is at its second version: the first stated the owner's mode as fact (never stored; kept in the lock).
   for (const [entry, want] of [
-    ["free", SETUP], ["recipe", SETUP], ["door", SETUP], ["improve", ["improve-a-taf"]],
+    ["free", SETUP], ["recipe", SETUP], ["door", SETUP],
+    // An `[improve taf …]` start adds a tool and drafts its Card through the gateway's tools too (agentgabo on #525).
+    ["improve", ["connect-an-app", "draft-the-card", "improve-a-taf", "name-the-tools"]],
     ["coach_lines", ["the-tafs"]], ["delivery", ["the-dial"]], ["did_this_happen", ["cards-and-holds"]],
   ] as const) {
     it(`loads ${want.join(", ")} for a conversation that opens as ${entry}`, () => {
@@ -112,7 +114,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
     expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "name-the-tools@2", "set-up-a-taf@1", "usage-and-plans@1"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "improve-a-taf@1"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "improve-a-taf@1", "name-the-tools@2"]);
   });
 
   it("loads a skill by the tool whose procedure it is, and nothing for a vendor's tool or a tool with none", () => {
