@@ -23,6 +23,14 @@ describe("Coach's skills, as files", () => {
     for (const s of fromFiles) expect(lock[`${s.name}@${s.version}`], `${s.name}@${s.version} in the lock`).toBe(digestOf(s.skill_md));
   });
 
+  // kiff/agents refuses a definition naming more skills than its cap (skill.MaxPerAgent, 16 since
+  // kiff/agents#316): #525 named ten against a cap of eight, and tafs cloud's fake never applied it.
+  it("are no more than kiff/agents takes on one definition", () => {
+    const KIFF_AGENTS_MAX_SKILLS = 16;
+    expect(COACH_SKILLS.length).toBeLessThanOrEqual(KIFF_AGENTS_MAX_SKILLS);
+    expect(setupDefinition("taf-0123456789abcdef0123").skills?.length).toBe(COACH_SKILLS.length);
+  });
+
   it("never changes a stored version: a changed body under the same version is refused, a new version is added", () => {
     const [one] = readSkills(ROOT);
     const lock = { [`${one.name}@${one.version}`]: digestOf(one.skill_md) };
