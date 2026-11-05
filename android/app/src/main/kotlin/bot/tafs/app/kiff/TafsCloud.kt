@@ -57,6 +57,9 @@ class TafsCloud(
   /** The account's Coach and its tools, from one read. */
   suspend fun setupAndTools(): Pair<CloudSetup?, CoachTools?> = get<SetupResponse>("/v1/setup").let { it.setup to it.tools }
 
+  /** The recipes a new Coach conversation opens to, by category (kiff/tafs#476). */
+  suspend fun recipes(): Recipes = get("/v1/recipes")
+
   /** Where Coach's tools are, on tafs cloud: KIFF's gateway reaches them there, each call carrying KIFF's permit. */
   val mcpUrl: String get() = "$baseUrl/v1/mcp"
 
