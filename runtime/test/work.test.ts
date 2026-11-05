@@ -24,6 +24,20 @@ describe("a taf's work, as both apps show it", () => {
     expect(requestOf(run({ status: "PAUSED", requirements: [wait, { ...wait, call_id: "c2", kind: undefined, exception: "exc_1" }] }), "UTC", NOW).line).toBe("Waiting for your approval");
     expect(requestOf(run({ status: "PAUSED", requirements: [{ ...wait, answered: "2026-10-30T11:30:00Z" }] }), "UTC", NOW)).toMatchObject({ line: "Waiting for an answer" });
     expect(requestOf(run({ status: "PAUSED", requirements: [{ ...wait, answered: "2026-10-30T11:30:00Z" }] }), "UTC", NOW).waiting_for).toBeUndefined();
+    // The taf's summary says so too, in the same words, instead of idle: after what needs the owner and what works, before paused.
+    const waiting = run({ status: "PAUSED", requirements: [wait] });
+    expect(summaryOf([waiting], true, "UTC", NOW)).toEqual({ status: "waiting_on_app", line: "The desk answers when the customer replies.", needs_you: 0 });
+    expect(summaryOf([waiting, run({ id: "r2", status: "RUNNING" })], false, "UTC", NOW).status).toBe("working");
+    expect(summaryOf([run({ status: "PAUSED", requirements: [wait, { ...wait, call_id: "c2", kind: undefined, exception: "exc_1" }] })], false, "UTC", NOW).status).toBe("needs_you");
+    expect(summaryOf([run({ status: "PAUSED", requirements: [{ ...wait, answered: "2026-10-30T11:30:00Z" }] })], true, "UTC", NOW).status).toBe("paused");
+    // An open card for the owner beside the wait: the run is the owner's to answer, not the app's wait, on the request and on the summary.
+    const card = { call_id: "c3", tool: "show", input: { type: "confirm", id: "which" }, operation: "", expires: "2026-10-30T13:00:00Z", kind: "card" };
+    const both = run({ status: "PAUSED", requirements: [wait, card] });
+    expect(requestOf(both, "UTC", NOW)).toMatchObject({ state: "waiting", line: "Waiting for an answer" });
+    expect(requestOf(both, "UTC", NOW).waiting_for).toBeUndefined();
+    expect(summaryOf([both], true, "UTC", NOW).status).toBe("paused");
+    // The card answered, the wait is the app's again.
+    expect(summaryOf([run({ status: "PAUSED", requirements: [wait, { ...card, answered: "2026-10-30T11:40:00Z" }] })], true, "UTC", NOW).status).toBe("waiting_on_app");
   });
 
   it("says a retrying run's next try and count, and a needs_you run's reason as kiff/agents gives it", () => {

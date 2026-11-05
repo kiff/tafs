@@ -216,7 +216,11 @@ class MappingTest {
       {"id":"taf_5","name":"Chatty","kiff_agent":"chatty-1","color":0,"state":"working","unscheduled":true,"card":{"ids":["c6"],"active":true}},
       {"id":"taf_6","name":"Idle","kiff_agent":"idle-1","color":1,"state":"idle","card":{"ids":["c7"],"active":true}},
       {"id":"taf_7","name":"Stopped","kiff_agent":"stopped-1","color":1,"state":"stopped","card":{"ids":[],"active":false}},
-      {"id":"taf_8","name":"Running","kiff_agent":"running-1","color":1,"state":"working","card":{"ids":["c8"],"active":true}}],
+      {"id":"taf_8","name":"Running","kiff_agent":"running-1","color":1,"state":"working","card":{"ids":["c8"],"active":true}},
+      {"id":"taf_11","name":"Desk","kiff_agent":"desk-1","color":1,"state":"working","card":{"ids":["c9"],"active":true},
+       "work":{"status":"waiting_on_app","line":"The desk answers when the customer replies.","needs_you":0}},
+      {"id":"taf_12","name":"Later","kiff_agent":"later-1","color":1,"state":"something_new","card":{"ids":["c10"],"active":true},
+       "work":{"status":"idle","line":"Last done at 09:40","needs_you":0}}],
      "others":[{"name":"Billing bot","kiff_agent":"billing-x","color":1,"state":"idle","waiting":0,"card":{"ids":["c9","c10"],"active":true}}],
      "removing":[{"id":"taf_9","name":"Old"}],"doors_offered":["email"]}
   """.trimIndent()
@@ -300,6 +304,10 @@ class MappingTest {
     assertEquals(TafState.idle to "Acting under KIFF", named("Idle").let { it.state to it.now })
     assertEquals(TafState.revoked to "Card not active", named("Stopped").let { it.state to it.now })
     assertEquals(TafState.working to "Running", named("Running").let { it.state to it.now })
+    // A run waiting for an app's event is the app's, in tafs cloud's words; never "Waiting on you", nor its next run.
+    assertEquals(TafState.idle to "The desk answers when the customer replies.", named("Desk").let { it.state to it.now })
+    // A state this app doesn't know reads as tafs cloud's line for its work, never as a Card stopped.
+    assertEquals(TafState.idle to "Last done at 09:40", named("Later").let { it.state to it.now })
   }
 
   @Test fun anAgentTafsDoesNotRunIsDescribedByItsCards() {
@@ -311,7 +319,7 @@ class MappingTest {
 
   @Test fun theHomeListHoldsRemovalsAndIgnoresWhatItDoesNotUse() {
     val h = home(homeJson)
-    assertEquals(8, h.tafs.size)
+    assertEquals(10, h.tafs.size)
     assertEquals(listOf("taf_9"), h.removing.map { it.id })
   }
 
