@@ -2687,11 +2687,8 @@ class AppModel(
 
   fun closeSiteSignIn() = _state.update { it.copy(siteSignIn = null) }
 
-  /** Whether [url] is an https address on planque's own host: the only place a sign-in view may come from. */
-  private fun onPlanque(url: String): Boolean = runCatching {
-    val view = java.net.URI(url)
-    view.scheme == "https" && view.host != null && view.host.equals(java.net.URI(planque.baseUrl).host, ignoreCase = true)
-  }.getOrDefault(false)
+  /** Whether [url] is on planque's own https origin (scheme, host and port): the only place a sign-in view may come from. */
+  private fun onPlanque(url: String): Boolean = bot.tafs.app.views.sameHttpsOrigin(url, planque.baseUrl)
 
   /** The channels a Slack bot connection can see, from planque: a signed read, for picking a Slack door's channel. */
   suspend fun loadSlackChannels(grantId: String) {

@@ -1157,4 +1157,14 @@ class PlanqueTest {
     assertEquals("Sign in to a site", app.siteSignIn?.title)
     assertNull(KiffClient.json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>("""{"id":"g1","name":"Notion","status":"connected"}""").siteSignIn)
   }
+
+  @Test fun aViewOnPlanquesHostButAnotherPortIsNeverOpened() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 200, """{"view":"https://planque.kiff.dev:8443/browser/view/tok_1","words":"Sign in"}""")
+    m.openSiteSignIn("gs")
+    assertNull(m.state.value.siteSignIn)
+    assertTrue(bot.tafs.app.views.sameHttpsOrigin("https://planque.kiff.dev/browser/view/t", "https://planque.kiff.dev:443"))
+    assertFalse(bot.tafs.app.views.sameHttpsOrigin("http://planque.kiff.dev/browser/view/t", "https://planque.kiff.dev"))
+    assertFalse(bot.tafs.app.views.sameHttpsOrigin("https://planque.kiff.dev.example/x", "https://planque.kiff.dev"))
+  }
 }
