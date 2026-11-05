@@ -390,6 +390,10 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
+  /** The account's "Show suggestions" setting as tafs cloud last said it, while it's being changed, and why a change didn't go. */
+  val suggestions: bot.tafs.app.kiff.Suggestions? = null,
+  val suggestionsBusy: Boolean = false,
+  val suggestionsError: String? = null,
   /** KIFF's words for the next approval while this phone holds an approval window ("No fingerprint for the next 4 minutes"). */
   val windowWords: String? = null,
   /** planque's live sign-in view for a browser connection, open over everything until the owner closes it. */
@@ -2336,6 +2340,35 @@ class AppModel(
       return
     }
     if (generation == accountGeneration) _state.update { it.copy(recipes = recipes) }
+  }
+
+  /** Reads the account's "Show suggestions" setting, for Account. */
+  suspend fun loadSuggestions() {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    val read = attempt { cloud.suggestions() } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(suggestions = read) }
+  }
+
+  /**
+   * Turns the account's suggestions off for good, or on again, in tafs cloud: it decides what a new Coach conversation shows, and
+   * the recipes are read again. A refusal is said in tafs cloud's words.
+   */
+  suspend fun setSuggestions(show: Boolean) {
+    if (_state.value.mode != Mode.kiff || _state.value.suggestionsBusy) return
+    val generation = accountGeneration
+    _state.update { it.copy(suggestionsBusy = true, suggestionsError = null) }
+    try {
+      val now = cloud.setSuggestions(show)
+      if (generation == accountGeneration) _state.update { it.copy(suggestions = now) }
+      loadRecipes()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(suggestionsError = "It didn't change. ${(e as? bot.tafs.app.kiff.CloudError)?.message ?: ErrorWords.of(e)}") }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(suggestionsBusy = false) }
+    }
   }
 
   /**

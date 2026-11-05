@@ -631,6 +631,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onLoadAlerts = { scope.launch { model.loadPhoneAlerts() } },
         onLoadTimeZones = { query -> scope.launch { model.loadTimeZones(query) } },
         onPickTimeZone = { zone -> scope.launch { model.setAccountTimeZone(zone) } },
+        onLoadSuggestions = { scope.launch { model.loadSuggestions() } },
+        onShowSuggestions = { show -> scope.launch { model.setSuggestions(show) } },
         onOpenAlertTaf = { cloudId ->
           state.tafs.firstOrNull { it.cloudId == cloudId }?.let {
             showingSettings = false; tab = Tab.Tafs; coachOpen = false; openTaf = it.id

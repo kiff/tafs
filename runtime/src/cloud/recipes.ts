@@ -36,6 +36,34 @@ export interface RecipesView {
   recipes: Recipe[];
   /** False when the catalog couldn't be read: every recipe is listed, and Coach says what it can't connect. */
   filtered: boolean;
+  /**
+   * Whether a new Coach conversation shows them (the owner's decision, kiff/tafs#476): only while the
+   * account has no live taf, and while its "Show suggestions" setting is on. False, the list is empty
+   * and `suggestions.words` say why; the apps draw only what comes.
+   */
+  shown: boolean;
+  suggestions: Suggestions;
+}
+
+/** The account's "Show suggestions" setting, with the words for it, all from here. */
+export interface Suggestions {
+  /** The setting: on by default; a manager turns it off for good. */
+  show: boolean;
+  /** Why the list is as it is: shown (`on`), turned off (`off`), or the account has a taf (`live`). */
+  reason: "on" | "off" | "live";
+  /** The same, in words the apps show. */
+  words: string;
+}
+
+export const SUGGESTION_WORDS = {
+  on: "Suggestions show in a new conversation with Coach until the account's first taf is live.",
+  off: "Suggestions are off for this account.",
+  live: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good.",
+};
+
+/** An empty list, with why (shown false). */
+export function noRecipes(suggestions: Suggestions): RecipesView {
+  return { categories: [], recipes: [], filtered: false, shown: false, suggestions };
 }
 
 /**
@@ -65,5 +93,7 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     categories: CATEGORIES.filter((c) => listed.some((r) => r.category === c.id)),
     recipes: listed,
     filtered: apps !== undefined,
+    shown: true,
+    suggestions: { show: true, reason: "on", words: SUGGESTION_WORDS.on },
   };
 }

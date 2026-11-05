@@ -414,6 +414,11 @@ are suggestions, not finished products: there is no recipe-specific code, and wh
 build one, the gap is fixed generically (a connection, how Coach picks tools, a Card rule), so a
 person can prompt Coach freely. The five starter jobs tafs began with are recipes now.
 
+They show only while the account has no live taf, and while its "Show suggestions" setting is
+on (the owner's decision): tafs cloud decides, and `GET /v1/recipes` sends the list or an empty
+one with `shown: false` and the words why. A manager turns them off for good with
+`PUT /v1/me/suggestions {show: false}` (on by default). The apps draw only what comes.
+
 The source is one file per recipe in [`recipes/`](../recipes/README.md): its title, category
 (money, customers, operations, errands), one line on what the taf does, the vendors each
 connection needs (any of several where one stands in for another), what its Card allows, holds and
@@ -427,6 +432,13 @@ catalog can't be read, or has more pages than tafs cloud reads, every recipe is 
 `filtered` says so, so the page is
 never blank for that; Coach says what it can't connect. The apps only draw the list and fill the
 message box: the words come from tafs cloud, so both apps show the same.
+
+On Android, a new Coach conversation draws only the recipes that come: none while tafs cloud's
+`shown` is false. Account › **Coach** has the **Show suggestions** switch, read and changed
+through `GET`/`PUT /v1/me/suggestions`, with tafs cloud's `words` under it. It's enabled for
+whoever KIFF lets manage the account's tafs (`cards.manage`), and a refusal is said in tafs
+cloud's words (`AppModel.setSuggestions`). The recipes are read again after a change. A tafs
+cloud without the route leaves the section out.
 
 **Android** reads them each time Coach opens, with Coach's setup (`AppModel.loadRecipes`), and
 draws them in an empty conversation that isn't improving a taf (`CoachStarts`): each category's

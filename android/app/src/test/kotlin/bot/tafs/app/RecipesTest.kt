@@ -6,6 +6,7 @@ import bot.tafs.app.kiff.InMemorySecretStore
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -75,5 +76,42 @@ class RecipesTest {
     assertNull(m.state.value.recipes)
     assertEquals("setup_1", m.state.value.coachCloudId)
     assertTrue("no error for missing recipes", m.state.value.chatErrors[COACH_CHAT] == null)
+  }
+  // MARK: "Show suggestions", kept in tafs cloud
+
+  @Test fun noRecipesComeWhenTafsCloudDoesntShowThemAndNoneAreDrawn() = runTest {
+    val m = model()
+    transport.answer("GET /v1/recipes", 200, """{"categories":[{"id":"money","title":"Money"}],"recipes":[],"filtered":true,"shown":false,
+      "suggestions":{"show":true,"words":"The account has a live taf, so a new conversation with Coach opens blank."}}""")
+    m.loadRecipes()
+    val read = m.state.value.recipes!!
+    assertFalse(read.shown)
+    assertTrue(read.byCategory.isEmpty())
+  }
+
+  @Test fun theSettingIsReadAndChangedInTafsCloudAndTheRecipesReadAgain() = runTest {
+    val m = model()
+    transport.answer("GET /v1/me/suggestions", 200, """{"suggestions":{"show":true,"words":"Suggestions show in a new conversation with Coach until the account's first taf is live."}}""")
+    m.loadSuggestions()
+    assertTrue(m.state.value.suggestions!!.show)
+    transport.answer("PUT /v1/me/suggestions", 200, """{"suggestions":{"show":false,"words":"Suggestions are off for this account."}}""")
+    transport.answer("GET /v1/recipes", 200, """{"categories":[],"recipes":[],"shown":false,"suggestions":{"show":false,"words":"Suggestions are off for this account."}}""")
+    m.setSuggestions(false)
+    assertEquals("""{"show":false}""", String(transport.requestsTo("PUT /v1/me/suggestions").single().body!!))
+    assertEquals("Suggestions are off for this account.", m.state.value.suggestions!!.words)
+    assertFalse(m.state.value.suggestions!!.show)
+    assertFalse(m.state.value.recipes!!.shown)
+    assertFalse(m.state.value.suggestionsBusy)
+  }
+
+  @Test fun aRefusedChangeIsSaidInTafsCloudsWordsAndNothingChanges() = runTest {
+    val m = model()
+    transport.answer("GET /v1/me/suggestions", 200, """{"suggestions":{"show":true,"words":"On"}}""")
+    m.loadSuggestions()
+    transport.answer("PUT /v1/me/suggestions", 403, """{"error":"the suggestions setting is for the people who manage the account's tafs"}""")
+    m.setSuggestions(false)
+    assertTrue(m.state.value.suggestions!!.show)
+    assertEquals("It didn't change. the suggestions setting is for the people who manage the account's tafs", m.state.value.suggestionsError)
+    assertFalse(m.state.value.suggestionsBusy)
   }
 }
