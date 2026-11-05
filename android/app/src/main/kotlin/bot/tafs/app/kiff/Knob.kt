@@ -219,11 +219,15 @@ data class ConnectApps(
     val icon: String? = null,
     /** oauth or key. */
     val how: String = "oauth",
-    /** connected, available or needs_reconnect. */
+    /** connected, available, needs_reconnect or needs_setup. */
     val state: String = "available",
+    /** For `needs_setup`: tafs cloud's line in place of Connect. */
+    val words: String? = null,
     val grant: String? = null,
   ) {
     val connected: Boolean get() = state == "connected"
+    /** Not set up for anyone to connect yet (kiff/planque#87): no Connect, only tafs cloud's words. */
+    val needsSetup: Boolean get() = state == "needs_setup"
     val needsReconnect: Boolean get() = state == "needs_reconnect"
     /** Signed in at the app, its actions still to choose with Coach (`signed_in`, or `listed` as planque names it). */
     val signedIn: Boolean get() = state == "signed_in" || state == "listed"

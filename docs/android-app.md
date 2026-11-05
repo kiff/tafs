@@ -313,6 +313,11 @@ confirmation as an approval and sends the key to planque once (`AppModel.giveKey
 `PlanqueClient.giveKey`, the key in `Planque-Vendor-Key`, its SHA-256 in the signed body). The
 key lives only in the open sheet's field, and nothing on the phone keeps it.
 
+An app tafs cloud sends as `needs_setup` (kiff/planque#87) shows tafs cloud's `words` under its
+title ("Needs setting up first. Ask tafs to enable it.") and has no Connect: nothing on its row
+can be tapped. On a taf's Setup, a connection's sheet shows tafs cloud's `custody_words` under its
+status line, the one line on who keeps its sign-in; with none sent, nothing shows.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

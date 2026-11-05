@@ -26,6 +26,7 @@ class ConnectAppsSheetTest {
       ConnectApps.App("notion@1", "Notion", "Notion"),
       ConnectApps.App("google", "Google", "Google Sheets", state = "needs_reconnect", grant = "g2"),
       ConnectApps.App("connector:composio:gmail", "Gmail", "Gmail", state = "signed_in", grant = "g7"),
+      ConnectApps.App("connector:composio:jira", "Jira", "Jira", state = "needs_setup", words = "Needs setting up first. Ask tafs to enable it."),
     ),
     byKey = true,
   )
@@ -52,6 +53,16 @@ class ConnectAppsSheetTest {
   }
 
   private fun count(text: String) = rule.onAllNodes(hasText(text)).fetchSemanticsNodes().size
+
+  @Test fun anAppNotSetUpSaysSoInTafsCloudsWordsAndOffersNoConnect() {
+    show(connect = true)
+    rule.onNodeWithText("Jira").assertIsDisplayed()
+    rule.onNodeWithText("Needs setting up first. Ask tafs to enable it.").assertIsDisplayed()
+    // Connect is offered once, on the one app that can be connected, never on Jira's row.
+    assertEquals(1, count(ConnectAppsWords.CONNECT))
+    rule.onNodeWithText("Jira").performClick()
+    assertEquals(emptyList<String>(), started)
+  }
 
   @Test fun eachAppSaysWhetherItsConnectedAndConnectStartsOne() {
     show(connect = true)
