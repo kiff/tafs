@@ -223,6 +223,14 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(r.body).toMatchObject({ outcome: "answered", note: WORDS.onDemandLetsRun("Stripe", "Send an email") });
     expect(String(r.body.answer)).toMatch(/^failed: Stripe was set up on demand.*"Send an email" run without asking/);
     expect(w.told()).toMatchObject({ answer: String(r.body.answer) });
+    // KIFF matches an action ignoring case and trims a quantity: so does the check, each way.
+    s.drafts.drf_1.cards = [card({ grants: [{ action: "SEND_X" }], aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", note: WORDS.onDemandLetsRun("Stripe", "Send an email") });
+    s.drafts.drf_1.cards = [card({ grants: [{ action: "Send_X" }], aggregates: [{ quantity: " count ", limit: 0, window: "calendar_day" }] })];
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign" });
+    // A draft read without its Cards can't be checked: read again, never signed on trust.
+    delete s.drafts.drf_1.cards;
+    expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", note: WORDS.cardsUnread });
     // Refused past the limit rather than held: not asking either.
     s.drafts.drf_1.cards = [card({ on_exceed: "refuse" })];
     expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered" });

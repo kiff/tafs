@@ -46,16 +46,18 @@ export interface ApprovalGrant {
 export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string | undefined {
   if (grant.on_demand !== true) return undefined;
   const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
+  // KIFF matches a Card's action to a tool ignoring case, and trims a quantity: so does this.
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   for (const t of writes) {
-    const name = t.name || t.tool;
+    const name = fold(t.name || t.tool);
     if (!name) continue;
     for (const raw of cards) {
       const card = raw as { on_exceed?: unknown; grants?: unknown; aggregates?: unknown };
-      const actions = Array.isArray(card.grants) ? card.grants.map((g) => (g as { action?: unknown }).action) : [];
+      const actions = Array.isArray(card.grants) ? card.grants.map((g) => fold((g as { action?: unknown }).action)) : [];
       if (!actions.includes(name)) continue;
       const asks = card.on_exceed === "owner" && Array.isArray(card.aggregates)
-        && card.aggregates.some((a) => (a as { quantity?: unknown; limit?: unknown }).quantity === "count" && (a as { limit?: unknown }).limit === 0);
-      if (!asks) return t.title || name;
+        && card.aggregates.some((a) => fold((a as { quantity?: unknown }).quantity) === "count" && (a as { limit?: unknown }).limit === 0);
+      if (!asks) return t.title || t.name || t.tool || name;
     }
   }
   return undefined;
@@ -112,6 +114,7 @@ export const WORDS = {
   digestMismatch: "This request doesn't match what it asks for. Nothing was approved.",
   noGrant: "There's no connection with that id.",
   cardsNotIssued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
+  cardsUnread: "The Card couldn't be checked yet. Read it again, then approve.",
   onDemandLetsRun: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   signInClosed: "The sign-in was closed. Nothing was connected.",
   noCode: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
@@ -205,6 +208,8 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     if (!draft.version || draft.version !== ask.shown_draft) return { outcome: "read_again", note: WORDS.outOfDate };
     // An app set up on demand asks for every change (kiff/planque#87): a draft that lets one of its
     // writes run outright isn't signed, and Coach hears why, so the default holds here, not only in its words.
+    // The check needs the Cards as KIFF shows them: a draft read without them isn't signed on trust.
+    if (grant.on_demand === true && !draft.cards) return { outcome: "read_again", note: WORDS.cardsUnread };
     const letsRun = onDemandLetsRun(grant, draft.cards ?? []);
     if (letsRun) {
       const why = WORDS.onDemandLetsRun(vendor, letsRun);
