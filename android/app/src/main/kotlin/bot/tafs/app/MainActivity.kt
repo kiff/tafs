@@ -443,6 +443,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadWork = model::loadWork,
       setDraft = model::setDraft,
       sendAgain = model::sendAgain,
+      askCoachAbout = model::askCoachAbout,
       openRequest = model::openRequest,
       setPaused = model::setPaused,
       remove = model::removeTaf,
@@ -679,7 +680,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     state.siteSignIn?.let { view -> bot.tafs.app.views.SiteSignInScreen(view, onClose = model::closeSiteSignIn) }
     // A request from the dial's rim or Activity, step by step.
     state.openRequest?.let { (tafId, detail) ->
-      val canSend = state.manages(tafId) && detail.deliveries.any { it.sendAgain }
+      // "Try the reply now" is the door reply's; a place of the taf's own goes again from its work.
+      val canSend = state.manages(tafId) && detail.deliveries.any { it.sendAgain && it.place == "door_reply" }
       bot.tafs.app.views.RequestSheet(
         detail,
         sending = detail.id in state.sendingAgain,
