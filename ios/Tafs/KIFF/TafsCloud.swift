@@ -1198,6 +1198,89 @@ final class TafsCloud {
         init(from decoder: Decoder) throws { shown = try? Shown(from: decoder) }
     }
 
+    /// The recipes a new Coach conversation opens to (`GET /v1/recipes`, kiff/tafs#476), by
+    /// category, as tafs cloud sends them: a recipe is a job and the words to say to Coach. The
+    /// app draws them and keeps no list of its own.
+    struct Recipes: Decodable, Equatable {
+        struct Category: Decodable, Equatable { let id: String; let title: String }
+        /// One recipe: its title and line, and `say`, what a tap puts in Coach's message box for
+        /// the person to edit and send.
+        struct Recipe: Decodable, Equatable, Identifiable {
+            let id: String
+            let title: String
+            var category: String = ""
+            var line: String = ""
+            var say: String = ""
+            private enum CodingKeys: String, CodingKey { case id, title, category, line, say }
+            init(id: String, title: String, category: String = "", line: String = "", say: String = "") {
+                self.id = id; self.title = title; self.category = category; self.line = line; self.say = say
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                id = try c.decode(String.self, forKey: .id)
+                title = try c.decode(String.self, forKey: .title)
+                category = try c.decodeIfPresent(String.self, forKey: .category) ?? ""
+                line = try c.decodeIfPresent(String.self, forKey: .line) ?? ""
+                say = try c.decodeIfPresent(String.self, forKey: .say) ?? ""
+            }
+        }
+        var categories: [Category] = []
+        var recipes: [Recipe] = []
+        /// Whether tafs cloud shows them now: only while the account has no live taf and its
+        /// suggestions are on; else none come.
+        var shown = true
+        var suggestions: Suggestions?
+        private enum CodingKeys: String, CodingKey { case categories, recipes, shown, suggestions }
+        init(categories: [Category] = [], recipes: [Recipe] = [], shown: Bool = true, suggestions: Suggestions? = nil) {
+            self.categories = categories; self.recipes = recipes; self.shown = shown; self.suggestions = suggestions
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            categories = try c.decodeIfPresent([Category].self, forKey: .categories) ?? []
+            recipes = try c.decodeIfPresent([Recipe].self, forKey: .recipes) ?? []
+            shown = try c.decodeIfPresent(Bool.self, forKey: .shown) ?? true
+            suggestions = try? c.decodeIfPresent(Suggestions.self, forKey: .suggestions)
+        }
+        /// Each category in tafs cloud's order, with its recipes; a category with none isn't shown.
+        var byCategory: [(category: Category, recipes: [Recipe])] {
+            categories.map { c in (c, recipes.filter { $0.category == c.id }) }.filter { !$0.recipes.isEmpty }
+        }
+    }
+
+    /// The account's "Show suggestions" setting, kept in tafs cloud: whether it's on, and tafs
+    /// cloud's words for it.
+    struct Suggestions: Decodable, Equatable {
+        var show = true
+        var words = ""
+        private enum CodingKeys: String, CodingKey { case show, words }
+        init(show: Bool = true, words: String = "") { self.show = show; self.words = words }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            show = try c.decodeIfPresent(Bool.self, forKey: .show) ?? true
+            words = try c.decodeIfPresent(String.self, forKey: .words) ?? ""
+        }
+    }
+
+    func recipes() async throws -> Recipes {
+        try await send("GET", "/v1/recipes")
+    }
+
+    /// The account's "Show suggestions" setting, with tafs cloud's words for it.
+    func suggestions() async throws -> Suggestions {
+        struct Response: Decodable { let suggestions: Suggestions }
+        let r: Response = try await send("GET", "/v1/me/suggestions")
+        return r.suggestions
+    }
+
+    /// Turns the account's suggestions off for good, or on again: for the people who manage its
+    /// tafs (403 otherwise).
+    func setSuggestions(_ show: Bool) async throws -> Suggestions {
+        struct Body: Encodable { let show: Bool }
+        struct Response: Decodable { let suggestions: Suggestions }
+        let r: Response = try await send("PUT", "/v1/me/suggestions", body: Body(show: show))
+        return r.suggestions
+    }
+
     /// The account's Setup, or nil before it is started.
     func setup() async throws -> CloudTaf? {
         struct Response: Decodable { let setup: CloudTaf? }
