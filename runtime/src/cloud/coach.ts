@@ -74,13 +74,15 @@ export const TOOLS: ToolDef[] = [
     properties: {
       taf: TAF,
       places: {
-        type: "array", minItems: 1, items: { type: "string", enum: ["door_reply", "app", "owner_email"] },
-        description: "Every place its results go: door_reply (the answer, through the door the work came in on), app (an alert in tafs), owner_email (an email to the owner).",
+        type: "array", minItems: 1, items: { type: ["string", "object"] },
+        description: "Every place its results go: door_reply (the answer, through the door the work came in on), app (an alert in tafs), owner_email (an email to the owner); " +
+          "a connected app's action, {place: \"action\", grant, action, args, name, fill} (args the fixed arguments, fill what each other field takes in words); " +
+          "or another taf, {place: \"taf\", taf, name, fill}, whose work the result becomes.",
       },
     },
     required: ["taf", "places"],
-    description: "Sets where a taf's results go, all places at once. KIFF holds each change for the owner, who approves it in tafs. " +
-      "Say \"Waiting for your approval\" once. tafs_state shows each taf's results.",
+    description: "Sets where a taf's results go, all places at once. With a built-in place only, KIFF holds the change for the owner, who approves it in tafs: " +
+      "say \"Waiting for your approval\" once. With a place at an app or another taf, it drafts the taf's next version as taf_dial does, and you install it. tafs_state shows each taf's results.",
   },
   {
     name: "taf_dial", line: "Draft a change to a taf",
