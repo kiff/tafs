@@ -125,6 +125,11 @@ export interface AgentDefinition {
   /** Tool name prefixes kept out of the prompt until the model searches for them (kiff/tafs#206). */
   deferred_tools?: string[];
   /**
+   * Skills the agent may read (kiff/agents#101), each a stored version: the context carries their names
+   * and descriptions, read_skill their text, and a run's `skills` (RunAt) loads bodies for its session.
+   */
+  skills?: { name: string; version: string }[];
+  /**
    * Every gateway tool that isn't KIFF's own (kiff_*) kept out of the prompt until the model searches
    * for it, so a Card that adds a vendor's tools mid-conversation keeps the cache (kiff/agents#197).
    */
@@ -332,6 +337,12 @@ export interface Requester {
  */
 export interface RunAt {
   session?: string;
+  /**
+   * Skills loaded for a new session, "name@version" each, from the definition's own: kiff/agents keeps
+   * them on the session and every turn's context carries their bodies after the instructions, in the
+   * definition's order (the Coach skills design, §4). Ignored on a session that exists.
+   */
+  skills?: string[];
   requester?: Requester;
   live?: boolean;
   /** The account's run grant for a member's run: kiff/agents takes the requester from it. */
@@ -469,6 +480,26 @@ export class Agents {
 
   putAgent(tenant: string, id: string, def: AgentDefinition): Promise<AgentDefinition> {
     return this.call("PUT", tenant, ["agents", id], def);
+  }
+
+  // Skills (kiff/agents#101).
+
+  /**
+   * Stores one version of a skill for the tenant: its SKILL.md as written. A version never changes: the
+   * same content again is 200, other content 409 (the caller bumps the version).
+   */
+  putSkill(tenant: string, name: string, version: string, skillMD: string): Promise<unknown> {
+    return this.call("PUT", tenant, ["skills", name, version], { skill_md: skillMD });
+  }
+
+  /**
+   * Adds skills to a session mid-conversation (the Coach skills design, way 2): "name@version" each, from
+   * the definition's own; they reach the context at the next turn, never a tool's answer. Adding one
+   * twice changes nothing. Answers the session's skills in the order they hold.
+   */
+  async addSessionSkills(tenant: string, agent: string, session: string, add: string[]): Promise<string[]> {
+    const r = await this.call<{ skills?: string[] }>("PUT", tenant, ["agents", agent, "sessions", session, "skills"], { add }, AS_SERVICE);
+    return r.skills ?? [];
   }
 
   // Versions (kiff/tafs#107).

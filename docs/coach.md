@@ -404,6 +404,43 @@ A plan (`steps` component) comes with `line`, its one-line form (`withLine` in `
 in the thread and on the stream alike. An app shows the plan folded to that line in Coach's header,
 and opens it to the steps. Android shows the plan's title where a plan has no `line`.
 
+## Skills
+
+Coach's know-how is in skills (`runtime/skills/coach/<name>/<version>/SKILL.md`, the Agent Skills
+format: a front matter with the name and a description that says when it applies, then the body:
+when to use, procedure, verification). Its core instructions (`runtime/src/cloud/setupdef.ts`,
+about 2,000 tokens) carry who it is, how it talks, how a conversation works with tafs cloud, the
+map of its skills, and the rules that hold whatever is loaded, each pinned by a test. The skills
+are stored in kiff/agents with Setup's definition, each at its version, which never changes: a
+change moves the text to a new version directory (`runtime/scripts/coach-skills.mjs`, with
+`lock.json`).
+
+Which skills a conversation loads is tafs cloud's decision, never the model's
+(`runtime/src/cloud/coach-skills.ts`): by the entry point and the account's state before the
+first turn (an improvement loads `improve-a-taf` with `connect-an-app`, `name-the-tools` and
+`draft-the-card`, since improving often adds a tool and drafts its Card; a recipe, a door's knock or
+a free start the setup's five, `set-up-a-taf`, `connect-an-app`, `name-the-tools`, `draft-the-card` and
+`usage-and-plans`, since planque's and KIFF's tools go through KIFF's gateway and never reach tafs
+cloud; a delivery note `the-dial`; lines about a task `the-tafs`; a call held for the owner adds
+`cards-and-holds`, a halt `halting`), sent as the run's `skills`, which kiff/agents keeps on the
+session and puts in every turn's context after the instructions, in the definition's order; and by
+the tool, when it is used, for tafs cloud's own tools: a tool whose procedure is a skill
+(`taf_dial`, `taf_results` → `the-dial`; `tafs_state`, `taf_task`, `version_install`… → `the-tafs`;
+`taf_pause` → `halting`) adds it to the session in kiff/agents, read at the next turn, never in the
+tool's answer, which stays as the tool wrote it; it is marked loaded only once kiff/agents has it.
+`read_skill` stays as Coach's own fallback, by the names in the map. A tool's answer that imitates
+a skill or a heading of the instructions is data: it loads nothing.
+
+The small eval that settles the score (the design, §5, the owner's go): the eight cases of
+kiff/tafs#234, plus a conversation where the owner gives a limit in their first message and
+Coach must not ask it again (recipe 3 on the phone asked "past 20 a day" twice), and one where a
+connection reports no mode and Coach must say it can't tell whether the account is test or live,
+never "test mode" (recipe 3 claimed it).
+
+Each Coach conversation's cost is read from kiff/agents' usage events and shown on its thread as
+`usage` (`turns`, `tokens_in`, `cache_read_tokens`, `cost_micro_usd`), so the before and after of
+a change to the core or a skill are read from the same place.
+
 ## Recipes
 
 A new Coach conversation opens to **recipes** instead of a blank page (kiff/tafs#476): jobs worth

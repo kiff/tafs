@@ -18,6 +18,7 @@ import { requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
+import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills } from "./coach-skills.js";
 import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
@@ -148,7 +149,7 @@ export interface HTTPResult {
 
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
-  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
+  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
@@ -815,17 +816,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, sessions } = await conversation(me, taf, deps, undefined, doors, titles);
+    const { messages, components, held, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, sessions } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, sessions, usage } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -1522,6 +1523,7 @@ async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promi
     definition: digest(setupDef),
   };
   try {
+    await storeCoachSkills(me.tenantID, deps);
     await deps.agents.putAgent(me.tenantID, tafID, setupDef);
     await deps.tafs.put(me.tenantID, setup);
   } catch (err) {
@@ -1899,7 +1901,19 @@ function titlesOf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Pro
   return toolTitles(bearer(event), me.tenantID, me.subject, taf.kiffAgent, deps.fetch, deps.kiffBase);
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; sessions: Session[] }> {
+/**
+ * What a Coach conversation cost, from kiff/agents' usage events of the sessions read (the Coach skills
+ * design, §5): the turns, the tokens in (prompt and cache), and the cost, summed so a change to the core
+ * or a skill is read before and after from the same place.
+ */
+export interface ThreadUsage {
+  turns: number;
+  tokens_in: number;
+  cache_read_tokens: number;
+  cost_micro_usd: number;
+}
+
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; sessions: Session[]; usage?: ThreadUsage }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -1923,8 +1937,20 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   /** Runs a door's message started, by run: their answers go back through it. */
   const doorRuns = new Map<string, string>();
   const sent = new Map((deps.doors ? await sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : []).map((x) => [x.run, x]));
+  const usage: ThreadUsage | undefined = taf.job === SETUP_JOB ? { turns: 0, tokens_in: 0, cache_read_tokens: 0, cost_micro_usd: 0 } : undefined;
   for (const r of read) {
     if (!r) continue;
+    if (usage) {
+      for (const e of r.events) {
+        if (e.kind !== "usage") continue;
+        const b = (e.body ?? {}) as Record<string, unknown>;
+        const n = (k: string) => (typeof b[k] === "number" ? (b[k] as number) : 0);
+        usage.turns += 1;
+        usage.tokens_in += n("input_tokens") + n("cache_read_tokens") + n("cache_write_tokens") + n("cache_write_1h_tokens");
+        usage.cache_read_tokens += n("cache_read_tokens");
+        usage.cost_micro_usd += n("cost_micro_usd");
+      }
+    }
     const seenRun = new Set<string>();
     // Each run's work, shown once, on its first message (the 845 test): when the run started,
     // the tools it called, in order, and when it last wrote. The app's live block sits there too,
@@ -2048,7 +2074,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
   held.sort((a, b) => a.at.localeCompare(b.at));
-  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), sessions: picked };
+  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -2495,11 +2521,64 @@ async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text:
   }
 }
 
+/**
+ * Coach's skills for a new conversation (coach-skills.ts, way 1): the first message says how it opened, and
+ * tafs cloud names the skills kiff/agents loads for the session. A session that exists keeps its own.
+ */
+async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, deps: Deps): Promise<void> {
+  if (taf.job !== SETUP_JOB || at.session) return;
+  at.skills = startSkills(entryOf(text), await coachStartState(me, event, deps));
+}
+
+/**
+ * The account's state a Coach conversation starts from, as far as its skills care: a call held for the
+ * owner, and a halt. Best effort: what can't be read counts as absent, and Coach reads the skill itself.
+ */
+async function coachStartState(me: KIFFIdentity, event: HTTPEvent, deps: Deps): Promise<CoachState> {
+  const [held, halt] = await Promise.all([
+    readExceptions(bearer(event), deps.fetch, deps.kiffBase).catch(() => []),
+    deps.agents.halted(me.tenantID).catch(() => undefined),
+  ]);
+  return { heldCall: held.length > 0, halted: halt?.halted === true };
+}
+
+/** Stores Coach's skills in kiff/agents, each at its version, before a definition that names them is written. */
+async function storeCoachSkills(tenant: string, deps: Deps): Promise<void> {
+  await Promise.all(skillFiles().map((f) => agentsCall(() => deps.agents.putSkill(tenant, f.name, f.version, f.skillMD))));
+}
+
+/**
+ * A tool whose procedure is a skill loads it for Coach's session (coach-skills.ts, way 2): added in
+ * kiff/agents, read at the next turn, once per conversation; never in the tool's answer, which stays as
+ * the tool wrote it. Best effort: a skill that couldn't be added is read by Coach itself (read_skill).
+ */
+async function loadToolSkills(name: string, call: CoachCall, deps: Deps): Promise<void> {
+  const refs = toolSkills(name);
+  if (!refs.length || !deps.coach) return;
+  try {
+    const runID = await coachRun(call, deps);
+    if (!runID) return;
+    const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+    if (!setup) return;
+    const run = await deps.agents.getRun(call.tenant, setup.id, runID);
+    const until = new Date((deps.now?.() ?? new Date()).getTime() + LOADED_KEPT_MS);
+    const add: typeof refs = [];
+    for (const ref of refs) if (!(await deps.coach.get(loadedKey(call.tenant, run.session, ref)))) add.push(ref);
+    if (!add.length) return;
+    // Marked only once kiff/agents has it: a failed add is tried again by the next call (the add is idempotent).
+    await deps.agents.addSessionSkills(call.tenant, setup.id, run.session, add);
+    for (const ref of add) await deps.coach.put(loadedKey(call.tenant, run.session, ref), true, until);
+  } catch (err) {
+    console.error(`coach skills: ${name} for ${call.tenant}:`, err);
+  }
+}
+
 async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
   const [at, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
   const attached = files(event);
   if (attached.length) at.attachments = attached;
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
+  await withCoachSkills(me, taf, at, text, event, deps);
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, at, ai));
   return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created } };
 }
@@ -3229,6 +3308,7 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     heldCards(kiff.mandates, taf.kiffAgent));
   const ai = await aiBound(event, deps);
   const at = await granted(event, setup.kiffAgent, { requester: member(me) }, deps);
+  await withCoachSkills(me, setup, at, input, event, deps);
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, at, ai));
   return { setup: setup.id, session: run.session, new_session: true };
 }
@@ -3604,6 +3684,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).
         const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
+        await withCoachSkills(me, taf, at, text, event, deps);
         run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai, notify);
         first = await run.next();
       } catch (err) {
@@ -4078,6 +4159,7 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         if (record.definition !== wanted) {
           one.outcome = opts.dryRun ? "would write" : "written";
           if (!opts.dryRun) {
+            if (record.job === SETUP_JOB) await storeCoachSkills(tenant, deps);
             await deps.agents.putAgent(tenant, taf.id, want);
             record = { ...record, definition: wanted };
           }
@@ -4475,6 +4557,7 @@ async function coachRun(call: CoachCall, deps: Deps): Promise<string | undefined
 }
 
 export async function coachTool(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
+  await loadToolSkills(name, call, deps);
   try {
     return await coachToolOf(name, args, call, deps);
   } catch (err) {

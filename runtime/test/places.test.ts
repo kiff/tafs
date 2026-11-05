@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { JOBS } from "../src/jobs.js";
 import { actionPlace, checkNoMoneyPlace, HANDOFF_HEADING, moneyActions, placesInstructions, placeWords, tafPlace, vendorPlace } from "../src/cloud/places.js";
+import { COACH_SKILLS } from "../src/coach-skills.js";
 import { SETUP_INSTRUCTIONS } from "../src/cloud/setupdef.js";
 import { instructions, ownerNotesIn } from "../src/cloud/tafdef.js";
 
@@ -79,7 +80,9 @@ describe("result places at connected apps", () => {
     expect(() => checkNoMoneyPlace([place("POST_K3")], cards, "rae")).toThrow("counted in USD");
     expect(() => checkNoMoneyPlace([place("read_k4"), place("old_k5"), place("pay_k6"), tafPlace({ place: "taf", taf: "taf_x", name: "Invoices" })], cards, "rae")).not.toThrow();
     expect(() => checkNoMoneyPlace([place("refund_k1")], cards, "max")).not.toThrow();
-    // Coach's rules say the same, so a draft is refused in words Coach already knows.
-    expect(SETUP_INSTRUCTIONS).toContain("A place moves no money: never a money tool as a\n     place");
+    // Coach's rules say the same, so a draft is refused in words Coach already knows: in the core, whatever is
+    // loaded, and in the dial's skill where the flow is.
+    expect(SETUP_INSTRUCTIONS).toContain("A place moves no money: never a money tool as a place.");
+    expect(COACH_SKILLS.find((k) => k.name === "the-dial")?.body).toContain("A place moves no money: never a money tool as a\n     place");
   });
 });
