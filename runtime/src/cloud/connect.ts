@@ -15,8 +15,13 @@ export interface CatalogApp {
   how: "oauth" | "key";
   /** `needs_setup`: the app needs setting up by an operator before anyone can connect it; the apps say so and offer no Connect. */
   state: "available" | "connected" | "needs_reconnect" | "needs_setup";
+  /** For `needs_setup`: the line the apps show in place of Connect. */
+  words?: string;
   grant?: string;
 }
+
+/** What an app that needs setting up says in place of Connect. */
+export const NEEDS_SETUP_WORDS = "Needs setting up first. Ask tafs to enable it.";
 
 /** planque didn't answer as it should: the apps are told planque can't be reached. */
 export class ConnectError extends Error {
@@ -87,7 +92,7 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     apps.push({
       entry: e.entry, vendor: typeof e.vendor === "string" ? e.vendor : e.title, title: e.title,
       ...(typeof e.icon === "string" && e.icon.startsWith("https://") ? { icon: e.icon } : {}),
-      how, state, ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
+      how, state, ...(state === "needs_setup" ? { words: NEEDS_SETUP_WORDS } : {}), ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
     });
   }
   return {

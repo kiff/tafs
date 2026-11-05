@@ -76,6 +76,13 @@ describe("a taf's server-composed setup", () => {
     expect(view.workflow.steps[0]?.grant).toBeUndefined();
     const reconnect = setupView({ ...args, grants: [{ ...grant, status: "needs_reconnect", status_words: "Signed out by the app" }] });
     expect(reconnect.connections[0]).toMatchObject({ reconnect: true, status_words: "Signed out by the app" });
+    // Who holds the sign-in, in one line as planque says it, and whether the app was set up on the owner's pick (kiff/planque#87).
+    const managed = setupView({ ...args, grants: [{ ...grant, custody: "provider", on_demand: true }] });
+    expect(managed.connections[0]).toMatchObject({ custody_words: "Your sign-in stays with the connection service; the taf never sees it.", on_demand: true });
+    const own = setupView({ ...args, grants: [{ ...grant, custody: "planque" }] });
+    expect(own.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept by tafs' connection service; the taf never sees it." });
+    expect(own.connections[0]).not.toHaveProperty("on_demand");
+    expect(view.connections[0]).not.toHaveProperty("custody_words");
     expect(appDisplayName({ ...grant, vendor: undefined })).toBe("Connected app");
   });
   it("marks a step running only while its tool call has no result", () => {

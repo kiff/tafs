@@ -56,7 +56,7 @@ The catalog of apps a taf can use, and a connection started for one taf. tafs cl
 
 | Route | Who | What |
 |---|---|---|
-| `GET /v1/connect/apps?q=&provider=&cursor=` | a person | One page of the catalog, searched by `q`: `{apps: [{entry, vendor, title, icon?, how: oauth \| key, state: available \| connected \| needs_reconnect \| needs_setup, grant?}], by_key, provider?, next_cursor?, skipped?, partial?}`. `needs_setup` is an app an operator has to set up before anyone can connect it: the apps say so, in words from tafs cloud, and offer no Connect. `partial` says the catalog read stopped with pages left, so an app that isn't listed isn't absent. Reviewed entries come first, then a page of the managed provider's apps (`entry` like `connector:composio:gmail`). Within a page, the account's own connections come first (one to sign in again before one connected), then, for a search, apps whose name starts with `q`, then whose name has it. Ask for the next page with the same `q`, `provider` and `next_cursor` as `cursor`; there's no `next_cursor` on the last page. `skipped` counts entries planque left out as malformed or unsupported. `by_key` says Coach can connect a vendor that isn't listed |
+| `GET /v1/connect/apps?q=&provider=&cursor=` | a person | One page of the catalog, searched by `q`: `{apps: [{entry, vendor, title, icon?, how: oauth \| key, state: available \| connected \| needs_reconnect \| needs_setup, words?, grant?}], by_key, provider?, next_cursor?, skipped?, partial?}`. `needs_setup` is an app an operator has to set up before anyone can connect it: it carries `words`, the line the apps show in place of Connect. `partial` says the catalog read stopped with pages left, so an app that isn't listed isn't absent. Reviewed entries come first, then a page of the managed provider's apps (`entry` like `connector:composio:gmail`). Within a page, the account's own connections come first (one to sign in again before one connected), then, for a search, apps whose name starts with `q`, then whose name has it. Ask for the next page with the same `q`, `provider` and `next_cursor` as `cursor`; there's no `next_cursor` on the last page. `skipped` counts entries planque left out as malformed or unsupported. `by_key` says Coach can connect a vendor that isn't listed |
 | `POST /v1/connect/apps/{entry}` | `cards.manage`, managing the taf | `{taf}`: starts a connection for that taf's KIFF agent, named by the taf's name in the words the owner signs ("Connect Gmail for Refunds"). Answers `{grant, needs_key?}`, the grant to approve. Nothing is signed here, and there's no sign-in URL until the phone approves |
 
 ### Recipes
@@ -293,7 +293,10 @@ person's matching phone, idempotently, leaving other phones and the account's
 KIFF alert secret in place. The older `DELETE /v1/push/{token}` is unchanged.
 
 Each setup connection also carries `status_words` from planque (or cloud's fallback)
-and `reconnect`. A held sign-in stays visible with zero usable actions until its
+and `reconnect`; `custody_words`, one line on who holds the sign-in, as planque says
+it (the connection service, or tafs' own), left out when planque doesn't say; and
+`on_demand: true` when the app's sign-in was set up on the owner's pick rather than by
+an operator (kiff/planque#87). A held sign-in stays visible with zero usable actions until its
 actions are approved. Signed-out connections retain their source status and can
 open the existing device approval and vendor sign-in flow; the cloud never signs
 that approval.

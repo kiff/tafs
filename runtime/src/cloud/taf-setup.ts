@@ -7,7 +7,20 @@ import { type Fetch } from "./kiff.js";
 
 export interface GrantView {
   id: string; vendor?: string; status: string; status_words?: string; signed_in?: boolean; entry?: string;
+  /** Who holds the sign-in, as planque says: the connection provider, or planque itself (kiff/planque#87). */
+  custody?: "provider" | "planque";
+  /** The app's sign-in was set up on the owner's pick, not by an operator. */
+  on_demand?: boolean;
   request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }> };
+}
+
+/** One line on who holds a connection's sign-in, for the apps to draw as it comes; none when planque doesn't say. */
+export function custodyWords(custody: GrantView["custody"]): string | undefined {
+  switch (custody) {
+    case "provider": return "Your sign-in stays with the connection service; the taf never sees it.";
+    case "planque": return "Your sign-in is kept by tafs' connection service; the taf never sees it.";
+    default: return undefined;
+  }
 }
 
 /** The phone signs this read; tafs cloud forwards the proof unchanged and signs nothing. */
@@ -121,6 +134,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     return { id: g.id, name: names.get(g.id)!, status: g.status,
       status_words: g.status_words || ({ connected: "Connected", listed: "Signed in · choose its actions", signed_in: "Signed in", needs_reconnect: "Sign in again", pending: "Signed in · actions waiting for approval" } as Record<string, string>)[g.status] || "Read its connection",
       reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: "Ask Coach to set its workflow" } : {}),
+      ...(custodyWords(g.custody) ? { custody_words: custodyWords(g.custody) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
       action_words: actions.length ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : "Choose actions",
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),
