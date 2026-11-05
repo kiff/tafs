@@ -334,7 +334,9 @@ not connected) is said on the connection in planque's words. Closing leaves the 
 An app tafs cloud sends as `needs_setup` (kiff/planque#87) shows tafs cloud's `words` under its
 title ("Needs setting up first. Ask tafs to enable it.") and has no Connect: nothing on its row
 can be tapped. On a taf's Setup, a connection's sheet shows tafs cloud's `custody_words` under its
-status line, the one line on who keeps its sign-in; with none sent, nothing shows.
+status line, the one line on who keeps its sign-in; with none sent, nothing shows. Above it,
+`account_words` says which account the connection works in and in which mode ("Demo Shop ·
+Live"), as tafs cloud sends it; with none sent, nothing shows.
 
 ## Signing
 
