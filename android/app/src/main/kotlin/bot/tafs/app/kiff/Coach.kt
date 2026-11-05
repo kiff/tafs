@@ -314,6 +314,8 @@ data class RequestStep(
   val at: String? = null,
   /** done, failed, not_made, waiting or next. */
   val state: String = "done",
+  /** `app` on a waiting step when the run waits for a connected app's event, not for the owner (the slow-tools design). */
+  @SerialName("waits_on") val waitsOn: String? = null,
 )
 
 /** Where a request's result went, and whether it can be sent again (a reply given up on after its tries). */
