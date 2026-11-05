@@ -1,5 +1,5 @@
 import { AgentsError } from "../agents.js";
-import { type AnsweredEvent, arrive, type DoorsContext, EARLY_EVENT_KEPT_MS, type KeptEvent, type Outcome, rememberAnswered } from "./doors.js";
+import { type AnsweredEvent, arrive, claimAnswered, type DoorsContext, EARLY_EVENT_KEPT_MS, type KeptEvent, type Outcome, rememberAnswered, unclaimAnswered } from "./doors.js";
 import { type Arrival, doorKeys } from "./model.js";
 import { emailArrival } from "./email.js";
 import { signedWebhook, whatsappSigned } from "./sign.js";
@@ -120,22 +120,31 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
     try {
       const taf = (await ctx.tafs.list(e.tenant)).find((t) => t.kiffAgent === e.agent && !t.removing);
       if (taf && e.key) {
-        // This delivery already answered a run's wait (planque or the provider sent it again): the same answer,
-        // never new work for an outcome already handled (dependable runs).
-        const answeredBefore = (await ctx.doors.store.get(doorKeys.answeredEvent(e.tenant, e.id))) as AnsweredEvent | undefined;
-        if (answeredBefore) return { status: 202, type: "json", body: JSON.stringify({ outcome: "answered", run: answeredBefore.run }) };
         // The outcome of a call a run of this taf sent and waits for (the slow-tools design): the
         // event carries the call's handle as its key, and the run that waits on exactly
         // (tenant, grant, event, key) gets it as the call's result, and goes on. No run starts for it.
+        // The delivery claims its id before it answers: the same delivery again, at once or later (planque
+        // or the provider sending it twice), gets the same answer and never new work (dependable runs).
         const run = await waitingOn(ctx, e.tenant, taf.id, e.grant, e.event, e.key);
-        // The wait closed between the listing and the answer (409 wait_not_open): nothing waits, as below.
-        const answered = run ? await ctx.agents.answerWait(e.tenant, taf.id, run.run, run.call, e.result).then(() => true, (err) => {
-          if (err instanceof AgentsError && err.status === 409) return false;
-          throw err;
-        }) : false;
-        if (run && answered) {
-          await rememberAnswered(ctx, e.tenant, e.id, run.run);
-          return { status: 202, type: "json", body: JSON.stringify({ outcome: "answered", run: run.run }) };
+        if (run) {
+          if (!(await claimAnswered(ctx, e.tenant, e.id))) {
+            const before = (await ctx.doors.store.get(doorKeys.answeredEvent(e.tenant, e.id))) as AnsweredEvent | undefined;
+            return { status: 202, type: "json", body: JSON.stringify({ outcome: "answered", ...(before?.run ? { run: before.run } : {}) }) };
+          }
+          // The wait closed between the listing and the answer (409 wait_not_open): nothing waits, as below.
+          const answered = await ctx.agents.answerWait(e.tenant, taf.id, run.run, run.call, e.result).then(() => true, async (err) => {
+            await unclaimAnswered(ctx, e.tenant, e.id).catch(() => undefined);
+            if (err instanceof AgentsError && err.status === 409) return false;
+            throw err;
+          });
+          if (answered) {
+            await rememberAnswered(ctx, e.tenant, e.id, run.run);
+            return { status: 202, type: "json", body: JSON.stringify({ outcome: "answered", run: run.run }) };
+          }
+        } else {
+          // Already answered by this delivery earlier (its wait is gone now): the same answer, never new work.
+          const before = (await ctx.doors.store.get(doorKeys.answeredEvent(e.tenant, e.id))) as AnsweredEvent | undefined;
+          if (before) return { status: 202, type: "json", body: JSON.stringify({ outcome: "answered", ...(before.run ? { run: before.run } : {}) }) };
         }
         // No run waits on it yet: a vendor faster than the run's pause. Kept a while for the pause
         // note that names it (doors.ts answerKeptEvents); meanwhile the event wakes the taf as any other.

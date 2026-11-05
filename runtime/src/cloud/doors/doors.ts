@@ -367,15 +367,29 @@ export const EARLY_EVENT_KEPT_MS = 10 * 60_000;
 /** How long the receiver remembers that an event answered a run's wait, so the same delivery again answers the same and starts no run. */
 export const ANSWERED_EVENT_KEPT_MS = 10 * 60_000;
 
-/** What an event that answered a wait is remembered as: the run it answered. */
+/** What an event that answers a wait is remembered as: the run it answered, empty while the answer is still on its way. */
 export interface AnsweredEvent {
   run: string;
   at: string;
 }
 
-/** Remembers that planque's event id answered run's wait (dependable runs: a delivery repeated is the same outcome, never new work). */
+/**
+ * Claims planque's event id as answering a wait, before the answer is sent: true once, for the delivery that
+ * answers; false for the same delivery again, at once or later (dependable runs: a delivery repeated is the same
+ * outcome, never new work, and a crash between the answer and its record still leaves the claim).
+ */
+export async function claimAnswered(ctx: DoorsContext, tenant: string, id: string): Promise<boolean> {
+  return ctx.doors.store.create(doorKeys.answeredEvent(tenant, id), { run: "", at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+}
+
+/** Records the run the claimed event answered. */
 export async function rememberAnswered(ctx: DoorsContext, tenant: string, id: string, run: string): Promise<void> {
   await ctx.doors.store.put(doorKeys.answeredEvent(tenant, id), { run, at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+}
+
+/** Gives a claim back: the delivery answered nothing after all. */
+export async function unclaimAnswered(ctx: DoorsContext, tenant: string, id: string): Promise<void> {
+  await ctx.doors.store.remove(doorKeys.answeredEvent(tenant, id));
 }
 
 /** An app's event kept for the run that will wait on it: planque's event id, and the call's result it is (inbound.ts appEventOf), as JSON text. */
@@ -400,12 +414,14 @@ export async function answerKeptEvents(note: Note, ctx: DoorsContext): Promise<v
     const key = doorKeys.earlyEvent(tenant, w.grant ?? "", w.event, w.key);
     const kept = (await ctx.doors.store.get(key)) as KeptEvent | undefined;
     if (!kept) continue;
+    if (!(await claimAnswered(ctx, tenant, kept.id))) continue; // another delivery of it is answering, or did
     try {
       await ctx.agents.answerWait(tenant, note.agent, note.run, w.call, parse(kept.result) ?? { truncated: true, payload: kept.result });
       await rememberAnswered(ctx, tenant, kept.id, note.run);
       await ctx.doors.store.remove(key);
     } catch (err) {
       console.error("app event kept:", err instanceof Error ? err.message : "error");
+      await unclaimAnswered(ctx, tenant, kept.id).catch(() => undefined);
     }
   }
 }
