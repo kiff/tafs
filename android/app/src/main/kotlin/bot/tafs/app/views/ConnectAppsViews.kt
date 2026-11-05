@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
+import bot.tafs.app.app.tafsUsing
 import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
@@ -51,7 +52,16 @@ object ConnectAppsWords {
   const val NONE = "No app by that name. Coach can connect one that isn't listed."
   const val MORE = "Show more apps"
   const val DISCONNECT = "Disconnect"
-  const val NO_TAF = "No taf uses it"
+  const val TAF_REMOVED = "Its taf was removed"
+
+  /** Which taf a connection was set up for, by who asked for it; the phone doesn't decide who uses it. */
+  fun setUpFor(state: AppState, grant: bot.tafs.app.kiff.Grant): String =
+    state.tafs.firstOrNull { it.id == grant.request.agent && it.state != bot.tafs.app.model.TafState.revoked }?.let { "Set up for ${it.name}" } ?: TAF_REMOVED
+
+  /** The other tafs whose live Card has a rule on one of its tools, as a warning above Disconnect; null when none. */
+  fun alsoOnCards(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
+    state.tafsUsing(grant, except = grant.request.agent).map { it.name }.takeIf { it.isNotEmpty() }
+      ?.let { "Also on ${it.joinToString(" and ")}'s Card" + if (it.size == 1) "" else "s" }
 
   /** The title over an app's connections. */
   fun yourConnections(app: String) = "Your $app connections"
@@ -143,7 +153,8 @@ fun ConnectAppsSheet(
             connections.forEach { g ->
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(1f)) {
-                  Text(state.tafs.firstOrNull { it.id == g.request.agent }?.name ?: ConnectAppsWords.NO_TAF, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+                  Text(ConnectAppsWords.setUpFor(state, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
+                  ConnectAppsWords.alsoOnCards(state, g)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
                   g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
                 }
                 if (onDisconnect != null) Text(

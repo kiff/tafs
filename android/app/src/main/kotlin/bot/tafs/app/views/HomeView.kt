@@ -155,7 +155,7 @@ fun HomeView(
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             val byId = state.listedTafs.associateBy { it.id }
             order.forEach { id ->
-              byId[id]?.let { taf -> TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut)) { onOpenTaf(taf.id) } }
+              byId[id]?.let { taf -> TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut), onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } }
             }
           }
         }
@@ -164,7 +164,7 @@ fun HomeView(
           item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               Eyebrow("Other agents with Cards")
-              state.otherAgents.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } }
+              state.otherAgents.forEach { taf -> TafRow(taf, onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } }
             }
           }
         }

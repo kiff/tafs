@@ -107,7 +107,8 @@ struct ConnectAppsView: View {
     }
 }
 
-/// A connected app's connections: which taf each serves, or none once its taf was removed, and
+/// A connected app's connections: which taf each was set up for (or that its taf was removed),
+/// any other taf whose Card covers it, and
 /// Disconnect, which removes its tools from KIFF and signs tafs out of the app (Face ID first).
 struct AppConnectionsView: View {
     @EnvironmentObject private var model: AppModel
@@ -120,8 +121,11 @@ struct AppConnectionsView: View {
                 ForEach(model.connections(of: app)) { g in
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(model.tafName(forAgent: g.request.agent) ?? "No taf uses it")
+                            Text(model.setUpFor(g))
                                 .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                            if let also = model.alsoOnCards(g) {
+                                Text(also).scaledFont(13).foregroundColor(Theme.soft)
+                            }
                             if let words = g.statusWords, !words.isEmpty {
                                 Text(words).scaledFont(13).foregroundColor(Theme.dim)
                             }

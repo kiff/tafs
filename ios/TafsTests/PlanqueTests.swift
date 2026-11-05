@@ -523,6 +523,46 @@ final class PlanqueTests: XCTestCase {
         XCTAssertTrue(StubProtocol.sent.isEmpty)
     }
 
+    /// Refunds asked for g_01; Chargebacks, when listed, draws on its refund tool through its own Card.
+    private func sharedModel(withChargebacks: Bool) async throws -> (AppModel, UUID, FaceIDSigner) {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        model.planqueSetUp(for: "t_01")
+        model.sessionHasKey = true
+        let chargebacks = #"{"id":"depl_2","name":"Chargebacks","job":"disputes","kiff_agent":"chargebacks","status":"active","next_run":null,"last_run":null,"color":1,"state":"working","waiting":0,"card":{"ids":["chargebacks-card"],"active":true,"expires":null,"tools":[],"rules":[{"action":"refund_payment","label":"Refund a payment","outside":"hold","window":"day"}],"used":{},"usage_unknown":[]}}"#
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.entry(agent: "refunds", name: "Refunds", cards: ["refunds-card"])] + (withChargebacks ? [chargebacks] : [])))
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Refunds","job":"refunds","kiff_agent":"refunds","status":"active"}]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
+        StubProtocol.responses["POST /v1/me/mandates/refunds-card/revoke"] = (200, "{}")
+        StubProtocol.responses["DELETE /v1/tafs/depl_1"] = (200, #"{"done":true,"removed":["schedule"],"failed":[]}"#)
+        await model.refresh()
+        let refunds = try XCTUnwrap(model.tafs.first { $0.name == "Refunds" }?.id)
+        return (model, refunds, signer)
+    }
+
+    /// A connection another taf's Card still covers stays when the taf that asked for it is
+    /// removed, and the owner is told which taf keeps it.
+    func testRemovingATafKeepsAConnectionAnotherTafUses() async throws {
+        let (model, refunds, signer) = try await sharedModel(withChargebacks: true)
+        let words = try XCTUnwrap(await model.removeTaf(refunds))
+        XCTAssertTrue(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").isEmpty, "Chargebacks still runs on it")
+        XCTAssertTrue(words.contains("Kept your Stripe connection: Chargebacks uses it."), words)
+        XCTAssertEqual(signer.prompts.count, 1, "one confirmation, the removal's")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Once the other taf is gone, the connection goes with the taf that asked for it, signed
+    /// under the removal's confirmation.
+    func testRemovingATafDisconnectsAConnectionNoOtherTafUses() async throws {
+        let (model, refunds, signer) = try await sharedModel(withChargebacks: false)
+        StubProtocol.responses["DELETE /v1/accounts/t_01/grants/g_01"] = (200, grantJSON(status: "disconnected"))
+        let words = try XCTUnwrap(await model.removeTaf(refunds))
+        XCTAssertEqual(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").count, 1)
+        XCTAssertFalse(words.contains("Kept"), words)
+        XCTAssertEqual(signer.prompts.count, 1, "no second prompt")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Disconnecting asks for Face ID, then planque revokes the sign-in.
     func testDisconnectAsksFaceID() async throws {
         let signer = FaceIDSigner()
