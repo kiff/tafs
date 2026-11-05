@@ -199,6 +199,9 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   if (grant.status === "connected") {
     // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a
     // draft. A connection already connected with no Cards left signs nothing, so it isn't approved.
+    // The card showed exactly what is connected (its digest): an approval signed earlier whose
+    // report was lost. Approve again answers what holds, already approved, as the report would have.
+    if (!ask.draft && ask.shown_digest && ask.shown_digest === grant.digest) return { outcome: "answered", answer: `already approved: ${vendor} is connected`, note: WORDS.alreadyApproved };
     if (!ask.draft) return { outcome: "answered", answer: `failed: ${vendor} is already connected; nothing new to approve`, note: WORDS.nothingToApprove(vendor) };
     const draft = await draftInfo(ctx.token, ask.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
     if (!draft) return { outcome: "answered", answer: `failed: KIFF has no Card draft ${ask.draft} on this account`, note: `KIFF has no Card draft for this. Ask Coach for a new one.` };
