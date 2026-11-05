@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import type { Run } from "../src/cloud/agents.js";
+import { AgentsError, type Run } from "../src/cloud/agents.js";
 import { type Deps, handle, type HTTPEvent, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
@@ -1230,6 +1230,49 @@ describe("a connected app's event, through planque", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toEqual([`answerWait ${MAXTAF} run_other call-run_other {"deal":"Acme renewal","amount":1200}`]);
     // The right key still answers its run.
     expect((await appEvent(w, { id: "ev_r", key: "reply_1" })).body).toEqual({ outcome: "answered", run: "run_key" });
+  });
+
+  it("answers the run with the whole payload, marked truncated past kiff/agents' bound, never with nothing", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    // Longer than the 20,000 characters a waking run's prompt keeps: the waiting run reads all of it.
+    waiting(w, "t_acme", REFUNDS, "run_long", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_long" });
+    const long = { reply: "reply_long", body: "x".repeat(25_000) };
+    expect((await appEvent(w, { id: "ev_long", key: "reply_long", payload: long })).body).toEqual({ outcome: "answered", run: "run_long" });
+    expect(w.agents.runs.find((x) => x.id === "run_long")!.requirements![0]!.result).toEqual(long);
+    // Past the 64 KB kiff/agents takes as a result: cut, and said to be.
+    waiting(w, "t_acme", REFUNDS, "run_huge", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_huge" });
+    expect((await appEvent(w, { id: "ev_huge", key: "reply_huge", payload: { reply: "reply_huge", body: "é".repeat(70_000) } })).body).toEqual({ outcome: "answered", run: "run_huge" });
+    const cut = w.agents.runs.find((x) => x.id === "run_huge")!.requirements![0]!.result as { truncated: boolean; payload: string };
+    expect(cut.truncated).toBe(true);
+    expect(cut.payload.startsWith('{"reply":"reply_huge","body":"éé')).toBe(true);
+    expect(Buffer.byteLength(cut.payload, "utf8")).toBeLessThanOrEqual(64 * 1024 - 1024);
+    expect(Buffer.byteLength(cut.payload, "utf8")).toBeGreaterThan(60_000);
+  });
+
+  it("treats a wait that closed meanwhile as nothing waiting, and tells a run started for a keyed event that a waiting run may have it too", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_gone", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_g" });
+    w.agents.fail.set("answerWait", new AgentsError(409, "wait_not_open", undefined, "wait_not_open"));
+    const r = await appEvent(w, { id: "ev_gone", key: "reply_g" });
+    expect(r.status).toBe(202);
+    expect(r.body.outcome).toBe("run");
+    expect(await w.store.get(doorKeys.earlyEvent("t_acme", "grt_hub", "HUBSPOT_DEAL_CREATED", "reply_g"))).toMatchObject({ id: "ev_gone" });
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS && x.status === "PENDING")!;
+    const text = (w.agents.events.get(run.session)![0]!.body as { text: string }).text;
+    expect(text).toContain("don't act on it twice");
+    // kiff/agents down is still 502, for planque to send it again.
+    w.agents.fail.set("answerWait", new AgentsError(502, "kiff/agents is down"));
+    expect((await appEvent(w, { id: "ev_down", key: "reply_g" })).status).toBe(502);
+    // An event with no key says nothing of the kind.
+    const before = w.agents.runs.length;
+    await appEvent(w, { id: "ev_plain" });
+    const plain = w.agents.runs.find((x) => x.agent === REFUNDS && x.status === "PENDING" && x.id !== run.id)!;
+    expect(w.agents.runs.length).toBe(before + 1);
+    expect((w.agents.events.get(plain.session)![0]!.body as { text: string }).text).not.toContain("act on it twice");
   });
 
   it("keeps an event that came before its run paused, and answers the run from its pause note", async () => {

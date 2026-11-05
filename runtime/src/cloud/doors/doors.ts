@@ -364,10 +364,10 @@ export async function doorRunEnded(note: Note, ctx: DoorsContext): Promise<boole
 /** How long an app's event that completes no run yet is kept, for a run that pauses on it right after (a fast vendor). */
 export const EARLY_EVENT_KEPT_MS = 10 * 60_000;
 
-/** An app's event kept for the run that will wait on it: planque's event id, and its payload as JSON text. */
+/** An app's event kept for the run that will wait on it: planque's event id, and the call's result it is (inbound.ts appEventOf), as JSON text. */
 export interface KeptEvent {
   id: string;
-  payload: string;
+  result: string;
   at: string;
 }
 
@@ -387,7 +387,7 @@ export async function answerKeptEvents(note: Note, ctx: DoorsContext): Promise<v
     const kept = (await ctx.doors.store.get(key)) as KeptEvent | undefined;
     if (!kept) continue;
     try {
-      await ctx.agents.answerWait(tenant, note.agent, note.run, w.call, parse(kept.payload) ?? {});
+      await ctx.agents.answerWait(tenant, note.agent, note.run, w.call, parse(kept.result) ?? { truncated: true, payload: kept.result });
       await ctx.doors.store.remove(key);
     } catch (err) {
       console.error("app event kept:", err instanceof Error ? err.message : "error");
