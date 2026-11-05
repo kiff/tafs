@@ -389,7 +389,8 @@ and a test fails when they differ.
 tafs cloud serves them at `GET /v1/recipes` ([api.md](api.md#recipes), `runtime/src/cloud/recipes.ts`):
 the recipes whose every connection has a vendor the account's catalog lists, read from planque
 with the person's own session, grouped by category with the titles the apps show. When the
-catalog can't be read, every recipe is listed and `filtered` says so, so the page is
+catalog can't be read, or has more pages than tafs cloud reads, every recipe is listed and
+`filtered` says so, so the page is
 never blank for that; Coach says what it can't connect. The apps only draw the list and fill the
 message box: the words come from tafs cloud, so both apps show the same.
 
