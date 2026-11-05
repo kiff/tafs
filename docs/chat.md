@@ -268,6 +268,10 @@ held call was answered, then `end`.
 - On `part`, the app starts a fresh live answer (`LiveAnswer.newPart`). The steps and the
   held card from before the pause stay with the answer written then, never shown again as
   the resumed run's work.
+- The live answer leaves in the same update that brings its words into the thread, at a
+  `part` and at the end (`readThread`'s `alongside`). Never both at once, nor neither: the
+  chat's end would grow by a row and shrink again, and on Android the thread jumped back and
+  forth while Coach wrote. Where the thread can't be read, the live answer goes all the same.
 
 ## The thread and the chats list
 
