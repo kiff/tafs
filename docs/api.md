@@ -296,7 +296,9 @@ Each setup connection also carries `status_words` from planque (or cloud's fallb
 and `reconnect`; `custody_words`, one line on who holds the sign-in, as planque says
 it (the connection service, or tafs' own), left out when planque doesn't say; and
 `on_demand: true` when the app's sign-in was set up on the owner's pick rather than by
-an operator (kiff/planque#87). A held sign-in stays visible with zero usable actions until its
+an operator (kiff/planque#87). A connected browser connection (planque's `provider: "browser"`)
+also has `site_sign_in: {title, words}`: the action the apps offer to open planque's live sign-in
+view (kiff/planque#86). A held sign-in stays visible with zero usable actions until its
 actions are approved. Signed-out connections retain their source status and can
 open the existing device approval and vendor sign-in flow; the cloud never signs
 that approval.

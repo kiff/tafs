@@ -425,7 +425,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       sendChat = { text, tafId, withFiles, onNotSent -> model.sendChat(text, tafId, withFiles, onNotSent) },
       issuer = model.issuer,
       doors = doorActions,
-      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId),
+      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId, siteSignIn = model::openSiteSignIn),
       stopChat = model::stopChat,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
@@ -665,6 +665,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         )
       }
     }
+    // A browser connection's live sign-in view, as planque serves it.
+    state.siteSignIn?.let { view -> bot.tafs.app.views.SiteSignInScreen(view, onClose = model::closeSiteSignIn) }
     // A request from the dial's rim or Activity, step by step.
     state.openRequest?.let { (tafId, detail) ->
       val canSend = state.manages(tafId) && detail.deliveries.any { it.sendAgain }

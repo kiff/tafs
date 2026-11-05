@@ -11,6 +11,8 @@ export interface GrantView {
   custody?: "provider" | "planque";
   /** The app's sign-in was set up on the owner's pick, not by an operator. */
   on_demand?: boolean;
+  /** planque's provider for the connection: `browser` for a browser grant (kiff/planque#86). */
+  provider?: string;
   request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }> };
 }
 
@@ -22,6 +24,15 @@ export function custodyWords(custody: GrantView["custody"]): string | undefined 
     default: return undefined;
   }
 }
+
+/**
+ * A browser connection's own sign-in (kiff/planque#86, step 4): the owner signs in to a site themselves, in planque's live
+ * view, which the apps open as it comes. Offered on a connected browser grant only; the apps show these words and keep none.
+ */
+export const SITE_SIGN_IN = {
+  title: "Sign in to a site",
+  words: "You sign in yourself, in a live view of the taf's browser. What you type goes to the site, never to the taf. Tap Done when you're in.",
+} as const;
 
 /** The phone signs this read; tafs cloud forwards the proof unchanged and signs nothing. */
 export async function setupGrants(base: string, tenant: string, proof: string, net: Fetch = fetch): Promise<GrantView[]> {
@@ -91,6 +102,8 @@ export interface SetupView {
     actions: Array<{ name: string; title: string; limits: string[]; steps: number[]; step_words: string }>;
     /** With no saved workflow, the line the app's sheet shows under its own Workflow heading, once. */
     workflow_words?: string;
+    /** A connected browser connection's sign-in to a site (kiff/planque#86): the action's title and its line. */
+    site_sign_in?: { title: string; words: string };
     workflow_steps: Array<{ number: number; label: string; words: string; running: boolean }>;
     steps: number[]; running: boolean; stats: { calls: number; done: number; held: number; words: string; complete: boolean; activity_query: string } }>;
   workflow: { title: string; summary: string; steps: Array<{ number: number; label: string; words: string; app?: string; grant?: string; running: boolean }>; running_step?: number };
@@ -135,6 +148,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
       status_words: g.status_words || ({ connected: "Connected", listed: "Signed in · choose its actions", signed_in: "Signed in", needs_reconnect: "Sign in again", pending: "Signed in · actions waiting for approval" } as Record<string, string>)[g.status] || "Read its connection",
       reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: "Ask Coach to set its workflow" } : {}),
       ...(custodyWords(g.custody) ? { custody_words: custodyWords(g.custody) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
+      ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: { ...SITE_SIGN_IN } } : {}),
       action_words: actions.length ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : "Choose actions",
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),

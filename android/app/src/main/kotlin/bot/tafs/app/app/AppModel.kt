@@ -387,6 +387,10 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
+  /** planque's live sign-in view for a browser connection, open over everything until the owner closes it. */
+  val siteSignIn: bot.tafs.app.kiff.SiteSignInView? = null,
+  /** The connection whose sign-in view is being asked for. */
+  val openingSiteSignIn: String? = null,
   /** Alerts can work in this build (Firebase is set up), whether this phone gets them, and whether this person may answer holds, as tafs cloud last said. */
   val alertsAvailable: Boolean = false,
   val alertsReady: Boolean = false,
@@ -2650,6 +2654,44 @@ class AppModel(
   }
 
   fun closeRequest() = _state.update { it.copy(openRequest = null, requestError = null) }
+
+  /**
+   * A browser connection's sign-in to a site (kiff/planque#86): planque's live view, asked for with this device's signature and
+   * opened as it comes. A view that isn't on planque's own address is never opened. A refusal is said on the connection.
+   */
+  suspend fun openSiteSignIn(grantId: String) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null || _state.value.openingSiteSignIn != null || _state.value.siteSignIn != null) return
+    val generation = accountGeneration
+    _state.update { it.copy(openingSiteSignIn = grantId, coachNotes = it.coachNotes - grantId) }
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    try {
+      val view = planque.siteSignIn(grantId) { signer.signConfirmed(it) }
+      if (generation != accountGeneration) return
+      if (!onPlanque(view.view)) {
+        note(grantId, "The sign-in view didn't open: it wasn't on the connection's own address.")
+        return
+      }
+      _state.update { it.copy(siteSignIn = view) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // planque's own words say why (a view already open, the connection not connected); anything else, in the app's.
+      if (generation == accountGeneration) note(grantId, "The sign-in view didn't open. " + ((e as? PlanqueError.Server)?.message ?: ErrorWords.of(e)))
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(openingSiteSignIn = null) }
+    }
+  }
+
+  fun closeSiteSignIn() = _state.update { it.copy(siteSignIn = null) }
+
+  /** Whether [url] is an https address on planque's own host: the only place a sign-in view may come from. */
+  private fun onPlanque(url: String): Boolean = runCatching {
+    val view = java.net.URI(url)
+    view.scheme == "https" && view.host != null && view.host.equals(java.net.URI(planque.baseUrl).host, ignoreCase = true)
+  }.getOrDefault(false)
 
   /** The channels a Slack bot connection can see, from planque: a signed read, for picking a Slack door's channel. */
   suspend fun loadSlackChannels(grantId: String) {

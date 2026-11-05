@@ -69,6 +69,10 @@ data class GrantConnector(val provider: String? = null, val toolkit: String? = n
 @Serializable
 data class SlackChannel(val id: String, val name: String = "", val private: Boolean = false)
 
+/** planque's live sign-in view for a browser connection: its one-time URL, when it lapses, and its words. */
+@Serializable
+data class SiteSignInView(val view: String, val expires: String? = null, val words: String? = null)
+
 /** The bot a bot connection's token is, as planque shows it. */
 @Serializable
 data class BotView(val id: Long = 0, val username: String = "")
@@ -271,6 +275,13 @@ class PlanqueClient(
     decode(raw("POST", "grants/${escaped(grantId)}/confirm", body("confirm" to code)))
 
   /** The channels a Slack bot connection can see (at most 200, no message content), for a Slack door. A signed read. */
+  /**
+   * Opens a browser connection's live sign-in view (kiff/planque#86, step 4), signed by this device: a one-time URL good for ten
+   * minutes, which the app opens in a web view and nothing more, and the words to show over it.
+   */
+  suspend fun siteSignIn(grantId: String, signedBy: ((ByteArray) -> String)? = null): SiteSignInView =
+    decode(raw("POST", "grants/${escaped(grantId)}/sign-in", "{}".toByteArray(), signedBy))
+
   suspend fun slackChannels(grantId: String, signedBy: ((ByteArray) -> String)? = null): List<SlackChannel> {
     val data = raw("GET", "grants/${escaped(grantId)}/channels", null, signedBy)
     // A list, or an object holding one.

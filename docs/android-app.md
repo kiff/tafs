@@ -313,6 +313,15 @@ confirmation as an approval and sends the key to planque once (`AppModel.giveKey
 `PlanqueClient.giveKey`, the key in `Planque-Vendor-Key`, its SHA-256 in the signed body). The
 key lives only in the open sheet's field, and nothing on the phone keeps it.
 
+A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
+whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed
+by the device's key with no fingerprint (it grants nothing), for the live sign-in view
+(`AppModel.openSiteSignIn`, `PlanqueClient.siteSignIn`, `POST …/grants/{id}/sign-in`). The view
+opens only when its URL is https on planque's own host, in a full-screen web view
+(`SiteSignInScreen`) under planque's `words`, with **Close** and nothing else. The web view runs the
+page's scripts and follows no link off that host. A refusal (a view already open, the connection
+not connected) is said on the connection in planque's words. Closing leaves the view to lapse.
+
 An app tafs cloud sends as `needs_setup` (kiff/planque#87) shows tafs cloud's `words` under its
 title ("Needs setting up first. Ask tafs to enable it.") and has no Connect: nothing on its row
 can be tapped. On a taf's Setup, a connection's sheet shows tafs cloud's `custody_words` under its

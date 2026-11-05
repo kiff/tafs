@@ -37,6 +37,8 @@ class ConnectionActions(
   /** Signs in again to a connection its vendor signed out: one approval, then the vendor's page. */
   val reconnect: (Grant) -> Unit = {},
   val reconnectId: (String) -> Unit = {},
+  /** A browser connection's sign-in to a site: asks planque for its live view, by the connection's id. */
+  val siteSignIn: suspend (String) -> Unit = {},
 )
 
 /**
