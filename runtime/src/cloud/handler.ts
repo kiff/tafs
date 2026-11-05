@@ -2542,10 +2542,35 @@ async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text:
  */
 async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, deps: Deps): Promise<string> {
   if (taf.job !== SETUP_JOB || at.session) return text;
+  // The apps name no session for the live chat: a message that goes on in it is no new chat, and reads
+  // nothing more nor carries the start's lines. It goes on in that chat by name.
+  if (at.live) {
+    const live = await liveChatOf(me, taf, deps).catch(() => undefined);
+    if (live) {
+      at.session = live;
+      delete at.live;
+      return text;
+    }
+  }
   const entry = entryOf(text);
   const [state, lines] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? [] : startConnections(me, event, deps)]);
   at.skills = startSkills(entry, state);
   return withConnections(text, lines);
+}
+
+/** How long after its last message a person's chat is still the one their next message goes on in: kiff/agents' live chat. */
+export const LIVE_CHAT_MS = 30 * 60_000;
+
+/**
+ * The person's live chat with Coach, as kiff/agents picks it for a message that names none: their latest own chat,
+ * unless they put it away or it has gone quiet. None means the message opens a new one.
+ */
+async function liveChatOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
+  const owner = ownerKey(me);
+  const latest = (await deps.agents.sessions(me.tenantID, taf.id, 5, owner, true)).find((s) => s.owner === owner && s.kind === "chat");
+  if (!latest || latest.archived) return undefined;
+  const now = (deps.now?.() ?? new Date()).getTime();
+  return now - Date.parse(latest.updated) < LIVE_CHAT_MS ? latest.id : undefined;
 }
 
 /**
