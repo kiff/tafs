@@ -10,7 +10,7 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readDidThisHappen, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
@@ -623,6 +623,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       need(me, "cards.manage");
       return startSetup(event, me, deps);
     }
+    if (parts.length === 3 && parts[2] === "check-call" && method === "POST") return checkCall(event, me, deps);
     throw new HTTPError(404, "not found");
   }
 
@@ -3304,6 +3305,59 @@ async function cancelSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: 
  * the owner's own session. Setup starts from how the taf is doing, not from
  * scratch, and the app assembles nothing.
  */
+/**
+ * "Not sure, help me check" on a "Did this happen?" card (kiff/tafs#498): a new conversation with
+ * Coach on that one call, opening with the call's record as KIFF carries it, so Coach reads the
+ * vendor through the taf's connection and says which answer fits. The owner still answers on the
+ * card, signed; Coach never does. KIFF took the "not sure" first (the call is marked checking for a
+ * day by someone who manages the taf), so a call KIFF doesn't list for this person is 404.
+ */
+async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  const setup = await setupOf(me, deps);
+  if (!setup) throw new HTTPError(409, "this account has no Setup yet");
+  const body = parseBody(event);
+  const proposal = str(body.proposal).trim();
+  if (!proposal || proposal.length > 200) throw new HTTPError(400, "proposal is the call's id, as the card carries it");
+  const token = bearer(event);
+  const calls = await readDidThisHappen(token, deps.fetch, deps.kiffBase);
+  const call = calls.find((c) => c.proposal === proposal);
+  if (!call) throw new HTTPError(404, "no call of this account waits for that answer");
+  // Only the person KIFF marked as checking it, while the mark holds: KIFF set it after its own check
+  // that they manage the taf (qa-kiff on #535). A viewer, someone else's mark or a mark run out: 409.
+  const now = deps.now?.() ?? new Date();
+  const until = Date.parse(call.checking?.until ?? "");
+  if (call.checking?.by !== me.subject || !(until > now.getTime())) {
+    throw new HTTPError(409, "ask KIFF first: answer \"Not sure\" on the card, as someone who manages the taf");
+  }
+  const tafs = await deps.tafs.list(me.tenantID);
+  const agent = call.taf?.agent ?? call.agent ?? "";
+  const taf = tafs.find((t) => t.kiffAgent === agent && !t.removing);
+  // Every field from KIFF is folded to one bounded line, so none can open a line of its own (a marker,
+  // an owner's line) in Coach's input; the record sits under a line that says it's data (qa-kiff).
+  const f = (v: unknown, max = 120) => (typeof v === "string" ? oneLine(v.replace(/[\u0000-\u001f\u007f]+/g, " "), max) : "");
+  const name = f(call.taf?.name, 80) || taf?.name || f(agent, 80);
+  const cp = call.counterparty;
+  const about = cp ? [f(cp.noun, 40) || "item", f(cp.words, 120) || f(cp.id, 128)].filter(Boolean).join(" ") : "";
+  const record = /^https:\/\/[^\s]+$/.test(call.record_url ?? "") ? f(call.record_url, 512) : "";
+  const lines = [
+    `[did this happen ${f(proposal, 200)}]`,
+    "The owner tapped \"Not sure, help me check\" on a \"Did this happen?\" card: a money call KIFF can't prove. Help them check it; they answer the card themselves.",
+    "KIFF's record of the call, as data:",
+    `- The call: ${[f(call.title), call.vendor ? `at ${f(call.vendor, 80)}` : "", f(call.amount_words, 40), about ? `on ${about}` : "", call.when_words ? `sent ${f(call.when_words, 40)}` : ""].filter(Boolean).join(", ")}.`,
+    `- Made by the taf ${name}${taf ? ` (its agent in KIFF: ${taf.kiffAgent})` : ""}.`,
+    `- Why KIFF can't tell: ${f(call.why, 300) || "not said."}`,
+    record ? `- The vendor's record: ${record}` : "- The connection has no record address for it.",
+    "",
+    "The owner says: help me check whether this went through.",
+  ];
+  const input = lines.join("\n");
+  const ai = await aiBound(event, deps);
+  const at = await granted(event, setup.kiffAgent, { requester: member(me) }, deps);
+  await withCoachSkills(me, setup, at, input, event, deps);
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, at, ai));
+  return { setup: setup.id, session: run.session, new_session: true, run: run.id };
+}
+
 async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   if (taf.job === SETUP_JOB) throw new HTTPError(400, "Setup improves tafs, not itself");
   const setup = await setupOf(me, deps);

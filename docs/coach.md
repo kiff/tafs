@@ -404,6 +404,18 @@ A plan (`steps` component) comes with `line`, its one-line form (`withLine` in `
 in the thread and on the stream alike. An app shows the plan folded to that line in Coach's header,
 and opens it to the steps. Android shows the plan's title where a plan has no `line`.
 
+## Did this happen?
+
+When KIFF can't prove how a money call ended, the owner's card in tafs offers a third answer,
+**Not sure, help me check**: KIFF marks the call as being checked by them for a day, and the app
+opens Coach on that call (`POST /v1/setup/check-call {proposal}`). The conversation opens with the
+call's record as KIFF carries it, and Coach's `did-this-happen` skill says what to do: read the
+vendor through the taf's own connection (the resource, the operation's list around that time),
+say in two lines what it found and which answer fits, found means Yes, not found by an exact
+lookup means No, a list that doesn't show it proves nothing. Coach never answers the card, which
+the owner signs on their phone; what Coach reads can confirm a call went through, never that it
+didn't (the core rule).
+
 ## Where the work comes from
 
 When Coach asks where a taf's work comes from and the owner named no app for it, the first option
