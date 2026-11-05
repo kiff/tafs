@@ -353,13 +353,16 @@ the line becomes the message's "Worked … · N steps".
 
 The same line can come back as text instead of a note, run to run. So tafs cloud holds a turn's
 text while it is still one short line (`heldLine`: no line break, at most 90 characters), and puts
-it on the live line as it's written, the same as a note. If a tool call follows, it was the turn's
-line: it never goes out as `text`. If anything else comes (more than a line, a component, the end),
-it was the answer: the line goes to `thinking` at once, with no hold, then the held words go as
-`text`, so they never show twice, and the rest streams as it's written. An answer waits for at most
-its first line. In the stored thread, such a line (a one-line message its run's tool call follows,
-`preToolLines`) isn't a message either: the run's work goes on its next message. A longer text
-before a tool call stays a message, as before.
+it on the live line as it's written, the same as a note. If anything but a tool call comes in that
+turn (more than a line, a component, the end), it was the answer: the line goes to `thinking` at
+once, with no hold, then the held words go as `text`, so they never show twice, and the rest
+streams. An answer waits for at most its first line. At a tool call the held text is kept: it was
+the turn's line if the run writes again after its tools, and is dropped then; it was the run's
+message if a card, a pause for the owner or the end comes first ("Falta que apruebes la
+conexión…", then the call the run waits on), and goes out as `text` then, the same way. In the
+stored thread such a line (`preToolLines`: a one-line message its calls follow, after which the
+run writes again before a card or a pause) isn't a message either: the run's work goes on its next
+message. A longer text before a tool call stays a message, as before.
 
 ## The thread in one order
 

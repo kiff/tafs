@@ -4115,21 +4115,31 @@ export function heldLine(text: string): boolean {
 
 /**
  * The taf's messages that were lines before tool calls, by `<run>.<seq>`: a message one short line long
- * (heldLine) whose next message, component or call in its run is a call. kiff/agents records a turn's text
- * before its calls.
+ * (heldLine) that its run's tool calls follow, and after which the run writes again before it shows a card,
+ * waits on the owner (the next turn is marked resumed), ends or reads the owner. A message the run waits on
+ * ("Falta que apruebes la conexión…", then the call that asks for the approval) stays.
+ * The live stream does the same (relay). kiff/agents records a turn's text before its calls.
  */
 export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
   const out = new Set<string>();
   const pending = new Map<string, string>(); // run → its latest message, while nothing has followed it
+  const called = new Map<string, string[]>(); // run → messages its calls followed, nothing shown since
   for (const e of events) {
     if (e.kind === "tool_call") {
       const id = pending.get(e.run);
-      if (id) out.add(id);
+      if (id) called.set(e.run, [...(called.get(e.run) ?? []), id]);
       pending.delete(e.run);
       continue;
     }
-    // Anything else the owner sees between them makes the message the answer, as the stream sends it.
+    // The first turn after a pause: the run waited on the owner after them, so they were its messages.
+    if (e.kind === "usage") {
+      if (turnTiming(e.body)?.resumed) called.delete(e.run);
+      continue;
+    }
     if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message" && e.kind !== "component") continue;
+    // The run wrote again: what its calls followed were lines. A card or the owner's words first: they were messages.
+    if (e.kind === "agent_message" || e.kind === "report") for (const id of called.get(e.run) ?? []) out.add(id);
+    called.delete(e.run);
     pending.delete(e.run);
     const text = (e.body as { text?: unknown } | undefined)?.text;
     if (e.kind === "agent_message" && typeof text === "string" && text.trim() && heldLine(text)) pending.set(e.run, `${e.run}.${e.seq}`);
@@ -4330,18 +4340,22 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     }
     return pace.flush();
   };
-  // A turn's text is held while it is still one short line (heldLine): a tool call after it makes it a line
-  // before the tools, which goes on the live line, as a progress note does, and never as answer text. Anything
-  // else makes it the answer: the line goes to thinking first, at once, so the words don't show twice, then the
-  // held words go as written, and the rest streams. A started run's only: a resumed one sends no text.
+  // A turn's text is held while it is still one short line (heldLine), and shown on the live line. At its tool
+  // call it is kept (`stash`): it was the turn's line if the run writes again after its tools, and is dropped
+  // then; it was the run's message if a card or the end comes first ("Falta que apruebes la conexión…", then the
+  // card the run waits on), and goes out as text then. Anything else in the turn makes the held text the answer.
+  // Whatever goes out as text sets the line to thinking first, at once, so the words never show twice. A started
+  // run's only: a resumed one sends no text. The stored thread does the same (preToolLines).
   let held = "";
   let holding = true;
+  let stash: string[] = [];
   const release = (): string => {
-    if (!held) return "";
-    const s = (pace.set("thinking", undefined, true) ?? "") + sse("text", { text: held });
+    const words = [...stash, held].filter((t) => t.trim()).join("\n\n");
+    stash = [];
     held = "";
+    if (!words) return "";
     holding = false;
-    return s;
+    return (pace.set("thinking", undefined, true) ?? "") + sse("text", { text: words });
   };
   const step = (e: RunStreamEvent): string => {
     const d = (e.data ?? {}) as Record<string, unknown>;
@@ -4349,6 +4363,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (!at || (e.event !== "delta" && e.event !== "end")) return as();
     if (e.event === "end") return release() + as();
     if (d.kind === "text" && typeof d.text === "string") {
+      stash = []; // the run wrote again after its tools: what it kept were lines
       if (!holding) return as();
       held += d.text;
       if (!heldLine(held)) return release();
@@ -4357,7 +4372,8 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
       return words && words.split(" ").length >= 3 ? pace.set("working", words, pace.showing("thinking") || pace.grows(words)) ?? "" : "";
     }
     if (d.kind === "tool_call") {
-      // The held words were the turn's line: the live line had them, and the step's words come next.
+      // The held words stay on the live line, kept until the run shows whether they were a line or its message.
+      if (held.trim()) stash.push(held);
       held = "";
       holding = true;
       return as();
