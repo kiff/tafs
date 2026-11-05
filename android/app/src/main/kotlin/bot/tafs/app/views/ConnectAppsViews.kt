@@ -198,7 +198,7 @@ fun ConnectAppsSheet(
         if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
-        apps?.apps?.forEach { app -> AppRow(app, connect, onChooseActions, onManage = { managing = it }.takeIf { connectionsOf(state, app).isNotEmpty() }) }
+        apps?.apps?.forEach { app -> AppRow(app, connect, onChooseActions, onManage = if (connectionsOf(state, app).isNotEmpty()) ({ a: ConnectApps.App -> managing = a }) else null) }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
         // The managed provider's catalog comes a page at a time.
         if (apps?.nextCursor != null) {
