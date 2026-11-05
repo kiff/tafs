@@ -15,7 +15,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
-import { type ActionPlace, actionPlace } from "./places.js";
+import { type VendorPlace, vendorPlace } from "./places.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { recipesFor, type RecipesView } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
@@ -323,8 +323,8 @@ export interface Taf {
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
   results?: ResultPlace[];
-  /** Where the live version's taf writes its results itself, at a vendor, through KIFF (places.ts). */
-  actionResults?: ActionPlace[];
+  /** Where the live version's taf writes its results itself, at a vendor, through KIFF, or hands them to another taf (places.ts). */
+  actionResults?: VendorPlace[];
   /** The connected apps' events the live version wakes on (applyKnob): what tafs cloud takes from planque for it. */
   appEvents?: Trigger[];
 }
@@ -2743,10 +2743,11 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
     if (d.status !== "draft") throw new HTTPError(409, `that draft is ${d.status}: draft it again`);
   }
+  // Its places, checked as the dial checks them: a taf place by this account's record (400 otherwise).
+  const actionResults = Array.isArray(body.actionResults) ? await vendorPlaces(body.actionResults, me, taf, deps) : taf.actionResults;
   let def: AgentDefinition;
   try {
-    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined,
-      actionResults: Array.isArray(body.actionResults) ? body.actionResults as ActionPlace[] : taf.actionResults });
+    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -2927,6 +2928,22 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
  * next version, as an improvement makes one, with its dial kept by version. Nothing runs from it until it
  * goes live (applyKnob).
  */
+/**
+ * The taf's own places from a request, checked (places.ts). A taf place names a taf of this account,
+ * by its record: its name is the record's, never the request's, so the words the owner approves name
+ * the taf the hand-over goes to; Coach and the taf itself are no destination. 400 says what's wrong.
+ */
+async function vendorPlaces(raw: unknown[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<VendorPlace[]> {
+  let vendor: VendorPlace[];
+  try { vendor = raw.map((p) => vendorPlace(p, taf.id)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  return Promise.all(vendor.map(async (p) => {
+    if (p.place !== "taf") return p;
+    const to = await deps.tafs.get(me.tenantID, p.taf);
+    if (!to || to.job === SETUP_JOB || to.removing) throw new HTTPError(400, `no taf of this account takes results by that id (${p.taf})`);
+    return { ...p, name: to.name };
+  }));
+}
+
 async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
   const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
   // `when.busy`, or `busy` at the top as a knob's `setting` and each size choice carry it, so a choice is sent back as it is.
@@ -2945,15 +2962,14 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   if (body.results === undefined) results = [...placesOf(taf), ...(taf.actionResults ?? [])];
   else {
     const all = Array.isArray(body.results) ? body.results : [];
-    let vendor: ActionPlace[];
-    try { vendor = all.filter((p) => typeof p !== "string").map(actionPlace); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    const vendor = await vendorPlaces(all.filter((p) => typeof p !== "string"), me, taf, deps);
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
   }
   let what: KnobSetting["what"];
   try { what = body.what === undefined ? taf.knobs?.[String(Object.keys(taf.knobs ?? {}).map(Number).sort((a, b) => b - a)[0])]?.what : recipeOf(body.what); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   const why = typeof body.why === "string" ? body.why.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 60) : undefined;
   const words = settingWords({ wakes, busy, results });
-  const actionResults = results.filter((p): p is ActionPlace => typeof p !== "string");
+  const actionResults = results.filter((p): p is VendorPlace => typeof p !== "string");
   const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE), actionResults }, me, taf, deps, event);
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(me.tenantID, taf.id);
@@ -3021,7 +3037,7 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(me.tenantID, taf.id);
     if (!cur) break;
-    const vendor = k.results.filter((p): p is ActionPlace => typeof p !== "string");
+    const vendor = k.results.filter((p): p is VendorPlace => typeof p !== "string");
     const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1), knobApplied: n };
     if (vendor.length) next.actionResults = vendor; else delete next.actionResults;
     // An app event planque already subscribed keeps its subscription when the dial is written again.
@@ -3100,7 +3116,7 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const { definition: live } = await deps.agents.getVersion(me.tenantID, taf.id, n);
     const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
     const dial = taf.knobs?.[String(n)];
-    const actionResults = dial ? dial.results.filter((p): p is ActionPlace => typeof p !== "string") : taf.actionResults;
+    const actionResults = dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.actionResults;
     const next: Taf = { ...taf, definition: digest(definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
@@ -4536,6 +4552,19 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   }
   if (name === "taf_results") {
     if (may && !may.manage) throw new ToolRefusal(`where ${taf.name}'s results go is for the people who manage it`);
+    const all = Array.isArray(args.places) ? args.places as unknown[] : [];
+    if (all.some((p) => typeof p !== "string")) {
+      // A place at a connected app, or another taf: the taf's next version carries it, as taf_dial makes one.
+      if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no results of its own");
+      try {
+        const made = await dialVersion({ results: all }, { tenantID: call.tenant, subject: call.person?.subject ?? call.coach, apiKey: false, agentID: "", capabilities: [] }, taf, deps);
+        return { taf: taf.name, taf_id: taf.id, version: made.version, words: made.words,
+          next: `show {type: "knob", version: ${made.version}, taf_id: "${taf.id}"}, then version_install ${made.version}: the owner confirms it in tafs` };
+      } catch (err) {
+        if (err instanceof HTTPError) throw new ToolRefusal(err.message);
+        throw err;
+      }
+    }
     let places: ResultPlace[];
     try { places = resultPlaces(args.places); } catch (err) { throw new ToolRefusal((err as Error).message); }
     await deps.tafs.put(call.tenant, { ...taf, results: places });

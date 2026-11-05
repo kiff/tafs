@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { type Job, systemPrompt } from "../jobs.js";
 import { KIFF_SKILL } from "../kiff-skill.js";
-import { type ActionPlace, ACTION_PLACES_INTRO, placesInstructions } from "./places.js";
+import { ACTION_PLACES_INTRO, placesInstructions, type VendorPlace } from "./places.js";
 import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
 
 /**
@@ -144,7 +144,7 @@ const SKILL_TEXT = [
 ].join("\n\n");
 
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
-export function instructions(job: Job, ownerNotes?: string, actionResults: ActionPlace[] = []): string {
+export function instructions(job: Job, ownerNotes?: string, actionResults: VendorPlace[] = []): string {
   const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, CALL_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
   if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
@@ -200,7 +200,7 @@ export function keepRules(): AgentDefinition["keep"] {
   return keep;
 }
 
-export function definition(tafID: string, job: Job, opts: { budgetCents?: number; ownerNotes?: string; actionResults?: ActionPlace[] } = {}): AgentDefinition {
+export function definition(tafID: string, job: Job, opts: { budgetCents?: number; ownerNotes?: string; actionResults?: VendorPlace[] } = {}): AgentDefinition {
   const budget = opts.budgetCents ?? DEFAULT_BUDGET_CENTS;
   if (!Number.isInteger(budget) || budget <= 0) throw new Error("the budget is a whole number of cents above zero");
   return {

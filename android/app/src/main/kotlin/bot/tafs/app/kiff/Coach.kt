@@ -282,6 +282,8 @@ data class WorkRequest(
   @Serializable(with = bot.tafs.app.model.InstantAsString::class) val at: Instant,
   val state: String = "",
   val line: String = "",
+  /** What a waiting run waits for, in the connection's words, when it waits for an app's event: not for the owner. */
+  @SerialName("waiting_for") val waitingFor: String? = null,
   val deliveries: List<WorkDelivery> = emptyList(),
 )
 
@@ -295,6 +297,8 @@ data class RequestDetail(
   @Serializable(with = bot.tafs.app.model.InstantAsString::class) val at: Instant,
   val state: String = "",
   val line: String = "",
+  /** What it waits for, in the connection's words, while it waits for an app's event (the slow-tools design). */
+  @SerialName("waiting_for") val waitingFor: String? = null,
   val deliveries: List<WorkDelivery> = emptyList(),
   /** "By email", "Its schedule", "From its chat", "Run now". */
   val from: String? = null,

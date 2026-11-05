@@ -265,7 +265,9 @@ the section titles and tafs' own three places, which are the app's (`SetupWords`
 **A request, step by step** (`RequestSheet`): a request's row in Activity opens it
 (`GET /v1/tafs/{id}/requests/{run}`). It shows the request's line, where it came from, and what
 happened, each step marked done, failed, not made, waiting or next, every line and time as tafs
-cloud wrote it. **Try the reply now** sends a reply given up on again, for whoever manages the
+cloud wrote it. A run waiting for an app's event (the slow-tools design) says what it waits for in
+the connection's words, tafs cloud's `waiting_for`; that step is drawn as not needing the owner,
+never in the amber of a hold (`RequestWords.waitsOnApp`). **Try the reply now** sends a reply given up on again, for whoever manages the
 taf, and **Ask Coach** opens a conversation about the taf.
 
 <p>
