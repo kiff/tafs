@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **tafs cloud, a step Coach retries:** a call that failed and was made again with the same tool in the same run no longer reads as failed to the owner; the retry's outcome stands, on the live stream (the failure is held until the run ends, and dropped on the retry), in the chat's thread and on a request's steps. A failure Coach gave up on is still said, with its reason.
 - **Android: a chat's rows keep their place while an answer arrives.** Each message keeps one key from its first frame to its last: the owner's from the moment the stream names it, and the taf's answer lands in the row its live answer had, updated in place rather than replaced. The thread follows its end when the last row's height changes, not only as words arrive.
 - **Android: tools added to a connection can be approved.** KIFF's words for a connection's profile are read again when its profile changes under the same connection, as adding tools does, instead of being kept from the first read; Approve no longer stops at "KIFF's words for this connection aren't read yet", and only the current profile's words are shown and signed.
 - **Android: Coach's chat no longer jumps as an answer lands.** The live answer leaves in the same update that brings it into the thread, at the end of a run and where a run goes on after a hold, instead of showing twice for a moment and then shrinking back, which moved the thread back and forth.

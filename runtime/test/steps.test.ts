@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachWhys, failedStep, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
+import { attachWhys, failedStep, foldRetried, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
   it("names a vendor from its server's host, and none from a cloud's own URL", () => {
@@ -97,5 +97,20 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
       { tool: "create_refund", error: true, failed: true },
     ]);
     expect(whys).toEqual([]); // consumed: a run's parts share one list
+  });
+
+  it("folds a failed call into a later call of the same tool: Coach's retry is what the owner sees", () => {
+    const steps = [
+      { tool: "version_install", error: true as const },
+      { tool: "get_order" },
+      { tool: "version_install" },
+      { tool: "create_refund", error: true as const },
+    ];
+    // The retried install is done; the refund's failure stands, since nothing retried it.
+    expect(foldRetried(steps)).toEqual([{ tool: "get_order" }, { tool: "version_install" }, { tool: "create_refund", error: true }]);
+    // A retry that failed again: one failure, the last.
+    expect(foldRetried([{ tool: "a", error: true as const }, { tool: "a", error: true as const }])).toEqual([{ tool: "a", error: true }]);
+    // Nothing to fold.
+    expect(foldRetried([{ tool: "a" }, { tool: "b", error: true as const }])).toEqual([{ tool: "a" }, { tool: "b", error: true }]);
   });
 });

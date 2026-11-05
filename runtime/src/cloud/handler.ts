@@ -24,7 +24,7 @@ import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { attachWhys, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -2038,7 +2038,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     for (const [id, w] of runs) {
       const whys = [...(whysOf.get(id) ?? [])];
       for (const p of w.parts) {
-        const steps = attachWhys(p.tools, whys);
+        const steps = foldRetried(attachWhys(p.tools, whys));
         if (p.first && p.tools.length > 0 && p.last !== undefined && !Number.isNaN(p.start)) {
           p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps };
         }
@@ -3840,9 +3840,17 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   // What it's doing, in a few words: only these, never the call's arguments.
   const toolOf = new Map<string, string>(); // call id → tool, for a failed step's reason
   let runID = resumed;
+  // A step that failed is held, not sent: Coach often retries, and a retry that goes through
+  // shouldn't have shown the owner "failed" meanwhile (kiff-cloud#1487). A later call of the
+  // same tool drops the held failure (its own outcome stands); the run's end sends what's
+  // still held, so a failure Coach gave up on is said then, with its why.
+  const heldFailures = new Map<string, string>(); // call id → its step event
   const call = (tool: string, input: unknown, callID: unknown): string => {
     const id = typeof callID === "string" ? callID : undefined;
     if (id) toolOf.set(id, tool);
+    for (const [heldID] of heldFailures) {
+      if (toolOf.get(heldID) === tool) heldFailures.delete(heldID);
+    }
     const step = steps.call(tool, input, id);
     return sse("activity", { tool, ...(step === undefined ? {} : { step }), ...(id ? { call_id: id } : {}) });
   };
@@ -3869,7 +3877,10 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (status !== "error") return sse("step", { call_id: id, status });
     const failed = failedStep(r.text);
     keepWhy(id, failed.why);
-    return sse("step", { call_id: id, status, ...failed });
+    const event = sse("step", { call_id: id, status, ...failed });
+    if (!id) return event;
+    heldFailures.set(id, event);
+    return "";
   };
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
@@ -3909,8 +3920,11 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         }
         return undefined;
       }
-      case "end":
-        return sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
+      case "end": {
+        const given = [...heldFailures.values()].join("");
+        heldFailures.clear();
+        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
+      }
       default:
         return undefined;
     }

@@ -169,6 +169,16 @@ export type StepWhys = Array<{ call: string; tool: string; why: string }>;
  * the run streamed. `whys` is consumed, so a run's parts share one list. A failed step says
  * `failed` as the stream's `step` does, with `why` when the tool said something readable.
  */
+/**
+ * A step Coach retried and that later went through isn't shown to the owner as failed
+ * (kiff-cloud#1487, recipe 3): a failed call of a tool followed by a later call of the
+ * same tool in the same run is dropped, and the later call's outcome stands, done or
+ * failed again. Only the last outcome of a tool's retries reaches the owner.
+ */
+export function foldRetried<T extends { tool: string; error?: true }>(steps: T[]): T[] {
+  return steps.filter((s, i) => !s.error || !steps.slice(i + 1).some((later) => later.tool === s.tool));
+}
+
 export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string }> {
   return steps.map((s) => {
     if (!s.error) return s;
