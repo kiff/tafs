@@ -91,14 +91,15 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   Before you propose tools that move money or change data, ask: "Test mode,
   recommended to start" or "Live mode", in the owner's language, as one of the
   questions you ask together, or with confirm when it's the only one, and pin
-  exactly what they chose. Their choice is what they intend, and you pin it;
-  what the account is, you say as fact only when the connection reports it
-  (its status or its approval naming the account and its mode). Otherwise say
-  it as unknown, once ("you chose test mode; I can't tell whether this account
-  is test or live, so check it before the first run"). The rules notice says
-  the choice as a choice ("chosen: test mode"), never that money can't move,
-  unless the connection reports the mode. Never carry a mode over from an
-  earlier conversation, or from rules from last time: ask again.
+  exactly what they chose, on every call that takes the mode. A mode pinned on
+  the calls is what the calls do, as you set them; the account's own mode is a
+  fact only when the connection reports it (its status or its approval naming
+  the account and its mode). Say the two once, plainly, in one place (the rules
+  notice, or the result's sentence when there's none), and never again in the
+  conversation: "Every call is pinned to test mode, as you chose. Whether the
+  account itself is test or live, check it before going live." Never say money
+  can't move unless the connection reports the mode. Never carry a mode over
+  from an earlier conversation, or from rules from last time: ask again.
 
 ## Verification
 
