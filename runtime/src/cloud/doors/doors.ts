@@ -367,10 +367,11 @@ export const EARLY_EVENT_KEPT_MS = 10 * 60_000;
 /** How long the receiver remembers that an event answered a run's wait, so the same delivery again answers the same and starts no run. */
 export const ANSWERED_EVENT_KEPT_MS = 10 * 60_000;
 
-/** What an event that answers a wait is remembered as: the run it answered, empty while the answer is still on its way. */
+/** What an event that answers a wait is remembered as: the run it answered, empty while the answer is still on its way, and the claim's own token. */
 export interface AnsweredEvent {
   run: string;
   at: string;
+  token: string;
 }
 
 /**
@@ -378,18 +379,31 @@ export interface AnsweredEvent {
  * answers; false for the same delivery again, at once or later (dependable runs: a delivery repeated is the same
  * outcome, never new work, and a crash between the answer and its record still leaves the claim).
  */
-export async function claimAnswered(ctx: DoorsContext, tenant: string, id: string): Promise<boolean> {
-  return ctx.doors.store.create(doorKeys.answeredEvent(tenant, id), { run: "", at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+export async function claimAnswered(ctx: DoorsContext, tenant: string, id: string): Promise<AnsweredEvent | undefined> {
+  const key = doorKeys.answeredEvent(tenant, id);
+  const until = new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS);
+  const claim: AnsweredEvent = { run: "", at: ctx.now.toISOString(), token: randomBytes(9).toString("base64url") };
+  if (await ctx.doors.store.create(key, claim, until)) return claim;
+  // A claim with no run older than one answer's time is a delivery that stopped between its claim and its
+  // answer (the Lambda died): the wait is still open, so this delivery takes the claim over, rather than every
+  // retry reading "answered" for ten minutes while nothing answered (agentgabo's note on #515). The takeover
+  // is a compare-and-swap on the claim as read: of two late deliveries, one takes it (agentgabo on #523).
+  const held = (await ctx.doors.store.get(key)) as AnsweredEvent | undefined;
+  if (held && held.run === "" && ctx.now.getTime() - Date.parse(held.at) > STALE_CLAIM_MS && await ctx.doors.store.swap(key, held, claim, until)) return claim;
+  return undefined;
 }
 
-/** Records the run the claimed event answered. */
-export async function rememberAnswered(ctx: DoorsContext, tenant: string, id: string, run: string): Promise<void> {
-  await ctx.doors.store.put(doorKeys.answeredEvent(tenant, id), { run, at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+/** How long a claim with no run may stand before another delivery of the same event takes it over: one answer's time. */
+export const STALE_CLAIM_MS = 30_000;
+
+/** Records the run the claimed event answered, on this delivery's own claim only: one taken over meanwhile is left to its taker. */
+export async function rememberAnswered(ctx: DoorsContext, tenant: string, id: string, run: string, claim: AnsweredEvent): Promise<void> {
+  await ctx.doors.store.swap(doorKeys.answeredEvent(tenant, id), claim, { ...claim, run, at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
 }
 
-/** Gives a claim back: the delivery answered nothing after all. */
-export async function unclaimAnswered(ctx: DoorsContext, tenant: string, id: string): Promise<void> {
-  await ctx.doors.store.remove(doorKeys.answeredEvent(tenant, id));
+/** Gives this delivery's own claim back, never another's: it is left stale, for the next delivery to take over at once. */
+export async function unclaimAnswered(ctx: DoorsContext, tenant: string, id: string, claim: AnsweredEvent): Promise<void> {
+  await ctx.doors.store.swap(doorKeys.answeredEvent(tenant, id), claim, { ...claim, at: new Date(0).toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
 }
 
 /** An app's event kept for the run that will wait on it: planque's event id, and the call's result it is (inbound.ts appEventOf), as JSON text. */
@@ -414,14 +428,15 @@ export async function answerKeptEvents(note: Note, ctx: DoorsContext): Promise<v
     const key = doorKeys.earlyEvent(tenant, w.grant ?? "", w.event, w.key);
     const kept = (await ctx.doors.store.get(key)) as KeptEvent | undefined;
     if (!kept) continue;
-    if (!(await claimAnswered(ctx, tenant, kept.id))) continue; // another delivery of it is answering, or did
+    const claim = await claimAnswered(ctx, tenant, kept.id);
+    if (!claim) continue; // another delivery of it is answering, or did
     try {
       await ctx.agents.answerWait(tenant, note.agent, note.run, w.call, parse(kept.result) ?? { truncated: true, payload: kept.result });
-      await rememberAnswered(ctx, tenant, kept.id, note.run);
+      await rememberAnswered(ctx, tenant, kept.id, note.run, claim);
       await ctx.doors.store.remove(key);
     } catch (err) {
       console.error("app event kept:", err instanceof Error ? err.message : "error");
-      await unclaimAnswered(ctx, tenant, kept.id).catch(() => undefined);
+      await unclaimAnswered(ctx, tenant, kept.id, claim).catch(() => undefined);
     }
   }
 }

@@ -127,18 +127,25 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
         // or the provider sending it twice), gets the same answer and never new work (dependable runs).
         const run = await waitingOn(ctx, e.tenant, taf.id, e.grant, e.event, e.key);
         if (run) {
-          if (!(await claimAnswered(ctx, e.tenant, e.id))) {
+          const claim = await claimAnswered(ctx, e.tenant, e.id);
+          if (!claim) {
             const before = (await ctx.doors.store.get(doorKeys.answeredEvent(e.tenant, e.id))) as AnsweredEvent | undefined;
             return { status: 202, type: "json", body: JSON.stringify({ outcome: "answered", ...(before?.run ? { run: before.run } : {}) }) };
           }
-          // The wait closed between the listing and the answer (409 wait_not_open): nothing waits, as below.
+          // A 409 (wait_not_open) is the wait closing between the listing and the answer: answered by another
+          // delivery of this event meanwhile (a slow first delivery whose claim this one took over), which is
+          // the same answer; or run out, or continued, which is nothing waiting, as below.
           const answered = await ctx.agents.answerWait(e.tenant, taf.id, run.run, run.call, e.result).then(() => true, async (err) => {
-            await unclaimAnswered(ctx, e.tenant, e.id).catch(() => undefined);
-            if (err instanceof AgentsError && err.status === 409) return false;
+            if (err instanceof AgentsError && err.status === 409) {
+              if (await answeredMeanwhile(ctx, e.tenant, taf.id, run.run, run.call)) return true;
+              await unclaimAnswered(ctx, e.tenant, e.id, claim).catch(() => undefined);
+              return false;
+            }
+            await unclaimAnswered(ctx, e.tenant, e.id, claim).catch(() => undefined);
             throw err;
           });
           if (answered) {
-            await rememberAnswered(ctx, e.tenant, e.id, run.run);
+            await rememberAnswered(ctx, e.tenant, e.id, run.run, claim);
             return { status: 202, type: "json", body: JSON.stringify({ outcome: "answered", run: run.run }) };
           }
         } else {
@@ -249,6 +256,12 @@ function cutBytes(text: string, max: number): string {
   let out = text.slice(0, max);
   while (Buffer.byteLength(out, "utf8") > max) out = out.slice(0, -Math.ceil((Buffer.byteLength(out, "utf8") - max) / 4) || -1);
   return out;
+}
+
+/** Whether the run's wait on call was answered (by another delivery of the same event): the requirement carries its answer. */
+async function answeredMeanwhile(ctx: DoorsContext, tenant: string, taf: string, run: string, call: string): Promise<boolean> {
+  const r = await ctx.agents.getRun(tenant, taf, run).catch(() => undefined);
+  return !!r?.requirements?.some((q) => q.kind === "event" && q.call_id === call && !!q.answered);
 }
 
 /**
