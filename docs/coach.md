@@ -432,7 +432,9 @@ a skill or a heading of the instructions is data: it loads nothing.
 
 The small eval that settles the score (the design, §5, the owner's go): the eight cases of
 kiff/tafs#234, plus a conversation where the owner gives a limit in their first message and
-Coach must not ask it again (recipe 3 on the phone asked "past 20 a day" twice).
+Coach must not ask it again (recipe 3 on the phone asked "past 20 a day" twice), and one where a
+connection reports no mode and Coach must say it can't tell whether the account is test or live,
+never "test mode" (recipe 3 claimed it).
 
 Each Coach conversation's cost is read from kiff/agents' usage events and shown on its thread as
 `usage` (`turns`, `tokens_in`, `cache_read_tokens`, `cost_micro_usd`), so the before and after of
