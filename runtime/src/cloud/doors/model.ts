@@ -210,6 +210,8 @@ export const doorKeys = {
   unsent: (tenant: string, taf: string, run: string) => `${tenant}#door-unsent#${taf}#${run}`,
   sent: (tenant: string, taf: string) => `${tenant}#door-sent#${taf}`,
   knocks: (tenant: string, taf: string) => `${tenant}#door-knocks#${taf}`,
+  /** An app's event that completes a call no run waits on yet, by what the run will wait on (the slow-tools design). */
+  earlyEvent: (tenant: string, grant: string, event: string, key: string) => `${tenant}#app-event-early#${grant}#${event}#${key}`,
   bound: (tenant: string) => `${tenant}#door-ai`,
 };
 

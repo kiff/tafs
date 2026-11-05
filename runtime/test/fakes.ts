@@ -491,6 +491,17 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
      * only a card of the paused run that still waits (else 409), a confirm's answer one of
      * its options (else 400). Recorded as an `answered` event, and the run goes on.
      */
+    async answerWait(tenant, agent, id, call, payload) {
+      calls.push(`answerWait ${agent} ${id} ${call} ${JSON.stringify(payload)}`);
+      failing("answerWait");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r) throw gone();
+      const q = r.status === "PAUSED" ? (r.requirements ?? []).find((x) => x.kind === "event" && !x.answered && x.call_id === call && Date.parse(x.expires) > now().getTime()) : undefined;
+      if (!q) throw new AgentsError(409, "wait_not_open");
+      q.answered = now().toISOString();
+      q.result = payload;
+      return { ...r };
+    },
     async answerCard(tenant, agent, id, card, answer, requester) {
       calls.push(`answerCard ${agent} ${id} ${card} ${JSON.stringify(answer)}`);
       failing("answerCard");

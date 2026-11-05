@@ -27,6 +27,8 @@ export interface RequestView {
   at: string;
   state: "done" | "working" | "retrying" | "needs_you" | "waiting" | "stopped" | "failed";
   line: string;
+  /** What a waiting run waits for, in the connection's words, when it waits for a vendor's event (the slow-tools design). */
+  waiting_for?: string;
   /** Where its result went, as far as tafs cloud sent it. */
   deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true }>;
 }
@@ -105,8 +107,15 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
     case "PENDING":
     case "RUNNING":
       return { ...base, state: "working", line: "Working on it" };
-    case "PAUSED":
-      return { ...base, state: "waiting", line: r.requirements?.some((q) => q.exception && !q.answered) ? "Waiting for your approval" : "Waiting for an answer" };
+    case "PAUSED": {
+      if (r.requirements?.some((q) => q.exception && !q.answered)) return { ...base, state: "waiting", line: "Waiting for your approval" };
+      const wait = r.requirements?.find((q) => q.kind === "event" && !q.answered && q.wait)?.wait;
+      if (wait) {
+        const words = wait.words?.trim() || `Waiting for the app's ${wait.event} event`;
+        return { ...base, state: "waiting", line: words, waiting_for: words };
+      }
+      return { ...base, state: "waiting", line: "Waiting for an answer" };
+    }
     case "COMPLETED":
       return { ...base, state: "done", line: `Done at ${timeIn(r.updated, zone, now)}` };
     case "CANCELLED":

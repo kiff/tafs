@@ -24,7 +24,7 @@ import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
-import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
@@ -146,7 +146,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -4359,10 +4359,11 @@ async function coachTaf(tenant: string, ref: unknown, deps: Deps): Promise<Taf> 
   return taf;
 }
 
-/** What a run waits on, as Coach reads it: each held call, its arguments and deadline. */
+/** What a run waits on, as Coach reads it: each held call, its arguments and deadline; a sent call whose outcome comes later, the event it waits for. */
 function waitsOn(r: Run) {
   return (r.requirements ?? []).filter((q) => !q.answered).map((q) => ({
     tool: q.tool, arguments: q.input, deadline: iso(q.expires), ...(q.exception ? { held_call: q.exception } : {}),
+    ...(q.wait ? { waiting_for: q.wait.words ?? `the ${q.wait.event} event`, event: q.wait.event } : {}),
   }));
 }
 
@@ -4648,6 +4649,8 @@ async function mcpRoute(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
  */
 async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const note = parseNote(rawBody(event));
+  // A run that paused waiting for a vendor's event whose event already came (a fast vendor) is answered now.
+  if (note && deps.doors) await answerKeptEvents(note, doorContext(deps));
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
@@ -4985,6 +4988,8 @@ function doorContext(deps: Deps): DoorsContext {
   // A door's message starts no run on an account being deleted.
   const agents: DoorsContext["agents"] = {
     getRun: (...a) => deps.agents.getRun(...a),
+    runs: (...a) => deps.agents.runs(...a),
+    answerWait: (...a) => deps.agents.answerWait(...a),
     startRun: async (tenant, ...rest) => {
       if (deps.deletions && await deps.deletions.get(tenant)) throw new AgentsError(410, "this account is being deleted");
       return deps.agents.startRun(tenant, ...rest);

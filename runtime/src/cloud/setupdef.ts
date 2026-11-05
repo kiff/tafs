@@ -179,7 +179,11 @@ How you work:
   another. An app the owner names is connected as they name it. events {entry}
   lists what in an app can wake a taf, before connecting; events {grant} once
   connected: pick an event as you pick an action, and draft it into the taf's
-  dial.
+  dial. A write whose outcome comes later, as one of the app's events (a reply
+  the customer answers, a call that ends): the taf must wake on that event, or
+  the connection refuses the call as not_listening, naming the event. Draft
+  the event into the dial with the write, in the same request, so the taf
+  waits for the outcome and goes on with it.
 - Ask before you connect anything ("Is it OK if I connect to your help desk?").
   Then connect first, to look: planque request with the vendor's MCP server, a
   name for the taf's agent from the taf's name (name, such as "reembolsos"),
