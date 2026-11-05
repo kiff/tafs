@@ -347,6 +347,20 @@ new sign-in. Whether the phone can approve is read each time the app comes back
 to do ([approvals.md](approvals.md#set-up-approvals-on-this-device)). A debug build on a phone with no screen lock signs without asking, as the iOS
 Simulator does; a release never does.
 
+## The calendar
+
+As iOS's (`docs/ios-app.md`, "The calendar"): the tafs' scheduled work still to
+come (kiff/tafs#534), opened from the calendar icon at the top right of the
+Overview on a tablet and from the home's header on a phone.
+`views/CalendarView.kt` draws Day, Week and Month, Week first; `model/Calendar.kt`
+(`CalendarMath`, `CalendarLayout`, `CalendarState`) counts dates, groups and picks
+the layout exactly as iOS's does, and the titles are the same words. Every
+occurrence, with its `day`, `time` and `minute` in the account's zone, is tafs
+cloud's (`TafsCloud.calendar`, `GET /v1/calendar`); the app converts no zone. What
+it shows is kept in `AppState`, so a rotation keeps it, and a new account starts
+afresh. A tap opens the taf. Read-only; no new dependency. Tests:
+`CalendarTest.kt`.
+
 ## Tests
 
 `app/src/test` holds the unit tests: each feature against `FakeTransport`, which answers

@@ -208,9 +208,21 @@ struct OverviewView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Overview").scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                    Text("Today, across your tafs").scaledFont(14).foregroundColor(Theme.dim)
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Overview").scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                        Text("Today, across your tafs").scaledFont(14).foregroundColor(Theme.dim)
+                    }
+                    Spacer()
+                    // The tafs' scheduled work to come (kiff/tafs#534).
+                    Button { open(.calendar) } label: {
+                        Image(systemName: "calendar").scaledFont(20, weight: .semibold).foregroundColor(Theme.ink)
+                            .frame(width: 44, height: 44)
+                            .background(Circle().fill(Theme.raised))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Calendar")
+                    .accessibilityIdentifier("overview.calendar")
                 }
                 if !model.held.isEmpty { needsYou }
                 tafsTable

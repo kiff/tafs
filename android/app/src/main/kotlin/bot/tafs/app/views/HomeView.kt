@@ -74,6 +74,8 @@ fun HomeView(
   onPlayNext: suspend () -> Unit,
   onOpenTaf: (String) -> Unit,
   onNewTaf: () -> Unit,
+  /** Opens the calendar of the tafs' scheduled work (kiff/tafs#534); null when there's none to open (the sample, or no tafs). */
+  onCalendar: (() -> Unit)? = null,
   onHaltAll: () -> Unit,
   /** Opens Plan & usage, from the plan's line when it needs the owner. */
   onUsage: () -> Unit = {},
@@ -109,7 +111,7 @@ fun HomeView(
     ) {
       item {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-          Header(state.accountLabel, showNew = sample, onNewTaf)
+          Header(state.accountLabel, showNew = sample, onNewTaf, onCalendar)
           // KIFF can't be reached just now: said quietly, under the account's name.
           state.unreachable?.let { UnreachableLine(it, state.retryingRefresh) }
           // The phone can't approve until a new sign-in: one calm line, said at launch rather than after a tap.
@@ -211,12 +213,21 @@ fun UnreachableLine(words: String, retrying: Boolean) {
 
 /** The bar above the list: the mascot and the account it is in, and, in the sample, a new taf. Account and Coach are in the tab bar. */
 @Composable
-private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit) {
+private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit, onCalendar: (() -> Unit)? = null) {
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
       Mascot(34.dp)
       // The account this is, always in sight.
       accountLabel?.let { Text(it, style = scaled(13, FontWeight.SemiBold, Theme.soft), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    }
+    // The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from here.
+    if (onCalendar != null) {
+      Box(
+        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = "Calendar" },
+        contentAlignment = Alignment.Center,
+      ) {
+        Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
+      }
     }
     // A new taf starts in Coach mode once signed in; the sample starts from its form.
     if (showNew) {

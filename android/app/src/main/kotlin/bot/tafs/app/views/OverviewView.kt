@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,7 +41,7 @@ import bot.tafs.app.model.shortTime
  * line per taf with what it does now, its Card as its page says it, and its last result. Each line opens the taf.
  */
 @Composable
-fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenTaf: (String) -> Unit) {
+fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCalendar: () -> Unit = {}, onOpenTaf: (String) -> Unit) {
   LaunchedEffect(state.tafs.map { it.id }) {
     state.tafs.filter { it.cloudId != null && state.reports[it.id] == null }.forEach { loadReport(it.id) }
   }
@@ -47,9 +49,19 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenTa
     Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp).widthIn(max = 980.dp),
     verticalArrangement = Arrangement.spacedBy(20.dp),
   ) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text("Overview", style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
-      Text("Today, across your tafs", style = scaled(14, color = Theme.dim))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+      Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Overview", style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
+        Text("Today, across your tafs", style = scaled(14, color = Theme.dim))
+      }
+      // The tafs' scheduled work to come (kiff/tafs#534), as iOS's Overview has it.
+      androidx.compose.foundation.layout.Box(
+        Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.raised).clickable(onClick = onOpenCalendar)
+          .semantics { contentDescription = "Calendar" }.testTag("overview.calendar"),
+        contentAlignment = Alignment.Center,
+      ) {
+        androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
+      }
     }
     if (state.held.isNotEmpty()) {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
