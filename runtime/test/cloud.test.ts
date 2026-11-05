@@ -283,6 +283,14 @@ describe("tafs cloud", () => {
     expect(r.statusCode).toBe(200);
     expect(JSON.parse(r.body).filtered).toBe(true);
     expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/catalog as Bearer ana", "https://planque.test/v1/accounts/t_acme/catalog?provider=composio&cursor=p2 as Bearer ana"]);
+    // A catalog with more pages than are read isn't filtered on: every recipe, and `filtered` says so.
+    const endless = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
+        ? new Response(JSON.stringify({ entries: [{ entry: "stripe@3", title: "Stripe", how: "key" }], provider: "composio", next_cursor: "more" }), { status: 200 })
+        : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
+    expect(endless.statusCode).toBe(200);
+    expect(JSON.parse(endless.body).filtered).toBe(false);
+    expect(JSON.parse(endless.body).recipes.length).toBeGreaterThan(2);
     // planque down: unfiltered, never an error, so the page is never blank for that.
     const down = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
       { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("boom", { status: 500 }) : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
@@ -1172,6 +1180,15 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     const noWhen = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead." } });
     expect(noWhen.status).toBe(400);
     expect(noWhen.body.error).toContain("unscheduled");
+    // A drafted schedule keeps to the same calm as any other, and a kickoff to the same length; neither makes a taf.
+    const tooOften = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead.", cron: "* * * * *" } });
+    expect(tooOften.status).toBe(400);
+    expect(tooOften.body.error).toContain("every 15 minutes");
+    const tooLong = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "x".repeat(2_001), cron: "0 * * * *" } });
+    expect(tooLong.status).toBe(400);
+    expect(tooLong.body.error).toContain("2000 characters");
+    expect([...w.tafs.held.values()].some((t) => t.name === "Leads")).toBe(false);
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([]);
     // From its chat: no running schedule, as for any unscheduled taf.
     const chat = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead.", unscheduled: true } });
     expect(chat.status).toBe(200);

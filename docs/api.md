@@ -63,7 +63,7 @@ The catalog of apps a taf can use, and a connection started for one taf. tafs cl
 
 | Route | Who | What |
 |---|---|---|
-| `GET /v1/recipes` | a person | The recipes a new Coach conversation opens to ([coach.md](coach.md#recipes)): `{categories: [{id, title}], recipes: [{id, title, category, line, say, connections: [[vendor…]…], card: {allows[], holds[], never[]}}], filtered}`. The recipes in `recipes/`, filtered to those whose every connection has a vendor the account's catalog lists, read from planque with the person's session. `categories` are the ones with a recipe, in order, with the title the apps show. `say` is what a tap puts in Coach's message box; the person edits it before sending. When the catalog can't be read, every recipe is listed and `filtered` is false: the page is never blank for that |
+| `GET /v1/recipes` | a person | The recipes a new Coach conversation opens to ([coach.md](coach.md#recipes)): `{categories: [{id, title}], recipes: [{id, title, category, line, say, connections: [[vendor…]…], card: {allows[], holds[], never[]}}], filtered}`. The recipes in `recipes/`, filtered to those whose every connection has a vendor the account's catalog lists, read from planque with the person's session, page by page. `categories` are the ones with a recipe, in order, with the title the apps show. `say` is what a tap puts in Coach's message box; the person edits it before sending. When the catalog can't be read, or has more pages than tafs cloud reads, every recipe is listed and `filtered` is false: a recipe is never hidden for a vendor that wasn't seen, and the page is never blank for that |
 
 ### Alerts
 

@@ -5008,19 +5008,26 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
  * listed and `filtered` says so: a new person still opens Coach to recipes, and Coach says what it
  * can't connect.
  */
+/** The most catalog pages the recipes route reads: planque keeps a provider's apps in one page, so this is room, not a limit. */
+const CATALOG_PAGES = 10;
+
 async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
   let apps: CatalogApp[] | undefined;
   if (deps.planqueBase) {
     try {
       apps = [];
       let page: { cursor?: string; provider?: string } = {};
-      // The whole catalog: the reviewed entries, then the managed provider's apps, a page at a time, at most a few.
-      for (let i = 0; i < 4; i++) {
+      // The whole catalog: the reviewed entries, then the managed provider's apps, a page at a time.
+      // A catalog longer than the pages read isn't filtered on: a recipe is never hidden for a vendor
+      // on a page that wasn't read, so every recipe is listed and `filtered` says so.
+      let whole = false;
+      for (let i = 0; i < CATALOG_PAGES; i++) {
         const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
         apps.push(...got.apps);
-        if (!got.next_cursor) break;
+        if (!got.next_cursor) { whole = true; break; }
         page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
       }
+      if (!whole) apps = undefined;
     } catch (err) {
       if (!(err instanceof ConnectError)) throw err;
       apps = undefined;
