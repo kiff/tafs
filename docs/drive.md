@@ -23,12 +23,56 @@ A drive is the person's, one request at a time.
    tafs cloud asks KIFF who signed (`POST /v1/me/device-signature`). It starts the drive
    only for KIFF's `key: "critical"`, outside any approval window. The device key, or a
    tap inside a window, is refused with 403 and `code: critical_key_required`, and
-   nothing starts. Coach's card is answered `approved: the drive is on`.
+   nothing starts. A `component` that isn't a drive card of theirs is 404, and nothing
+   starts either. Coach's card is answered `approved: the drive is on`.
+
+### What the approval key signs
+
+The phone signs `kiff.request.v1` over the request it sends to tafs cloud, exactly as for
+any setup call to KIFF. These are the lines, joined by `\n`:
+
+```
+kiff.request.v1
+<tenant id>
+POST
+/v1/coach/drive
+<sha256 of the body as sent, lowercase hex>
+<signed_at, RFC 3339>
+```
+
+The header is `KIFF-Device-Signature: t=<signed_at>,v1=<base64 DER ECDSA>`, and
+`signed_at` is within 5 minutes of KIFF's clock. The path is tafs cloud's, with the query
+if any, and the body's hash is of the exact bytes sent.
+
+A test vector for both apps' contract tests:
+
+| | |
+|---|---|
+| Tenant | `t_acme` |
+| Body | `{"session":"s_1","task":"Run Chargebacks","component":"d1"}` |
+| sha256 | `fea4f2ebc2091cd2cbf48e1cc3b6285603bcc194cddea23f5737dfdc2a78414f` |
+| `signed_at` | `2026-11-06T00:30:00Z` |
+
+The message is then:
+
+```
+kiff.request.v1
+t_acme
+POST
+/v1/coach/drive
+fea4f2ebc2091cd2cbf48e1cc3b6285603bcc194cddea23f5737dfdc2a78414f
+2026-11-06T00:30:00Z
+```
 4. **Not now** answers the card `declined` (`POST /v1/tafs/{coach}/components/{id}/answer`).
    That route takes no other answer for a drive card.
 
 There's no standing approval. The next request takes a new card. A new drive ends the
 person's earlier one, if any.
+
+**The drive is the chat's that approved it.** Coach's calls don't say which chat they come
+from. So tafs cloud refuses a drive tool unless every Coach run of that person at work is
+in the drive's chat. Another chat, on another phone or the same one, can't look or act
+while the drive is on.
 
 ## Routes
 
@@ -79,6 +123,11 @@ a drive with `ended` is over.
 - `line`: the caption to show for this step, at most 60 characters.
 - `at`: a point in the last screenshot's pixels. `element`: an id from the last tree.
   Never both.
+- **Coordinates:** the screenshot is scaled down, and the tree's `bounds` are in its
+  pixels too. The app turns a point into the screen's by multiplying by `screen pixels /
+  screenshot pixels`, then sends it to the topmost of its windows that contains the point
+  (a sheet or a dialog over the screen), less that window's offset. A contract test pins
+  this with a scaled screenshot and a sheet.
 - The actions:
   - `tap` and `long_press` at `at` or `element`;
   - `swipe` from `at` to `to` over `ms` milliseconds;
@@ -150,7 +199,14 @@ allows 2,000 a day and `coach-app-act` allows 1,000 a day, refused past that.
 ## Never captured
 
 The screenshot holds the app's own windows only, never the status bar, the keyboard,
-other apps or the system's prompts. These are blanked in it:
+other apps or the system's prompts. "The app's own windows" means all of them, composited
+in their order. A dialog, a sheet or a popup is a window of its own:
+
+- **Android:** `WindowInspector.getGlobalWindowViews()` lists them, and `PixelCopy`
+  copies each that has a `Window`.
+- **iOS:** each of the scene's windows, drawn with `drawHierarchy`.
+
+These are blanked in it:
 
 - a field marked secret: a vendor's key, a password, a recovery code;
 - an open approval's terms. Coach can't act on them, and the tree names only the
@@ -159,7 +215,9 @@ other apps or the system's prompts. These are blanked in it:
 Each platform's contract test fails on a secret field or a confirming control without
 its mark.
 
-The border, the caption and the dot are drawn in an overlay the screenshot leaves out.
+The border, the caption and the dot are drawn in a window of their own, which the
+capture leaves out, or are hidden for the frame it takes. Drawn in the screen's own
+window, they would be in the screenshot on both platforms.
 
 ## When a drive ends
 
@@ -184,10 +242,14 @@ tafs cloud ends a drive itself in these cases:
 
 ### How each platform tells the person's input from Coach's
 
-- **Android:** catch every event at the activity's `dispatchTouchEvent`. An event is
-  Coach's only when the app is dispatching it right then, matched by the `downTime` and
-  `eventTime` it created. Anything else is the person's. End the drive in `onStop`, which
-  also fires for the Custom Tab sign-in and the fingerprint sheet.
+- **Android:** catch every event on **every** window of the app, not only the
+  activity's. A dialog, a sheet and a popup have their own `Window.Callback`; wrap each,
+  from `WindowInspector.getGlobalWindowViews()`. An event is Coach's only when the app is
+  dispatching it right then, matched by the `downTime` and `eventTime` it created.
+  Anything else is the person's, and isn't delivered. End the drive in `ON_PAUSE`: a
+  Custom Tab, a system dialog, the share sheet, Recents and Home all pause the activity,
+  and a translucent one (a permission dialog, the share sheet) never stops it. The
+  app's own dialogs and sheets don't pause it.
 - **iOS:** Coach's steps never come through the touch stream (accessibility activation,
   `insertText`), so any `UITouch`, key press or gesture is the person's. End the drive on
   `sceneDidEnterBackground` or `willResignActive`.

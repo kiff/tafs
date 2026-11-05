@@ -163,6 +163,8 @@ async function world(signed: { key?: string; window?: unknown } = { key: "critic
   const run = await agents.api.startRun(T, COACH, "Show me how to run Chargebacks", { requester: { kind: "member", id: ANA } });
   const stored = agents.runs.find((r) => r.id === run.id)!;
   agents.ask(stored, { type: "drive", id: "d1", text: "Run Chargebacks" });
+  /** Coach's run at work, as it is while it calls a tool. */
+  const working = () => { stored.status = "RUNNING"; };
   const coach = memoryCoach(() => clock);
   const events: Array<Record<string, unknown>> = [];
   const deps: Deps = {
@@ -185,7 +187,7 @@ async function world(signed: { key?: string; window?: unknown } = { key: "critic
   };
   const told = () => (stored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "d1")?.result as { answer?: unknown } | undefined;
   const coachCall: CoachCall = { tenant: T, coach: "setup-acme", notify: () => ({ url: "https://tafs.test/v1/runs/ended", ref: "r" }), person: { subject: ANA, permit: "p" } };
-  return { agents, deps, coach, call, told, events, coachCall, session: stored.session };
+  return { agents, deps, coach, call, told, events, coachCall, session: stored.session, working, stored };
 }
 
 const SIGNED = { "kiff-device-signature": "t=2026-11-06T00:30:00Z,v1=sig" };
@@ -230,6 +232,7 @@ describe("a drive, from the phone", () => {
     const stop = await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "owner_took_over" });
     expect(stop.body).toMatchObject({ ended: { why: "owner_took_over" } });
     expect((await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "stopped" })).body).toMatchObject({ ended: { why: "owner_took_over" } });
+    w.working();
     const a = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
     expect(a.isError).toBe(true);
     expect(a.content[0]).toMatchObject({ type: "text", text: expect.stringContaining("the owner touched the app") });
@@ -243,10 +246,11 @@ describe("a drive, from the phone", () => {
 describe("Coach's drive tools", () => {
   it("answer with the app's line and the screen as an image; a retry gets the words only", async () => {
     const w = await world();
+    w.working();
     const d = await startDrive(w.coach, T, ANA, w.session, "Run Chargebacks", NOW);
     w.deps.sleep = async () => {
       for (const req of (await w.coach.take(`${T}#drive-q#${d.id}`)) as Array<{ id: string }>) {
-        await putResult(w.coach, T, ANA, d.id, req.id, { outcome: "done", line: "Tapped Run now", image: { media_type: "image/png", data: PNG }, touched: { words: "Run now", taf: "Chargebacks" } }, NOW);
+        await w.call("POST", `/v1/coach/drive/${d.id}/results/${req.id}`, { outcome: "done", line: "Tapped Run now", image: { media_type: "image/png", data: PNG }, touched: { words: "Run now", taf: "Chargebacks" } });
       }
     };
     const a = await coachTool("app_act", { action: "tap", line: "Tapping Run now", at: { x: 10, y: 20 } }, w.coachCall, w.deps) as Rich;
@@ -258,10 +262,11 @@ describe("Coach's drive tools", () => {
 
   it("pass on the app's refusal of a confirming control, as a refusal", async () => {
     const w = await world();
+    w.working();
     const d = await startDrive(w.coach, T, ANA, w.session, "Approve it", NOW);
     w.deps.sleep = async () => {
       for (const req of (await w.coach.take(`${T}#drive-q#${d.id}`)) as Array<{ id: string }>) {
-        await putResult(w.coach, T, ANA, d.id, req.id, { outcome: "refused", line: "That's yours to confirm" }, NOW);
+        await w.call("POST", `/v1/coach/drive/${d.id}/results/${req.id}`, { outcome: "refused", line: "That's yours to confirm" });
       }
     };
     const a = await coachTool("app_act", { action: "tap", line: "Tapping Approve", at: { x: 10, y: 20 } }, w.coachCall, w.deps) as Rich;
@@ -274,6 +279,7 @@ describe("Coach's drive tools", () => {
     const w = await world();
     const { person: _p, ...asCoach } = w.coachCall;
     expect((await coachTool("app_look", {}, asCoach, w.deps) as Rich).content[0]).toMatchObject({ text: expect.stringContaining("A drive is a person's") });
+    w.working();
     await startDrive(w.coach, T, ANA, w.session, "Run Chargebacks", NOW);
     await w.agents.api.halt(T);
     const a = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
@@ -283,14 +289,79 @@ describe("Coach's drive tools", () => {
 
   it("end the drive with done, and the record says how many steps it took", async () => {
     const w = await world();
+    w.working();
     const d = await startDrive(w.coach, T, ANA, w.session, "Run Chargebacks", NOW);
     w.deps.sleep = async () => {
       for (const req of (await w.coach.take(`${T}#drive-q#${d.id}`)) as Array<{ id: string }>) {
-        await putResult(w.coach, T, ANA, d.id, req.id, { outcome: "done", line: "Done" }, NOW);
+        await w.call("POST", `/v1/coach/drive/${d.id}/results/${req.id}`, { outcome: "done", line: "Done" });
       }
     };
     await coachTool("app_act", { action: "done", line: "Done" }, w.coachCall, w.deps);
     expect((await currentDrive(w.coach, T, ANA, NOW))?.ended?.why).toBe("done");
     expect(w.events.at(-1)).toMatchObject({ kind: "drive_ended", title: "Coach finished driving" });
+  });
+});
+
+// qa-kiff's negative cases on #554.
+describe("a drive's end holds, and its record is the app's", () => {
+  it("N1: an end that lands while Coach's call is being sent stays an end", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    // The owner's stop lands just after the call read the drive: the call's own writes never touch the drive record.
+    const store = { ...r.store, async put(key: string, value: unknown, at: Date) {
+      if (key.startsWith(`${T}#drive-last#`)) await endDrive(r.store, T, ANA, "owner_took_over", r.now(), d.id);
+      return r.store.put(key, value, at);
+    } };
+    expect(await askApp(store, T, ANA, "app_look", {}, r.now, r.wait)).toMatchObject({ ended: { why: "owner_took_over" } });
+    expect((await currentDrive(r.store, T, ANA, r.now()))?.ended?.why).toBe("owner_took_over");
+  });
+
+  it("N2: an end that lands while the phone's answer is being kept stays an end", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    await askApp(r.store, T, ANA, "app_look", {}, r.now, async (ms) => { await r.wait(ms); });
+    await r.store.put(`${T}#drive-rq#${d.id}#rq_2`, { tool: "app_look" }, new Date(NOW.getTime() + 60_000));
+    const store = { ...r.store, async put(key: string, value: unknown, at: Date) {
+      if (key.startsWith(`${T}#drive-r#`)) await endDrive(r.store, T, ANA, "owner_took_over", r.now(), d.id);
+      return r.store.put(key, value, at);
+    } };
+    await putResult(store, T, ANA, d.id, "rq_2", { outcome: "done", line: "Looked" }, r.now());
+    expect((await currentDrive(r.store, T, ANA, r.now()))?.ended?.why).toBe("owner_took_over");
+  });
+
+  it("N3: a step the app did after the 20-second hold is still in the record", async () => {
+    const w = await world();
+    w.working();
+    const d = await startDrive(w.coach, T, ANA, w.session, "Run Chargebacks", NOW);
+    const a = await coachTool("app_act", { action: "tap", line: "Tapping Run now", at: { x: 10, y: 20 } }, w.coachCall, w.deps) as Rich;
+    expect(a.content[0]).toMatchObject({ text: expect.stringContaining("didn't answer in 20 seconds") });
+    const [req] = (await w.coach.take(`${T}#drive-q#${d.id}`)) as Array<{ id: string }>;
+    const late = await w.call("POST", `/v1/coach/drive/${d.id}/results/${req!.id}`, { outcome: "done", line: "Tapped Run now", touched: { words: "Run now", taf: "Chargebacks" } });
+    expect(late.status).toBe(200);
+    expect((await w.call("GET", "/v1/coach/drive")).body.steps).toMatchObject([{ line: "Tapping Run now", touched: { words: "Run now", taf: "Chargebacks" } }]);
+    expect(w.events.at(-1)).toMatchObject({ kind: "drive_step", title: "Coach: Tapping Run now" });
+  });
+
+  it("N4: a start for a drive card that isn't there starts nothing", async () => {
+    const w = await world();
+    const r = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks", component: "nope" }, SIGNED);
+    expect(r.status).toBe(404);
+    expect(await currentDrive(w.coach, T, ANA, NOW)).toBeUndefined();
+    expect(w.events).toEqual([]);
+  });
+
+  it("an answer for a request this drive never sent is refused", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    await expect(putResult(r.store, T, ANA, d.id, "made_up", { outcome: "done", line: "x" }, r.now())).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("only the chat that approved the drive drives: another chat of the same person is refused", async () => {
+    const w = await world();
+    await startDrive(w.coach, T, ANA, "another-chat", "Run Chargebacks", NOW);
+    w.working();
+    const a = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
+    expect(a.content[0]).toMatchObject({ text: expect.stringContaining("approved in another chat") });
+    expect(await w.coach.get(`${T}#drive-q#${(await currentDrive(w.coach, T, ANA, NOW))!.id}`)).toBeUndefined();
   });
 });

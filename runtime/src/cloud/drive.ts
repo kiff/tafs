@@ -65,7 +65,7 @@ export interface Drive {
   /** The request, in the person's words, as the approval named it. */
   task: string;
   started: string;
-  /** The last thing done: a step, a look, the stream opened. */
+  /** When it started; the last thing done is kept apart (driveKeys.last), so only a start or an end ever writes this record. */
   last: string;
   ended?: { why: EndWhy; at: string };
 }
@@ -114,8 +114,13 @@ export class DriveError extends Error {
 }
 
 export const driveKeys = {
+  /** The drive record: written by startDrive and endDrive only, so an end can never be overwritten (qa-kiff on #554). */
   drive: (tenant: string, person: string) => `${tenant}#drive#${person}`,
+  /** When the drive was last used: for the idle end. */
+  last: (tenant: string, drive: string) => `${tenant}#drive-last#${drive}`,
   queue: (tenant: string, drive: string) => `${tenant}#drive-q#${drive}`,
+  /** Each request as sent (its tool and caption), so a late answer still makes its step. */
+  request: (tenant: string, drive: string, request: string) => `${tenant}#drive-rq#${drive}#${request}`,
   result: (tenant: string, drive: string, request: string) => `${tenant}#drive-r#${drive}#${request}`,
   steps: (tenant: string, drive: string) => `${tenant}#drive-steps#${drive}`,
 };
@@ -135,8 +140,14 @@ function words(v: unknown, what: string, max: number = DRIVE.textMax): string {
 export async function currentDrive(store: CoachStore, tenant: string, person: string, now: Date): Promise<Drive | undefined> {
   const d = (await store.get(driveKeys.drive(tenant, person))) as Drive | undefined;
   if (!d || d.ended) return d;
-  if (now.getTime() - Date.parse(d.last) > DRIVE.idleMs) return endDrive(store, tenant, person, "idle", now, d.id);
+  const last = (await store.get(driveKeys.last(tenant, d.id))) as string | undefined;
+  if (now.getTime() - Date.parse(last ?? d.last) > DRIVE.idleMs) return endDrive(store, tenant, person, "idle", now, d.id);
   return d;
+}
+
+/** The drive was used now: a step, a look, an answer. Never the drive record itself. */
+async function touch(store: CoachStore, tenant: string, drive: string, now: Date): Promise<void> {
+  await store.put(driveKeys.last(tenant, drive), now.toISOString(), kept(now));
 }
 
 /**
@@ -295,8 +306,9 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
   if (!d) return { off: "no drive is on: ask the person, or suggest driving with a drive card, and wait for their approval" };
   if (d.ended) return { ended: d.ended };
   const at = now();
-  await store.put(driveKeys.drive(tenant, person), { ...d, last: at.toISOString() }, kept(at));
+  await touch(store, tenant, d.id, at);
   const req: DriveRequest = { id: randomBytes(9).toString("base64url"), tool, args, at: at.toISOString() };
+  await store.put(driveKeys.request(tenant, d.id, req.id), { tool, ...(typeof args.action === "string" ? { action: args.action } : {}), ...(typeof args.line === "string" ? { line: args.line } : {}) }, kept(at));
   await store.append(driveKeys.queue(tenant, d.id), req, kept(at));
   const until = at.getTime() + DRIVE.holdMs;
   while (now().getTime() < until) {
@@ -304,7 +316,6 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
     const r = (await store.get(driveKeys.result(tenant, d.id, req.id))) as DriveResult | undefined;
     if (r) {
       await store.remove(driveKeys.result(tenant, d.id, req.id)).catch(() => undefined);
-      if (tool === "app_act" && r.outcome === "done") await addStep(store, tenant, d.id, { at: now().toISOString(), line: String(args.line), touched: r.touched }, now());
       return { result: r, drive: d };
     }
     const now2 = (await store.get(driveKeys.drive(tenant, person))) as Drive | undefined;
@@ -314,23 +325,33 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
   return { timedOut: true };
 }
 
-/** The phone's answer to one of its drive's requests, kept for the held call to take. */
-export async function putResult(store: CoachStore, tenant: string, person: string, drive: string, request: string, body: Record<string, unknown>, now: Date): Promise<DriveResult> {
+/** What came of the phone's answer: the result, the step it made, and the drive's end when it was Coach's done. */
+export interface Taken { result: DriveResult; drive: Drive; step?: Step; ended?: Drive }
+
+/**
+ * The phone's answer to one of its drive's requests: kept for the held call to take, and,
+ * for a step the app did, put in the drive's record whether or not the call still waits
+ * (a late answer is still a step done). Coach's `done` ends the drive.
+ */
+export async function putResult(store: CoachStore, tenant: string, person: string, drive: string, request: string, body: Record<string, unknown>, now: Date): Promise<Taken> {
   const d = await currentDrive(store, tenant, person, now);
   if (!d || d.id !== drive) throw new DriveError(404, "that isn't your drive");
   if (d.ended) throw new DriveError(409, `the drive is over: ${END_WORDS[d.ended.why]}`);
   if (!/^[A-Za-z0-9_-]{1,40}$/.test(request)) throw new DriveError(400, "not a request of this drive");
+  const sent = (await store.get(driveKeys.request(tenant, d.id, request))) as { tool?: string; action?: string; line?: string } | undefined;
+  if (!sent) throw new DriveError(404, "not a request of this drive");
   const r = resultOf(body);
   await store.put(driveKeys.result(tenant, d.id, request), r, new Date(now.getTime() + 2 * DRIVE.holdMs));
-  await store.put(driveKeys.drive(tenant, person), { ...d, last: now.toISOString() }, kept(now));
-  return r;
+  await store.remove(driveKeys.request(tenant, d.id, request)).catch(() => undefined);
+  await touch(store, tenant, d.id, now);
+  if (sent.tool !== "app_act" || r.outcome !== "done") return { result: r, drive: d };
+  if (sent.action === "done") return { result: r, drive: d, ended: await endDrive(store, tenant, person, "done", now, d.id) };
+  const step: Step = { at: now.toISOString(), line: sent.line ?? "", ...(r.touched ? { touched: r.touched } : {}) };
+  await store.append(driveKeys.steps(tenant, d.id), step, kept(now));
+  return { result: r, drive: d, step };
 }
 
 export interface Step { at: string; line: string; touched?: { words: string; taf?: string } }
-
-async function addStep(store: CoachStore, tenant: string, drive: string, step: Step, now: Date): Promise<void> {
-  await store.append(driveKeys.steps(tenant, drive), step, kept(now));
-}
 
 /** The drive's steps, for the "What I did" card: the record of what was done, not Coach's memory of it. */
 export async function driveSteps(store: CoachStore, tenant: string, drive: string): Promise<Step[]> {
