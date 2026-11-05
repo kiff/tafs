@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach helps check a "Did this happen?" (kiff/tafs#498, step 3).** The card's third answer, "Not sure, help me check", opens Coach on that one call (`POST /v1/setup/check-call {proposal}`) with its record as KIFF carries it, and the new `did-this-happen` skill has Coach read the vendor through the taf's connection and say which answer fits; the owner answers the card, signed, as before (`docs/coach.md`).
 - **Coach runs at the standard output.** With the lighter Coach, its turns run at the standard speed, as the tafs' do, not the fast one, which costs several times it; the next Upgrade writes it to every account's Coach with the skills.
 - **tafs cloud, results to their destination (step 4).** A job run's report in the thread carries one line above the taf's words, `delivered`: where its result went ("Sent to Google Sheets · Refunds 2026 and handed to Invoices. Not sent to Slack · #ops yet: trying again.").
 - **tafs cloud, a step Coach retries:** a call that failed and was made again with the same tool in the same run no longer reads as failed to the owner; the retry's outcome stands, on the live stream (the failure is held until the run ends, and dropped on the retry), in the chat's thread and on a request's steps. A failure Coach gave up on is still said, with its reason.

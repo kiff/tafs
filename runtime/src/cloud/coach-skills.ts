@@ -54,7 +54,7 @@ const ENTRY_SKILLS: Record<CoachEntry, string[]> = {
   improve: ["improve-a-taf", "connect-an-app", "name-the-tools", "draft-the-card"],
   coach_lines: ["the-tafs"],
   delivery: ["the-dial"],
-  did_this_happen: ["cards-and-holds"],
+  did_this_happen: ["did-this-happen", "cards-and-holds"],
 };
 
 /**

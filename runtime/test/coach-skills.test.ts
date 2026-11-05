@@ -31,8 +31,8 @@ describe("Coach's skills, as files", () => {
     expect(Object.keys(next).sort()).toEqual([`${one.name}@1`, `${one.name}@2`]);
   });
 
-  it("are ten, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "improve-a-taf@1", "name-the-tools@2", "set-up-a-taf@1", "the-dial@1", "the-tafs@1", "usage-and-plans@1"]);
+  it("are eleven, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@1", "did-this-happen@1", "draft-the-card@1", "halting@1", "improve-a-taf@1", "name-the-tools@2", "set-up-a-taf@1", "the-dial@1", "the-tafs@1", "usage-and-plans@1"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -105,7 +105,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     ["free", SETUP], ["recipe", SETUP], ["door", SETUP],
     // An `[improve taf …]` start adds a tool and drafts its Card through the gateway's tools too (agentgabo on #525).
     ["improve", ["connect-an-app", "draft-the-card", "improve-a-taf", "name-the-tools"]],
-    ["coach_lines", ["the-tafs"]], ["delivery", ["the-dial"]], ["did_this_happen", ["cards-and-holds"]],
+    ["coach_lines", ["the-tafs"]], ["delivery", ["the-dial"]], ["did_this_happen", ["cards-and-holds", "did-this-happen"]],
   ] as const) {
     it(`loads ${want.join(", ")} for a conversation that opens as ${entry}`, () => {
       expect(startSkills(entry)).toEqual(want.map(skillRef));

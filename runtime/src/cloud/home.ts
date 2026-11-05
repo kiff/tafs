@@ -208,6 +208,31 @@ export async function readUnsure(token: string, doFetch: Fetch = fetch, base = K
   return result.calls.length;
 }
 
+/**
+ * One money call KIFF can't prove, as `GET /v1/me/did-this-happen` carries it with its context
+ * (kiff/tafs#498): the taf, the action and the vendor, the amount, what it acted on, when, why KIFF
+ * can't tell, the vendor's record address. Only the fields tafs cloud reads; the rest passes through.
+ */
+export interface UnsureCall {
+  proposal: string;
+  agent?: string;
+  title?: string;
+  vendor?: string;
+  amount_words?: string;
+  when_words?: string;
+  why?: string;
+  record_url?: string;
+  taf?: { agent?: string; name?: string };
+  counterparty?: { noun?: string; id?: string; words?: string };
+}
+
+/** The money calls that wait for the person's "Did this happen?", with their context. */
+export async function readDidThisHappen(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<UnsureCall[]> {
+  const result = await read<{ calls?: UnsureCall[] }>("/v1/me/did-this-happen", token, doFetch, base, "the calls to confirm");
+  if (!Array.isArray(result.calls)) throw new KIFFError(502, "KIFF's calls to confirm could not be read");
+  return result.calls;
+}
+
 /** What the person may do with an agent, as KIFF answers it. */
 export interface Access {
   use: boolean;
