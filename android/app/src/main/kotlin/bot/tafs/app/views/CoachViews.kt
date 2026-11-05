@@ -312,7 +312,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready && !grant.needsReconnect) ApprovalsUnavailable(readiness)
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
-              if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else "Approve with $biometry",
+              if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else if (state.windowWords != null) "Approve" else "Approve with $biometry",
               { actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f),
               // With a profile, nothing is approved before KIFF's words for it are read and shown.
@@ -320,6 +320,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
             )
             OutlineButton("Decline", { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }
+          // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
+          state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
             Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
             Text("Cancel", style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })

@@ -30,6 +30,12 @@ sealed class KiffError(message: String) : Exception(message) {
    */
   data object ApprovalKeyRequired : KiffError(KiffClient.APPROVAL_KEY_LOST)
 
+  /**
+   * Refused inside an approval window (kiff/tafs#494): [code] is KIFF's, `critical_key_required` (the act takes the approval key
+   * every time) or `window_required` (the window has ended). Thrown only where no approval key can sign it again.
+   */
+  class WindowRefused(val code: String, message: String) : KiffError(message)
+
   /** The session has an approval key already: KIFF's fingerprint of it. */
   class ApprovalKeyExists(val fingerprint: String?) : KiffError("KIFF holds an approval key for this session already.")
 }
@@ -67,6 +73,23 @@ data class Account(
   /** The account as the owner knows it: its name, else its slug. */
   val name: String get() = displayName?.takeIf { it.isNotEmpty() } ?: slug
 }
+
+/**
+ * An approval window as KIFF answers it (kiff/tafs#494): one fingerprint opened it, and inside it a routine approval is a tap,
+ * signed by the device key with the window's id. KIFF alone says whether it is open; [words] are KIFF's for the next tap.
+ */
+@Serializable
+data class ApprovalWindow(
+  val id: String,
+  val expires: String = "",
+  val cap: String = "",
+  val open: Boolean = false,
+  val words: String? = null,
+)
+
+/** `GET /v1/me/window`: the open window, if any, and KIFF's words for the next approval. */
+@Serializable
+data class WindowRead(val window: ApprovalWindow? = null, val words: String? = null)
 
 /** A device signed in as this person on the account. */
 @Serializable
@@ -162,6 +185,38 @@ class KiffClient(
 
   /** Called when KIFF answers that an act needs the approval key this phone doesn't hold. */
   var approvalKeyRequired: (() -> Unit)? = null
+
+  /**
+   * The approval window this phone holds at KIFF (kiff/tafs#494), as KIFF last answered it. While it is held, a call the approval
+   * key would sign goes with the device key and the window's id, a tap; KIFF decides whether it takes it. A refusal drops back to
+   * the approval key, and `window_required` forgets the window.
+   */
+  @Volatile var window: ApprovalWindow? = null
+
+  /** The open window, if any, with KIFF's words for the next approval. */
+  suspend fun readWindow(): WindowRead = call("GET", WINDOW)
+
+  /**
+   * Opens an approval window with the approval key, behind its fingerprint: KIFF's `kiff.window.v1`, to [expires] at most five
+   * minutes ahead, with a fresh [nonce]; KIFF takes the signer's own session and device. The window is held once KIFF answers it.
+   */
+  suspend fun openWindow(expires: String, nonce: String): ApprovalWindow {
+    val body = buildJsonObject {
+      put("message", WINDOW_MESSAGE)
+      put("expires", expires)
+      put("nonce", nonce)
+    }
+    val opened = json.decodeFromString<WindowRead>(String(sendJson("POST", WINDOW, body))).window ?: throw KiffError.Server(0, "KIFF opened no window")
+    window = opened
+    return opened
+  }
+
+  /** Closes the held window, signed by the device key ([sign]): the app went to the background or the screen locked. Forgotten either way. */
+  suspend fun closeWindow(sign: (ByteArray) -> String) {
+    val held = window ?: return
+    window = null
+    sendJson("POST", "$WINDOW/${escaped(held.id)}/close", JsonObject(emptyMap()), signedBy = sign)
+  }
 
   /** The held call's page in KIFF, where it can be answered today. */
   fun answerPage(exceptionId: String): String = "$webUrl/needs-you/$exceptionId"
@@ -561,6 +616,7 @@ class KiffClient(
     authorized: Boolean = true,
     signedBy: ((ByteArray) -> String)? = null,
     gateway: Boolean = false,
+    inWindow: Boolean = true,
   ): ByteArray {
     val url = (if (gateway) gatewayUrl else baseUrl) + path
     val uri = try { URI.create(url) } catch (_: IllegalArgumentException) { throw KiffError.Server(0, "Bad path") }
@@ -577,7 +633,11 @@ class KiffClient(
     // What grants authority is signed by the approval key, once the session has one, each request
     // behind its own fingerprint; KIFF picks the key by route, so the header is the same (kiff/tafs#233).
     val plain = (signedBy ?: setupSigner)?.let { s -> val signs: suspend (() -> ByteArray) -> String = { built -> s(built()) }; signs }
-    val signer = if (signedBy == null && plain != null && !gateway && grantsAuthority(method, path)) approvalSigner ?: plain else plain
+    val authority = signedBy == null && plain != null && !gateway && grantsAuthority(method, path)
+    // Inside a held approval window, what the approval key would sign goes with the device key and the window's id: a tap
+    // (kiff/tafs#494). Opening a window is never signed in one.
+    val held = window?.id?.takeIf { inWindow && authority && path != WINDOW }
+    val signer = if (held != null) plain else if (authority) approvalSigner ?: plain else plain
     val account = tenant
     if (method in WRITES && signed && signer != null && account != null) {
       val requestUri = uri.path + (uri.rawQuery?.let { "?$it" } ?: "")
@@ -585,9 +645,10 @@ class KiffClient(
       var signedAt = ""
       val value = signer {
         signedAt = signingTime.next()
-        requestMessage(account, method, requestUri, payload ?: ByteArray(0), signedAt)
+        if (held != null) requestMessageWindow(account, method, requestUri, payload ?: ByteArray(0), signedAt, held)
+        else requestMessage(account, method, requestUri, payload ?: ByteArray(0), signedAt)
       }
-      headers["KIFF-Device-Signature"] = "t=$signedAt,v1=$value"
+      headers["KIFF-Device-Signature"] = if (held != null) "t=$signedAt,v2=$value,w=$held" else "t=$signedAt,v1=$value"
     }
     if (authorized) {
       val bearer = token ?: throw KiffError.Unauthorized
@@ -599,6 +660,14 @@ class KiffClient(
     if (status == 401) throw KiffError.Unauthorized
     if (status !in 200..299) {
       val fields = errorFields(response.body)
+      // Refused in the window: the act takes the fingerprint every time, or the window ended. The approval key signs it
+      // again, once, behind its fingerprint; an ended window is forgotten.
+      val refused = fields["error"]
+      if (status == 403 && held != null && (refused == CRITICAL_KEY_REQUIRED || refused == WINDOW_REQUIRED)) {
+        if (refused == WINDOW_REQUIRED && window?.id == held) window = null
+        if (approvalSigner == null) throw KiffError.WindowRefused(refused, fields["detail"] ?: refused)
+        return sendJson(method, path, body, authorized, signedBy, gateway, inWindow = false)
+      }
       if (status == 403 && (fields["error"] == "approval_key_required" || fields["reason"] == "approval_key_required")) {
         approvalKeyRequired?.invoke()
         throw KiffError.ApprovalKeyRequired
@@ -651,6 +720,8 @@ class KiffClient(
      */
     fun signsSetup(path: String): Boolean {
       if (path in SIGNED_SETUP_PATHS) return true
+      // Opening an approval window, and closing it (kiff/tafs#494).
+      if (path == WINDOW || (path.startsWith("$WINDOW/") && path.endsWith("/close"))) return true
       if (path.startsWith("$DID_THIS_HAPPEN/")) return true
       val parts = path.split("/")
       // Groups and sharing: each change is the person's act behind their confirmation. A group,
@@ -675,6 +746,8 @@ class KiffClient(
      */
     fun grantsAuthority(method: String, path: String): Boolean {
       if (method != "POST") return false
+      // Opening an approval window stands for a fingerprint: only the approval key opens one (kiff/tafs#494).
+      if (path == WINDOW) return true
       // "Did this happen?": No gives the Card its room back, and KIFF takes either answer only from the approval key.
       if (path.startsWith("$DID_THIS_HAPPEN/") && path.length > DID_THIS_HAPPEN.length + 1) return true
       if (path == "/v1/me/agent-drafts") return true
@@ -684,6 +757,23 @@ class KiffClient(
       if (path == "/v1/resume" || (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "resume" && parts[3].isNotEmpty())) return true
       return parts.size == 6 && path.startsWith("/v1/me/agent-drafts/") && parts[5] == "confirm" && parts[4].isNotEmpty()
     }
+
+    /** KIFF's approval window (kiff/tafs#494): read, opened with the approval key, closed with the device key. */
+    const val WINDOW = "/v1/me/window"
+
+    /** What opening a window signs, as its body's `message`. */
+    const val WINDOW_MESSAGE = "kiff.window.v1"
+
+    /** KIFF's refusals inside a window: the act takes the approval key every time, or the window has ended. */
+    const val CRITICAL_KEY_REQUIRED = "critical_key_required"
+    const val WINDOW_REQUIRED = "window_required"
+
+    /**
+     * What the device key signs inside an approval window: `kiff.request.v1`'s lines under `kiff.request.v2`, with the window's id
+     * last, so the signature can't be moved to another window (KIFF's `RequestMessageWindow`).
+     */
+    fun requestMessageWindow(tenant: String, method: String, uri: String, body: ByteArray, signedAt: String, window: String): ByteArray =
+      listOf("kiff.request.v2", tenant, method, uri, sha256Hex(body), signedAt, window).joinToString("\n").toByteArray()
 
     /** What the phone signs for a setup call: KIFF's signed request message, `kiff.request.v1`. */
     fun requestMessage(tenant: String, method: String, uri: String, body: ByteArray, signedAt: String): ByteArray =

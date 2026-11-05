@@ -169,6 +169,11 @@ data class ApprovalAsk(
   val message: String,
   /** What the prompt says. */
   val reason: String,
+  /**
+   * Which key the call takes, tafs cloud's hint (kiff/tafs#494): `window`, the device key inside an approval window, a tap;
+   * `critical`, the approval key behind the fingerprint. The service the call goes to decides; none reads as `critical`.
+   */
+  val key: String? = null,
   val planque: PlanqueAsk? = null,
   val kiff: KiffAsk? = null,
 )

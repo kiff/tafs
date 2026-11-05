@@ -156,6 +156,16 @@ class MainActivity : FragmentActivity() {
             app.changeListener = null
           }
         }
+        // The approval window (kiff/tafs#494) closes after 30 s in the background, and at once when the screen turns off.
+        androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_STOP) { model.wentToBackground() }
+        androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_START) { model.cameToForeground() }
+        DisposableEffect(model) {
+          val screenOff = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: android.content.Context, intent: Intent) = model.screenLocked()
+          }
+          registerReceiver(screenOff, android.content.IntentFilter(Intent.ACTION_SCREEN_OFF))
+          onDispose { unregisterReceiver(screenOff) }
+        }
         LaunchedEffect(openFromAlert, model) {
           model.requestOpen(openFromAlert)
           openFromAlert = null
