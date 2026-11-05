@@ -440,6 +440,9 @@ whoever KIFF lets manage the account's tafs (`cards.manage`), and a refusal is s
 cloud's words (`AppModel.setSuggestions`). The recipes are read again after a change. A tafs
 cloud without the route leaves the section out.
 
+iOS is the same: `SettingsView`'s **Coach** section holds the switch (`AppModel.setSuggestions`),
+enabled for `cards.manage`, and a new conversation draws only the recipes that come.
+
 **Android** reads them each time Coach opens, with Coach's setup (`AppModel.loadRecipes`), and
 draws them in an empty conversation that isn't improving a taf (`CoachStarts`): each category's
 title, then its recipes' `title` and `line`. A tap sets the conversation's draft to `say`. Recipes

@@ -135,6 +135,21 @@ struct SettingsView: View {
                         NavigationLink { UsageView() } label: { PlanRow(usage: model.usage) }.accessibilityIdentifier("plan-card")
                     }
                 }
+                // What a new Coach conversation offers, as tafs cloud keeps it: its words say what the
+                // switch does now. Enabled for the people who manage the account's tafs.
+                if model.mode == .kiff, model.mayUseCoach, let shown = model.suggestions {
+                    Section("Coach") {
+                        Toggle(isOn: Binding(get: { shown.show }, set: { on in Task { await model.setSuggestions(on) } })) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Show suggestions")
+                                if !shown.words.isEmpty { Text(shown.words).scaledFont(13).foregroundColor(Theme.soft) }
+                            }
+                        }
+                        .disabled(!model.canManageCards || model.suggestionsBusy)
+                        .accessibilityIdentifier("show-suggestions")
+                        if let why = model.suggestionsError { Text(why).scaledFont(13).foregroundColor(Theme.no) }
+                    }
+                }
                 Section {
                     NavigationLink(NotificationSettingsView.title) { NotificationSettingsView() }
                 }
@@ -173,6 +188,7 @@ struct SettingsView: View {
                 if !atEnd { Image(systemName: "chevron.down").foregroundColor(Theme.dim).padding(8).frame(maxWidth: .infinity).background(LinearGradient(colors: [.clear, Theme.background], startPoint: .top, endPoint: .bottom)).allowsHitTesting(false) }
             }
             .navigationTitle("Account")
+            .task(id: model.mode) { await model.loadSuggestions() }
             .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
             .confirmingSignOut($confirming) { _ in

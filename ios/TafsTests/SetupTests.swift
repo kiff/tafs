@@ -51,6 +51,50 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(model.setupTaf?.id, "taf-setup")
     }
 
+    /// No recipes come while tafs cloud doesn't show them (a live taf, or suggestions off), and
+    /// none are drawn.
+    func testNoRecipesComeWhenTafsCloudDoesntShowThemAndNoneAreDrawn() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/recipes"] = (200, #"{"categories":[{"id":"money","title":"Money"}],"recipes":[],"filtered":true,"shown":false,"suggestions":{"show":true,"words":"The account has a live taf, so a new conversation with Coach opens blank."}}"#)
+        await model.loadSetup()
+        let read = try XCTUnwrap(model.recipes)
+        XCTAssertFalse(read.shown)
+        XCTAssertTrue(read.byCategory.isEmpty)
+    }
+
+    /// The account's "Show suggestions" setting is read and changed in tafs cloud, and the
+    /// recipes are read again after a change.
+    func testTheSuggestionsSettingIsReadAndChangedInTafsCloudAndTheRecipesReadAgain() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/me/suggestions"] = (200, #"{"suggestions":{"show":true,"words":"Suggestions show in a new conversation with Coach until the account's first taf is live."}}"#)
+        await model.loadSuggestions()
+        XCTAssertEqual(model.suggestions?.show, true)
+        StubProtocol.responses["PUT /v1/me/suggestions"] = (200, #"{"suggestions":{"show":false,"words":"Suggestions are off for this account."}}"#)
+        StubProtocol.responses["GET /v1/recipes"] = (200, #"{"categories":[],"recipes":[],"shown":false,"suggestions":{"show":false,"words":"Suggestions are off for this account."}}"#)
+        StubProtocol.sent = []
+        await model.setSuggestions(false)
+        let put = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "PUT" && $0.url?.path == "/v1/me/suggestions" })
+        XCTAssertEqual(String(data: try XCTUnwrap(put.httpBody), encoding: .utf8), #"{"show":false}"#)
+        XCTAssertEqual(model.suggestions, TafsCloud.Suggestions(show: false, words: "Suggestions are off for this account."))
+        XCTAssertEqual(model.recipes?.shown, false)
+        XCTAssertFalse(model.suggestionsBusy)
+        XCTAssertNil(model.suggestionsError)
+    }
+
+    /// A viewer's change is refused: the setting stays as it was, and the refusal is said in
+    /// tafs cloud's words.
+    func testARefusedSuggestionsChangeIsSaidInTafsCloudsWordsAndNothingChanges() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/me/suggestions"] = (200, #"{"suggestions":{"show":true,"words":"On"}}"#)
+        await model.loadSuggestions()
+        StubProtocol.responses["PUT /v1/me/suggestions"] = (403, #"{"error":"the suggestions setting is for the people who manage the account's tafs"}"#)
+        await model.setSuggestions(false)
+        XCTAssertEqual(model.suggestions?.show, true)
+        XCTAssertEqual(model.suggestionsError, "It didn't change. the suggestions setting is for the people who manage the account's tafs")
+        XCTAssertFalse(model.suggestionsBusy)
+    }
+
     private static let setupJSON = #"{"id":"taf-setup","name":"Setup","job":"setup","kiff_agent":"setup","status":"active","next_run":null,"last_run":null}"#
 
     private func model(signer: FaceIDSigner, vendor: StubVendor = StubVendor()) async -> AppModel {

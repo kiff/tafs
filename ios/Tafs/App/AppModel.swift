@@ -680,7 +680,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1032,7 +1032,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -5246,6 +5246,11 @@ final class AppModel: ObservableObject {
     /// The recipes a new Coach conversation opens to, from tafs cloud (kiff/tafs#476); nil until
     /// read, or when they couldn't be.
     @Published var recipes: TafsCloud.Recipes?
+    /// The account's "Show suggestions" setting as tafs cloud last said it, while it's being
+    /// changed, and why a change didn't go.
+    @Published var suggestions: TafsCloud.Suggestions?
+    @Published var suggestionsBusy = false
+    @Published var suggestionsError: String?
     /// What the owner wrote while Setup works: sent once it's done (kiff/tafs#58).
     @Published private(set) var setupQueued: String?
     /// How Setup's last run ended, when the owner should know: they stopped it, or it
@@ -5495,6 +5500,33 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let r = try? await cloud.recipes(), gen == accountGeneration else { return }
         recipes = r
+    }
+
+    /// Reads the account's "Show suggestions" setting, for Account.
+    func loadSuggestions() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        guard let read = try? await cloud.suggestions(), gen == accountGeneration else { return }
+        suggestions = read
+    }
+
+    /// Turns the account's suggestions off for good, or on again, in tafs cloud: it decides what
+    /// a new Coach conversation shows, and the recipes are read again. A refusal is said in tafs
+    /// cloud's words.
+    func setSuggestions(_ show: Bool) async {
+        guard mode == .kiff, !suggestionsBusy else { return }
+        let gen = accountGeneration
+        suggestionsBusy = true
+        suggestionsError = nil
+        defer { if gen == accountGeneration { suggestionsBusy = false } }
+        do {
+            let now = try await cloud.setSuggestions(show)
+            guard gen == accountGeneration else { return }
+            suggestions = now
+            await loadRecipes()
+        } catch {
+            if gen == accountGeneration { suggestionsError = "It didn't change. \(error.localizedDescription)" }
+        }
     }
 
     /// A recipe tapped: its words go in Coach's message box, for the person to edit and send.
