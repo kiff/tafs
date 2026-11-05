@@ -60,6 +60,14 @@ class TafsCloud(
   /** The recipes a new Coach conversation opens to, by category (kiff/tafs#476). */
   suspend fun recipes(): Recipes = get("/v1/recipes")
 
+  /** The account's "Show suggestions" setting, with tafs cloud's words for it. */
+  suspend fun suggestions(): Suggestions = get<SuggestionsAnswer>("/v1/me/suggestions").suggestions
+
+  /** Turns the account's suggestions off for good, or on again: for the people who manage its tafs (403 otherwise). */
+  suspend fun setSuggestions(show: Boolean): Suggestions = KiffClient.json.decodeFromString<SuggestionsAnswer>(
+    String(sendJson("PUT", "/v1/me/suggestions", kotlinx.serialization.json.JsonObject(mapOf("show" to kotlinx.serialization.json.JsonPrimitive(show))))),
+  ).suggestions
+
   /** Where Coach's tools are, on tafs cloud: KIFF's gateway reaches them there, each call carrying KIFF's permit. */
   val mcpUrl: String get() = "$baseUrl/v1/mcp"
 
