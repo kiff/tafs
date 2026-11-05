@@ -256,9 +256,19 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   val busy = state.connecting != null
   var details by remember { mutableStateOf(false) }
   // Answered, it keeps one line saying what it was: several in a row each say what was approved. One line, whatever the words'
-  // length: with no title, planque's text can run to paragraphs.
+  // length: with no title, planque's text can run to paragraphs. A tap opens it again, to read what was approved in planque's
+  // and KIFF's words, with nothing to answer; another tap folds it.
   if (answered != null) {
-    Text(CoachWords.answeredApproval(answered, c, grant?.text, draft?.label), style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    var open by remember(c.id) { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      Text(
+        (if (open) "▾ " else "▸ ") + CoachWords.answeredApproval(answered, c, grant?.text, draft?.label),
+        style = scaled(14, FontWeight.Medium, Theme.dim),
+        maxLines = if (open) Int.MAX_VALUE else 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      if (open && (grant != null || draft != null)) Panel { ApprovedLines(grant, draft, state, actions) }
+    }
     return
   }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
@@ -319,6 +329,21 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
     state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
     error?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
+}
+
+/** What an answered approval covered, read again: planque's words for the connection, KIFF's for its profile, and its Card. */
+@Composable
+private fun ApprovedLines(grant: bot.tafs.app.kiff.Grant?, draft: bot.tafs.app.kiff.AgentDraft?, state: AppState, actions: CoachActions) {
+  if (grant != null) {
+    Text(grant.text, style = scaled(14, color = Theme.ink))
+    Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
+    if (grant.request.profile != null) {
+      LaunchedEffect(grant.id) { actions.loadProfileWords(grant.id) }
+      state.profileWords[grant.id]?.let { ProfileWordsLines(it) }
+    }
+    grant.terms.orEmpty().forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) }
+  }
+  if (draft != null) DraftCardsView(draft)
 }
 
 private fun toneColor(tone: String?): Color = when (tone) {

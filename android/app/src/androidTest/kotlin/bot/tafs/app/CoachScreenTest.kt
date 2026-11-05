@@ -51,11 +51,19 @@ class CoachScreenTest {
   private val rules = component(
     """{"type":"confirm","id":"rules","title":"Use these rules?","text":"Refund up to €5 each, €20 a day. Anything over waits for you.","options":[{"label":"Agree","value":"agree"},{"label":"Change them","value":"change"}]}""",
   )
-  private val connect = component("""{"type":"approval","id":"connect","title":"Connect Stripe (test mode)","grant":"g1"}""")
+  private val connect = component("""{"type":"approval","id":"connect","title":"Connect Stripe (test mode)","grant":"g1","draft":"dr_1"}""")
+  private val grant = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(
+    """{"id":"g1","status":"connected","text":"Read your payments and refund one.","request":{"server":"https://mcp.stripe.example"}}""",
+  )
+  private val draft = KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>(
+    """{"id":"dr_1","agent_id":"refunds-1","status":"confirmed","version":"v1","label":"Refunds",
+        "cards":[{"grants":[{"action":"create_refund"}],"lines":["Refund a payment, up to €5 each","Up to €20 a day"]}]}""",
+  )
 
   private fun state(live: LiveAnswer?) = AppState(
     mode = Mode.kiff, ready = true, kiffAccount = Account("t_01", "acme", capabilities = listOf("members.manage")),
     coachChecked = true, coachCloudId = "setup_1", coachAgent = "setup-acme", coachChat = "s1",
+    grants = listOf(grant), setupDrafts = mapOf("dr_1" to draft),
     coachComponents = listOf(
       ShownComponent(t0, "s1", "r1", plan),
       ShownComponent(t0.plusSeconds(10), "s1", "r1", connect, CardAnswer(words = "Approved")),
@@ -95,8 +103,24 @@ class CoachScreenTest {
     rule.onNodeWithText("Coach").assertIsDisplayed()
     rule.onNodeWithText("Step 3 of 6 · Your rules").assertIsDisplayed()
     // Answered: kiff/agents' word, and no buttons left on it.
-    rule.onNodeWithText("Approved · Connect Stripe (test mode)").assertIsDisplayed()
+    rule.onNodeWithText("Approved · Connect Stripe (test mode)", substring = true).assertIsDisplayed()
     hold()
+  }
+
+  @Test fun anAnsweredApprovalOpensOnATapToWhatWasApprovedAndFoldsBack() {
+    show(null)
+    // Folded: one line, and what it covered isn't shown.
+    rule.onNodeWithText("Up to €20 a day").assertDoesNotExist()
+    rule.onNodeWithText("Approved · Connect Stripe (test mode)", substring = true).performClick()
+    // Open: planque's words for the connection and its Card's lines in KIFF's words, with nothing to answer.
+    rule.onNodeWithText("Read your payments and refund one.").assertIsDisplayed()
+    rule.onNodeWithText("Refund a payment, up to €5 each").assertIsDisplayed()
+    rule.onNodeWithText("Up to €20 a day").assertIsDisplayed()
+    rule.onNodeWithText("Approve with your fingerprint").assertDoesNotExist()
+    rule.onNodeWithText("Decline").assertDoesNotExist()
+    hold()
+    rule.onNodeWithText("Approved · Connect Stripe (test mode)", substring = true).performClick()
+    rule.onNodeWithText("Up to €20 a day").assertDoesNotExist()
   }
 
   @Test fun thePlanOpensToItsStepsAndFoldsBack() {
