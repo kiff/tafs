@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach helps check a "Did this happen?" (kiff/tafs#498, step 3).** The card's third answer, "Not sure, help me check", opens Coach on that one call (`POST /v1/setup/check-call {proposal}`) with its record as KIFF carries it, and the new `did-this-happen` skill has Coach read the vendor through the taf's connection and say which answer fits; the owner answers the card, signed, as before (`docs/coach.md`).
 - **Coach offers the taf's chat first for where the work comes from.** When the owner named no app for it, handing the work to the taf in its chat is the first option, and an app is connected only when the owner picks it (`set-up-a-taf@2`).
 - **Which account, and live or test.** A connection on a taf's Setup says which vendor account it works in and its mode, in the connection service's words ("Demo Shop · Live"); an unknown mode reads as treated as live. tafs cloud sends it as `account_words`; Android draws it on the connection's sheet, and iOS follows.
 - **Android: Run now is back on Activity.** A signed-in taf's Activity shows when it runs next, with Run now and Pause, ahead of its work. A taf that works from its chat says so instead.
