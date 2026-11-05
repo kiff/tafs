@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android: Run now is back on Activity.** A signed-in taf's Activity shows when it runs next, with Run now and Pause, ahead of its work. A taf that works from its chat says so instead.
 - **Android: where a job run's result went.** A job run's report in the thread shows tafs cloud's `delivered` line above the taf's words ("Sent to Google Sheets · Refunds 2026…").
 - **Coach runs at the standard output.** With the lighter Coach, its turns run at the standard speed, as the tafs' do, not the fast one, which costs several times it; the next Upgrade writes it to every account's Coach with the skills.
 - **tafs cloud, results to their destination (step 4).** A job run's report in the thread carries one line above the taf's words, `delivered`: where its result went ("Sent to Google Sheets · Refunds 2026 and handed to Invoices. Not sent to Slack · #ops yet: trying again.").
