@@ -484,7 +484,11 @@ private fun WorkSummary(work: Work) {
       style = scaled(12, FontWeight.Medium, Theme.dim),
       modifier = Modifier.heightIn(min = 28.dp).clickable(enabled = steps.isNotEmpty()) { open = !open }.padding(vertical = 4.dp),
     )
-    if (open) steps.forEach { Text("• $it", style = scaled(12, color = if (it.endsWith(" · failed")) Theme.no else Theme.soft)) }
+    // A failed step in the failure colour, with tafs cloud's reason under it when it sent one; nothing of the app's own.
+    if (open) steps.forEach { step ->
+      Text("• " + step.words + if (step.notMade) " · not made" else "", style = scaled(12, color = if (step.failed) Theme.no else Theme.soft))
+      step.why?.let { Text(it, style = scaled(12, color = Theme.dim), modifier = Modifier.padding(start = 10.dp)) }
+    }
   }
 }
 

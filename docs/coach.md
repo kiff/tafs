@@ -198,6 +198,12 @@ things (`runtime/src/cloud/approval.ts`):
   service holds the connection or the Card, else `failed: <why>` in tafs cloud's words,
   whatever the phone reported. The phone never builds an approval's answer, and tafs cloud
   never vouches for one: planque and KIFF still take only the device's signature.
+  The ask also says which key the call takes (`key`, kiff/tafs#494): `window`, a tap inside
+  an approval window the fingerprint opened at KIFF (connecting an app; a draft KIFF's view
+  says widens nothing, `confirm_key`); `critical`, the fingerprint every time (a draft
+  otherwise). It is a hint: planque and KIFF decide for themselves, and tafs cloud's check of
+  the report refuses a critical ask the device key signed (`code: critical_key_required`) or
+  a window that has ended (`code: window_required`), with the words the card shows.
 
 A card counts as finished only by its answer in the thread, on both apps. Every word the
 apps show for an outcome comes from tafs cloud. An ask waits 20 minutes for its report and is
