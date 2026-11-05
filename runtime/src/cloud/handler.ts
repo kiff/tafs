@@ -5002,15 +5002,15 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
   throw new HTTPError(404, "not found");
 }
 
+/** The most catalog pages the recipes route reads: planque keeps a provider's apps in one page, so this is room, not a limit. */
+const CATALOG_PAGES = 10;
+
 /**
  * Recipes (docs/coach.md, "Recipes"): the recipes whose connections the account's catalog can
  * make, read with the person's own session. When the catalog can't be read, every recipe is
  * listed and `filtered` says so: a new person still opens Coach to recipes, and Coach says what it
  * can't connect.
  */
-/** The most catalog pages the recipes route reads: planque keeps a provider's apps in one page, so this is room, not a limit. */
-const CATALOG_PAGES = 10;
-
 async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
   let apps: CatalogApp[] | undefined;
   if (deps.planqueBase) {
