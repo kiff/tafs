@@ -25,6 +25,8 @@ interface Account {
   mandates: Mandate[]; held: Held[]; calls?: ActivityCall[];
   /** "Did this happen?" calls KIFF lists, or "down" when that read fails. */
   unsure?: number | "down";
+  /** Set: KIFF answers the Card reads only once "Did this happen?" was asked too, as reads made together are. */
+  together?: { asked?: () => void; seen?: Promise<void> };
   drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number;
   /** Each Card's latest revision, as its statement says (kiff/tafs#107). */
   revisions?: Record<string, number>;
@@ -133,11 +135,15 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
     }
     if (url.endsWith("/v1/me/did-this-happen")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
+      account.together?.asked?.();
       if (account.unsure === "down") return new Response(JSON.stringify({ error: "down" }), { status: 503 });
       return new Response(JSON.stringify({ calls: Array.from({ length: account.unsure ?? 0 }, (_, i) => ({ proposal: `p-${i}` })) }), { status: 200 });
     }
     if (url.includes("/v1/me/mandates") || url.includes("/v1/me/card-exceptions")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.together?.seen && !(await Promise.race([account.together.seen.then(() => true), new Promise<boolean>((r) => setTimeout(() => r(false), 300))]))) {
+        return new Response(JSON.stringify({ error: "asked one at a time" }), { status: 503 });
+      }
       if (account.status) return new Response(JSON.stringify({ error: "down" }), { status: account.status });
       return new Response(JSON.stringify(url.includes("mandates") ? { mandates: account.mandates } : { exceptions: account.held }), { status: 200 });
     }
@@ -395,6 +401,17 @@ describe("tafs cloud", () => {
     w.account.unsure = "down";
     const r = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(r.status).toBe(200); expect(r.body.needs_you).toBeUndefined();
+  });
+
+  it("reads \"Did this happen?\" together with the Cards, not after them", async () => {
+    const w = world();
+    w.account.unsure = 1;
+    const together: { asked?: () => void; seen?: Promise<void> } = {};
+    together.seen = new Promise<void>((r) => { together.asked = r; });
+    w.account.together = together;
+    const r = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.needs_you).toEqual({ count: 1, words: "1 needs you." });
   });
 
   it("composes KIFF currency exceptions only for visible tafs, with the same row in Needs you and Setup", async () => {
