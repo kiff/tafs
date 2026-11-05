@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach:** when its dial, install or results tool is refused because the owner hasn't given Coach that tool yet (an account from before it), Coach says so in one sentence and stops, instead of stopping silently (kiff/tafs#476, gap 5).
 - **Sign in to a site (kiff/planque#86).** tafs cloud offers `site_sign_in` on a connected browser connection. On Android, the connection's sheet shows it, and a tap opens planque's live sign-in view in a web view, under planque's words, where the owner signs in to the site themselves. Nothing else is shown, and the view never leaves planque's address.
 - **Android: any app on demand (kiff/planque#87).** Connect apps shows an app that isn't set up yet with tafs cloud's words in place of Connect, and nothing to tap. A taf's connection sheet says who keeps its sign-in, in tafs cloud's line.
 - **Recipes:** the words to say to Coach name the kind of app ("my accounting app", "my email"), never a brand, since an app sold in one country isn't in another and the account may already have a different one; Coach finds the apps by those words and proposes the ones the account has first (kiff/tafs#476, gap 2).
