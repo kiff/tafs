@@ -60,13 +60,17 @@ object ConnectAppsWords {
   /** The other tafs whose live Card has a rule on one of its tools, as a warning above Disconnect; null when none. */
   fun alsoOnCards(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
     state.tafsUsing(grant, except = grant.request.agent).map { it.name }.takeIf { it.isNotEmpty() }
-      ?.let { "Also on ${it.joinToString(" and ")}'s Card" + if (it.size == 1) "" else "s" }
+      ?.let { if (it.size == 1) "Also on ${bot.tafs.app.model.ConnectionWords.possessive(it[0])} Card" else "Also on the Cards of ${it.joinToString(" and ")}" }
+
+  /** The other tafs whose Card draws on a connection's tools: disconnecting it stops them too. */
+  fun alsoStops(state: AppState, grant: bot.tafs.app.kiff.Grant): List<String> =
+    state.tafsUsing(grant, except = grant.request.agent).map { it.name }
 
   /** The title over an app's connections. */
   fun yourConnections(app: String) = "Your $app connections"
 
   /** What disconnecting one does, said before the fingerprint. */
-  const val DISCONNECT_WHY = "Disconnecting one removes its tools from that taf only. Other tafs keep theirs."
+  const val DISCONNECT_WHY = "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay."
 
   /** The taf a connection was set up for, by name; null once that taf was removed. */
   fun tafOf(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
@@ -182,8 +186,8 @@ fun ConnectAppsSheet(
       androidx.compose.material3.AlertDialog(
         onDismissRequest = { confirmingDisconnect = null },
         containerColor = Theme.panel,
-        title = { Text(bot.tafs.app.model.ConnectionWords.disconnectTitle(g, taf)) },
-        text = { Text(bot.tafs.app.model.ConnectionWords.disconnectBody(g, taf)) },
+        title = { Text(bot.tafs.app.model.ConnectionWords.disconnectTitle(g, taf, ConnectAppsWords.alsoStops(state, g))) },
+        text = { Text(bot.tafs.app.model.ConnectionWords.disconnectBody(g, taf, ConnectAppsWords.alsoStops(state, g))) },
         confirmButton = {
           androidx.compose.material3.TextButton({ confirmingDisconnect = null; onDisconnect?.invoke(g.id) }) { Text(ConnectAppsWords.DISCONNECT, color = Theme.no) }
         },

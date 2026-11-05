@@ -116,8 +116,8 @@ connect some apps that aren't on the list, and tells you when one isn't availabl
 A connected app (“Connected ✓”) opens its connections: each planque grant the account has for that app, live (not
 `disconnected` or `failed`), with the taf it was set up for (“Set up for Refunds”), or “Its taf was removed”, and
 **Disconnect** for whoever manages the account's Cards. Disconnect asks first, naming the one taf it ends (“Disconnect
-Stripe from Refunds?”, with Cancel), and says other tafs' connections to the app stay; Face ID or the fingerprint then
-asks the same words. It calls planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes that
+Stripe from Refunds?”, with Cancel), names any other taf whose Card draws on its tools, which stops too (“Chargebacks
+stops too.”), and says other connections to the app stay; Face ID or the fingerprint then asks the same words. It calls planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes that
 connection's tools from KIFF, and revokes its sign-in at the app only when no other live connection uses it (a second
 taf that reused it, or the same provider account); the last connection on a sign-in revokes it. The list is read again
 after.

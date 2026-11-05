@@ -78,7 +78,7 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText(ConnectAppsWords.DISCONNECT_WHY).assertIsDisplayed()
     rule.onNodeWithText(ConnectAppsWords.DISCONNECT).performClick()
     rule.onNodeWithText("Disconnect Stripe from Refunds?").assertIsDisplayed()
-    rule.onNodeWithText("Other tafs' Stripe connections stay connected", substring = true).assertIsDisplayed()
+    rule.onNodeWithText("Other connections to Stripe stay connected", substring = true).assertIsDisplayed()
     rule.onNodeWithText("Cancel").performClick()
     rule.waitForIdle()
     assertEquals("Cancel sends nothing", emptyList<String>(), disconnected)

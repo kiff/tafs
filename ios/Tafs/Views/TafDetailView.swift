@@ -547,14 +547,14 @@ struct ConnectionsPanel: View {
                         .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 }
             }
-            .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0)) } ?? "",
+            .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0), alsoStops: model.alsoStops($0)) } ?? "",
                                 isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                                 titleVisibility: .visible) {
                 Button("Disconnect", role: .destructive) {
                     if let id = confirming?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
             } message: {
-                if let g = confirming { Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g))) }
+                if let g = confirming { Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g))) }
             }
         }
     }

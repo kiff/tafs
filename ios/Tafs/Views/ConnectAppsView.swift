@@ -110,15 +110,29 @@ struct ConnectAppsView: View {
 /// Disconnect's words, the same on every screen and in the Face ID prompt: it names the one taf
 /// it ends, and says other tafs' connections to the vendor stay.
 enum DisconnectWords {
-    static let footer = "Disconnecting one removes its tools from that taf only. Other tafs keep theirs."
+    static let footer = "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay."
 
-    static func title(_ vendor: String, taf: String?) -> String {
-        taf.map { "Disconnect \(vendor) from \($0)?" } ?? "Disconnect \(vendor)?"
+    /// A name's possessive: "Refunds'", "Chargebacks'"; else "Coach's".
+    static func possessive(_ name: String) -> String { name.hasSuffix("s") ? "\(name)'" : "\(name)'s" }
+
+    /// The question, naming the one taf it ends and `alsoStops`, the other tafs whose Card
+    /// draws on its tools; the Face ID prompt asks the same.
+    static func title(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
+        let asked = taf.map { "Disconnect \(vendor) from \($0)?" } ?? "Disconnect \(vendor)?"
+        guard !alsoStops.isEmpty else { return asked }
+        return "\(asked) \(alsoStops.joined(separator: " and ")) \(alsoStops.count == 1 ? "stops" : "stop") too."
     }
 
-    static func message(_ vendor: String, taf: String?) -> String {
-        (taf.map { "\($0)'s \(vendor) tools stop working." } ?? "No taf uses this \(vendor) connection now. Its tools leave KIFF.")
-            + " Other tafs' \(vendor) connections stay connected. If no other taf uses this sign-in, it's revoked at \(vendor)."
+    static func message(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
+        let others: String
+        switch alsoStops.count {
+        case 0: others = ""
+        case 1: others = " \(possessive(alsoStops[0])) Card also uses these tools, so it stops too."
+        default: others = " The Cards of \(alsoStops.joined(separator: " and ")) also use these tools, so they stop too."
+        }
+        return (taf.map { "\(possessive($0)) \(vendor) tools stop working." } ?? "No taf uses this \(vendor) connection now. Its tools leave KIFF.")
+            + others
+            + " Other connections to \(vendor) stay connected. If no other connection uses this sign-in, it's revoked at \(vendor)."
             + " Connecting again asks you to approve and sign in again."
     }
 }
@@ -172,13 +186,13 @@ struct AppConnectionsView: View {
         .navigationTitle("Your \(app.title) connections")
         .navigationBarTitleDisplayMode(.inline)
         // Asked first, naming the one taf it ends; only then Face ID, in the same words.
-        .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0)) } ?? "",
+        .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0), alsoStops: model.alsoStops($0)) } ?? "",
                             isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                             titleVisibility: .visible, presenting: confirming) { g in
             Button("Disconnect", role: .destructive) { disconnect(g) }
             Button("Cancel", role: .cancel) { confirming = nil }
         } message: { g in
-            Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g)))
+            Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g)))
         }
     }
 

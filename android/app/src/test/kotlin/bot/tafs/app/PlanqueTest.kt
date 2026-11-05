@@ -1044,7 +1044,12 @@ class PlanqueTest {
     assertEquals("Disconnect Stripe from Invoice reminders?", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Invoice reminders"))
     assertEquals("Disconnect Stripe?", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, null))
     val body = bot.tafs.app.model.ConnectionWords.disconnectBody(g, "Invoice reminders")
-    assertTrue(body, body.startsWith("Invoice reminders's Stripe tools stop working.") && body.contains("Other tafs' Stripe connections stay connected."))
+    assertTrue(body, body.startsWith("Invoice reminders' Stripe tools stop working.") && body.contains("Other connections to Stripe stay connected."))
+    // Another taf whose Card draws on these tools stops too, and is named (qa-kiff on tafs#546).
+    assertEquals("Disconnect Stripe from Refunds? Chargebacks stops too.", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Refunds", listOf("Chargebacks")))
+    val shared = bot.tafs.app.model.ConnectionWords.disconnectBody(g, "Refunds", listOf("Chargebacks"))
+    assertTrue(shared, shared.contains("Chargebacks' Card also uses these tools, so it stops too."))
+    assertEquals("Coach's", bot.tafs.app.model.ConnectionWords.possessive("Coach"))
     assertTrue(bot.tafs.app.model.ConnectionWords.disconnectBody(g, null).startsWith("No taf uses this Stripe connection now."))
     // The fingerprint prompt: the taf the connection was set up for, by name.
     reads()
@@ -1059,6 +1064,19 @@ class PlanqueTest {
     m.refreshConnections()
     assertTrue(m.disconnect("g1"))
     assertEquals(listOf("Disconnect Stripe from Refunds?"), auth.asked)
+  }
+
+  /** The fingerprint prompt names another taf whose Card draws on the connection's tools: it stops too. */
+  @Test fun disconnectsPromptNamesAnotherTafWhoseCardUsesTheTools() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, sharedHome(withChargebacks = true))
+    transport.answer(grants, 200, """{"grants":[${grant("g1", "connected", extra = ",\"vendor\":\"Stripe\"")}]}""")
+    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
+    val m = model()
+    m.refresh()
+    m.refreshConnections()
+    assertTrue(m.disconnect("g1"))
+    assertEquals(listOf("Disconnect Stripe from Refunds? Chargebacks stops too."), auth.asked)
   }
 
   @Test fun planquesOwnRefusalsSayWhatHappened() {

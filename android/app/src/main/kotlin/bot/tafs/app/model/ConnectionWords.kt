@@ -24,12 +24,26 @@ object ConnectionWords {
   /** What planque last did, as it writes it ("Approved from tafs on Android phone"). */
   fun lastEvent(g: Grant): String? = g.events.lastOrNull()?.what?.takeIf { it.isNotBlank() }
 
-  /** Disconnect's question, naming the one taf it ends ([taf], or none once its taf was removed); the fingerprint prompt says the same. */
-  fun disconnectTitle(g: Grant, taf: String?): String = taf?.let { "Disconnect ${g.vendor} from $it?" } ?: "Disconnect ${g.vendor}?"
+  /** A name's possessive: "Refunds'", "Invoice reminders'", "Chargebacks'"; else "Coach's". */
+  fun possessive(name: String): String = if (name.endsWith("s")) "$name'" else "$name's"
 
-  /** What stops and what doesn't: only this taf's connection ends, and other tafs' connections to the vendor stay. */
-  fun disconnectBody(g: Grant, taf: String?): String =
-    (taf?.let { "$it's ${g.vendor} tools stop working." } ?: "No taf uses this ${g.vendor} connection now. Its tools leave KIFF.") +
-      " Other tafs' ${g.vendor} connections stay connected. If no other taf uses this sign-in, it's revoked at ${g.vendor}." +
+  /**
+   * Disconnect's question, naming the one taf it ends ([taf], or none once its taf was removed), and [alsoStops], the
+   * other tafs whose Card draws on its tools, which stop too; the fingerprint prompt asks the same.
+   */
+  fun disconnectTitle(g: Grant, taf: String?, alsoStops: List<String> = emptyList()): String {
+    val asked = taf?.let { "Disconnect ${g.vendor} from $it?" } ?: "Disconnect ${g.vendor}?"
+    return if (alsoStops.isEmpty()) asked else "$asked ${alsoStops.joinToString(" and ")} ${if (alsoStops.size == 1) "stops" else "stop"} too."
+  }
+
+  /** What stops and what doesn't: this taf's connection ends, with any other taf whose Card draws on its tools; other connections to the vendor stay. */
+  fun disconnectBody(g: Grant, taf: String?, alsoStops: List<String> = emptyList()): String =
+    (taf?.let { "${possessive(it)} ${g.vendor} tools stop working." } ?: "No taf uses this ${g.vendor} connection now. Its tools leave KIFF.") +
+      when (alsoStops.size) {
+        0 -> ""
+        1 -> " ${possessive(alsoStops[0])} Card also uses these tools, so it stops too."
+        else -> " The Cards of ${alsoStops.joinToString(" and ")} also use these tools, so they stop too."
+      } +
+      " Other connections to ${g.vendor} stay connected. If no other connection uses this sign-in, it's revoked at ${g.vendor}." +
       " Connecting again asks you to approve and sign in again."
 }

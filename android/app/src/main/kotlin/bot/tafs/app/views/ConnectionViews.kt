@@ -84,8 +84,8 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
   ending?.let { grant ->
     AlertDialog(
       onDismissRequest = { ending = null },
-      title = { Text("Disconnect ${grant.vendor}?") },
-      text = { Text(ConnectionWords.disconnectBody(grant, taf.name)) },
+      title = { Text(ConnectionWords.disconnectTitle(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
+      text = { Text(ConnectionWords.disconnectBody(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
       confirmButton = { TextButton({ ending = null; scope.launch { actions.disconnect(grant.id) } }) { Text("Disconnect", color = Theme.no) } },
       dismissButton = { TextButton({ ending = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
