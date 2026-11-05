@@ -130,6 +130,21 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.raw).not.toContain("names a tool twice");
   });
 
+  it("keeps a failed step when the same tool is called again with other input: that is a new call, not a retry", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "send_reminder", input: { to: "A" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "The mailbox for A is full.", is_error: true } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "send_reminder", input: { to: "B" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "sent" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Remind A and B" } });
+    const steps = r.events.filter((e) => e.event === "step").map((e) => e.data);
+    // B's reminder went; A's still shows failed, with its why, before the end.
+    expect(steps).toEqual([{ call_id: "c2", status: "done" }, { call_id: "c1", status: "error", failed: true, why: "The mailbox for A is full." }]);
+    expect(r.events.map((e) => e.event).slice(-2)).toEqual(["step", "end"]);
+  });
+
   it("says each step in a few words, naming the vendor once its grant is known, never the arguments (kiff/tafs#214)", async () => {
     const w = world();
     w.agents.streamed.push(

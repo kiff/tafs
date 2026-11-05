@@ -171,12 +171,14 @@ export type StepWhys = Array<{ call: string; tool: string; why: string }>;
  */
 /**
  * A step Coach retried and that later went through isn't shown to the owner as failed
- * (kiff-cloud#1487, recipe 3): a failed call of a tool followed by a later call of the
- * same tool in the same run is dropped, and the later call's outcome stands, done or
- * failed again. Only the last outcome of a tool's retries reaches the owner.
+ * (kiff-cloud#1487, recipe 3): a failed call followed by a real retry, the same tool with
+ * the same input (kiff/agents' `input_hash` on the usage record), is dropped, and the
+ * retry's outcome stands, done or failed again. A later call of the same tool with other
+ * input is other work, and keeps its own step: a reminder to B says nothing about A's. A
+ * record with no digest (from before kiff/agents wrote one) folds nothing.
  */
-export function foldRetried<T extends { tool: string; error?: true }>(steps: T[]): T[] {
-  return steps.filter((s, i) => !s.error || !steps.slice(i + 1).some((later) => later.tool === s.tool));
+export function foldRetried<T extends { tool: string; error?: true; inputHash?: string }>(steps: T[]): T[] {
+  return steps.filter((s, i) => !s.error || !s.inputHash || !steps.slice(i + 1).some((later) => later.tool === s.tool && later.inputHash === s.inputHash));
 }
 
 export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string }> {

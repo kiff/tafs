@@ -100,8 +100,8 @@ describe("conversation", () => {
     const usage = (s: number, waited: object[]) =>
       list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(s), kind: "usage", body: { cost_micro_usd: 1, timing: { ms: 900, waited } } });
     usage(2, []);
-    usage(7, [{ tool: "get_order", ms: 300, is_error: true }]);
-    usage(12, [{ tool: "get_order", ms: 200 }, { tool: "create_refund", ms: 900, result_bytes: 40 }]);
+    usage(7, [{ tool: "get_order", ms: 300, is_error: true, input_hash: "o42" }]);
+    usage(12, [{ tool: "get_order", ms: 200, input_hash: "o42" }, { tool: "create_refund", ms: 900, result_bytes: 40 }]);
     w.agents.say(chat, "Refunded $20.", at(12));
     w.agents.say(chat, "Anything else?", at(14));
     // Why the first try failed, as the stream kept it (stream.test.ts): the thread says it on that step.

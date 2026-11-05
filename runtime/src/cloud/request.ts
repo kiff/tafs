@@ -36,10 +36,10 @@ export function fromOf(r: Run): string {
 }
 
 /** The waited calls each turn recorded, as kiff/agents writes them on a usage event. */
-function callsOf(body: unknown): Array<{ tool: string; error: boolean; notMade: boolean }> {
+function callsOf(body: unknown): Array<{ tool: string; error: boolean; notMade: boolean; inputHash?: string }> {
   const t = (body as { timing?: { waited?: unknown } } | undefined)?.timing;
-  const waited = Array.isArray(t?.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown; not_made?: unknown }>) : [];
-  return waited.filter((w) => typeof w?.tool === "string").map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true }));
+  const waited = Array.isArray(t?.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown; not_made?: unknown; input_hash?: unknown }>) : [];
+  return waited.filter((w) => typeof w?.tool === "string").map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true, ...(typeof w.input_hash === "string" && w.input_hash ? { inputHash: w.input_hash } : {}) }));
 }
 
 export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>(), own: DeliveryView[] = []): RequestDetail {
@@ -49,7 +49,7 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
   const steps: RequestStep[] = [{ label: "Received", line: `${from}, ${at(r.created)}`, state: "done" }];
   // Each call's step, with its tool and whether it failed, so a failed call Coach retried
   // with the same tool later in the run is folded into the retry's outcome (steps.ts foldRetried).
-  const calls: Array<{ tool: string; error?: true; step: RequestStep }> = [];
+  const calls: Array<{ tool: string; error?: true; inputHash?: string; step: RequestStep }> = [];
   for (const e of events.filter((x) => x.run === r.id).sort((a, b) => a.seq - b.seq)) {
     if (e.kind === "usage") {
       for (const c of callsOf(e.body)) {
@@ -57,7 +57,7 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
         const words = stepWords(c.tool, titles) ?? "Worked on it";
         const step: RequestStep = { label: words, line: c.notMade ? `Not made · ${at(e.time)}` : c.error ? `Didn't go through · ${at(e.time)}` : at(e.time),
           state: c.notMade ? "not_made" : c.error ? "failed" : "done" };
-        calls.push({ tool: c.tool, ...(c.error && !c.notMade ? { error: true as const } : {}), step });
+        calls.push({ tool: c.tool, ...(c.error && !c.notMade ? { error: true as const } : {}), ...(c.inputHash ? { inputHash: c.inputHash } : {}), step });
         steps.push(step);
       }
     } else if (e.kind === "tool_result") {
