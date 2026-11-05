@@ -25,12 +25,12 @@ export const MODEL = "claude-sonnet-5-5";
 export const PRICE = { Input: 2_000_000, Output: 10_000_000, CacheRead: 200_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 } as const;
 export const MAX_TOKENS = 16_000;
 /**
- * How hard the model works on each turn. Low: a taf's steps ("refund this payment") need no
- * long thinking, and the owner waits on each answer (kiff/tafs#102). Measured through
- * kiff/agents' Eval on 5 Nov 2026: Sonnet 5.5 at low did the chargebacks job in full.
- * Sonnet 5.5 has no fast output, so a taf's definition carries no speed or fast price.
+ * How hard the model works on each turn. Medium: a taf acts on money and records, and at low
+ * Sonnet 5.5 once wrote a call with a mistyped id (kiff/agents' Eval, 6 Nov 2026), so it thinks a
+ * little more before each write; the owner's choice. Sonnet 5.5 has no fast output, so a taf's
+ * definition carries no speed or fast price.
  */
-export const EFFORT: Effort = "low";
+export const EFFORT: Effort = "medium";
 /**
  * The model's short progress notes between tool calls stream to the person waiting, its
  * reasoning never: on Claude Opus 5.5 a line written before a tool call ("Miro las últimas
