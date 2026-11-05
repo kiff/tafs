@@ -109,6 +109,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
       Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(app.name, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
         Text(app.statusWords, style = scaled(14, color = if (app.reconnect) Theme.amberText else Theme.soft))
+        app.accountWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(14, color = Theme.ink)) }
         app.custodyWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
         // A browser connection: the owner signs in to a site themselves, in planque's live view (tafs cloud's words).
         app.siteSignIn?.takeIf { state.manages(taf.id) }?.let { action ->
@@ -171,6 +172,8 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     val latest = cache?.pages?.lastOrNull()
     items(latest?.cardUnitExceptions.orEmpty(), key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     latest?.cardUnitExceptionsNotice?.let { notice -> item { Text(notice, style = scaled(13, color = Theme.dim)) } }
+    // When it runs, with Run now and Pause, ahead of what it did.
+    item(key = "runs") { RunsPanel(taf, taf.id in state.runsInFlight, actions) }
     item { RetainedRuns(taf, state, actions) }
     if (selection.isNotBlank()) item { TextButton(clearSelection) { Text("All apps", color = Theme.amberText) } }
     item {

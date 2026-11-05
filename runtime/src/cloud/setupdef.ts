@@ -24,10 +24,14 @@ export const SETUP_EFFORT: Effort = "high";
 /** Coach's tools on the account's tafs MCP server, by name: deferred, so an ordinary turn pays nothing for them. */
 export const COACH_TOOLS = TOOLS.map((t) => t.name);
 
-/** What one setup run may cost at most, in cents: the same room at the fast output (kiff/agents#197). */
+/** What one setup run may cost at most, in cents (kiff/agents#197). */
 export const SETUP_BUDGET_CENTS = 600;
-/** Coach answers someone who waits, so its turns run at the fast output (kiff/agents#197). */
-export const SETUP_SPEED = "fast" as const;
+/**
+ * Coach runs at the standard output (the owner's decision of 5 Nov 2026, with the lighter Coach of
+ * #525): the fast output costs several times it, and its turns are short now. PRICE_FAST stays on the
+ * definition as what the fast output would cost, for a turn kiff/agents ever runs there.
+ */
+export const SETUP_SPEED = "standard" as const;
 
 export const SETUP_INSTRUCTIONS_HEAD = `You are Setup. In the tafs app's setup chat, a business owner tells you, in
 their own words, an outcome they want ("make sure customers can get their

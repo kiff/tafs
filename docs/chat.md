@@ -283,10 +283,14 @@ held call was answered, then `end`.
 
 `GET /v1/tafs/{id}/conversation` is the thread: the taf's last 5 job runs and the
 person's last 5 chats, oldest first, at most 100 messages. Each message is
-`{at, from: owner|taf, kind: kickoff|message, text, session}`, with `work`, `door` and
-`attachments` where they apply. With it come the components, whether the taf is at work
+`{at, from: owner|taf, kind: kickoff|message, text, session}`, with `work`, `door`,
+`attachments` and `delivered` where they apply (`delivered`: on a job run's report, where its
+result went, in tafs cloud's words, "Sent to Google Sheets · Refunds 2026 and handed to
+Invoices"; the app draws it above the taf's own words, `docs/reliability.md`). With it come the components, whether the taf is at work
 (`working`), what the owner wrote to the run that it hasn't read (`steering`), and where
-the latest run stopped at a cap (`capped`).
+the latest run stopped at a cap (`capped`). A job run's report may carry `delivered`, tafs
+cloud's one line on where its result went; Android draws it above the taf's words, as written
+(`ChatMessage.delivered`), and nothing where none comes.
 
 - A job run's first message is the job's instruction, shown as a small note.
 - A message that came through a door shows with its door and sender ([doors.md](doors.md)).

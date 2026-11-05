@@ -353,7 +353,7 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
 
 /** When it runs, with Run now and Pause or Resume; a taf that works from its chat has no schedule to run or pause. */
 @Composable
-private fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
+internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
   val scope = rememberCoroutineScope()
   // Set on the tap itself, before the request starts, so a second tap can't send one.
   var tapped by remember { mutableStateOf(false) }

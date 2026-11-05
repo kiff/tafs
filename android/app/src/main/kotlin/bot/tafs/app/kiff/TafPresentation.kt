@@ -43,6 +43,8 @@ import java.net.URLEncoder
   @SerialName("workflow_words") val workflowWords: String? = null,
   /** Who keeps its sign-in, in tafs cloud's one line (kiff/planque#87); none when the connection service doesn't say. */
   @SerialName("custody_words") val custodyWords: String? = null,
+  /** Which vendor account it works in and in which mode, tafs cloud's one line from planque's words: "Demo Shop · Live". */
+  @SerialName("account_words") val accountWords: String? = null,
   /** A browser connection's own sign-in to a site (kiff/planque#86): tafs cloud's title and line; none on any other connection. */
   @SerialName("site_sign_in") val siteSignIn: SiteSignIn? = null)
 @Serializable data class SiteSignIn(val title: String, val words: String = "")

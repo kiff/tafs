@@ -437,6 +437,9 @@ Coach must not ask it again (recipe 3 on the phone asked "past 20 a day" twice),
 connection reports no mode and Coach must say it can't tell whether the account is test or live,
 never "test mode" (recipe 3 claimed it).
 
+Coach runs at the standard output, as the tafs do: with the lighter core its turns are short, and
+the fast output costs several times the standard one.
+
 Each Coach conversation's cost is read from kiff/agents' usage events and shown on its thread as
 `usage` (`turns`, `tokens_in`, `cache_read_tokens`, `cost_micro_usd`), so the before and after of
 a change to the core or a skill are read from the same place.
