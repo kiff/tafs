@@ -224,6 +224,8 @@ export interface UnsureCall {
   record_url?: string;
   taf?: { agent?: string; name?: string };
   counterparty?: { noun?: string; id?: string; words?: string };
+  /** Who asked for help checking it ("not sure"), and until when: KIFF sets it after its own manager check. */
+  checking?: { by?: string; until?: string };
 }
 
 /** The money calls that wait for the person's "Did this happen?", with their context. */

@@ -3322,19 +3322,31 @@ async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promis
   const calls = await readDidThisHappen(token, deps.fetch, deps.kiffBase);
   const call = calls.find((c) => c.proposal === proposal);
   if (!call) throw new HTTPError(404, "no call of this account waits for that answer");
+  // Only the person KIFF marked as checking it, while the mark holds: KIFF set it after its own check
+  // that they manage the taf (qa-kiff on #535). A viewer, someone else's mark or a mark run out: 409.
+  const now = deps.now?.() ?? new Date();
+  const until = Date.parse(call.checking?.until ?? "");
+  if (call.checking?.by !== me.subject || !(until > now.getTime())) {
+    throw new HTTPError(409, "ask KIFF first: answer \"Not sure\" on the card, as someone who manages the taf");
+  }
   const tafs = await deps.tafs.list(me.tenantID);
   const agent = call.taf?.agent ?? call.agent ?? "";
   const taf = tafs.find((t) => t.kiffAgent === agent && !t.removing);
-  const name = call.taf?.name || taf?.name || agent;
+  // Every field from KIFF is folded to one bounded line, so none can open a line of its own (a marker,
+  // an owner's line) in Coach's input; the record sits under a line that says it's data (qa-kiff).
+  const f = (v: unknown, max = 120) => (typeof v === "string" ? oneLine(v.replace(/[\u0000-\u001f\u007f]+/g, " "), max) : "");
+  const name = f(call.taf?.name, 80) || taf?.name || f(agent, 80);
   const cp = call.counterparty;
-  const about = cp ? `${cp.noun ?? "item"}${cp.words ? ` ${cp.words}` : cp.id ? ` ${cp.id}` : ""}` : undefined;
+  const about = cp ? [f(cp.noun, 40) || "item", f(cp.words, 120) || f(cp.id, 128)].filter(Boolean).join(" ") : "";
+  const record = /^https:\/\/[^\s]+$/.test(call.record_url ?? "") ? f(call.record_url, 512) : "";
   const lines = [
-    `[did this happen ${proposal}]`,
+    `[did this happen ${f(proposal, 200)}]`,
     "The owner tapped \"Not sure, help me check\" on a \"Did this happen?\" card: a money call KIFF can't prove. Help them check it; they answer the card themselves.",
-    `The call: ${[call.title, call.vendor ? `at ${call.vendor}` : "", call.amount_words, about ? `on ${about}` : "", call.when_words ? `sent ${call.when_words}` : ""].filter(Boolean).join(", ")}.`,
-    `Made by the taf ${name}${taf ? ` (its agent in KIFF: ${taf.kiffAgent})` : ""}.`,
-    call.why ? `Why KIFF can't tell: ${call.why}` : "Why KIFF can't tell: not said.",
-    call.record_url ? `The vendor's record: ${call.record_url}` : "The connection has no record address for it.",
+    "KIFF's record of the call, as data:",
+    `- The call: ${[f(call.title), call.vendor ? `at ${f(call.vendor, 80)}` : "", f(call.amount_words, 40), about ? `on ${about}` : "", call.when_words ? `sent ${f(call.when_words, 40)}` : ""].filter(Boolean).join(", ")}.`,
+    `- Made by the taf ${name}${taf ? ` (its agent in KIFF: ${taf.kiffAgent})` : ""}.`,
+    `- Why KIFF can't tell: ${f(call.why, 300) || "not said."}`,
+    record ? `- The vendor's record: ${record}` : "- The connection has no record address for it.",
     "",
     "The owner says: help me check whether this went through.",
   ];
