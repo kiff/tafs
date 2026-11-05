@@ -905,6 +905,10 @@ class AppModel(
     cloud.token = token
     kiff.tenant = tenant
     accountGeneration += 1
+    // An approval window is the last session's: a new sign-in opens its own.
+    kiff.window = null
+    windowClosing?.cancel()
+    _state.update { it.copy(windowWords = null) }
     eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()

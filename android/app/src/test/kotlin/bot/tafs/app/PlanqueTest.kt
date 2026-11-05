@@ -1304,4 +1304,27 @@ class PlanqueTest {
     testScheduler.runCurrent()
     assertEquals(2, transport.requestsTo("POST /v1/me/window/$win/close").size)
   }
+
+  @Test fun aNewSignInForgetsTheLastSessionsWindow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    transport.answer("GET /v1/me/window", 200, windowOpened)
+    transport.answer("POST /v1/me/window/$win/close", 200, """{"window":{"id":"$win","open":false}}""")
+    val m = model(scope = backgroundScope)
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals("No fingerprint for the next 5 minutes", m.state.value.windowWords)
+    reads()
+    runCatching { m.useSession("at_2", "t_02") }
+    assertNull(m.state.value.windowWords)
+    // Nothing of the last session's window is closed or signed in the new one.
+    m.screenLocked()
+    testScheduler.runCurrent()
+    assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
+  }
 }
