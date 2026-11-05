@@ -72,7 +72,14 @@ struct ConnectAppsView: View {
             Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                 .accessibilityIdentifier("connect.title." + app.entry)
             Spacer()
-            if app.connected {
+            if app.connected, !model.connections(of: app).isEmpty {
+                // Its connections, each with the taf it serves and Disconnect, on a screen of their own.
+                NavigationLink { AppConnectionsView(app: app) } label: {
+                    Label("Connected", systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
+                }
+                .accessibilityLabel("Connected. Manage")
+                .accessibilityIdentifier("connect.manage." + app.entry)
+            } else if app.connected {
                 Label("Connected", systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
                     .accessibilityLabel("Connected")
             } else {
@@ -97,6 +104,59 @@ struct ConnectAppsView: View {
             await model.startConnect(app, for: tafID)
             starting = nil
         }
+    }
+}
+
+/// A connected app's connections: which taf each was set up for (or that its taf was removed),
+/// any other taf whose Card covers it, and
+/// Disconnect, which removes its tools from KIFF and signs tafs out of the app (Face ID first).
+struct AppConnectionsView: View {
+    @EnvironmentObject private var model: AppModel
+    let app: TafsCloud.ConnectApps.App
+    @State private var busy: String?
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(model.connections(of: app)) { g in
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(model.setUpFor(g))
+                                .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                            if let also = model.alsoOnCards(g) {
+                                Text(also).scaledFont(13).foregroundColor(Theme.soft)
+                            }
+                            if let words = g.statusWords, !words.isEmpty {
+                                Text(words).scaledFont(13).foregroundColor(Theme.dim)
+                            }
+                        }
+                        Spacer()
+                        if model.canManageCards {
+                            Button(busy == g.id ? "Disconnecting…" : "Disconnect", role: .destructive) {
+                                busy = g.id
+                                Task {
+                                    if await model.disconnect(grantID: g.id) { await model.loadConnectApps() }
+                                    busy = nil
+                                }
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(busy != nil)
+                            .accessibilityIdentifier("connect.disconnect." + g.id)
+                        }
+                    }
+                    .frame(minHeight: 44)
+                }
+            } footer: {
+                if model.canManageCards {
+                    Text("Disconnecting removes its tools from KIFF and signs tafs out of the app. A taf that used it stops being able to.")
+                }
+            }
+            if let error = model.lastError, error.hasPrefix("Not disconnected") {
+                Text(error).foregroundColor(Theme.no)
+            }
+        }
+        .navigationTitle("Your \(app.title) connections")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

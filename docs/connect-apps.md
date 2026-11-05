@@ -109,3 +109,16 @@ asks for one approval, then the app's own page.
 
 Ask Coach: **Not listed? Ask Coach** in Connect apps, or tell Coach what you need. Coach can
 connect some apps that aren't on the list, and tells you when one isn't available yet.
+
+## Disconnecting
+
+A connected app (“Connected ✓”) opens its connections: each planque grant the account has for that app, live (not
+`disconnected` or `failed`), with the taf it serves by its agent, or “No taf uses it” once that taf was removed, and
+**Disconnect** for whoever manages the account's Cards. Disconnect asks for Face ID or the fingerprint, then calls
+planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes the connection's tools from KIFF and revokes
+its sign-in at the app. The list is read again after.
+
+Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own
+confirmation, after its Cards are revoked and before tafs cloud removes the rest. Its result says the connections are
+disconnected, or how many couldn't be (then Disconnect here).
+

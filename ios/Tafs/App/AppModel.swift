@@ -1749,6 +1749,9 @@ final class AppModel: ObservableObject {
     /// Reads Connect apps' first page, filtered by what the owner typed.
     func loadConnectApps(_ q: String = "") async {
         guard mode == .kiff else { return }
+        // The account's connections too, so a connected app lists each one, with its taf and
+        // Disconnect.
+        if q.isEmpty { await refreshConnections() }
         let gen = accountGeneration
         let request = UUID()
         connectAppsRequest = request
@@ -2475,9 +2478,19 @@ final class AppModel: ObservableObject {
             }
         }
         guard gen == accountGeneration else { return nil }
-        let cards = cardsLeft == 0
+        // Its connections go with it: each grant its agent asked for is disconnected in
+        // planque (its tools out of KIFF, its sign-in revoked at the vendor), signed under the
+        // confirmation just given. Left connected, they stayed live and Coach offered them to
+        // the next taf as "already connected".
+        // A connection another taf still uses stays: KIFF's tools are the account's, so a later
+        // taf can draw on this one's.
+        guard let connections = await disconnectGrants(of: c.kiffAgent ?? "", gen: gen) else { return nil }
+        let cards = (cardsLeft == 0
             ? "Its Cards are revoked in KIFF."
-            : "KIFF didn't revoke \(cardsLeft) of its Cards: revoke them in KIFF."
+            : "KIFF didn't revoke \(cardsLeft) of its Cards: revoke them in KIFF.")
+            + (connections.left > 0 ? " \(connections.left) of its connections couldn't be disconnected: disconnect them in Connect apps."
+               : connections.done > 0 ? " Its connections are disconnected." : "")
+            + connections.kept.map { " " + $0 }.joined()
 
         let removal: TafsCloud.Removal
         do { removal = try await cloud.remove(c.id) } catch {
@@ -5197,6 +5210,73 @@ final class AppModel: ObservableObject {
             return nil
         }
         return connected
+    }
+
+    /// The account's live connections to a Connect apps entry: by its catalog entry, or the
+    /// grant tafs cloud named for it.
+    func connections(of app: TafsCloud.ConnectApps.App) -> [PlanqueClient.Grant] {
+        grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
+    }
+
+    /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
+    /// who uses it.
+    func setUpFor(_ grant: PlanqueClient.Grant) -> String {
+        guard let t = holderIDs[grant.request.agent].flatMap({ taf($0) }), t.state != .revoked else { return "Its taf was removed" }
+        return "Set up for \(t.name)"
+    }
+
+    /// The other tafs whose live Card has a rule on one of its tools, as a warning above
+    /// Disconnect; nil when none.
+    func alsoOnCards(_ grant: PlanqueClient.Grant) -> String? {
+        let names = tafsUsing(grant, except: grant.request.agent).map(\.name)
+        guard !names.isEmpty else { return nil }
+        return "Also on \(names.joined(separator: " and "))'s Card" + (names.count == 1 ? "" : "s")
+    }
+
+    /// The tafs that use a connection: a live Card rule, or a tool, on one of the actions it
+    /// connects. KIFF's tools are the account's, so a taf can draw on a connection another taf
+    /// asked for; `agent` leaves out the one being removed.
+    func tafsUsing(_ grant: PlanqueClient.Grant, except agent: String? = nil) -> [Taf] {
+        let actions = Set(grant.tools ?? grant.request.tools.filter(\.tafs).map(\.action))
+        guard !actions.isEmpty else { return [] }
+        let skip = agent.flatMap { holderIDs[$0] }
+        return tafs.filter { t in
+            t.id != skip && t.state != .revoked && !t.card.revoked
+                && (t.card.rules.contains { actions.contains($0.action) } || t.tools.contains { actions.contains($0) })
+        }
+    }
+
+    /// Disconnects every live grant `agent` asked for that no other taf uses, signed by the
+    /// device key under a confirmation the caller already took (removing the taf): how many
+    /// were, how many couldn't be, and each one kept for another taf in words; nil when the
+    /// account changed meanwhile. Without planque here, there's nothing to disconnect from
+    /// this device; without its key, each is counted as left, so the owner is told.
+    private func disconnectGrants(of agent: String, gen: Int) async -> (done: Int, left: Int, kept: [String])? {
+        guard !agent.isEmpty, planqueReady, let tenant = kiffTenant else { return (0, 0, []) }
+        await refreshConnections()
+        guard gen == accountGeneration else { return nil }
+        // Only the ones holding a sign-in: a pending grant never signed in has nothing to end.
+        let asked = grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect) }
+        var mine: [PlanqueClient.Grant] = []
+        var kept: [String] = []
+        for g in asked {
+            let names = tafsUsing(g, except: agent).map(\.name)
+            if names.isEmpty { mine.append(g); continue }
+            kept.append("Kept your \(g.vendor) connection: \(names.joined(separator: " and ")) \(names.count == 1 ? "uses" : "use") it.")
+        }
+        guard !mine.isEmpty else { return (0, 0, kept) }
+        guard sessionHasKey else { return (0, mine.count, kept) }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        var left = 0
+        for g in mine {
+            guard gen == accountGeneration else { return nil }
+            do { _ = try await planque.disconnect(grantID: g.id) } catch { left += 1 }
+        }
+        await refreshConnections()
+        return (mine.count - left, left, kept)
     }
 
     /// Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at

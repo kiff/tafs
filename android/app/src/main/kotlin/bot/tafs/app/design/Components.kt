@@ -57,7 +57,7 @@ fun TafAvatar(taf: Taf, size: Dp = 40.dp) {
 }
 
 @Composable
-fun StateChip(state: TafState) {
+fun StateChip(state: TafState, onClick: (() -> Unit)? = null) {
   val color = when (state) {
     TafState.working -> Theme.ok
     TafState.waiting -> Theme.amber
@@ -69,6 +69,7 @@ fun StateChip(state: TafState) {
     style = scaled(12, FontWeight.Medium, color),
     modifier = Modifier
       .clip(CircleShape)
+      .then(if (onClick != null) Modifier.clickable(onClickLabel = "Open Halt", onClick = onClick) else Modifier)
       .background(color.copy(alpha = 0.15f))
       .padding(horizontal = 8.dp, vertical = 4.dp),
   )

@@ -142,7 +142,8 @@ fun EnvironmentPill(text: String) {
 
 /**
  * A taf's Cards as a wallet stack (kiff/tafs#211): the Card in front whole, the others behind it
- * showing their top edge, so their number and names read at once. Tapping one brings it forward.
+ * showing their top edge, each a shade darker, so their number and names read at once. Tapping one
+ * brings it forward.
  */
 @Composable
 fun CardStack(
@@ -163,11 +164,17 @@ fun CardStack(
       ordered.forEachIndexed { index, card ->
         Box(Modifier.then(Modifier.offset(y = 26.dp * index)).clickable { onFront(card.id) }) {
           TafCardFace(card, issuedBy, color, revoked)
+          // Each Card behind a shade darker, so Cards of the same colour read as separate.
+          val shade = behindShade(ordered.size - 1 - index)
+          if (shade > 0f) Box(Modifier.matchParentSize().clip(RoundedCornerShape(18.dp)).background(Color.Black.copy(alpha = shade)))
         }
       }
     }
   }
 }
+
+/** How much darker a Card [depth] places behind the front one is drawn: none in front, then deeper, never hiding its edge. */
+fun behindShade(depth: Int): Float = if (depth <= 0) 0f else minOf(0.12f + 0.08f * (depth - 1), 0.32f)
 
 /**
  * A taf's Cards in one line (kiff/tafs#211): the front Card's balance, its name, its environment
