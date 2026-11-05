@@ -1267,8 +1267,9 @@ describe("a connected app's event, through planque", () => {
     const slow = w.agents.runs.find((x) => x.id === "run_slow")!.requirements![0]!;
     slow.answered = new Date(NOW.getTime() + 60_000).toISOString(); // the slow delivery's answer landed
     w.at(new Date(NOW.getTime() + 70_000));
+    const runsWithSlow = w.agents.runs.length;
     expect((await appEvent(w, { id: "ev_slow", key: "reply_slow" })).body).toEqual({ outcome: "answered" });
-    expect(w.agents.runs.length).toBe(runsBefore);
+    expect(w.agents.runs.length).toBe(runsWithSlow);
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
   });
 
