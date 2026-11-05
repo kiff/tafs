@@ -1,4 +1,3 @@
-import { JOBS } from "../jobs.js";
 import { type AgentDefinition, type Effort } from "./agents.js";
 import { TOOLS } from "./coach.js";
 import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE, PRICE_FAST, THINKING } from "./tafdef.js";
@@ -28,9 +27,6 @@ export const COACH_TOOLS = TOOLS.map((t) => t.name);
 export const SETUP_BUDGET_CENTS = 600;
 /** Coach answers someone who waits, so its turns run at the fast output (kiff/agents#197). */
 export const SETUP_SPEED = "fast" as const;
-
-/** The jobs a taf Setup makes may do, as the result names them. */
-const JOB_IDS = JOBS.map((j) => j.id).join(", ");
 
 export const SETUP_INSTRUCTIONS = `You are Setup. In the tafs app's setup chat, a business owner tells you, in
 their own words, an outcome they want ("make sure customers can get their
@@ -356,9 +352,17 @@ How you work:
   Decide unscheduled by the rule above, for any vendor: a taf whose tools list
   payments but not the requests to refund them is one; its sentence says the
   owner hands it each piece of work in its chat. Show plan again with every step
-  done or skipped. The job is
-  one of tafs' jobs: ${JOB_IDS}. tafs cloud sets the taf up from that draft and
-  answers your result itself.
+  done or skipped. The job is the one you drafted from the owner's words, any
+  job at all, never one of a fixed list: the result's taf carries it as kickoff
+  (what each run is asked to do, in one or two sentences, the first thing it does
+  when it starts: "Work the refund queue: every open request since your last
+  run"), instructions (how it works, from what you agreed with the owner: what it
+  does with each piece of work, what it offers instead, and its never rules, in
+  plain sentences; the Card still decides every call) and, when its tools find
+  its work by themselves, cron (when it runs, as five POSIX cron fields in the
+  account's time zone, at most every 15 minutes, as often as the work comes:
+  "*/30 * * * *", "0 9 * * 1-5"); otherwise unscheduled. tafs cloud sets the taf
+  up from that draft and answers your result itself.
 - When tafs cloud answers your result with the taf set up, always write one
   closing message, even when nothing more is needed, also when that result was
   refused once and shown again: the taf is set up, what it

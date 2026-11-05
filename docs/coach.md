@@ -139,8 +139,10 @@ then shows its plan. Then, each step behind the owner's yes:
    them from the Card's terms and its `on_exceed`, with the same words as a taf's Card tab
    ([tafs.md](tafs.md)): an `owner` Card says what asks the owner past each limit. An editor's draft
    waits for an admin to confirm it in KIFF.
-4. **Start the taf.** The result card hands over the taf, with `summary`: one line on
-   what this taf does, in the owner's words. tafs cloud starts it as the
+4. **Start the taf.** The result card hands over the taf, with its job as Coach drafted it
+   from the owner's words, any job at all (kiff/tafs#476): `summary`, one line on what this
+   taf does, `kickoff`, what each run is asked to do, `instructions`, how it works, and
+   `cron`, when it runs, or `unscheduled`. tafs cloud starts it as the
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
@@ -367,3 +369,26 @@ A plan (`steps` component) comes with `line`, its one-line form (`withLine` in `
 "Step 3 of 6 · Your rules", for the step at work or the first still to do, or "Done · 6 of 6". It's
 in the thread and on the stream alike. An app shows the plan folded to that line in Coach's header,
 and opens it to the steps. Android shows the plan's title where a plan has no `line`.
+
+## Recipes
+
+A new Coach conversation opens to **recipes** instead of a blank page (kiff/tafs#476): jobs worth
+giving a taf, each with the words to say to Coach. Tapping one fills Coach's message box with
+those words; the person edits them (the limits are examples) and sends. Coach then works as for
+any request: it connects the tools from the catalog, drafts the Card and hands the taf over. Recipes
+are suggestions, not finished products: there is no recipe-specific code, and when Coach can't
+build one, the gap is fixed generically (a connection, how Coach picks tools, a Card rule), so a
+person can prompt Coach freely. The five starter jobs tafs began with are recipes now.
+
+The source is one file per recipe in [`recipes/`](../recipes/README.md): its title, category
+(money, customers, operations, errands), one line on what the taf does, the vendors each
+connection needs (any of several where one stands in for another), what its Card allows, holds and
+never does, in words. `runtime/scripts/recipes.mjs` reads the files into `runtime/src/recipes.ts`,
+and a test fails when they differ.
+
+tafs cloud serves them at `GET /v1/recipes` ([api.md](api.md#recipes), `runtime/src/cloud/recipes.ts`):
+the recipes whose every connection has a vendor the account's catalog lists, read from planque
+with the person's own session, grouped by category with the titles the apps show. When the
+catalog can't be read, every recipe is listed and `filtered` says so, so the page is
+never blank for that; Coach says what it can't connect. The apps only draw the list and fill the
+message box: the words come from tafs cloud, so both apps show the same.
