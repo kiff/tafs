@@ -36,6 +36,9 @@ class TafsCloud(
    */
   suspend fun home(): Home = get("/v1/home")
 
+  /** The scheduled work to come on the dates [from] to [to] (YYYY-MM-DD, in the account's zone): kiff/tafs#534. */
+  suspend fun calendar(from: String, to: String): CalendarRead = get("/v1/calendar?from=$from&to=$to")
+
   /** A taf's thread, oldest first, and the run at work in it now, if any. */
   class Thread(
     val messages: List<ChatMessage>,

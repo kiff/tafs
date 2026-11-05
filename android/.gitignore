@@ -17,3 +17,5 @@ local.properties
 # The Play upload key never goes in the repository (android/make-upload-key.sh keeps it in Secrets Manager).
 *.jks
 *.keystore
+# Kotlin 2 keeps its compiler caches here.
+.kotlin

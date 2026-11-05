@@ -88,6 +88,7 @@ import bot.tafs.app.views.LocalSignInAgain
 import bot.tafs.app.views.ApproveAgain
 import bot.tafs.app.views.LocalApproveAgain
 import bot.tafs.app.views.LocalReceipt
+import bot.tafs.app.views.CalendarView
 import bot.tafs.app.views.OverviewView
 import bot.tafs.app.views.LocalCoachInstalls
 import bot.tafs.app.views.NeedsYouView
@@ -413,13 +414,15 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var coachOpen by rememberSaveable { mutableStateOf(false) }
   // Overview, on a tablet: beside the list, until a taf is picked.
   var overviewOpen by rememberSaveable { mutableStateOf(false) }
+  // The calendar of the tafs' scheduled work (kiff/tafs#534): from the Overview on a tablet, from the home's header on a phone.
+  var calendarOpen by rememberSaveable { mutableStateOf(false) }
   // Another account (signed in from the sample, or switched): the Tafs tab opens on its list, nothing of the last one left open.
   val whose = accountShown(state)
   var shownAccount by rememberSaveable { mutableStateOf(whose) }
   LaunchedEffect(whose) {
     if (whose == shownAccount) return@LaunchedEffect
     shownAccount = whose
-    openTaf = null; trialTaf = null; versionsTaf = null; haltTaf = null; usageTaf = null; overviewOpen = false; coachOpen = false
+    openTaf = null; trialTaf = null; versionsTaf = null; haltTaf = null; usageTaf = null; overviewOpen = false; calendarOpen = false; coachOpen = false
   }
   val detailState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
   val coachVisibility = remember { androidx.compose.animation.core.MutableTransitionState(false) }
@@ -492,6 +495,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   }
   // Back closes the open taf before it leaves the app.
   BackHandler(enabled = tab == Tab.Tafs && openTaf != null && !coachOpen) { openTaf = null }
+  BackHandler(enabled = tab == Tab.Tafs && calendarOpen && openTaf == null && !coachOpen) { calendarOpen = false }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
   // Coach asked for from another screen (a hold's "Change the limit in Coach mode"): it opens here, on the Tafs tab.
@@ -530,8 +534,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onNeedsYou = { tab = Tab.NeedsYou },
               // The sample plays its next round; signed in, KIFF is read again.
               onPlayNext = { if (state.mode == Mode.sample) model.playNextDemoActions() else model.refresh() },
-              onOpenTaf = { coachOpen = false; trialTaf = null; overviewOpen = false; openTaf = it },
+              onOpenTaf = { coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; openTaf = it },
               onNewTaf = { showingNew = true },
+              onCalendar = if (state.mode == Mode.kiff && state.tafs.isNotEmpty() && !wide) ({ coachOpen = false; trialTaf = null; calendarOpen = true }) else null,
               onHaltAll = { haltTaf = null; haltOpen = true },
               onUsage = { usageTaf = null; usageOpen = true },
             )
@@ -547,8 +552,16 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               showBack = !wide,
             ) }
           }
+          val calendar: @Composable (Boolean) -> Unit = { phone ->
+            CalendarView(
+              state, onShow = model::showCalendar, load = model::loadCalendar, tafIdForCloud = model::tafIdForCloud,
+              onOpenTaf = { calendarOpen = false; overviewOpen = false; openTaf = it },
+              onBack = if (phone) ({ calendarOpen = false }) else null,
+            )
+          }
           val open: (@Composable () -> Unit)? = when {
             trying != null -> ({ TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null }) })
+            calendarOpen && openTaf == null && !coachOpen && !wide -> ({ calendar(true) })
             openTaf != null || coachOpen || coachVisibility.currentState || !coachVisibility.isIdle -> ({
               Box(Modifier.fillMaxSize()) {
                 openTaf?.let { detail(it) }
@@ -581,7 +594,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 androidx.compose.material3.Text(
                   "Overview",
                   style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
-                  modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; overviewOpen = true }
+                  modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
               }
@@ -589,7 +602,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               Box(Modifier.weight(1f).fillMaxHeight()) {
                 when {
                   open != null -> open()
-                  overviewOpen -> OverviewView(state, loadReport = model::loadReport) { overviewOpen = false; openTaf = it }
+                  calendarOpen -> calendar(false)
+                  overviewOpen -> OverviewView(state, loadReport = model::loadReport, onOpenCalendar = { calendarOpen = true }) { overviewOpen = false; openTaf = it }
                   state.tafs.isNotEmpty() -> detail(state.tafs.first().id)
                   else -> Unit
                 }

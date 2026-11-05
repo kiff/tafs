@@ -198,6 +198,11 @@ final class AppModel: ObservableObject {
     }
     /// Why the account's time zone didn't change, when it didn't.
     @Published private(set) var timeZoneError: String?
+    /// The calendar (kiff/tafs#534): what it shows, kept here so a rotation or a new layout keeps
+    /// it; and the last read, for the selected month's grid.
+    @Published var calendarState: CalendarState?
+    @Published private(set) var calendarRead: TafsCloud.CalendarRead?
+    @Published private(set) var calendarError: String?
     /// The account's usage this billing period, once read.
     @Published private(set) var usage: KIFFClient.Usage?
     /// The period's counted tasks, newest first: the first page.
@@ -680,7 +685,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1032,7 +1037,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -2156,6 +2161,29 @@ final class AppModel: ObservableObject {
     /// The taf here whose tafs cloud id is `cloudID`, when the list has it.
     func tafID(cloud cloudID: String) -> UUID? {
         cloudTafs.first { $0.value.id == cloudID }.flatMap { holderIDs[$0.key] }
+    }
+
+    /// The taf behind tafs cloud's id, as the calendar names it, when this person has it listed.
+    func tafID(forCloud id: String) -> UUID? {
+        holderIDs.first(where: { cloudTafs[$0.key]?.id == id })?.value
+    }
+
+    /// Reads the calendar for the selected month's grid (`CalendarMath.range`): one read draws its
+    /// day, week and month and the navigator's marks. Another account's read never lands here.
+    func loadCalendar(_ state: CalendarState) async {
+        let range = CalendarMath.range(state.selected)
+        let gen = accountGeneration
+        calendarError = nil
+        do {
+            let read = try await cloud.calendar(from: range.from, to: range.to)
+            guard gen == accountGeneration else { return }
+            calendarRead = read
+            calendarError = nil
+        } catch {
+            // A read the calendar cancelled (another range, the view gone) isn't an error.
+            guard gen == accountGeneration, !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
+            calendarError = "The calendar couldn't be read. \(error.localizedDescription)"
+        }
     }
 
     /// The tafs cloud taf behind a taf, when there is one.

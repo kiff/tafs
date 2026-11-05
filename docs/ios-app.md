@@ -176,6 +176,25 @@ the app in sample mode.
   Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the
   Card its room back; the first answer stands.
 
+## The calendar
+
+The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
+icon at the top right of the Overview (the iPad's sidebar) and, on the iPhone,
+beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
+Week first, with Today, previous and next, and a date to pick. tafs cloud computes
+every occurrence (`GET /v1/calendar`, docs/api.md): live schedules' firings in the
+account's zone, follow-ups and runs' next tries, only for the tafs the person may
+see, none for a paused taf. Each comes with its `day`, `time` and `minute` in that
+zone, so the app places it and converts nothing. `Model/CalendarModel.swift`
+(`CalendarMath`) only counts dates (Monday-first weeks, the month's six-week grid,
+one read per grid), groups events by day and hour, and picks the layout: wide
+(`CalendarLayout.of`: at least 700 points wide, on its side, a tablet's height),
+with a month navigator at the upper left, the calendar beside it and the agenda
+under them; compact otherwise, with a scrolling week strip and the selected day's
+work under it. What it shows (`CalendarState`) is kept on `AppModel`, so a rotation
+or a new layout keeps it, and cleared with the rest of an account's state. A tap
+opens the taf. Read-only; no new dependency. Tests: `TafsTests/CalendarTests.swift`.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,

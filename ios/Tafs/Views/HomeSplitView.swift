@@ -34,6 +34,8 @@ enum HomeSelection: Hashable {
     case haltAll
     /// Today across the tafs this person uses or oversees.
     case overview
+    /// The tafs' scheduled work to come (kiff/tafs#534), opened from the Overview.
+    case calendar
 }
 
 /// The sidebar (Theme.raised): the overview, the calls waiting for the owner, and the tafs with a line on each. The selected one opens beside it.
@@ -58,6 +60,8 @@ struct HomeSplitView: View {
                     HaltScreen(tafID: nil)
                 case .overview?:
                     OverviewView { open in withMotion(.easeInOut(duration: 0.25)) { selection = open } }
+                case .calendar?:
+                    CalendarView { id in withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) } }
                 case nil:
                     VStack(spacing: 12) {
                         Mascot(size: 72)
@@ -95,7 +99,7 @@ struct HomeSplitView: View {
             if chosen, let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
-                case .haltAll, .overview: return
+                case .haltAll, .overview, .calendar: return
                 }
             }
             opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)

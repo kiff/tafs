@@ -390,6 +390,13 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
+  /**
+   * The calendar (kiff/tafs#534): what it shows, kept here so a rotation or a new layout keeps it; the last read, for the selected
+   * month's grid; and why it couldn't be read. A new account starts a new state, so another account's events never show.
+   */
+  val calendarState: bot.tafs.app.model.CalendarState? = null,
+  val calendar: bot.tafs.app.kiff.CalendarRead? = null,
+  val calendarError: String? = null,
   /** The account's "Show suggestions" setting as tafs cloud last said it, while it's being changed, and why a change didn't go. */
   val suggestions: bot.tafs.app.kiff.Suggestions? = null,
   val suggestionsBusy: Boolean = false,
@@ -2340,6 +2347,30 @@ class AppModel(
       return
     }
     if (generation == accountGeneration) _state.update { it.copy(recipes = recipes) }
+  }
+
+  /** The calendar shows another view or date: kept in the state, so a rotation keeps it. */
+  fun showCalendar(calendar: bot.tafs.app.model.CalendarState) {
+    _state.update { it.copy(calendarState = calendar) }
+  }
+
+  /** The taf behind tafs cloud's id, as the calendar names it, when this person has it listed. */
+  fun tafIdForCloud(cloudId: String): String? = _state.value.tafs.firstOrNull { it.cloudId == cloudId }?.id
+
+  /** Reads the calendar for the selected month's grid ([bot.tafs.app.model.CalendarMath.range]): one read draws its day, week and month. */
+  suspend fun loadCalendar(calendar: bot.tafs.app.model.CalendarState) {
+    if (_state.value.mode != Mode.kiff) return
+    val (from, to) = bot.tafs.app.model.CalendarMath.range(calendar.selected)
+    val generation = accountGeneration
+    _state.update { it.copy(calendarError = null) }
+    try {
+      val read = cloud.calendar(from, to)
+      if (generation == accountGeneration) _state.update { it.copy(calendar = read, calendarError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(calendarError = "The calendar couldn't be read. ${ErrorWords.of(e)}") }
+    }
   }
 
   /** Reads the account's "Show suggestions" setting, for Account. */

@@ -333,3 +333,52 @@ data class ActivityCall(
 
 @Serializable
 data class ActivityCalls(val calls: List<ActivityCall> = emptyList())
+
+/**
+ * The tafs' scheduled work still to come on a range of dates (`GET /v1/calendar`, kiff/tafs#534). tafs cloud computes every
+ * occurrence in the account's zone and gives each its day, time and minute there, so the app places it without converting a zone.
+ */
+@Serializable
+data class CalendarRead(
+  @SerialName("time_zone") val timeZone: String = "UTC",
+  val from: String = "",
+  val to: String = "",
+  @SerialName("events") val rawEvents: List<kotlinx.serialization.json.JsonElement> = emptyList(),
+  /** The dates with an event, so the app marks them. */
+  val days: List<String> = emptyList(),
+  /** tafs cloud's line for the range: "3 to come", "Nothing scheduled in these days", "Halted: nothing runs until it's resumed". */
+  val words: String = "",
+  /** Some events were left out: more than one read answers. */
+  val more: Boolean = false,
+  /** The account is halted: nothing runs, so nothing is to come. */
+  val halted: Boolean = false,
+) {
+  /** The events this app can read: one it can't is left out, never the read. */
+  val events: List<CalendarEvent> by lazy {
+    rawEvents.mapNotNull { runCatching { KiffClient.json.decodeFromJsonElement(CalendarEvent.serializer(), it) }.getOrNull() }
+  }
+}
+
+/** One occurrence: a live schedule's firing, a follow-up the taf set itself, or a run's next try. */
+@Serializable
+data class CalendarEvent(
+  /** The taf it belongs to (tafs cloud's id), its name and its colour. */
+  val taf: String,
+  val name: String = "",
+  val color: Int = 0,
+  /** `schedule`, `follow_up` or `retry`. */
+  val kind: String = "schedule",
+  /** The instant, RFC 3339 in UTC, as tafs cloud wrote it. */
+  val at: String,
+  /** Its date, time of day and minutes since midnight, in the account's zone. */
+  val day: String,
+  val time: String,
+  val minute: Int,
+  /** What it is, in tafs cloud's words. */
+  val words: String = "",
+  /** How many firings it stands for: tafs cloud folds a day of a dense schedule into one event. */
+  @SerialName("count") val rawCount: Int = 1,
+) {
+  val id: String get() = "$taf|$kind|$at"
+  val count: Int get() = rawCount.coerceAtLeast(1)
+}

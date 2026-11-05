@@ -21,6 +21,7 @@ import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js"
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills } from "./coach-skills.js";
 import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
+import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -557,6 +558,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
+  if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
   if (parts[1] === "events" && parts.length === 2 && method === "GET") {
@@ -4326,6 +4328,41 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
  * list rather than showing tafs without their Cards. It lists only the agents KIFF
  * says the person may use or oversee (GET /v1/me/access): tafs cloud decides nothing.
  */
+/**
+ * The calendar (kiff/tafs#534): the scheduled work still to come on the dates `from` to `to`, in the account's zone, for
+ * the tafs this person may see (as home lists them). Computed here from each taf's schedules, follow-ups and runs
+ * (`calendar.ts`), so the apps draw what comes and both draw the same.
+ */
+async function calendar(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
+  const q = new URLSearchParams(event.rawQueryString ?? "");
+  const from = dateOf(q.get("from")), to = dateOf(q.get("to"));
+  if (!from || !to) throw new HTTPError(400, "from and to are dates, such as 2026-11-05");
+  if (to < from) throw new HTTPError(400, "to is on or after from");
+  if (plusDays(from, MAX_DAYS - 1) < to) throw new HTTPError(400, `a read covers at most ${MAX_DAYS} days`);
+  const zone = me.timeZone ?? "UTC";
+  const now = deps.now?.() ?? new Date();
+  const [records, access, account] = await Promise.all([
+    deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase), deps.agents.halted(me.tenantID).catch(() => undefined),
+  ]);
+  // Nothing runs while the account is halted (kiff/tafs#537): no work is to come until it's resumed.
+  if (account?.halted) return { time_zone: zone, from, to, events: [], days: [], more: false, halted: true, words: "Halted: nothing runs until it's resumed" };
+  const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent))
+    .sort((a, b) => a.created.localeCompare(b.created) || a.id.localeCompare(b.id));
+  // A taf whose schedules or runs can't be read today shows none, never a guess; a halted taf shows none, as nothing of it runs.
+  const each = await Promise.all(tafs.map(async (t) => {
+    const [schedules, runs, halt] = await Promise.all([
+      deps.agents.listSchedules(me.tenantID, t.id).catch(() => [] as Schedule[]),
+      deps.agents.runs(me.tenantID, t.id, true, 20).catch(() => [] as Run[]),
+      deps.agents.halted(me.tenantID, t.id).catch(() => undefined),
+    ]);
+    if (halt?.halted) return [];
+    return eventsOf({ id: t.id, name: t.name, color: t.color ?? 0 }, schedules, runs, from, to, zone, now);
+  }));
+  const { events, days, more } = calendarOf(each.flat());
+  const count = events.reduce((n, e) => n + e.count, 0);
+  return { time_zone: zone, from, to, events, days, more, halted: false, words: count ? `${count} to come${more ? ", and more" : ""}` : "Nothing scheduled in these days" };
+}
+
 async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
   await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))

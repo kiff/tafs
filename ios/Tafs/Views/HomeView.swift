@@ -8,6 +8,8 @@ struct HomeView: View {
     @State private var showingSolo = false
     @State private var showingExport = false
     @State private var openingFirst = false
+    /// The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from the bar.
+    @State private var showingCalendar = false
 
     var body: some View {
         ScrollView {
@@ -108,6 +110,7 @@ struct HomeView: View {
         }
         .refreshable { await model.refresh() }
         .screenBackground()
+        .navigationDestination(isPresented: $showingCalendar) { CalendarView() }
         .navigationDestination(for: UUID.self) { id in
             if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
         }
@@ -122,6 +125,16 @@ struct HomeView: View {
                     }
                 }
                 .accessibilityElement(children: .combine)
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if model.mode == .kiff, !model.tafs.isEmpty {
+                    Button { showingCalendar = true } label: {
+                        Image(systemName: "calendar").scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
+                            .frame(width: 36, height: 36)
+                    }
+                    .accessibilityLabel("Calendar")
+                    .accessibilityIdentifier("home.calendar")
+                }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if model.canStartTafs {
