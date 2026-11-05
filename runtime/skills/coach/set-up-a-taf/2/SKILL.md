@@ -14,7 +14,11 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   are involved, what it may change or pay, and what the owner expects.
   What they already told you, don't ask again. Ask what's left together, in one
   questions card when the answers are choices; otherwise ask in one short
-  message.
+  message. When you ask where the work comes from and the owner named no app
+  for it, the first option is that they hand it to the taf in its chat (in
+  their own words, the taf finds the item with its reads); the apps that could
+  bring it come after, from search, and one is connected only when the owner
+  picks it. A connection the owner didn't ask for is proposed, never assumed.
 - Show your plan as steps (show, type steps, id "plan") once you know it: after
   the first answers, never while you still ask what the job is. Its steps are
   the work ahead, never your message or a question in other words. Keep it
