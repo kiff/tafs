@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android: where a job run's result went.** A job run's report in the thread shows tafs cloud's `delivered` line above the taf's words ("Sent to Google Sheets · Refunds 2026…").
 - **tafs cloud, a step Coach retries:** a call that failed and was made again with the same tool in the same run no longer reads as failed to the owner; the retry's outcome stands, on the live stream (the failure is held until the run ends, and dropped on the retry), in the chat's thread and on a request's steps. A failure Coach gave up on is still said, with its reason.
 - **tafs cloud, dependable runs:** a connected app's event whose first delivery claimed its id and stopped before it answered the run's wait is answered by the next delivery after thirty seconds, instead of every retry reading "answered" for ten minutes while nothing answered.
 - **iOS: recipes and Show suggestions.** A new Coach conversation opens to tafs cloud's recipes, by category; a tap puts a recipe's words in the message box and sends nothing. Account › Coach has the account's **Show suggestions** switch, kept in tafs cloud, with its words under it, for the people who manage the account's tafs, as on Android.
