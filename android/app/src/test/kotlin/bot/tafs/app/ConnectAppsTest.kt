@@ -208,4 +208,14 @@ class ConnectAppsTest {
     val unsaid = json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>("""{"id":"g2","name":"Notion","status":"connected"}""")
     org.junit.Assert.assertNull("nothing when tafs cloud says nothing", unsaid.custodyWords)
   }
+
+  @Test fun aConnectionCarriesTafsCloudsAccountLineOrNone() {
+    val json = bot.tafs.app.kiff.KiffClient.json
+    val said = json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>(
+      """{"id":"g1","name":"Stripe","status":"connected","account_words":"Demo Shop · Mode not known yet: treated as live"}""",
+    )
+    org.junit.Assert.assertEquals("Demo Shop · Mode not known yet: treated as live", said.accountWords)
+    val unsaid = json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>("""{"id":"g2","name":"Notion","status":"connected"}""")
+    org.junit.Assert.assertNull("nothing when tafs cloud says nothing", unsaid.accountWords)
+  }
 }
