@@ -154,7 +154,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(heldLine("a".repeat(MAX_NOTE + 1))).toBe(false);
   });
 
-  it("leaves a run's lines before its tool calls out of the thread: a one-line message its call follows", () => {
+  it("leaves a run's lines before its tool calls out of the thread: a one-line message its calls follow, then more text", () => {
     const ev = (run: string, seq: number, kind: string, text?: string) => ({ run, seq, kind, ...(text === undefined ? {} : { body: { text } }) });
     const got = preToolLines([
       ev("r1", 1, "owner_message", "¿Cómo va?"),
@@ -164,7 +164,47 @@ describe("a message streamed (kiff/tafs#60)", () => {
       // A component between them made it the answer on the stream: it stays in the thread too (agentgabo on #549).
       ev("r3", 10, "agent_message", "Aquí tienes la tarjeta."), ev("r3", 11, "component"), ev("r3", 12, "tool_call"),
     ]);
-    expect([...got].sort()).toEqual(["r1.2", "r2.7"]);
+    // r2's text: its call came, and the run wrote nothing after it, so it was the run's message.
+    expect([...got].sort()).toEqual(["r1.2"]);
+  });
+
+  // The confirming Eval (6 Nov): "Falta que lo apruebes para seguir." before the call that asks for the approval,
+  // then the run waits. Dropped from the thread, the owner saw the approval card with no message.
+  it("keeps a message the run waits on in the thread: a card, a pause or its end before the run writes again", () => {
+    const ev = (seq: number, kind: string, body?: unknown) => ({ run: "r1", seq, kind, ...(body === undefined ? {} : { body }) });
+    const say = (seq: number, text: string) => ev(seq, "agent_message", { text });
+    expect([...preToolLines([say(1, "Falta que lo apruebes para seguir."), ev(2, "tool_call")])]).toEqual([]);
+    expect([...preToolLines([say(1, "Te preparo el plan…"), ev(2, "tool_call"), ev(3, "component"), say(4, "Listo.")])]).toEqual([]);
+    const resumed = ev(3, "usage", { timing: { ms: 900, resumed: true } });
+    expect([...preToolLines([say(1, "Falta que lo apruebes para seguir."), ev(2, "tool_call"), resumed, say(4, "Conectado.")])]).toEqual([]);
+    expect([...preToolLines([say(1, "Miro la cuenta…"), ev(2, "tool_call"), ev(3, "usage", { timing: { ms: 900 } }), say(4, "Conectado.")])]).toEqual(["r1.1"]);
+  });
+
+  it("sends a one-line text its call follows as the answer when the run ends with nothing after it", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "text", text: "Falta que lo apruebes para seguir." } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "approval asked" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Conéctalo" } });
+    expect(r.events.filter((e) => e.event === "text").map((e) => e.data.text)).toEqual(["Falta que lo apruebes para seguir."]);
+    // The live line had it while the call ran; it goes to thinking, at once, just before the words.
+    expect(r.states).toContainEqual({ state: "working", words: "Falta que lo apruebes para seguir" });
+    const at = r.raw.indexOf("event: text\n");
+    expect(r.raw.slice(0, at)).toMatch(/event: state\ndata: \{"state":"thinking"\}\n\n$/);
+  });
+
+  it("sends a one-line text its call follows before the card the run then shows", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "text", text: "Te preparo el plan de Reembolsos." } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "show", input: { type: "steps" } } },
+      { event: "delta", data: { kind: "component", component: { type: "steps", id: "s1" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Hazlo" } });
+    // The text comes before the card it introduces, as the stored thread has it.
+    expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "text", "component", "end"]);
   });
 
   it("shows a note as one short line: its closing mark gone, cut at a word, and nothing for an empty one", () => {
@@ -285,9 +325,10 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "ch_secret paid" } } },
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Refund $20 of T-3002" } });
-    // "Refunding $20." was the turn's line before its call: the live line's, not the answer's.
-    expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "held", "activity", "step", "end"]);
+    // "Refunding $20." before its calls, and nothing written after them: the run's message, sent at its end.
+    expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "held", "activity", "step", "text", "end"]);
     expect(r.events[2]!.data).toEqual({ exception: "exc_1", invocation: "tc-1" });
+    expect(r.events[5]!.data).toEqual({ text: "Refunding $20." });
     expect(r.raw).not.toContain("ch_secret");
     expect(r.raw).not.toContain("op_1");
   });
