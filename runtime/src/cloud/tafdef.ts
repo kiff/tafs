@@ -11,26 +11,26 @@ import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, t
  * KIFF agent) and the definition's inputs.
  */
 
-export const MODEL = "claude-opus-5-5";
+/**
+ * A taf's model: Sonnet 5.5, the owner's choice of 5 Nov 2026 after measuring it beside Opus 5.5
+ * (the same work at about half the cost). Coach keeps Opus (setupdef's SETUP_MODEL).
+ */
+export const MODEL = "claude-sonnet-5-5";
 /**
  * What MODEL costs, in millionths of a US dollar per million tokens. Cache writes: 5 minutes at
  * 1.25× input, an hour at 2×. With CacheWrite1h set, kiff/agents keeps a taf's shared prefix (its
  * tools and instructions) an hour (kiff/agents#171), so an owner who writes again after a pause
  * doesn't wait while it is read again (kiff/tafs#138, item 58).
  */
-export const PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 } as const;
-/** What MODEL costs at its fast output (kiff/agents#197). */
-export const PRICE_FAST = {
-  Input: 2 * PRICE.Input, Output: 2 * PRICE.Output, CacheRead: 2 * PRICE.CacheRead, CacheWrite: 2 * PRICE.CacheWrite,
-  CacheWrite1h: 2 * PRICE.CacheWrite1h,
-} as const;
+export const PRICE = { Input: 2_000_000, Output: 10_000_000, CacheRead: 200_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 } as const;
 export const MAX_TOKENS = 16_000;
 /**
- * How hard the model works on each turn. Medium, Opus 5.5's own default: a taf's
- * steps ("refund this payment") need no long thinking, and the owner waits on each
- * answer (kiff/tafs#102). Measured against high through kiff/agents' gate.
+ * How hard the model works on each turn. Low: a taf's steps ("refund this payment") need no
+ * long thinking, and the owner waits on each answer (kiff/tafs#102). Measured through
+ * kiff/agents' Eval on 5 Nov 2026: Sonnet 5.5 at low did the chargebacks job in full.
+ * Sonnet 5.5 has no fast output, so a taf's definition carries no speed or fast price.
  */
-export const EFFORT: Effort = "medium";
+export const EFFORT: Effort = "low";
 /**
  * The model's short progress notes between tool calls stream to the person waiting, its
  * reasoning never: on Claude Opus 5.5 a line written before a tool call ("Miro las últimas
