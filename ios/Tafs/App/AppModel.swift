@@ -680,7 +680,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1032,7 +1032,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -5243,6 +5243,9 @@ final class AppModel: ObservableObject {
     /// chat's view, so closing Coach mode, opening it again or switching tabs keeps it, as a
     /// taf's chat does. Only Send or the owner clears it; a new account starts empty.
     @Published var setupDraft = ""
+    /// The recipes a new Coach conversation opens to, from tafs cloud (kiff/tafs#476); nil until
+    /// read, or when they couldn't be.
+    @Published var recipes: TafsCloud.Recipes?
     /// What the owner wrote while Setup works: sent once it's done (kiff/tafs#58).
     @Published private(set) var setupQueued: String?
     /// How Setup's last run ended, when the owner should know: they stopped it, or it
@@ -5482,6 +5485,22 @@ final class AppModel: ObservableObject {
         guard let s = try? await cloud.setup(), gen == accountGeneration else { return }
         setupTaf = s
         if s != nil { await loadSetupThread() }
+        await loadRecipes()
+    }
+
+    /// Reads the recipes a new Coach conversation opens to (kiff/tafs#476). Not read, the
+    /// conversation opens without them; Coach still takes any job.
+    func loadRecipes() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        guard let r = try? await cloud.recipes(), gen == accountGeneration else { return }
+        recipes = r
+    }
+
+    /// A recipe tapped: its words go in Coach's message box, for the person to edit and send.
+    /// Nothing is sent.
+    func fillRecipe(_ recipe: TafsCloud.Recipes.Recipe) {
+        setupDraft = recipe.say
     }
 
     func loadSetupThread() async {

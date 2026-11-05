@@ -465,7 +465,18 @@ struct SetupChatView: View {
                 Text("Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            ForEach(model.setupImproving == nil ? Self.examples : Self.improveExamples, id: \.self) { example in
+            if model.setupImproving == nil {
+                // tafs cloud's recipes, by category (kiff/tafs#476): a tap puts the words in the
+                // message box, to edit and send; it never sends.
+                ForEach(model.recipes?.byCategory ?? [], id: \.category.id) { group in
+                    Text(group.category.title.uppercased())
+                        .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.dim)
+                        .padding(.top, 6)
+                        .accessibilityAddTraits(.isHeader)
+                    ForEach(group.recipes) { recipe in recipeRow(recipe) }
+                }
+            }
+            ForEach(model.setupImproving == nil ? [] : Self.improveExamples, id: \.self) { example in
                 Button {
                     Haptics.tap()
                     pinNext = true
@@ -523,11 +534,30 @@ struct SetupChatView: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    static let examples = [
-        "Make sure customers can get their refunds",
-        "Answer customer questions about orders",
-        "Connect my payment provider",
-    ]
+    /// One recipe, as tafs cloud words it: its title, and its line under it.
+    private func recipeRow(_ recipe: TafsCloud.Recipes.Recipe) -> some View {
+        Button {
+            Haptics.tap()
+            model.fillRecipe(recipe)
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(recipe.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                    .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                if !recipe.line.isEmpty {
+                    Text(recipe.line).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(Theme.panel)
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(model.setupSending)
+        .accessibilityHint("Puts its words in the message box")
+    }
 
     /// Ways to start improving a taf (kiff/tafs#107).
     static let improveExamples = [

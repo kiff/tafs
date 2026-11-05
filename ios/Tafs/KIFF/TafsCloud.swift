@@ -1199,6 +1199,51 @@ final class TafsCloud {
     }
 
     /// The account's Setup, or nil before it is started.
+    /// The recipes a new Coach conversation opens to (`GET /v1/recipes`, kiff/tafs#476), by
+    /// category, as tafs cloud sends them: a recipe is a job and the words to say to Coach. The
+    /// app draws them and keeps no list of its own.
+    struct Recipes: Decodable, Equatable {
+        struct Category: Decodable, Equatable { let id: String; let title: String }
+        /// One recipe: its title and line, and `say`, what a tap puts in Coach's message box for
+        /// the person to edit and send.
+        struct Recipe: Decodable, Equatable, Identifiable {
+            let id: String
+            let title: String
+            var category: String = ""
+            var line: String = ""
+            var say: String = ""
+            private enum CodingKeys: String, CodingKey { case id, title, category, line, say }
+            init(id: String, title: String, category: String = "", line: String = "", say: String = "") {
+                self.id = id; self.title = title; self.category = category; self.line = line; self.say = say
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                id = try c.decode(String.self, forKey: .id)
+                title = try c.decode(String.self, forKey: .title)
+                category = try c.decodeIfPresent(String.self, forKey: .category) ?? ""
+                line = try c.decodeIfPresent(String.self, forKey: .line) ?? ""
+                say = try c.decodeIfPresent(String.self, forKey: .say) ?? ""
+            }
+        }
+        var categories: [Category] = []
+        var recipes: [Recipe] = []
+        private enum CodingKeys: String, CodingKey { case categories, recipes }
+        init(categories: [Category] = [], recipes: [Recipe] = []) { self.categories = categories; self.recipes = recipes }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            categories = try c.decodeIfPresent([Category].self, forKey: .categories) ?? []
+            recipes = try c.decodeIfPresent([Recipe].self, forKey: .recipes) ?? []
+        }
+        /// Each category in tafs cloud's order, with its recipes; a category with none isn't shown.
+        var byCategory: [(category: Category, recipes: [Recipe])] {
+            categories.map { c in (c, recipes.filter { $0.category == c.id }) }.filter { !$0.recipes.isEmpty }
+        }
+    }
+
+    func recipes() async throws -> Recipes {
+        try await send("GET", "/v1/recipes")
+    }
+
     func setup() async throws -> CloudTaf? {
         struct Response: Decodable { let setup: CloudTaf? }
         let r: Response = try await send("GET", "/v1/setup")

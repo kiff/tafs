@@ -21,6 +21,36 @@ final class SetupTests: XCTestCase {
         XCTAssertTrue(model.setupThread.messages.isEmpty)
         XCTAssertTrue(model.setupFresh)
     }
+    /// A new Coach conversation opens to tafs cloud's recipes, by category in its order (kiff/tafs#476):
+    /// a category with none isn't shown, and a tap fills the message box and sends nothing.
+    func testCoachOpensToTafsCloudsRecipesAndATapOnlyFillsTheBox() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/recipes"] = (200, #"{"categories":[{"id":"money","title":"Money"},{"id":"errands","title":"Errands"},{"id":"customers","title":"Customers"}],"recipes":[{"id":"refunds","title":"Refunds within a limit","category":"money","line":"Refunds what fits the Card.","say":"Refund customers up to 40 EUR."},{"id":"orders","title":"Answer questions about orders","category":"customers","line":"Answers from the orders.","say":"Answer order questions."}],"filtered":true}"#)
+        await model.loadSetup()
+        let groups = try XCTUnwrap(model.recipes).byCategory
+        XCTAssertEqual(groups.map(\.category.title), ["Money", "Customers"])
+        XCTAssertEqual(groups.map { $0.recipes.map(\.id) }, [["refunds"], ["orders"]])
+        StubProtocol.sent = []
+        model.fillRecipe(groups[0].recipes[0])
+        XCTAssertEqual(model.setupDraft, "Refund customers up to 40 EUR.")
+        XCTAssertTrue(StubProtocol.sent.isEmpty)
+        // Another account's session never shows this account's recipes.
+        StubProtocol.responses["GET /v1/recipes"] = (503, #"{"error":"down"}"#)
+        await model.useSession("kiff_dev_y", tenant: "t_02")
+        XCTAssertNil(model.recipes)
+    }
+
+    /// Recipes tafs cloud couldn't give leave Coach usable: no recipes, the conversation as before.
+    func testRecipesNotReadLeaveCoachUsable() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/recipes"] = (503, #"{"error":"down"}"#)
+        await model.loadSetup()
+        XCTAssertNil(model.recipes)
+        XCTAssertEqual(model.setupTaf?.id, "taf-setup")
+    }
+
     private static let setupJSON = #"{"id":"taf-setup","name":"Setup","job":"setup","kiff_agent":"setup","status":"active","next_run":null,"last_run":null}"#
 
     private func model(signer: FaceIDSigner, vendor: StubVendor = StubVendor()) async -> AppModel {
