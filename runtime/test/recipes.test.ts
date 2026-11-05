@@ -88,7 +88,11 @@ describe("recipes", () => {
     expect(github.categories).toEqual([{ id: "operations", title: "Operations" }]);
     expect(github.recipes.map((r) => r.id)).toEqual(["ship-when-green"]);
     expect(github.recipes[0]!.say).toContain("Deploy my releases from my code host");
-    // The words name the kind of app, never a brand (kiff/tafs#476, gap 2): the brands are the connections' alone.
-    for (const r of RECIPES) for (const vendor of r.connections.flat()) expect(r.say.toLowerCase()).not.toContain(vendor.replace(/[_-]/g, " ").split(" ")[0]!);
+    // The title, line and words name the kind of app, never a brand (kiff/tafs#476, gap 2): the brands are the
+    // connections' alone. Whole words, so "wise" never trips on "otherwise", and two-word brands are caught by their first.
+    const brands = /\b(stripe|quickbooks|xero|moneybird|zoho|wise|revolut|gorgias|intercom|gmail|outlook|shopify|typeform|pipedrive|google|slack|github|notion|amazon|agentmail|hubspot|zendesk|microsoft|teams)\b/i;
+    for (const r of RECIPES) for (const text of [r.title, r.line, r.say]) expect(text).not.toMatch(brands);
+    expect("Save it in Google Drive, otherwise wait").toMatch(brands);
+    expect("otherwise wait").not.toMatch(brands);
   });
 });
