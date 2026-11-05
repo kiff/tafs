@@ -36,6 +36,7 @@ details go only to tafs cloud's own log.
 
 | Route | Who | What |
 |---|---|---|
+| `GET /v1/me/suggestions`, `PUT /v1/me/suggestions` | a person; manages, to change | The account's "Show suggestions" setting, kept in tafs cloud: `{suggestions: {show, reason: on | off | live, words}}`. On by default; `PUT {show: false}` turns them off for good (`{show: true}` on again); 403 for someone who doesn't manage the account's tafs. `words` are tafs cloud's for the apps to show beside the switch |
 | `GET /v1/jobs` | anyone | The five starter jobs, kept for the tafs that have one: `{jobs: [{id, name, summary, cron}]}`. A new taf carries its own job (`POST /v1/tafs`), and the five are recipes (`GET /v1/recipes`) |
 | `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, its `job_summary` (what Coach said it does, else its job's line), its `last_run` (its own latest, scheduled or from its chat, never a trial's), doors (each with its `label`) and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)). Also `limits: {text, trial_idle_days}`, the longest message and how long a trial waits unused, which the apps check and keep no copy of |
 | `GET /v1/tafs` | a person | The account's tafs the person may use or oversee, and removals not finished |
@@ -63,7 +64,7 @@ The catalog of apps a taf can use, and a connection started for one taf. tafs cl
 
 | Route | Who | What |
 |---|---|---|
-| `GET /v1/recipes` | a person | The recipes a new Coach conversation opens to ([coach.md](coach.md#recipes)): `{categories: [{id, title}], recipes: [{id, title, category, line, say, connections: [[vendor…]…], card: {allows[], holds[], never[]}}], filtered}`. The recipes in `recipes/`, filtered to those whose every connection has a vendor the account's catalog lists, read from planque with the person's session, page by page. `categories` are the ones with a recipe, in order, with the title the apps show. `say` is what a tap puts in Coach's message box; the person edits it before sending. When the catalog can't be read, or has more pages than tafs cloud reads, every recipe is listed and `filtered` is false: a recipe is never hidden for a vendor that wasn't seen, and the page is never blank for that |
+| `GET /v1/recipes` | a person | The recipes a new Coach conversation opens to ([coach.md](coach.md#recipes)): `{categories: [{id, title}], recipes: [{id, title, category, line, say, connections: [[vendor…]…], card: {allows[], holds[], never[]}}], filtered, shown, suggestions: {show, words}}`. Shown only while the account has no live taf and its suggestions are on (the owner's decision): otherwise `categories` and `recipes` are empty, `shown` is false and `suggestions.words` say why; the apps draw only what comes. The recipes in `recipes/`, filtered to those whose every connection has a vendor the account's catalog lists, read from planque with the person's session, page by page. `categories` are the ones with a recipe, in order, with the title the apps show. `say` is what a tap puts in Coach's message box; the person edits it before sending. When the catalog can't be read, or has more pages than tafs cloud reads, every recipe is listed and `filtered` is false: a recipe is never hidden for a vendor that wasn't seen, and the page is never blank for that |
 
 ### Alerts
 

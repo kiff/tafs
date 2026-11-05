@@ -18,7 +18,7 @@ import { requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
-import { recipesFor, type RecipesView } from "./recipes.js";
+import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
@@ -74,7 +74,9 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
- *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476)
+ *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
+ *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
+ *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
  *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
@@ -589,6 +591,18 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
+  if (parts.length === 3 && parts[1] === "me" && parts[2] === "suggestions" && (method === "GET" || method === "PUT")) {
+    // The account's "Show suggestions" setting (kiff/tafs#476): on by default; a manager turns it off for good.
+    const me = await person(event, deps);
+    if (method === "PUT") {
+      if (!me.capabilities.includes("cards.manage")) throw new HTTPError(403, "the suggestions setting is for the people who manage the account's tafs");
+      const body = parseBody(event);
+      if (typeof body.show !== "boolean") throw new HTTPError(400, "send {show: true} or {show: false}");
+      if (!deps.coach) throw new HTTPError(503, "the setting can't be kept here");
+      await deps.coach.put(suggestionsKey(me.tenantID), { show: body.show, by: me.subject, at: (deps.now?.() ?? new Date()).toISOString() }, new Date((deps.now?.() ?? new Date()).getTime() + SUGGESTIONS_KEPT_MS));
+    }
+    return { suggestions: await suggestionsOf(me, deps) };
+  }
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -5161,6 +5175,21 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
 /** The most catalog pages the recipes route reads: planque keeps a provider's apps in one page, so this is room, not a limit. */
 const CATALOG_PAGES = 10;
 
+/** Where the account's "Show suggestions" setting is kept, for the account's life (the store's records expire; this one far off). */
+const suggestionsKey = (tenant: string) => `${tenant}#suggestions`;
+const SUGGESTIONS_KEPT_MS = 10 * 365 * 24 * 3600_000;
+
+/** The account's suggestions setting with its words: off for good, or on until the account's first taf is live. */
+async function suggestionsOf(me: KIFFIdentity, deps: Deps): Promise<Suggestions> {
+  const kept = deps.coach ? (await deps.coach.get(suggestionsKey(me.tenantID)).catch(() => undefined)) as { show?: unknown } | undefined : undefined;
+  if (kept?.show === false) return { show: false, reason: "off", words: SUGGESTION_WORDS.off };
+  // "Live": a taf on the account, Setup aside, that isn't being removed. A taf made from Coach goes live
+  // as it's made, and one paused or stopped is still the owner's: the suggestions are for an account
+  // with none yet.
+  const live = (await deps.tafs.list(me.tenantID)).some((t) => t.job !== SETUP_JOB && !t.removing);
+  return live ? { show: true, reason: "live", words: SUGGESTION_WORDS.live } : { show: true, reason: "on", words: SUGGESTION_WORDS.on };
+}
+
 /**
  * Recipes (docs/coach.md, "Recipes"): the recipes whose connections the account's catalog can
  * make, read with the person's own session. When the catalog can't be read, every recipe is
@@ -5168,6 +5197,10 @@ const CATALOG_PAGES = 10;
  * can't connect.
  */
 async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
+  // Shown only while the account has no live taf and the setting is on (the owner's decision): else the
+  // list is empty and the words say why, so the apps draw only what comes.
+  const suggestions = await suggestionsOf(me, deps);
+  if (suggestions.reason !== "on") return noRecipes(suggestions);
   let apps: CatalogApp[] | undefined;
   if (deps.planqueBase) {
     try {
