@@ -148,13 +148,16 @@ hand-off or a retry; a viewer's records what it can and starts nothing), each ru
 wasn't checked is settled, once:
 
 - **an action at a connected app**: the run's usage record says whether the taf called the
-  action and whether the tool took it. Called and taken: `sent`. Not called, or refused: the taf
+  action and whether the tool took it (the action, not its arguments: a call of that action
+  made for another purpose counts too, which the record can't tell apart). Called and taken:
+  `sent`. Not called, or refused: the taf
   **retries once itself**, as a task with the result and the action by its id, 10 minutes later,
   with the fixed arguments exactly as the owner approved them, never changed: a place that no
   longer fits (a sheet renamed or gone) makes no call, and Coach proposes the new one as a
   version of the dial, which the owner installs. The
-  retry's run is settled the same way: taken, `sent`; still not, `not_sent`, with the reason the
-  stream kept (`steps.ts`, the failed step's `why`), and **one silent note to the people who
+  retry's run is settled the same way, however it ended (one that failed or was stopped
+  delivered nothing): taken, `sent`; still not, `not_sent`, with the reason the stream kept
+  (`steps.ts`, the failed step's `why`) or the run's own, and **one silent note to the people who
   manage the taf** ("Rae didn't deliver to Google Sheets · Refunds 2026: the sheet was renamed.
   Send it again from Rae's page, or open Coach for help."), none more for that place while it
   stays broken; a later delivery clears it. The request shows **Send again** (the same task, now)
