@@ -20,7 +20,7 @@ import type { Taf, Tafs } from "./handler.js";
 import { apsFor, levelOf } from "./levels.js";
 import { HANDOFF_HEADING, type VendorPlace } from "./places.js";
 import { type Device, type PushStore, type Sender, sendNotification } from "./push.js";
-import { stepWhyKey, type StepWhys } from "./steps.js";
+import { stepWhyKey, type StepWhys, whyOf } from "./steps.js";
 import { timeIn } from "./work.js";
 
 export type DeliveryState = "sent" | "handed" | "retrying" | "not_sent";
@@ -296,7 +296,8 @@ async function settleRetry(ctx: DeliveryContext, tenant: string, taf: Taf, r: Ru
   if (!ended(r)) {
     // The retry failed or was stopped before it could deliver: said, and the managers hear once.
     d.state = "not_sent";
-    d.why = r.status === "ERROR" ? (r.error || DELIVERY_WORDS.retryFailed) : DELIVERY_WORDS.retryStopped;
+    // The run's error goes through the same scrub as a step's reason before it reaches the managers' push (qa-kiff on #512).
+    d.why = r.status === "ERROR" ? (whyOf(r.error) || DELIVERY_WORDS.retryFailed) : DELIVERY_WORDS.retryStopped;
     await noteManagers(ctx, tenant, taf, d);
   } else if (call?.ok) {
     d.state = "sent";
@@ -369,6 +370,21 @@ export async function sweepDeliveries(ctx: DeliveryContext): Promise<Array<{ run
     out.push({ run: i.run, waiting });
   }
   return out;
+}
+
+/**
+ * The line above a run's report in the thread: where its result went, in a sentence ("Sent to
+ * Google Sheets · Refunds 2026 and handed to Invoices", "Not sent to Slack · #ops yet: trying
+ * again"), or none when the run had no place of its own.
+ */
+export function deliveredLine(rd: RunDeliveries | undefined): string | undefined {
+  if (!rd?.places.length) return undefined;
+  const went = rd.places.filter((d) => d.state === "sent" || d.state === "handed").map((d) => `${d.state === "handed" ? "handed to" : "sent to"} ${d.name}`);
+  const not = rd.places.filter((d) => d.state === "retrying" || d.state === "not_sent").map((d) => d.state === "retrying" ? `${d.name} yet: trying again` : d.name);
+  const parts: string[] = [];
+  if (went.length) parts.push(`${went[0]!.charAt(0).toUpperCase()}${went[0]!.slice(1)}${went.length > 1 ? ` and ${went.slice(1).join(" and ")}` : ""}`);
+  if (not.length) parts.push(`Not sent to ${not.join(" and ")}`);
+  return parts.join(". ") + ".";
 }
 
 /**
