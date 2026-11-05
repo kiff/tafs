@@ -272,20 +272,23 @@ describe("tafs cloud", () => {
     // The account has Rae, live: a new conversation opens blank, and the words say why.
     const live = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(live.status).toBe(200);
-    expect(live.body).toEqual({ categories: [], recipes: [], filtered: false, shown: false, suggestions: { show: true, words: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good." } });
+    expect(live.body).toEqual({ categories: [], recipes: [], filtered: false, shown: false, suggestions: { show: true, reason: "live", words: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good." } });
     // No live taf: the recipes, shown.
     for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k);
     const fresh = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(fresh.body.shown).toBe(true);
     expect(fresh.body.recipes.length).toBeGreaterThan(0);
-    expect(fresh.body.suggestions).toEqual({ show: true, words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
+    expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
     // The setting: read by anyone, turned off by a manager, for good.
-    expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana" })).body).toEqual({ suggestions: { show: true, words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
+    expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana" })).body).toEqual({ suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: "no" } })).status).toBe(400);
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "key_rae", body: { show: false } })).status).toBe(403);
+    // A viewer can't turn suggestions off for the whole account (qa-kiff): refused, and the setting unchanged.
+    expect((await call(w, "PUT", "/v1/me/suggestions", { token: "viewer", body: { show: false } })).status).toBe(403);
+    expect((await call(w, "GET", "/v1/me/suggestions", { token: "viewer" })).body.suggestions).toMatchObject({ show: true, reason: "on" });
     const off = await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: false } });
     expect(off.status).toBe(200);
-    expect(off.body).toEqual({ suggestions: { show: false, words: "Suggestions are off for this account." } });
+    expect(off.body).toEqual({ suggestions: { show: false, reason: "off", words: "Suggestions are off for this account." } });
     const hidden = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(hidden.body).toMatchObject({ recipes: [], shown: false, suggestions: { show: false } });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } })).body.suggestions.show).toBe(true);

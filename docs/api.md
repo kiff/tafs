@@ -36,7 +36,7 @@ details go only to tafs cloud's own log.
 
 | Route | Who | What |
 |---|---|---|
-| `GET /v1/me/suggestions`, `PUT /v1/me/suggestions` | a person; manages, to change | The account's "Show suggestions" setting, kept in tafs cloud: `{suggestions: {show, words}}`. On by default; `PUT {show: false}` turns them off for good (`{show: true}` on again); 403 for someone who doesn't manage the account's tafs. `words` are tafs cloud's for the apps to show beside the switch |
+| `GET /v1/me/suggestions`, `PUT /v1/me/suggestions` | a person; manages, to change | The account's "Show suggestions" setting, kept in tafs cloud: `{suggestions: {show, reason: on | off | live, words}}`. On by default; `PUT {show: false}` turns them off for good (`{show: true}` on again); 403 for someone who doesn't manage the account's tafs. `words` are tafs cloud's for the apps to show beside the switch |
 | `GET /v1/jobs` | anyone | The five starter jobs, kept for the tafs that have one: `{jobs: [{id, name, summary, cron}]}`. A new taf carries its own job (`POST /v1/tafs`), and the five are recipes (`GET /v1/recipes`) |
 | `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, its `job_summary` (what Coach said it does, else its job's line), its `last_run` (its own latest, scheduled or from its chat, never a trial's), doors (each with its `label`) and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)). Also `limits: {text, trial_idle_days}`, the longest message and how long a trial waits unused, which the apps check and keep no copy of |
 | `GET /v1/tafs` | a person | The account's tafs the person may use or oversee, and removals not finished |

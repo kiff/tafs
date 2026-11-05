@@ -5182,9 +5182,12 @@ const SUGGESTIONS_KEPT_MS = 10 * 365 * 24 * 3600_000;
 /** The account's suggestions setting with its words: off for good, or on until the account's first taf is live. */
 async function suggestionsOf(me: KIFFIdentity, deps: Deps): Promise<Suggestions> {
   const kept = deps.coach ? (await deps.coach.get(suggestionsKey(me.tenantID)).catch(() => undefined)) as { show?: unknown } | undefined : undefined;
-  if (kept?.show === false) return { show: false, words: SUGGESTION_WORDS.off };
+  if (kept?.show === false) return { show: false, reason: "off", words: SUGGESTION_WORDS.off };
+  // "Live": a taf on the account, Setup aside, that isn't being removed. A taf made from Coach goes live
+  // as it's made, and one paused or stopped is still the owner's: the suggestions are for an account
+  // with none yet.
   const live = (await deps.tafs.list(me.tenantID)).some((t) => t.job !== SETUP_JOB && !t.removing);
-  return { show: true, words: live ? SUGGESTION_WORDS.live : SUGGESTION_WORDS.on };
+  return live ? { show: true, reason: "live", words: SUGGESTION_WORDS.live } : { show: true, reason: "on", words: SUGGESTION_WORDS.on };
 }
 
 /**
@@ -5197,7 +5200,7 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   // Shown only while the account has no live taf and the setting is on (the owner's decision): else the
   // list is empty and the words say why, so the apps draw only what comes.
   const suggestions = await suggestionsOf(me, deps);
-  if (!suggestions.show || suggestions.words === SUGGESTION_WORDS.live) return noRecipes(suggestions);
+  if (suggestions.reason !== "on") return noRecipes(suggestions);
   let apps: CatalogApp[] | undefined;
   if (deps.planqueBase) {
     try {

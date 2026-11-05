@@ -49,7 +49,9 @@ export interface RecipesView {
 export interface Suggestions {
   /** The setting: on by default; a manager turns it off for good. */
   show: boolean;
-  /** Why the list is as it is: shown, off, or the account has a live taf. */
+  /** Why the list is as it is: shown (`on`), turned off (`off`), or the account has a taf (`live`). */
+  reason: "on" | "off" | "live";
+  /** The same, in words the apps show. */
   words: string;
 }
 
@@ -92,6 +94,6 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     recipes: listed,
     filtered: apps !== undefined,
     shown: true,
-    suggestions: { show: true, words: SUGGESTION_WORDS.on },
+    suggestions: { show: true, reason: "on", words: SUGGESTION_WORDS.on },
   };
 }
