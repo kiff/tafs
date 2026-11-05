@@ -69,8 +69,11 @@ describe("result places at connected apps", () => {
       { subject: "rae", active: true, grants: [{ action: "post_k3", per_action_max: [{ quantity: "sum(amount)", unit: "USD" }] }, { action: "read_k4" }], aggregates: [{ quantity: "count" }] },
       { subject: "rae", active: false, grants: [{ action: "old_k5" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
       { subject: "max", active: true, grants: [{ action: "pay_k6" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
+      // A shared Card the taf holds as a second holder counts too (qa-kiff).
+      { subject: "other", subjects: ["other", "rae"], active: true, grants: [{ action: "stripe_refund" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
     ];
-    expect([...moneyActions(cards, "rae")]).toEqual([["refund_k1", "EUR"], ["note_k2", "EUR"], ["post_k3", "USD"]]);
+    expect([...moneyActions(cards, "rae")]).toEqual([["refund_k1", "EUR"], ["note_k2", "EUR"], ["post_k3", "USD"], ["stripe_refund", "EUR"]]);
+    expect(() => checkNoMoneyPlace([place("stripe_refund")], cards, "rae")).toThrow("moves money");
     const place = (action: string) => actionPlace({ place: "action", grant: "grt_1", action, args: {}, name: "Stripe · Refunds" });
     expect(() => checkNoMoneyPlace([place("refund_k1")], cards, "rae")).toThrow("Stripe · Refunds can't be a place: refund_k1 moves money (counted in EUR on the taf's Card), and a place moves no money");
     expect(() => checkNoMoneyPlace([place("POST_K3")], cards, "rae")).toThrow("counted in USD");

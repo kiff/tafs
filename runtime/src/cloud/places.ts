@@ -128,6 +128,8 @@ export function placeWords(p: VendorPlace): { label: string; words: string } {
 /** A Card as KIFF lists it, as far as a place's check reads it: whose it is, its actions, what it counts. */
 export interface PlaceCard {
   subject: string;
+  /** A shared Card's holders (KIFF's `subjects`): the taf may hold it as one of them. */
+  subjects?: string[] | null;
   active?: boolean;
   grants?: { action: string; per_action_max?: { quantity: string; unit?: string | null }[] | null }[] | null;
   aggregates?: { quantity: string; unit?: string | null }[] | null;
@@ -143,7 +145,7 @@ export function moneyActions(cards: PlaceCard[], agent: string): Map<string, str
   const summed = (q: { quantity: string; unit?: string | null }) => fold(q.quantity).startsWith("sum(");
   const out = new Map<string, string>();
   for (const card of cards) {
-    if (card.subject !== agent || card.active === false) continue;
+    if ((card.subject !== agent && !card.subjects?.includes(agent)) || card.active === false) continue;
     const total = (card.aggregates ?? []).find(summed);
     for (const g of card.grants ?? []) {
       const own = (g.per_action_max ?? []).find(summed);
