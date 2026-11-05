@@ -16,6 +16,16 @@ describe("a taf's work, as both apps show it", () => {
     expect(timeIn("2026-10-30T11:20:00Z", "Not/AZone", NOW)).toBe("11:20");
   });
 
+  it("says what a run waiting for a vendor's event waits for, in the connection's words", () => {
+    const wait = { call_id: "c1", tool: "desk_reply", input: {}, operation: "", expires: "2026-10-30T13:00:00Z", kind: "event", wait: { grant: "grt_desk", event: "DESK_NEW_TICKET", key: "reply_1", words: "The desk answers when the customer replies." } };
+    expect(requestOf(run({ status: "PAUSED", requirements: [wait] }), "UTC", NOW)).toMatchObject({ state: "waiting", line: "The desk answers when the customer replies.", waiting_for: "The desk answers when the customer replies." });
+    // No words from the connection: the event is named; an approval waiting comes first; an answered wait says nothing.
+    expect(requestOf(run({ status: "PAUSED", requirements: [{ ...wait, wait: { ...wait.wait, words: "" } }] }), "UTC", NOW).line).toBe("Waiting for the app's DESK_NEW_TICKET event");
+    expect(requestOf(run({ status: "PAUSED", requirements: [wait, { ...wait, call_id: "c2", kind: undefined, exception: "exc_1" }] }), "UTC", NOW).line).toBe("Waiting for your approval");
+    expect(requestOf(run({ status: "PAUSED", requirements: [{ ...wait, answered: "2026-10-30T11:30:00Z" }] }), "UTC", NOW)).toMatchObject({ line: "Waiting for an answer" });
+    expect(requestOf(run({ status: "PAUSED", requirements: [{ ...wait, answered: "2026-10-30T11:30:00Z" }] }), "UTC", NOW).waiting_for).toBeUndefined();
+  });
+
   it("says a retrying run's next try and count, and a needs_you run's reason as kiff/agents gives it", () => {
     expect(requestOf(run({ status: "PAUSED", state: "retrying", try: 1, of: 3, next_at: "2026-10-30T12:20:00Z" }), "Europe/Tallinn", NOW).line)
       .toBe("It stopped while it worked. Trying again at 14:20, 1 of 3.");

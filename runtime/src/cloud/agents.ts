@@ -160,8 +160,14 @@ export interface Requirement {
   answer?: string;
   /** "card" for a card shown to the owner that waits for their answer; none for a call KIFF holds. */
   kind?: string;
-  /** A card's answer as the run reads it, once answered. */
+  /** A card's answer as the run reads it, once answered; an event's payload, for an event's requirement. */
   result?: unknown;
+  /**
+   * What a sent call whose outcome comes later waits for (`kind: "event"`, the slow-tools
+   * design): the vendor's event, on that connection, carrying that key. The event is matched
+   * to the run by (tenant, grant, event, key); `words` are the connection's, for the owner.
+   */
+  wait?: { grant?: string; event: string; key: string; words?: string };
 }
 
 /**
@@ -675,6 +681,17 @@ export class Agents {
    */
   answerResult(tenant: string, agent: string, run: string, card: string, outcome: ResultOutcome): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "cards", card, "answer"], { answer: outcome, answered_by: ANSWERED_BY, background: true });
+  }
+
+  /**
+   * Answers, with the vendor's event, a sent call the paused run waits on because its
+   * outcome comes later (`requirements[].kind: "event"`): the event's payload is the call's
+   * result, and the run goes on in the background. tafs cloud matched the event to the run
+   * by (tenant, grant, event, key); no person answers it. 409 `wait_not_open` once the wait
+   * is answered, ran out, or the run went on.
+   */
+  answerWait(tenant: string, agent: string, run: string, call: string, payload: unknown): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "waits", call, "answer"], { payload, background: true });
   }
 
   /**

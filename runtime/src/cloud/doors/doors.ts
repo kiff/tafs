@@ -44,7 +44,7 @@ export interface DoorsDeps {
 export interface DoorsContext {
   doors: DoorsDeps;
   tafs: Tafs;
-  agents: Pick<AgentsAPI, "startRun" | "getRun">;
+  agents: Pick<AgentsAPI, "startRun" | "getRun" | "runs" | "answerWait">;
   push: PushStore;
   apns: Sender;
   now: Date;
@@ -359,6 +359,44 @@ export async function doorRunEnded(note: Note, ctx: DoorsContext): Promise<boole
   if (reply.taf !== note.agent || (reply.run && reply.run !== note.run)) return true;
   await settle(ctx, tenant, note.ref, note.run);
   return true;
+}
+
+/** How long an app's event that completes no run yet is kept, for a run that pauses on it right after (a fast vendor). */
+export const EARLY_EVENT_KEPT_MS = 10 * 60_000;
+
+/** An app's event kept for the run that will wait on it: planque's event id, and its payload as JSON text. */
+export interface KeptEvent {
+  id: string;
+  payload: string;
+  at: string;
+}
+
+/**
+ * A run's pause note names the vendor events it waits on (`waits`, kiff/agents):
+ * one whose event already came, kept by the receiver (inbound.ts), is answered
+ * now, so a vendor faster than the run's pause loses nothing. An answer that
+ * fails is logged and the kept event stays: the run's wait runs out on its own,
+ * and the kept event with it.
+ */
+export async function answerKeptEvents(note: Note, ctx: DoorsContext): Promise<void> {
+  const tenant = refTenant(note.ref);
+  if (!tenant || note.status !== "PAUSED" || !note.waits?.length) return;
+  for (const w of note.waits) {
+    if (!w.call || !w.event || !w.key) continue;
+    const key = doorKeys.earlyEvent(tenant, w.grant ?? "", w.event, w.key);
+    const kept = (await ctx.doors.store.get(key)) as KeptEvent | undefined;
+    if (!kept) continue;
+    try {
+      await ctx.agents.answerWait(tenant, note.agent, note.run, w.call, parse(kept.payload) ?? {});
+      await ctx.doors.store.remove(key);
+    } catch (err) {
+      console.error("app event kept:", err instanceof Error ? err.message : "error");
+    }
+  }
+}
+
+function parse(body: string): unknown {
+  try { return JSON.parse(body); } catch { return undefined; }
 }
 
 /**
