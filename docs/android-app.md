@@ -335,7 +335,7 @@ An app tafs cloud sends as `needs_setup` (kiff/planque#87) shows tafs cloud's `w
 title ("Needs setting up first. Ask tafs to enable it.") and has no Connect: nothing on its row
 can be tapped. On a taf's Setup, a connection's sheet shows tafs cloud's `custody_words` under its
 status line, the one line on who keeps its sign-in; with none sent, nothing shows. Above it,
-`account_words` says which account the connection works in and in which mode ("Kiff Agents ·
+`account_words` says which account the connection works in and in which mode ("Demo Shop ·
 Live"), as tafs cloud sends it; with none sent, nothing shows.
 
 ## Signing

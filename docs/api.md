@@ -298,7 +298,7 @@ and `reconnect`; `custody_words`, one line on who holds the sign-in, as planque 
 it (the connection service, or tafs' own), left out when planque doesn't say; and
 `on_demand: true` when the app's sign-in was set up on the owner's pick rather than by
 an operator (kiff/planque#87); and `account_words`, which vendor account it works in and
-in which mode, planque's `account_name` and `mode_words` in one line ("Kiff Agents ·
+in which mode, planque's `account_name` and `mode_words` in one line ("Demo Shop ·
 Live", "… · Mode not known yet: treated as live"), left out when planque says neither. A connected browser connection (planque's `provider: "browser"`)
 also has `site_sign_in: {title, words}`: the action the apps offer to open planque's live sign-in
 view (kiff/planque#86). A held sign-in stays visible with zero usable actions until its
