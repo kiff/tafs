@@ -2173,14 +2173,16 @@ final class AppModel: ObservableObject {
     func loadCalendar(_ state: CalendarState) async {
         let range = CalendarMath.range(state.selected)
         let gen = accountGeneration
+        calendarError = nil
         do {
             let read = try await cloud.calendar(from: range.from, to: range.to)
             guard gen == accountGeneration else { return }
             calendarRead = read
             calendarError = nil
         } catch {
-            guard gen == accountGeneration, !(error is CancellationError) else { return }
-            calendarError = error.localizedDescription
+            // A read the calendar cancelled (another range, the view gone) isn't an error.
+            guard gen == accountGeneration, !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
+            calendarError = "The calendar couldn't be read. \(error.localizedDescription)"
         }
     }
 

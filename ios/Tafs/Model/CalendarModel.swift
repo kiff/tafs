@@ -118,6 +118,14 @@ enum CalendarMath {
         return (grid.first!, grid.last!)
     }
 
+    /// The read, when it answers the selected date's range; nil while that range is still being read, so a
+    /// view never says "Nothing scheduled" from another month's read or before the first.
+    static func current(_ read: TafsCloud.CalendarRead?, selected: String) -> TafsCloud.CalendarRead? {
+        let r = range(selected)
+        guard let read, read.from == r.from, read.to == r.to else { return nil }
+        return read
+    }
+
     /// The dates a view shows.
     static func shown(_ state: CalendarState) -> [String] {
         switch state.mode {
@@ -196,8 +204,8 @@ enum CalendarMath {
         for e in self.events(events, on: day) {
             let hour = min(max(e.minute / 60, 0), 23)
             var row = out[hour] ?? []
-            if let i = row.firstIndex(where: { $0.taf == e.taf }) { row[i].count += 1 } else {
-                row.append(Slot(taf: e.taf, name: e.name, color: e.color, count: 1, first: e.time))
+            if let i = row.firstIndex(where: { $0.taf == e.taf }) { row[i].count += e.count } else {
+                row.append(Slot(taf: e.taf, name: e.name, color: e.color, count: e.count, first: e.time))
             }
             out[hour] = row
         }
@@ -208,6 +216,11 @@ enum CalendarMath {
     static func firstHour(_ events: [TafsCloud.CalendarEvent], days: [String]) -> Int {
         let set = Set(days)
         return events.filter { set.contains($0.day) }.map { min(max($0.minute / 60, 0), 23) }.min() ?? 8
+    }
+
+    /// How many firings a day has, a folded event counting all it stands for.
+    static func count(_ events: [TafsCloud.CalendarEvent], on day: String) -> Int {
+        events.filter { $0.day == day }.reduce(0) { $0 + $1.count }
     }
 
     /// The colours of the tafs with work on a day, at most three, for the day's marks.

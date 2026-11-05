@@ -11,11 +11,15 @@ extension TafsCloud {
         var events: [CalendarEvent] = []
         /// The dates with an event, so the app marks them.
         var days: [String] = []
-        /// tafs cloud's line for the range: "3 to come", "Nothing scheduled in these days".
+        /// tafs cloud's line for the range: "3 to come", "Nothing scheduled in these days", "Halted: nothing runs until it's resumed".
         var words = ""
-        enum CodingKeys: String, CodingKey { case timeZone = "time_zone", from, to, events, days, words }
-        init(timeZone: String = "UTC", from: String = "", to: String = "", events: [CalendarEvent] = [], days: [String] = [], words: String = "") {
-            self.timeZone = timeZone; self.from = from; self.to = to; self.events = events; self.days = days; self.words = words
+        /// Some events were left out: more than one read answers.
+        var more = false
+        /// The account is halted: nothing runs, so nothing is to come.
+        var halted = false
+        enum CodingKeys: String, CodingKey { case timeZone = "time_zone", from, to, events, days, words, more, halted }
+        init(timeZone: String = "UTC", from: String = "", to: String = "", events: [CalendarEvent] = [], days: [String] = [], words: String = "", more: Bool = false, halted: Bool = false) {
+            self.timeZone = timeZone; self.from = from; self.to = to; self.events = events; self.days = days; self.words = words; self.more = more; self.halted = halted
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -26,6 +30,8 @@ extension TafsCloud {
             events = ((try? c.decode([LenientItem<CalendarEvent>].self, forKey: .events)) ?? []).compactMap(\.value)
             days = (try? c.decode([String].self, forKey: .days)) ?? []
             words = (try? c.decode(String.self, forKey: .words)) ?? ""
+            more = (try? c.decode(Bool.self, forKey: .more)) ?? false
+            halted = (try? c.decode(Bool.self, forKey: .halted)) ?? false
         }
     }
 
@@ -45,10 +51,12 @@ extension TafsCloud {
         var minute: Int
         /// What it is, in tafs cloud's words.
         var words: String
+        /// How many firings it stands for: tafs cloud folds a day of a dense schedule into one event.
+        var count: Int
         var id: String { "\(taf)|\(kind)|\(at)" }
-        enum CodingKeys: String, CodingKey { case taf, name, color, kind, at, day, time, minute, words }
-        init(taf: String, name: String, color: Int = 0, kind: String = "schedule", at: String, day: String, time: String, minute: Int, words: String = "") {
-            self.taf = taf; self.name = name; self.color = color; self.kind = kind; self.at = at; self.day = day; self.time = time; self.minute = minute; self.words = words
+        enum CodingKeys: String, CodingKey { case taf, name, color, kind, at, day, time, minute, words, count }
+        init(taf: String, name: String, color: Int = 0, kind: String = "schedule", at: String, day: String, time: String, minute: Int, words: String = "", count: Int = 1) {
+            self.taf = taf; self.name = name; self.color = color; self.kind = kind; self.at = at; self.day = day; self.time = time; self.minute = minute; self.words = words; self.count = count
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -61,6 +69,7 @@ extension TafsCloud {
             color = (try? c.decode(Int.self, forKey: .color)) ?? 0
             kind = (try? c.decode(String.self, forKey: .kind)) ?? "schedule"
             words = (try? c.decode(String.self, forKey: .words)) ?? ""
+            count = max(1, (try? c.decode(Int.self, forKey: .count)) ?? 1)
         }
     }
 

@@ -344,8 +344,12 @@ data class CalendarRead(
   @SerialName("events") val rawEvents: List<kotlinx.serialization.json.JsonElement> = emptyList(),
   /** The dates with an event, so the app marks them. */
   val days: List<String> = emptyList(),
-  /** tafs cloud's line for the range: "3 to come", "Nothing scheduled in these days". */
+  /** tafs cloud's line for the range: "3 to come", "Nothing scheduled in these days", "Halted: nothing runs until it's resumed". */
   val words: String = "",
+  /** Some events were left out: more than one read answers. */
+  val more: Boolean = false,
+  /** The account is halted: nothing runs, so nothing is to come. */
+  val halted: Boolean = false,
 ) {
   /** The events this app can read: one it can't is left out, never the read. */
   val events: List<CalendarEvent> by lazy {
@@ -370,6 +374,9 @@ data class CalendarEvent(
   val minute: Int,
   /** What it is, in tafs cloud's words. */
   val words: String = "",
+  /** How many firings it stands for: tafs cloud folds a day of a dense schedule into one event. */
+  @SerialName("count") val rawCount: Int = 1,
 ) {
   val id: String get() = "$taf|$kind|$at"
+  val count: Int get() = rawCount.coerceAtLeast(1)
 }

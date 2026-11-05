@@ -2957,8 +2957,8 @@ describe("the calendar (kiff/tafs#534)", () => {
     expect(r.status).toBe(200);
     expect(r.body).toEqual({
       time_zone: "Europe/Paris", from: "2026-11-05", to: "2026-11-06",
-      events: [{ taf: RAE, name: "Rae", color: 0, kind: "schedule", at: "2026-11-06T08:00:00Z", day: "2026-11-06", time: "09:00", minute: 540, words: "Every day at 09:00" }],
-      days: ["2026-11-06"], words: "1 to come",
+      events: [{ taf: RAE, name: "Rae", color: 0, kind: "schedule", at: "2026-11-06T08:00:00Z", day: "2026-11-06", time: "09:00", minute: 540, words: "Every day at 09:00", count: 1 }],
+      days: ["2026-11-06"], more: false, halted: false, words: "1 to come",
     });
     // Someone KIFF says may not use or oversee the taf sees none of its work.
     w.account.access = { rae: { use: false, oversee: false, manage: false } };
@@ -2974,6 +2974,43 @@ describe("the calendar (kiff/tafs#534)", () => {
     w.agents.schedules.set(`t_acme|${RAE}`, daily);
     w.agents.api.listSchedules = async () => { throw new Error("scheduler down"); };
     expect((await call(w, "GET", "/v1/calendar", { token: "ana", query: "from=2026-11-05&to=2026-11-06" })).body.events).toEqual([]);
+  });
+
+  it("shows nothing to come while the account is halted, and nothing of a halted taf beside a running one", async () => {
+    const w = world();
+    w.now = new Date("2026-11-05T10:00:00Z");
+    w.agents.schedules.set(`t_acme|${RAE}`, daily);
+    const BO = "taf-bo00000000000000000";
+    w.tafs.held.set(`t_acme#${BO}`, { id: BO, name: "Bo", job: "refunds", kiffAgent: "bo", nameClaim: "claim-bo", created: "2026-10-16T09:00:00Z", color: 1 });
+    await w.agents.api.putAgent("t_acme", BO, {} as never);
+    w.agents.schedules.set(`t_acme|${BO}`, { ...daily, id: BO, agent: BO });
+    const q = { token: "ana_paris", query: "from=2026-11-05&to=2026-11-06" };
+    expect((await call(w, "GET", "/v1/calendar", q)).body.events.map((e: { name: string }) => e.name)).toEqual(["Bo", "Rae"]);
+    await w.agents.api.halt("t_acme", RAE);
+    const one = await call(w, "GET", "/v1/calendar", q);
+    expect(one.body).toMatchObject({ halted: false, words: "1 to come" });
+    expect(one.body.events.map((e: { name: string }) => e.name)).toEqual(["Bo"]);
+    await w.agents.api.halt("t_acme");
+    const all = await call(w, "GET", "/v1/calendar", q);
+    expect(all.body).toEqual({ time_zone: "Europe/Paris", from: "2026-11-05", to: "2026-11-06", events: [], days: [], more: false, halted: true, words: "Halted: nothing runs until it's resumed" });
+  });
+
+  it("stays small at its worst: six tafs every 15 minutes for 62 days", async () => {
+    const w = world();
+    w.now = new Date("2026-11-01T00:00:00Z");
+    for (let i = 0; i < 6; i++) {
+      const id = `taf-dense${i}000000000000000`;
+      w.tafs.held.set(`t_acme#${id}`, { id, name: `Dense ${i}`, job: "refunds", kiffAgent: `dense${i}`, nameClaim: `c${i}`, created: `2026-10-1${i}T09:00:00Z` });
+      await w.agents.api.putAgent("t_acme", id, {} as never);
+      w.agents.schedules.set(`t_acme|${id}`, { ...daily, id, agent: id, cron: "*/15 * * * *" });
+    }
+    const r = await call(w, "GET", "/v1/calendar", { token: "ana_paris", query: "from=2026-11-01&to=2027-01-01" });
+    expect(r.status).toBe(200);
+    // One event a day for each dense taf, plus Rae's daily one: every firing still counted.
+    expect(r.body.events.length).toBeLessThanOrEqual(7 * 62);
+    expect(r.body.events.filter((e: { name: string }) => e.name === "Dense 0").every((e: { count: number }) => e.count > 12)).toBe(true);
+    expect(JSON.stringify(r.body).length).toBeLessThan(150_000);
+    expect(r.body.more).toBe(false);
   });
 
   it("refuses a range that isn't dates, runs backwards, or is longer than two months", async () => {

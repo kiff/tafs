@@ -24,10 +24,21 @@ export interface CalendarEvent {
   minute: number;
   /** What it is, in tafs cloud's words: "Every day at 09:00", "Checks again", "Try 2 of 3". */
   words: string;
+  /** How many firings it stands for: a schedule that fires more than FOLD_AT times on a day is one event that day. */
+  count: number;
 }
 
 /** The most days one read covers. */
 export const MAX_DAYS = 62;
+
+/**
+ * A schedule that fires more than this many times on one day is one event that day ("Every 15 minutes: 36 times from 09:00 to
+ * 17:45"), so a dense schedule can't make a read too large for the apps or for the answer's limit (kiff/tafs#537).
+ */
+export const FOLD_AT = 12;
+
+/** The most events one read answers; past it, `more` says the rest were left out. */
+export const MAX_EVENTS = 2000;
 
 const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -46,12 +57,32 @@ export function plusDays(date: string, n: number): string {
   return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
 }
 
+/** One formatter per zone: building one is the costly part of reading a wall clock, and a read reads thousands. */
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function formatter(zone: string): Intl.DateTimeFormat {
+  let f = formatters.get(zone);
+  if (!f) {
+    f = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    formatters.set(zone, f);
+  }
+  return f;
+}
+
 /** The date an instant falls on, and its time of day, in zone. */
-export function localOf(at: string | Date, zone: string): { day: string; time: string; minute: number } {
-  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
-    .formatToParts(typeof at === "string" ? new Date(at) : at).map((x) => [x.type, x.value]));
+export function localOf(at: string | Date | number, zone: string): { day: string; time: string; minute: number } {
+  const p: Record<string, string> = {};
+  for (const x of formatter(zone).formatToParts(typeof at === "string" ? new Date(at) : at)) p[x.type] = x.value;
   return { day: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}`, minute: Number(p.hour) * 60 + Number(p.minute) };
 }
+
+/** The zone's offset from UTC at an instant, in milliseconds. */
+function offsetAt(at: number, zone: string): number {
+  const l = localOf(at, zone);
+  const [y, m, d] = l.day.split("-").map(Number) as [number, number, number];
+  return Date.UTC(y, m - 1, d) + l.minute * 60_000 - Math.floor(at / 60_000) * 60_000;
+}
+
+const iso = (t: number) => new Date(t).toISOString().replace(/\.000Z$/, "Z");
 
 /** A cron's five fields as sets, as kiff/agents parses them (schedule/cron.go): "*", lists, ranges and steps. */
 export interface Cron { minute: Set<number>; hour: Set<number>; dom: Set<number>; month: Set<number>; dow: Set<number> }
@@ -113,15 +144,25 @@ export function firings(s: Schedule, from: string, to: string, zone: string, now
   const out: string[] = [];
   // The schedule's zone and the account's can differ: walk the schedule's dates one wider on each side, and keep what
   // falls in the account's range by instant.
+  const hours = [...cron.hour].sort((a, b) => a - b), minutes = [...cron.minute].sort((a, b) => a - b);
   for (let date = plusDays(from, -1); date <= plusDays(to, 1); date = plusDays(date, 1)) {
     const f = dayFacts(date);
     if (!cron.month.has(f.month) || !cron.dom.has(f.dom) || !cron.dow.has(f.dow)) continue;
     if (s.kind === "monthly_last_day" && !f.last) continue;
-    for (const h of [...cron.hour].sort((a, b) => a - b)) {
-      for (const m of [...cron.minute].sort((a, b) => a - b)) {
-        const at = instantIn(`${date}T${hhmm(h, m)}`, sz);
-        const back = localOf(at, sz);
-        if (back.day !== date || back.time !== hhmm(h, m)) continue; // a wall time the zone skips
+    const [y, mo, d] = date.split("-").map(Number) as [number, number, number];
+    const midnight = Date.UTC(y, mo - 1, d);
+    // A day the zone keeps one offset all through is plain arithmetic; a day it changes (DST) reads each wall time.
+    const early = offsetAt(midnight - 14 * 3_600_000, sz), late = offsetAt(midnight + 38 * 3_600_000, sz);
+    for (const h of hours) {
+      for (const m of minutes) {
+        let at: string;
+        if (early === late) {
+          at = iso(midnight + (h * 60 + m) * 60_000 - early);
+        } else {
+          at = instantIn(`${date}T${hhmm(h, m)}`, sz);
+          const back = localOf(at, sz);
+          if (back.day !== date || back.time !== hhmm(h, m)) continue; // a wall time the zone skips
+        }
         if (skip.has(Date.parse(at)) || !within(at)) continue;
         out.push(at);
       }
@@ -143,10 +184,21 @@ function scheduleWords(s: Schedule, zone: string): string {
 /** A range's events for one taf: its schedules' firings, its follow-ups and its runs' next tries, after now. */
 export function eventsOf(taf: CalendarTaf, schedules: Schedule[], runs: Run[], from: string, to: string, zone: string, now: Date): CalendarEvent[] {
   const out: CalendarEvent[] = [];
-  const event = (kind: CalendarEvent["kind"], at: string, words: string): CalendarEvent => ({ taf: taf.id, name: taf.name, color: taf.color, kind, at, ...localOf(at, zone), words });
+  const event = (kind: CalendarEvent["kind"], at: string, words: string, count = 1): CalendarEvent => ({ taf: taf.id, name: taf.name, color: taf.color, kind, at, ...localOf(at, zone), words, count });
   for (const s of schedules) {
     const kind = s.follow_up ? "follow_up" : "schedule";
-    for (const at of firings(s, from, to, zone, now)) out.push(event(kind, at, scheduleWords(s, zone)));
+    const words = scheduleWords(s, zone);
+    // By the day it falls on in the account's zone: a day with more than FOLD_AT firings is one event, at its first.
+    const byDay = new Map<string, string[]>();
+    for (const at of firings(s, from, to, zone, now)) {
+      const day = localOf(at, zone).day;
+      byDay.set(day, [...(byDay.get(day) ?? []), at]);
+    }
+    for (const ats of byDay.values()) {
+      if (ats.length <= FOLD_AT) { for (const at of ats) out.push(event(kind, at, words)); continue; }
+      const first = localOf(ats[0]!, zone).time, last = localOf(ats[ats.length - 1]!, zone).time;
+      out.push(event(kind, ats[0]!, `${words}: ${ats.length} times from ${first} to ${last}`, ats.length));
+    }
   }
   const lower = Math.max(now.getTime(), Date.parse(instantIn(`${from}T00:00`, zone)));
   const upper = Date.parse(instantIn(`${plusDays(to, 1)}T00:00`, zone));
@@ -159,8 +211,8 @@ export function eventsOf(taf: CalendarTaf, schedules: Schedule[], runs: Run[], f
   return out;
 }
 
-/** The events in time order, then by taf name, and the dates that have one. */
-export function calendarOf(events: CalendarEvent[]): { events: CalendarEvent[]; days: string[] } {
+/** The events in time order, then by taf name, at most MAX_EVENTS (`more` when some were left out), and the dates that have one. */
+export function calendarOf(events: CalendarEvent[]): { events: CalendarEvent[]; days: string[]; more: boolean } {
   const sorted = [...events].sort((a, b) => a.at.localeCompare(b.at) || a.name.localeCompare(b.name) || a.kind.localeCompare(b.kind));
-  return { events: sorted, days: [...new Set(sorted.map((e) => e.day))] };
+  return { events: sorted.slice(0, MAX_EVENTS), days: [...new Set(sorted.map((e) => e.day))], more: sorted.length > MAX_EVENTS };
 }

@@ -89,10 +89,13 @@ fun CalendarView(
 ) {
   val today = CalendarMath.today(zone)
   val shown = state.calendarState ?: CalendarState(selected = today)
-  val events = state.calendar?.events ?: emptyList()
+  // The read for the selected date's range, or null while it's being read: never another month's, never "nothing" before the first.
+  val read = CalendarMath.current(state.calendar, shown.selected)
+  val events = read?.events ?: emptyList()
   val range = CalendarMath.range(shown.selected)
-  LaunchedEffect(range.first) { load(shown) }
-  val ctx = Ctx(shown, events, today, onShow, { cloud -> tafIdForCloud(cloud)?.let(onOpenTaf) }, tafIdForCloud)
+  var retries by remember { mutableStateOf(0) }
+  LaunchedEffect(range.first, retries) { load(shown) }
+  val ctx = Ctx(shown, events, today, read != null, read?.words.orEmpty(), onShow, { cloud -> tafIdForCloud(cloud)?.let(onOpenTaf) }, tafIdForCloud)
 
   BoxWithConstraints(Modifier.fillMaxSize().background(Theme.background).statusBarsPadding().testTag("calendar")) {
     val layout = CalendarLayout.of(maxWidth.value.toInt(), maxHeight.value.toInt())
@@ -107,6 +110,20 @@ fun CalendarView(
         }
       }
       Text("Calendar", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+      val error = state.calendarError
+      when {
+        error != null -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+          Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.weight(1f, fill = false))
+          OutlineButton("Try again", onClick = { retries += 1 }, modifier = Modifier.testTag("calendar.retry"))
+        }
+        read == null -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("calendar.loading")) {
+          androidx.compose.material3.CircularProgressIndicator(Modifier.size(16.dp), color = Theme.dim, strokeWidth = 2.dp)
+          Text("Reading the calendar…", style = scaled(13, color = Theme.dim))
+        }
+        // tafs cloud's words: the account is halted, or some work was left out of this read.
+        read.halted || read.more ->
+          Text(read.words, style = scaled(13, FontWeight.SemiBold, if (read.halted) Theme.no else Theme.soft), modifier = Modifier.testTag("calendar.words"))
+      }
       if (layout == CalendarLayout.Wide) Wide(ctx) else Compact(ctx)
     }
   }
@@ -117,6 +134,10 @@ private class Ctx(
   val state: CalendarState,
   val events: List<CalendarEvent>,
   val today: String,
+  /** The read answers this range: only then is an empty day "nothing scheduled". */
+  val loaded: Boolean,
+  /** tafs cloud's words for the range, for the agenda when nothing is to come. */
+  val words: String,
   val show: (CalendarState) -> Unit,
   val open: (String) -> Unit,
   val known: (String) -> String?,
@@ -229,7 +250,7 @@ private fun MonthCells(c: Ctx, large: Boolean) {
 private fun DayCell(c: Ctx, day: String, large: Boolean, modifier: Modifier) {
   val inMonth = CalendarMath.sameMonth(day, c.state.selected)
   val marks = CalendarMath.marks(c.events, day)
-  val count = CalendarMath.events(c.events, day).size
+  val count = CalendarMath.count(c.events, day)
   val selected = day == c.state.selected
   Column(
     modifier
@@ -318,7 +339,7 @@ private fun TimeGrid(c: Ctx, days: List<String>) {
         }
       }
     }
-    if (days.all { CalendarMath.events(c.events, it).isEmpty() }) Empty(if (days.size == 1) "Nothing scheduled on this day." else "Nothing scheduled this week.")
+    if (c.loaded && days.all { CalendarMath.events(c.events, it).isEmpty() }) Empty(if (days.size == 1) "Nothing scheduled on this day." else "Nothing scheduled this week.")
   }
 }
 
@@ -345,7 +366,7 @@ private fun DayList(c: Ctx, day: String) {
   val on = CalendarMath.events(c.events, day)
   Column(Modifier.testTag("calendar.day"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Eyebrow(CalendarMath.dayHeading(day))
-    if (on.isEmpty()) Empty("Nothing scheduled on this day.")
+    if (c.loaded && on.isEmpty()) Empty("Nothing scheduled on this day.")
     on.forEach { EventRow(c, it) }
   }
 }
@@ -356,7 +377,8 @@ private fun Agenda(c: Ctx) {
   val groups = CalendarMath.agenda(c.events, CalendarMath.shown(c.state))
   Column(Modifier.testTag("calendar.agenda"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Eyebrow("Agenda")
-    if (groups.isEmpty()) Empty("Nothing scheduled in these days.")
+    // tafs cloud's own words when nothing is to come, so both apps say the same.
+    if (c.loaded && groups.isEmpty()) Empty(c.words.ifEmpty { "Nothing scheduled in these days." })
     groups.forEach { (day, events) ->
       Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(CalendarMath.dayHeading(day), style = scaled(14, FontWeight.SemiBold, if (day == c.today) Theme.amberText else Theme.ink))

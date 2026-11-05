@@ -2362,6 +2362,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff) return
     val (from, to) = bot.tafs.app.model.CalendarMath.range(calendar.selected)
     val generation = accountGeneration
+    _state.update { it.copy(calendarError = null) }
     try {
       val read = cloud.calendar(from, to)
       if (generation == accountGeneration) _state.update { it.copy(calendar = read, calendarError = null) }

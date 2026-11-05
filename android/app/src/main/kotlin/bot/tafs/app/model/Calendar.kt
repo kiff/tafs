@@ -63,6 +63,15 @@ object CalendarMath {
   /** The dates one read covers: the selected month's grid, which holds its day and its week too. */
   fun range(selected: String): Pair<String, String> = monthGrid(selected).let { it.first() to it.last() }
 
+  /**
+   * The read, when it answers the selected date's range; null while that range is still being read, so a view never says
+   * "Nothing scheduled" from another month's read or before the first. As iOS's `CalendarMath.current`.
+   */
+  fun current(read: bot.tafs.app.kiff.CalendarRead?, selected: String): bot.tafs.app.kiff.CalendarRead? {
+    val (from, to) = range(selected)
+    return read?.takeIf { it.from == from && it.to == to }
+  }
+
   /** The dates a view shows. */
   fun shown(state: CalendarState): List<String> = when (state.mode) {
     CalendarMode.Day -> listOf(state.selected)
@@ -120,7 +129,7 @@ object CalendarMath {
       val hour = (e.minute / 60).coerceIn(0, 23)
       val row = out.getOrPut(hour) { mutableListOf() }
       val i = row.indexOfFirst { it.taf == e.taf }
-      if (i >= 0) row[i] = row[i].copy(count = row[i].count + 1) else row.add(Slot(e.taf, e.name, e.color, 1, e.time))
+      if (i >= 0) row[i] = row[i].copy(count = row[i].count + e.count) else row.add(Slot(e.taf, e.name, e.color, e.count, e.time))
     }
     return out
   }
@@ -128,6 +137,9 @@ object CalendarMath {
   /** The first hour with work among the dates, to scroll a time view to; 8 when there's none. */
   fun firstHour(events: List<CalendarEvent>, days: List<String>): Int =
     events.filter { it.day in days }.minOfOrNull { (it.minute / 60).coerceIn(0, 23) } ?: 8
+
+  /** How many firings a day has, a folded event counting all it stands for. */
+  fun count(events: List<CalendarEvent>, day: String): Int = events.filter { it.day == day }.sumOf { it.count }
 
   /** The colours of the tafs with work on a day, at most three, for the day's marks. */
   fun marks(events: List<CalendarEvent>, day: String): List<Int> =

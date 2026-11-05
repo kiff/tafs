@@ -4287,19 +4287,26 @@ async function calendar(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   if (plusDays(from, MAX_DAYS - 1) < to) throw new HTTPError(400, `a read covers at most ${MAX_DAYS} days`);
   const zone = me.timeZone ?? "UTC";
   const now = deps.now?.() ?? new Date();
-  const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
+  const [records, access, account] = await Promise.all([
+    deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase), deps.agents.halted(me.tenantID).catch(() => undefined),
+  ]);
+  // Nothing runs while the account is halted (kiff/tafs#537): no work is to come until it's resumed.
+  if (account?.halted) return { time_zone: zone, from, to, events: [], days: [], more: false, halted: true, words: "Halted: nothing runs until it's resumed" };
   const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent))
     .sort((a, b) => a.created.localeCompare(b.created) || a.id.localeCompare(b.id));
-  // A taf whose schedules or runs can't be read today shows none, never a guess.
+  // A taf whose schedules or runs can't be read today shows none, never a guess; a halted taf shows none, as nothing of it runs.
   const each = await Promise.all(tafs.map(async (t) => {
-    const [schedules, runs] = await Promise.all([
+    const [schedules, runs, halt] = await Promise.all([
       deps.agents.listSchedules(me.tenantID, t.id).catch(() => [] as Schedule[]),
       deps.agents.runs(me.tenantID, t.id, true, 20).catch(() => [] as Run[]),
+      deps.agents.halted(me.tenantID, t.id).catch(() => undefined),
     ]);
+    if (halt?.halted) return [];
     return eventsOf({ id: t.id, name: t.name, color: t.color ?? 0 }, schedules, runs, from, to, zone, now);
   }));
-  const { events, days } = calendarOf(each.flat());
-  return { time_zone: zone, from, to, events, days, words: events.length ? `${events.length} to come` : "Nothing scheduled in these days" };
+  const { events, days, more } = calendarOf(each.flat());
+  const count = events.reduce((n, e) => n + e.count, 0);
+  return { time_zone: zone, from, to, events, days, more, halted: false, words: count ? `${count} to come${more ? ", and more" : ""}` : "Nothing scheduled in these days" };
 }
 
 async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {

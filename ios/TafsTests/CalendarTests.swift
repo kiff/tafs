@@ -3,6 +3,7 @@ import XCTest
 
 /// The calendar (kiff/tafs#534): tafs cloud gives every occurrence with its day and minute in the
 /// account's zone; the app counts dates, groups and places, and converts no zone.
+@MainActor
 final class CalendarTests: XCTestCase {
     private func event(_ taf: String, _ day: String, _ time: String, color: Int = 0, kind: String = "schedule") -> TafsCloud.CalendarEvent {
         let p = time.split(separator: ":").compactMap { Int($0) }
@@ -108,6 +109,28 @@ final class CalendarTests: XCTestCase {
         let four = ["a", "b", "c", "d"].enumerated().map { event($1, "2026-11-06", "10:00", color: $0) }
         XCTAssertEqual(CalendarMath.marks(four, on: "2026-11-06"), [0, 1, 2])
         XCTAssertEqual(CalendarMath.marks(four, on: "2026-11-07"), [], "an empty day has no mark")
+    }
+
+    func testAFoldedDayCountsEveryFiringAndAHaltedReadSaysSo() throws {
+        let json = #"""
+        {"time_zone":"UTC","halted":true,"more":false,"words":"Halted: nothing runs until it's resumed","events":[],"days":[]}
+        """#
+        let halted = try KIFFClient.decoder.decode(TafsCloud.CalendarRead.self, from: Data(json.utf8))
+        XCTAssertTrue(halted.halted)
+        XCTAssertEqual(halted.words, "Halted: nothing runs until it's resumed")
+        let folded = TafsCloud.CalendarEvent(taf: "rae", name: "Rae", at: "2026-11-06T08:00:00Z", day: "2026-11-06", time: "09:00", minute: 540, words: "Every 15 minutes: 36 times from 09:00 to 17:45", count: 36)
+        let one = event("bo", "2026-11-06", "09:30", color: 1)
+        XCTAssertEqual(CalendarMath.count([folded, one], on: "2026-11-06"), 37)
+        XCTAssertEqual(CalendarMath.slots([folded], on: "2026-11-06")[9]?.first?.count, 36)
+        let old = try KIFFClient.decoder.decode(TafsCloud.CalendarEvent.self, from: Data(#"{"taf":"t","at":"x","day":"2026-11-06","time":"09:00","minute":540}"#.utf8))
+        XCTAssertEqual(old.count, 1, "an event without a count stands for one firing")
+    }
+
+    func testAReadCountsOnlyForTheRangeItAnswered() {
+        let november = TafsCloud.CalendarRead(from: "2026-10-26", to: "2026-12-06", words: "Nothing scheduled in these days")
+        XCTAssertEqual(CalendarMath.current(november, selected: "2026-11-20"), november)
+        XCTAssertNil(CalendarMath.current(november, selected: "2026-12-10"), "another month's read never says this one is empty")
+        XCTAssertNil(CalendarMath.current(nil, selected: "2026-11-20"), "before the first answer: reading, not empty")
     }
 
     func testADSTDayIsPlacedByTheMinuteTafsCloudGivesNotByTheInstant() {

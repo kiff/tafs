@@ -118,6 +118,25 @@ class CalendarTest {
     assertEquals("an empty day has no mark", emptyList<Int>(), CalendarMath.marks(four, "2026-11-07"))
   }
 
+  @Test fun aFoldedDayCountsEveryFiringAndAHaltedReadSaysSo() {
+    val halted = KiffClient.json.decodeFromString(CalendarRead.serializer(), """{"time_zone":"UTC","halted":true,"more":false,"words":"Halted: nothing runs until it's resumed","events":[],"days":[]}""")
+    assertTrue(halted.halted)
+    assertEquals("Halted: nothing runs until it's resumed", halted.words)
+    val folded = CalendarEvent(taf = "rae", name = "Rae", at = "2026-11-06T08:00:00Z", day = "2026-11-06", time = "09:00", minute = 540, words = "Every 15 minutes: 36 times from 09:00 to 17:45", rawCount = 36)
+    val one = event("bo", "2026-11-06", "09:30", color = 1)
+    assertEquals(37, CalendarMath.count(listOf(folded, one), "2026-11-06"))
+    assertEquals(36, CalendarMath.slots(listOf(folded), "2026-11-06")[9]?.first()?.count)
+    val old = KiffClient.json.decodeFromString(CalendarEvent.serializer(), """{"taf":"t","at":"x","day":"2026-11-06","time":"09:00","minute":540}""")
+    assertEquals("an event without a count stands for one firing", 1, old.count)
+  }
+
+  @Test fun aReadCountsOnlyForTheRangeItAnswered() {
+    val november = CalendarRead(from = "2026-10-26", to = "2026-12-06", words = "Nothing scheduled in these days")
+    assertEquals(november, CalendarMath.current(november, "2026-11-20"))
+    assertNull("another month's read never says this one is empty", CalendarMath.current(november, "2026-12-10"))
+    assertNull("before the first answer: reading, not empty", CalendarMath.current(null, "2026-11-20"))
+  }
+
   @Test fun aDSTDayIsPlacedByTheMinuteTafsCloudGivesNotByTheInstant() {
     // 25 October 2026 in Paris: 09:00 is 08:00Z, an hour later in UTC than the day before.
     val before = CalendarEvent(taf = "rae", name = "Rae", at = "2026-10-24T07:00:00Z", day = "2026-10-24", time = "09:00", minute = 540)

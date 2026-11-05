@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Run, Schedule } from "../src/cloud/agents.js";
-import { calendarOf, dateOf, eventsOf, firings, localOf, parseCron, plusDays } from "../src/cloud/calendar.js";
+import { calendarOf, dateOf, eventsOf, firings, FOLD_AT, localOf, MAX_EVENTS, parseCron, plusDays } from "../src/cloud/calendar.js";
 
 const NOW = new Date("2026-11-05T10:00:00Z");
 const base: Schedule = { id: "s1", agent: "rae", cron: "0 9 * * *", time_zone: "Europe/Paris", input: "", enabled: true };
@@ -101,12 +101,31 @@ describe("a taf's events", () => {
     const ev = eventsOf(taf, [base, followUp], [run, done], "2026-11-05", "2026-11-06", "Europe/Paris", NOW);
     expect(calendarOf(ev)).toEqual({
       events: [
-        { taf: "rae", name: "Rae", color: 2, kind: "retry", at: "2026-11-05T11:00:00Z", day: "2026-11-05", time: "12:00", minute: 720, words: "Try 2 of 3" },
-        { taf: "rae", name: "Rae", color: 2, kind: "schedule", at: "2026-11-06T08:00:00Z", day: "2026-11-06", time: "09:00", minute: 540, words: "Every day at 09:00" },
-        { taf: "rae", name: "Rae", color: 2, kind: "follow_up", at: "2026-11-06T12:00:00Z", day: "2026-11-06", time: "13:00", minute: 780, words: "Checks again, as it set itself" },
+        { taf: "rae", name: "Rae", color: 2, kind: "retry", at: "2026-11-05T11:00:00Z", day: "2026-11-05", time: "12:00", minute: 720, words: "Try 2 of 3", count: 1 },
+        { taf: "rae", name: "Rae", color: 2, kind: "schedule", at: "2026-11-06T08:00:00Z", day: "2026-11-06", time: "09:00", minute: 540, words: "Every day at 09:00", count: 1 },
+        { taf: "rae", name: "Rae", color: 2, kind: "follow_up", at: "2026-11-06T12:00:00Z", day: "2026-11-06", time: "13:00", minute: 780, words: "Checks again, as it set itself", count: 1 },
       ],
-      days: ["2026-11-05", "2026-11-06"],
+      days: ["2026-11-05", "2026-11-06"], more: false,
     });
+  });
+
+  it("folds a day with more than FOLD_AT firings into one event, with how many and from when to when", () => {
+    const dense = { ...base, cron: "*/15 9-17 * * *" };
+    const ev = eventsOf(taf, [dense], [], "2026-11-06", "2026-11-07", "Europe/Paris", NOW);
+    expect(ev).toHaveLength(2);
+    expect(ev[0]).toMatchObject({ day: "2026-11-06", time: "09:00", minute: 540, count: 36, words: "Every 15 minutes from 09:00 to 18:00: 36 times from 09:00 to 17:45" });
+    // A day with FOLD_AT firings or fewer keeps each.
+    const twelve = { ...base, cron: "0 8-19 * * *" };
+    expect(eventsOf(taf, [twelve], [], "2026-11-06", "2026-11-06", "Europe/Paris", NOW)).toHaveLength(FOLD_AT);
+  });
+
+  it("answers at most MAX_EVENTS, says there are more, and still marks every day", () => {
+    const many = Array.from({ length: MAX_EVENTS + 5 }, (_, i) => ({ taf: "rae", name: "Rae", color: 0, kind: "schedule" as const,
+      at: new Date(Date.UTC(2026, 10, 6) + i * 60_000).toISOString(), day: i < MAX_EVENTS ? "2026-11-06" : "2026-11-07", time: "09:00", minute: 540, words: "", count: 1 }));
+    const c = calendarOf(many);
+    expect(c.events).toHaveLength(MAX_EVENTS);
+    expect(c.more).toBe(true);
+    expect(c.days).toEqual(["2026-11-06", "2026-11-07"]);
   });
 
   it("orders events by time, then by taf", () => {

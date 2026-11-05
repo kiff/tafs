@@ -16,7 +16,9 @@ struct CalendarView: View {
 
     private var today: String { CalendarMath.today(in: AccountTime.zone) }
     private var state: CalendarState { model.calendarState ?? CalendarState(selected: today) }
-    private var events: [TafsCloud.CalendarEvent] { model.calendarRead?.events ?? [] }
+    /// The read for the selected date's range, or nil while it's being read.
+    private var read: TafsCloud.CalendarRead? { CalendarMath.current(model.calendarRead, selected: state.selected) }
+    private var events: [TafsCloud.CalendarEvent] { read?.events ?? [] }
     private func show(_ s: CalendarState) { withMotion(.easeInOut(duration: 0.2)) { model.calendarState = s } }
     private func select(_ day: String) { show(CalendarState(mode: state.mode, selected: day)) }
 
@@ -35,7 +37,8 @@ struct CalendarView: View {
         .screenBackground()
         .navigationTitle("Calendar")
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: CalendarMath.range(state.selected).from) { await model.loadCalendar(state) }
+        // Read again for another range, and for another account (the same month, after a switch).
+        .task(id: "\(model.accountGeneration)|\(CalendarMath.range(state.selected).from)") { await model.loadCalendar(state) }
     }
 
     // MARK: Layouts
@@ -110,7 +113,22 @@ struct CalendarView: View {
             VStack(alignment: .leading, spacing: 10) { nav; picker.frame(maxWidth: 320) }
         }
         if let error = model.calendarError {
-            Text(error).scaledFont(13).foregroundColor(Theme.no)
+            HStack(spacing: 10) {
+                Text(error).scaledFont(13).foregroundColor(Theme.no)
+                Button("Try again") { Task { await model.loadCalendar(state) } }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("calendar.retry")
+            }
+        } else if read == nil {
+            HStack(spacing: 8) {
+                ProgressView()
+                Text("Reading the calendar…").scaledFont(13).foregroundColor(Theme.dim)
+            }
+            .accessibilityIdentifier("calendar.loading")
+        } else if let read, read.halted || read.more {
+            // tafs cloud's words: the account is halted, or some work was left out of this read.
+            Text(read.words).scaledFont(13, weight: .semibold).foregroundColor(read.halted ? Theme.no : Theme.soft)
+                .accessibilityIdentifier("calendar.words")
         }
     }
 
@@ -170,7 +188,7 @@ struct CalendarView: View {
     private func dayCell(_ day: String, large: Bool) -> some View {
         let inMonth = CalendarMath.sameMonth(day, state.selected)
         let marks = CalendarMath.marks(events, on: day)
-        let count = CalendarMath.events(events, on: day).count
+        let count = CalendarMath.count(events, on: day)
         let selected = day == state.selected
         return Button { select(day) } label: {
             VStack(spacing: 3) {
@@ -290,7 +308,7 @@ struct CalendarView: View {
                 .onAppear { proxy.scrollTo(first, anchor: .top) }
                 .onChange(of: first) { proxy.scrollTo($0, anchor: .top) }
             }
-            if days.allSatisfy({ CalendarMath.events(events, on: $0).isEmpty }) { empty(days.count == 1 ? "Nothing scheduled on this day." : "Nothing scheduled this week.") }
+            if read != nil, days.allSatisfy({ CalendarMath.events(events, on: $0).isEmpty }) { empty(days.count == 1 ? "Nothing scheduled on this day." : "Nothing scheduled this week.") }
         }
         .accessibilityIdentifier("calendar.slots")
     }
@@ -315,7 +333,7 @@ struct CalendarView: View {
         let on = CalendarMath.events(events, on: day)
         return VStack(alignment: .leading, spacing: 8) {
             Eyebrow(text: CalendarMath.dayHeading(day))
-            if on.isEmpty { empty("Nothing scheduled on this day.") }
+            if read != nil, on.isEmpty { empty("Nothing scheduled on this day.") }
             ForEach(on) { eventRow($0) }
         }
         .accessibilityIdentifier("calendar.day")
@@ -325,7 +343,8 @@ struct CalendarView: View {
         let groups = CalendarMath.agenda(events, days: CalendarMath.shown(state))
         return VStack(alignment: .leading, spacing: 10) {
             Eyebrow(text: "Agenda")
-            if groups.isEmpty { empty(model.calendarRead == nil ? "Loading…" : "Nothing scheduled in these days.") }
+            // tafs cloud's own words when nothing is to come, so both apps say the same.
+            if let read, groups.isEmpty { empty(read.words.isEmpty ? "Nothing scheduled in these days." : read.words) }
             ForEach(groups) { group in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(CalendarMath.dayHeading(group.day)).scaledFont(14, weight: .semibold)
