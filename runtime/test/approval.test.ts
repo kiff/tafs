@@ -28,9 +28,12 @@ function grant(over: Record<string, unknown> = {}, request: Record<string, unkno
 
 interface Services {
   grants: unknown[];
-  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[] }>;
+  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[]; confirm_key?: string }>;
   /** What KIFF answers the device-signature check: signed, or a status. */
   signed: true | number;
+  /** Which key KIFF says signed, and the window it named (kiff/tafs#494); none, as a KIFF from before. */
+  signedKey?: string;
+  signedWindow?: { id: string; open: boolean };
   /** Every signature check KIFF was asked, as sent. */
   checks: Array<Record<string, unknown>>;
   proofs: string[];
@@ -55,7 +58,7 @@ function net(s: Services) {
     if (url.endsWith("/v1/me")) return new Response(JSON.stringify(me), { status: 200 });
     if (url.endsWith("/v1/me/device-signature")) {
       s.checks.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-      return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z" }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
+      return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z", ...(s.signedKey ? { key: s.signedKey } : {}), ...(s.signedWindow ? { window: s.signedWindow } : {}) }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
     }
     const draft = /\/v1\/me\/agent-drafts\/([^/?]+)$/.exec(url);
     if (draft) {
@@ -430,5 +433,66 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     const w = await asked(s);
     expect((await w.report({ result: "maybe" })).status).toBe(400);
     expect((await w.report({})).status).toBe(400);
+  });
+});
+
+describe("the approval window (kiff/tafs#494): which key an ask takes, and the report's check of it", () => {
+  const SIG = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+  const WIN = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v2=sig,w=win_abcdefghijklmnopqrstuvwxyz" };
+
+  it("says the key: connecting an app is a tap inside a window; a draft takes the fingerprint unless KIFF says it widens nothing", async () => {
+    const s = services();
+    const w = await world(s);
+    const connect = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    expect(connect.body).toMatchObject({ outcome: "sign", ask: { step: "connect", key: "window" } });
+    s.grants = [grant({ status: "connected" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const cards = await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(cards.body).toMatchObject({ outcome: "sign", ask: { step: "cards", key: "critical" } });
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", confirm_key: "window" };
+    const routine = await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(routine.body).toMatchObject({ outcome: "sign", ask: { step: "cards", key: "window" } });
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", confirm_key: "critical" };
+    const widening = await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(widening.body).toMatchObject({ outcome: "sign", ask: { step: "cards", key: "critical" } });
+  });
+
+  it("refuses a critical ask the device key signed, with the code and the words, and the ask stays", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    const id = (r.body.ask as { id: string }).id;
+    s.signedKey = "device";
+    const refused = await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIG);
+    expect(refused.status).toBe(403);
+    expect(refused.body).toEqual({ error: WORDS.criticalKey, code: "critical_key_required" });
+    expect(w.told()).toBeUndefined();
+    // The fingerprint: taken, and the draft confirmed means approved.
+    s.signedKey = "critical";
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    expect((await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIG)).body).toMatchObject({ answer: "approved" });
+  });
+
+  it("takes a routine ask signed inside an open window, and refuses one whose window has ended", async () => {
+    const s = services();
+    const w = await world(s);
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    const id = (r.body.ask as { id: string }).id;
+    s.grants = [grant({ status: "connected" })];
+    s.signedKey = "device";
+    s.signedWindow = { id: "win_abcdefghijklmnopqrstuvwxyz", open: false };
+    const ended = await w.call("POST", `${ASK}/${id}`, { result: "connected" }, WIN);
+    expect(ended.status).toBe(403);
+    expect(ended.body).toEqual({ error: WORDS.windowClosed, code: "window_required" });
+    s.signedWindow = { id: "win_abcdefghijklmnopqrstuvwxyz", open: true };
+    expect((await w.call("POST", `${ASK}/${id}`, { result: "connected" }, WIN)).body).toMatchObject({ answer: "approved" });
+    // A KIFF from before the window says no key: taken as today.
+    const s2 = services();
+    const w2 = await world(s2);
+    const r2 = await w2.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    s2.grants = [grant({ status: "connected" })];
+    expect((await w2.call("POST", `${ASK}/${(r2.body.ask as { id: string }).id}`, { result: "connected" }, SIG)).body).toMatchObject({ answer: "approved" });
   });
 });

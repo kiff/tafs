@@ -81,6 +81,13 @@ export interface Signing {
   message: string;
   /** What the biometric prompt says. */
   reason: string;
+  /**
+   * Which key the call takes, a hint for the app (kiff/tafs#494): "window", the device key inside an open
+   * approval window does (connecting an app; a draft KIFF says widens nothing), so a tap; "critical", the
+   * approval key behind the fingerprint, every time. The service the call goes to decides for itself, and
+   * the report's check here refuses a key short of it; the hint only saves the app a round trip.
+   */
+  key: "window" | "critical";
   /** The connect step: planque's approve, its body as the phone sends it. */
   planque?: { grant: string; body: { digest: string; kiff_profile?: { profile_sha256: string; words_sha256: string } } };
   /** The cards step: KIFF's draft to confirm, at this version. */
@@ -100,6 +107,8 @@ interface Pending {
   draft?: string;
   version?: string;
   made: string;
+  /** The key the ask takes (Signing.key); an ask from before the window reads as "window". */
+  key?: "window" | "critical";
 }
 
 /** An ask waits this long for the phone's report. */
@@ -116,6 +125,8 @@ export const WORDS = {
   cardsNotIssued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
   cardsUnread: "The Card couldn't be checked yet. Read it again, then approve.",
   onDemandLetsRun: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
+  criticalKey: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
+  windowClosed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
   signInClosed: "The sign-in was closed. Nothing was connected.",
   noCode: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
   cameBack: (status: string) => `The connection came back ${status.replace(/_/g, " ")} with no sign-in link. Nothing was connected.`,
@@ -124,7 +135,8 @@ export const WORDS = {
 };
 
 export class ApprovalError extends Error {
-  constructor(readonly status: number, message: string) {
+  /** `code`, when set, is what the app acts on beside the words: critical_key_required, window_required. */
+  constructor(readonly status: number, message: string, readonly code?: string) {
     super(message);
   }
 }
@@ -219,9 +231,11 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
       return { outcome: "answered", answer: `failed: ${vendor} was set up on demand, so every write and money tool of it must ask the owner each time (0 a day, held); the draft lets "${letsRun}" run without asking. Draft it again with that tool held.`, note: why };
     }
     const id = ctx.newID();
-    const pending: Pending = { step: "cards", grant: grant.id, vendor, draft: ask.draft, version: draft.version, made: ctx.now.toISOString() };
+    // KIFF says which key confirms the draft (kiff/tafs#494); until it does, the fingerprint.
+    const key = draft.confirmKey ?? "critical";
+    const pending: Pending = { step: "cards", grant: grant.id, vendor, draft: ask.draft, version: draft.version, made: ctx.now.toISOString(), key };
     await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
-    return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: `Give ${draft.agent || "the taf"} its Card`, kiff: { draft: ask.draft, version: draft.version } } };
+    return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: `Give ${draft.agent || "the taf"} its Card`, key, kiff: { draft: ask.draft, version: draft.version } } };
   }
   // Signed in already, its tools listed and waiting for their own approval: an earlier approval
   // went through even if its report didn't reach here (the phone lost it, or it was refused), so
@@ -243,12 +257,13 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     kiffProfile = { profile_sha256: ask.words.profile_sha256, words_sha256: ask.words.words_sha256 };
   }
   const id = ctx.newID();
-  const pending: Pending = { step: "connect", grant: grant.id, vendor, made: ctx.now.toISOString() };
+  // Connecting an app is routine (kiff/tafs#494): a tap inside an approval window.
+  const pending: Pending = { step: "connect", grant: grant.id, vendor, made: ctx.now.toISOString(), key: "window" };
   await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
   return {
     outcome: "sign",
     ask: {
-      id, step: "connect", message: `tafs.connect.v1|${ctx.tenant}|${grant.id}|${grant.digest}`, reason: `Connect ${vendor} to ${grant.request.agent ?? "the taf"}`,
+      id, step: "connect", message: `tafs.connect.v1|${ctx.tenant}|${grant.id}|${grant.digest}`, reason: `Connect ${vendor} to ${grant.request.agent ?? "the taf"}`, key: "window",
       planque: { grant: grant.id, body: { digest: grant.digest, ...(kiffProfile ? { kiff_profile: kiffProfile } : {}) } },
     },
   };
@@ -282,9 +297,12 @@ export interface ReportContext extends DecideContext {
 /**
  * Asks KIFF whether this phone signed the report, with the phone's own session
  * (`POST /v1/me/device-signature`): tafs cloud holds no device key and checks
- * no signature itself. Each signed report is taken once.
+ * no signature itself. Each signed report is taken once. KIFF also says which
+ * key signed and, for a signature made inside an approval window, whether that
+ * window is open (kiff/tafs#494): a critical ask signed by the device key, or a
+ * window that has ended, is refused, since what the call went to refused it too.
  */
-export async function checkSigned(ctx: ReportContext): Promise<void> {
+export async function checkSigned(ctx: ReportContext, key: "window" | "critical" = "window"): Promise<void> {
   const { signed } = ctx;
   if (!signed.signature) throw new ApprovalError(403, "this answer isn't signed by your phone");
   let res: Response;
@@ -304,8 +322,10 @@ export async function checkSigned(ctx: ReportContext): Promise<void> {
   // KIFF's answer also carries a one-minute device grant (`grant`, `grant_until`): the writes a
   // service like the gateway then makes for the phone. tafs cloud makes none and must not use
   // it, so only `signed` is read; the grant is dropped here and never kept or passed on.
-  const out = (await res.json().catch(() => ({}))) as { signed?: unknown };
+  const out = (await res.json().catch(() => ({}))) as { signed?: unknown; key?: unknown; window?: { open?: unknown } };
   if (out.signed !== true) throw new ApprovalError(403, "this phone didn't sign that answer");
+  if (key === "critical" && out.key === "device") throw new ApprovalError(403, WORDS.criticalKey, "critical_key_required");
+  if (out.key === "device" && out.window && out.window.open !== true) throw new ApprovalError(403, WORDS.windowClosed, "window_required");
 }
 
 /** The outcome of a reported approval: Coach's answer and the card's note. */
@@ -324,7 +344,7 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   const key = keyOf(ctx.tenant, ctx.taf, ctx.component, askID);
   const pending = (await ctx.store.get(key)) as Pending | undefined;
   if (!pending || !pending.step) throw new ApprovalError(404, "no approval waits for that answer");
-  await checkSigned(ctx);
+  await checkSigned(ctx, pending.key ?? "window");
   // Taken once, atomically, before Coach hears anything: two signed reports of one ask that
   // arrive together settle it once; the other finds nothing waiting. A report KIFF refused
   // above spends nothing, so the phone can report again.

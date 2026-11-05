@@ -2387,7 +2387,7 @@ function askOrRefuse<T>(read: () => T): T {
 }
 
 function approvalFailure(err: unknown): never {
-  if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message);
+  if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message, err.code ? { code: err.code } : undefined);
   if (err instanceof KIFFError) throw new HTTPError(err.status === 401 ? 401 : 502, err.message);
   throw err;
 }
