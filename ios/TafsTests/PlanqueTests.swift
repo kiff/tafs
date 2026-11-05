@@ -544,7 +544,8 @@ final class PlanqueTests: XCTestCase {
     /// removed, and the owner is told which taf keeps it.
     func testRemovingATafKeepsAConnectionAnotherTafUses() async throws {
         let (model, refunds, signer) = try await sharedModel(withChargebacks: true)
-        let words = try XCTUnwrap(await model.removeTaf(refunds))
+        let removed = await model.removeTaf(refunds)
+        let words = try XCTUnwrap(removed)
         XCTAssertTrue(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").isEmpty, "Chargebacks still runs on it")
         XCTAssertTrue(words.contains("Kept your Stripe connection: Chargebacks uses it."), words)
         XCTAssertEqual(signer.prompts.count, 1, "one confirmation, the removal's")
@@ -556,7 +557,8 @@ final class PlanqueTests: XCTestCase {
     func testRemovingATafDisconnectsAConnectionNoOtherTafUses() async throws {
         let (model, refunds, signer) = try await sharedModel(withChargebacks: false)
         StubProtocol.responses["DELETE /v1/accounts/t_01/grants/g_01"] = (200, grantJSON(status: "disconnected"))
-        let words = try XCTUnwrap(await model.removeTaf(refunds))
+        let removed = await model.removeTaf(refunds)
+        let words = try XCTUnwrap(removed)
         XCTAssertEqual(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").count, 1)
         XCTAssertFalse(words.contains("Kept"), words)
         XCTAssertEqual(signer.prompts.count, 1, "no second prompt")
