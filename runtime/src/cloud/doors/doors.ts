@@ -379,8 +379,22 @@ export interface AnsweredEvent {
  * outcome, never new work, and a crash between the answer and its record still leaves the claim).
  */
 export async function claimAnswered(ctx: DoorsContext, tenant: string, id: string): Promise<boolean> {
-  return ctx.doors.store.create(doorKeys.answeredEvent(tenant, id), { run: "", at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+  const key = doorKeys.answeredEvent(tenant, id);
+  const claim: AnsweredEvent = { run: "", at: ctx.now.toISOString() };
+  if (await ctx.doors.store.create(key, claim, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS))) return true;
+  // A claim with no run older than one answer's time is a delivery that stopped between its claim and its
+  // answer (the Lambda died): the wait is still open, so this delivery takes the claim over, rather than every
+  // retry reading "answered" for ten minutes while nothing answered (agentgabo's note on #515).
+  const held = (await ctx.doors.store.get(key)) as AnsweredEvent | undefined;
+  if (held && held.run === "" && ctx.now.getTime() - Date.parse(held.at) > STALE_CLAIM_MS) {
+    await ctx.doors.store.put(key, claim, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+    return true;
+  }
+  return false;
 }
+
+/** How long a claim with no run may stand before another delivery of the same event takes it over: one answer's time. */
+export const STALE_CLAIM_MS = 30_000;
 
 /** Records the run the claimed event answered. */
 export async function rememberAnswered(ctx: DoorsContext, tenant: string, id: string, run: string): Promise<void> {

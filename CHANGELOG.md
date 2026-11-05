@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **tafs cloud, dependable runs:** a connected app's event whose first delivery claimed its id and stopped before it answered the run's wait is answered by the next delivery after thirty seconds, instead of every retry reading "answered" for ten minutes while nothing answered.
 - **Android: a chat's rows keep their place while an answer arrives.** Each message keeps one key from its first frame to its last: the owner's from the moment the stream names it, and the taf's answer lands in the row its live answer had, updated in place rather than replaced. The thread follows its end when the last row's height changes, not only as words arrive.
 - **Android: tools added to a connection can be approved.** KIFF's words for a connection's profile are read again when its profile changes under the same connection, as adding tools does, instead of being kept from the first read; Approve no longer stops at "KIFF's words for this connection aren't read yet", and only the current profile's words are shown and signed.
 - **Android: Coach's chat no longer jumps as an answer lands.** The live answer leaves in the same update that brings it into the thread, at the end of a run and where a run goes on after a hold, instead of showing twice for a moment and then shrinking back, which moved the thread back and forth.

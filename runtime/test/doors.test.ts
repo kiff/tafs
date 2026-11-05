@@ -1226,6 +1226,27 @@ describe("a connected app's event, through planque", () => {
     expect((await appEvent(w, { id: "ev_dup", key: "reply_d" })).body.outcome).toBe("run");
   });
 
+  it("a claim left with no run by a delivery that stopped is taken over after thirty seconds, so the wait is still answered", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_stale", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_s" });
+    // The first delivery claimed and died before it answered.
+    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_stale"), { run: "", at: NOW.toISOString() }, new Date(NOW.getTime() + 10 * 60_000));
+    // Its retry inside thirty seconds defers to it.
+    w.at(new Date(NOW.getTime() + 20_000));
+    expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(0);
+    // Past thirty seconds, the retry takes the claim over and answers the wait.
+    w.at(new Date(NOW.getTime() + 31_000));
+    expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered", run: "run_stale" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+    // A claim with its run is never taken over, however old.
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered", run: "run_stale" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+  });
+
   it("two deliveries of the same event at once answer the wait once, and both say so (qa-kiff's probe)", async () => {
     const w = world();
     const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
