@@ -1124,6 +1124,44 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     }
   });
 
+  it("starts a taf with a job of its own, as Coach drafted it: any job, not one of the five (kiff/tafs#476)", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
+    const own = { name: "Invoices", draft_id: "drf_s1", from_setup: true, summary: "Reminds customers of overdue invoices.",
+      kickoff: "Find every overdue invoice and send each customer one reminder, at most one a week.", instructions: "Never change an invoice or offer a discount.", cron: "0 9 * * 1-5" };
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: own });
+    expect(r.status).toBe(200);
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Invoices", job: "custom", kiff_agent: "invoices-x" });
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ job: "custom", summary: own.summary, work: { kickoff: own.kickoff, instructions: own.instructions } });
+    // Its definition carries the job as drafted, and its schedule asks each run for the kickoff.
+    const def = w.agents.agents.get(`t_acme|${NEW}`)!;
+    expect(def.instructions).toContain("Your job: Invoices.\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice or offer a discount.");
+    expect(w.agents.schedules.get(`t_acme|${NEW}`)).toMatchObject({ cron: "0 9 * * 1-5", input: own.kickoff, enabled: true });
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} 0 9 * * 1-5 UTC`, `trigger ${NEW}`]);
+    // Its job line is what Coach said it does, and its dial's face names it.
+    const listed = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs.find((t: { id: string }) => t.id === NEW);
+    expect(listed.job_summary).toBe(own.summary);
+    // Run now fires its schedule, whose input is its own kickoff, not a starter job's.
+    w.agents.calls.length = 0;
+    expect((await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana" })).status).toBe(200);
+    expect(w.agents.calls).toContain(`trigger ${NEW}`);
+    const session = w.agents.runs.find((r) => r.agent === NEW)!.session;
+    expect(w.agents.events.get(session)?.[0]?.body).toMatchObject({ text: own.kickoff });
+    // A job of its own needs its kickoff, and says when it runs or that it works from its chat.
+    w.agents.setupDrafts.set("drf_s2", { tenant: "t_acme", agent: "leads-x" });
+    const noKickoff = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, cron: "0 * * * *" } });
+    expect(noKickoff.status).toBe(400);
+    expect(noKickoff.body.error).toContain("kickoff");
+    const noWhen = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead." } });
+    expect(noWhen.status).toBe(400);
+    expect(noWhen.body.error).toContain("unscheduled");
+    // From its chat: no running schedule, as for any unscheduled taf.
+    const chat = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead.", unscheduled: true } });
+    expect(chat.status).toBe(200);
+    expect(chat.body.taf).toMatchObject({ job: "custom", unscheduled: true });
+    expect(w.agents.schedules.get(`t_acme|${NEW2}`)?.enabled).toBe(false);
+  });
+
   it("keeps what Coach said the taf does, on one line, and shows it as its job line in place of its job's", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
@@ -2387,6 +2425,27 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.agents.calls.length = 0;
     await note();
     expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toEqual([]);
+  });
+
+  it("makes a taf with the job Coach drafted, outside the five, and runs it (kiff/tafs#476)", async () => {
+    const own = { agent: "invoices-x", name: "Invoices", draft: "drf_s1", summary: "Reminds customers of overdue invoices.",
+      kickoff: "Find every overdue invoice and send each customer one reminder.", instructions: "Never change an invoice.", cron: "0 9 * * 1-5" };
+    const { w, note, answer } = await paused({ type: "result", id: "done", text: "Invoices is ready.", taf: own });
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Invoices", job: "custom", kiffAgent: "invoices-x", summary: own.summary, work: { kickoff: own.kickoff, instructions: own.instructions } });
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(w.agents.schedules.get(`t_acme|${NEW}`)).toMatchObject({ cron: "0 9 * * 1-5", input: own.kickoff, enabled: true });
+    expect(w.agents.calls).toContain(`trigger ${NEW}`);
+    expect(w.agents.agents.get(`t_acme|${NEW}`)!.instructions).toContain("What this job does: Reminds customers of overdue invoices.");
+    // A result that names neither a starter job nor the job it drafted is answered failed, in words, and no taf exists.
+    const { w: w2, note: note2, answer: answer2 } = await paused({ type: "result", id: "done", taf: { agent: "leads-x", name: "Leads", draft: "drf_s1", cron: "0 * * * *" } });
+    w2.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "leads-x" });
+    w2.agents.access.set("u_ana", { cards_manage: true });
+    await note2();
+    expect(answer2()?.answer).toMatchObject({ failed: expect.stringContaining("kickoff") });
+    expect(w2.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
   });
 
   it("makes an improvement's version for the taf it improves, once, and answers with it; nothing goes live", async () => {

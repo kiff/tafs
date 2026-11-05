@@ -1,8 +1,8 @@
 /**
  * Recipes (docs/coach.md, "Recipes"; recipes/README.md): the jobs a new person opens Coach to,
- * each with the words to say to Coach. tafs cloud serves the tried ones, filtered to those whose
- * every connection has a vendor the account's catalog lists; the apps only draw them and fill
- * Coach's message box with the words.
+ * each with the words to say to Coach. tafs cloud serves them filtered to those whose every
+ * connection has a vendor the account's catalog lists; the apps only draw them and fill Coach's
+ * message box with the words.
  */
 import { RECIPES } from "../recipes.js";
 import type { CatalogApp } from "./connect.js";
@@ -34,14 +34,14 @@ export interface Recipe {
 export interface RecipesView {
   categories: Array<{ id: string; title: string }>;
   recipes: Recipe[];
-  /** False when the catalog couldn't be read: every tried recipe is listed, and Coach says what it can't connect. */
+  /** False when the catalog couldn't be read: every recipe is listed, and Coach says what it can't connect. */
   filtered: boolean;
 }
 
 /**
  * The vendor a catalog entry names, as a recipe names it: the slug after `connector:<provider>:`,
- * or before `@` in a reviewed entry; else its `vendor`, lowered. Dots and spaces fold to nothing
- * (`google-calendar` and `google_calendar` match; `Google Calendar` matches `googlecalendar`).
+ * or before `@` in a reviewed entry; and its `vendor`, lowered. Dots, spaces, dashes and
+ * underscores fold to nothing (`google-calendar` and `Google Calendar` match `googlecalendar`).
  */
 export function vendorOf(app: Pick<CatalogApp, "entry" | "vendor">): string[] {
   const m = /^connector:[^:]+:(.+)$/.exec(app.entry);
@@ -52,10 +52,10 @@ function fold(name: string): string {
   return name.toLowerCase().replace(/^_+/, "").replace(/[\s._-]+/g, "");
 }
 
-/** The tried recipes, each of whose connections has a vendor among apps; every tried recipe when apps is undefined. */
+/** The recipes each of whose connections has a vendor among apps, by category; every recipe when apps is undefined. */
 export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefined): RecipesView {
   const have = new Set(apps?.flatMap(vendorOf) ?? []);
-  const listed = RECIPES.filter((r) => "tried" in r)
+  const listed = RECIPES
     .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)))))
     .map((r): Recipe => ({ id: r.id, title: r.title, category: r.category, line: r.line, say: r.say,
       connections: r.connections.map((g) => [...g]), card: { allows: [...r.card.allows], holds: [...r.card.holds], never: [...r.card.never] } }));

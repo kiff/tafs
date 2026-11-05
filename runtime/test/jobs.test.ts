@@ -1,12 +1,24 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { JOBS, jobById, systemPrompt } from "../src/jobs.js";
+import { JOBS, jobById, ownJob, systemPrompt } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 
 describe("jobs", () => {
   it("has the five jobs, each with a valid default schedule", () => {
     expect(JOBS.map((j) => j.id)).toEqual(["refunds", "billpay", "access", "deploys", "chargebacks"]);
     for (const j of JOBS) expect(j.cron.split(" ")).toHaveLength(5);
+  });
+
+  it("builds a taf's own job from what Coach drafted: any job, under the same rules as the five (kiff/tafs#476)", () => {
+    const own = ownJob({ name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", instructions: "Never change an invoice." });
+    expect(own).toEqual({ id: "custom", name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", cron: "",
+      instructions: "What this job does: Reminds customers of overdue invoices.\n\nNever change an invoice." });
+    const prompt = systemPrompt(own);
+    expect(prompt).toContain("Your job: Invoices.\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
+    expect(prompt).toContain("kiff_pending");
+    // With nothing drafted but the name, it still says what it is.
+    expect(ownJob({ name: "Leads", summary: " ", kickoff: "x" }).instructions).toBe("You do this job for the company: Leads.");
+    expect(ownJob({ name: "Leads", summary: "", kickoff: "x", instructions: "Reply within the hour." }).instructions).toBe("Reply within the hour.");
   });
 
   it("tells every taf how to work under a Card", () => {

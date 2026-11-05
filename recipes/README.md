@@ -4,6 +4,9 @@ A recipe is a job worth giving a taf, plus the words to say to Coach to get it. 
 opens Coach to this list instead of a blank page; tapping one fills Coach's message box with
 the recipe's words, which they can edit before sending. Coach builds the taf from catalog
 connections and a Card, as for any other request: there is no recipe-specific code anywhere.
+Recipes are suggestions, not finished products: each is tried in Coach on a test account to find
+where Coach falls short, and every gap gets a generic fix (a connection, how Coach picks tools, a
+Card rule), never recipe-specific code. The five starter jobs tafs began with are recipes here.
 
 One file per recipe, `<id>.md`, with a front matter and the words to say to Coach as the body:
 
@@ -23,7 +26,6 @@ card:
     - A refund over 150 EUR, or past 2,000 EUR in a day
   never:
     - A payout, or a refund to another method
-tried: 2026-11-10 test
 ---
 Handle refund requests from my help desk. Refund in Stripe up to 150 EUR each…
 ```
@@ -37,12 +39,10 @@ Handle refund requests from my help desk. Refund in Stripe up to 150 EUR each…
 - `card` says in plain words what the Card allows, what waits for the person (`holds`) and
   what is refused outright (`never`). These are the owner's choices; the words to Coach carry
   the same limits, and the person edits them before sending.
-- `tried` is the date and the kind of account (`test` or `live`) on which Coach built and ran
-  this recipe. **A recipe without it isn't served:** it stays here as a candidate.
 - The body is the words to say to Coach, in the person's own voice.
 
-tafs cloud serves the tried recipes at `GET /v1/recipes`, filtered to those whose every
-connection has at least one vendor the account's catalog lists
+tafs cloud serves them at `GET /v1/recipes`, filtered to those whose every connection has at
+least one vendor the account's catalog lists
 ([docs/api.md](../docs/api.md#recipes), [docs/coach.md](../docs/coach.md#recipes)). The files are
 read at build time into `runtime/src/recipes.ts`: after changing one, run
 

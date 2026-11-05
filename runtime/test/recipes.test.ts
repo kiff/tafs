@@ -30,9 +30,11 @@ describe("recipes", () => {
     expect(readFileSync(MODULE, "utf8")).toBe(render(fromFiles));
     expect(RECIPES).toEqual(fromFiles);
     expect(RECIPES.length).toBeGreaterThanOrEqual(10);
-    // Every category of the first batch is there, and the batch has the one that buys within a Card (kiff/tafs#475).
+    // Every category of the first batch is there, and the five starter jobs are recipes now (kiff/tafs#476).
     for (const c of CATEGORIES) expect(RECIPES.some((r) => r.category === c.id)).toBe(true);
-    expect(RECIPES.map((r) => r.id)).toContain("buy-an-item-within-a-card");
+    for (const id of ["refunds-within-a-limit", "pay-matching-bills", "access-for-joiners-and-leavers", "ship-when-green", "chargebacks-with-evidence"]) {
+      expect(RECIPES.map((r) => r.id)).toContain(id);
+    }
   });
 
   it("reads a recipe file: the front matter and the words to say to Coach", () => {
@@ -41,8 +43,6 @@ describe("recipes", () => {
       connections: [["quickbooks", "xero"], ["wise"]],
       card: { allows: ["A payment up to 100 EUR"], holds: ["A payment over 100 EUR"], never: ["A new payee"] },
     });
-    const tried = parseRecipe(FILE.replace("---\nPay", "tried: 2026-11-10 test\n---\nPay"), "pay-a-bill.md");
-    expect(tried.tried).toEqual({ on: "2026-11-10", account: "test" });
   });
 
   it("refuses a recipe file that isn't one, naming the file and why", () => {
@@ -53,8 +53,7 @@ describe("recipes", () => {
     bad(FILE.replace("  - quickbooks | xero", "  - Quick Books"), "a vendor is named as the catalog names it");
     bad(FILE.replace("  never:\n    - A new payee\n", ""), "card.never is missing");
     bad(FILE.replace("Pay my bills under 100 EUR.\n", ""), "the words to say to Coach are missing");
-    bad(FILE.replace("tried", "tried").replace("---\nPay", "tried: soon\n---\nPay"), "tried is a date and the account's kind");
-    bad(FILE.replace("line: Pays one bill.", "line: Pays one bill.\nstore: amazon"), "store isn't a recipe's field");
+    bad(FILE.replace("line: Pays one bill.", "line: Pays one bill.\ntried: 2026-11-10 test"), "tried isn't a recipe's field");
     bad(FILE.replace("title: Pay a bill\n", ""), "title is missing");
   });
 
@@ -65,30 +64,29 @@ describe("recipes", () => {
     expect(vendorOf({ entry: "connector:composio:googlecalendar", vendor: "Google Calendar" })).toEqual(["googlecalendar"]);
   });
 
-  it("lists only tried recipes, each of whose connections the catalog can make, by category", () => {
-    const tried = RECIPES.filter((r) => "tried" in r).map((r) => r.id);
+  it("lists every recipe when the catalog wasn't read, and none when it lists nothing", () => {
     const all = recipesFor(undefined);
     expect(all.filtered).toBe(false);
-    expect(all.recipes.map((r) => r.id)).toEqual(tried);
-    // Nothing in the catalog: nothing listed, and no category.
+    expect(all.recipes.map((r) => r.id)).toEqual(RECIPES.map((r) => r.id).sort((a, b) => {
+      const order = (id: string) => CATEGORIES.findIndex((c) => c.id === RECIPES.find((r) => r.id === id)!.category);
+      return order(a) - order(b);
+    }));
+    expect(all.categories).toEqual(CATEGORIES);
     expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true });
   });
 
-  it("filters by every connection, taking any vendor that would do for it", () => {
-    // A view over the whole file set, with every recipe tried, so the filter can be seen working.
-    const view = (apps: Array<{ entry: string; vendor: string }>) => {
-      const have = new Set(apps.flatMap(vendorOf));
-      return RECIPES.filter((r) => r.connections.every((g) => g.some((v) => have.has(v.replace(/[_-]/g, ""))))).map((r) => r.id);
-    };
+  it("filters by every connection, taking any vendor that would do for it, by category", () => {
+    const ids = (apps: Array<{ entry: string; vendor: string }>) => recipesFor(apps).recipes.map((r) => r.id);
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
-    expect(view(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
+    expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
     // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk.
-    expect(view([{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gorgias", vendor: "Gorgias" }]))
+    expect(ids([{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gorgias", vendor: "Gorgias" }]))
       .toEqual(["chargebacks-with-evidence", "refunds-within-a-limit"]);
-    expect(view([{ entry: "stripe@3", vendor: "Stripe" }])).toEqual([]);
-    // Categories come in their order, with a title for the apps, only for categories with a recipe.
-    const money = recipesFor(undefined);
-    expect(CATEGORIES.map((c) => c.id)).toEqual(["money", "customers", "operations", "errands"]);
-    for (const c of money.categories) expect(c.title).toMatch(/^[A-Z]/);
+    expect(ids([{ entry: "stripe@3", vendor: "Stripe" }])).toEqual([]);
+    // Only the categories with a recipe, in their order, with the title the apps show.
+    const github = recipesFor([{ entry: "connector:composio:github", vendor: "GitHub" }]);
+    expect(github.categories).toEqual([{ id: "operations", title: "Operations" }]);
+    expect(github.recipes.map((r) => r.id)).toEqual(["ship-when-green"]);
+    expect(github.recipes[0]!.say).toContain("Deploy my GitHub releases");
   });
 });
