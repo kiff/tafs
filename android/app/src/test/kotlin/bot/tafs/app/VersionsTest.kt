@@ -247,7 +247,7 @@ class VersionsTest {
     assertEquals("v3", KiffClient.json.parseToJsonElement(String(confirm.body!!)).jsonObject.getValue("version").jsonPrimitive.content)
     val parts = confirm.headers.getValue("KIFF-Device-Signature").split(",")
     val at = parts[0].removePrefix("t=")
-    val message = KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", confirm.body!!, at)
+    val message = KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", confirm.body, at)
     assertTrue("it issues Cards: the approval key signs it", verifies(signer.approvalPublicKeyDER, message, parts[1].removePrefix("v1=")))
     assertFalse(verifies(signer.publicKeyDER, message, parts[1].removePrefix("v1=")))
     val order = transport.requests.map { it.method + " " + java.net.URI(it.url).path }

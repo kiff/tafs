@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package bot.tafs.app
 
 import bot.tafs.app.app.AppModel

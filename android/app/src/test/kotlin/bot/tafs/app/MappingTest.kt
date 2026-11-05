@@ -416,7 +416,7 @@ class MappingTest {
     assertEquals("sha256:abc", p1.onHash)
     assertEquals("payment", p1.onArg)
     assertEquals("signed", p1.receipt!!.status)
-    assertEquals("tr_1", p1.receipt!!.traceId)
+    assertEquals("tr_1", p1.receipt.traceId)
     assertEquals(Instant.parse("2026-10-28T07:59:00Z"), p1.madeAt)
     assertEquals(Instant.parse("2026-10-28T08:00:00Z"), p1.at)
   }

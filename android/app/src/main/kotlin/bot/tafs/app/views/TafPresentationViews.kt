@@ -225,7 +225,7 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
       item { Text("Its work", style = scaled(24, FontWeight.Bold, Theme.ink)) }
       cache?.pages?.forEach { page -> items(page.requests, key = { it.id }) { run -> TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) } } }
       if (cache?.loading != false) item { CircularProgressIndicator(color = Theme.amber) }
-      else if (next == null) cache?.pages?.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
+      else if (next == null) cache.pages.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
       cache?.error?.let { item { Text(it, color = Theme.no); TextButton({ scope.launch { actions.loadRuns(taf.id, false, true) } }) { Text("Try again", color = Theme.amberText) } } }
     }
   }

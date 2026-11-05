@@ -92,7 +92,7 @@ class GoOnTest {
     assertEquals("https://api.kiff.dev/v1/me/usage/ai", put.url)
     assertEquals("""{"go_on":true}""", String(put.body!!))
     val (at, signature) = put.headers.getValue("KIFF-Device-Signature").split(",").let { it[0].removePrefix("t=") to it[1].removePrefix("v1=") }
-    val message = KiffClient.requestMessage("t_01", "PUT", "/v1/me/usage/ai", put.body!!, at)
+    val message = KiffClient.requestMessage("t_01", "PUT", "/v1/me/usage/ai", put.body, at)
     assertTrue("KIFF takes it from the device key (a phone-signed route)", verifies(signer.publicKeyDER, message, signature))
     assertFalse("not the approval key, which KIFF would refuse here", verifies(signer.approvalPublicKeyDER, message, signature))
     assertEquals(200, m.state.value.aiUse!!.asksAtPct)

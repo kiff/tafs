@@ -2383,7 +2383,7 @@ class AppModel(
         return false
       }
       if (generation != accountGeneration) return false
-      _state.update { it.copy(coachCloudId = setup?.id, coachAgent = setup?.kiffAgent, coachChecked = true) }
+      _state.update { it.copy(coachCloudId = setup.id, coachAgent = setup.kiffAgent, coachChecked = true) }
       // Within the step the owner just confirmed: Coach's tools, as tafs cloud says they're still to give.
       giveCoachTools()
     } finally {
@@ -2895,7 +2895,7 @@ class AppModel(
     } else first
     val behind = want != null && knob.shown != want
     if (generation == shownGeneration()) _state.update {
-      it.copy(knobs = it.knobs + (tafId to knob), knobBehind = if (behind) it.knobBehind + (tafId to want!!) else it.knobBehind - tafId)
+      it.copy(knobs = it.knobs + (tafId to knob), knobBehind = if (behind) it.knobBehind + (tafId to want) else it.knobBehind - tafId)
     }
   }
 

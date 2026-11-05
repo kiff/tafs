@@ -221,8 +221,8 @@ object KiffMapping {
       }
       val refusedByTool = c.outcome == "allowed" && c.toolOutcome?.status == "refused_by_tool"
       // Typed by KIFF as the connection's refusal: KIFF's words, or the plain fact, never the tool's raw message.
-      val byConnection = refusedByTool && c.toolOutcome?.refusedBy == "connection"
-      val shown = if (byConnection && c.toolOutcome?.code != null) c.detail ?: "The connection refused it before sending. Nothing was sent." else detail
+      val byConnection = refusedByTool && c.toolOutcome.refusedBy == "connection"
+      val shown = if (byConnection && c.toolOutcome.code != null) c.detail ?: "The connection refused it before sending. Nothing was sent." else detail
       RecordEntry(
         id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
@@ -286,7 +286,7 @@ object KiffMapping {
   fun install(e: CardException, coach: String?): VersionInstall? {
     if (coach.isNullOrEmpty() || e.subject != coach || e.action != "version_install") return null
     val taf = (e.arguments?.get("taf") as? JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotEmpty() } ?: return null
-    val n = (e.arguments?.get("n") as? JsonPrimitive)?.content?.toIntOrNull()?.takeIf { it > 0 } ?: return null
+    val n = (e.arguments["n"] as? JsonPrimitive)?.content?.toIntOrNull()?.takeIf { it > 0 } ?: return null
     return VersionInstall(taf, n)
   }
 

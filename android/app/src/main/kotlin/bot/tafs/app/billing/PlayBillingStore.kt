@@ -169,12 +169,11 @@ class PlayBillingStore(context: Context) : PlayStore {
     if (unreachable(r.responseCode)) Purchases.PLAY_UNREACHABLE else r.debugMessage.ifEmpty { Purchases.PLAY_UNREACHABLE }
 
   companion object {
-    /** Play's codes for not being reached now (no network, its service down or gone): worth trying again, unlike not selling. */
+    /** Play's codes for not being reached now (no network, its service down, timed out or gone): worth trying again, unlike not selling. Billing 9 says a timeout as SERVICE_UNAVAILABLE. */
     fun unreachable(code: Int): Boolean = code in setOf(
       BillingClient.BillingResponseCode.NETWORK_ERROR,
       BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE,
       BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
-      BillingClient.BillingResponseCode.SERVICE_TIMEOUT,
     )
 
     /** "P1M" → "month", as a price is said per period. */

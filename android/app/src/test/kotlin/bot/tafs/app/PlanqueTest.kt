@@ -424,7 +424,7 @@ class PlanqueTest {
     assertEquals(sum, fields.getValue("key_sha256").jsonPrimitive.content)
     // Signed by this device, over the body, as every planque request is.
     val parts = sent.headers.getValue("Planque-Device-Signature").split(",")
-    val message = PlanqueClient.message("https://planque.kiff.dev", "t_01", "POST", "/v1/accounts/t_01/grants/g1/key", sent.body!!, parts[0].removePrefix("t="))
+    val message = PlanqueClient.message("https://planque.kiff.dev", "t_01", "POST", "/v1/accounts/t_01/grants/g1/key", sent.body, parts[0].removePrefix("t="))
     assertTrue(verifies(signer.publicKeyDER, message, parts[1].removePrefix("v1=")))
     assertFalse("kept nowhere in the app's state", m.state.value.toString().contains("sk_test_4eC39H"))
     assertNull(m.state.value.connecting)
@@ -581,7 +581,7 @@ class PlanqueTest {
     val sent = transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").single()
     assertEquals("v3", KiffClient.json.parseToJsonElement(String(sent.body!!)).jsonObject.getValue("version").jsonPrimitive.content)
     val parts = sent.headers.getValue("KIFF-Device-Signature").split(",")
-    val message = KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", sent.body!!, parts[0].removePrefix("t="))
+    val message = KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", sent.body, parts[0].removePrefix("t="))
     assertTrue("it issues Cards: the approval key signs it", verifies(signer.approvalPublicKeyDER, message, parts[1].removePrefix("v1=")))
     assertTrue("planque is not asked to approve a connection that is connected", transport.requestsTo(approve).isEmpty())
   }
