@@ -120,7 +120,8 @@ failed?, why?, not_made?}`: the app shows `words`, the same as the live step's w
 "…", and never `tool`. On Android the block says how long and how many steps, with how many failed
 ("Worked 4.2 s · 3 steps, 1 failed", `Chat.workLine`), and opens to the steps that have
 words (`Chat.steps`); a step without words is left out, and a live step without `step`
-words has no line.
+words has no line. A failed step is in the failure colour, with tafs cloud's `why` under it
+when one is sent; Android adds no word of its own for a failure.
 
 Tries of the same step after a failed one are one row, "3 tries", with the last try's
 outcome, and a failed step is left out once something worked (`WorkLog.rows`).

@@ -6,6 +6,7 @@ version headings refer to releases, not merely to merged pull requests.
 ## Unreleased
 
 - **tafs cloud, a failed step says why (kiff/tafs#476, gap 9).** The stream's `step` event and the thread's steps carry `failed: true` and `why`: the first line of what the tool answered, in the owner's words, with ids and codes left out. The apps draw `why` under the step, and the " · failed" is the service's word, not theirs (`docs/chat.md`).
+- **Android: a failed step says why.** The list of a run's steps shows a failed step in the failure colour, with tafs cloud's one-line reason under it when one is sent, and no longer adds " · failed" of its own.
 - **Coach:** when its dial, install or results tool is refused because the owner hasn't given Coach that tool yet (an account from before it), Coach says so in one sentence and stops, instead of stopping silently (kiff/tafs#476, gap 5).
 - **Sign in to a site (kiff/planque#86).** tafs cloud offers `site_sign_in` on a connected browser connection. On Android, the connection's sheet shows it, and a tap opens planque's live sign-in view in a web view, under planque's words, where the owner signs in to the site themselves. Nothing else is shown, and the view never leaves planque's address.
 - **Android: any app on demand (kiff/planque#87).** Connect apps shows an app that isn't set up yet with tafs cloud's words in place of Connect, and nothing to tap. A taf's connection sheet says who keeps its sign-in, in tafs cloud's line.
