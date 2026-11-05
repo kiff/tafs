@@ -387,6 +387,8 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
+  /** KIFF's words for the next approval while this phone holds an approval window ("No fingerprint for the next 4 minutes"). */
+  val windowWords: String? = null,
   /** planque's live sign-in view for a browser connection, open over everything until the owner closes it. */
   val siteSignIn: bot.tafs.app.kiff.SiteSignInView? = null,
   /** The connection whose sign-in view is being asked for. */
@@ -903,6 +905,10 @@ class AppModel(
     cloud.token = token
     kiff.tenant = tenant
     accountGeneration += 1
+    // An approval window is the last session's: a new sign-in opens its own.
+    kiff.window = null
+    windowClosing?.cancel()
+    _state.update { it.copy(windowWords = null) }
     eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()
@@ -1330,6 +1336,9 @@ class AppModel(
     secrets.delete(APPROVAL_KEYED)
     forgetApprovalKey()
     kiff.token = null
+    // KIFF ends this session's approval window at sign-out.
+    kiff.window = null
+    windowClosing?.cancel()
     cloud.token = null
     kiff.tenant = null
     kiffTenant = null
@@ -3331,19 +3340,41 @@ class AppModel(
           // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
           // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
           if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return }
+          // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one fingerprint opens it, unless this phone
+          // holds one, and the call goes as a tap. The service decides; a KIFF without windows leaves the step as it was.
+          kiff.setupSigner = sign
+          var windowed = false
           try {
+            windowed = asked.key == "window" && holdWindow(asked.reason)
             // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
-            if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
+            if (!windowed) {
+              if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
+            }
           } catch (e: SignerException) {
             note(c.id, notSigned(e, "Not done: it wasn't confirmed."))
             return
           }
           if (generation != accountGeneration) return
           planque.signer = sign
-          kiff.setupSigner = sign
+          if (windowed) planque.window = kiff.window?.id
+          var came = makeAskedCall(asked)
+          // planque says the window ended before anything was done: a new one, behind the fingerprint, and the call once more.
+          if (windowed && came == Came.WindowEnded) {
+            kiff.window = null
+            try {
+              holdWindow(asked.reason)
+            } catch (e: SignerException) {
+              note(c.id, notSigned(e, "Not done: it wasn't confirmed."))
+              return
+            }
+            if (generation != accountGeneration) return
+            planque.window = kiff.window?.id
+            came = makeAskedCall(asked)
+          }
           val report = kotlinx.serialization.json.buildJsonObject {
-            when (val came = makeAskedCall(asked)) {
-              is Came.Of -> { put("result", came.result); came.status?.let { put("status", it) }; came.why?.let { put("why", it) } }
+            when (val c2 = came) {
+              is Came.Of -> { put("result", c2.result); c2.status?.let { put("status", it) }; c2.why?.let { put("why", it) } }
+              Came.WindowEnded -> put("result", "failed")
             }
             session?.let { put("session", it) }
           }
@@ -3367,14 +3398,86 @@ class AppModel(
       readThread(COACH_CHAT)
     } finally {
       planque.signer = null
+      planque.window = null
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+      if (generation == accountGeneration) readWindowWords()
     }
   }
 
   /** What came of the call tafs cloud asked for, as the report says it: never an answer, only what happened. */
   private sealed interface Came {
     data class Of(val result: String, val status: String? = null, val why: String? = null) : Came
+
+    /** planque refused it: signed in an approval window that had ended, so nothing was done. */
+    data object WindowEnded : Came
+  }
+
+  /**
+   * An approval window held at KIFF (kiff/tafs#494): true at once while this phone holds one, else one fingerprint (the approval
+   * key, with [reason]'s words) opens one for five minutes. False where it can't: no approval key in KIFF, or a KIFF without
+   * windows; the step then signs as it did. Whether the window is open is KIFF's to say, at each call.
+   */
+  private suspend fun holdWindow(reason: String): Boolean {
+    if (!sessionHasApprovalKey || kiff.approvalSigner == null) return false
+    if (kiff.window != null) return true
+    approvalReason = reason
+    val expires = DateTimeFormatter.ISO_INSTANT.format(clock().plusSeconds(WINDOW_SECONDS).truncatedTo(ChronoUnit.SECONDS))
+    val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
+    return try {
+      val opened = kiff.openWindow(expires, nonce)
+      _state.update { it.copy(windowWords = opened.words) }
+      true
+    } catch (e: KiffError.Server) {
+      // A KIFF from before the window has no such route: the step goes on as before.
+      if (e.status == 404 || e.status == 405) false else throw e
+    }
+  }
+
+  /** KIFF's words for the next approval, while a window is held; none once it's gone. */
+  private suspend fun readWindowWords() {
+    if (kiff.window == null) {
+      _state.update { it.copy(windowWords = null) }
+      return
+    }
+    val read = runCatching { kiff.readWindow() }.getOrNull() ?: return
+    if (read.window?.open != true) kiff.window = null
+    _state.update { it.copy(windowWords = read.window?.takeIf { w -> w.open }?.words) }
+  }
+
+  private var windowClosing: Job? = null
+
+  /**
+   * The app went to the background: after 30 seconds there, the window this phone holds is closed at KIFF (kiff/tafs#494).
+   * Back sooner, it stays.
+   */
+  fun wentToBackground() {
+    if (kiff.window == null) return
+    windowClosing?.cancel()
+    windowClosing = scope.launch {
+      delay(WINDOW_BACKGROUND_MS)
+      closeWindow()
+    }
+  }
+
+  /** Back on screen: a close waiting on the background is called off, and KIFF's words read again. */
+  fun cameToForeground() {
+    windowClosing?.cancel()
+    windowClosing = null
+    if (kiff.window != null) scope.launch { readWindowWords() }
+  }
+
+  /** The screen turned off: the window this phone holds is closed at once. */
+  fun screenLocked() {
+    windowClosing?.cancel()
+    if (kiff.window != null) windowClosing = scope.launch { closeWindow() }
+  }
+
+  private suspend fun closeWindow() {
+    val signer = signer
+    // Forgotten here whether or not KIFF heard: a window it still holds ends at its own time, and the next approval asks again.
+    runCatching { kiff.closeWindow { signer.signConfirmed(it) } }
+    _state.update { it.copy(windowWords = null) }
   }
 
   /** Makes the one call tafs cloud asked for, as given, and says what came of it. */
@@ -3407,6 +3510,8 @@ class AppModel(
     }
   } catch (e: VendorSignInCancelled) {
     Came.Of("sign_in_closed")
+  } catch (e: bot.tafs.app.kiff.PlanqueError.WindowRequired) {
+    Came.WindowEnded
   } catch (e: CancellationException) {
     throw e
   } catch (e: Exception) {
@@ -5728,6 +5833,12 @@ class AppModel(
 
     /** What the fingerprint prompt says when Approve again proves this phone holds its new key. */
     const val RELINK_REASON = "Approve again with this fingerprint"
+
+    /** How long an approval window is asked for: KIFF takes five minutes at most, and restarts it with each approval in it. */
+    const val WINDOW_SECONDS = 300L
+
+    /** How long the app may be in the background before the window it holds is closed (kiff/tafs#494). */
+    const val WINDOW_BACKGROUND_MS = 30_000L
 
     /** KIFF answered, but holds another key, or this one was turned off while the browser waited. */
     const val RELINK_DIDNT_TAKE = "This phone still can't approve. Try again, or sign in again in Settings."

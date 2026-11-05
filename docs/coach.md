@@ -49,6 +49,10 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   (`startApproval`, `startSignInAgain`, `startReconnect`), so the vendor's sign-in page opening
   never cuts the flow short: planque's confirm, the answer to Coach, reading the thread and
   following the run all go on.
+- **An answered approval** folds to one line saying what was approved. On Android, when it had a
+  Card, a tap opens it again to that Card's lines, KIFF's draft at the version signed, with nothing
+  to answer; another tap folds it. planque's grant isn't shown there: it reads as it is now, and a
+  later tools approval can widen it past what this one approved. iOS follows.
 - **Coach's tools in one tap:** when tafs cloud sends the connect batch before Coach's Card (the
   Card is drafted over tools KIFF holds), the app reads the tools again after the batch and gives
   the Card in the same flow: one tap, still two fingerprints (the batch, then the Card). A
@@ -197,9 +201,11 @@ things (`runtime/src/cloud/approval.ts`):
   The ask also says which key the call takes (`key`, kiff/tafs#494): `window`, a tap inside
   an approval window the fingerprint opened at KIFF (connecting an app; a draft KIFF's view
   says widens nothing, `confirm_key`); `critical`, the fingerprint every time (a draft
-  otherwise). It is a hint: planque and KIFF decide for themselves, and tafs cloud's check of
-  the report refuses a critical ask the device key signed (`code: critical_key_required`) or
-  a window that has ended (`code: window_required`), with the words the card shows.
+  otherwise). It is a hint: planque and KIFF decide for themselves. The report stays the
+  device key's (v1), since the fingerprint goes on the call it reports; tafs cloud's check of
+  the report refuses one signed inside a window for a critical ask (`code:
+  critical_key_required`) or inside a window that has ended (`code: window_required`), with
+  the words the card shows.
 
 A card counts as finished only by its answer in the thread, on both apps. Every word the
 apps show for an outcome comes from tafs cloud. An ask waits 20 minutes for its report and is
