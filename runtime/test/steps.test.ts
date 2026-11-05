@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stepWords, Steps, vendorName } from "../src/cloud/steps.js";
+import { attachWhys, failedStep, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
   it("names a vendor from its server's host, and none from a cloud's own URL", () => {
@@ -41,5 +41,41 @@ describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
     expect(stepWords("kiff_draft")).toBe("Drafting the Card");
     expect(stepWords("show")).toBe("Showing you a card");
     expect(stepWords("get_charge_ijkp", titles)).toBeUndefined();
+  });
+});
+
+describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () => {
+  it("keeps the first line's words and drops a service's prefix, ids, codes and hashes", () => {
+    expect(whyOf("planque answered 403: Google Sheets refused the write: the sheet was renamed.\nstack…")).toBe("Google Sheets refused the write: the sheet was renamed.");
+    expect(whyOf("KIFF answered 409: the grant grt_Abc123xyz is revoked (code grant_revoked)")).toBe("the grant it is revoked");
+    expect(whyOf("Stripe refused ch_1AbCdEfGhIjKlMnOp: the charge is already refunded (grant grt_Abc123xyz, code already_refunded).")).toBe("Stripe refused it: the charge is already refunded.");
+    expect(whyOf("ord_secret not found")).toBe("not found");
+    expect(whyOf("  \n\nThe customer has no email on file.")).toBe("The customer has no email on file.");
+    expect(whyOf("0123456789abcdef0123 ch_1AbCdEfGhIjKlMnOp")).toBeUndefined();
+    expect(whyOf("ch_1AbCdEfGhIjKlMnOp")).toBeUndefined();
+    expect(whyOf("")).toBeUndefined();
+    expect(whyOf(undefined)).toBeUndefined();
+    expect(whyOf({ error: "x" })).toBeUndefined();
+    const long = whyOf(`The provider said no because ${"the limit is reached and ".repeat(20)}`)!;
+    expect(long.length).toBeLessThanOrEqual(160);
+    expect(long.endsWith("…")).toBe(true);
+    expect(long).not.toMatch(/\s…$/);
+  });
+
+  it("marks a failed step, with its reason only when there is one", () => {
+    expect(failedStep("The sheet was renamed.")).toEqual({ failed: true, why: "The sheet was renamed." });
+    expect(failedStep("grt_Abc123xyz")).toEqual({ failed: true });
+  });
+
+  it("gives the thread's failed steps their reasons, each to the first failed step of its tool, in order", () => {
+    const whys = [{ call: "c1", tool: "get_order", why: "Not found." }, { call: "c3", tool: "get_order", why: "Timed out." }];
+    const steps = [{ tool: "get_order", error: true as const }, { tool: "get_order" }, { tool: "get_order", error: true as const }, { tool: "create_refund", error: true as const }];
+    expect(attachWhys(steps, whys)).toEqual([
+      { tool: "get_order", error: true, failed: true, why: "Not found." },
+      { tool: "get_order" },
+      { tool: "get_order", error: true, failed: true, why: "Timed out." },
+      { tool: "create_refund", error: true, failed: true },
+    ]);
+    expect(whys).toEqual([]); // consumed: a run's parts share one list
   });
 });

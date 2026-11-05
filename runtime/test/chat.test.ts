@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
-import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { stepWhyKey } from "../src/cloud/steps.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -41,7 +42,7 @@ function world() {
     void agents.api.createSchedule(tenant, { id, agent: id, cron: "*/30 * * * *", input: "Work the refund queue.", enabled: true });
   }
   agents.calls.length = 0;
-  return { agents, tafs, slots: memorySlots(), archived: memoryArchived(), at: (d: Date) => { clock = d; } };
+  return { agents, tafs, slots: memorySlots(), archived: memoryArchived(), coach: memoryCoach(() => clock), at: (d: Date) => { clock = d; } };
 }
 type World = ReturnType<typeof world>;
 
@@ -54,7 +55,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
   };
   const r = await handle(event, {
     agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
-    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: w.archived,
+    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: w.archived, coach: w.coach,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
@@ -103,12 +104,14 @@ describe("conversation", () => {
     usage(12, [{ tool: "get_order", ms: 200 }, { tool: "create_refund", ms: 900, result_bytes: 40 }]);
     w.agents.say(chat, "Refunded $20.", at(12));
     w.agents.say(chat, "Anything else?", at(14));
+    // Why the first try failed, as the stream kept it (stream.test.ts): the thread says it on that step.
+    await w.coach.put(stepWhyKey("t_acme", chat.id), [{ call: "c1", tool: "get_order", why: "The order wasn't found." }], new Date(NOW.getTime() + 3600_000));
     const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
     const [, refunded, after] = r.body.messages;
     expect(refunded.text).toBe("Refunded $20.");
     // The whole run, on its first message, where the app's work block sat (the 845 test): from
-    // the owner's message to the run's last words.
-    expect(refunded.work).toEqual({ ms: 14_000, steps: [{ tool: "get_order", error: true }, { tool: "get_order" }, { tool: "create_refund" }] });
+    // the owner's message to the run's last words. A failed step says `failed` and why (gap 9).
+    expect(refunded.work).toEqual({ ms: 14_000, steps: [{ tool: "get_order", error: true, failed: true, why: "The order wasn't found." }, { tool: "get_order" }, { tool: "create_refund" }] });
     expect(after.work).toBeUndefined(); // the run's work is shown once
     expect(JSON.stringify(r.body)).not.toContain("result_bytes");
   });
@@ -139,7 +142,7 @@ describe("conversation", () => {
     expect(r.body.messages[1].work.steps).toEqual([
       { tool: "list_charges_ijkp", words: "List your charges" },
       { tool: "memory", words: "Going through its notes" },
-      { tool: "get_charge_ijkp", error: true },
+      { tool: "get_charge_ijkp", error: true, failed: true }, // no reason was kept: only that it failed
     ]);
     // Read again soon after: the titles are kept, not asked of KIFF on every read.
     await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", fetch: withCards });

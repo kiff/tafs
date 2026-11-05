@@ -105,3 +105,58 @@ export class Steps {
     if (grant && vendor) this.vendors.set(grant, vendor);
   }
 }
+
+
+/**
+ * Why a step failed, in one line the owner can read, from what the tool answered
+ * (kiff/tafs#476, gap 9): the words after a service's "answered NNN:", the first line only,
+ * with ids, codes and long hashes left out, at most 160 characters. Undefined when nothing
+ * readable is left: the app then says only that the step failed.
+ */
+export function whyOf(text: unknown): string | undefined {
+  if (typeof text !== "string") return undefined;
+  let line = text.split("\n").map((l) => l.trim()).find(Boolean) ?? "";
+  line = line.replace(/^(?:planque|kiff|tafs cloud|the (?:vendor|provider|tool)) answered \d{3}:\s*/i, "");
+  line = line
+    // A service's id with its prefix ("grt_Abc123xyz", "ch_1AbC…") reads as "it"; a bare hash or code goes.
+    .replace(/\b[a-z]{1,5}_(?=[A-Za-z0-9]*[A-Z0-9])[A-Za-z0-9]{4,}\b/g, "it")
+    .replace(/\b[0-9a-f]{16,}\b/gi, "")
+    .replace(/\b(?:code|error|status|reason)\s+[a-z]+(?:_[a-z]+)+\b/g, "")
+    .replace(/\b[a-z]+(?:_[a-z]+)+\b/g, "")
+    // What's left of a bracket that held only ids and codes.
+    .replace(/\(\s*(?:(?:[a-z]+\s+)?it[\s,]*)*\)/g, "").replace(/,\s*(?=[).;])/g, "")
+    .replace(/\s{2,}/g, " ").replace(/\s+([,.;:)])/g, "$1").trim();
+  if (line.length > 160) line = `${line.slice(0, 159).replace(/\s+\S*$/, "")}…`;
+  line = line.replace(/[\s,;:]+$/, "");
+  return /[A-Za-z]{3,}/.test(line) ? line : undefined;
+}
+
+/** A failed step as the apps draw it: `failed`, and `why` when the tool said something readable. */
+export function failedStep(text: unknown): { failed: true; why?: string } {
+  const why = whyOf(text);
+  return { failed: true, ...(why ? { why } : {}) };
+}
+
+/** Where a run's failed steps' reasons are kept for its thread, by tenant and run (30 days, as the run is). */
+export const stepWhyKey = (tenant: string, run: string) => `${tenant}#step-why#${run}`;
+export const STEP_WHY_KEPT_MS = 30 * 24 * 3600_000;
+/** The most reasons kept for one run: the last ones, which are the thread's most recent. */
+export const STEP_WHYS_KEPT = 50;
+
+/** The reasons a run's failed steps had, as the stream saw them, each with its call and tool, in order. */
+export type StepWhys = Array<{ call: string; tool: string; why: string }>;
+
+/**
+ * Gives failed steps their reasons, each to the first failed step of its tool in order: the
+ * stored thread has only each call's tool and that it failed, and the reasons were kept as
+ * the run streamed. `whys` is consumed, so a run's parts share one list. A failed step says
+ * `failed` as the stream's `step` does, with `why` when the tool said something readable.
+ */
+export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string }> {
+  return steps.map((s) => {
+    if (!s.error) return s;
+    const i = whys.findIndex((w) => w.tool === s.tool);
+    const why = i >= 0 ? whys.splice(i, 1)[0]!.why : undefined;
+    return { ...s, failed: true as const, ...(why ? { why } : {}) };
+  });
+}
