@@ -29,7 +29,13 @@ export function custodyWords(custody: GrantView["custody"]): string | undefined 
 
 /** Which vendor account a connection works in, and in which mode, one line as planque words them; none when it says neither. */
 export function accountWords(g: Pick<GrantView, "account_name" | "mode_words">): string | undefined {
-  const parts = [g.account_name, g.mode_words].map((s) => (typeof s === "string" ? s.replace(/\s+/g, " ").trim() : "")).filter(Boolean);
+  // The account's name is the vendor's: one line, at most 60 characters, so it can't crowd the sheet.
+  const line = (s: unknown, max: number) => {
+    const t = typeof s === "string" ? s.replace(/\s+/g, " ").trim() : "";
+    const chars = [...t];
+    return chars.length > max ? chars.slice(0, max - 1).join("").trimEnd() + "…" : t;
+  };
+  const parts = [line(g.account_name, 60), line(g.mode_words, 120)].filter(Boolean);
   return parts.length ? parts.join(" · ") : undefined;
 }
 
