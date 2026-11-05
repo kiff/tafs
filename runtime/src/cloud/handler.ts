@@ -3752,10 +3752,11 @@ export interface StreamResult {
  *                     owner, at this point of the answer (kiff/tafs#206)
  *   event: component  {component}: a component the agent showed
  *   event: state      {state, words?}: the one line the app shows while the taf works, as tafs
- *                     cloud paces it: "thinking", "working" with the step's words, "waiting_for_you",
- *                     then "done". Sent only when it changes, a line held at least a second
- *                     (STATE_HOLD_MS) unless it waits for the person or ends. The model's thinking
- *                     text is never in it: an app shows this line, and draws no `thinking` text
+ *                     cloud paces it: "thinking", "working" with the step's words or the model's
+ *                     own short progress note (noteWords), "waiting_for_you", then "done". Sent
+ *                     only when it changes, a line held at least a second (STATE_HOLD_MS) unless
+ *                     it waits for the person or ends, or a note replaces "thinking". Nothing else
+ *                     of the model's is in it: an app shows this line, and draws no `thinking` text
  *   event: end        {status, stop}: where the run stopped
  *   event: error      {error}: the stream broke; the conversation has the rest
  *
@@ -3976,6 +3977,26 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
 /** How long the stream's `state` line holds before it changes, unless it waits for the person or ends. */
 export const STATE_HOLD_MS = 1000;
 
+/** The most of a progress note the live line keeps, in characters. */
+export const MAX_NOTE = 90;
+
+/**
+ * A progress note as the live line's words: one line, cut at a word past MAX_NOTE, without its closing
+ * mark (". … ... ! ?"), since an app adds "…" after a working line's words as after a step's. None when
+ * nothing is left.
+ */
+export function noteWords(note: string): string | undefined {
+  let line = note.replace(/[\u0000-\u001f\u007f-\u009f\s]+/g, " ").trim();
+  const chars = [...line];
+  if (chars.length > MAX_NOTE) {
+    const cut = chars.slice(0, MAX_NOTE).join("");
+    const space = cut.lastIndexOf(" ");
+    line = space > MAX_NOTE / 2 ? cut.slice(0, space) : cut;
+  }
+  line = line.replace(/[\s.…!?,;:–—-]+$/u, "").trim();
+  return line || undefined;
+}
+
 /** The card types a run waits on the person for: while one shows, the line says it waits for them. */
 const WAITS_FOR_YOU = new Set(["confirm", "questions", "approval", "sign_in"]);
 
@@ -3989,10 +4010,15 @@ class Pace {
   private pending?: { state: string; words?: string };
   constructor(private readonly now: () => number) {}
 
-  /** The `state` event to send now for this line, if any. */
-  set(state: string, words?: string): string | undefined {
+  /** The `state` event to send now for this line, if any; `now` sends it whatever the hold. */
+  set(state: string, words?: string, now = false): string | undefined {
     this.pending = { state, ...(words ? { words } : {}) };
-    return this.flush(state === "waiting_for_you" || state === "done");
+    return this.flush(now || state === "waiting_for_you" || state === "done");
+  }
+
+  /** Whether the line the app has now is this state. */
+  showing(state: string): boolean {
+    return this.sent?.key.startsWith(`${state}|`) === true;
   }
 
   /** The line held back, once its hold is over (or at once, when `now`). */
@@ -4139,6 +4165,12 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (e.event === "end") return pace.set("done");
     if (e.event === "run") return pace.set("thinking");
     if (kind === "thinking" || kind === "text") return pace.set("thinking");
+    // Coach's own short progress note before a tool call (kiff/agents' `update`): its first words. It
+    // replaces "Thinking…" at once, and holds like a step's words otherwise.
+    if (kind === "update" && typeof b.text === "string") {
+      const words = noteWords(b.text);
+      return words ? pace.set("working", words, pace.showing("thinking")) : pace.flush();
+    }
     if (kind === "tool_call" && typeof b.tool === "string") {
       return pace.set("working", steps.call(b.tool, b.input)?.replace(/…$/, ""));
     }

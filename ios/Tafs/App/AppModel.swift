@@ -3945,6 +3945,8 @@ final class AppModel: ObservableObject {
                     chatStates[tafID]?.live?.thinking = ""
                 case .thinking(let t):
                     chatStates[tafID]?.live?.thinking += t
+                case .state(let state, let words):
+                    chatStates[tafID]?.live?.state = LiveState(state: state, words: words)
                 case .activity(let tool, let step, let call):
                     // The words so far are done; the answer goes on below them. Nothing is reloaded.
                     if let t = chatStates[tafID]?.live?.text, !t.isEmpty {
@@ -5933,9 +5935,19 @@ final class AppModel: ObservableObject {
         /// When it started: the time its words are shown under.
         var started = Date()
         /// The summary so far of what it's thinking now (kiff/tafs#285); cleared once it writes.
+        /// Never drawn: the live line says what it's doing.
         var thinking = ""
+        /// tafs cloud's live line, once its stream sends one (docs/chat.md, "The live line").
+        var state: LiveState?
         /// The tools it called in this answer, in order, and how each went (kiff/tafs#285).
         var steps: [LiveStep] = []
+
+        /// The live line, as Android draws it (`Chat.liveLine`): tafs cloud's while its stream
+        /// sends one, else the step in progress (`current`, in its words), else "Writing…" or
+        /// "Thinking…". The thinking text is never in it.
+        func line(current: String?) -> String {
+            state?.line ?? current ?? (text.isEmpty ? "Thinking…" : "Writing…")
+        }
 
         /// A tool call begins: shown as a step, in its words. Show draws in the chat itself.
         mutating func began(_ tool: String, words: String?, call: String?) {
@@ -5949,7 +5961,7 @@ final class AppModel: ObservableObject {
         /// A run went on after a pause: its answer so far is the thread's, with its work, and
         /// what follows starts afresh.
         mutating func newPart() {
-            text = ""; parts = []; steps = []; activity = nil; thinking = ""
+            text = ""; parts = []; steps = []; activity = nil; thinking = ""; state = nil
         }
 
         /// A call ended: the step it began, or the latest still running when the stream
@@ -5961,6 +5973,24 @@ final class AppModel: ObservableObject {
     }
 
     /// One tool call of an answer as it streams (kiff/tafs#285).
+    /// tafs cloud's live line: what the taf does now, in its state and, while working, its words.
+    struct LiveState: Equatable {
+        var state: String
+        var words: String?
+
+        /// The line in words, as Android draws it (`Chat.stateLine`): the step's or the note's
+        /// own while working, else what the state is. None at `done`. A state the app doesn't
+        /// know reads as thinking.
+        var line: String? {
+            switch state {
+            case "done": return nil
+            case "working": return words.map { "\($0)…" } ?? "Working…"
+            case "waiting_for_you": return "Waiting for you"
+            default: return "Thinking…"
+            }
+        }
+    }
+
     struct LiveStep: Equatable {
         enum Status: Equatable {
             case running, done, error, held
@@ -6048,6 +6078,8 @@ final class AppModel: ObservableObject {
                     setupLive?.thinking = ""
                 case .thinking(let t):
                     setupLive?.thinking += t
+                case .state(let state, let words):
+                    setupLive?.state = LiveState(state: state, words: words)
                 case .activity(let tool, let step, let call):
                     // The step shows at once; the thread then picks up the words written so far.
                     let words = step ?? Self.activityWords(tool)

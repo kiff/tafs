@@ -77,9 +77,11 @@ typing does. The microphone isn't required to install the app.
 
 On Android, the block under the owner's message is one line (`LiveWork`, `Chat.liveLine`): the
 stream's `state` once tafs cloud sends it (`event: state {state, words?}`), "Working…" lines in
-the step's words, "Waiting for you", and nothing at `done`, where it folds into the message's
-"Worked … · N steps". Before tafs cloud sends `state`, the step at work stands in, else
-"Thinking…". The model's thinking text and a list of steps are never drawn.
+the step's words or Coach's own progress note ("Miro las últimas ejecuciones de Reembolsos…"),
+"Waiting for you", and nothing at `done`, where it folds into the message's "Worked … · N
+steps". Before tafs cloud sends `state`, the step at work stands in, else "Thinking…". The
+model's thinking text and a list of steps are never drawn. iOS draws the same line on top of
+its work block (`LiveWork.line`), and no thinking text either.
 
 tafs cloud trims kiff/agents' stream to what the phone shows. Tool inputs and results
 never reach the phone.
@@ -87,7 +89,7 @@ never reach the phone.
 | Event | Data | What the app does |
 |---|---|---|
 | `session` | `{session, new_session, run, message: {id, at}}`, first | Notes the chat and the run, for Stop and for steering. `message` is the owner's message as the thread names it, so the app matches its send by id; a message that steers a run already at work has none |
-| `thinking` | `{text}` | Adds to the line of what the taf is thinking |
+| `thinking` | `{text}` | More of a summary of the model's thinking, for a definition that shows it. Neither app draws it; tafs' and Coach's definitions ask for progress notes instead (`thinking: "updates"`), which come as the live line's words |
 | `text` | `{text}` | Adds to the answer |
 | `activity` | `{tool, step?, call_id}` | A step begins, in words: "Asking KIFF: List payments…" |
 | `step` | `{call_id, status, failed?, why?}` | That step ended: `done`, `error`, or `not_made` (refused back unmade, below). An `error` step says `failed: true` and, when the tool said something readable, `why`: one line for the owner (below) |
@@ -106,10 +108,9 @@ step without them.
 
 ### The work block
 
-While the taf works, a block sits under the owner's message (`LiveWork`): the step in
-progress on top, one calm line of what it's thinking (shown after a few seconds, changed
-at most every second and a half), and the steps done under it. The answer streams below
-the block.
+While the taf works, a block sits under the owner's message (`LiveWork`): the live line on
+top (tafs cloud's `state`, as on Android; before it comes, the step in progress, else
+"Thinking…"), and the steps done under it. The answer streams below the block.
 
 When the run ends, the thread is reloaded and the stored answer takes the live one's
 place. The block folds in place to "Worked for 12 s" (`WorkSummary`), which opens the
@@ -337,11 +338,18 @@ and never by text or time.
 ## The live line
 
 While a taf works, the stream sends one line for the app to show (`event: state`, `relay` in
-`handler.ts`). It has one `state`: `thinking`, `working` with the step's `words`, `waiting_for_you`,
-or `done`. It's sent only when it changes, and a line holds at least a second (`STATE_HOLD_MS`),
-so it doesn't flicker. Waiting for the person and the end go at once. The model's thinking text is
-never in it. An app shows this line and doesn't draw the `thinking` events. When the run ends, the
-line becomes the message's "Worked … · N steps".
+`handler.ts`). It has one `state`: `thinking`, `working` with `words`, `waiting_for_you`, or
+`done`. It's sent only when it changes, and a line holds at least a second (`STATE_HOLD_MS`), so it
+doesn't flicker. Waiting for the person and the end go at once.
+
+`working`'s `words` are the step's, or the model's own short progress note before a tool call.
+On Claude Opus 5.5 a line Coach writes before a tool call comes back as such a note, not as text
+(kiff/agents' `update`, with the definition's `thinking: "updates"`). tafs cloud puts it on the
+line as one line, cut at a word past 90 characters, without its closing mark, since the app adds
+"…" after a working line's words (`noteWords`). A note replaces `thinking` at once, whatever the
+hold: it's the owner's first words. The note is all of the model's the line may carry: its
+thinking text is never in it, and an app doesn't draw the `thinking` events. When the run ends,
+the line becomes the message's "Worked … · N steps".
 
 ## The thread in one order
 

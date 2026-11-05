@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
-import { handleStream, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { handleStream, type HTTPEvent, MAX_NOTE, noteWords, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -86,6 +86,34 @@ describe("a message streamed (kiff/tafs#60)", () => {
     // Sent only on a change, and the model's thinking text is never in the line.
     expect(lines.every((l, i) => i === 0 || l !== lines[i - 1])).toBe(true);
     expect(JSON.stringify(r.states)).not.toContain("Let me look");
+  });
+
+  // On Claude Opus 5.5 Coach's line before a tool call comes back as a progress note, not as text, and
+  // Android draws no thinking: first words were a median 12.5 s with the note at a few (the Eval, 5 Nov).
+  it("puts the model's progress note on the line at once, in place of thinking, as words with no closing mark", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "update", text: "Miro las últimas ejecuciones de Reembolsos…" } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "show", input: { type: "approval" } } },
+      { event: "delta", data: { kind: "component", component: { type: "approval", id: "a1", grant: "g_1" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "¿Cómo van los reembolsos?" } });
+    // The note replaces "thinking" whatever the hold; the rest of the line goes as before.
+    expect(r.states.slice(0, 2)).toEqual([{ state: "thinking" }, { state: "working", words: "Miro las últimas ejecuciones de Reembolsos" }]);
+    expect(r.states.at(-1)).toEqual({ state: "done" });
+    // The note is the line's only: never an event of its own, never the answer's text.
+    expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "component", "end"]);
+  });
+
+  it("shows a note as one short line: its closing mark gone, cut at a word, and nothing for an empty one", () => {
+    expect(noteWords("Checking your Stripe account first.")).toBe("Checking your Stripe account first");
+    expect(noteWords("  Reviso los pagos...  ")).toBe("Reviso los pagos");
+    expect(noteWords("Listo!?")).toBe("Listo");
+    expect(noteWords("Two\nlines,\u0007 one line…")).toBe("Two lines, one line");
+    expect(noteWords(" … ")).toBeUndefined();
+    const long = noteWords("Reading ".repeat(30))!;
+    expect([...long].length).toBeLessThanOrEqual(MAX_NOTE);
+    expect(long.endsWith("Reading")).toBe(true);
   });
 
   it("relays the answer as it's written, the tools by name only, and where it stopped", async () => {

@@ -39,7 +39,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.model).toBe(MODEL);
     // Setup plans and judges more than a taf's steps (kiff/tafs#102): it keeps high.
     expect(d.effort).toBe(SETUP_EFFORT);
-    expect(d.thinking).toBe("summarized"); // the person waiting sees what it considers (kiff/tafs#285)
+    expect(d.thinking).toBe("updates"); // the person waiting sees its progress notes, never its reasoning
     expect(SETUP_EFFORT).toBe("high");
     expect(d.keep).toEqual(taf.keep);
     expect(d.max_cost_micro_usd).toBe(SETUP_BUDGET_CENTS * 10_000);

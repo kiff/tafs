@@ -32,10 +32,12 @@ export const MAX_TOKENS = 16_000;
  */
 export const EFFORT: Effort = "medium";
 /**
- * A summary of the model's thinking streams to the person waiting (kiff/tafs#285): the app
- * shows it as one line while the taf works. It changes what is shown, not what is billed.
+ * The model's short progress notes between tool calls stream to the person waiting, its
+ * reasoning never: on Claude Opus 5.5 a line written before a tool call ("Miro las últimas
+ * ejecuciones de Reembolsos…") comes back as such a note, not as text, and tafs cloud makes
+ * it the live line's words (noteWords). It changes what is shown, not what is billed.
  */
-export const THINKING = "summarized" as const;
+export const THINKING = "updates" as const;
 export const KIFF_GATEWAY = "https://mcp.kiff.dev/mcp";
 /**
  * Finished runs of a session the model gets before a new one: the thread it

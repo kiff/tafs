@@ -525,6 +525,10 @@ final class SetupTests: XCTestCase {
         // How a step ended, what the taf thinks, a message a resumed run wrote (kiff/tafs#285).
         XCTAssertEqual(e("step", #"{"call_id":"c1","status":"error"}"#), .step(call: "c1", status: "error"))
         XCTAssertEqual(e("thinking", #"{"text":"The order is paid."}"#), .thinking("The order is paid."))
+        // The live line, with a step's words or Coach's progress note (docs/chat.md, "The live line").
+        XCTAssertEqual(e("state", #"{"state":"working","words":"Miro las últimas ejecuciones"}"#), .state("working", words: "Miro las últimas ejecuciones"))
+        XCTAssertEqual(e("state", #"{"state":"thinking","words":" "}"#), .state("thinking"))
+        XCTAssertNil(e("state", "{}"))
         XCTAssertEqual(e("said", "{}"), .said)
         XCTAssertNil(e("step", "{}"))
         XCTAssertEqual(e("component", #"{"component":{}}"#), .component)
