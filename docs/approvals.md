@@ -262,6 +262,17 @@ with `{happened}`): **No** gives the Card its room back, **Yes** keeps it counte
 the first answer. Answered, the call leaves the list and the Card's numbers are read again. On
 Android: `AppModel.answerDidThisHappen`, `UnsureCallCard`.
 
+Where KIFF sends each call's context, the card shows it as sent: which taf (`taf.name`), when
+(`when_words`), the amount (`amount_words`), what it acted on (`counterparty`), why KIFF can't
+tell (`why`), and **See it at …** for the vendor's own record (`record_url`, https only). Its
+answers are then KIFF's (`answers`), in KIFF's order and words, each with its `detail` under it.
+**Yes** and **No** go as above. **Not sure, help me check** decides nothing. It is signed by the
+device key alone, with no fingerprint (`POST …/did-this-happen/{proposal}/check`), and KIFF
+marks the call as being checked by this person for a day. Then tafs cloud opens a new conversation
+with Coach on that one call (`POST /v1/setup/check-call {proposal}`), and the app shows it. The
+card stays until it's answered. A KIFF that sends no `answers` gets the app's **No** and **Yes, it
+did**, and no Not sure. On Android: `AppModel.checkDidThisHappen`.
+
 ## After the answer
 
 1. The answer goes to KIFF: `POST /v1/me/card-exceptions/{id}/approve-once`, `reject` or `change-card`, with its signature.

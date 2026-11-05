@@ -359,6 +359,14 @@ class KiffClient(
     sendJson("POST", "$DID_THIS_HAPPEN/${escaped(proposal)}", JsonObject(mapOf("happened" to JsonPrimitive(happened))))
   }
 
+  /**
+   * "Not sure, help me check": decides nothing, so it's signed by the device key alone ([sign]), window or not. KIFF marks the
+   * call as being checked by this person for a day.
+   */
+  suspend fun checkDidThisHappen(proposal: String, sign: (ByteArray) -> String) {
+    sendJson("POST", "$DID_THIS_HAPPEN/${escaped(proposal)}/check", JsonObject(emptyMap()), signedBy = sign)
+  }
+
   /** The account's latest calls, for Activity and the Record. */
   suspend fun activity(limit: Int = 100): List<ActivityCall> = call<ActivityCalls>("GET", "/v1/me/activity?limit=$limit").calls
 
@@ -749,7 +757,8 @@ class KiffClient(
       // Opening an approval window stands for a fingerprint: only the approval key opens one (kiff/tafs#494).
       if (path == WINDOW) return true
       // "Did this happen?": No gives the Card its room back, and KIFF takes either answer only from the approval key.
-      if (path.startsWith("$DID_THIS_HAPPEN/") && path.length > DID_THIS_HAPPEN.length + 1) return true
+      // "Not sure" decides nothing: the device key takes it.
+      if (path.startsWith("$DID_THIS_HAPPEN/") && path.length > DID_THIS_HAPPEN.length + 1 && !path.endsWith("/check")) return true
       if (path == "/v1/me/agent-drafts") return true
       val parts = path.split("/")
       // Sharing a taf gives people its use. Taking it away is the current key.

@@ -2726,6 +2726,39 @@ class AppModel(
     return true
   }
 
+  /**
+   * "Not sure, help me check" on [call]: KIFF takes it signed by the device key (it decides nothing), then tafs cloud opens a new
+   * conversation with Coach on that call, which Coach opens on. The card stays until the owner answers it.
+   */
+  suspend fun checkDidThisHappen(call: bot.tafs.app.kiff.UnsureCall): Boolean {
+    if (_state.value.mode != Mode.kiff || _state.value.answeringUnsure != null) return false
+    val tenant = kiffTenant
+    val key = call.proposal
+    if (!_state.value.sessionHasKey || tenant == null) {
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Sign in with KIFF again: this sign-in can't sign for the phone.")) }
+      return false
+    }
+    val generation = accountGeneration
+    _state.update { it.copy(answeringUnsure = key, unsureErrors = it.unsureErrors - key) }
+    val sent = try {
+      kiff.tenant = tenant
+      val signer = signer
+      kiff.checkDidThisHappen(key) { signer.signConfirmed(it) }
+      cloud.checkCall(key)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Coach couldn't open on it. ${ErrorWords.of(e)}")) }
+      return false
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(answeringUnsure = null) }
+    }
+    if (generation != accountGeneration) return false
+    openCoachChat(sent.session)
+    _state.update { it.copy(coachRequested = true) }
+    return true
+  }
+
   /** Opens [run] of [tafId], step by step (K5). Someone else's request is only for whoever manages the taf: tafs cloud says no. */
   suspend fun openRequest(tafId: String, run: String) {
     if (_state.value.mode != Mode.kiff) return
