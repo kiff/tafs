@@ -20,7 +20,7 @@ import type { Taf, Tafs } from "./handler.js";
 import { apsFor, levelOf } from "./levels.js";
 import { HANDOFF_HEADING, type VendorPlace } from "./places.js";
 import { type Device, type PushStore, type Sender, sendNotification } from "./push.js";
-import { stepWhyKey, type StepWhys } from "./steps.js";
+import { stepWhyKey, type StepWhys, whyOf } from "./steps.js";
 import { timeIn } from "./work.js";
 
 export type DeliveryState = "sent" | "handed" | "retrying" | "not_sent";
@@ -296,7 +296,8 @@ async function settleRetry(ctx: DeliveryContext, tenant: string, taf: Taf, r: Ru
   if (!ended(r)) {
     // The retry failed or was stopped before it could deliver: said, and the managers hear once.
     d.state = "not_sent";
-    d.why = r.status === "ERROR" ? (r.error || DELIVERY_WORDS.retryFailed) : DELIVERY_WORDS.retryStopped;
+    // The run's error goes through the same scrub as a step's reason before it reaches the managers' push (qa-kiff on #512).
+    d.why = r.status === "ERROR" ? (whyOf(r.error) || DELIVERY_WORDS.retryFailed) : DELIVERY_WORDS.retryStopped;
     await noteManagers(ctx, tenant, taf, d);
   } else if (call?.ok) {
     d.state = "sent";

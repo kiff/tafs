@@ -153,9 +153,11 @@ describe("a taf's results reach their destination, checked by tafs cloud (result
     w.at(new Date(NOW.getTime() + 11 * 60_000));
     await sweepDeliveries(w.deps);
     const retry = w.agents.runs.find((r) => r.source === `delivery:${run.id}:grt_g:sheets_append_k3`)!;
-    Object.assign(retry, { status: "ERROR", error: "It ran out of budget." });
+    Object.assign(retry, { status: "ERROR", error: "It ran out of budget. Contact ops@example.com or see https://vendor.test/x" });
     const work = await w.call("GET", `/v1/tafs/${RAE}/work`);
-    expect(work.body.requests.find((r: { id: string }) => r.id === run.id).deliveries[0]).toMatchObject({ state: "not_sent", line: `Not delivered to ${SHEET.name}: It ran out of budget.`, send_again: true });
+    expect(work.body.requests.find((r: { id: string }) => r.id === run.id).deliveries[0]).toMatchObject({ state: "not_sent", line: `Not delivered to ${SHEET.name}: It ran out of budget. Contact it or see it`, send_again: true });
+    // The run's error went through the scrub before it reached the managers' push: no address, no link.
+    expect(JSON.stringify(w.pushed)).not.toMatch(/example\.com|vendor\.test/);
     expect(w.pushed).toHaveLength(1);
     // A stopped retry the same, in tafs cloud's words; and the sweep leaves it be.
     const again = await w.call("POST", `/v1/tafs/${RAE}/requests/${run.id}/deliveries/${encodeURIComponent("grt_g:sheets_append_k3")}/send`);
