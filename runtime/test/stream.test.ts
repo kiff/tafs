@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
-import { handleStream, type HTTPEvent, MAX_NOTE, noteWords, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -105,6 +105,66 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "component", "end"]);
   });
 
+  // On Opus 5.5 and Sonnet 5.5 Coach's line before its tools comes as a note or as text, run to run: the owner
+  // sees one shape either way (the PM, 5 Nov).
+  it("puts a turn's one-line text before its tool call on the live line, never as the answer", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "text", text: "Miro las últimas " } },
+      { event: "delta", data: { kind: "text", text: "ejecuciones de Reembolsos…" } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "get_charge" } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "ok" } } },
+      { event: "delta", data: { kind: "text", text: "Todo en orden." } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "¿Cómo va?" } });
+    // The line shows as it's written, growing at once, whatever the hold.
+    expect(r.states.slice(1, 3)).toEqual([{ state: "working", words: "Miro las últimas" }, { state: "working", words: "Miro las últimas ejecuciones de Reembolsos" }]);
+    // The answer after the tools is held as one line too, then sent at the end, the line going to thinking first.
+    expect(r.events.filter((e) => e.event === "text").map((e) => e.data.text)).toEqual(["Todo en orden."]);
+    expect(r.raw).not.toContain("Miro las últimas ejecuciones de Reembolsos…");
+  });
+
+  it("sends held words as the answer with the line at thinking first, at once, so they never show twice", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "text", text: "Reembolsos está lista." } },
+      { event: "delta", data: { kind: "component", component: { type: "approval", id: "a1", grant: "g_1" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "¿Lista?" } });
+    // The live line had the words; just before they go as text, it says thinking, with nothing between.
+    const at = r.raw.indexOf("event: text\n");
+    expect(r.raw.slice(0, at)).toMatch(/event: state\ndata: \{"state":"thinking"\}\n\n$/);
+    expect(r.states).toContainEqual({ state: "working", words: "Reembolsos está lista" });
+  });
+
+  it("streams an answer past its first line word by word, holding only that line", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "text", text: "Hecho:" } },
+      { event: "delta", data: { kind: "text", text: "\n- 3 reembolsos" } },
+      { event: "delta", data: { kind: "text", text: "\n- 0 fallos" } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "¿Qué hiciste?" } });
+    expect(r.events.filter((e) => e.event === "text").map((e) => e.data.text)).toEqual(["Hecho:\n- 3 reembolsos", "\n- 0 fallos"]);
+  });
+
+  it("knows a turn's line: one short line, which a long or broken text isn't", () => {
+    expect(heldLine("Miro las últimas ejecuciones de Reembolsos…\n\n")).toBe(true);
+    expect(heldLine("Hecho:\n- 3 reembolsos")).toBe(false);
+    expect(heldLine("a".repeat(MAX_NOTE + 1))).toBe(false);
+  });
+
+  it("leaves a run's lines before its tool calls out of the thread: a one-line message its call follows", () => {
+    const ev = (run: string, seq: number, kind: string, text?: string) => ({ run, seq, kind, ...(text === undefined ? {} : { body: { text } }) });
+    const got = preToolLines([
+      ev("r1", 1, "owner_message", "¿Cómo va?"),
+      ev("r1", 2, "agent_message", "Miro las ejecuciones…"), ev("r1", 3, "usage"), ev("r1", 4, "tool_call"),
+      ev("r1", 5, "agent_message", "Primero:\nreviso los pagos."), ev("r1", 6, "tool_call"),
+      ev("r2", 7, "agent_message", "Otro run."), ev("r1", 8, "agent_message", "Todo en orden."), ev("r2", 9, "tool_call"),
+    ]);
+    expect([...got].sort()).toEqual(["r1.2", "r2.7"]);
+  });
+
   it("shows a note as one short line: its closing mark gone, cut at a word, and nothing for an empty one", () => {
     expect(noteWords("Checking your Stripe account first.")).toBe("Checking your Stripe account first");
     expect(noteWords("  Reviso los pagos...  ")).toBe("Reviso los pagos");
@@ -120,7 +180,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const w = world();
     w.agents.streamed.push(
       { event: "delta", data: { kind: "text", text: "I'll connect " } },
-      { event: "delta", data: { kind: "text", text: "**Stripe**." } },
+      { event: "delta", data: { kind: "text", text: "**Stripe**.\nYou approve it on your phone." } },
       { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "catalog", grant: "grt_secret" } } },
       { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "acct_123 tools…" } } },
       { event: "event", data: { kind: "tool_call", body: { input: "grt_secret" } } },
@@ -128,11 +188,12 @@ describe("a message streamed (kiff/tafs#60)", () => {
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Make sure customers can get their refunds" } });
     expect(r.status).toBe(200);
-    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "text", "activity", "step", "component", "end"]);
+    // Held while it was one short line, then sent as written once it was more: the answer, not a line.
+    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "activity", "step", "component", "end"]);
     expect(r.events[0]!.data).toMatchObject({ new_session: true });
-    expect(r.events.filter((e) => e.event === "text").map((e) => e.data.text).join("")).toBe("I'll connect **Stripe**.");
-    expect(r.events[3]!.data).toEqual({ tool: "planque", step: "Reading what your provider offers…", call_id: "c1" });
-    expect(r.events[4]!.data).toEqual({ call_id: "c1", status: "done" });
+    expect(r.events.filter((e) => e.event === "text").map((e) => e.data.text).join("")).toBe("I'll connect **Stripe**.\nYou approve it on your phone.");
+    expect(r.events[2]!.data).toEqual({ tool: "planque", step: "Reading what your provider offers…", call_id: "c1" });
+    expect(r.events[3]!.data).toEqual({ call_id: "c1", status: "done" });
     expect(r.events.at(-1)!.data).toEqual({ status: "COMPLETED", stop: "answered" });
     // What tools were given and what they answered never reaches the phone.
     expect(r.raw).not.toContain("grt_secret");
@@ -222,8 +283,9 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "ch_secret paid" } } },
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Refund $20 of T-3002" } });
-    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "activity", "held", "activity", "step", "end"]);
-    expect(r.events[3]!.data).toEqual({ exception: "exc_1", invocation: "tc-1" });
+    // "Refunding $20." was the turn's line before its call: the live line's, not the answer's.
+    expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "held", "activity", "step", "end"]);
+    expect(r.events[2]!.data).toEqual({ exception: "exc_1", invocation: "tc-1" });
     expect(r.raw).not.toContain("ch_secret");
     expect(r.raw).not.toContain("op_1");
   });
