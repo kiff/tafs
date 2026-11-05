@@ -56,7 +56,7 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *   GET  /v1/setup                      the account's Setup (Coach), or null
  *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead
+ *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead, never with from_setup
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET | POST | DELETE /v1/tafs/{id}/halt  one taf's halt
  *   GET  /v1/tafs/{id}/runs
@@ -1228,6 +1228,11 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   const fromSetup = body.from_setup === true;
   if (fromSetup && (!draftID || claimSecret || body.agent_key !== undefined)) {
     throw new HTTPError(400, "from_setup takes a draft_id and no claim_secret or agent_key");
+  }
+  // A taf Coach sets up carries the job it drafted from the owner's words: a starter job's
+  // kickoff and instructions would run under the owner's summary, doing another job.
+  if (fromSetup && body.job !== undefined && body.job !== CUSTOM) {
+    throw new HTTPError(400, "a taf from Coach carries the job you drafted with the owner (kickoff, instructions, cron or unscheduled), never a starter job");
   }
   if (!fromSetup && !draftID !== !claimSecret) throw new HTTPError(400, "send both draft_id and claim_secret");
   if (draftID && !/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new HTTPError(400, "that is not a KIFF draft id");
@@ -4847,8 +4852,8 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
 
 /**
  * What a result names for a new taf: its agent and draft, its name, and its job as Coach drafted it
- * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. `job` names one
- * of the five starter jobs, from a Coach from before.
+ * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. A `job` naming
+ * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
 interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string }
 
@@ -4871,7 +4876,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
   try {
     const out = await makeTaf({
       name: taf.name, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}),
-      ...(typeof taf.job === "string" && taf.job !== CUSTOM ? { job: taf.job } : {}),
+      ...(typeof taf.job === "string" ? { job: taf.job } : {}),
       ...(typeof taf.summary === "string" ? { summary: taf.summary } : {}),
       ...(typeof taf.kickoff === "string" ? { kickoff: taf.kickoff } : {}),
       ...(typeof taf.instructions === "string" ? { instructions: taf.instructions } : {}),
