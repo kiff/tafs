@@ -317,9 +317,9 @@ A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_i
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed
 by the device's key with no fingerprint (it grants nothing), for the live sign-in view
 (`AppModel.openSiteSignIn`, `PlanqueClient.siteSignIn`, `POST …/grants/{id}/sign-in`). The view
-opens only when its URL is https on planque's own host, in a full-screen web view
+opens only when its URL is on planque's own https origin (scheme, host and port), in a full-screen web view
 (`SiteSignInScreen`) under planque's `words`, with **Close** and nothing else. The web view runs the
-page's scripts and follows no link off that host. A refusal (a view already open, the connection
+page's scripts and follows no link off that origin, and closing it clears its cookies (it is the app's only web view). A refusal (a view already open, the connection
 not connected) is said on the connection in planque's words. Closing leaves the view to lapse.
 
 An app tafs cloud sends as `needs_setup` (kiff/planque#87) shows tafs cloud's `words` under its

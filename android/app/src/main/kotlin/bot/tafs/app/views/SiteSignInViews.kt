@@ -38,7 +38,8 @@ import bot.tafs.app.kiff.SiteSignInView
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun SiteSignInScreen(view: SiteSignInView, onClose: () -> Unit) {
-  val host = remember(view.view) { runCatching { java.net.URI(view.view).host }.getOrNull() }
+  // The view's own origin: the web view follows nothing off it (scheme, host and port).
+  val origin = view.view
   val context = LocalContext.current
   val web = remember(view.view) {
     WebView(context).apply {
@@ -49,12 +50,19 @@ fun SiteSignInScreen(view: SiteSignInView, onClose: () -> Unit) {
       settings.allowContentAccess = false
       webViewClient = object : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
-          !(request.url.scheme == "https" && request.url.host.equals(host, ignoreCase = true))
+          !sameHttpsOrigin(request.url.toString(), origin)
       }
       loadUrl(view.view)
     }
   }
-  DisposableEffect(web) { onDispose { web.stopLoading(); web.destroy() } }
+  // Closed, it keeps nothing: the page's cookies go with it (this is the app's only web view).
+  DisposableEffect(web) {
+    onDispose {
+      web.stopLoading()
+      web.destroy()
+      android.webkit.CookieManager.getInstance().apply { removeAllCookies(null); flush() }
+    }
+  }
   Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
     Column(Modifier.fillMaxSize().background(Theme.background).statusBarsPadding().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -65,3 +73,11 @@ fun SiteSignInScreen(view: SiteSignInView, onClose: () -> Unit) {
     }
   }
 }
+
+/** Whether [url] and [origin] are the same https origin: scheme, host and port (443 when none is written). */
+internal fun sameHttpsOrigin(url: String, origin: String): Boolean = runCatching {
+  val a = java.net.URI(url)
+  val b = java.net.URI(origin)
+  fun port(u: java.net.URI) = if (u.port == -1) 443 else u.port
+  a.scheme == "https" && b.scheme == "https" && a.host != null && a.host.equals(b.host, ignoreCase = true) && port(a) == port(b)
+}.getOrDefault(false)
