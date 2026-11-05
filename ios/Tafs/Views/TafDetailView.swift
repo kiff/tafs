@@ -1133,7 +1133,7 @@ struct EnvironmentPill: View {
 }
 
 /// A taf's Cards as a wallet stack (kiff/tafs#211): the Card in front whole, the others
-/// behind it showing their top edge, so their number and names read at once. Tapping one
+/// behind it showing their top edge, each a shade darker, so their number and names read at once. Tapping one
 /// brings it forward.
 struct CardStack: View {
     let cards: [TafCard]
@@ -1146,17 +1146,24 @@ struct CardStack: View {
     /// How much of a Card behind shows.
     private static let edge: CGFloat = 40
 
+    /// How much darker a Card `depth` places behind the front one is drawn: none in front,
+    /// then deeper, never hiding its edge.
+    static func shade(depth: Int) -> Double { depth <= 0 ? 0 : min(0.12 + 0.08 * Double(depth - 1), 0.32) }
+
     var body: some View {
         let shown = cards.first(where: { $0.id == front }) ?? cards.first
         // The furthest back on top, as in a wallet: the reverse of the order they're listed in.
         let behind = cards.filter { $0.id != shown?.id }.reversed()
         let ordered = Array(behind) + (shown.map { [$0] } ?? [])
         WalletLayout {
-            ForEach(ordered) { card in
+            ForEach(Array(ordered.enumerated()), id: \.element.id) { index, card in
                 Button {
                     withMotion(.spring(response: 0.35, dampingFraction: 0.85)) { front = card.id }
                 } label: {
                     TafCardFace(card: card, issuedBy: issuedBy, color: color, revoked: revoked)
+                        // Each Card behind a shade darker, so Cards of the same colour read as separate.
+                        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.black.opacity(Self.shade(depth: ordered.count - 1 - index))))
                         .shadow(color: .black.opacity(0.16), radius: 4, y: -2)
                 }.buttonStyle(.plain).accessibilityLabel("\(card.title). Show this Card")
             }

@@ -446,4 +446,11 @@ class TafPageTest {
     assertEquals(2, model.state.value.needsYouCount)
     assertEquals("2 need you.", model.state.value.needsYouWords)
   }
+
+  @Test fun theCardsBehindAreEachAShadeDarkerNeverHidden() {
+    assertEquals(0f, bot.tafs.app.views.behindShade(0))
+    val shades = (1..6).map { bot.tafs.app.views.behindShade(it) }
+    assertTrue(shades.zipWithNext().all { (a, b) -> b >= a } && shades.first() > 0f)
+    assertTrue(shades.all { it <= 0.32f })
+  }
 }
