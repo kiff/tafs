@@ -143,7 +143,7 @@ export async function readGrants(base: string, tenant: string, proof: string, ne
   } catch {
     throw new ApprovalError(502, "Connected apps could not be read; try again");
   }
-  if (!res.ok) throw new ApprovalError(502, "Connected apps could not be read; try again");
+  if (!res.ok) throw new ApprovalError(502, `Connected apps could not be read (planque answered ${res.status}); try again`);
   const out = (await res.json().catch(() => ({}))) as { grants?: unknown };
   if (!Array.isArray(out.grants)) throw new ApprovalError(502, "Connected apps returned an unreadable list");
   return out.grants.filter((g): g is ApprovalGrant => !!g && typeof g === "object" && typeof (g as ApprovalGrant).id === "string" && typeof (g as ApprovalGrant).status === "string" && !!(g as ApprovalGrant).request);
