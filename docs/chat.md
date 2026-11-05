@@ -90,7 +90,7 @@ never reach the phone.
 | `thinking` | `{text}` | Adds to the line of what the taf is thinking |
 | `text` | `{text}` | Adds to the answer |
 | `activity` | `{tool, step?, call_id}` | A step begins, in words: "Asking KIFF: List payments…" |
-| `step` | `{call_id, status}` | That step ended: `done`, `error`, or `not_made` (refused back unmade, below) |
+| `step` | `{call_id, status, failed?, why?}` | That step ended: `done`, `error`, or `not_made` (refused back unmade, below). An `error` step says `failed: true` and, when the tool said something readable, `why`: one line for the owner (below) |
 | `held` | `{exception, invocation}` | KIFF held the call just made: its card goes here in the answer |
 | `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
 | `component` | `{component}` | Something the agent showed: the thread has it |
@@ -116,14 +116,26 @@ place. The block folds in place to "Worked for 12 s" (`WorkSummary`), which open
 steps again. tafs cloud puts a run's work on its first message: the time from the run's
 start to its last words, and the tools it called, in order, with the ones that failed
 (`conversation`, from kiff/agents' usage records). Each step is `{tool, words?, error?,
-not_made?}`: the app shows `words`, the same as the live step's without the "…", and never
-`tool`. On Android the block says how long and how many steps, with how many failed
+failed?, why?, not_made?}`: the app shows `words`, the same as the live step's without the
+"…", and never `tool`. On Android the block says how long and how many steps, with how many failed
 ("Worked 4.2 s · 3 steps, 1 failed", `Chat.workLine`), and opens to the steps that have
 words (`Chat.steps`); a step without words is left out, and a live step without `step`
-words has no line.
+words has no line. A failed step is in the failure colour, with tafs cloud's `why` under it
+when one is sent; Android adds no word of its own for a failure.
 
 Tries of the same step after a failed one are one row, "3 tries", with the last try's
 outcome, and a failed step is left out once something worked (`WorkLog.rows`).
+
+**Why a step failed.** A failed step carries `failed: true` and, when there is one, `why`:
+the first line of what the tool answered, in the owner's words, with a service's "answered
+403:" prefix, ids, codes and hashes left out, at most 160 characters (`whyOf`, `steps.ts`).
+The live `step` event has it, and the thread's step has the same line: tafs cloud keeps a
+run's reasons while the run streams (by run and call, for as long as the run is kept), since
+kiff/agents keeps a result only until its run ends and its usage record says only that the
+call failed. The app draws `why` under the step and nothing else for it: no " · failed" of
+its own, since `failed` is the service's. A step with `failed` and no `why` shows that it
+failed, no more. A scheduled run nobody streamed has no reasons kept, so its thread's failed
+steps have none.
 
 **A step not made.** When a taf sends a call that acts in the same turn as one that
 reads, kiff/agents refuses the act back, unmade, and tells the taf to read first. Nothing
@@ -256,6 +268,16 @@ held call was answered, then `end`.
 - On `part`, the app starts a fresh live answer (`LiveAnswer.newPart`). The steps and the
   held card from before the pause stay with the answer written then, never shown again as
   the resumed run's work.
+- The live answer leaves in the same update that brings its words into the thread, at a
+  `part` and at the end (`readThread`'s `alongside`). Never both at once, nor neither: the
+  chat's end would grow by a row and shrink again, and on Android the thread jumped back and
+  forth while Coach wrote. Where the thread can't be read, the live answer goes all the same.
+- On Android each row keeps one key from its first frame to its last, so the list updates it in
+  place (`Chat.rowKeys`, `Chat.liveKey`): an owner's message by tafs cloud's id, which the
+  stream gives at once (`<run>.in`); a taf's message `<run>.<seq>` by its run and its place
+  among that run's messages. The live answer has the key its words will have in the thread, so
+  the answer lands in the live answer's own row. The thread follows its end on the last row's
+  height as well as on the words arriving, at once and only while the owner is at the end.
 
 ## The thread and the chats list
 

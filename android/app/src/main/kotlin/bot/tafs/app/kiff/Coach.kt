@@ -169,6 +169,11 @@ data class ApprovalAsk(
   val message: String,
   /** What the prompt says. */
   val reason: String,
+  /**
+   * Which key the call takes, tafs cloud's hint (kiff/tafs#494): `window`, the device key inside an approval window, a tap;
+   * `critical`, the approval key behind the fingerprint. The service the call goes to decides; none reads as `critical`.
+   */
+  val key: String? = null,
   val planque: PlanqueAsk? = null,
   val kiff: KiffAsk? = null,
 )
@@ -277,6 +282,8 @@ data class WorkRequest(
   @Serializable(with = bot.tafs.app.model.InstantAsString::class) val at: Instant,
   val state: String = "",
   val line: String = "",
+  /** What a waiting run waits for, in the connection's words, when it waits for an app's event: not for the owner. */
+  @SerialName("waiting_for") val waitingFor: String? = null,
   val deliveries: List<WorkDelivery> = emptyList(),
 )
 
@@ -290,6 +297,8 @@ data class RequestDetail(
   @Serializable(with = bot.tafs.app.model.InstantAsString::class) val at: Instant,
   val state: String = "",
   val line: String = "",
+  /** What it waits for, in the connection's words, while it waits for an app's event (the slow-tools design). */
+  @SerialName("waiting_for") val waitingFor: String? = null,
   val deliveries: List<WorkDelivery> = emptyList(),
   /** "By email", "Its schedule", "From its chat", "Run now". */
   val from: String? = null,
@@ -305,11 +314,28 @@ data class RequestStep(
   val at: String? = null,
   /** done, failed, not_made, waiting or next. */
   val state: String = "done",
+  /** `app` on a waiting step when the run waits for a connected app's event, not for the owner (the slow-tools design). */
+  @SerialName("waits_on") val waitsOn: String? = null,
 )
 
 /** Where a request's result went, and whether it can be sent again (a reply given up on after its tries). */
 @Serializable
-data class WorkDelivery(val place: String = "door_reply", val state: String = "", val line: String = "", @SerialName("send_again") val sendAgain: Boolean = false)
+data class WorkDelivery(
+  /** `door_reply`, or a place of the taf's own: `action` (an app's action) or `taf` (another taf). */
+  val place: String = "door_reply",
+  val state: String = "",
+  val line: String = "",
+  @SerialName("send_again") val sendAgain: Boolean = false,
+  /** A place of the taf's own: its key (`<grant>:<action>`), which Send again names, and its name in tafs cloud's words. */
+  val key: String? = null,
+  val name: String? = null,
+  /** Still not delivered: Coach may be asked about it, in tafs cloud's words for what to ask. */
+  @SerialName("open_coach") val openCoach: Boolean = false,
+  @SerialName("coach_words") val coachWords: String? = null,
+) {
+  /** What Send again names in its route: the door reply, or the place's own key. */
+  val sendPlace: String get() = if (place == "door_reply") place else key ?: place
+}
 
 /** A scheduled run that was skipped: when it was due, why (missed or busy), and tafs cloud's words for it. */
 @Serializable

@@ -156,6 +156,16 @@ class MainActivity : FragmentActivity() {
             app.changeListener = null
           }
         }
+        // The approval window (kiff/tafs#494) closes after 30 s in the background, and at once when the screen turns off.
+        androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_STOP) { model.wentToBackground() }
+        androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_START) { model.cameToForeground() }
+        DisposableEffect(model) {
+          val screenOff = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: android.content.Context, intent: Intent) = model.screenLocked()
+          }
+          registerReceiver(screenOff, android.content.IntentFilter(Intent.ACTION_SCREEN_OFF))
+          onDispose { unregisterReceiver(screenOff) }
+        }
         LaunchedEffect(openFromAlert, model) {
           model.requestOpen(openFromAlert)
           openFromAlert = null
@@ -380,6 +390,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       add = { taf, app -> model.addDoor(taf, app) },
       loadSlackChannels = model::loadSlackChannels,
       addSlack = { taf, app, grant, channel -> model.addSlackDoor(taf, app, grant, channel) },
+      addBot = { taf, app, grant -> model.addBotDoor(taf, app, grant) },
       setOpen = { taf, door, open -> model.setDoorOpen(taf, door, open) },
       remove = { taf, door -> model.removeDoor(taf, door) },
       pair = { taf, door, sender, name -> model.pairDoor(taf, door, sender, name) },
@@ -424,7 +435,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       sendChat = { text, tafId, withFiles, onNotSent -> model.sendChat(text, tafId, withFiles, onNotSent) },
       issuer = model.issuer,
       doors = doorActions,
-      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId),
+      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId, siteSignIn = model::openSiteSignIn),
       stopChat = model::stopChat,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
@@ -432,6 +443,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadWork = model::loadWork,
       setDraft = model::setDraft,
       sendAgain = model::sendAgain,
+      askCoachAbout = model::askCoachAbout,
       openRequest = model::openRequest,
       setPaused = model::setPaused,
       remove = model::removeTaf,
@@ -619,6 +631,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onLoadAlerts = { scope.launch { model.loadPhoneAlerts() } },
         onLoadTimeZones = { query -> scope.launch { model.loadTimeZones(query) } },
         onPickTimeZone = { zone -> scope.launch { model.setAccountTimeZone(zone) } },
+        onLoadSuggestions = { scope.launch { model.loadSuggestions() } },
+        onShowSuggestions = { show -> scope.launch { model.setSuggestions(show) } },
         onOpenAlertTaf = { cloudId ->
           state.tafs.firstOrNull { it.cloudId == cloudId }?.let {
             showingSettings = false; tab = Tab.Tafs; coachOpen = false; openTaf = it.id
@@ -664,9 +678,12 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         )
       }
     }
+    // A browser connection's live sign-in view, as planque serves it.
+    state.siteSignIn?.let { view -> bot.tafs.app.views.SiteSignInScreen(view, onClose = model::closeSiteSignIn) }
     // A request from the dial's rim or Activity, step by step.
     state.openRequest?.let { (tafId, detail) ->
-      val canSend = state.manages(tafId) && detail.deliveries.any { it.sendAgain }
+      // "Try the reply now" is the door reply's; a place of the taf's own goes again from its work.
+      val canSend = state.manages(tafId) && detail.deliveries.any { it.sendAgain && it.place == "door_reply" }
       bot.tafs.app.views.RequestSheet(
         detail,
         sending = detail.id in state.sendingAgain,

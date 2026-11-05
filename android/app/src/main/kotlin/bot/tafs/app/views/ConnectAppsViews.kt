@@ -186,10 +186,15 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
       Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(tileColor(app.title)), contentAlignment = Alignment.Center) {
         Text(app.title.take(1).uppercase(), style = scaled(15, FontWeight.ExtraBold, Color.White))
       }
-      // Its title alone: the provider's own id for it means nothing to a person.
-      Text(app.title, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
+      // Its title alone: the provider's own id for it means nothing to a person; an app not set up yet says so under it.
+      Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(app.title, style = scaled(15, FontWeight.SemiBold, if (app.needsSetup) Theme.soft else Theme.ink))
+        app.words?.takeIf { app.needsSetup && it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+      }
       when {
         app.connected -> Text(ConnectAppsWords.CONNECTED, style = scaled(14, FontWeight.SemiBold, Theme.ok))
+        // Not set up yet: nothing to tap, only tafs cloud's line under the name.
+        app.needsSetup -> Unit
         // Signed in, its actions still to choose: the next step is the taf's Coach, not Connect again.
         app.signedIn -> Text(
           bot.tafs.app.model.ConnectWords.SIGNED_IN_ROW,
@@ -242,9 +247,9 @@ fun ConnectApprovalSheet(
         Text(grant.text, style = scaled(15, color = Theme.ink))
         Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
         val profiled = grant.request.profile != null
-        val words = state.profileWords[grant.id]
+        val words = state.profileWordsFor(grant)
         if (profiled) {
-          LaunchedEffect(grant.id) { loadWords(grant.id) }
+          LaunchedEffect(grant.id, state.profileDigest(grant)) { loadWords(grant.id) }
           when {
             words != null -> ProfileWordsLines(words)
             state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))

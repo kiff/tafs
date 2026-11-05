@@ -64,4 +64,23 @@ class RequestDetailTest {
     assertNull(m.state.value.openRequest)
     assertTrue(m.state.value.requestError!!.startsWith("That request couldn't be read."))
   }
+
+  @Test fun aRunWaitingForAnAppsEventSaysItInTheConnectionsWordsAndIsntTheOwners() = runTest {
+    val m = model()
+    transport.answer(
+      "GET /v1/tafs/taf_1/requests/run_3", 200,
+      """{"id":"run_3","at":"2026-11-02T22:41:00Z","state":"waiting","line":"Waiting for the customer's reply","waiting_for":"Waiting for the customer's reply","from":"By email",
+        "steps":[{"label":"Held for your approval","line":"Over its Card · 22:41","state":"waiting"},
+                 {"label":"Sent the email","at":"22:42","state":"done"},
+                 {"label":"Waiting for the customer's reply","state":"waiting","waits_on":"app"}]}""",
+    )
+    m.openRequest("refunds-1", "run_3")
+    val d = m.state.value.openRequest!!.second
+    assertEquals("Waiting for the customer's reply", d.waitingFor)
+    // The step tafs cloud marks `waits_on: "app"` is the app's, drawn as not needing the owner; a hold is still the owner's,
+    // and so is a step whose words match but that tafs cloud doesn't mark.
+    assertTrue(bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[2]))
+    assertTrue(!bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[0]))
+    assertTrue(!bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[2].copy(waitsOn = null)))
+  }
 }

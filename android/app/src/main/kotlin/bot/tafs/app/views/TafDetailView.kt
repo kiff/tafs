@@ -92,9 +92,11 @@ class TafActions(
   val loadReport: suspend (String) -> Unit = {},
   /** What the owner wrote in a chat and hasn't sent, kept by the app: the chat, and its words. */
   val setDraft: (String, String) -> Unit = { _, _ -> },
-  /** Reads where its work stands (docs/reliability.md), and sends a door reply again by its run. */
+  /** Reads where its work stands (docs/reliability.md), and sends a delivery again by its run and place. */
   val loadWork: suspend (String) -> Unit = {},
-  val sendAgain: suspend (String, String) -> Unit = { _, _ -> },
+  val sendAgain: suspend (String, String, String) -> Unit = { _, _, _ -> },
+  /** Opens Coach about a taf with tafs cloud's words in the message box (taf, words). */
+  val askCoachAbout: (String, String) -> Unit = { _, _ -> },
   /** Opens a request step by step (taf, run). */
   val openRequest: suspend (String, String) -> Unit = { _, _ -> },
   /** Pauses or resumes its schedule. */
@@ -412,9 +414,17 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
             if (d.sendAgain && state.manages(taf.id)) {
               OutlineButton(
                 if (r.id in state.sendingAgain) "Sending again…" else "Send again",
-                { scope.launch { actions.sendAgain(taf.id, r.id) } },
+                { scope.launch { actions.sendAgain(taf.id, r.id, d.sendPlace) } },
                 Modifier.fillMaxWidth(),
                 enabled = r.id !in state.sendingAgain,
+              )
+            }
+            // Still not delivered: Coach, asked in tafs cloud's words.
+            d.coachWords?.takeIf { d.openCoach && state.mayUseCoach }?.let { words ->
+              Text(
+                RequestWords.ASK_COACH,
+                style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+                modifier = Modifier.heightIn(min = 44.dp).clickable { actions.askCoachAbout(taf.id, words) }.padding(vertical = 10.dp),
               )
             }
           }

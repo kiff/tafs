@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import type { Run } from "../src/cloud/agents.js";
+import { AgentsError, type Run } from "../src/cloud/agents.js";
 import { type Deps, handle, type HTTPEvent, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
@@ -887,7 +887,7 @@ describe("knocks and keys", () => {
   it("a taf has no door until its owner turns one on, and the home list says which doors are offered", async () => {
     const w = world();
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.doors).toEqual([]);
-    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toEqual(["email", "whatsapp", "slack"]);
+    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toEqual(["email", "whatsapp", "slack", "telegram"]);
     // A deployment with no doors set up offers none, and the app shows no Doors.
     w.config.email = undefined;
     w.config.whatsapp = undefined;
@@ -1029,7 +1029,7 @@ describe("what a door keeps of a message", () => {
 
   it("offers the Slack door only where planque hands Slack messages over", async () => {
     const w = world();
-    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp", "slack"]);
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp", "slack", "telegram"]);
     delete w.config.planqueHandoffSecret;
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp"]);
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "g", channel: "C0X" } })).status).toBe(400);
@@ -1088,6 +1088,58 @@ describe("the Slack door, through planque", () => {
   });
 });
 
+/** planque's signed handover of a Telegram message, as planque.door.v1 with app "telegram". */
+function telegramHook(w: World, body: Record<string, unknown>, opts: { secret?: string } = {}) {
+  const id = String(body.id ?? `ev_${++n}`);
+  const raw = JSON.stringify({ v: "planque.door.v1", app: "telegram", id, tenant: "t_acme", agent: "refunds", grant: "grt_tg1", provider: "planque",
+    chat: "5551234", sender: "5551234", message_id: "42", name: "Ben", text: "Refund order 9, charged twice", timestamp: Math.floor(w.now().getTime() / 1000), ...body });
+  const ts = String(Math.floor(w.now().getTime() / 1000));
+  const sig = createHmac("sha256", Buffer.from(opts.secret ?? PLANQUE_SECRET, "utf8")).update(`${id}.${ts}.${raw}`).digest("base64");
+  return send(w, "POST", "/v1/doors/planque", { raw, headers: { "planque-event-id": id, "planque-event-timestamp": ts, "planque-event-signature": `v1,${sig}` } });
+}
+
+describe("the Telegram door, through planque", () => {
+  it("opens on the owner's bot connection; paired users give work, strangers knock, the taf answers in Telegram itself", async () => {
+    const w = world();
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram" } })).status).toBe(400);
+    const made = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram", grant: "grt_tg1", bot: "@acme_refunds_bot", trigger: "trg_tg" } });
+    expect(made.status).toBe(200);
+    expect(made.body.door).toMatchObject({ id: "telegram", kind: "telegram", address: "@acme_refunds_bot", open: true, proof: "proven", grant: "grt_tg1", trigger: "trg_tg" });
+    // Every word of the door's step and its pairing is tafs cloud's; the apps keep no Telegram words or provider.
+    expect(made.body.door.words).toMatchObject({ pair_hint: "Their Telegram user id, a number", pair_from_knock: expect.stringContaining("write to the bot") });
+    const offeredApps = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps as Array<{ id: string; bot?: { provider: string; words: { none: string; pick: string } } }>;
+    expect(offeredApps.find((a) => a.id === "telegram")?.bot).toMatchObject({ provider: "telegram", words: { none: expect.stringContaining("BotFather"), pick: expect.any(String) } });
+    expect(offeredApps.find((a) => a.id === "email")?.bot).toBeUndefined();
+    // The same bot can't be a second taf's door.
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram", grant: "grt_tg1" } })).status).toBe(409);
+    // Keys are Telegram user ids, never a @username.
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/telegram/keys`, { token: "ana", body: { id: "@ben" } })).status).toBe(400);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/telegram/keys`, { token: "ana", body: { id: "5551234", name: "Ben" } })).status).toBe(200);
+
+    // A bad signature, another agent, another bot, or a malformed sender is no door of ours.
+    expect((await telegramHook(w, {}, { secret: "wrong" })).status).toBe(401);
+    expect((await telegramHook(w, { agent: "someone-else" })).status).toBe(404);
+    expect((await telegramHook(w, { grant: "grt_other" })).status).toBe(404);
+    expect((await telegramHook(w, { sender: "@ben" })).status).toBe(400);
+
+    const r = await telegramHook(w, { id: "ev_tg_ben" });
+    expect(r.status).toBe(202);
+    expect(r.body.outcome).toBe("run");
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    const input = (w.agents.events.get(run.session)![0]!.body as { text: string }).text;
+    expect(input).toContain("post your answer yourself with your Telegram bot's send-message tool, in the chat 5551234, replying to message 42");
+    // The same update again starts nothing twice.
+    expect((await telegramHook(w, { id: "ev_tg_ben" })).body.outcome).toBe("seen");
+    // A forum topic in a group is kept for the answer.
+    await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/telegram/keys`, { token: "ana", body: { id: "777" } });
+    expect((await telegramHook(w, { id: "ev_tg_grp", chat: "-100123", sender: "777", thread: "9", message_id: "50" })).body.outcome).toBe("run");
+    const texts = [...w.agents.events.values()].flat().map((e) => (e.body as { text?: string }).text ?? "");
+    expect(texts.find((t) => t.includes("in the chat -100123"))).toContain("in the topic 9");
+    // Someone not paired knocks.
+    expect((await telegramHook(w, { id: "ev_tg_eve", chat: "888", sender: "888" })).body.outcome).toBe("knock");
+  });
+});
+
 /** planque's signed handover of any connected app's event, as planque.event.v1. */
 function appEvent(w: World, body: Record<string, unknown>, opts: { secret?: string } = {}) {
   const id = String(body.id ?? `ev_${++n}`);
@@ -1124,5 +1176,206 @@ describe("a connected app's event, through planque", () => {
     // The same event again is the same run.
     await appEvent(w, { id: "ev_deal1" });
     expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(1);
+  });
+
+  /** A paused run of the taf waiting for the event that completes a call it sent (the slow-tools design). */
+  const waiting = (w: World, tenant: string, agent: string, id: string, wait: { grant: string; event: string; key: string }, expires = new Date(w.now().getTime() + 15 * 60_000)): Run => {
+    const at = w.now().toISOString();
+    const r: Run & { tenant: string } = { tenant, id, agent, session: `s-${id}`, trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 1, created: at, updated: at,
+      requirements: [{ call_id: `call-${id}`, tool: "hubspot_reply", input: { deal: "d9" }, operation: "", expires: expires.toISOString(), kind: "event", wait: { ...wait, words: "The deal's owner answers in HubSpot; the taf waits for that." } }] };
+    w.agents.runs.unshift(r);
+    return r;
+  };
+
+  it("answers the run that waits on exactly its grant, event and key, with the event as the call's result, and starts no run for it", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_w", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_9" });
+    const runsBefore = w.agents.runs.length;
+    const r = await appEvent(w, { id: "ev_reply9", key: "reply_9", payload: { deal: "d9", reply: "reply_9", text: "Signed." } });
+    expect(r.status).toBe(202);
+    expect(r.body).toEqual({ outcome: "answered", run: "run_w" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toEqual([`answerWait ${REFUNDS} run_w call-run_w {"deal":"d9","reply":"reply_9","text":"Signed."}`]);
+    expect(w.agents.runs.length).toBe(runsBefore);
+    const q = w.agents.runs.find((x) => x.id === "run_w")!.requirements![0]!;
+    expect(q.answered).toBeTruthy();
+    expect(q.result).toEqual({ deal: "d9", reply: "reply_9", text: "Signed." });
+    // Answered once: the same event again (planque sends it again) wakes the taf as any other event now.
+    expect((await appEvent(w, { id: "ev_reply9_again", key: "reply_9" })).body.outcome).toBe("run");
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+  });
+
+  it("a completing event delivered twice answers the wait once, and the repeat is the same answer, never a new run", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_dup", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_d" });
+    const runsBefore = w.agents.runs.length;
+    expect((await appEvent(w, { id: "ev_dup", key: "reply_d" })).body).toEqual({ outcome: "answered", run: "run_dup" });
+    // The same delivery again (the provider or planque sent it twice): the wait is answered, and the repeat is the same answer, not a new run.
+    const again = await appEvent(w, { id: "ev_dup", key: "reply_d" });
+    expect(again.status).toBe(202);
+    expect(again.body).toEqual({ outcome: "answered", run: "run_dup" });
+    expect(w.agents.runs.length).toBe(runsBefore);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+    // A different delivery with the same key, after the wait: an ordinary event, as before.
+    expect((await appEvent(w, { id: "ev_dup_other", key: "reply_d" })).body.outcome).toBe("run");
+    // The memory is ten minutes: past it, the id is an ordinary event again.
+    w.at(new Date(NOW.getTime() + 11 * 60_000));
+    expect((await appEvent(w, { id: "ev_dup", key: "reply_d" })).body.outcome).toBe("run");
+  });
+
+  it("a claim left with no run by a delivery that stopped is taken over after thirty seconds, so the wait is still answered", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_stale", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_s" });
+    // The first delivery claimed and died before it answered.
+    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_stale"), { run: "", at: NOW.toISOString(), token: "first" }, new Date(NOW.getTime() + 10 * 60_000));
+    // Its retry inside thirty seconds defers to it.
+    w.at(new Date(NOW.getTime() + 20_000));
+    expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(0);
+    // Past thirty seconds, the retry takes the claim over and answers the wait.
+    w.at(new Date(NOW.getTime() + 31_000));
+    expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered", run: "run_stale" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+    // A claim with its run is never taken over, however old.
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    expect((await appEvent(w, { id: "ev_stale", key: "reply_s" })).body).toEqual({ outcome: "answered", run: "run_stale" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+  });
+
+  it("two late deliveries take a stale claim over once, and a slow first delivery's answer is the retry's answer too (agentgabo's probe on #523)", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_race2", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_r2" });
+    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_race2"), { run: "", at: NOW.toISOString(), token: "dead" }, new Date(NOW.getTime() + 10 * 60_000));
+    w.at(new Date(NOW.getTime() + 31_000));
+    const runsBefore = w.agents.runs.length;
+    const both = await Promise.all([appEvent(w, { id: "ev_race2", key: "reply_r2" }), appEvent(w, { id: "ev_race2", key: "reply_r2" })]);
+    expect(both.map((r) => r.body.outcome)).toEqual(["answered", "answered"]);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+    expect(w.agents.runs.length).toBe(runsBefore);
+    // A first delivery that was slow, not dead: its answer landed, and its claim, past thirty seconds, is what its
+    // retry finds. The wait reads as answered, so the retry answers "answered" and starts nothing; the record stays
+    // the claim, which only a run can answer again. (A 409 on the retry's own answer reads the run the same way.)
+    waiting(w, "t_acme", REFUNDS, "run_slow", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_slow" });
+    await w.store.put(doorKeys.answeredEvent("t_acme", "ev_slow"), { run: "", at: new Date(NOW.getTime() + 31_000).toISOString(), token: "slow" }, new Date(NOW.getTime() + 10 * 60_000));
+    const slow = w.agents.runs.find((x) => x.id === "run_slow")!.requirements![0]!;
+    slow.answered = new Date(NOW.getTime() + 60_000).toISOString(); // the slow delivery's answer landed
+    w.at(new Date(NOW.getTime() + 70_000));
+    const runsWithSlow = w.agents.runs.length;
+    expect((await appEvent(w, { id: "ev_slow", key: "reply_slow" })).body).toEqual({ outcome: "answered" });
+    expect(w.agents.runs.length).toBe(runsWithSlow);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+  });
+
+  it("two deliveries of the same event at once answer the wait once, and both say so (qa-kiff's probe)", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_race", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_r" });
+    const runsBefore = w.agents.runs.length;
+    const both = await Promise.all([appEvent(w, { id: "ev_race", key: "reply_r" }), appEvent(w, { id: "ev_race", key: "reply_r" })]);
+    expect(both.map((r) => r.body.outcome)).toEqual(["answered", "answered"]);
+    expect(both.map((r) => r.status)).toEqual([202, 202]);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+    expect(w.agents.runs.length).toBe(runsBefore);
+    // A delivery whose answer failed gives its claim back, so planque's next delivery of it answers.
+    waiting(w, "t_acme", REFUNDS, "run_down", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_down" });
+    w.agents.fail.set("answerWait", new AgentsError(502, "kiff/agents is down"));
+    expect((await appEvent(w, { id: "ev_down2", key: "reply_down" })).status).toBe(502);
+    expect((await appEvent(w, { id: "ev_down2", key: "reply_down" })).body).toEqual({ outcome: "answered", run: "run_down" });
+  });
+
+  it("answers no wait for another key, another connection, a wait that ran out, or another account's run", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_key", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_1" });
+    waiting(w, "t_acme", REFUNDS, "run_grant", { grant: "grt_other", event: "HUBSPOT_DEAL_CREATED", key: "reply_2" });
+    waiting(w, "t_acme", REFUNDS, "run_late", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_3" }, new Date(w.now().getTime() - 1000));
+    // Another account's run, waiting on the same connection id and key: its own tenant's, never this one's.
+    waiting(w, "t_other", MAXTAF, "run_other", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_4" });
+    // Another key: no match; the event wakes the taf as any other.
+    expect((await appEvent(w, { id: "ev_k", key: "reply_x" })).body.outcome).toBe("run");
+    // The wait's connection isn't the event's.
+    expect((await appEvent(w, { id: "ev_g", key: "reply_2" })).body.outcome).toBe("run");
+    // The wait ran out.
+    expect((await appEvent(w, { id: "ev_l", key: "reply_3" })).body.outcome).toBe("run");
+    // Another account's key, forged into this account's event: this account has no run waiting on it.
+    expect((await appEvent(w, { id: "ev_o", key: "reply_4" })).body.outcome).toBe("run");
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toEqual([]);
+    for (const id of ["run_key", "run_grant", "run_late", "run_other"]) expect(w.agents.runs.find((x) => x.id === id)!.requirements![0]!.answered).toBeUndefined();
+    // The other account's own event, signed with its tenant, answers that account's run and no other.
+    expect((await appEvent(w, { id: "ev_t", tenant: "t_other", key: "reply_4" })).body).toEqual({ outcome: "answered", run: "run_other" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toEqual([`answerWait ${MAXTAF} run_other call-run_other {"deal":"Acme renewal","amount":1200}`]);
+    // The right key still answers its run.
+    expect((await appEvent(w, { id: "ev_r", key: "reply_1" })).body).toEqual({ outcome: "answered", run: "run_key" });
+  });
+
+  it("answers the run with the whole payload, marked truncated past kiff/agents' bound, never with nothing", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    // Longer than the 20,000 characters a waking run's prompt keeps: the waiting run reads all of it.
+    waiting(w, "t_acme", REFUNDS, "run_long", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_long" });
+    const long = { reply: "reply_long", body: "x".repeat(25_000) };
+    expect((await appEvent(w, { id: "ev_long", key: "reply_long", payload: long })).body).toEqual({ outcome: "answered", run: "run_long" });
+    expect(w.agents.runs.find((x) => x.id === "run_long")!.requirements![0]!.result).toEqual(long);
+    // Past the 64 KB kiff/agents takes as a result: cut, and said to be.
+    waiting(w, "t_acme", REFUNDS, "run_huge", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_huge" });
+    expect((await appEvent(w, { id: "ev_huge", key: "reply_huge", payload: { reply: "reply_huge", body: "é".repeat(70_000) } })).body).toEqual({ outcome: "answered", run: "run_huge" });
+    const cut = w.agents.runs.find((x) => x.id === "run_huge")!.requirements![0]!.result as { truncated: boolean; payload: string };
+    expect(cut.truncated).toBe(true);
+    expect(cut.payload.startsWith('{"reply":"reply_huge","body":"éé')).toBe(true);
+    expect(Buffer.byteLength(cut.payload, "utf8")).toBeLessThanOrEqual(64 * 1024 - 1024);
+    expect(Buffer.byteLength(cut.payload, "utf8")).toBeGreaterThan(60_000);
+  });
+
+  it("treats a wait that closed meanwhile as nothing waiting, and tells a run started for a keyed event that a waiting run may have it too", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    waiting(w, "t_acme", REFUNDS, "run_gone", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_g" });
+    w.agents.fail.set("answerWait", new AgentsError(409, "wait_not_open", undefined, "wait_not_open"));
+    const r = await appEvent(w, { id: "ev_gone", key: "reply_g" });
+    expect(r.status).toBe(202);
+    expect(r.body.outcome).toBe("run");
+    expect(await w.store.get(doorKeys.earlyEvent("t_acme", "grt_hub", "HUBSPOT_DEAL_CREATED", "reply_g"))).toMatchObject({ id: "ev_gone" });
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS && x.status === "PENDING")!;
+    const text = (w.agents.events.get(run.session)![0]!.body as { text: string }).text;
+    expect(text).toContain("don't act on it twice");
+    // kiff/agents down is still 502, for planque to send it again.
+    w.agents.fail.set("answerWait", new AgentsError(502, "kiff/agents is down"));
+    expect((await appEvent(w, { id: "ev_down", key: "reply_g" })).status).toBe(502);
+    // An event with no key says nothing of the kind.
+    const before = w.agents.runs.length;
+    await appEvent(w, { id: "ev_plain" });
+    const plain = w.agents.runs.find((x) => x.agent === REFUNDS && x.status === "PENDING" && x.id !== run.id)!;
+    expect(w.agents.runs.length).toBe(before + 1);
+    expect((w.agents.events.get(plain.session)![0]!.body as { text: string }).text).not.toContain("act on it twice");
+  });
+
+  it("keeps an event that came before its run paused, and answers the run from its pause note", async () => {
+    const w = world();
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    // The vendor answers before the run has paused: the event wakes the taf as any other, and is kept.
+    expect((await appEvent(w, { id: "ev_early", key: "reply_7", payload: { reply: "reply_7", text: "Early." } })).body.outcome).toBe("run");
+    expect(await w.store.get(doorKeys.earlyEvent("t_acme", "grt_hub", "HUBSPOT_DEAL_CREATED", "reply_7"))).toMatchObject({ id: "ev_early" });
+    // Then the run pauses on it, and its note names the wait: the kept event answers it.
+    const r = waiting(w, "t_acme", REFUNDS, "run_early", { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_7" });
+    const ref = `${Buffer.from("t_acme").toString("base64url")}.${"x".repeat(24)}`;
+    const note = { run: r.id, agent: REFUNDS, status: "PAUSED", ref, waits: [{ call: "call-run_early", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_7", expires: r.requirements![0]!.expires }] };
+    expect((await send(w, "POST", "/v1/runs/ended", { body: note })).status).toBe(200);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toEqual([`answerWait ${REFUNDS} run_early call-run_early {"reply":"reply_7","text":"Early."}`]);
+    expect(await w.store.get(doorKeys.earlyEvent("t_acme", "grt_hub", "HUBSPOT_DEAL_CREATED", "reply_7"))).toBeUndefined();
+    // A note for a wait with no kept event answers nothing; a kept event answers once.
+    expect((await send(w, "POST", "/v1/runs/ended", { body: note })).status).toBe(200);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
   });
 });

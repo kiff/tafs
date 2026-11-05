@@ -92,6 +92,17 @@ describe("Setup's definition on kiff/agents", () => {
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
     expect(flat).toContain("version_install, taf_results and taf_dial tools see and act on them");
     expect(flat).toContain("To change what wakes a taf, when, or where its results go, use taf_dial.");
+    // Where results go (results to destination, step 3): the write found, the place fixed by name, fill, another taf, the draft.
+    expect(flat).toContain("A place moves no money: never a money tool as a place; when the only write that fits moves money, say so and stop.");
+    expect(flat).toContain("come from the owner's words; never ask for an id.");
+    expect(flat).toContain("ask the owner's OK to read that list, as for the accounts list, read it on the taf's connection, and let the owner pick by name in a questions card.");
+    expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026").');
+    expect(flat).toContain("fill names each field the taf fills from its result, one line in words about the result");
+    expect(flat).toContain("one hop, never back to the sender, and never Coach.");
+    expect(flat).toContain("Draft it with taf_dial (results carries every place; the rest stays as it is), show the knob, then version_install");
+    // Opened from a delivery note: diagnose, propose a version, never retry.
+    expect(flat).toContain("read the taf's last request (taf_run) for why");
+    expect(flat).toContain("Never retry the delivery yourself: Send again is the owner's, on the taf's page.");
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 
@@ -140,6 +151,18 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).not.toContain("refunds, billpay, access, deploys, chargebacks");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
     expect(SETUP_INSTRUCTIONS).toContain("at most every 15 minutes");
+    // On an account from before Coach's dial tool, its Card isn't given yet: Coach says so and stops (kiff/tafs#476, gap 5).
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("the owner hasn't given you that tool yet: say so in one sentence");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Coach's tools aren't given on this account. Once they are, ask me again");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("naming no button or screen, since each app shows its own");
+    // Any app on demand (kiff/planque#87): find apps by words before connecting, never stop on a long
+    // catalog (kiff/tafs#476, gap 1), and an app set up on demand asks by default.
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("search {q} with two or three short searches of words from the job");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("an app that needs_setup can't be connected until an operator sets it up: say so and offer another");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A long catalog is never a reason to stop: catalog {grant, q} searches it by words");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never say a list was too long to read.");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("on_demand: true is an app whose sign-in was set up on the owner's pick");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("changes data or moves money to ask the owner each time");
     expect(SETUP_INSTRUCTIONS).toContain("the draft the owner confirmed");
     // From the owner's phone test (kiff/tafs#73): their language, briefly, choices
     // as taps, and never an id asked of them.

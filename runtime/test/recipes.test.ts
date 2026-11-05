@@ -72,7 +72,7 @@ describe("recipes", () => {
       return order(a) - order(b);
     }));
     expect(all.categories).toEqual(CATEGORIES);
-    expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true });
+    expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true, shown: true, suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
   });
 
   it("filters by every connection, taking any vendor that would do for it, by category", () => {
@@ -87,6 +87,12 @@ describe("recipes", () => {
     const github = recipesFor([{ entry: "connector:composio:github", vendor: "GitHub" }]);
     expect(github.categories).toEqual([{ id: "operations", title: "Operations" }]);
     expect(github.recipes.map((r) => r.id)).toEqual(["ship-when-green"]);
-    expect(github.recipes[0]!.say).toContain("Deploy my GitHub releases");
+    expect(github.recipes[0]!.say).toContain("Deploy my releases from my code host");
+    // The title, line and words name the kind of app, never a brand (kiff/tafs#476, gap 2): the brands are the
+    // connections' alone. Whole words, so "wise" never trips on "otherwise", and two-word brands are caught by their first.
+    const brands = /\b(stripe|quickbooks|xero|moneybird|zoho|wise|revolut|gorgias|intercom|gmail|outlook|shopify|typeform|pipedrive|google|slack|github|notion|amazon|agentmail|hubspot|zendesk|microsoft|teams)\b/i;
+    for (const r of RECIPES) for (const text of [r.title, r.line, r.say]) expect(text).not.toMatch(brands);
+    expect("Save it in Google Drive, otherwise wait").toMatch(brands);
+    expect("otherwise wait").not.toMatch(brands);
   });
 });

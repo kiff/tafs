@@ -68,8 +68,8 @@ class UsageTest {
     m.refreshUsage()
     val s = m.state.value
     assertEquals("team", s.usage!!.plan)
-    assertEquals(14, s.usage!!.tasks.counted)
-    assertEquals(35, s.usage!!.tasks.total)
+    assertEquals(14, s.usage.tasks.counted)
+    assertEquals(35, s.usage.tasks.total)
     assertEquals(listOf("tc-1", "tc-2"), s.countedTasks.map { it.record })
     assertEquals(42, s.aiUse!!.usedPct)
     assertNull(s.usageError)

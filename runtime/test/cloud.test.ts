@@ -25,6 +25,8 @@ interface Account {
   mandates: Mandate[]; held: Held[]; calls?: ActivityCall[];
   /** "Did this happen?" calls KIFF lists, or "down" when that read fails. */
   unsure?: number | "down";
+  /** Set: KIFF answers the Card reads only once "Did this happen?" was asked too, as reads made together are. */
+  together?: { asked?: () => void; seen?: Promise<void> };
   drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number;
   /** Each Card's latest revision, as its statement says (kiff/tafs#107). */
   revisions?: Record<string, number>;
@@ -133,11 +135,15 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
     }
     if (url.endsWith("/v1/me/did-this-happen")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
+      account.together?.asked?.();
       if (account.unsure === "down") return new Response(JSON.stringify({ error: "down" }), { status: 503 });
       return new Response(JSON.stringify({ calls: Array.from({ length: account.unsure ?? 0 }, (_, i) => ({ proposal: `p-${i}` })) }), { status: 200 });
     }
     if (url.includes("/v1/me/mandates") || url.includes("/v1/me/card-exceptions")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.together?.seen && !(await Promise.race([account.together.seen.then(() => true), new Promise<boolean>((r) => setTimeout(() => r(false), 300))]))) {
+        return new Response(JSON.stringify({ error: "asked one at a time" }), { status: 503 });
+      }
       if (account.status) return new Response(JSON.stringify({ error: "down" }), { status: account.status });
       return new Response(JSON.stringify(url.includes("mandates") ? { mandates: account.mandates } : { exceptions: account.held }), { status: 200 });
     }
@@ -256,8 +262,42 @@ describe("tafs cloud", () => {
     expect(r.body.jobs.map((j: { id: string }) => j.id)).toContain("refunds");
   });
 
+  it("shows recipes only while the account has no live taf and suggestions are on, decided here (kiff/tafs#476)", async () => {
+    const w = world();
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const call = async (_w: unknown, method: string, path: string, opts: { token?: string; body?: unknown } = {}) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {}, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) }, deps);
+      return { status: r.statusCode, body: JSON.parse(r.body) };
+    };
+    // The account has Rae, live: a new conversation opens blank, and the words say why.
+    const live = await call(w, "GET", "/v1/recipes", { token: "ana" });
+    expect(live.status).toBe(200);
+    expect(live.body).toEqual({ categories: [], recipes: [], filtered: false, shown: false, suggestions: { show: true, reason: "live", words: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good." } });
+    // No live taf: the recipes, shown.
+    for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k);
+    const fresh = await call(w, "GET", "/v1/recipes", { token: "ana" });
+    expect(fresh.body.shown).toBe(true);
+    expect(fresh.body.recipes.length).toBeGreaterThan(0);
+    expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
+    // The setting: read by anyone, turned off by a manager, for good.
+    expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana" })).body).toEqual({ suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
+    expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: "no" } })).status).toBe(400);
+    expect((await call(w, "PUT", "/v1/me/suggestions", { token: "key_rae", body: { show: false } })).status).toBe(403);
+    // A viewer can't turn suggestions off for the whole account (qa-kiff): refused, and the setting unchanged.
+    expect((await call(w, "PUT", "/v1/me/suggestions", { token: "viewer", body: { show: false } })).status).toBe(403);
+    expect((await call(w, "GET", "/v1/me/suggestions", { token: "viewer" })).body.suggestions).toMatchObject({ show: true, reason: "on" });
+    const off = await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: false } });
+    expect(off.status).toBe(200);
+    expect(off.body).toEqual({ suggestions: { show: false, reason: "off", words: "Suggestions are off for this account." } });
+    const hidden = await call(w, "GET", "/v1/recipes", { token: "ana" });
+    expect(hidden.body).toMatchObject({ recipes: [], shown: false, suggestions: { show: false } });
+    expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } })).body.suggestions.show).toBe(true);
+    expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.shown).toBe(true);
+  });
+
   it("serves the recipes to a person, filtered to what the account's catalog can connect (kiff/tafs#476)", async () => {
     const w = world();
+    for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k); // no live taf: shown
     expect((await call(w, "GET", "/v1/recipes")).status).toBe(401);
     expect((await call(w, "GET", "/v1/recipes", { token: "key_rae" })).status).toBe(403);
     // With no planque, every tried recipe, unfiltered; the apps still open Coach to recipes.
@@ -277,6 +317,20 @@ describe("tafs cloud", () => {
     expect(r.statusCode).toBe(200);
     expect(JSON.parse(r.body).filtered).toBe(true);
     expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/catalog as Bearer ana", "https://planque.test/v1/accounts/t_acme/catalog?provider=composio&cursor=p2 as Bearer ana"]);
+    // A catalog with more pages than are read isn't filtered on: every recipe, and `filtered` says so.
+    const endless = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
+        ? new Response(JSON.stringify({ entries: [{ entry: "stripe@3", title: "Stripe", how: "key" }], provider: "composio", next_cursor: "more" }), { status: 200 })
+        : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
+    expect(endless.statusCode).toBe(200);
+    expect(JSON.parse(endless.body).filtered).toBe(false);
+    expect(JSON.parse(endless.body).recipes.length).toBeGreaterThan(2);
+    // A read planque says is partial isn't filtered on either.
+    const partial = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
+        ? new Response(JSON.stringify({ entries: [{ entry: "stripe@3", title: "Stripe", how: "key" }], partial: true }), { status: 200 })
+        : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
+    expect(JSON.parse(partial.body).filtered).toBe(false);
     // planque down: unfiltered, never an error, so the page is never blank for that.
     const down = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
       { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("boom", { status: 500 }) : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
@@ -395,6 +449,17 @@ describe("tafs cloud", () => {
     w.account.unsure = "down";
     const r = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(r.status).toBe(200); expect(r.body.needs_you).toBeUndefined();
+  });
+
+  it("reads \"Did this happen?\" together with the Cards, not after them", async () => {
+    const w = world();
+    w.account.unsure = 1;
+    const together: { asked?: () => void; seen?: Promise<void> } = {};
+    together.seen = new Promise<void>((r) => { together.asked = r; });
+    w.account.together = together;
+    const r = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.needs_you).toEqual({ count: 1, words: "1 needs you." });
   });
 
   it("composes KIFF currency exceptions only for visible tafs, with the same row in Needs you and Setup", async () => {
@@ -1092,14 +1157,14 @@ describe("Setup (kiff/agents#91)", () => {
 });
 
 describe("a taf Setup made (kiff/agents#91, #94)", () => {
-  const BODY = { name: "Refunds", job: "refunds", draft_id: "drf_s1", from_setup: true };
+  const BODY = { name: "Refunds", draft_id: "drf_s1", from_setup: true, kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *" };
 
   it("starts from Setup's draft: kiff/agents claims the key into the taf's reference", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
     const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
     expect(r.status).toBe(200);
-    expect(r.body.taf).toMatchObject({ id: NEW, name: "Refunds", job: "refunds", kiff_agent: "refunds-x" });
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Refunds", job: "custom", kiff_agent: "refunds-x" });
     expect(w.agents.setupDrafts.get("drf_s1")?.keyRef).toBe(`kiff/${NEW}`);
     expect(w.keys.held.has(`t_acme#${NEW}`)).toBe(false);
     expect(w.agents.agents.get(`t_acme|${NEW}`)).toMatchObject({ key_ref: `kiff/${NEW}` });
@@ -1155,6 +1220,15 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     const noWhen = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead." } });
     expect(noWhen.status).toBe(400);
     expect(noWhen.body.error).toContain("unscheduled");
+    // A drafted schedule keeps to the same calm as any other, and a kickoff to the same length; neither makes a taf.
+    const tooOften = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead.", cron: "* * * * *" } });
+    expect(tooOften.status).toBe(400);
+    expect(tooOften.body.error).toContain("every 15 minutes");
+    const tooLong = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "x".repeat(2_001), cron: "0 * * * *" } });
+    expect(tooLong.status).toBe(400);
+    expect(tooLong.body.error).toContain("2000 characters");
+    expect([...w.tafs.held.values()].some((t) => t.name === "Leads")).toBe(false);
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([]);
     // From its chat: no running schedule, as for any unscheduled taf.
     const chat = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead.", unscheduled: true } });
     expect(chat.status).toBe(200);
@@ -1848,6 +1922,69 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(knob.body.results.find((r: { place: string }) => r.place === "action")).toMatchObject({ grant: "grt_n1", action: "notion_add_page_k3f9", tap: "Turn to stop: each result goes to Notion · Support log" });
   });
 
+  it("refuses a money tool as a place, from the taf's Cards: at the dial from the app, and at go-live for Coach's draft (agentgabo on #516)", async () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const refund = { place: "action", grant: "grt_s1", action: "Stripe_Refund_k3f9", args: { charge: "ch_1" }, name: "Stripe · Refunds" };
+    const put = (results: unknown[]) => call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results } });
+    // The taf's Card counts the action in EUR: never a place, whatever its name says.
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold",
+      grants: [{ action: "stripe_refund_k3f9", title: "Refund a charge" }],
+      aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "calendar_day", unit: "EUR", scale: 2 }] } as Mandate];
+    const bad = await put(["app", refund]);
+    expect(bad.status).toBe(400);
+    expect(bad.body.error).toBe("Stripe · Refunds can't be a place: Stripe_Refund_k3f9 moves money (counted in EUR on the taf's Card), and a place moves no money");
+    // Another taf's Card, or a Card that counts calls only: not money, so the place is taken.
+    w.account.mandates = [{ id: "card_max", subject: "max", active: true, grants: [{ action: "stripe_refund_k3f9" }], aggregates: [{ quantity: "sum(amount)", limit: 1, window: "calendar_day", unit: "EUR" }] },
+      { id: "card_rae", subject: "rae", active: true, grants: [{ action: "stripe_refund_k3f9" }], aggregates: [{ quantity: "count", limit: 5, window: "calendar_day" }] }] as Mandate[];
+    const ok = await put(["app", refund]);
+    expect(ok.status).toBe(200);
+    const n = ok.body.version as number;
+    // Coach's draft is made with no session to read the Cards under, so the version going live is
+    // where it's checked: a Card that now counts the action in money stops it.
+    w.account.mandates = [{ id: "card_rae2", subject: "rae", active: true, grants: [{ action: "stripe_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }] }], aggregates: [] } as Mandate];
+    const live = await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    expect(live.status).toBe(400);
+    expect(live.body.error).toContain("moves money");
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.actionResults).toBeUndefined();
+    // Cards KIFF can't read refuse the change rather than let the place through.
+    w.account.mandates = [];
+    w.account.status = 503;
+    const down = await put(["app", refund]);
+    expect(down.status).toBe(503);
+    expect(down.body.error).toContain("Cards couldn't be read");
+  });
+
+  it("takes another taf as a place only by this account's record, named as the record names it (qa-kiff on #507)", async () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const put = (results: unknown[]) => call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results } });
+    // Another account's taf, an unknown id, Coach, and the taf itself: refused.
+    w.tafs.held.set(`t_acme#taf_coach1`, { id: "taf_coach1", name: "Coach", job: "setup", kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-15T09:00:00Z" } as Taf);
+    for (const id of [MAX, "taf_nope", "taf_coach1", RAE]) {
+      const r = await put(["app", { place: "taf", taf: id, name: "Invoices" }]);
+      expect(r.status, id).toBe(400);
+    }
+    // A taf of this account, asked for as "Invoices" while its record says another name: the record's name.
+    w.tafs.held.set(`t_acme#taf_inv1`, { id: "taf_inv1", name: "Refunds II", job: "refunds", kiffAgent: "refunds-ii", nameClaim: "c", created: "2026-10-15T09:00:00Z" } as Taf);
+    const ok = await put(["app", { place: "taf", taf: "taf_inv1", name: "Invoices", fill: { what: "the invoice and the amount" } }]);
+    expect(ok.status).toBe(200);
+    expect(JSON.stringify(ok.body.words)).toContain("Refunds II");
+    expect(JSON.stringify(ok.body.words)).not.toContain("Invoices");
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${ok.body.version}/live`, { token: "ana" });
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.setting.results).toEqual(["app", { place: "taf", taf: "taf_inv1", name: "Refunds II", fill: { what: "the invoice and the amount" } }]);
+    expect(knob.body.results.find((r: { place: string }) => r.place === "taf")).toMatchObject({ taf: "taf_inv1", label: "Refunds II", words: "Each result is handed to Refunds II: the invoice and the amount" });
+    // A version made with places goes through the same check (qa-kiff's second point).
+    const bad = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Results to Invoices", actionResults: [{ place: "taf", taf: "taf_nope", name: "Invoices" }] } });
+    expect(bad.status).toBe(400);
+    expect(bad.body.error).toContain("no taf of this account");
+    const made = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Results to Invoices", actionResults: [{ place: "taf", taf: "taf_inv1", name: "Invoices" }] } });
+    expect(made.status).toBeLessThan(300);
+    expect(JSON.stringify([...w.agents.versionDefs.values()].at(-1))).toContain("Hand-off");
+    expect(JSON.stringify([...w.agents.versionDefs.values()].at(-1))).not.toContain("Invoices");
+  });
+
   it("records the Cards a version runs under when it goes live", async () => {
     const w = twoVersions();
     w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];
@@ -2391,7 +2528,7 @@ describe("deleting the account (kiff/tafs#185)", () => {
 
 describe("Coach's result, handed over by tafs cloud", () => {
   const COACH = "taf-c0ac4000000000000000";
-  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", taf: { agent: "refunds-x", name: "Refunds", job: "refunds", draft: "drf_s1" } };
+  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *" } };
 
   /** A world with the account's Coach, its run paused on a result Ana's chat showed, and the deps that hand it over. */
   async function paused(card: Record<string, unknown> = RESULT, requester: { kind: string; id: string } | undefined = { kind: "member", id: "u_ana" }) {
@@ -2446,6 +2583,16 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note2();
     expect(answer2()?.answer).toMatchObject({ failed: expect.stringContaining("kickoff") });
     expect(w2.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+    // A result that names a starter job under the owner's own summary would run that job's
+    // kickoff and instructions, not the one agreed: answered failed, in words, and no taf exists.
+    const starter = { agent: "invoices-x", name: "Invoice reminders", job: "billpay", draft: "drf_s1", summary: "Emails a polite reminder for overdue invoices." };
+    const { w: w3, note: note3, answer: answer3 } = await paused({ type: "result", id: "done", taf: starter });
+    w3.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
+    w3.agents.access.set("u_ana", { cards_manage: true });
+    await note3();
+    expect(answer3()?.answer).toMatchObject({ failed: expect.stringContaining("never a starter job") });
+    expect(w3.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+    expect(w3.agents.calls.filter((c) => c.startsWith("claimTafDraft"))).toEqual([]);
   });
 
   it("makes an improvement's version for the taf it improves, once, and answers with it; nothing goes live", async () => {

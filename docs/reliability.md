@@ -137,6 +137,40 @@ The work of delivering is split in two:
 - Trying a delivery again never repeats the work. A refund that went through stays one
   refund while its reply is tried again.
 
+### The taf's own places
+
+A result place at a connected app, or another taf (`docs/api.md`, the knob), is delivered by the
+taf itself or handed over by tafs cloud, and tafs cloud checks what became of it from the run's
+record, never from the taf's report (`runtime/src/cloud/delivery.ts`). By the sweep, which walks
+every taf whose live version has a place of its own, so a hand-off and a retry happen on its
+cadence, read or not; and when the taf's page or a request is read (a manager's read starts a
+hand-off or a retry; a viewer's records what it can and starts nothing), each run that ended and
+wasn't checked is settled, once:
+
+- **an action at a connected app**: the run's usage record says whether the taf called the
+  action and whether the tool took it (the action, not its arguments: a call of that action
+  made for another purpose counts too, which the record can't tell apart). Called and taken:
+  `sent`. Not called, or refused: the taf
+  **retries once itself**, as a task with the result and the action by its id, 10 minutes later,
+  with the fixed arguments exactly as the owner approved them, never changed: a place that no
+  longer fits (a sheet renamed or gone) makes no call, and Coach proposes the new one as a
+  version of the dial, which the owner installs. The
+  retry's run is settled the same way, however it ended (one that failed or was stopped
+  delivered nothing): taken, `sent`; still not, `not_sent`, with the reason the stream kept
+  (`steps.ts`, the failed step's `why`) or the run's own, and **one silent note to the people who
+  manage the taf** ("Rae didn't deliver to Google Sheets · Refunds 2026: the sheet was renamed.
+  Send it again from Rae's page, or open Coach for help."), none more for that place while it
+  stays broken; a later delivery clears it. The request shows **Send again** (the same task, now)
+  and Coach's words to open it with (`open_coach`, `coach_words`);
+- **another taf**: the "Hand-off" section the taf ended its result with becomes a run of the
+  receiving taf, as its work under its own Card (`handed`, with the run), once per run (a dedup
+  key), fenced as data with where it came from, never as the owner's words: what reached the
+  first taf from outside is in it, and nothing in it is an instruction to the second. The receiver is checked again then: removed, or Coach, is `not_sent`. A run that came as
+  a hand-off hands nothing on (its `source` says so: one hop), and a result with no hand-off
+  section is `not_sent`, with Coach to open and nothing to send again.
+
+Nothing here moves money: a place is a write, and the taf's Card decides it as any call.
+
 ## The taf's view
 
 **Landed:** `work` on `GET /v1/home`'s tafs and `GET /v1/tafs/{id}/work` (`runtime/src/cloud/work.ts`), from the runs' `state` as kiff/agents gives it, in the account's time zone from KIFF. **Send again** too (`sendAgain` in `doors.ts`): a door reply given up on is kept for 30 days, and its delivery says `send_again: true`.

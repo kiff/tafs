@@ -183,9 +183,13 @@ The Activity tab shows where the taf's work stands, from `GET /v1/tafs/{id}/work
 summary line, then its recent requests and skipped firings, newest first, each in tafs cloud's
 words (`Chat.workRows`). A request that needs the owner is amber, a failed one red; a skipped
 firing ("Skipped the 9:00 run: the last one was still working", `skipped[]`) isn't a failure, so
-it's dim. A door reply given up on after its tries shows **Send again** to whoever manages the taf
-(`AppModel.sendAgain`): it sends once more, does no work and signs nothing, and the work is read
-again after. A `taf` live update reads it again where the page has.
+it's dim. A delivery given up on after its tries shows **Send again** to whoever manages the taf
+(`AppModel.sendAgain`), by its own place (`WorkDelivery.sendPlace`): a door reply sends once more;
+a place of the taf's own (an app's action, another taf) goes by its `key`, retried as the taf's
+task. It signs nothing, and the work is read again after. One still not delivered offers **Ask
+Coach** (`open_coach`): a new conversation about the taf with tafs cloud's `coach_words` in the
+message box, sent only by the owner (`askCoachAbout`). The request sheet's **Try the reply now**
+is the door reply's alone. A `taf` live update reads it again where the page has.
 
 ## When something doesn't go through
 
@@ -239,8 +243,8 @@ Four tabs, each with one job (`TafDetailView`):
   - **Results go to**, the places on, opening its sheet (`ResultsSheet`): tafs' own places (Reply
     to the sender, Alert our phones, Email me), each a switch sent through `PUT …/results`; each
     place in a connected app by its name, a switch from its own on/off choice; **Add a place from
-    a connected app…** (Coach). The last place on can't be turned off. A reply given up on shows
-    under **Not sent** with **Send again**.
+    a connected app…** (Coach). The last place on can't be turned off. A delivery given up on shows
+    under **Not sent**, with the place's name for one of the taf's own, and **Send again** by its place.
   - **What it remembers**, **Versions**, Pause (in the sample) and **Remove for good**.
 
 A change to the dial's setting (a size, Skip it / Run after, a place in an app) makes the taf's
@@ -265,7 +269,12 @@ the section titles and tafs' own three places, which are the app's (`SetupWords`
 **A request, step by step** (`RequestSheet`): a request's row in Activity opens it
 (`GET /v1/tafs/{id}/requests/{run}`). It shows the request's line, where it came from, and what
 happened, each step marked done, failed, not made, waiting or next, every line and time as tafs
-cloud wrote it. **Try the reply now** sends a reply given up on again, for whoever manages the
+cloud wrote it. A run waiting for an app's event (the slow-tools design) says what it waits for in
+the connection's words, tafs cloud's `waiting_for`; the step tafs cloud marks `waits_on: "app"` is
+drawn as not needing the owner, never in the amber of a hold (`RequestWords.waitsOnApp`). On the
+home list, a taf whose work is `waiting_on_app` reads as its work's line, not "Waiting on you" nor
+its next run, and a home state the app doesn't know reads as that line too (`KiffMapping`).
+**Try the reply now** sends a reply given up on again, for whoever manages the
 taf, and **Ask Coach** opens a conversation about the taf.
 
 <p>
@@ -312,6 +321,20 @@ and iPad: a password field, and **Give the key with your fingerprint**, which si
 confirmation as an approval and sends the key to planque once (`AppModel.giveKey`,
 `PlanqueClient.giveKey`, the key in `Planque-Vendor-Key`, its SHA-256 in the signed body). The
 key lives only in the open sheet's field, and nothing on the phone keeps it.
+
+A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
+whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed
+by the device's key with no fingerprint (it grants nothing), for the live sign-in view
+(`AppModel.openSiteSignIn`, `PlanqueClient.siteSignIn`, `POST …/grants/{id}/sign-in`). The view
+opens only when its URL is on planque's own https origin (scheme, host and port), in a full-screen web view
+(`SiteSignInScreen`) under planque's `words`, with **Close** and nothing else. The web view runs the
+page's scripts and follows no link off that origin, and closing it clears its cookies (it is the app's only web view). A refusal (a view already open, the connection
+not connected) is said on the connection in planque's words. Closing leaves the view to lapse.
+
+An app tafs cloud sends as `needs_setup` (kiff/planque#87) shows tafs cloud's `words` under its
+title ("Needs setting up first. Ask tafs to enable it.") and has no Connect: nothing on its row
+can be tapped. On a taf's Setup, a connection's sheet shows tafs cloud's `custody_words` under its
+status line, the one line on who keeps its sign-in; with none sent, nothing shows.
 
 ## Signing
 

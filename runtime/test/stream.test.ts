@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
 import { handleStream, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
-import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { stepWhyKey } from "../src/cloud/steps.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -27,7 +28,7 @@ function world() {
     void agents.api.putAgent(tenant, id, {} as never);
   }
   agents.calls.length = 0;
-  return { agents, tafs, slots: memorySlots(), archived: memoryArchived(), at: (d: Date) => { clock = d; } };
+  return { agents, tafs, slots: memorySlots(), archived: memoryArchived(), coach: memoryCoach(() => clock), at: (d: Date) => { clock = d; } };
 }
 type World = ReturnType<typeof world>;
 
@@ -43,7 +44,7 @@ async function stream(w: World, path: string, opts: { token?: string; body?: unk
   };
   const r = await handleStream(event, {
     agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
-    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: w.archived,
+    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: w.archived, coach: w.coach,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
@@ -109,6 +110,39 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.raw).not.toContain("grt_secret");
     expect(r.raw).not.toContain("acct_123");
     expect(w.agents.calls).toEqual(["streamRun " + RAE + " live"]);
+  });
+
+  it("holds a failed step while Coach may retry it: a retry that goes through is never shown failed; one given up on is said at the end", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "kiff_draft", input: { action: "submit" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "KIFF refused: the draft names a tool twice.", is_error: true } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "kiff_draft", input: { action: "submit" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "draft drf_1 submitted" } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c3", tool: "planque", input: { action: "status", grant: "grt_1" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c3", result: { text: "The connection service is down.", is_error: true } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Set up refunds" } });
+    const steps = r.events.filter((e) => e.event === "step").map((e) => e.data);
+    // The retried draft never reads as failed; the status read Coach gave up on is said, with its why, before the end.
+    expect(steps).toEqual([{ call_id: "c2", status: "done" }, { call_id: "c3", status: "error", failed: true, why: "The connection service is down." }]);
+    expect(r.events.map((e) => e.event).slice(-2)).toEqual(["step", "end"]);
+    expect(r.raw).not.toContain("names a tool twice");
+  });
+
+  it("keeps a failed step when the same tool is called again with other input: that is a new call, not a retry", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "send_reminder", input: { to: "A" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "The mailbox for A is full.", is_error: true } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "send_reminder", input: { to: "B" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "sent" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Remind A and B" } });
+    const steps = r.events.filter((e) => e.event === "step").map((e) => e.data);
+    // B's reminder went; A's still shows failed, with its why, before the end.
+    expect(steps).toEqual([{ call_id: "c2", status: "done" }, { call_id: "c1", status: "error", failed: true, why: "The mailbox for A is full." }]);
+    expect(r.events.map((e) => e.event).slice(-2)).toEqual(["step", "end"]);
   });
 
   it("says each step in a few words, naming the vendor once its grant is known, never the arguments (kiff/tafs#214)", async () => {
@@ -193,12 +227,32 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { event: "delta", data: { kind: "text", text: "Refunded." } },
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Refund the last order" } });
-    expect(r.events.map((e) => e.event)).toEqual(["session", "thinking", "thinking", "activity", "step", "activity", "step", "text", "end"]);
+    // The look-up failed and was retried with the same tool: the failure is never shown, the retry's outcome is (kiff-cloud#1487).
+    expect(r.events.map((e) => e.event)).toEqual(["session", "thinking", "thinking", "activity", "activity", "step", "text", "end"]);
     expect(r.events.filter((e) => e.event === "thinking").map((e) => e.data.text).join("")).toBe("The order is paid, so a refund fits.");
-    expect(r.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([
-      { call_id: "c1", status: "error" }, { call_id: "c2", status: "done" },
-    ]);
+    expect(r.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([{ call_id: "c2", status: "done" }]);
     expect(r.raw).not.toContain("ord_secret");
+  });
+
+  it("says why a step failed, in one line without ids or codes, and keeps it for the thread (kiff/tafs#476, gap 9)", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "append_row_ijkp", input: { sheet: "sh_secret" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "planque answered 403: Google Sheets refused the write: the sheet \"Orders\" was renamed (grant grt_Abc123xyz, code sheet_not_found).\nMore lines the owner never sees.", is_error: true } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "get_charge_ijkp", input: { charge: "ch_secret" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "ch_1AbCdEfGhIjKlMnOp 0123456789abcdef0123", is_error: true } } },
+      { event: "delta", data: { kind: "text", text: "I couldn't write the row." } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Add the order to the sheet" } });
+    expect(r.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([
+      { call_id: "c1", status: "error", failed: true, why: "Google Sheets refused the write: the sheet \"Orders\" was renamed." },
+      { call_id: "c2", status: "error", failed: true }, // nothing readable: only that it failed
+    ]);
+    for (const secret of ["grt_Abc123xyz", "sheet_not_found", "More lines", "ch_1AbCdEfGhIjKlMnOp", "0123456789abcdef"]) expect(r.raw).not.toContain(secret);
+    // Kept under the run, with the call and its tool, so the stored thread can say it (chat.test.ts).
+    const run = r.events[0]!.data.run as string;
+    await new Promise((f) => setTimeout(f, 0));
+    expect(await w.coach.get(stepWhyKey("t_acme", run))).toEqual([{ call: "c1", tool: "append_row_ijkp", why: "Google Sheets refused the write: the sheet \"Orders\" was renamed." }]);
   });
 
   it("picks the person's own run back up from its record, steps only (kiff/tafs#285)", async () => {

@@ -40,7 +40,12 @@ import java.net.URLEncoder
   @SerialName("action_words") val actionWords: String = "", val actions: List<ConnectedAction> = emptyList(), val steps: List<Int> = emptyList(),
   val running: Boolean = false, val stats: ConnectedStats = ConnectedStats(), @SerialName("workflow_steps") val workflowSteps: List<WorkflowStep> = emptyList(),
   /** With no saved workflow, what its own Workflow line says, once: "Ask Coach to set its workflow". */
-  @SerialName("workflow_words") val workflowWords: String? = null)
+  @SerialName("workflow_words") val workflowWords: String? = null,
+  /** Who keeps its sign-in, in tafs cloud's one line (kiff/planque#87); none when the connection service doesn't say. */
+  @SerialName("custody_words") val custodyWords: String? = null,
+  /** A browser connection's own sign-in to a site (kiff/planque#86): tafs cloud's title and line; none on any other connection. */
+  @SerialName("site_sign_in") val siteSignIn: SiteSignIn? = null)
+@Serializable data class SiteSignIn(val title: String, val words: String = "")
 @Serializable data class WorkflowStep(val number: Int, val label: String, val words: String, val app: String? = null, val grant: String? = null, val running: Boolean = false)
 @Serializable data class WorkflowView(val title: String = "Workflow", val summary: String = "", val steps: List<WorkflowStep> = emptyList(),
   @SerialName("running_step") val runningStep: Int? = null)

@@ -13,7 +13,7 @@
  *   information, never instructions.
  */
 
-export type DoorKind = "email" | "whatsapp" | "slack";
+export type DoorKind = "email" | "whatsapp" | "slack" | "telegram";
 
 /** A sender who may give the taf work through one door. */
 export interface Key {
@@ -46,7 +46,7 @@ export interface Door {
   created: string;
   /** A WhatsApp door's number, as the WhatsApp Business Platform names it. */
   phoneNumberID?: string;
-  /** A Slack door's connection in planque (the grant whose Slack bot it listens through) and its channel. */
+  /** A Slack or Telegram door's connection in planque (the grant whose bot it listens through); a Slack door's channel. */
   grant?: string;
   channel?: string;
   /** planque's subscription that hands this channel's messages over: the app deletes it when the door goes. */
@@ -210,6 +210,10 @@ export const doorKeys = {
   unsent: (tenant: string, taf: string, run: string) => `${tenant}#door-unsent#${taf}#${run}`,
   sent: (tenant: string, taf: string) => `${tenant}#door-sent#${taf}`,
   knocks: (tenant: string, taf: string) => `${tenant}#door-knocks#${taf}`,
+  /** An app's event that completes a call no run waits on yet, by what the run will wait on (the slow-tools design). */
+  earlyEvent: (tenant: string, grant: string, event: string, key: string) => `${tenant}#app-event-early#${grant}#${event}#${key}`,
+  /** An app's event that answered a run's wait, by planque's event id: a delivery repeated answers the same, and starts no run. */
+  answeredEvent: (tenant: string, id: string) => `${tenant}#app-event-answered#${id}`,
   bound: (tenant: string) => `${tenant}#door-ai`,
 };
 

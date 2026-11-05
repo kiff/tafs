@@ -119,6 +119,32 @@ class ChatStreamTest {
     assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
   }
 
+  @Test fun theAnswerTakesTheLiveRowsPlaceInOneUpdateNeverBothNorNeither() = runTest {
+    reads()
+    transport.answer(stream, 200, sse(
+      "session" to """{"session":"s1","run":"run_1"}""",
+      "text" to """{"text":"Refunded Ana."}""",
+      "end" to """{"status":"COMPLETED","stop":"end_turn"}""",
+    ))
+    // The thread read at the end holds the answer.
+    transport.answer(conversation, 200, """{"messages":[{"from":"owner","text":"Refund Ana","at":"2026-10-28T09:00:00Z","session":"s1","id":"s1.m1"},
+      {"from":"taf","text":"Refunded Ana.","at":"2026-10-28T09:00:01Z","session":"s1","id":"run_1.out"}]}""")
+    val m = model()
+    // Every state the chat shows, as it changes: the end's swap is one of them, never two.
+    val seen = mutableListOf<bot.tafs.app.app.AppState>()
+    backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) { m.state.collect { seen += it } }
+    assertTrue(m.deliverChat("Refund Ana", "refunds-1"))
+    settle()
+    fun answered(s: bot.tafs.app.app.AppState) = s.chats["refunds-1"].orEmpty().any { it.from == bot.tafs.app.model.ChatMessage.From.taf }
+    fun live(s: bot.tafs.app.app.AppState) = s.chatLive["refunds-1"]?.text?.isNotEmpty() == true
+    assertTrue("the answer landed", answered(seen.last()))
+    // Never the answer twice (in the thread and still live), and never neither once it was written.
+    assertTrue("the answer showed twice", seen.none { answered(it) && live(it) })
+    val wrote = seen.indexOfFirst { live(it) }
+    assertTrue(wrote >= 0)
+    assertTrue("the live answer went before the thread had it", seen.drop(wrote).none { !answered(it) && !live(it) })
+  }
+
   @Test fun aHoldInTheStreamReadsKiffAtOnce() = runTest {
     reads()
     transport.answer(stream, 200, sse(

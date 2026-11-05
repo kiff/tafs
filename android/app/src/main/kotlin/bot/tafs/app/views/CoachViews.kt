@@ -256,9 +256,20 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   val busy = state.connecting != null
   var details by remember { mutableStateOf(false) }
   // Answered, it keeps one line saying what it was: several in a row each say what was approved. One line, whatever the words'
-  // length: with no title, planque's text can run to paragraphs.
+  // length: with no title, planque's text can run to paragraphs. With a Card, a tap opens it again to read the Card that was
+  // approved, KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown
+  // there: it reads as it is now, and a later approval can widen it past what this one approved.
   if (answered != null) {
-    Text(CoachWords.answeredApproval(answered, c, grant?.text, draft?.label), style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    val line = CoachWords.answeredApproval(answered, c, grant?.text, draft?.label)
+    if (draft == null) {
+      Text(line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+      return
+    }
+    var open by remember(c.id) { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      Text((if (open) "▾ " else "▸ ") + line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = if (open) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
+      if (open) DraftCardsView(draft)
+    }
     return
   }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
@@ -275,9 +286,9 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
         // KIFF's words for the connection's profile, verbatim and in order (KIFF's profile contract, `kiff.words.v1`): what the owner's approval signs.
         val profiled = grant.request.profile != null
-        val words = state.profileWords[grant.id]
+        val words = state.profileWordsFor(grant)
         if (profiled) {
-          LaunchedEffect(grant.id) { actions.loadProfileWords(grant.id) }
+          LaunchedEffect(grant.id, state.profileDigest(grant)) { actions.loadProfileWords(grant.id) }
           when {
             words != null -> ProfileWordsLines(words)
             state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))
@@ -301,7 +312,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready && !grant.needsReconnect) ApprovalsUnavailable(readiness)
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
-              if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else "Approve with $biometry",
+              if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else if (state.windowWords != null) "Approve" else "Approve with $biometry",
               { actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f),
               // With a profile, nothing is approved before KIFF's words for it are read and shown.
@@ -309,6 +320,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
             )
             OutlineButton("Decline", { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }
+          // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
+          state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
             Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
             Text("Cancel", style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })

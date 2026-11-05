@@ -109,6 +109,14 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
       Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(app.name, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
         Text(app.statusWords, style = scaled(14, color = if (app.reconnect) Theme.amberText else Theme.soft))
+        app.custodyWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+        // A browser connection: the owner signs in to a site themselves, in planque's live view (tafs cloud's words).
+        app.siteSignIn?.takeIf { state.manages(taf.id) }?.let { action ->
+          TextButton({ scope.launch { actions.connections.siteSignIn(app.id) } }, enabled = state.openingSiteSignIn == null) {
+            Text(if (state.openingSiteSignIn == app.id) "Opening…" else action.title, color = Theme.amberText)
+          }
+          if (action.words.isNotBlank()) Text(action.words, style = scaled(13, color = Theme.soft))
+        }
         if (app.reconnect && state.manages(taf.id)) TextButton({ actions.connections.reconnectId(app.id) }, enabled = state.connecting == null) { Text("Sign in again", color = Theme.amberText) }
         state.coachNotes[app.id]?.let { Text(it, color = Theme.no) }
         Eyebrow("What it may do")
@@ -225,7 +233,7 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
       item { Text("Its work", style = scaled(24, FontWeight.Bold, Theme.ink)) }
       cache?.pages?.forEach { page -> items(page.requests, key = { it.id }) { run -> TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) } } }
       if (cache?.loading != false) item { CircularProgressIndicator(color = Theme.amber) }
-      else if (next == null) cache?.pages?.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
+      else if (next == null) cache.pages.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
       cache?.error?.let { item { Text(it, color = Theme.no); TextButton({ scope.launch { actions.loadRuns(taf.id, false, true) } }) { Text("Try again", color = Theme.amberText) } } }
     }
   }

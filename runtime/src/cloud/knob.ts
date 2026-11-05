@@ -6,7 +6,7 @@
 import type { Schedule } from "./agents.js";
 import type { ResultPlace } from "./handler.js";
 import { type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
-import { type ActionPlace, placeWords } from "./places.js";
+import { placeWords, type VendorPlace } from "./places.js";
 import { timeIn } from "./work.js";
 
 /** A version's dial as PUT takes it: its triggers, what a busy taf does, where results go. */
@@ -16,7 +16,7 @@ export interface Step { label: string; words: string; tool?: string }
 export interface KnobSetting {
   wakes: Trigger[];
   busy: "skip" | "latest";
-  results: Array<ResultPlace | ActionPlace>;
+  results: Array<ResultPlace | VendorPlace>;
   /** Coach's recipe and the taf's purpose in a few words, for the What ring and the face. */
   what?: Step[];
   why?: string;
@@ -79,7 +79,7 @@ export interface Knob {
   wakes: RingItem[];
   when: RingItem[];
   /** Each place, on or off; an action place also names its connection and action. */
-  results: (Omit<RingItem, "kind"> & { place: ResultPlace | ActionPlace["place"]; grant?: string; action?: string })[];
+  results: (Omit<RingItem, "kind"> & { place: ResultPlace | VendorPlace["place"]; grant?: string; action?: string; taf?: string })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
   /** Whether ⏻ applies: false for a taf that works from its chat, which has no schedule to pause (409). */
   can_pause: boolean;
@@ -229,10 +229,12 @@ export function knobOf(k: KnobInput): Knob {
     return { id: `res_${p}`, place: p, label: PLACE[p].label, words: PLACE[p].words, on, state: on ? "On" : "Off",
       ...(on && places.length === 1 ? {} : { tap: on ? `Turn to stop: ${PLACE[p].words.toLowerCase()}` : `Turn on: ${PLACE[p].words.toLowerCase()}` }) };
   });
-  // A connected app's action the taf calls itself: turning it takes it off; adding one is the picker's or Coach's draft.
-  for (const [i, p] of all.filter((x): x is ActionPlace => typeof x !== "string").entries()) {
+  // A connected app's action the taf calls itself, or another taf the result is handed to: turning it takes it
+  // off; adding one is the picker's or Coach's draft.
+  for (const [i, p] of all.filter((x): x is VendorPlace => typeof x !== "string").entries()) {
     const w = placeWords(p);
-    results.push({ id: `res_action_${i + 1}`, place: p.place, grant: p.grant, action: p.action, ...w, on: true, state: "On", tap: `Turn to stop: ${w.words.charAt(0).toLowerCase()}${w.words.slice(1)}` });
+    const who = p.place === "taf" ? { taf: p.taf } : { grant: p.grant, action: p.action };
+    results.push({ id: `res_${p.place}_${i + 1}`, place: p.place, ...who, ...w, on: true, state: "On", tap: `Turn to stop: ${w.words.charAt(0).toLowerCase()}${w.words.slice(1)}` });
   }
 
   const setting: KnobSetting = k.setting ?? {
@@ -285,6 +287,7 @@ function groupsOf(s: KnobSetting): NonNullable<Knob["draft"]>["groups"] {
   for (const [i, w] of (s.what ?? []).entries()) own.what.push(`${i + 1} · ${w.label}: ${w.words}`);
   for (const p of s.results) {
     if (typeof p === "string") own.results.push(`Results go to ${p}`);
+    else if (p.place === "taf") own.results.push(`Results are handed to ${p.name}`);
     else of(p.grant, p.name).results.push(`Results go to ${p.name}`);
   }
   own.wakes.push(s.busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run");
@@ -314,12 +317,14 @@ function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting):
       w.size = { label: "How often", index: values.indexOf(t.every_minutes), choices: values.map((v) => ({ label: say(v), setting: withWake(i, { ...t, every_minutes: v }) })) };
     }
   }
-  const on = (p: Knob["results"][number]) => s.results.some((x) => (typeof x === "string" ? x === p.place : x.grant === p.grant && x.action === p.action));
+  // A vendor place is the same one by its connection and action, or by the taf it hands to.
+  const same = (x: VendorPlace, p: Knob["results"][number]) => x.place === "taf" ? p.place === "taf" && x.taf === p.taf : p.place === "action" && x.grant === p.grant && x.action === p.action;
+  const on = (p: Knob["results"][number]) => s.results.some((x) => (typeof x === "string" ? x === p.place : same(x, p)));
   for (const p of results) {
     const isOn = on(p);
-    const without = s.results.filter((x) => (typeof x === "string" ? x !== p.place : !(x.grant === p.grant && x.action === p.action)));
+    const without = s.results.filter((x) => (typeof x === "string" ? x !== p.place : !same(x, p)));
     if (isOn && !without.some((x) => typeof x === "string")) continue; // the last place tafs delivers stays on
-    const added = isOn ? s.results : typeof p.place === "string" && p.place !== "action" ? [...s.results, p.place as ResultPlace] : s.results;
+    const added = isOn ? s.results : typeof p.place === "string" && p.place !== "action" && p.place !== "taf" ? [...s.results, p.place as ResultPlace] : s.results;
     w(p, isOn, without, added);
   }
   function w(p: Knob["results"][number], isOn: boolean, off: KnobSetting["results"], onSet: KnobSetting["results"]) {

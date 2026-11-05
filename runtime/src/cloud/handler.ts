@@ -10,21 +10,22 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, readAccess, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
-import { type ActionPlace, actionPlace } from "./places.js";
+import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
+import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
-import { recipesFor, type RecipesView } from "./recipes.js";
+import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { stepWords, Steps, type ToolTitles } from "./steps.js";
-import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
@@ -56,7 +57,7 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *   GET  /v1/setup                      the account's Setup (Coach), or null
  *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead
+ *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead, never with from_setup
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET | POST | DELETE /v1/tafs/{id}/halt  one taf's halt
  *   GET  /v1/tafs/{id}/runs
@@ -73,7 +74,9 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
- *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476)
+ *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
+ *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
+ *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
  *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
@@ -146,7 +149,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -323,8 +326,8 @@ export interface Taf {
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
   results?: ResultPlace[];
-  /** Where the live version's taf writes its results itself, at a vendor, through KIFF (places.ts). */
-  actionResults?: ActionPlace[];
+  /** Where the live version's taf writes its results itself, at a vendor, through KIFF, or hands them to another taf (places.ts). */
+  actionResults?: VendorPlace[];
   /** The connected apps' events the live version wakes on (applyKnob): what tafs cloud takes from planque for it. */
   appEvents?: Trigger[];
 }
@@ -477,7 +480,7 @@ function conditionalPage(event: HTTPEvent, value: unknown): PageResponse {
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const began = Date.now();
   const r = await answer(event, deps);
-  logRequest(event, r.statusCode, Date.now() - began);
+  logRequest(event, r.statusCode, Date.now() - began, r.statusCode >= 500 ? errorOf(r) : undefined);
   return r;
 }
 
@@ -504,12 +507,30 @@ const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived 
 
 /**
  * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the route
- * with every part that isn't one of its fixed words masked, the status and how long it took. Never a
- * body, a token, a query, an id, an address or a name.
+ * with every part that isn't one of its fixed words masked, the status and how long it took, and for
+ * a 5xx why, in tafs cloud's own words with anything that looks like an id or address masked. Never
+ * a body, a token, a query, an id, an address or a name.
  */
-export function logRequest(event: HTTPEvent, status: number, ms: number): void {
+export function logRequest(event: HTTPEvent, status: number, ms: number, why?: string): void {
   const route = event.rawPath.split("/").map((p) => (p === "" || ROUTE_WORDS.has(p) ? p : ":x")).join("/");
-  console.log(JSON.stringify({ event: "request", method: event.requestContext.http.method.toUpperCase(), route, status, ms }));
+  const line: Record<string, unknown> = { event: "request", method: event.requestContext.http.method.toUpperCase(), route, status, ms };
+  if (why && status >= 500) line.why = maskedWhy(why);
+  console.log(JSON.stringify(line));
+}
+
+/** A 5xx answer's error, as it was sent. */
+function errorOf(r: HTTPResult): string | undefined {
+  try {
+    const e = (JSON.parse(String(r.body ?? "")) as { error?: unknown }).error;
+    return typeof e === "string" ? e : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** An error's words for the log: ids, addresses and long tokens masked, at most 200 characters. */
+export function maskedWhy(why: string): string {
+  return why.replace(/\S+@\S+/g, ":x").replace(/https?:\/\/\S+/g, ":x").replace(/[A-Za-z0-9_-]*[0-9][A-Za-z0-9_-]{9,}/g, ":x").slice(0, 200);
 }
 
 
@@ -570,6 +591,18 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
+  if (parts.length === 3 && parts[1] === "me" && parts[2] === "suggestions" && (method === "GET" || method === "PUT")) {
+    // The account's "Show suggestions" setting (kiff/tafs#476): on by default; a manager turns it off for good.
+    const me = await person(event, deps);
+    if (method === "PUT") {
+      if (!me.capabilities.includes("cards.manage")) throw new HTTPError(403, "the suggestions setting is for the people who manage the account's tafs");
+      const body = parseBody(event);
+      if (typeof body.show !== "boolean") throw new HTTPError(400, "send {show: true} or {show: false}");
+      if (!deps.coach) throw new HTTPError(503, "the setting can't be kept here");
+      await deps.coach.put(suggestionsKey(me.tenantID), { show: body.show, by: me.subject, at: (deps.now?.() ?? new Date()).toISOString() }, new Date((deps.now?.() ?? new Date()).getTime() + SUGGESTIONS_KEPT_MS));
+    }
+    return { suggestions: await suggestionsOf(me, deps) };
+  }
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -666,7 +699,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const zone = me.timeZone ?? "UTC";
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again), skipped: skippedOf(fired, zone, now) };
+    // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
+    const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false));
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own), skipped: skippedOf(fired, zone, now) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
     // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
@@ -682,7 +717,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       titlesOf(event, me, taf, deps),
     ]);
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
-    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again);
+    const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC", others || await managesTaf(event, me, taf, deps).catch(() => false));
+    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? []);
   }
   if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
     // A follow-up the taf set itself, removed by someone who manages it (docs/api.md, "The knob"). Only a
@@ -741,7 +777,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
     // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
     await needTaf(event, me, taf, deps);
-    if (parts[6] !== "door_reply") throw new HTTPError(400, "only a door's reply is sent again");
+    if (parts[6] !== "door_reply") {
+      // A place of the taf's own (delivery.ts): the taf's retry task, now, by hand.
+      const out = deps.coach ? await sendDeliveryAgain(deliveryContext(deps), me.tenantID, taf, parts[4] ?? "", decodeURIComponent(parts[6] ?? "")) : undefined;
+      if (!out) throw new HTTPError(400, "only a door's reply, or a place of the taf's own that wasn't delivered, is sent again");
+      return out;
+    }
     try {
       return await sendAgain(doorContext(deps), me.tenantID, taf.id, parts[4] ?? "");
     } catch (err) {
@@ -1210,6 +1251,11 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   const fromSetup = body.from_setup === true;
   if (fromSetup && (!draftID || claimSecret || body.agent_key !== undefined)) {
     throw new HTTPError(400, "from_setup takes a draft_id and no claim_secret or agent_key");
+  }
+  // A taf Coach sets up carries the job it drafted from the owner's words: a starter job's
+  // kickoff and instructions would run under the owner's summary, doing another job.
+  if (fromSetup && body.job !== undefined && body.job !== CUSTOM) {
+    throw new HTTPError(400, "a taf from Coach carries the job you drafted with the owner (kickoff, instructions, cron or unscheduled), never a starter job");
   }
   if (!fromSetup && !draftID !== !claimSecret) throw new HTTPError(400, "send both draft_id and claim_secret");
   if (draftID && !/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new HTTPError(400, "that is not a KIFF draft id");
@@ -1803,9 +1849,11 @@ export interface ThreadMessage {
    * message before, and the tools it called, by name, in order, with the ones that failed. From
    * the run's usage records, which keep each call's tool and time, never its input or result.
    * Each step's `words` are what the app shows for it (KIFF's title for a tool through KIFF),
-   * never the tool's name; a step nothing names has none.
+   * never the tool's name; a step nothing names has none. A step that failed says so twice
+   * (`error`, as before, and `failed`, as the stream's `step` says it) and, when the tool said
+   * something readable, `why`: one line in the owner's words (kiff/tafs#476, gap 9).
    */
-  work?: { ms: number; steps: Array<{ tool: string; words?: string; error?: true; not_made?: true }> };
+  work?: { ms: number; steps: Array<{ tool: string; words?: string; error?: true; failed?: true; why?: string; not_made?: true }> };
 }
 
 /**
@@ -1884,7 +1932,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     // held call and went on once the owner answered has its work in parts, each on the part's
     // first message: the time it waited for the owner isn't work, and what it did before the
     // pause isn't shown again after it (the 859 test).
-    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; words?: string; error?: true; not_made?: true }>; first?: ThreadMessage; last?: number };
+    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; words?: string; error?: true; not_made?: true; inputHash?: string }>; first?: ThreadMessage; last?: number };
     const runs = new Map<string, { parts: Part[]; turns: number }>();
     const runOf = (id: string, at: number) => {
       let w = runs.get(id);
@@ -1911,7 +1959,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         // A call refused back unmade (an act beside a read) isn't failed work: it shows as not made.
         for (const t of turn?.waited ?? []) {
           const words = stepWords(t.tool, titles);
-          part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}) });
+          part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}), ...(t.inputHash ? { inputHash: t.inputHash } : {}) });
         }
         continue;
       }
@@ -1981,10 +2029,18 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (!Number.isNaN(at)) part.last = at;
       }
     }
-    for (const w of runs.values()) {
+    // The reasons the run's failed steps had, kept while it streamed (gap 9), each to the first
+    // failed step of its tool in the run's order; a step with none says only that it failed.
+    const whysOf = new Map(await Promise.all([...runs.keys()].map(async (id) => {
+      const kept = deps.coach ? await deps.coach.get(stepWhyKey(me.tenantID, id)).catch(() => undefined) : undefined;
+      return [id, Array.isArray(kept) ? kept as StepWhys : []] as const;
+    })));
+    for (const [id, w] of runs) {
+      const whys = [...(whysOf.get(id) ?? [])];
       for (const p of w.parts) {
+        const steps = foldRetried(attachWhys(p.tools, whys)).map(({ inputHash: _hash, ...step }) => step);
         if (p.first && p.tools.length > 0 && p.last !== undefined && !Number.isNaN(p.start)) {
-          p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps: p.tools };
+          p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps };
         }
       }
     }
@@ -2359,7 +2415,7 @@ function askOrRefuse<T>(read: () => T): T {
 }
 
 function approvalFailure(err: unknown): never {
-  if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message);
+  if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message, err.code ? { code: err.code } : undefined);
   if (err instanceof KIFFError) throw new HTTPError(err.status === 401 ? 401 : 502, err.message);
   throw err;
 }
@@ -2710,10 +2766,11 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
     if (d.status !== "draft") throw new HTTPError(409, `that draft is ${d.status}: draft it again`);
   }
+  // Its places, checked as the dial checks them: a taf place by this account's record (400 otherwise).
+  const actionResults = Array.isArray(body.actionResults) ? await vendorPlaces(body.actionResults, me, taf, deps) : taf.actionResults;
   let def: AgentDefinition;
   try {
-    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined,
-      actionResults: Array.isArray(body.actionResults) ? body.actionResults as ActionPlace[] : taf.actionResults });
+    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -2774,6 +2831,9 @@ async function recordLiveCards(event: HTTPEvent, me: KIFFIdentity, taf: Taf, sta
 
 /** Makes version n live, recording the Cards it runs under, and keeps the record in step. */
 async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+  // The version's places, drafted by Coach with no session to check them under: checked now, under the owner's.
+  const dial = taf.knobs?.[String(n)];
+  await refuseMoneyPlaces(dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.actionResults ?? [], event, taf, deps);
   const cards = await liveCards(event, taf, deps);
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
   await applyKnob(me, taf, n, deps);
@@ -2894,6 +2954,36 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
  * next version, as an improvement makes one, with its dial kept by version. Nothing runs from it until it
  * goes live (applyKnob).
  */
+/**
+ * The taf's own places from a request, checked (places.ts). A taf place names a taf of this account,
+ * by its record: its name is the record's, never the request's, so the words the owner approves name
+ * the taf the hand-over goes to; Coach and the taf itself are no destination. 400 says what's wrong.
+ */
+async function vendorPlaces(raw: unknown[], me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<VendorPlace[]> {
+  let vendor: VendorPlace[];
+  try { vendor = raw.map((p) => vendorPlace(p, taf.id)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  if (event) await refuseMoneyPlaces(vendor, event, taf, deps);
+  return Promise.all(vendor.map(async (p) => {
+    if (p.place !== "taf") return p;
+    const to = await deps.tafs.get(me.tenantID, p.taf);
+    if (!to || to.job === SETUP_JOB || to.removing) throw new HTTPError(400, `no taf of this account takes results by that id (${p.taf})`);
+    return { ...p, name: to.name };
+  }));
+}
+
+/**
+ * A place moves no money (places.ts): an action place the taf's Cards count in money is refused, read
+ * from KIFF with the person's own session. Checked where that session is: the dial from the app, and a
+ * version going live, which is where Coach's draft (made with no session) reaches. Cards that can't be
+ * read refuse the change: a place is never let through unchecked.
+ */
+async function refuseMoneyPlaces(places: VendorPlace[], event: HTTPEvent, taf: Taf, deps: Deps): Promise<void> {
+  if (!places.some((p) => p.place === "action")) return;
+  let mandates: Mandate[];
+  try { ({ mandates } = await readKIFF(bearer(event), deps.fetch, deps.kiffBase)); } catch { throw new HTTPError(503, "the taf's Cards couldn't be read, so its places can't be checked; try again"); }
+  try { checkNoMoneyPlace(places, mandates, taf.kiffAgent); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+}
+
 async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
   const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
   // `when.busy`, or `busy` at the top as a knob's `setting` and each size choice carry it, so a choice is sent back as it is.
@@ -2912,15 +3002,14 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   if (body.results === undefined) results = [...placesOf(taf), ...(taf.actionResults ?? [])];
   else {
     const all = Array.isArray(body.results) ? body.results : [];
-    let vendor: ActionPlace[];
-    try { vendor = all.filter((p) => typeof p !== "string").map(actionPlace); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    const vendor = await vendorPlaces(all.filter((p) => typeof p !== "string"), me, taf, deps, event);
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
   }
   let what: KnobSetting["what"];
   try { what = body.what === undefined ? taf.knobs?.[String(Object.keys(taf.knobs ?? {}).map(Number).sort((a, b) => b - a)[0])]?.what : recipeOf(body.what); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   const why = typeof body.why === "string" ? body.why.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 60) : undefined;
   const words = settingWords({ wakes, busy, results });
-  const actionResults = results.filter((p): p is ActionPlace => typeof p !== "string");
+  const actionResults = results.filter((p): p is VendorPlace => typeof p !== "string");
   const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE), actionResults }, me, taf, deps, event);
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(me.tenantID, taf.id);
@@ -2988,7 +3077,7 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(me.tenantID, taf.id);
     if (!cur) break;
-    const vendor = k.results.filter((p): p is ActionPlace => typeof p !== "string");
+    const vendor = k.results.filter((p): p is VendorPlace => typeof p !== "string");
     const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1), knobApplied: n };
     if (vendor.length) next.actionResults = vendor; else delete next.actionResults;
     // An app event planque already subscribed keeps its subscription when the dial is written again.
@@ -3067,7 +3156,7 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const { definition: live } = await deps.agents.getVersion(me.tenantID, taf.id, n);
     const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
     const dial = taf.knobs?.[String(n)];
-    const actionResults = dial ? dial.results.filter((p): p is ActionPlace => typeof p !== "string") : taf.actionResults;
+    const actionResults = dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.actionResults;
     const next: Taf = { ...taf, definition: digest(definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
@@ -3525,7 +3614,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       await lines.putBack();
       throw err;
     }
-    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at, titles) };
+    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at, titles, Date.now, whyKeeper(me, deps)) };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
     if (status === 500) console.error(err);
@@ -3552,7 +3641,7 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
   async function* body(): AsyncGenerator<string> {
     yield sse("session", { session: answered.session, new_session: false, run: answered.id });
     yield sse("taken", {});
-    yield* relay(run, first, undefined, titles);
+    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), answered.id);
   }
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: body() };
 }
@@ -3678,7 +3767,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined, titles) };
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID) };
 }
 
 /**
@@ -3722,20 +3811,63 @@ class Pace {
   }
 }
 
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now): AsyncGenerator<string> {
+/** Keeps a failed step's reason for its run's thread (kiff/tafs#476, gap 9): by run and call, with the call's tool. */
+type WhyKeeper = (run: string, call: string, tool: string, why: string) => void;
+
+/**
+ * The keeper for a person's streams: a run's failed steps' reasons go in the coach store
+ * under the run, kept as long as the run is, and `conversation` gives them to the thread's
+ * steps. The stored thread knows only each call's tool and that it failed (kiff/agents keeps
+ * a result until its run ends), so the reason is kept here while it streams, once per call.
+ */
+function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
+  const store = deps.coach;
+  if (!store) return undefined;
+  return (run, call, tool, why) => {
+    const key = stepWhyKey(me.tenantID, run);
+    void store.get(key).then((kept) => {
+      const whys = Array.isArray(kept) ? kept as StepWhys : [];
+      if (whys.some((w) => w.call === call)) return undefined;
+      return store.put(key, [...whys, { call, tool, why }].slice(-STEP_WHYS_KEPT), new Date((deps.now?.() ?? new Date()).getTime() + STEP_WHY_KEPT_MS));
+    }).catch(() => undefined);
+  };
+}
+
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = ""): AsyncGenerator<string> {
   const steps = new Steps(titles);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.
+  const toolOf = new Map<string, string>(); // call id → tool, for a failed step's reason
+  let runID = resumed;
+  // A step that failed is held, not sent: Coach often retries, and a retry that goes through
+  // shouldn't have shown the owner "failed" meanwhile (kiff-cloud#1487). A later call of the
+  // same tool drops the held failure (its own outcome stands); the run's end sends what's
+  // still held, so a failure Coach gave up on is said then, with its why.
+  const heldFailures = new Map<string, string>(); // call id → its step event
+  const inputOf = new Map<string, string>(); // call id → its input, as sent, to tell a retry from other work
   const call = (tool: string, input: unknown, callID: unknown): string => {
     const id = typeof callID === "string" ? callID : undefined;
+    if (id) toolOf.set(id, tool);
+    const sent = JSON.stringify(input ?? null);
+    if (id) inputOf.set(id, sent);
+    for (const [heldID] of heldFailures) {
+      if (toolOf.get(heldID) === tool && inputOf.get(heldID) === sent) heldFailures.delete(heldID);
+    }
     const step = steps.call(tool, input, id);
     return sse("activity", { tool, ...(step === undefined ? {} : { step }), ...(id ? { call_id: id } : {}) });
   };
+  // A failed step's reason, in the owner's words, kept for the run's thread (kiff/tafs#476, gap 9):
+  // the stored thread knows only that the call failed, and the tool's words end with the run.
+  const keepWhy = (callID: string, why: string | undefined): void => {
+    const tool = toolOf.get(callID);
+    if (why && tool && callID && runID && keep) keep(runID, callID, tool, why);
+  };
   // How a call ended. Where KIFF held it, the app shows the owner's card there in the
-  // answer: only KIFF's keys for it, never what the tool answered.
-  const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown }, notMade = false): string => {
+  // answer: only KIFF's keys for it, never what the tool answered, but why it failed, in words.
+  const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown; tool?: unknown }, notMade = false): string => {
     steps.result(callID, r.text);
+    if (typeof callID === "string" && typeof r.tool === "string" && !toolOf.has(callID)) toolOf.set(callID, r.tool);
     if (r.state === "held") {
       return sse("held", {
         exception: typeof r.hold?.exception === "string" ? r.hold.exception : "",
@@ -3744,13 +3876,21 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     }
     // Refused back unmade (an act beside a read): nothing reached KIFF or the tool.
     const status = notMade ? "not_made" : r.is_error === true ? "error" : "done";
-    return sse("step", { call_id: typeof callID === "string" ? callID : "", status });
+    const id = typeof callID === "string" ? callID : "";
+    if (status !== "error") return sse("step", { call_id: id, status });
+    const failed = failedStep(r.text);
+    keepWhy(id, failed.why);
+    const event = sse("step", { call_id: id, status, ...failed });
+    if (!id) return event;
+    heldFailures.set(id, event);
+    return "";
   };
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
     switch (e.event) {
       case "run":
         // The owner's message as the thread will name it, so the app matches its send by id, as POST …/messages answers it.
+        if (typeof d.id === "string") runID = d.id;
         return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id,
           ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}) }) : undefined;
       case "delta":
@@ -3783,8 +3923,11 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         }
         return undefined;
       }
-      case "end":
-        return sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
+      case "end": {
+        const given = [...heldFailures.values()].join("");
+        heldFailures.clear();
+        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
+      }
       default:
         return undefined;
     }
@@ -4040,11 +4183,13 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
   await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))
     .catch((err) => console.error(`presence: ${(err as Error).message}`));
-  const [records, removing, kiff, access] = await Promise.all([
+  // "Did this happen?" is read with the rest, not after: a KIFF that can't give it leaves only the Needs you count out.
+  const [records, removing, kiff, access, unsure] = await Promise.all([
     deps.tafs.list(me.tenantID),
     deps.removals.list(me.tenantID),
     readKIFF(bearer(event), deps.fetch, deps.kiffBase),
     readAccess(bearer(event), deps.fetch, deps.kiffBase),
+    readUnsure(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined),
   ]);
   const { cards, waiting } = byHolder(kiff.mandates, kiff.held);
   const all = records.filter((t) => !t.removing && t.job !== SETUP_JOB)
@@ -4111,7 +4256,6 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
-  const unsure = await readUnsure(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined);
   const needsYou = unsure === undefined ? undefined : (() => {
     const count = kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length + unsure + unitExceptions.length
       + lights.filter((l) => l.some((d) => d.knocks > 0)).length;
@@ -4173,15 +4317,15 @@ export function wentThrough(done: unknown): Array<{ tool: string; resource?: str
  * of the turn before whose results it read, each with whether it failed or was refused back
  * unmade. Undefined for a usage record with no timing (a summary's).
  */
-export function turnTiming(body: unknown): { ms: number; resumed: boolean; waited: Array<{ tool: string; error: boolean; notMade: boolean }> } | undefined {
+export function turnTiming(body: unknown): { ms: number; resumed: boolean; waited: Array<{ tool: string; error: boolean; notMade: boolean; inputHash?: string }> } | undefined {
   const t = (body as { timing?: { ms?: unknown; resumed?: unknown; waited?: unknown } } | undefined)?.timing;
   if (!t || typeof t !== "object") return undefined;
-  const waited = Array.isArray(t.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown; not_made?: unknown }>) : [];
+  const waited = Array.isArray(t.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown; not_made?: unknown; input_hash?: unknown }>) : [];
   return {
     ms: typeof t.ms === "number" && t.ms > 0 ? t.ms : 0,
     resumed: t.resumed === true,
     waited: waited.filter((w) => typeof w?.tool === "string")
-      .map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true })),
+      .map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true, ...(typeof w.input_hash === "string" && w.input_hash ? { inputHash: w.input_hash } : {}) })),
   };
 }
 
@@ -4293,10 +4437,11 @@ async function coachTaf(tenant: string, ref: unknown, deps: Deps): Promise<Taf> 
   return taf;
 }
 
-/** What a run waits on, as Coach reads it: each held call, its arguments and deadline. */
+/** What a run waits on, as Coach reads it: each held call, its arguments and deadline; a sent call whose outcome comes later, the event it waits for. */
 function waitsOn(r: Run) {
   return (r.requirements ?? []).filter((q) => !q.answered).map((q) => ({
     tool: q.tool, arguments: q.input, deadline: iso(q.expires), ...(q.exception ? { held_call: q.exception } : {}),
+    ...(q.wait ? { waiting_for: q.wait.words ?? `the ${q.wait.event} event`, event: q.wait.event } : {}),
   }));
 }
 
@@ -4464,6 +4609,19 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   }
   if (name === "taf_results") {
     if (may && !may.manage) throw new ToolRefusal(`where ${taf.name}'s results go is for the people who manage it`);
+    const all = Array.isArray(args.places) ? args.places as unknown[] : [];
+    if (all.some((p) => typeof p !== "string")) {
+      // A place at a connected app, or another taf: the taf's next version carries it, as taf_dial makes one.
+      if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no results of its own");
+      try {
+        const made = await dialVersion({ results: all }, { tenantID: call.tenant, subject: call.person?.subject ?? call.coach, apiKey: false, agentID: "", capabilities: [] }, taf, deps);
+        return { taf: taf.name, taf_id: taf.id, version: made.version, words: made.words,
+          next: `show {type: "knob", version: ${made.version}, taf_id: "${taf.id}"}, then version_install ${made.version}: the owner confirms it in tafs` };
+      } catch (err) {
+        if (err instanceof HTTPError) throw new ToolRefusal(err.message);
+        throw err;
+      }
+    }
     let places: ResultPlace[];
     try { places = resultPlaces(args.places); } catch (err) { throw new ToolRefusal((err as Error).message); }
     await deps.tafs.put(call.tenant, { ...taf, results: places });
@@ -4582,6 +4740,8 @@ async function mcpRoute(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
  */
 async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const note = parseNote(rawBody(event));
+  // A run that paused waiting for a vendor's event whose event already came (a fast vendor) is answered now.
+  if (note && deps.doors) await answerKeptEvents(note, doorContext(deps));
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
@@ -4687,6 +4847,32 @@ export async function sweepReplies(deps: Deps): Promise<Array<{ ref: string; wai
   return sweepDoorReplies(doorContext(deps));
 }
 
+/**
+ * The deliveries sweep (delivery.ts): every taf whose live version has a place of its own, its
+ * latest runs settled (a hand-off and a retry happen on the sweep's cadence, read or not), then
+ * every retry waiting.
+ */
+export async function sweepDeliveries(deps: Deps): Promise<Array<{ run: string; waiting: boolean }>> {
+  if (!deps.coach) return [];
+  const ctx = deliveryContext(deps);
+  await settleEveryTaf(ctx, () => deps.tafs.tenants());
+  return sweepRunDeliveries(ctx);
+}
+
+function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): DeliveryContext {
+  if (!deps.coach) throw new HTTPError(404, "not found");
+  return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };
+}
+
+/** The taf's own deliveries for these runs, settled first (delivery.ts; `act`: a manager's read starts a hand-off or a retry, a viewer's doesn't), as the apps draw them. */
+async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string, act: boolean): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
+  if (!deps.coach) return new Map();
+  const ctx = deliveryContext(deps, now);
+  await settleRuns(ctx, tenant, taf, runs, act).catch((err) => console.error("deliveries not settled:", err instanceof Error ? err.message : "error"));
+  const kept = await deliveriesOf(deps.coach, tenant, taf.id, runs.map((r) => r.id));
+  return new Map(runs.map((r) => [r.id, deliveryViews(kept.get(r.id), taf.name, zone, now)]));
+}
+
 /** Where the hand-overs a server error left undone wait for the sweep: one list for all accounts. */
 const HANDOVERS_PENDING = "handovers#pending";
 /** How long a hand-over is retried before the card is left to Coach's own wait. */
@@ -4778,8 +4964,8 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
 
 /**
  * What a result names for a new taf: its agent and draft, its name, and its job as Coach drafted it
- * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. `job` names one
- * of the five starter jobs, from a Coach from before.
+ * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. A `job` naming
+ * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
 interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string }
 
@@ -4802,7 +4988,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
   try {
     const out = await makeTaf({
       name: taf.name, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}),
-      ...(typeof taf.job === "string" && taf.job !== CUSTOM ? { job: taf.job } : {}),
+      ...(typeof taf.job === "string" ? { job: taf.job } : {}),
       ...(typeof taf.summary === "string" ? { summary: taf.summary } : {}),
       ...(typeof taf.kickoff === "string" ? { kickoff: taf.kickoff } : {}),
       ...(typeof taf.instructions === "string" ? { instructions: taf.instructions } : {}),
@@ -4919,6 +5105,8 @@ function doorContext(deps: Deps): DoorsContext {
   // A door's message starts no run on an account being deleted.
   const agents: DoorsContext["agents"] = {
     getRun: (...a) => deps.agents.getRun(...a),
+    runs: (...a) => deps.agents.runs(...a),
+    answerWait: (...a) => deps.agents.answerWait(...a),
     startRun: async (tenant, ...rest) => {
       if (deps.deletions && await deps.deletions.get(tenant)) throw new AgentsError(410, "this account is being deleted");
       return deps.agents.startRun(tenant, ...rest);
@@ -5001,6 +5189,24 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
   throw new HTTPError(404, "not found");
 }
 
+/** The most catalog pages the recipes route reads: planque keeps a provider's apps in one page, so this is room, not a limit. */
+const CATALOG_PAGES = 10;
+
+/** Where the account's "Show suggestions" setting is kept, for the account's life (the store's records expire; this one far off). */
+const suggestionsKey = (tenant: string) => `${tenant}#suggestions`;
+const SUGGESTIONS_KEPT_MS = 10 * 365 * 24 * 3600_000;
+
+/** The account's suggestions setting with its words: off for good, or on until the account's first taf is live. */
+async function suggestionsOf(me: KIFFIdentity, deps: Deps): Promise<Suggestions> {
+  const kept = deps.coach ? (await deps.coach.get(suggestionsKey(me.tenantID)).catch(() => undefined)) as { show?: unknown } | undefined : undefined;
+  if (kept?.show === false) return { show: false, reason: "off", words: SUGGESTION_WORDS.off };
+  // "Live": a taf on the account, Setup aside, that isn't being removed. A taf made from Coach goes live
+  // as it's made, and one paused or stopped is still the owner's: the suggestions are for an account
+  // with none yet.
+  const live = (await deps.tafs.list(me.tenantID)).some((t) => t.job !== SETUP_JOB && !t.removing);
+  return live ? { show: true, reason: "live", words: SUGGESTION_WORDS.live } : { show: true, reason: "on", words: SUGGESTION_WORDS.on };
+}
+
 /**
  * Recipes (docs/coach.md, "Recipes"): the recipes whose connections the account's catalog can
  * make, read with the person's own session. When the catalog can't be read, every recipe is
@@ -5008,18 +5214,27 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
  * can't connect.
  */
 async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
+  // Shown only while the account has no live taf and the setting is on (the owner's decision): else the
+  // list is empty and the words say why, so the apps draw only what comes.
+  const suggestions = await suggestionsOf(me, deps);
+  if (suggestions.reason !== "on") return noRecipes(suggestions);
   let apps: CatalogApp[] | undefined;
   if (deps.planqueBase) {
     try {
       apps = [];
       let page: { cursor?: string; provider?: string } = {};
-      // The whole catalog: the reviewed entries, then the managed provider's apps, a page at a time, at most a few.
-      for (let i = 0; i < 4; i++) {
+      // The whole catalog: the reviewed entries, then the managed provider's apps, a page at a time.
+      // A catalog longer than the pages read isn't filtered on: a recipe is never hidden for a vendor
+      // on a page that wasn't read, so every recipe is listed and `filtered` says so.
+      let whole = false;
+      for (let i = 0; i < CATALOG_PAGES; i++) {
         const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
         apps.push(...got.apps);
-        if (!got.next_cursor) break;
+        if (!got.next_cursor && !got.partial) { whole = true; break; }
+        if (got.partial) break;
         page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
       }
+      if (!whole) apps = undefined;
     } catch (err) {
       if (!(err instanceof ConnectError)) throw err;
       apps = undefined;

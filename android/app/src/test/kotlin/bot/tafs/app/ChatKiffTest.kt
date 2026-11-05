@@ -107,9 +107,9 @@ class ChatKiffTest {
     assertEquals(ChatMessage.Kind.kickoff, kickoff.kind)
     assertEquals(ChatMessage.Kind.message, answer.kind)
     assertEquals(4200, answer.work!!.ms)
-    assertEquals(listOf("bxkwf7vi_list_charges", "create_refund", "x"), answer.work!!.steps.map { it.tool })
-    assertEquals(listOf(false, true, false), answer.work!!.steps.map { it.error })
-    assertEquals(listOf(false, false, true), answer.work!!.steps.map { it.notMade })
+    assertEquals(listOf("bxkwf7vi_list_charges", "create_refund", "x"), answer.work.steps.map { it.tool })
+    assertEquals(listOf(false, true, false), answer.work.steps.map { it.error })
+    assertEquals(listOf(false, false, true), answer.work.steps.map { it.notMade })
   }
 
   @Test fun aMessageFromNeitherTheOwnerNorTheTafIsLeftOutNotTheThread() = runTest {

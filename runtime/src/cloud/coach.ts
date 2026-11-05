@@ -74,13 +74,15 @@ export const TOOLS: ToolDef[] = [
     properties: {
       taf: TAF,
       places: {
-        type: "array", minItems: 1, items: { type: "string", enum: ["door_reply", "app", "owner_email"] },
-        description: "Every place its results go: door_reply (the answer, through the door the work came in on), app (an alert in tafs), owner_email (an email to the owner).",
+        type: "array", minItems: 1, items: { type: ["string", "object"] },
+        description: "Every place its results go: door_reply (the answer, through the door the work came in on), app (an alert in tafs), owner_email (an email to the owner); " +
+          "a connected app's action, {place: \"action\", grant, action, args, name, fill} (args the fixed arguments, fill what each other field takes in words); " +
+          "or another taf, {place: \"taf\", taf, name, fill}, whose work the result becomes.",
       },
     },
     required: ["taf", "places"],
-    description: "Sets where a taf's results go, all places at once. KIFF holds each change for the owner, who approves it in tafs. " +
-      "Say \"Waiting for your approval\" once. tafs_state shows each taf's results.",
+    description: "Sets where a taf's results go, all places at once. With a built-in place only, KIFF holds the change for the owner, who approves it in tafs: " +
+      "say \"Waiting for your approval\" once. With a place at an app or another taf, it drafts the taf's next version as taf_dial does, and you install it. tafs_state shows each taf's results.",
   },
   {
     name: "taf_dial", line: "Draft a change to a taf",
@@ -90,7 +92,8 @@ export const TOOLS: ToolDef[] = [
         type: "array", description: "Every trigger, as it should be: {kind: \"schedule\", form: daily|weekdays|weekly|monthly|monthly_last_day|times_a_day|every|once, " +
           "at?: \"09:00\", days?: [\"mon\"…], times?: [\"09:00\"…], every_minutes?: 15|20|30|60·k, between?: {from, to} on the hour, date?: day of month or \"2026-11-05T09:00\"}, " +
           "{kind: \"app_check\", operation, args, items, cursor, every_minutes}, {kind: \"door\"}, or any connected app's event: " +
-          "{kind: \"app_event\", grant: <connection>, event: <its event, as the connection lists it>, config?: {<filters>}, name: \"App · what happens\"}. Times are in the account's zone.",
+          "{kind: \"app_event\", grant: <connection>, event: <its event, as the connection lists it>, config?: {<filters>}, name: \"App · what happens\"}. Times are in the account's zone. " +
+          "A write whose outcome comes later as one of the app's events (the connection says so, or refuses the call as not_listening, naming the event) needs that event among the wakes: draft it with the write.",
         items: { type: "object" },
       },
       when: { type: "object", properties: { busy: { type: "string", enum: ["skip", "latest"] } }, description: "What it does when a trigger fires while it works." },
@@ -423,6 +426,8 @@ export interface Note {
   ref: string;
   /** A paused run's cards that wait, as kiff/agents names them: only which run to read back. */
   cards?: Array<{ id: string; type: string }>;
+  /** The vendor events a paused run waits on (the slow-tools design): what an incoming event is matched to, by grant, event and key. */
+  waits?: Array<{ call: string; grant?: string; event: string; key: string; expires: string; words?: string }>;
 }
 
 export function parseNote(raw: string): Note | undefined {

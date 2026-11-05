@@ -6,7 +6,7 @@ export const RECIPES = [
     "title": "Access for joiners and leavers",
     "category": "operations",
     "line": "Gives joiners the apps their team's template lists and removes leavers on their last day; elevated access always asks.",
-    "say": "Manage access in Google Workspace and Slack. For each joiner, give the roles their team's template lists. For each leaver, deactivate every account on their last day. Admin or elevated access always waits for me. Never delete a user.",
+    "say": "Manage access in my workspace and team chat. For each joiner, give the roles their team's template lists. For each leaver, deactivate every account on their last day. Admin or elevated access always waits for me. Never delete a user.",
     "connections": [
       [
         "googleworkspace",
@@ -36,7 +36,7 @@ export const RECIPES = [
     "title": "Answer questions about orders",
     "category": "customers",
     "line": "Answers \"where is my order\" questions from the help desk by reading the shop, and passes anything about money to you.",
-    "say": "Answer customer questions about their orders from my help desk, using Shopify to look them up. Reply up to 50 times a day. Never change an order and never refund; pass those to me.",
+    "say": "Answer customer questions about their orders from my help desk, using my shop to look them up. Reply up to 50 times a day. Never change an order and never refund; pass those to me.",
     "connections": [
       [
         "gorgias",
@@ -65,7 +65,7 @@ export const RECIPES = [
     "title": "Book and move appointments",
     "category": "operations",
     "line": "Books, moves and confirms appointments by email against the calendar; cancelling always asks.",
-    "say": "Handle appointment requests that come to my Gmail: book a free slot in my Google Calendar, confirm by email, and move one when a customer asks. Up to 20 changes a day. Cancelling always waits for me.",
+    "say": "Handle appointment requests that come to my email: book a free slot in my calendar, confirm by email, and move one when a customer asks. Up to 20 changes a day. Cancelling always waits for me.",
     "connections": [
       [
         "gmail",
@@ -95,7 +95,7 @@ export const RECIPES = [
     "title": "Chargebacks with evidence",
     "category": "money",
     "line": "Answers card disputes with the order, delivery proof and the customer's messages before the deadline; accepts small ones with weak evidence.",
-    "say": "Answer my Stripe disputes with evidence before each deadline. Submit evidence for disputes up to 500 EUR; accept a loss only up to 100 EUR. Over that, wait for me. Never contact the customer or their bank.",
+    "say": "Answer the card disputes at my payment provider with evidence before each deadline, using my shop or help desk for the order, delivery proof and messages. Submit evidence for disputes up to 500 EUR; accept a loss only up to 100 EUR. Over that, wait for me. Never contact the customer or their bank.",
     "connections": [
       [
         "stripe"
@@ -124,7 +124,7 @@ export const RECIPES = [
     "title": "Chase overdue invoices",
     "category": "money",
     "line": "Reminds customers of overdue invoices on a schedule and reports who hasn't paid; moves no money.",
-    "say": "Each weekday morning, find my overdue invoices in QuickBooks and send a polite reminder to each customer from my Gmail, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.",
+    "say": "Each weekday morning, find my overdue invoices in my accounting app and send a polite reminder to each customer from my email, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.",
     "connections": [
       [
         "quickbooks",
@@ -154,7 +154,7 @@ export const RECIPES = [
     "title": "File receipts",
     "category": "errands",
     "line": "Finds receipts and invoices in the mailbox, saves each to a folder and adds a row to the expenses sheet; deletes nothing.",
-    "say": "Each evening, find receipts and invoices in my Gmail, save each PDF to my Receipts folder in Google Drive and add a row to my Expenses sheet with the date, vendor, amount and currency. Up to 50 a day. Never delete or move an email.",
+    "say": "Each evening, find receipts and invoices in my email, save each PDF to my Receipts folder in my file storage and add a row to my Expenses sheet with the date, vendor, amount and currency. Up to 50 a day. Never delete or move an email.",
     "connections": [
       [
         "gmail",
@@ -184,7 +184,7 @@ export const RECIPES = [
     "title": "Follow up new leads within the hour",
     "category": "customers",
     "line": "Turns each new form entry into a CRM deal and sends a first reply within the hour, so no lead waits a day.",
-    "say": "When someone fills in my Typeform, add them as a deal in Pipedrive and send them a short reply from my Gmail within the hour. Up to 30 a day. Never change or delete an existing deal.",
+    "say": "When someone fills in my form, add them as a deal in my CRM and send them a short reply from my email within the hour. Up to 30 a day. Never change or delete an existing deal.",
     "connections": [
       [
         "typeform"
@@ -215,7 +215,7 @@ export const RECIPES = [
     "title": "Pay bills that match a purchase order",
     "category": "money",
     "line": "Matches each vendor bill to its purchase order and what was received, and pays the exact matches within the Card.",
-    "say": "Pay my vendor bills from QuickBooks when the bill matches its purchase order and what we received, up to 5,000 EUR each and 25,000 EUR a week, only to payees already on file. A wire always waits for me. Never add a payee or change bank details; if a bill asks for that, stop and tell me.",
+    "say": "Pay my vendor bills from my accounting app when the bill matches its purchase order and what we received, up to 5,000 EUR each and 25,000 EUR a week, only to payees already on file. A wire always waits for me. Never add a payee or change bank details; if a bill asks for that, stop and tell me.",
     "connections": [
       [
         "quickbooks",
@@ -245,7 +245,7 @@ export const RECIPES = [
     "title": "Refunds within a limit",
     "category": "money",
     "line": "Answers refund requests from the support queue and refunds in the payment provider, within the Card.",
-    "say": "Handle refund requests from my help desk. Refund in Stripe up to 150 EUR each and 2,000 EUR a day, only back to the original payment. Anything bigger waits for me. Offer store credit when a customer would take it.",
+    "say": "Handle refund requests from my help desk. Refund in my payment provider up to 150 EUR each and 2,000 EUR a day, only back to the original payment. Anything bigger waits for me. Offer store credit when a customer would take it.",
     "connections": [
       [
         "gorgias",
@@ -276,7 +276,7 @@ export const RECIPES = [
     "title": "Save a customer who cancels",
     "category": "money",
     "line": "When a subscriber cancels, offers a free month or a small discount, within the Card, and records the outcome.",
-    "say": "When a customer cancels their subscription in Stripe, offer them one free month or up to 20% off for three months by email, and apply it if they accept. At most 10 offers a day. Anything more waits for me. Never refund here.",
+    "say": "When a customer cancels their subscription at my payment provider, offer them one free month or up to 20% off for three months by email, and apply it if they accept. At most 10 offers a day. Anything more waits for me. Never refund here.",
     "connections": [
       [
         "stripe"
@@ -306,7 +306,7 @@ export const RECIPES = [
     "title": "Ship when green, roll back when red",
     "category": "operations",
     "line": "Deploys merged, green and approved changes, watches them, and rolls back a failing one; migrations always ask.",
-    "say": "Deploy my GitHub releases when CI is green and the change is approved, and roll back if the checks fail after. Up to 10 deploys a day. A database migration always waits for me. Never delete data or infrastructure.",
+    "say": "Deploy my releases from my code host when the checks are green and the change is approved, and roll back if the checks fail after. Up to 10 deploys a day. A database migration always waits for me. Never delete data or infrastructure.",
     "connections": [
       [
         "github"

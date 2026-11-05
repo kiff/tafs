@@ -1,4 +1,5 @@
 import type { Fired, Run } from "./agents.js";
+import type { DeliveryView } from "./delivery.js";
 import type { Sent } from "./doors/model.js";
 
 /**
@@ -8,7 +9,7 @@ import type { Sent } from "./doors/model.js";
  */
 
 /** A taf's status, the most pressing first. */
-export type WorkStatus = "halted" | "needs_you" | "retrying" | "working" | "paused" | "idle";
+export type WorkStatus = "halted" | "needs_you" | "retrying" | "working" | "waiting_on_app" | "paused" | "idle";
 
 /** What else says where a taf stands: halted, its schedule off, no schedule at all, its next run. */
 export interface TafNow { paused?: boolean; halted?: boolean; unscheduled?: boolean; next?: string | null }
@@ -27,8 +28,10 @@ export interface RequestView {
   at: string;
   state: "done" | "working" | "retrying" | "needs_you" | "waiting" | "stopped" | "failed";
   line: string;
-  /** Where its result went, as far as tafs cloud sent it. */
-  deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true }>;
+  /** What a waiting run waits for, in the connection's words, when it waits for a vendor's event (the slow-tools design). */
+  waiting_for?: string;
+  /** Where its result went: the door's reply as far as tafs cloud sent it, and each place of the taf's own (delivery.ts). */
+  deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true } | DeliveryView>;
 }
 
 /** A firing its schedule skipped, as the taf's page shows it: not a failure, nothing was run. */
@@ -86,14 +89,15 @@ function validZone(zone: string): string {
 }
 
 /** One run as a request: its state and the words for it. */
-export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], again = new Set<string>()): RequestView {
+export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], again = new Set<string>(), own: DeliveryView[] = []): RequestView {
   // The newest stamp per run: a reply sent again replaces the one that wasn't.
   const last = sent.find((s) => s.run === r.id);
-  const deliveries = last ? [{
+  const deliveries: RequestView["deliveries"] = last ? [{
     place: "door_reply" as const, state: last.status,
     line: last.status === "sent" ? `Replied at ${timeIn(last.at, zone, now)}` : `Reply not sent: ${last.why ?? "the provider didn't take it"}`,
     ...(last.status === "not_sent" && again.has(r.id) ? { send_again: true as const } : {}),
   }] : [];
+  deliveries.push(...own);
   const base = { id: r.id, at: r.created, deliveries };
   if (r.state === "needs_you") return { ...base, state: "needs_you", line: r.reason ?? "It needs you to look at it." };
   if (r.state === "retrying") {
@@ -105,8 +109,17 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
     case "PENDING":
     case "RUNNING":
       return { ...base, state: "working", line: "Working on it" };
-    case "PAUSED":
-      return { ...base, state: "waiting", line: r.requirements?.some((q) => q.exception && !q.answered) ? "Waiting for your approval" : "Waiting for an answer" };
+    case "PAUSED": {
+      if (r.requirements?.some((q) => q.exception && !q.answered)) return { ...base, state: "waiting", line: "Waiting for your approval" };
+      // An open card is the owner's to answer: it comes before any wait on the app, so an owner's question is never drawn as the app's.
+      if (r.requirements?.some((q) => q.kind === "card" && !q.answered)) return { ...base, state: "waiting", line: "Waiting for an answer" };
+      const wait = r.requirements?.find((q) => q.kind === "event" && !q.answered && q.wait)?.wait;
+      if (wait) {
+        const words = wait.words?.trim() || `Waiting for the app's ${wait.event} event`;
+        return { ...base, state: "waiting", line: words, waiting_for: words };
+      }
+      return { ...base, state: "waiting", line: "Waiting for an answer" };
+    }
     case "COMPLETED":
       return { ...base, state: "done", line: `Done at ${timeIn(r.updated, zone, now)}` };
     case "CANCELLED":
@@ -130,6 +143,14 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   const retrying = runs.find((r) => r.state === "retrying");
   if (retrying) return { status: "retrying", line: requestOf(retrying, zone, now).line, needs_you: 0 };
   if (runs.some((r) => r.status === "RUNNING" || r.status === "PENDING")) return { status: "working", line: "Working on it", needs_you: 0 };
+  // A run waiting for a connected app's event (the slow-tools design): the taf isn't idle, and the line is the
+  // connection's words for the wait. A run that also needs the owner was counted above. Named apart from the
+  // home item's `state: "waiting"`, which means a call held for the owner.
+  const waiting = runs.find((r) => {
+    const open = (r.requirements ?? []).filter((q) => !q.answered);
+    return r.status === "PAUSED" && open.length > 0 && open.every((q) => q.kind === "event" && q.wait);
+  });
+  if (waiting) return { status: "waiting_on_app", line: requestOf(waiting, zone, now).line, needs_you: 0 };
   if (paused) return { status: "paused", line: "Paused", needs_you: 0 };
   if (unscheduled) return { status: "idle", line: "Works from its chat", needs_you: 0 };
   if (next) return { status: "idle", line: `Next run ${timeIn(next, zone, now)}`, needs_you: 0 };
@@ -138,8 +159,8 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
 }
 
 /** The taf's page: counts per state, and the recent requests with what was sent. */
-export function workOf(runs: Run[], zone: string, now: Date, sent: Sent[], again = new Set<string>()): { counts: Record<RequestView["state"], number>; requests: RequestView[] } {
-  const requests = runs.map((r) => requestOf(r, zone, now, sent, again));
+export function workOf(runs: Run[], zone: string, now: Date, sent: Sent[], again = new Set<string>(), own = new Map<string, DeliveryView[]>()): { counts: Record<RequestView["state"], number>; requests: RequestView[] } {
+  const requests = runs.map((r) => requestOf(r, zone, now, sent, again, own.get(r.id) ?? []));
   const counts = { done: 0, working: 0, retrying: 0, needs_you: 0, waiting: 0, stopped: 0, failed: 0 };
   for (const q of requests) counts[q.state]++;
   return { counts, requests };

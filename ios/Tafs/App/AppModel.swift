@@ -6227,9 +6227,12 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
                 await refreshConnections()
                 guard gen == accountGeneration else { return }
+                // A fresh read proof for the report: the first was spent by the approval's read, and planque takes each
+                // signed request once, within minutes (a vendor sign-in can take longer).
+                let reportProof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
                 let outcome = try await cloud.approvalReport(s.id, component: component.id, ask: ask.id,
                                                              body: .init(result: came.result, status: came.status, why: came.why, session: session),
-                                                             proof: proof, tenant: tenant, signedBy: { try signer.signConfirmed($0) })
+                                                             proof: reportProof, tenant: tenant, signedBy: { try signer.signConfirmed($0) })
                 guard gen == accountGeneration else { return }
                 cardNotes[component.id] = outcome.note
                 await setupAnswered(s.id, ref: ref, decision: outcome, gen: gen)

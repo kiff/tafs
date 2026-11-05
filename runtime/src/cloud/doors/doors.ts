@@ -44,7 +44,7 @@ export interface DoorsDeps {
 export interface DoorsContext {
   doors: DoorsDeps;
   tafs: Tafs;
-  agents: Pick<AgentsAPI, "startRun" | "getRun">;
+  agents: Pick<AgentsAPI, "startRun" | "getRun" | "runs" | "answerWait">;
   push: PushStore;
   apns: Sender;
   now: Date;
@@ -126,7 +126,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   // is connected.
   const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
-  return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${slackReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
+  return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${botReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
 
 /**
@@ -136,7 +136,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
  */
 export function ownerDoorMessage(app: DoorApp, a: Arrival, text: string, notes: string[]): string {
   const who = a.name ? `${a.name} <${a.from}>` : a.from;
-  const back = `this is the account's owner, writing from their own sign-in; take it as their message in this chat, and your answer also goes back to them by ${app.label.toLowerCase()}${slackReply(a)}`;
+  const back = `this is the account's owner, writing from their own sign-in; take it as their message in this chat, and your answer also goes back to them by ${app.label.toLowerCase()}${botReply(a)}`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -145,7 +145,13 @@ export function ownerDoorMessage(app: DoorApp, a: Arrival, text: string, notes: 
  * Slack's answer is the taf's own: tafs cloud holds no Slack token, so the taf posts it with its Slack bot
  * tool, a write through KIFF inside its Card, in the channel and thread the message came in.
  */
-function slackReply(a: Arrival): string {
+/** Where a Slack or Telegram door's taf posts its own answer, with its bot's send-message tool; "" for other doors. */
+function botReply(a: Arrival): string {
+  if (a.thread.telegram_chat) {
+    const topic = a.thread.telegram_thread ? `, in the topic ${a.thread.telegram_thread}` : "";
+    const replyTo = a.thread.telegram_message ? `, replying to message ${a.thread.telegram_message}` : "";
+    return `; post your answer yourself with your Telegram bot's send-message tool, in the chat ${a.thread.telegram_chat}${topic}${replyTo}`;
+  }
   if (!a.thread.slack_channel) return "";
   const thread = a.thread.slack_thread ? `, in the thread ${a.thread.slack_thread}` : "";
   return `; post your answer yourself with your Slack bot's send-message tool, in the channel ${a.thread.slack_channel}${thread}`;
@@ -355,6 +361,90 @@ export async function doorRunEnded(note: Note, ctx: DoorsContext): Promise<boole
   return true;
 }
 
+/** How long an app's event that completes no run yet is kept, for a run that pauses on it right after (a fast vendor). */
+export const EARLY_EVENT_KEPT_MS = 10 * 60_000;
+
+/** How long the receiver remembers that an event answered a run's wait, so the same delivery again answers the same and starts no run. */
+export const ANSWERED_EVENT_KEPT_MS = 10 * 60_000;
+
+/** What an event that answers a wait is remembered as: the run it answered, empty while the answer is still on its way, and the claim's own token. */
+export interface AnsweredEvent {
+  run: string;
+  at: string;
+  token: string;
+}
+
+/**
+ * Claims planque's event id as answering a wait, before the answer is sent: true once, for the delivery that
+ * answers; false for the same delivery again, at once or later (dependable runs: a delivery repeated is the same
+ * outcome, never new work, and a crash between the answer and its record still leaves the claim).
+ */
+export async function claimAnswered(ctx: DoorsContext, tenant: string, id: string): Promise<AnsweredEvent | undefined> {
+  const key = doorKeys.answeredEvent(tenant, id);
+  const until = new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS);
+  const claim: AnsweredEvent = { run: "", at: ctx.now.toISOString(), token: randomBytes(9).toString("base64url") };
+  if (await ctx.doors.store.create(key, claim, until)) return claim;
+  // A claim with no run older than one answer's time is a delivery that stopped between its claim and its
+  // answer (the Lambda died): the wait is still open, so this delivery takes the claim over, rather than every
+  // retry reading "answered" for ten minutes while nothing answered (agentgabo's note on #515). The takeover
+  // is a compare-and-swap on the claim as read: of two late deliveries, one takes it (agentgabo on #523).
+  const held = (await ctx.doors.store.get(key)) as AnsweredEvent | undefined;
+  if (held && held.run === "" && ctx.now.getTime() - Date.parse(held.at) > STALE_CLAIM_MS && await ctx.doors.store.swap(key, held, claim, until)) return claim;
+  return undefined;
+}
+
+/** How long a claim with no run may stand before another delivery of the same event takes it over: one answer's time. */
+export const STALE_CLAIM_MS = 30_000;
+
+/** Records the run the claimed event answered, on this delivery's own claim only: one taken over meanwhile is left to its taker. */
+export async function rememberAnswered(ctx: DoorsContext, tenant: string, id: string, run: string, claim: AnsweredEvent): Promise<void> {
+  await ctx.doors.store.swap(doorKeys.answeredEvent(tenant, id), claim, { ...claim, run, at: ctx.now.toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+}
+
+/** Gives this delivery's own claim back, never another's: it is left stale, for the next delivery to take over at once. */
+export async function unclaimAnswered(ctx: DoorsContext, tenant: string, id: string, claim: AnsweredEvent): Promise<void> {
+  await ctx.doors.store.swap(doorKeys.answeredEvent(tenant, id), claim, { ...claim, at: new Date(0).toISOString() } satisfies AnsweredEvent, new Date(ctx.now.getTime() + ANSWERED_EVENT_KEPT_MS));
+}
+
+/** An app's event kept for the run that will wait on it: planque's event id, and the call's result it is (inbound.ts appEventOf), as JSON text. */
+export interface KeptEvent {
+  id: string;
+  result: string;
+  at: string;
+}
+
+/**
+ * A run's pause note names the vendor events it waits on (`waits`, kiff/agents):
+ * one whose event already came, kept by the receiver (inbound.ts), is answered
+ * now, so a vendor faster than the run's pause loses nothing. An answer that
+ * fails is logged and the kept event stays: the run's wait runs out on its own,
+ * and the kept event with it.
+ */
+export async function answerKeptEvents(note: Note, ctx: DoorsContext): Promise<void> {
+  const tenant = refTenant(note.ref);
+  if (!tenant || note.status !== "PAUSED" || !note.waits?.length) return;
+  for (const w of note.waits) {
+    if (!w.call || !w.event || !w.key) continue;
+    const key = doorKeys.earlyEvent(tenant, w.grant ?? "", w.event, w.key);
+    const kept = (await ctx.doors.store.get(key)) as KeptEvent | undefined;
+    if (!kept) continue;
+    const claim = await claimAnswered(ctx, tenant, kept.id);
+    if (!claim) continue; // another delivery of it is answering, or did
+    try {
+      await ctx.agents.answerWait(tenant, note.agent, note.run, w.call, parse(kept.result) ?? { truncated: true, payload: kept.result });
+      await rememberAnswered(ctx, tenant, kept.id, note.run, claim);
+      await ctx.doors.store.remove(key);
+    } catch (err) {
+      console.error("app event kept:", err instanceof Error ? err.message : "error");
+      await unclaimAnswered(ctx, tenant, kept.id, claim).catch(() => undefined);
+    }
+  }
+}
+
+function parse(body: string): unknown {
+  try { return JSON.parse(body); } catch { return undefined; }
+}
+
 /**
  * The replies the taf's doors still owe, settled: kiff/agents sends a note
  * once, so one lost, or a reply the provider didn't take, is settled when the
@@ -412,7 +502,7 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       // that reply waits for its next try the alert waits with it, and one given up on is said below.
       if (taf && placesOf(taf).includes("door_reply") && !done.has("door_reply")) continue;
       // A Slack answer is the taf's own post, which tafs cloud doesn't see: it says handled, not answered.
-      if (taf) await tellOwner(ctx, tenant, taf, door?.kind === "slack" ? `Handled ${reply.name || reply.to}'s message in Slack; ${taf.name} posts its answer there itself.`
+      if (taf) await tellOwner(ctx, tenant, taf, door?.kind === "slack" || door?.kind === "telegram" ? `Handled ${reply.name || reply.to}'s message in ${door.kind === "slack" ? "Slack" : "Telegram"}; ${taf.name} posts its answer there itself.`
         : `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
       done.add(place);
     } else if (place === "owner_email") {
@@ -599,8 +689,8 @@ async function sendReply(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, ta
       await cfg.whatsapp.client.send(door.phoneNumberID, token, reply.to, [...text].slice(0, 4000).join(""), reply.thread.message_id);
       return { sent: { ...base, status: "sent" } };
     }
-    if (door.kind === "slack") {
-      // The taf posted it itself, in its run (slackReply): there's nothing for tafs cloud to send.
+    if (door.kind === "slack" || door.kind === "telegram") {
+      // The taf posted it itself, in its run (botReply): there's nothing for tafs cloud to send.
       return { sent: { ...base, status: "sent" } };
     }
     return notSent("this door can't answer");
@@ -624,6 +714,8 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
     words: doorWords(d, app, today),
     // A Slack door names its connection, channel and planque subscription, for the app to undo it with the door.
     ...(d.kind === "slack" ? { grant: d.grant, channel: d.channel, ...(d.trigger ? { trigger: d.trigger } : {}) } : {}),
+    // A Telegram door names its connection and planque subscription the same way.
+    ...(d.kind === "telegram" ? { grant: d.grant, ...(d.trigger ? { trigger: d.trigger } : {}) } : {}),
   };
 }
 
@@ -631,7 +723,7 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
  * What the door's page says, in words the apps show as they are: where it stands, what a tap on
  * it does, and that its settings (keys and limits) are below. So neither app writes its own.
  */
-export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }): { state: string; tap: string; settings: string } {
+export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }): { state: string; tap: string; settings: string; pair_hint?: string; pair_from_knock?: string } {
   const label = app?.label ?? d.app;
   const state = !d.open
     ? `Closed: messages to ${d.address} start nothing.`
@@ -642,6 +734,8 @@ export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, 
     state,
     tap: d.open ? `Tap to close the ${label.toLowerCase()} door.` : `Tap to open the ${label.toLowerCase()} door.`,
     settings: "Paired senders and today's limits are below.",
+    ...(app?.proof === "proven" ? { pair_hint: app.pairHint } : {}),
+    ...(app?.proof === "proven" && app.pairFromKnock ? { pair_from_knock: app.pairFromKnock } : {}),
   };
 }
 
@@ -652,9 +746,9 @@ async function todayOf(store: DoorStore, tenant: string, taf: string, door: stri
 }
 
 /** The apps a door can open on here: what the deployment set up. */
-export function offered(cfg: DoorsConfig): Array<{ id: string; label: string; kind: string; proof: string; how: string }> {
-  return APPS.filter((a) => (a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) : a.kind === "slack" ? Boolean(cfg.planqueHandoffSecret) : Boolean(cfg.whatsapp)))
-    .map(({ id, label, kind, proof, how }) => ({ id, label, kind, proof, how }));
+export function offered(cfg: DoorsConfig): Array<{ id: string; label: string; kind: string; proof: string; how: string; bot?: { provider: string; words: { none: string; pick: string } } }> {
+  return APPS.filter((a) => (a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) : a.kind === "slack" || a.kind === "telegram" ? Boolean(cfg.planqueHandoffSecret) : Boolean(cfg.whatsapp)))
+    .map(({ id, label, kind, proof, how, bot }) => ({ id, label, kind, proof, how, ...(bot ? { bot } : {}) }));
 }
 
 export interface Owner {
@@ -738,6 +832,17 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
     if (!(await store.create(doorKeys.route(route), { tenant: owner.tenant, taf: taf.id, door: "slack" }))) throw new DoorError(409, "that channel is already a taf's door");
     const trigger = typeof body.trigger === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(body.trigger.trim()) ? body.trigger.trim() : undefined;
     door = { id: "slack", kind: "slack", app: "slack", open: true, address: `#${channel}`, route, grant, channel, ...(trigger ? { trigger } : {}), keys: [], created: now };
+  } else if (app.kind === "telegram") {
+    // The owner's own Telegram bot, connected in planque (kiff/tafs#472): every chat with the bot comes through this
+    // one door, routed by the grant. tafs cloud holds no Telegram token; the taf answers with the bot's send tool.
+    const grant = typeof body.grant === "string" ? body.grant.trim() : "";
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(grant)) throw new DoorError(400, "connect the Telegram bot first");
+    const bot = typeof body.bot === "string" ? body.bot.trim().replace(/^@/, "") : "";
+    const route = `telegram:${grant}`;
+    if (!(await store.create(doorKeys.route(route), { tenant: owner.tenant, taf: taf.id, door: "telegram" }))) throw new DoorError(409, "that Telegram bot is already a taf's door");
+    const trigger = typeof body.trigger === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(body.trigger.trim()) ? body.trigger.trim() : undefined;
+    door = { id: "telegram", kind: "telegram", app: "telegram", open: true, address: /^[A-Za-z0-9_]{5,32}$/.test(bot) ? `@${bot}` : "your Telegram bot",
+      route, grant, ...(trigger ? { trigger } : {}), keys: [], created: now };
   } else {
     door = await connectWhatsApp(ctx, cfg, owner, taf, body, now);
   }
@@ -804,9 +909,11 @@ export async function pair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string
     if (app?.proof !== "proven") throw new DoorError(409, `${app?.label ?? "this door"} can't prove who's writing, so it has no keys`);
     const key = door.kind === "email" ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : "")
       : door.kind === "slack" ? (/^[uw][a-z0-9]{2,30}$/.test(raw) ? raw : "")
+      : door.kind === "telegram" ? (/^[1-9][0-9]{0,19}$/.test(raw) ? raw : "")
       : raw.replace(/\D/g, "").replace(/^00/, "");
     if (!key || key.length > 200) {
-      throw new DoorError(400, door.kind === "email" ? "write an email address" : door.kind === "slack" ? "write their Slack member ID, such as U012AB3CD" : "write a phone number with its country code");
+      throw new DoorError(400, door.kind === "email" ? "write an email address" : door.kind === "slack" ? "write their Slack member ID, such as U012AB3CD"
+        : door.kind === "telegram" ? "write their Telegram user id, a number; or pair them from their message" : "write a phone number with its country code");
     }
     if (door.keys.some((k) => k.id === key)) return doors;
     // A name that's only the address again isn't kept: the sender shows once (kiff/tafs#236, item 20).

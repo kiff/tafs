@@ -21,6 +21,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -243,12 +244,12 @@ class PlanqueTest {
     transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
   }
 
-  private suspend fun model(signIn: VendorSignIn = FakeSignIn(), keyed: Boolean = true): AppModel {
+  private suspend fun model(signIn: VendorSignIn = FakeSignIn(), keyed: Boolean = true, scope: kotlinx.coroutines.CoroutineScope? = null): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     if (keyed) secrets.save("1", AppModel.KEYED)
     secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
-    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, vendorSignIn = signIn).also { it.restore() }
+    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, vendorSignIn = signIn, scope = scope).also { it.restore() }
   }
 
   private val grants = "GET /v1/accounts/t_01/grants"
@@ -342,6 +343,42 @@ class PlanqueTest {
     assertEquals(expected["words_sha256"], signed["words_sha256"])
   }
 
+  @Test fun aProfileChangedUnderTheSameConnectionIsReadAgainAndOnlyItsWordsAreApproved() = runTest {
+    reads()
+    // Tools added to a connection change its profile under the same grant id (planque merges the addition into it).
+    val slackProfile = resource("slack-messages")
+    val changedRequest = request.dropLast(1) + ""","profile":""" + slackProfile + "}"
+    val changedGrant = """{"id":"g1","status":"pending","text":"Connect Stripe: refund a payment.","digest":"${digestOf(changedRequest)}","request":$changedRequest}"""
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    transport.answer(words, 200, resource("stripe-refunds.expected"))
+    transport.answer(words, 200, resource("slack-messages.expected"))
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refreshConnections()
+    m.loadProfileWords("g1")
+    assertTrue(m.state.value.profileWordsFor(m.state.value.grants.single()) != null)
+    // The profile changes: the words read for the earlier one aren't this one's, and nothing can be approved with them.
+    transport.answer(grants, 200, """{"grants":[$changedGrant]}""")
+    m.refreshConnections()
+    assertNull(m.state.value.profileWordsFor(m.state.value.grants.single()))
+    val early = m.connect("a1", "g1", digestOf(changedRequest))
+    assertTrue(early.toString(), early is AppModel.Connected.Failed)
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    // Read again, for the profile as it is now.
+    m.loadProfileWords("g1")
+    assertEquals(2, transport.requestsTo(words).size)
+    assertEquals(Jcs.canonical(slackProfile), Jcs.canonical(String(transport.requestsTo(words).last().body!!)))
+    val result = m.connect("a1", "g1", digestOf(changedRequest))
+    assertTrue(result.toString(), result is AppModel.Connected.Done)
+    val signed = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject.getValue("kiff_profile").jsonObject
+    val expected = KiffClient.json.parseToJsonElement(resource("slack-messages.expected")).jsonObject
+    assertEquals(expected["profile_sha256"], signed["profile_sha256"])
+    // Read once per profile: asking again reads nothing more.
+    m.loadProfileWords("g1")
+    assertEquals(2, transport.requestsTo(words).size)
+  }
+
   @Test fun aConnectionWithAProfileIsNeverApprovedBeforeItsWordsAreRead() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
@@ -424,7 +461,7 @@ class PlanqueTest {
     assertEquals(sum, fields.getValue("key_sha256").jsonPrimitive.content)
     // Signed by this device, over the body, as every planque request is.
     val parts = sent.headers.getValue("Planque-Device-Signature").split(",")
-    val message = PlanqueClient.message("https://planque.kiff.dev", "t_01", "POST", "/v1/accounts/t_01/grants/g1/key", sent.body!!, parts[0].removePrefix("t="))
+    val message = PlanqueClient.message("https://planque.kiff.dev", "t_01", "POST", "/v1/accounts/t_01/grants/g1/key", sent.body, parts[0].removePrefix("t="))
     assertTrue(verifies(signer.publicKeyDER, message, parts[1].removePrefix("v1=")))
     assertFalse("kept nowhere in the app's state", m.state.value.toString().contains("sk_test_4eC39H"))
     assertNull(m.state.value.connecting)
@@ -581,7 +618,7 @@ class PlanqueTest {
     val sent = transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").single()
     assertEquals("v3", KiffClient.json.parseToJsonElement(String(sent.body!!)).jsonObject.getValue("version").jsonPrimitive.content)
     val parts = sent.headers.getValue("KIFF-Device-Signature").split(",")
-    val message = KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", sent.body!!, parts[0].removePrefix("t="))
+    val message = KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", sent.body, parts[0].removePrefix("t="))
     assertTrue("it issues Cards: the approval key signs it", verifies(signer.approvalPublicKeyDER, message, parts[1].removePrefix("v1=")))
     assertTrue("planque is not asked to approve a connection that is connected", transport.requestsTo(approve).isEmpty())
   }
@@ -692,6 +729,8 @@ class PlanqueTest {
     assertEquals("c0de", bodyOf(transport.requestsTo(confirm).single()).getValue("confirm").jsonPrimitive.content)
     // The report: what came of it, signed as a setup call by this phone's key over exactly this request. Never an answer.
     val report = transport.requestsTo(reportRoute).single()
+    // Its own read proof: the approval's was spent by tafs cloud's first read, and planque takes each signed request once.
+    assertNotEquals(ask.headers.getValue("Planque-Device-Signature"), report.headers.getValue("Planque-Device-Signature"))
     assertEquals("connected", bodyOf(report).getValue("result").jsonPrimitive.content)
     assertNull(bodyOf(report)["answer"])
     val parts = report.headers.getValue("KIFF-Device-Signature").split(",")
@@ -992,14 +1031,14 @@ class PlanqueTest {
     """{"id":"gs","status":"connected","account":"ca_1","entry":"connector:composio:slackbot","text":"Slack bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[]}}"""
   private val slackApp = bot.tafs.app.kiff.DoorApp(id = "slack", label = "Slack", kind = "slack", proof = "proven")
 
-  private suspend fun slackModel(): AppModel {
+  private suspend fun slackModel(bots: String = slackBot): AppModel {
     transport.answer("GET /v1/me", 200, me)
     transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
     transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
-    transport.answer(grants, 200, """{"grants":[$slackBot,${grant("g1")}]}""")
+    transport.answer(grants, 200, """{"grants":[$bots,${grant("g1")}]}""")
     val m = model()
     m.refresh()
     m.refreshConnections()
@@ -1058,5 +1097,270 @@ class PlanqueTest {
     val sub = transport.requestsTo("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9").single()
     val door = transport.requestsTo("DELETE /v1/tafs/taf_1/doors/door_s").single()
     assertTrue(transport.requests.indexOf(sub) < transport.requests.indexOf(door))
+  }
+
+  // MARK: A bot door (Telegram): the provider and every word are tafs cloud's; the bot's connection, as its door; nothing to subscribe
+
+  private val telegramBot =
+    """{"id":"gt","status":"connected","provider":"telegram","entry":"api:telegram","telegram":{"id":7001,"username":"refunds_desk_bot"},"text":"Telegram bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[],"api":{"url":"https://core.telegram.org/bots/api"}}}"""
+  /** The door's app as tafs cloud offers it: the provider to list and the step's words come with it. */
+  private val telegramApp = KiffClient.json.decodeFromString<bot.tafs.app.kiff.DoorApp>(
+    """{"id":"telegram","label":"Telegram","kind":"telegram","proof":"proven","how":"","bot":{"provider":"telegram","words":{"none":"Connect it first.","pick":"Which bot?"}}}""",
+  )
+
+  private suspend fun telegramModel(): AppModel {
+    return slackModel("$telegramBot,$slackBot")
+  }
+
+  @Test fun aBotDoorListsTheConnectionsFromTheProviderTafsCloudNamesNeverByName() = runTest {
+    val m = telegramModel()
+    val provider = telegramApp.bot!!.provider
+    assertEquals(listOf("gt"), m.state.value.bots("refunds-1", provider).map { it.id })
+    assertEquals("@refunds_desk_bot", m.state.value.bots("refunds-1", provider).single().botName)
+    assertTrue("another provider lists none of them", m.state.value.bots("refunds-1", "other").isEmpty())
+    val noToken = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g2","status":"connected","provider":"telegram","request":{"agent":"refunds-1"}}""")
+    assertNull("no token given yet: no bot to name", noToken.botName)
+    val named = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g3","status":"connected","vendor":"Telegram","request":{"agent":"refunds-1"}}""")
+    assertFalse("a vendor name isn't a provider", named.isFrom(provider))
+  }
+
+  @Test fun aBotDoorIsAddedOnTheBotsGrantWithNothingSubscribedOrSigned() = runTest {
+    val m = telegramModel()
+    transport.answer("POST /v1/tafs/taf_1/doors", 200, """{"door":{"id":"telegram","app":"telegram","kind":"telegram","label":"Telegram","proof":"proven","grant":"gt"}}""")
+    val door = m.addBotDoor("refunds-1", telegramApp, m.state.value.bots("refunds-1", "telegram").single())
+    assertEquals("telegram", door?.id)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/taf_1/doors").single().body!!)).jsonObject
+    assertEquals(KiffClient.json.parseToJsonElement("""{"grant":"gt","bot":"@refunds_desk_bot","app":"telegram"}"""), body)
+    assertTrue("nothing asked", auth.asked.isEmpty())
+    assertTrue("nothing subscribed at planque", transport.requests.none { it.url.contains("/triggers") })
+    assertTrue(m.state.value.doors.getValue("refunds-1").doors.any { it.id == "telegram" })
+  }
+
+  @Test fun aBotDoorTafsCloudRefusesIsNotAdded() = runTest {
+    val m = telegramModel()
+    transport.answer("POST /v1/tafs/taf_1/doors", 400, """{"error":"connect the Telegram bot first"}""")
+    assertNull(m.addBotDoor("refunds-1", telegramApp, m.state.value.bots("refunds-1", "telegram").single()))
+    assertNotNull(m.state.value.doors.getValue("refunds-1").error)
+    assertTrue(m.state.value.doors.getValue("refunds-1").doors.isEmpty())
+  }
+
+  @Test fun pairingWordsAreTafsClouds() {
+    val door = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Door>(
+      """{"id":"telegram","app":"telegram","kind":"telegram","label":"Telegram","proof":"proven","words":{"pair_hint":"Their user id","pair_from_knock":"Ask them to write first."}}""",
+    )
+    assertEquals("Their user id", bot.tafs.app.model.DoorWords.pairHint(door))
+    assertEquals("Ask them to write first.", door.words?.pairFromKnock)
+  }
+
+  // MARK: A browser connection's sign-in to a site: planque's live view, signed, opened as it comes (kiff/planque#86)
+
+  private val signInRoute = "POST /v1/accounts/t_01/grants/gs/sign-in"
+
+  @Test fun theSignInViewIsAskedForSignedAndOpenedAsPlanqueSendsIt() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 200, """{"view":"https://planque.kiff.dev/browser/view/tok_1","expires":"2026-11-05T04:20:00Z","words":"Sign in, then tap Done."}""")
+    m.openSiteSignIn("gs")
+    val sent = transport.requestsTo(signInRoute).single()
+    assertTrue("device-signed", sent.headers.containsKey("Planque-Device-Signature"))
+    assertTrue("no fingerprint asked: it grants nothing", auth.asked.isEmpty())
+    assertEquals("https://planque.kiff.dev/browser/view/tok_1", m.state.value.siteSignIn?.view)
+    assertEquals("Sign in, then tap Done.", m.state.value.siteSignIn?.words)
+    assertNull(m.state.value.openingSiteSignIn)
+    m.closeSiteSignIn()
+    assertNull(m.state.value.siteSignIn)
+  }
+
+  @Test fun aViewOffPlanquesOwnAddressIsNeverOpened() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 200, """{"view":"https://elsewhere.example/browser/view/tok_1","words":"Sign in"}""")
+    m.openSiteSignIn("gs")
+    assertNull(m.state.value.siteSignIn)
+    assertTrue(m.state.value.coachNotes.getValue("gs").contains("wasn't on the connection's own address"))
+  }
+
+  @Test fun planquesRefusalIsSaidOnTheConnection() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 409, """{"error":"a sign-in view is open for this connection: finish it on the phone, or wait for it to lapse"}""")
+    m.openSiteSignIn("gs")
+    assertNull(m.state.value.siteSignIn)
+    assertTrue(m.state.value.coachNotes.getValue("gs").contains("a sign-in view is open for this connection"))
+  }
+
+  @Test fun aBrowserConnectionCarriesTafsCloudsSignInAction() {
+    val app = KiffClient.json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>(
+      """{"id":"gb","name":"Shop","status":"connected","site_sign_in":{"title":"Sign in to a site","words":"You sign in yourself."}}""",
+    )
+    assertEquals("Sign in to a site", app.siteSignIn?.title)
+    assertNull(KiffClient.json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>("""{"id":"g1","name":"Notion","status":"connected"}""").siteSignIn)
+  }
+
+  @Test fun aViewOnPlanquesHostButAnotherPortIsNeverOpened() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 200, """{"view":"https://planque.kiff.dev:8443/browser/view/tok_1","words":"Sign in"}""")
+    m.openSiteSignIn("gs")
+    assertNull(m.state.value.siteSignIn)
+    assertTrue(bot.tafs.app.views.sameHttpsOrigin("https://planque.kiff.dev/browser/view/t", "https://planque.kiff.dev:443"))
+    assertFalse(bot.tafs.app.views.sameHttpsOrigin("http://planque.kiff.dev/browser/view/t", "https://planque.kiff.dev"))
+    assertFalse(bot.tafs.app.views.sameHttpsOrigin("https://planque.kiff.dev.example/x", "https://planque.kiff.dev"))
+  }
+
+  // MARK: The approval window (kiff/tafs#494)
+
+  private val win = "win_abcdefghijklmnopqrstuvwxyz"
+  private val windowOpened = """{"window":{"id":"$win","expires":"2026-10-28T09:05:00Z","open":true,"words":"No fingerprint for the next 5 minutes"}}"""
+
+  /** tafs cloud's connection ask, with its hint that the call takes a window. */
+  private fun signConnectInWindow() = signConnect().replace(""""reason":"Connect Stripe to Refunds",""", """"reason":"Connect Stripe to Refunds","key":"window",""")
+
+  @Test fun aWindowAskOpensAWindowWithOneFingerprintAndTheConnectionGoesAsATap() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    transport.answer("GET /v1/me/window", 200, windowOpened.replace("5 minutes", "4 minutes"))
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    // One fingerprint, the window's, in tafs cloud's words: the connection's own prompt isn't asked.
+    assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
+    val opening = transport.requestsTo("POST /v1/me/window").single()
+    assertEquals("kiff.window.v1", bodyOf(opening).getValue("message").jsonPrimitive.content)
+    assertTrue(opening.headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    // planque's approve goes as a tap: the device key, with the window's id.
+    val header = transport.requestsTo(approve).single().headers.getValue("Planque-Device-Signature")
+    assertTrue(header, header.contains(",v2=") && header.contains(",w=$win,"))
+    // The report is signed as it always was (v1), and KIFF's words for the next tap are read again.
+    assertTrue(transport.requestsTo(reportRoute).single().headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    assertEquals("No fingerprint for the next 4 minutes", m.state.value.windowWords)
+  }
+
+  @Test fun aSecondWindowAskInsideTheWindowAsksNoFingerprint() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    repeat(2) {
+      transport.answer(askRoute, 200, signConnectInWindow())
+      transport.answer(approve, 200, """{"status":"connected"}""")
+      transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+      transport.answer("GET /v1/me/window", 200, windowOpened)
+    }
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals(1, auth.asked.size)
+    assertEquals(1, transport.requestsTo("POST /v1/me/window").size)
+    assertEquals(2, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
+  }
+
+  @Test fun planqueSayingTheWindowEndedOpensANewOneAndTriesOnceMore() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer(approve, 403, """{"error":"Your approval window has ended.","code":"window_required"}""")
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    transport.answer("GET /v1/me/window", 200, windowOpened)
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals(2, transport.requestsTo("POST /v1/me/window").size)
+    assertEquals(2, auth.asked.size)
+    assertEquals(2, transport.requestsTo(approve).size)
+    assertEquals("connected", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+  }
+
+  @Test fun aKiffWithoutWindowsLeavesTheStepAsItWas() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 404, """{"error":"not_found"}""")
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    val header = transport.requestsTo(approve).single().headers.getValue("Planque-Device-Signature")
+    assertTrue(header, header.contains(",v1=") && !header.contains(",w="))
+    assertNull(m.state.value.windowWords)
+  }
+
+  @Test fun anAskWithNoHintOpensNoWindow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertTrue(transport.requestsTo("POST /v1/me/window").isEmpty())
+  }
+
+  @Test fun theWindowClosesAfterThirtySecondsInTheBackgroundAndAtOnceWhenTheScreenTurnsOff() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    repeat(2) {
+      transport.answer(askRoute, 200, signConnectInWindow())
+      transport.answer("POST /v1/me/window", 201, windowOpened)
+      transport.answer(approve, 200, """{"status":"connected"}""")
+      transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+      transport.answer("GET /v1/me/window", 200, windowOpened)
+      transport.answer("POST /v1/me/window/$win/close", 200, """{"window":{"id":"$win","open":false}}""")
+    }
+    val m = model(scope = backgroundScope)
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    // Back within 30 seconds: it stays.
+    m.wentToBackground()
+    testScheduler.advanceTimeBy(20_000)
+    m.cameToForeground()
+    testScheduler.advanceTimeBy(60_000)
+    assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
+    // Away for longer: closed, device-signed, and its words gone.
+    m.wentToBackground()
+    testScheduler.advanceTimeBy(31_000)
+    testScheduler.runCurrent()
+    val closed = transport.requestsTo("POST /v1/me/window/$win/close").single()
+    assertTrue(closed.headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    assertNull(m.state.value.windowWords)
+    // A new window, then the screen turns off: closed at once.
+    m.approveCoach(approvalComponent(), digest, null)
+    m.screenLocked()
+    testScheduler.runCurrent()
+    assertEquals(2, transport.requestsTo("POST /v1/me/window/$win/close").size)
+  }
+
+  @Test fun aNewSignInForgetsTheLastSessionsWindow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    transport.answer("GET /v1/me/window", 200, windowOpened)
+    transport.answer("POST /v1/me/window/$win/close", 200, """{"window":{"id":"$win","open":false}}""")
+    val m = model(scope = backgroundScope)
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals("No fingerprint for the next 5 minutes", m.state.value.windowWords)
+    reads()
+    runCatching { m.useSession("at_2", "t_02") }
+    assertNull(m.state.value.windowWords)
+    // Nothing of the last session's window is closed or signed in the new one.
+    m.screenLocked()
+    testScheduler.runCurrent()
+    assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
   }
 }

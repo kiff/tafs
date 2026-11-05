@@ -49,6 +49,10 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   (`startApproval`, `startSignInAgain`, `startReconnect`), so the vendor's sign-in page opening
   never cuts the flow short: planque's confirm, the answer to Coach, reading the thread and
   following the run all go on.
+- **An answered approval** folds to one line saying what was approved. On Android, when it had a
+  Card, a tap opens it again to that Card's lines, KIFF's draft at the version signed, with nothing
+  to answer; another tap folds it. planque's grant isn't shown there: it reads as it is now, and a
+  later tools approval can widen it past what this one approved. iOS follows.
 - **Coach's tools in one tap:** when tafs cloud sends the connect batch before Coach's Card (the
   Card is drafted over tools KIFF holds), the app reads the tools again after the batch and gives
   the Card in the same flow: one tap, still two fingerprints (the batch, then the Card). A
@@ -156,6 +160,21 @@ then shows its plan. Then, each step behind the owner's yes:
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
 from its chat.
 
+## Where results go
+
+When the owner says where a result should land, Coach finds the app's write (the taf's
+connection's catalog, or a search across the catalog and a connection asked for), fixes the
+arguments that pick the place from the owner's words (a list read on the taf's connection,
+with the owner's OK, and a pick by name in a questions card, never an id asked for), says
+what each field takes in words (`fill`), and drafts the place with `taf_dial` as the taf's
+next version, which the owner installs (`runtime/src/cloud/setupdef.ts`). A place moves no
+money: a money tool is never a place, and tafs cloud refuses one the taf's Cards count in money,
+at the dial and when the version goes live (`places.ts`). Another taf can be the place: the result becomes its
+work, one hop, never back and never Coach. Opened from a delivery that wasn't made ("Rae
+didn't deliver to Google Sheets · Refunds 2026"), Coach reads the taf's last request for why
+and proposes the fix as a version; it never retries the delivery itself, which is Send again
+on the taf's page (`docs/reliability.md`, "The taf's own places").
+
 ## Approving: tafs cloud decides
 
 An approval card's outcome is tafs cloud's to decide (kiff/tafs#413); the apps only sign. On
@@ -172,6 +191,10 @@ things (`runtime/src/cloud/approval.ts`):
   otherwise (no such connection, a connection planque failed, a request whose digest isn't its
   hash, a connection already connected with no Card to confirm, a draft KIFF dropped). The
   card shows tafs cloud's `note` ("Already approved", or why).
+  An app set up on demand (kiff/planque#87) asks the owner for every change: a draft
+  that would let one of its write or money tools run without asking is answered
+  `failed: …` too, naming the tool, so Coach drafts it again with that tool held (0 a
+  day); the owner widens it later as a version.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
@@ -190,6 +213,14 @@ things (`runtime/src/cloud/approval.ts`):
   service holds the connection or the Card, else `failed: <why>` in tafs cloud's words,
   whatever the phone reported. The phone never builds an approval's answer, and tafs cloud
   never vouches for one: planque and KIFF still take only the device's signature.
+  The ask also says which key the call takes (`key`, kiff/tafs#494): `window`, a tap inside
+  an approval window the fingerprint opened at KIFF (connecting an app; a draft KIFF's view
+  says widens nothing, `confirm_key`); `critical`, the fingerprint every time (a draft
+  otherwise). It is a hint: planque and KIFF decide for themselves. The report stays the
+  device key's (v1), since the fingerprint goes on the call it reports; tafs cloud's check of
+  the report refuses one signed inside a window for a critical ask (`code:
+  critical_key_required`) or inside a window that has ended (`code: window_required`), with
+  the words the card shows.
 
 A card counts as finished only by its answer in the thread, on both apps. Every word the
 apps show for an outcome comes from tafs cloud. An ask waits 20 minutes for its report and is
@@ -248,8 +279,11 @@ the phone already checks covers it. Before the owner approves:
 **Approve** waits until the words are on screen, and approving signs `kiff_profile`
 (`profile_sha256`, `words_sha256`) into planque's approve body, so one signature covers the
 connection, the profile and the words. Words that don't check out are said ("KIFF's words for
-this connection don't check out…"), and nothing can be approved. On Android: `ProfileWords`,
-`AppModel.loadProfileWords`, `ProfileWordsLines`; KIFF's golden vectors are in
+this connection don't check out…"), and nothing can be approved. The words are read once per
+profile, not per connection: tools added to an approved connection change its profile under the
+same grant id, so the words read for the earlier profile aren't shown or signed, and the new
+profile's are read (`AppState.profileWordsFor`, by the profile's digest). On Android:
+`ProfileWords`, `AppModel.loadProfileWords`, `ProfileWordsLines`; KIFF's golden vectors are in
 `app/src/test/resources/profile`.
 
 ### The next version Coach drafts
@@ -345,7 +379,7 @@ under Coach's Cards first.
 | `taf_task` | Hands a taf a task or a message: a new run, or to a run at work |
 | `run_stop` | Stops a run; its held calls are withdrawn |
 | `taf_pause` | Pauses or resumes a taf's schedule |
-| `taf_results` | Sets where a taf's results go, all places at once ([doors.md](doors.md#where-results-go)). KIFF holds every change for the owner, who approves it in tafs |
+| `taf_results` | Sets where a taf's results go, all places at once ([doors.md](doors.md#where-results-go)). With built-in places only, KIFF holds the change for the owner, who approves it in tafs; with a place at a connected app or another taf (`{place: "action", …, fill}`, `{place: "taf", taf, name, fill}`, as `PUT /v1/tafs/{id}/knob` takes them), it drafts the taf's next version as `taf_dial` does |
 | `taf_dial` | Drafts how a taf runs, all its triggers, what it does when busy and where results go, as `PUT /v1/tafs/{id}/knob` takes them ([api.md](api.md)): the taf's next version, nothing running from it. Coach shows `{type: "knob", version, taf_id}` and installs it with `version_install`, held for the owner. Its Card, `coach-taf-dial`, allows 20 a day and holds nothing |
 | `version_try` | Tries a version: KIFF decides each of its writes and sends none |
 | `version_install` | Installs a version. KIFF holds this for the owner, who approves it in tafs: the app stops what's in the way, confirms the version's Card and makes it live |
@@ -380,6 +414,11 @@ are suggestions, not finished products: there is no recipe-specific code, and wh
 build one, the gap is fixed generically (a connection, how Coach picks tools, a Card rule), so a
 person can prompt Coach freely. The five starter jobs tafs began with are recipes now.
 
+They show only while the account has no live taf, and while its "Show suggestions" setting is
+on (the owner's decision): tafs cloud decides, and `GET /v1/recipes` sends the list or an empty
+one with `shown: false` and the words why. A manager turns them off for good with
+`PUT /v1/me/suggestions {show: false}` (on by default). The apps draw only what comes.
+
 The source is one file per recipe in [`recipes/`](../recipes/README.md): its title, category
 (money, customers, operations, errands), one line on what the taf does, the vendors each
 connection needs (any of several where one stands in for another), what its Card allows, holds and
@@ -389,9 +428,17 @@ and a test fails when they differ.
 tafs cloud serves them at `GET /v1/recipes` ([api.md](api.md#recipes), `runtime/src/cloud/recipes.ts`):
 the recipes whose every connection has a vendor the account's catalog lists, read from planque
 with the person's own session, grouped by category with the titles the apps show. When the
-catalog can't be read, every recipe is listed and `filtered` says so, so the page is
+catalog can't be read, or has more pages than tafs cloud reads, every recipe is listed and
+`filtered` says so, so the page is
 never blank for that; Coach says what it can't connect. The apps only draw the list and fill the
 message box: the words come from tafs cloud, so both apps show the same.
+
+On Android, a new Coach conversation draws only the recipes that come: none while tafs cloud's
+`shown` is false. Account › **Coach** has the **Show suggestions** switch, read and changed
+through `GET`/`PUT /v1/me/suggestions`, with tafs cloud's `words` under it. It's enabled for
+whoever KIFF lets manage the account's tafs (`cards.manage`), and a refusal is said in tafs
+cloud's words (`AppModel.setSuggestions`). The recipes are read again after a change. A tafs
+cloud without the route leaves the section out.
 
 **Android** reads them each time Coach opens, with Coach's setup (`AppModel.loadRecipes`), and
 draws them in an empty conversation that isn't improving a taf (`CoachStarts`): each category's

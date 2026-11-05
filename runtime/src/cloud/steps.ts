@@ -105,3 +105,87 @@ export class Steps {
     if (grant && vendor) this.vendors.set(grant, vendor);
   }
 }
+
+
+/**
+ * Why a step failed, in one line the owner can read, from what the tool answered
+ * (kiff/tafs#476, gap 9): the words after a service's "answered NNN:", the first line only,
+ * with anything that could be a secret or a person's own left out, at most 160 characters.
+ * Undefined when nothing readable is left: the app then says only that the step failed.
+ *
+ * The line goes to everyone who reads the taf's thread and is kept for 30 days, so what's
+ * scrubbed is wide: emails, URLs, Bearer and Basic credentials, UUIDs, long runs of digits (a
+ * card number, an account number), tokens that mix letters and digits (keys, JWTs, ids of any
+ * prefix), long hashes, snake_case codes, and the name of the service that relayed the call.
+ */
+export function whyOf(text: unknown): string | undefined {
+  if (typeof text !== "string") return undefined;
+  let line = text.split("\n").map((l) => l.trim()).find(Boolean) ?? "";
+  line = line.replace(/^(?:planque|kiff|tafs cloud|the (?:vendor|provider|tool)) answered \d{3}:\s*/i, "");
+  line = line
+    // A person's email, a URL (with whatever it carries), a credential and what follows it.
+    .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, "it")
+    .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, "it")
+    .replace(/\b(?:bearer|basic)\s+\S+/gi, "it")
+    // A token: 16 or more characters that mix letters and digits (a key, a JWT, a UUID, an id
+    // of any prefix), with _, - and . allowed inside; then a UUID of digits alone, a long run
+    // of digits (spaces or dashes inside), a long hash, and a service's short id with its prefix.
+    .replace(/\b(?=[A-Za-z0-9_.-]*[A-Za-z])(?=[A-Za-z0-9_.-]*\d)[A-Za-z0-9][A-Za-z0-9_.-]{15,}\b/g, "it")
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "it")
+    .replace(/\b\d(?:[ -]?\d){11,}\b/g, "it")
+    .replace(/\b[0-9a-f]{16,}\b/gi, "it")
+    .replace(/\b[a-z]{1,5}_(?=[A-Za-z0-9]*[A-Z0-9])[A-Za-z0-9]{4,}\b/g, "it")
+    // A code, with its label; and the service that relayed the call, which the owner never sees.
+    .replace(/\b(?:code|error|status|reason)\s+[a-z]+(?:_[a-z]+)+\b/g, "")
+    .replace(/\b[a-z]+(?:_[a-z]+)+\b/g, "")
+    .replace(/\bplanque\b/gi, "")
+    // What's left of a bracket that held only ids and codes, and doubled "it"s.
+    .replace(/\(\s*(?:(?:[a-z]+\s+)?it[\s,]*)*\)/g, "").replace(/,\s*(?=[).;])/g, "")
+    .replace(/\bit(?:\s+it)+\b/g, "it")
+    .replace(/\s{2,}/g, " ").replace(/\s+([,.;:)])/g, "$1").trim();
+  if (line.length > 160) line = `${line.slice(0, 159).replace(/\s+\S*$/, "")}…`;
+  line = line.replace(/[\s,;:]+$/, "");
+  return /[A-Za-z]{3,}/.test(line.replace(/\bit\b/g, "")) ? line : undefined;
+}
+
+/** A failed step as the apps draw it: `failed`, and `why` when the tool said something readable. */
+export function failedStep(text: unknown): { failed: true; why?: string } {
+  const why = whyOf(text);
+  return { failed: true, ...(why ? { why } : {}) };
+}
+
+/** Where a run's failed steps' reasons are kept for its thread, by tenant and run (30 days, as the run is). */
+export const stepWhyKey = (tenant: string, run: string) => `${tenant}#step-why#${run}`;
+export const STEP_WHY_KEPT_MS = 30 * 24 * 3600_000;
+/** The most reasons kept for one run: the last ones, which are the thread's most recent. */
+export const STEP_WHYS_KEPT = 50;
+
+/** The reasons a run's failed steps had, as the stream saw them, each with its call and tool, in order. */
+export type StepWhys = Array<{ call: string; tool: string; why: string }>;
+
+/**
+ * Gives failed steps their reasons, each to the first failed step of its tool in order: the
+ * stored thread has only each call's tool and that it failed, and the reasons were kept as
+ * the run streamed. `whys` is consumed, so a run's parts share one list. A failed step says
+ * `failed` as the stream's `step` does, with `why` when the tool said something readable.
+ */
+/**
+ * A step Coach retried and that later went through isn't shown to the owner as failed
+ * (kiff-cloud#1487, recipe 3): a failed call followed by a real retry, the same tool with
+ * the same input (kiff/agents' `input_hash` on the usage record), is dropped, and the
+ * retry's outcome stands, done or failed again. A later call of the same tool with other
+ * input is other work, and keeps its own step: a reminder to B says nothing about A's. A
+ * record with no digest (from before kiff/agents wrote one) folds nothing.
+ */
+export function foldRetried<T extends { tool: string; error?: true; inputHash?: string }>(steps: T[]): T[] {
+  return steps.filter((s, i) => !s.error || !s.inputHash || !steps.slice(i + 1).some((later) => later.tool === s.tool && later.inputHash === s.inputHash));
+}
+
+export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string }> {
+  return steps.map((s) => {
+    if (!s.error) return s;
+    const i = whys.findIndex((w) => w.tool === s.tool);
+    const why = i >= 0 ? whys.splice(i, 1)[0]!.why : undefined;
+    return { ...s, failed: true as const, ...(why ? { why } : {}) };
+  });
+}

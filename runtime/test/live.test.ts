@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { logRequest, type HTTPEvent } from "../src/cloud/handler.js";
+import { logRequest, maskedWhy, type HTTPEvent } from "../src/cloud/handler.js";
 import { changeNotification, type Device, tellChange } from "../src/cloud/push.js";
 import { fcmMessage } from "../src/cloud/fcm.js";
 
@@ -40,6 +40,19 @@ describe("live updates for the whole account", () => {
     const lines = log2.mock.calls.map((c) => JSON.parse(c[0] as string).route);
     log2.mockRestore();
     expect(lines).toEqual(["/v1/tafs/:x/doors/email/keys/:x", "/v1/tafs/:x/memory/:x"]);
+  });
+
+  it("says why a 5xx happened, with ids and addresses masked", () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const event = { rawPath: "/v1/tafs/taf-a/components/c1/approval/ask1", requestContext: { http: { method: "post" } } } as HTTPEvent;
+    logRequest(event, 502, 40, "Connected apps could not be read (planque answered 409); try again");
+    logRequest(event, 200, 4, "not logged for a 2xx");
+    const [bad, ok] = log.mock.calls.map((c) => JSON.parse(c[0] as string));
+    log.mockRestore();
+    expect(bad.why).toBe("Connected apps could not be read (planque answered 409); try again");
+    expect(ok.why).toBeUndefined();
+    expect(maskedWhy("receipt for tc-30983a9da8b9b4988fb5 from ana@acme.example at https://x.example/a?b=1 failed")).toBe("receipt for :x from :x at :x failed");
+    expect(maskedWhy("x".repeat(300))).toHaveLength(200);
   });
 });
 

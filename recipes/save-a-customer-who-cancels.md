@@ -16,4 +16,4 @@ card:
     - A refund
     - A plan change the customer didn't ask for
 ---
-When a customer cancels their subscription in Stripe, offer them one free month or up to 20% off for three months by email, and apply it if they accept. At most 10 offers a day. Anything more waits for me. Never refund here.
+When a customer cancels their subscription at my payment provider, offer them one free month or up to 20% off for three months by email, and apply it if they accept. At most 10 offers a day. Anything more waits for me. Never refund here.

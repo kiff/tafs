@@ -42,12 +42,16 @@ object RequestWords {
     "not_made" -> "–"
     else -> "○"
   }
+
+  /** Whether tafs cloud says [step] waits for a connected app's event, not for the owner: it isn't drawn as needing them. */
+  fun waitsOnApp(step: RequestStep): Boolean = step.waitsOn == "app"
 }
 
-private fun markColor(step: RequestStep): Color = when (step.state) {
-  "done" -> Theme.ok
-  "failed" -> Theme.no
-  "waiting" -> Theme.amberText
+private fun markColor(step: RequestStep): Color = when {
+  step.state == "done" -> Theme.ok
+  step.state == "failed" -> Theme.no
+  RequestWords.waitsOnApp(step) -> Theme.soft
+  step.state == "waiting" -> Theme.amberText
   else -> Theme.dim
 }
 

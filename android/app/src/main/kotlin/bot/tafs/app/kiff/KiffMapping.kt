@@ -151,11 +151,15 @@ object KiffMapping {
       h.state == "paused" -> taf.copy(state = TafState.paused, now = "Paused")
       // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
       h.state == "halted" -> taf.copy(state = TafState.halted, now = "Halted · resume it from Halt")
+      // Its run waits for a connected app's event (the slow-tools design): not the owner's, in the connection's words.
+      h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = h.work.line)
       // A taf with no schedule isn't at work until it's told something in its chat (kiff/tafs#138, item 55).
       h.state == "working" && h.unscheduled == true -> taf.copy(state = TafState.idle, now = "Works from its chat")
       h.state == "working" -> taf.copy(state = TafState.working, now = h.nextRun?.let { "Next run ${shortTime(it)}" } ?: "Running")
       h.state == "idle" -> taf.copy(state = TafState.idle, now = "Acting under KIFF")
-      else -> taf.copy(state = TafState.revoked, now = "Card not active")
+      h.state == "stopped" -> taf.copy(state = TafState.revoked, now = "Card not active")
+      // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
+      else -> taf.copy(state = TafState.idle, now = h.work?.line.orEmpty())
     }
     return taf.copy(
       cloudId = h.id,
@@ -221,8 +225,8 @@ object KiffMapping {
       }
       val refusedByTool = c.outcome == "allowed" && c.toolOutcome?.status == "refused_by_tool"
       // Typed by KIFF as the connection's refusal: KIFF's words, or the plain fact, never the tool's raw message.
-      val byConnection = refusedByTool && c.toolOutcome?.refusedBy == "connection"
-      val shown = if (byConnection && c.toolOutcome?.code != null) c.detail ?: "The connection refused it before sending. Nothing was sent." else detail
+      val byConnection = refusedByTool && c.toolOutcome.refusedBy == "connection"
+      val shown = if (byConnection && c.toolOutcome.code != null) c.detail ?: "The connection refused it before sending. Nothing was sent." else detail
       RecordEntry(
         id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
@@ -286,7 +290,7 @@ object KiffMapping {
   fun install(e: CardException, coach: String?): VersionInstall? {
     if (coach.isNullOrEmpty() || e.subject != coach || e.action != "version_install") return null
     val taf = (e.arguments?.get("taf") as? JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotEmpty() } ?: return null
-    val n = (e.arguments?.get("n") as? JsonPrimitive)?.content?.toIntOrNull()?.takeIf { it > 0 } ?: return null
+    val n = (e.arguments["n"] as? JsonPrimitive)?.content?.toIntOrNull()?.takeIf { it > 0 } ?: return null
     return VersionInstall(taf, n)
   }
 

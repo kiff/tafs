@@ -376,7 +376,10 @@ data class AppState(
   val listApprovalNeedsKey: Boolean = false,
   /** A connection from Connect apps that just came back signed in or connected: said at once, over the list. */
   val connectedNow: bot.tafs.app.kiff.Grant? = null,
-  /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
+  /**
+   * KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). A grant's profile can change
+   * under the same id (tools added to a connection): read them through [profileWordsFor], which holds only the current profile's.
+   */
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
   val profileWordsErrors: Map<String, String> = emptyMap(),
@@ -387,6 +390,16 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
+  /** The account's "Show suggestions" setting as tafs cloud last said it, while it's being changed, and why a change didn't go. */
+  val suggestions: bot.tafs.app.kiff.Suggestions? = null,
+  val suggestionsBusy: Boolean = false,
+  val suggestionsError: String? = null,
+  /** KIFF's words for the next approval while this phone holds an approval window ("No fingerprint for the next 4 minutes"). */
+  val windowWords: String? = null,
+  /** planque's live sign-in view for a browser connection, open over everything until the owner closes it. */
+  val siteSignIn: bot.tafs.app.kiff.SiteSignInView? = null,
+  /** The connection whose sign-in view is being asked for. */
+  val openingSiteSignIn: String? = null,
   /** Alerts can work in this build (Firebase is set up), whether this phone gets them, and whether this person may answer holds, as tafs cloud last said. */
   val alertsAvailable: Boolean = false,
   val alertsReady: Boolean = false,
@@ -451,6 +464,9 @@ data class AppState(
 
   /** The taf's connected Slack bot connections, which a Slack door listens through. */
   fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
+
+  /** The taf's connected bot connections from [provider] (tafs cloud names it on the door's app), which a bot door listens through. */
+  fun bots(tafId: String, provider: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isFrom(provider) && it.request.agent == tafId }
 
   /** The tafs an app can be connected for: on tafs cloud, and managed by this person. */
   val connectableTafs: List<Taf> get() = tafs.filter { it.cloudId != null && manages(it.id) }
@@ -666,6 +682,13 @@ data class AppState(
    * message twice in a thread) shows once.
    */
   fun chatItems(tafId: String): List<ChatItem> = chatItemsAsRead(tafId).distinctBy { it.id }
+
+  /** The digest of [grant]'s profile as planque sends it now, or null for a grant with none. */
+  fun profileDigest(grant: bot.tafs.app.kiff.Grant): String? = grant.request.profile?.let(bot.tafs.app.kiff.ProfileWords::digest)
+
+  /** KIFF's words for [grant]'s profile as it is now: none while the words read are an earlier profile's. */
+  fun profileWordsFor(grant: bot.tafs.app.kiff.Grant): bot.tafs.app.kiff.ProfileWords? =
+    profileDigest(grant)?.let { digest -> profileWords[grant.id]?.takeIf { it.profileSha256 == digest } }
 
   private fun chatItemsAsRead(tafId: String): List<ChatItem> {
     val messages = chats[tafId] ?: emptyList()
@@ -896,6 +919,10 @@ class AppModel(
     cloud.token = token
     kiff.tenant = tenant
     accountGeneration += 1
+    // An approval window is the last session's: a new sign-in opens its own.
+    kiff.window = null
+    windowClosing?.cancel()
+    _state.update { it.copy(windowWords = null) }
     eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()
@@ -1323,6 +1350,9 @@ class AppModel(
     secrets.delete(APPROVAL_KEYED)
     forgetApprovalKey()
     kiff.token = null
+    // KIFF ends this session's approval window at sign-out.
+    kiff.window = null
+    windowClosing?.cancel()
     cloud.token = null
     kiff.tenant = null
     kiffTenant = null
@@ -1509,6 +1539,15 @@ class AppModel(
     _state.update { it.copy(coachRequested = true) }
   }
 
+  /**
+   * A delivery still not made, asked about in Coach: a new conversation about the taf, with tafs cloud's words for it in the
+   * message box, for the owner to edit and send. Nothing is sent.
+   */
+  fun askCoachAbout(tafId: String, words: String) {
+    improveInCoach(tafId)
+    setDraft(COACH_CHAT, words)
+  }
+
   /** The tab screen opened Coach. */
   fun coachOpened() = _state.update { it.copy(coachRequested = false) }
 
@@ -1692,16 +1731,16 @@ class AppModel(
   }
 
   /**
-   * Send again: a door reply given up on after its tries goes once more (`POST …/deliveries/door_reply/send`). It does no work
-   * and signs nothing. The work is read again after, whatever came of it.
+   * Send again: a delivery given up on goes once more, by its place (`POST …/deliveries/{place}/send`): the door reply, or a place
+   * of the taf's own by its key, which tafs cloud retries as the taf's task. It signs nothing. The work is read again after.
    */
-  suspend fun sendAgain(tafId: String, run: String) {
+  suspend fun sendAgain(tafId: String, run: String, place: String = "door_reply") {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     if (run in _state.value.sendingAgain) return
     _state.update { it.copy(sendingAgain = it.sendingAgain + run, workErrors = it.workErrors - tafId) }
     val generation = accountGeneration
     val failed = try {
-      cloud.sendAgain(cloudId, run)
+      cloud.sendAgain(cloudId, run, place)
       null
     } catch (e: CancellationException) {
       throw e
@@ -1900,7 +1939,11 @@ class AppModel(
     _state.value.coachComponents.any { it.run == run && it.component.type == "result" && it.answer == null }
 
   /** Reads a taf's thread from tafs cloud and shows it; what the owner sent that it doesn't have yet stays, dimmed. */
-  private suspend fun readThread(tafId: String) {
+  /**
+   * [alongside] changes the state in the same update that brings the thread: the live answer leaving as its words land in the thread,
+   * so the chat's end never grows by a row and shrinks again, which moved the thread about while Coach wrote.
+   */
+  private suspend fun readThread(tafId: String, alongside: ((AppState) -> AppState)? = null) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     // A new Coach conversation has nothing to read until its first message is sent.
     if (tafId == COACH_CHAT && _state.value.coachFresh) return
@@ -1927,7 +1970,8 @@ class AppModel(
     }
     if (!current() || _state.value.mode != Mode.kiff) return
     val now = clock()
-    _state.update { s ->
+    _state.update { read ->
+      val s = alongside?.invoke(read) ?: read
       // What the owner sent stays on screen until the thread has it (kiff/tafs#138, 48).
       val (messages, waiting) = SentMessages.merge(thread.messages, s.chatSent[tafId].orEmpty(), now)
       // The wait ends once tafs cloud says the taf is at work, once it answered after the owner wrote, or after
@@ -2298,6 +2342,35 @@ class AppModel(
     if (generation == accountGeneration) _state.update { it.copy(recipes = recipes) }
   }
 
+  /** Reads the account's "Show suggestions" setting, for Account. */
+  suspend fun loadSuggestions() {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    val read = attempt { cloud.suggestions() } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(suggestions = read) }
+  }
+
+  /**
+   * Turns the account's suggestions off for good, or on again, in tafs cloud: it decides what a new Coach conversation shows, and
+   * the recipes are read again. A refusal is said in tafs cloud's words.
+   */
+  suspend fun setSuggestions(show: Boolean) {
+    if (_state.value.mode != Mode.kiff || _state.value.suggestionsBusy) return
+    val generation = accountGeneration
+    _state.update { it.copy(suggestionsBusy = true, suggestionsError = null) }
+    try {
+      val now = cloud.setSuggestions(show)
+      if (generation == accountGeneration) _state.update { it.copy(suggestions = now) }
+      loadRecipes()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(suggestionsError = "It didn't change. ${(e as? bot.tafs.app.kiff.CloudError)?.message ?: ErrorWords.of(e)}") }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(suggestionsBusy = false) }
+    }
+  }
+
   /**
    * Starts Coach on this account, once, behind one confirmation: the phone gives Coach its tools, enrols with planque (planque gets
    * the phone's key and a connector key that connects tools and does nothing else), and Coach is started from a draft with no
@@ -2380,7 +2453,7 @@ class AppModel(
         return false
       }
       if (generation != accountGeneration) return false
-      _state.update { it.copy(coachCloudId = setup?.id, coachAgent = setup?.kiffAgent, coachChecked = true) }
+      _state.update { it.copy(coachCloudId = setup.id, coachAgent = setup.kiffAgent, coachChecked = true) }
       // Within the step the owner just confirmed: Coach's tools, as tafs cloud says they're still to give.
       giveCoachTools()
     } finally {
@@ -2648,6 +2721,41 @@ class AppModel(
 
   fun closeRequest() = _state.update { it.copy(openRequest = null, requestError = null) }
 
+  /**
+   * A browser connection's sign-in to a site (kiff/planque#86): planque's live view, asked for with this device's signature and
+   * opened as it comes. A view that isn't on planque's own address is never opened. A refusal is said on the connection.
+   */
+  suspend fun openSiteSignIn(grantId: String) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null || _state.value.openingSiteSignIn != null || _state.value.siteSignIn != null) return
+    val generation = accountGeneration
+    _state.update { it.copy(openingSiteSignIn = grantId, coachNotes = it.coachNotes - grantId) }
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    try {
+      val view = planque.siteSignIn(grantId) { signer.signConfirmed(it) }
+      if (generation != accountGeneration) return
+      if (!onPlanque(view.view)) {
+        note(grantId, "The sign-in view didn't open: it wasn't on the connection's own address.")
+        return
+      }
+      _state.update { it.copy(siteSignIn = view) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // planque's own words say why (a view already open, the connection not connected); anything else, in the app's.
+      if (generation == accountGeneration) note(grantId, "The sign-in view didn't open. " + ((e as? PlanqueError.Server)?.message ?: ErrorWords.of(e)))
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(openingSiteSignIn = null) }
+    }
+  }
+
+  fun closeSiteSignIn() = _state.update { it.copy(siteSignIn = null) }
+
+  /** Whether [url] is on planque's own https origin (scheme, host and port): the only place a sign-in view may come from. */
+  private fun onPlanque(url: String): Boolean = bot.tafs.app.views.sameHttpsOrigin(url, planque.baseUrl)
+
   /** The channels a Slack bot connection can see, from planque: a signed read, for picking a Slack door's channel. */
   suspend fun loadSlackChannels(grantId: String) {
     val tenant = kiffTenant
@@ -2721,6 +2829,15 @@ class AppModel(
       planque.signer = null
       if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
     }
+  }
+
+  /**
+   * A bot door, such as Telegram's: the owner's bot connection, as tafs cloud's door (`{app, grant, bot?}`). planque listens to the bot
+   * from its connection on, so there's nothing to subscribe and nothing to sign; who may give work is paired after, from their knock.
+   */
+  suspend fun addBotDoor(tafId: String, app: DoorApp, grant: bot.tafs.app.kiff.Grant): Door? {
+    if (_state.value.mode != Mode.kiff) return null
+    return doorWork(tafId) { cloud.addDoor(it, app.id, mapOf("grant" to grant.id) + (grant.botName?.let { bot -> mapOf("bot" to bot) } ?: emptyMap())) }
   }
 
   /** A subscription planque made for an approved event that tafs cloud hasn't recorded yet: kept only to record it again. */
@@ -2883,7 +3000,7 @@ class AppModel(
     } else first
     val behind = want != null && knob.shown != want
     if (generation == shownGeneration()) _state.update {
-      it.copy(knobs = it.knobs + (tafId to knob), knobBehind = if (behind) it.knobBehind + (tafId to want!!) else it.knobBehind - tafId)
+      it.copy(knobs = it.knobs + (tafId to knob), knobBehind = if (behind) it.knobBehind + (tafId to want) else it.knobBehind - tafId)
     }
   }
 
@@ -3029,9 +3146,8 @@ class AppModel(
         _state.update { s -> s.copy(grants = s.grants.map { if (it.id == grant.id) grant else it }) }
         return false.also { note(noteKey, VersionWords.OUT_OF_DATE_CARD) }
       }
-      val words = grant.request.profile?.let { profile ->
-        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
-          ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
+      val words = grant.request.profile?.let {
+        _state.value.profileWordsFor(grant) ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
       }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Give ${grant.vendor} its key for ${grant.request.agent}")
@@ -3059,8 +3175,13 @@ class AppModel(
    * the card shows them before any approval. Nothing is read for a grant with no profile.
    */
   suspend fun loadProfileWords(grantId: String) {
-    if (_state.value.mode != Mode.kiff || grantId in _state.value.profileWords) return
-    val profile = _state.value.grants.firstOrNull { it.id == grantId }?.request?.profile ?: return
+    if (_state.value.mode != Mode.kiff) return
+    val grant = _state.value.grants.firstOrNull { it.id == grantId } ?: return
+    val profile = grant.request.profile ?: return
+    // Read once per profile, not per connection: tools added to it change its profile under the same id.
+    if (_state.value.profileWordsFor(grant) != null) return
+    // An earlier profile's refusal isn't this one's.
+    _state.update { it.copy(profileWordsErrors = it.profileWordsErrors - grantId) }
     val generation = accountGeneration
     val result = try {
       Result.success(kiff.profileWords(profile))
@@ -3146,9 +3267,8 @@ class AppModel(
         return Connected.Stopped
       }
       // A connection with a profile is approved only with KIFF's words for exactly that profile, as the owner read them.
-      val words = grant.request.profile?.let { profile ->
-        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
-          ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
+      val words = grant.request.profile?.let {
+        _state.value.profileWordsFor(grant) ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
       }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Connect ${grant.vendor} to ${grant.request.agent}")
@@ -3261,7 +3381,8 @@ class AppModel(
     try {
       // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
       val proof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
-      val words = _state.value.profileWords[grantId]
+      // The words for the profile as it is now: an earlier profile's would name another digest, and tafs cloud refuses it.
+      val words = _state.value.grants.firstOrNull { it.id == grantId }?.let { _state.value.profileWordsFor(it) }
       val ask = kotlinx.serialization.json.buildJsonObject {
         put("grant", grantId)
         shownDigest?.let { put("shown_digest", it) }
@@ -3280,25 +3401,50 @@ class AppModel(
           // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
           // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
           if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return }
+          // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one fingerprint opens it, unless this phone
+          // holds one, and the call goes as a tap. The service decides; a KIFF without windows leaves the step as it was.
+          kiff.setupSigner = sign
+          var windowed = false
           try {
+            windowed = asked.key == "window" && holdWindow(asked.reason)
             // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
-            if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
+            if (!windowed) {
+              if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
+            }
           } catch (e: SignerException) {
             note(c.id, notSigned(e, "Not done: it wasn't confirmed."))
             return
           }
           if (generation != accountGeneration) return
           planque.signer = sign
-          kiff.setupSigner = sign
+          if (windowed) planque.window = kiff.window?.id
+          var came = makeAskedCall(asked)
+          // planque says the window ended before anything was done: a new one, behind the fingerprint, and the call once more.
+          if (windowed && came == Came.WindowEnded) {
+            kiff.window = null
+            try {
+              holdWindow(asked.reason)
+            } catch (e: SignerException) {
+              note(c.id, notSigned(e, "Not done: it wasn't confirmed."))
+              return
+            }
+            if (generation != accountGeneration) return
+            planque.window = kiff.window?.id
+            came = makeAskedCall(asked)
+          }
           val report = kotlinx.serialization.json.buildJsonObject {
-            when (val came = makeAskedCall(asked)) {
-              is Came.Of -> { put("result", came.result); came.status?.let { put("status", it) }; came.why?.let { put("why", it) } }
+            when (val c2 = came) {
+              is Came.Of -> { put("result", c2.result); c2.status?.let { put("status", it) }; c2.why?.let { put("why", it) } }
+              Came.WindowEnded -> put("result", "failed")
             }
             session?.let { put("session", it) }
           }
           if (generation != accountGeneration) return
           refreshConnections()
-          val outcome = cloud.approvalReport(cloudId, c.id, asked.id, report, proof, tenant, sign)
+          // A fresh read proof for the report: the first was spent by the approval's read, and planque takes each signed
+          // request once, within minutes (a vendor sign-in can take longer).
+          val reportProof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
+          val outcome = cloud.approvalReport(cloudId, c.id, asked.id, report, reportProof, tenant, sign)
           if (generation != accountGeneration) return
           note(c.id, outcome.note)
           coachAnswered(cloudId, key, outcome.session, outcome.run)
@@ -3313,14 +3459,86 @@ class AppModel(
       readThread(COACH_CHAT)
     } finally {
       planque.signer = null
+      planque.window = null
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+      if (generation == accountGeneration) readWindowWords()
     }
   }
 
   /** What came of the call tafs cloud asked for, as the report says it: never an answer, only what happened. */
   private sealed interface Came {
     data class Of(val result: String, val status: String? = null, val why: String? = null) : Came
+
+    /** planque refused it: signed in an approval window that had ended, so nothing was done. */
+    data object WindowEnded : Came
+  }
+
+  /**
+   * An approval window held at KIFF (kiff/tafs#494): true at once while this phone holds one, else one fingerprint (the approval
+   * key, with [reason]'s words) opens one for five minutes. False where it can't: no approval key in KIFF, or a KIFF without
+   * windows; the step then signs as it did. Whether the window is open is KIFF's to say, at each call.
+   */
+  private suspend fun holdWindow(reason: String): Boolean {
+    if (!sessionHasApprovalKey || kiff.approvalSigner == null) return false
+    if (kiff.window != null) return true
+    approvalReason = reason
+    val expires = DateTimeFormatter.ISO_INSTANT.format(clock().plusSeconds(WINDOW_SECONDS).truncatedTo(ChronoUnit.SECONDS))
+    val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
+    return try {
+      val opened = kiff.openWindow(expires, nonce)
+      _state.update { it.copy(windowWords = opened.words) }
+      true
+    } catch (e: KiffError.Server) {
+      // A KIFF from before the window has no such route: the step goes on as before.
+      if (e.status == 404 || e.status == 405) false else throw e
+    }
+  }
+
+  /** KIFF's words for the next approval, while a window is held; none once it's gone. */
+  private suspend fun readWindowWords() {
+    if (kiff.window == null) {
+      _state.update { it.copy(windowWords = null) }
+      return
+    }
+    val read = runCatching { kiff.readWindow() }.getOrNull() ?: return
+    if (read.window?.open != true) kiff.window = null
+    _state.update { it.copy(windowWords = read.window?.takeIf { w -> w.open }?.words) }
+  }
+
+  private var windowClosing: Job? = null
+
+  /**
+   * The app went to the background: after 30 seconds there, the window this phone holds is closed at KIFF (kiff/tafs#494).
+   * Back sooner, it stays.
+   */
+  fun wentToBackground() {
+    if (kiff.window == null) return
+    windowClosing?.cancel()
+    windowClosing = scope.launch {
+      delay(WINDOW_BACKGROUND_MS)
+      closeWindow()
+    }
+  }
+
+  /** Back on screen: a close waiting on the background is called off, and KIFF's words read again. */
+  fun cameToForeground() {
+    windowClosing?.cancel()
+    windowClosing = null
+    if (kiff.window != null) scope.launch { readWindowWords() }
+  }
+
+  /** The screen turned off: the window this phone holds is closed at once. */
+  fun screenLocked() {
+    windowClosing?.cancel()
+    if (kiff.window != null) windowClosing = scope.launch { closeWindow() }
+  }
+
+  private suspend fun closeWindow() {
+    val signer = signer
+    // Forgotten here whether or not KIFF heard: a window it still holds ends at its own time, and the next approval asks again.
+    runCatching { kiff.closeWindow { signer.signConfirmed(it) } }
+    _state.update { it.copy(windowWords = null) }
   }
 
   /** Makes the one call tafs cloud asked for, as given, and says what came of it. */
@@ -3353,6 +3571,8 @@ class AppModel(
     }
   } catch (e: VendorSignInCancelled) {
     Came.Of("sign_in_closed")
+  } catch (e: bot.tafs.app.kiff.PlanqueError.WindowRequired) {
+    Came.WindowEnded
   } catch (e: CancellationException) {
     throw e
   } catch (e: Exception) {
@@ -3849,8 +4069,8 @@ class AppModel(
             }
             StreamEvent.Taken, StreamEvent.Said, StreamEvent.Component -> readThread(tafId)
             StreamEvent.Part -> {
-              live { it.newPart() }
-              readThread(tafId)
+              // The part's words leave the live row in the update that brings them into the thread, never a frame before.
+              readThread(tafId) { s -> s.chatLive[tafId]?.let { a -> s.copy(chatLive = s.chatLive + (tafId to a.newPart())) } ?: s }
             }
             is StreamEvent.End -> {
               ended = e
@@ -3879,9 +4099,12 @@ class AppModel(
       }
       // Over, or paused on a held call: KIFF is read at once, so the hold shows and the Card's amounts are today's.
       if (end != null) refresh()
-      readThread(tafId)
+      // The live answer goes in the update that brings the answer into the thread: one row takes the other's place.
+      val settle: (AppState) -> AppState = { s -> s.copy(chatLive = s.chatLive - tafId, chatAwaiting = if (end != null) s.chatAwaiting - tafId else s.chatAwaiting) }
+      readThread(tafId, settle)
       if (!current()) return@launch
-      _state.update { it.copy(chatLive = it.chatLive - tafId, chatAwaiting = if (end != null) it.chatAwaiting - tafId else it.chatAwaiting) }
+      // Where the thread couldn't be read, the live answer goes all the same.
+      _state.update(settle)
       // This stream no longer holds the chat. What goes on after it is read on a timer: a stream that dropped with no end, or a
       // run that paused and went on with no stream open, as Coach's does once tafs cloud answers its result. Its end must show.
       if (followers[tafId] === coroutineContext[kotlinx.coroutines.Job]) followers.remove(tafId)
@@ -4601,8 +4824,8 @@ class AppModel(
   }
 
   suspend fun removeDoor(tafId: String, door: Door) {
-    // A Slack door: planque's subscription goes first (a signed delete), then the door, so nothing listens for a door that's gone.
-    if (door.kind == "slack" && door.grant != null && door.trigger != null) {
+    // A door with planque's subscription (a Slack channel's, or a bot's): it goes first (a signed delete), then the door, so nothing listens for a door that's gone.
+    if (door.grant != null && door.trigger != null) {
       val tenant = kiffTenant ?: return
       val account = _state.value.grants.firstOrNull { it.id == door.grant }?.account
       if (account != null) {
@@ -4615,7 +4838,7 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          updateDoors(tafId) { it.copy(error = "The Slack bot still listens to that channel, so the door stays. ${ErrorWords.of(e)}") }
+          updateDoors(tafId) { it.copy(error = (if (door.kind == "slack") "The Slack bot still listens to that channel" else "The bot still listens") + ", so the door stays. ${ErrorWords.of(e)}") }
           return
         } finally {
           planque.signer = null
@@ -5674,6 +5897,12 @@ class AppModel(
 
     /** What the fingerprint prompt says when Approve again proves this phone holds its new key. */
     const val RELINK_REASON = "Approve again with this fingerprint"
+
+    /** How long an approval window is asked for: KIFF takes five minutes at most, and restarts it with each approval in it. */
+    const val WINDOW_SECONDS = 300L
+
+    /** How long the app may be in the background before the window it holds is closed (kiff/tafs#494). */
+    const val WINDOW_BACKGROUND_MS = 30_000L
 
     /** KIFF answered, but holds another key, or this one was turned off while the browser waited. */
     const val RELINK_DIDNT_TAKE = "This phone still can't approve. Try again, or sign in again in Settings."
