@@ -3,6 +3,60 @@ import UIKit
 import XCTest
 @testable import Tafs
 
+/// Spike v2 (kiff/tafs#544): with VoiceOver off, SwiftUI builds no accessibility elements, so the app keeps its
+/// own registry of what can be driven. Each control registers its frame on screen and its actions through one
+/// modifier; a driven tap hit-tests the registry and runs the control's action.
+@MainActor
+final class DriveTargets {
+    static let shared = DriveTargets()
+    struct Target {
+        let id: String
+        var label: String
+        var frame: CGRect
+        var actions: [String: () -> Void]
+    }
+    private(set) var targets: [String: Target] = [:]
+
+    func set(_ id: String, label: String, frame: CGRect, actions: [String: () -> Void]) {
+        targets[id] = Target(id: id, label: label, frame: frame, actions: actions)
+    }
+    func remove(_ id: String) { targets[id] = nil }
+    func reset() { targets = [:] }
+
+    /// The smallest target that contains a point on the screen: what `app_tap {x, y}` acts on.
+    func hit(_ p: CGPoint) -> Target? {
+        targets.values.filter { $0.frame.contains(p) }.min { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
+    }
+    @discardableResult
+    func perform(_ id: String, _ action: String = "activate") -> Bool {
+        guard let a = targets[id]?.actions[action] else { return false }
+        a()
+        return true
+    }
+}
+
+struct Drivable: ViewModifier {
+    let id: String
+    let label: String
+    let actions: [String: () -> Void]
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { frame in
+                DriveTargets.shared.set(id, label: label, frame: frame, actions: actions)
+            }
+            .onDisappear { DriveTargets.shared.remove(id) }
+    }
+}
+
+extension View {
+    func drivable(_ id: String, _ label: String, actions: [String: () -> Void] = [:], activate: (() -> Void)? = nil) -> some View {
+        var all = actions
+        if let activate { all["activate"] = activate }
+        return modifier(Drivable(id: id, label: label, actions: all))
+    }
+}
+
 /// The one-day spike for "Coach drives the app" (kiff/tafs#544): can the app see its own windows
 /// and act on its own controls through public APIs only, with VoiceOver off? Each check prints a
 /// `DRIVE-SPIKE` line for the CI log, and asserts what the design relies on.
@@ -30,19 +84,25 @@ final class DriveSpikeTests: XCTestCase {
                     Section {
                         Button("Run now") { probe.runs += 1 }
                             .accessibilityIdentifier("spike.run")
+                            .drivable("spike.run", "Run now") { probe.runs += 1 }
                         Text("Refunds")
                             .swipeActions { Button("Pause") { probe.paused = true } }
                             .contextMenu { Button("Archive") { probe.archived = true } }
+                            .drivable("spike.refunds", "Refunds", actions: ["Pause": { probe.paused = true }, "Archive": { probe.archived = true }])
                         Button("Open sheet") { probe.sheet = true }
+                            .drivable("spike.sheet", "Open sheet") { probe.sheet = true }
                         Button("Halt") { probe.alert = true }
+                            .drivable("spike.halt", "Halt") { probe.alert = true }
                     }
-                    ForEach(0..<60, id: \.self) { i in Text("Row \(i)") }
+                    ForEach(0..<60, id: \.self) { i in Text("Row \(i)").drivable("spike.row\(i)", "Row \(i)") }
                 }
                 .navigationTitle("Spike")
                 .sheet(isPresented: $probe.sheet) {
                     VStack(spacing: 20) {
                         TextField("Limit", text: $probe.limit).textFieldStyle(.roundedBorder)
+                            .drivable("spike.limit", "Limit")
                         Button("Close") { probe.sheet = false }
+                            .drivable("spike.close", "Close") { probe.sheet = false }
                     }
                     .padding()
                 }
@@ -309,6 +369,99 @@ final class DriveSpikeTests: XCTestCase {
         let changed = Set(next.map(\.label)) != Set(home.map(\.label))
         log("activated \"\(row.label)\" #\(row.identifier): \(activated); the screen changed: \(changed); now: " + next.prefix(25).map(\.line).joined(separator: " | "))
         XCTAssertTrue(changed, "activating \"\(row.label)\" changed nothing")
+    }
+
+    // MARK: - v2: the app's own registry
+
+    private var targets: DriveTargets { DriveTargets.shared }
+
+    /// Why v1 found nothing: UIKit's own accessibility answers are loaded with an assistive technology, so
+    /// with VoiceOver off even a UILabel reports nothing.
+    func testV2WhyTheTreeIsEmpty() async throws {
+        let label = UILabel()
+        label.text = "Refunds"
+        let w = try await show(SpikeScreen(probe: Probe()))
+        log("UILabel isAccessibilityElement: \(label.isAccessibilityElement), label: \(label.accessibilityLabel ?? "nil"); window elements: \(Self.elements(in: w).count); registry: \(targets.targets.count)")
+    }
+
+    /// A tap at a point, through the registry: the control's own action runs.
+    func testV2TapAtAPoint() async throws {
+        targets.reset()
+        let probe = Probe()
+        let w = try await show(SpikeScreen(probe: probe))
+        let run = try XCTUnwrap(targets.targets["spike.run"], "Run now didn't register: \(targets.targets.keys.sorted())")
+        let hit = try XCTUnwrap(targets.hit(CGPoint(x: run.frame.midX, y: run.frame.midY)))
+        log("registry \(targets.targets.count) targets; Run now at \(run.frame); hit \(hit.id); window \(w.bounds)")
+        XCTAssertEqual(hit.id, "spike.run")
+        hit.actions["activate"]?()
+        await settle(0.2)
+        XCTAssertEqual(probe.runs, 1)
+    }
+
+    /// A swipe action and a context menu item, as the row's named actions.
+    func testV2SwipeAndLongPress() async throws {
+        targets.reset()
+        let probe = Probe()
+        _ = try await show(SpikeScreen(probe: probe))
+        XCTAssertTrue(targets.perform("spike.refunds", "Pause"))
+        XCTAssertTrue(targets.perform("spike.refunds", "Archive"))
+        await settle(0.2)
+        XCTAssertTrue(probe.paused && probe.archived)
+    }
+
+    /// A scroll: the list's scroll view moved by its offset; the far rows register as they come on screen.
+    func testV2Scroll() async throws {
+        targets.reset()
+        let w = try await show(SpikeScreen(probe: Probe()))
+        XCTAssertNil(targets.targets["spike.row59"].flatMap { w.bounds.intersects($0.frame) ? $0 : nil })
+        let list = try XCTUnwrap(Self.views(UIScrollView.self, in: w).max { $0.contentSize.height < $1.contentSize.height })
+        list.setContentOffset(CGPoint(x: 0, y: max(0, list.contentSize.height - list.bounds.height + list.adjustedContentInset.bottom)), animated: false)
+        await settle(0.6)
+        let row = targets.targets["spike.row59"]
+        log("content \(list.contentSize.height); Row 59 registered: \(row != nil), on screen: \(row.map { w.bounds.intersects($0.frame) } ?? false)")
+        XCTAssertTrue(row.map { w.bounds.intersects($0.frame) } ?? false)
+    }
+
+    /// A sheet: opened through the registry, in the drawn window, its field typed into, closed by dismissing.
+    func testV2Sheet() async throws {
+        targets.reset()
+        let probe = Probe()
+        let w = try await show(SpikeScreen(probe: probe))
+        let before = Self.draw(w).pngData()
+        XCTAssertTrue(targets.perform("spike.sheet"))
+        await settle(1.0)
+        XCTAssertTrue(probe.sheet)
+        let after = Self.draw(w).pngData()
+        log("drawn with the sheet differs: \(before != after); sheet's targets: \(["spike.limit", "spike.close"].map { "\($0) \(targets.targets[$0]?.frame ?? .null)" })")
+        XCTAssertNotEqual(before, after, "the sheet isn't in the drawn window")
+        let field = try XCTUnwrap(Self.views(UITextField.self, in: w).first, "no text field behind the sheet's TextField")
+        XCTAssertTrue(field.becomeFirstResponder())
+        field.insertText("50")
+        await settle(0.3)
+        log("typed: \(probe.limit)")
+        XCTAssertEqual(probe.limit, "50")
+        field.resignFirstResponder()
+        w.rootViewController?.presentedViewController?.dismiss(animated: false)
+        await settle(1.0)
+        log("dismissed: sheet open \(probe.sheet)")
+        XCTAssertFalse(probe.sheet, "dismissing didn't close the sheet's binding")
+    }
+
+    /// An alert: shown in the window; closed by dismissing (Cancel), never confirming.
+    func testV2Alert() async throws {
+        targets.reset()
+        let probe = Probe()
+        let w = try await show(SpikeScreen(probe: probe))
+        XCTAssertTrue(targets.perform("spike.halt"))
+        await settle(1.0)
+        let alert = w.rootViewController?.presentedViewController
+        log("presented: \(alert.map { String(describing: type(of: $0)) } ?? "nil"); drawn colours \(Self.colours(Self.draw(w)))")
+        XCTAssertNotNil(alert)
+        alert?.dismiss(animated: false)
+        await settle(1.0)
+        log("after dismiss: alert \(probe.alert), halted \(probe.halted)")
+        XCTAssertFalse(probe.alert)
+        XCTAssertFalse(probe.halted)
     }
 
     /// Every view of a kind under a view.
