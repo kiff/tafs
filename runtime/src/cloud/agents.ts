@@ -412,6 +412,8 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.grant ? { run_grant: at.grant } : {}),
     ...(at.attachments?.length ? { attachments: at.attachments } : {}),
     ...(at.dedupKey ? { dedup_key: at.dedupKey, ...(at.source ? { source: at.source } : {}) } : {}),
+    // A new session's skills (the Coach skills design, way 1); a session that exists keeps its own.
+    ...(at.skills?.length && !at.session ? { skills: at.skills } : {}),
   };
 }
 
