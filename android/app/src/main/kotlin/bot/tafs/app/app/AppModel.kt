@@ -3310,7 +3310,10 @@ class AppModel(
           }
           if (generation != accountGeneration) return
           refreshConnections()
-          val outcome = cloud.approvalReport(cloudId, c.id, asked.id, report, proof, tenant, sign)
+          // A fresh read proof for the report: the first was spent by the approval's read, and planque takes each signed
+          // request once, within minutes (a vendor sign-in can take longer).
+          val reportProof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
+          val outcome = cloud.approvalReport(cloudId, c.id, asked.id, report, reportProof, tenant, sign)
           if (generation != accountGeneration) return
           note(c.id, outcome.note)
           coachAnswered(cloudId, key, outcome.session, outcome.run)

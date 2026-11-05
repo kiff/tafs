@@ -21,6 +21,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -692,6 +693,8 @@ class PlanqueTest {
     assertEquals("c0de", bodyOf(transport.requestsTo(confirm).single()).getValue("confirm").jsonPrimitive.content)
     // The report: what came of it, signed as a setup call by this phone's key over exactly this request. Never an answer.
     val report = transport.requestsTo(reportRoute).single()
+    // Its own read proof: the approval's was spent by tafs cloud's first read, and planque takes each signed request once.
+    assertNotEquals(ask.headers.getValue("Planque-Device-Signature"), report.headers.getValue("Planque-Device-Signature"))
     assertEquals("connected", bodyOf(report).getValue("result").jsonPrimitive.content)
     assertNull(bodyOf(report)["answer"])
     val parts = report.headers.getValue("KIFF-Device-Signature").split(",")

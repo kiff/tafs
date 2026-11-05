@@ -477,7 +477,7 @@ function conditionalPage(event: HTTPEvent, value: unknown): PageResponse {
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const began = Date.now();
   const r = await answer(event, deps);
-  logRequest(event, r.statusCode, Date.now() - began);
+  logRequest(event, r.statusCode, Date.now() - began, r.statusCode >= 500 ? errorOf(r) : undefined);
   return r;
 }
 
@@ -504,12 +504,30 @@ const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived 
 
 /**
  * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the route
- * with every part that isn't one of its fixed words masked, the status and how long it took. Never a
- * body, a token, a query, an id, an address or a name.
+ * with every part that isn't one of its fixed words masked, the status and how long it took, and for
+ * a 5xx why, in tafs cloud's own words with anything that looks like an id or address masked. Never
+ * a body, a token, a query, an id, an address or a name.
  */
-export function logRequest(event: HTTPEvent, status: number, ms: number): void {
+export function logRequest(event: HTTPEvent, status: number, ms: number, why?: string): void {
   const route = event.rawPath.split("/").map((p) => (p === "" || ROUTE_WORDS.has(p) ? p : ":x")).join("/");
-  console.log(JSON.stringify({ event: "request", method: event.requestContext.http.method.toUpperCase(), route, status, ms }));
+  const line: Record<string, unknown> = { event: "request", method: event.requestContext.http.method.toUpperCase(), route, status, ms };
+  if (why && status >= 500) line.why = maskedWhy(why);
+  console.log(JSON.stringify(line));
+}
+
+/** A 5xx answer's error, as it was sent. */
+function errorOf(r: HTTPResult): string | undefined {
+  try {
+    const e = (JSON.parse(String(r.body ?? "")) as { error?: unknown }).error;
+    return typeof e === "string" ? e : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** An error's words for the log: ids, addresses and long tokens masked, at most 200 characters. */
+export function maskedWhy(why: string): string {
+  return why.replace(/\S+@\S+/g, ":x").replace(/https?:\/\/\S+/g, ":x").replace(/[A-Za-z0-9_-]*[0-9][A-Za-z0-9_-]{9,}/g, ":x").slice(0, 200);
 }
 
 

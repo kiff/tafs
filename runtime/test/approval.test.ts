@@ -188,6 +188,15 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(w.told()).toMatchObject({ answer: "failed: Stripe is already connected; nothing new to approve" });
   });
 
+  it("a connection signed in already (its report lost) is already approved on a new tap, never failed", async () => {
+    const s = services();
+    s.grants = [grant({ status: "listed" })];
+    const w = await world(s);
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    expect(r.body).toMatchObject({ outcome: "answered", answer: "already approved: Stripe is signed in; its tools wait for approval", note: WORDS.alreadyApproved });
+    expect(w.told()).toMatchObject({ answer: "already approved: Stripe is signed in; its tools wait for approval" });
+  });
+
   it("a Card KIFF already confirmed was approved earlier, with its own signature: already approved, never failed", async () => {
     const s = services();
     s.grants = [grant({ status: "connected" })];

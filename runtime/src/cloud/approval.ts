@@ -143,7 +143,7 @@ export async function readGrants(base: string, tenant: string, proof: string, ne
   } catch {
     throw new ApprovalError(502, "Connected apps could not be read; try again");
   }
-  if (!res.ok) throw new ApprovalError(502, "Connected apps could not be read; try again");
+  if (!res.ok) throw new ApprovalError(502, `Connected apps could not be read (planque answered ${res.status}); try again`);
   const out = (await res.json().catch(() => ({}))) as { grants?: unknown };
   if (!Array.isArray(out.grants)) throw new ApprovalError(502, "Connected apps returned an unreadable list");
   return out.grants.filter((g): g is ApprovalGrant => !!g && typeof g === "object" && typeof (g as ApprovalGrant).id === "string" && typeof (g as ApprovalGrant).status === "string" && !!(g as ApprovalGrant).request);
@@ -220,6 +220,10 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
     return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: `Give ${draft.agent || "the taf"} its Card`, kiff: { draft: ask.draft, version: draft.version } } };
   }
+  // Signed in already, its tools listed and waiting for their own approval: an earlier approval
+  // went through even if its report didn't reach here (the phone lost it, or it was refused), so
+  // Approve again answers what holds, as the report would have: approved, never failed.
+  if (grant.status === "listed" && !ask.draft) return { outcome: "answered", answer: `already approved: ${vendor} is signed in; its tools wait for approval`, note: WORDS.alreadyApproved };
   if (!APPROVABLE.has(grant.status)) {
     const why = `This connection is ${grant.status.replace(/_/g, " ")}${grant.reason ? `: ${grant.reason}` : "."}`;
     return { outcome: "answered", answer: `failed: ${why}`, note: why };
