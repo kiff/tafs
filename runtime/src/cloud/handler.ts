@@ -23,7 +23,7 @@ import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -1821,9 +1821,11 @@ export interface ThreadMessage {
    * message before, and the tools it called, by name, in order, with the ones that failed. From
    * the run's usage records, which keep each call's tool and time, never its input or result.
    * Each step's `words` are what the app shows for it (KIFF's title for a tool through KIFF),
-   * never the tool's name; a step nothing names has none.
+   * never the tool's name; a step nothing names has none. A step that failed says so twice
+   * (`error`, as before, and `failed`, as the stream's `step` says it) and, when the tool said
+   * something readable, `why`: one line in the owner's words (kiff/tafs#476, gap 9).
    */
-  work?: { ms: number; steps: Array<{ tool: string; words?: string; error?: true; not_made?: true }> };
+  work?: { ms: number; steps: Array<{ tool: string; words?: string; error?: true; failed?: true; why?: string; not_made?: true }> };
 }
 
 /**
@@ -1999,10 +2001,18 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (!Number.isNaN(at)) part.last = at;
       }
     }
-    for (const w of runs.values()) {
+    // The reasons the run's failed steps had, kept while it streamed (gap 9), each to the first
+    // failed step of its tool in the run's order; a step with none says only that it failed.
+    const whysOf = new Map(await Promise.all([...runs.keys()].map(async (id) => {
+      const kept = deps.coach ? await deps.coach.get(stepWhyKey(me.tenantID, id)).catch(() => undefined) : undefined;
+      return [id, Array.isArray(kept) ? kept as StepWhys : []] as const;
+    })));
+    for (const [id, w] of runs) {
+      const whys = [...(whysOf.get(id) ?? [])];
       for (const p of w.parts) {
+        const steps = attachWhys(p.tools, whys);
         if (p.first && p.tools.length > 0 && p.last !== undefined && !Number.isNaN(p.start)) {
-          p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps: p.tools };
+          p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps };
         }
       }
     }
@@ -2377,7 +2387,7 @@ function askOrRefuse<T>(read: () => T): T {
 }
 
 function approvalFailure(err: unknown): never {
-  if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message);
+  if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message, err.code ? { code: err.code } : undefined);
   if (err instanceof KIFFError) throw new HTTPError(err.status === 401 ? 401 : 502, err.message);
   throw err;
 }
@@ -3543,7 +3553,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       await lines.putBack();
       throw err;
     }
-    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at, titles) };
+    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at, titles, Date.now, whyKeeper(me, deps)) };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
     if (status === 500) console.error(err);
@@ -3570,7 +3580,7 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
   async function* body(): AsyncGenerator<string> {
     yield sse("session", { session: answered.session, new_session: false, run: answered.id });
     yield sse("taken", {});
-    yield* relay(run, first, undefined, titles);
+    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), answered.id);
   }
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: body() };
 }
@@ -3696,7 +3706,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined, titles) };
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID) };
 }
 
 /**
@@ -3740,20 +3750,52 @@ class Pace {
   }
 }
 
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now): AsyncGenerator<string> {
+/** Keeps a failed step's reason for its run's thread (kiff/tafs#476, gap 9): by run and call, with the call's tool. */
+type WhyKeeper = (run: string, call: string, tool: string, why: string) => void;
+
+/**
+ * The keeper for a person's streams: a run's failed steps' reasons go in the coach store
+ * under the run, kept as long as the run is, and `conversation` gives them to the thread's
+ * steps. The stored thread knows only each call's tool and that it failed (kiff/agents keeps
+ * a result until its run ends), so the reason is kept here while it streams, once per call.
+ */
+function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
+  const store = deps.coach;
+  if (!store) return undefined;
+  return (run, call, tool, why) => {
+    const key = stepWhyKey(me.tenantID, run);
+    void store.get(key).then((kept) => {
+      const whys = Array.isArray(kept) ? kept as StepWhys : [];
+      if (whys.some((w) => w.call === call)) return undefined;
+      return store.put(key, [...whys, { call, tool, why }].slice(-STEP_WHYS_KEPT), new Date((deps.now?.() ?? new Date()).getTime() + STEP_WHY_KEPT_MS));
+    }).catch(() => undefined);
+  };
+}
+
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = ""): AsyncGenerator<string> {
   const steps = new Steps(titles);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.
+  const toolOf = new Map<string, string>(); // call id → tool, for a failed step's reason
+  let runID = resumed;
   const call = (tool: string, input: unknown, callID: unknown): string => {
     const id = typeof callID === "string" ? callID : undefined;
+    if (id) toolOf.set(id, tool);
     const step = steps.call(tool, input, id);
     return sse("activity", { tool, ...(step === undefined ? {} : { step }), ...(id ? { call_id: id } : {}) });
   };
+  // A failed step's reason, in the owner's words, kept for the run's thread (kiff/tafs#476, gap 9):
+  // the stored thread knows only that the call failed, and the tool's words end with the run.
+  const keepWhy = (callID: string, why: string | undefined): void => {
+    const tool = toolOf.get(callID);
+    if (why && tool && callID && runID && keep) keep(runID, callID, tool, why);
+  };
   // How a call ended. Where KIFF held it, the app shows the owner's card there in the
-  // answer: only KIFF's keys for it, never what the tool answered.
-  const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown }, notMade = false): string => {
+  // answer: only KIFF's keys for it, never what the tool answered, but why it failed, in words.
+  const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown; tool?: unknown }, notMade = false): string => {
     steps.result(callID, r.text);
+    if (typeof callID === "string" && typeof r.tool === "string" && !toolOf.has(callID)) toolOf.set(callID, r.tool);
     if (r.state === "held") {
       return sse("held", {
         exception: typeof r.hold?.exception === "string" ? r.hold.exception : "",
@@ -3762,13 +3804,18 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     }
     // Refused back unmade (an act beside a read): nothing reached KIFF or the tool.
     const status = notMade ? "not_made" : r.is_error === true ? "error" : "done";
-    return sse("step", { call_id: typeof callID === "string" ? callID : "", status });
+    const id = typeof callID === "string" ? callID : "";
+    if (status !== "error") return sse("step", { call_id: id, status });
+    const failed = failedStep(r.text);
+    keepWhy(id, failed.why);
+    return sse("step", { call_id: id, status, ...failed });
   };
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
     switch (e.event) {
       case "run":
         // The owner's message as the thread will name it, so the app matches its send by id, as POST …/messages answers it.
+        if (typeof d.id === "string") runID = d.id;
         return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id,
           ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}) }) : undefined;
       case "delta":
