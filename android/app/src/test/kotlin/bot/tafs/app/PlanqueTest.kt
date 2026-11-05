@@ -982,7 +982,7 @@ class PlanqueTest {
   /** Refunds asked for g1; Chargebacks, when listed, draws on its refund tool through its own Card. */
   private fun sharedHome(withChargebacks: Boolean) =
     """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}""" +
-      (if (withChargebacks) ""","""" + """{"id":"taf_2","name":"Chargebacks","kiff_agent":"chargebacks-1","color":2,"state":"working","status":"active",""" +
+      (if (withChargebacks) "," + """{"id":"taf_2","name":"Chargebacks","kiff_agent":"chargebacks-1","color":2,"state":"working","status":"active",""" +
         """"card":{"ids":["c2"],"active":true,"rules":[{"action":"create_refund_repg","label":"Refund a payment","outside":"hold","window":"day"}]}}""" else "") +
       """],"others":[],"removing":[]}"""
 
