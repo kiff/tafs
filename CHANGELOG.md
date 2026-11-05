@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach offers the taf's chat first for where the work comes from.** When the owner named no app for it, handing the work to the taf in its chat is the first option, and an app is connected only when the owner picks it (`set-up-a-taf@2`).
 - **Which account, and live or test.** A connection on a taf's Setup says which vendor account it works in and its mode, in the connection service's words ("Demo Shop · Live"); an unknown mode reads as treated as live. tafs cloud sends it as `account_words`; Android draws it on the connection's sheet, and iOS follows.
 - **Android: Run now is back on Activity.** A signed-in taf's Activity shows when it runs next, with Run now and Pause, ahead of its work. A taf that works from its chat says so instead.
 - **Android: where a job run's result went.** A job run's report in the thread shows tafs cloud's `delivered` line above the taf's words ("Sent to Google Sheets · Refunds 2026…").
