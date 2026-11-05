@@ -3773,7 +3773,10 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || grant == null || !_state.value.planqueReady) return false
     val generation = accountGeneration
     try {
-      signer.sign("tafs.disconnect.v1|$tenant|$grantId".toByteArray(), "Disconnect ${grant.vendor}")
+      // The fingerprint prompt asks what the confirmation asked: this taf's connection, by name.
+      val taf = _state.value.tafs.firstOrNull { it.id == grant.request.agent && it.state != TafState.revoked }?.name
+      val alsoStops = _state.value.tafsUsing(grant, except = grant.request.agent).map { it.name }
+      signer.sign("tafs.disconnect.v1|$tenant|$grantId".toByteArray(), bot.tafs.app.model.ConnectionWords.disconnectTitle(grant, taf, alsoStops))
     } catch (_: SignerException) {
       return false
     }

@@ -54,6 +54,43 @@ class ConnectAppsSheetTest {
 
   private fun count(text: String) = rule.onAllNodes(hasText(text)).fetchSemanticsNodes().size
 
+  /** Stripe connected for Refunds, and Disconnect wired: what reached it. */
+  private val disconnected = mutableListOf<String>()
+
+  private fun showConnected() = rule.setShown {
+    val refunds = taf("refunds-1", "Refunds")
+    val grant = bot.tafs.app.kiff.Grant(id = "g1", status = "connected", request = bot.tafs.app.kiff.GrantRequest(server = "https://mcp.stripe.com", agent = "refunds-1"),
+      vendorName = "Stripe", entry = "stripe@1")
+    TafsTheme {
+      ConnectAppsSheet(
+        AppState(mode = Mode.kiff, ready = true, connectApps = list, tafs = listOf(refunds), grants = listOf(grant),
+          access = mapOf(refunds.id to bot.tafs.app.kiff.Access(use = true, manage = true))),
+        load = {}, onConnect = null, onAskCoach = {}, onClose = {},
+        onDisconnect = { disconnected += it },
+      )
+    }
+  }
+
+  /** The owner's rule: Disconnect asks first, naming the one taf it ends, and Cancel sends nothing. */
+  @Test fun disconnectAsksFirstNamingTheOneTafAndCancelSendsNothing() {
+    showConnected()
+    rule.onNodeWithText(ConnectAppsWords.CONNECTED).performClick()
+    rule.onNodeWithText(ConnectAppsWords.DISCONNECT_WHY).assertIsDisplayed()
+    rule.onNodeWithText(ConnectAppsWords.DISCONNECT).performClick()
+    rule.onNodeWithText("Disconnect Stripe from Refunds?").assertIsDisplayed()
+    rule.onNodeWithText("Other connections to Stripe stay connected", substring = true).assertIsDisplayed()
+    rule.onNodeWithText("Cancel").performClick()
+    rule.waitForIdle()
+    assertEquals("Cancel sends nothing", emptyList<String>(), disconnected)
+    assertEquals(0, count("Disconnect Stripe from Refunds?"))
+    // Asked again and confirmed: that one connection, by its id.
+    rule.onNodeWithText(ConnectAppsWords.DISCONNECT).performClick()
+    rule.onAllNodes(hasText(ConnectAppsWords.DISCONNECT)).fetchSemanticsNodes().size.let { assertEquals("the row's and the dialog's", 2, it) }
+    rule.onAllNodes(hasText(ConnectAppsWords.DISCONNECT))[1].performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("g1"), disconnected)
+  }
+
   @Test fun anAppNotSetUpSaysSoInTafsCloudsWordsAndOffersNoConnect() {
     show(connect = true)
     rule.onNodeWithText("Jira").assertIsDisplayed()

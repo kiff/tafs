@@ -547,13 +547,14 @@ struct ConnectionsPanel: View {
                         .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 }
             }
-            .confirmationDialog("Disconnect \(confirming?.vendor ?? "")?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
+            .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0), alsoStops: model.alsoStops($0)) } ?? "",
+                                isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                                 titleVisibility: .visible) {
                 Button("Disconnect", role: .destructive) {
                     if let id = confirming?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
             } message: {
-                Text("The sign-in at the vendor is revoked and its tools are removed from KIFF. The taf can't use them until you connect again.")
+                if let g = confirming { Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g))) }
             }
         }
     }

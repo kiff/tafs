@@ -99,9 +99,10 @@ Both use the taf's Slack connection.
 
 A taf's connections are on its **Card** tab: whose sign-in, which actions, and what
 happened last. **Disconnect**, with Face ID or your fingerprint, takes the app's actions
-away from the taf at once. New actions stop through that connection; an action already
-sent may still finish. It also
-asks the app to revoke the sign-in; that part may finish later, on the app's side. If the app signs you out on its side (a
+away from that taf at once, and only that taf: it asks first, “Disconnect Stripe from Refunds?”, and other tafs'
+connections to the app stay connected. New actions stop through that connection; an action already sent may still
+finish. When no other taf uses the same sign-in, it also asks the app to revoke it; that part may finish later, on the
+app's side. If the app signs you out on its side (a
 changed password, an expired session), the taf says so and waits for you: **Sign in again**
 asks for one approval, then the app's own page.
 
@@ -113,10 +114,13 @@ connect some apps that aren't on the list, and tells you when one isn't availabl
 ## Disconnecting
 
 A connected app (“Connected ✓”) opens its connections: each planque grant the account has for that app, live (not
-`disconnected` or `failed`), with the taf it serves by its agent, or “No taf uses it” once that taf was removed, and
-**Disconnect** for whoever manages the account's Cards. Disconnect asks for Face ID or the fingerprint, then calls
-planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes the connection's tools from KIFF and revokes
-its sign-in at the app. The list is read again after.
+`disconnected` or `failed`), with the taf it was set up for (“Set up for Refunds”), or “Its taf was removed”, and
+**Disconnect** for whoever manages the account's Cards. Disconnect asks first, naming the one taf it ends (“Disconnect
+Stripe from Refunds?”, with Cancel), names any other taf whose Card draws on its tools, which stops too (“Chargebacks
+stops too.”), and says other connections to the app stay; Face ID or the fingerprint then asks the same words. It calls planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes that
+connection's tools from KIFF, and revokes its sign-in at the app only when no other live connection uses it (a second
+taf that reused it, or the same provider account); the last connection on a sign-in revokes it. The list is read again
+after.
 
 Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own
 confirmation, after its Cards are revoked and before tafs cloud removes the rest. Its result says the connections are

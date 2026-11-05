@@ -55,19 +55,26 @@ object ConnectAppsWords {
   const val TAF_REMOVED = "Its taf was removed"
 
   /** Which taf a connection was set up for, by who asked for it; the phone doesn't decide who uses it. */
-  fun setUpFor(state: AppState, grant: bot.tafs.app.kiff.Grant): String =
-    state.tafs.firstOrNull { it.id == grant.request.agent && it.state != bot.tafs.app.model.TafState.revoked }?.let { "Set up for ${it.name}" } ?: TAF_REMOVED
+  fun setUpFor(state: AppState, grant: bot.tafs.app.kiff.Grant): String = tafOf(state, grant)?.let { "Set up for $it" } ?: TAF_REMOVED
 
   /** The other tafs whose live Card has a rule on one of its tools, as a warning above Disconnect; null when none. */
   fun alsoOnCards(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
     state.tafsUsing(grant, except = grant.request.agent).map { it.name }.takeIf { it.isNotEmpty() }
-      ?.let { "Also on ${it.joinToString(" and ")}'s Card" + if (it.size == 1) "" else "s" }
+      ?.let { if (it.size == 1) "Also on ${bot.tafs.app.model.ConnectionWords.possessive(it[0])} Card" else "Also on the Cards of ${it.joinToString(" and ")}" }
+
+  /** The other tafs whose Card draws on a connection's tools: disconnecting it stops them too. */
+  fun alsoStops(state: AppState, grant: bot.tafs.app.kiff.Grant): List<String> =
+    state.tafsUsing(grant, except = grant.request.agent).map { it.name }
 
   /** The title over an app's connections. */
   fun yourConnections(app: String) = "Your $app connections"
 
   /** What disconnecting one does, said before the fingerprint. */
-  const val DISCONNECT_WHY = "Disconnecting removes its tools from KIFF and signs tafs out of the app. A taf that used it stops being able to."
+  const val DISCONNECT_WHY = "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay."
+
+  /** The taf a connection was set up for, by name; null once that taf was removed. */
+  fun tafOf(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
+    state.tafs.firstOrNull { it.id == grant.request.agent && it.state != bot.tafs.app.model.TafState.revoked }?.name
 }
 
 /** The account's live connections to [app]: by its catalog entry, or the grant tafs cloud named for it. */
@@ -101,6 +108,7 @@ fun ConnectAppsSheet(
   var picking by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
   // A connected app's connections, each with the taf it serves (or none, once its taf was removed) and Disconnect.
   var managing by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
+  var confirmingDisconnect by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
     { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
@@ -160,7 +168,7 @@ fun ConnectAppsSheet(
                 if (onDisconnect != null) Text(
                   ConnectAppsWords.DISCONNECT,
                   style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).clickable { onDisconnect(g.id) }.padding(top = 10.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).clickable { confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
             }
@@ -170,6 +178,20 @@ fun ConnectAppsSheet(
         dismissButton = {
           Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { managing = null }.padding(12.dp))
         },
+      )
+    }
+    // Disconnect asks first, naming the one taf it ends; only then the fingerprint, in the same words.
+    confirmingDisconnect?.let { g ->
+      val taf = ConnectAppsWords.tafOf(state, g)
+      androidx.compose.material3.AlertDialog(
+        onDismissRequest = { confirmingDisconnect = null },
+        containerColor = Theme.panel,
+        title = { Text(bot.tafs.app.model.ConnectionWords.disconnectTitle(g, taf, ConnectAppsWords.alsoStops(state, g))) },
+        text = { Text(bot.tafs.app.model.ConnectionWords.disconnectBody(g, taf, ConnectAppsWords.alsoStops(state, g))) },
+        confirmButton = {
+          androidx.compose.material3.TextButton({ confirmingDisconnect = null; onDisconnect?.invoke(g.id) }) { Text(ConnectAppsWords.DISCONNECT, color = Theme.no) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton({ confirmingDisconnect = null }) { Text("Cancel", color = Theme.soft) } },
       )
     }
     // Which taf: asked over the list, wherever Connect was tapped, before anything starts.
