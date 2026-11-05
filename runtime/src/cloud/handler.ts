@@ -2743,10 +2743,11 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
     if (d.status !== "draft") throw new HTTPError(409, `that draft is ${d.status}: draft it again`);
   }
+  // Its places, checked as the dial checks them: a taf place by this account's record (400 otherwise).
+  const actionResults = Array.isArray(body.actionResults) ? await vendorPlaces(body.actionResults, me, taf, deps) : taf.actionResults;
   let def: AgentDefinition;
   try {
-    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined,
-      actionResults: Array.isArray(body.actionResults) ? body.actionResults as VendorPlace[] : taf.actionResults });
+    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -2927,6 +2928,22 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
  * next version, as an improvement makes one, with its dial kept by version. Nothing runs from it until it
  * goes live (applyKnob).
  */
+/**
+ * The taf's own places from a request, checked (places.ts). A taf place names a taf of this account,
+ * by its record: its name is the record's, never the request's, so the words the owner approves name
+ * the taf the hand-over goes to; Coach and the taf itself are no destination. 400 says what's wrong.
+ */
+async function vendorPlaces(raw: unknown[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<VendorPlace[]> {
+  let vendor: VendorPlace[];
+  try { vendor = raw.map((p) => vendorPlace(p, taf.id)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  return Promise.all(vendor.map(async (p) => {
+    if (p.place !== "taf") return p;
+    const to = await deps.tafs.get(me.tenantID, p.taf);
+    if (!to || to.job === SETUP_JOB || to.removing) throw new HTTPError(400, `no taf of this account takes results by that id (${p.taf})`);
+    return { ...p, name: to.name };
+  }));
+}
+
 async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
   const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
   // `when.busy`, or `busy` at the top as a knob's `setting` and each size choice carry it, so a choice is sent back as it is.
@@ -2945,16 +2962,7 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   if (body.results === undefined) results = [...placesOf(taf), ...(taf.actionResults ?? [])];
   else {
     const all = Array.isArray(body.results) ? body.results : [];
-    let vendor: VendorPlace[];
-    try { vendor = all.filter((p) => typeof p !== "string").map((p) => vendorPlace(p, taf.id)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
-    // A taf place names a taf of this account, by its record: its name is the record's, never the
-    // request's, so the words the owner approves name the taf the hand-over goes to.
-    vendor = await Promise.all(vendor.map(async (p) => {
-      if (p.place !== "taf") return p;
-      const to = await deps.tafs.get(me.tenantID, p.taf);
-      if (!to || to.job === SETUP_JOB) throw new HTTPError(400, `no taf of this account takes results by that id (${p.taf})`);
-      return { ...p, name: to.name };
-    }));
+    const vendor = await vendorPlaces(all.filter((p) => typeof p !== "string"), me, taf, deps);
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
   }
   let what: KnobSetting["what"];
