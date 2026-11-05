@@ -286,9 +286,9 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
         // KIFF's words for the connection's profile, verbatim and in order (KIFF's profile contract, `kiff.words.v1`): what the owner's approval signs.
         val profiled = grant.request.profile != null
-        val words = state.profileWords[grant.id]
+        val words = state.profileWordsFor(grant)
         if (profiled) {
-          LaunchedEffect(grant.id) { actions.loadProfileWords(grant.id) }
+          LaunchedEffect(grant.id, state.profileDigest(grant)) { actions.loadProfileWords(grant.id) }
           when {
             words != null -> ProfileWordsLines(words)
             state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))
