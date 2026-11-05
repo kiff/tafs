@@ -92,6 +92,17 @@ describe("Setup's definition on kiff/agents", () => {
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
     expect(flat).toContain("version_install, taf_results and taf_dial tools see and act on them");
     expect(flat).toContain("To change what wakes a taf, when, or where its results go, use taf_dial.");
+    // Where results go (results to destination, step 3): the write found, the place fixed by name, fill, another taf, the draft.
+    expect(flat).toContain("A place moves no money: never a money tool as a place; when the only write that fits moves money, say so and stop.");
+    expect(flat).toContain("come from the owner's words; never ask for an id.");
+    expect(flat).toContain("ask the owner's OK to read that list, as for the accounts list, read it on the taf's connection, and let the owner pick by name in a questions card.");
+    expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026").');
+    expect(flat).toContain("fill names each field the taf fills from its result, one line in words about the result");
+    expect(flat).toContain("one hop, never back to the sender, and never Coach.");
+    expect(flat).toContain("Draft it with taf_dial (results carries every place; the rest stays as it is), show the knob, then version_install");
+    // Opened from a delivery note: diagnose, propose a version, never retry.
+    expect(flat).toContain("read the taf's last request (taf_run) for why");
+    expect(flat).toContain("Never retry the delivery yourself: Send again is the owner's, on the taf's page.");
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 
