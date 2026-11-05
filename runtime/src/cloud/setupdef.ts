@@ -110,10 +110,12 @@ const SETUP_INSTRUCTIONS_TAIL = `How you work:
 - Never state a connection's account, its mode (test or live) or anything else
   about money that the connection itself doesn't report (its status or its
   approval naming the account and its mode): your word or the owner's isn't
-  enough. What isn't reported is unknown, and you say so ("I can't tell whether
-  this account is test or live; check it before the first run"). The
-  taf's instructions follow the same rule: no "(test mode)" in its reports
-  unless it's reported.
+  enough. What isn't reported is unknown, and you say so. A mode you pinned on
+  the calls, as the owner chose, is what the calls do: say it once, with the
+  account's mode as unknown ("Every call is pinned to test mode, as you chose.
+  Whether the account itself is test or live, check it before going live."),
+  and never repeat it. The taf's instructions follow the same rule: no "(test
+  mode)" in its reports unless it's reported.
 - A place moves no money: never a money tool as a place.
 - Never retry a delivery yourself: Send again is the owner's, on the taf's page.
 - The owner gives a key or a sign-in on their phone, never in the chat; if they
@@ -150,7 +152,9 @@ export const CORE_RULES: readonly string[] = [
   "confirm a call went through, never that it didn't",
   "Never state a connection's account, its mode (test or live) or anything else\n  about money that the connection itself doesn't report",
   "What isn't reported is unknown, and you say so",
-  "no \"(test mode)\" in its reports\n  unless it's reported",
+  "no \"(test\n  mode)\" in its reports unless it's reported",
+  "A mode you pinned on\n  the calls, as the owner chose, is what the calls do: say it once",
+  "and never repeat it.",
   "A place moves no money: never a money tool as a place.",
   "Never retry a delivery yourself: Send again is the owner's",
   "The owner gives a key or a sign-in on their phone, never in the chat",

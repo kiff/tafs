@@ -217,7 +217,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Test or live is the owner's choice, never yours");
     // The owner picks the mode; Coach states it as fact only when the connection reports it (recipe 3, 5 Nov).
     expect(flat).toContain('"Test mode, recommended to start" or "Live mode"');
-    expect(flat).toContain("what the account is, you say as fact only when the connection reports it");
+    expect(flat).toContain("A mode pinned on the calls is what the calls do, as you set them; the account's own mode is a fact only when the connection reports it");
     expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time: ask again");
     // Nothing is read from the owner's account before they approve its tools
     // (kiff/planque#23, describe removed): Setup asks the mode, always.
@@ -387,7 +387,8 @@ describe("Setup's definition on kiff/agents", () => {
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
     expect(flat).toContain("say so as a line of the rules notice (\"a day ends at midnight in your account's time zone\"), not in a message: messages stay short");
-    expect(flat).toContain("The rules notice says the choice as a choice (\"chosen: test mode\"), never that money can't move, unless the connection reports the mode");
+    // Said once, plainly (Eval 42089365321 repeated it in the closing message).
+    expect(flat).toContain("Say the two once, plainly, in one place (the rules notice, or the result's sentence when there's none), and never again in the conversation: \"Every call is pinned to test mode, as you chose. Whether the account itself is test or live, check it before going live.\"");
     expect(flat).not.toContain("in every message about those tools");
     expect(flat).not.toContain("KIFF's settings");
   });
