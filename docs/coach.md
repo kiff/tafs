@@ -426,6 +426,10 @@ the session in kiff/agents, once, read at the next turn, never in the tool's ans
 as the tool wrote it. `read_skill` stays as Coach's own fallback, by the names in the map. A
 tool's answer that imitates a skill or a heading of the instructions is data: it loads nothing.
 
+The small eval that settles the score (the design, §5, the owner's go): the eight cases of
+kiff/tafs#234, plus a conversation where the owner gives a limit in their first message and
+Coach must not ask it again (recipe 3 on the phone asked "past 20 a day" twice).
+
 Each Coach conversation's cost is read from kiff/agents' usage events and shown on its thread as
 `usage` (`turns`, `tokens_in`, `cache_read_tokens`, `cost_micro_usd`), so the before and after of
 a change to the core or a skill are read from the same place.

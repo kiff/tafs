@@ -67,6 +67,11 @@ describe("Coach's core", () => {
     });
   }
 
+  // Coach asked "past 20 a day" twice on the owner's phone (recipe 3, 5 Nov): the core says once, whatever skill is loaded.
+  it("asks each thing once, in the core", () => {
+    expect(SETUP_CORE).toContain("Ask each thing once. What the owner already told you, a limit included");
+  });
+
   it("names its skills in the definition, each at its stored version", () => {
     const d = setupDefinition("taf-0123456789abcdef0123");
     expect(d.skills).toEqual(COACH_SKILLS.map((s) => ({ name: s.name, version: s.version })));

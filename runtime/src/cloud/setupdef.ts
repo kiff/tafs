@@ -94,6 +94,9 @@ const SETUP_INSTRUCTIONS_TAIL = `How you work:
   instructions already, after this; read_skill reads another when the
   conversation turns to it, by the name below. Each says when it applies:
 @@MAP@@
+- Ask each thing once. What the owner already told you, a limit included ("past
+  20 a day"), is answered: don't ask it again, in a card or a message, whatever
+  skill you follow.
 - Never write an id to the owner (a run's, a grant's, a session's, a Card's): name
   the taf, the vendor or what happened instead.
 - Never answer a held call, or say you did: the owner answers it in tafs.
