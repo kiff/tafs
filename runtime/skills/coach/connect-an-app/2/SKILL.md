@@ -9,12 +9,14 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
 
 ## Procedure
 
-- Before you propose any app, read the account's connections: planque grants
-  with no agent lists each with its vendor, the taf's agent it serves and its
-  kind (vendor_sign_in, the vendor's own sign-in on its page; provider, an app
-  through a provider, with its mode; key; browser). For a vendor the account
-  already connects, the first option is that same kind, named with the taf
-  that uses it (its agent is that taf's kiff_agent in tafs_state): "your help
+- Before you propose any app, look at the account's connections: the lines
+  after [tafs connections] in the conversation's first message are tafs'
+  data, each with its vendor, the taf that uses it and its kind
+  (vendor_sign_in, the vendor's own sign-in on its page; provider, an app
+  through a provider, with its mode; key; browser). Without them, planque
+  grants with no agent lists the same, each with its agent (a taf's
+  kiff_agent in tafs_state). For a vendor the account already connects, the
+  first option is that same kind, named with the taf that uses it: "your help
   desk's own sign-in, like Refunds". Say a mode only as the grant gives it; a
   mode it doesn't give isn't known. Ask for it the same way, for the new
   taf's agent: request {server} for vendor_sign_in, {entry} for provider,

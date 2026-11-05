@@ -87,7 +87,8 @@ describe("Coach's core", () => {
   // used Stripe's own sign-in, in test (5 Nov): for a vendor the account already connects, the same kind first.
   it("offers the kind of connection the account already uses for a vendor first, named with its taf", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("Before you propose any app, read the account's connections: planque grants with no agent");
+    expect(body).toContain("Before you propose any app, look at the account's connections: the lines after [tafs connections] in the conversation's first message are tafs' data");
+    expect(body).toContain("Without them, planque grants with no agent lists the same");
     expect(body).toContain("For a vendor the account already connects, the first option is that same kind, named with the taf that uses it");
     expect(body).toContain("Say a mode only as the grant gives it; a mode it doesn't give isn't known.");
     expect(body).toContain("request {server} for vendor_sign_in, {entry} for provider, {api} for key");
