@@ -5024,7 +5024,8 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
       for (let i = 0; i < CATALOG_PAGES; i++) {
         const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
         apps.push(...got.apps);
-        if (!got.next_cursor) { whole = true; break; }
+        if (!got.next_cursor && !got.partial) { whole = true; break; }
+        if (got.partial) break;
         page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
       }
       if (!whole) apps = undefined;

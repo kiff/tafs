@@ -50,10 +50,13 @@ describe("Connect apps", () => {
     const got = await listApps(fake(200, { entries: [
       { entry: "connector:composio:_1password", vendor: "_1password", title: "1Password", how: "oauth", state: "available" },
       { entry: "connector:composio:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "connected", grant: "g9" },
-    ], by_key: true, provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2 }, seen), BASE, "t1", "sess", "", { provider: "composio", cursor: "Y3Vyc29yOjA=" });
+      { entry: "connector:composio:own", vendor: "own", title: "Own app", how: "oauth", state: "needs_setup" },
+    ], by_key: true, provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2, partial: true }, seen), BASE, "t1", "sess", "", { provider: "composio", cursor: "Y3Vyc29yOjA=" });
     expect(seen[0]!.url).toBe("https://planque.test/v1/accounts/t1/catalog?provider=composio&cursor=Y3Vyc29yOjA%3D");
-    expect(got.apps.map((a) => a.entry)).toEqual(["connector:composio:gmail", "connector:composio:_1password"]);
-    expect(got).toMatchObject({ provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2 });
+    expect(got.apps.map((a) => a.entry)).toEqual(["connector:composio:gmail", "connector:composio:_1password", "connector:composio:own"]);
+    // An app that needs setting up by an operator is said so, as planque says it; a read with pages left says so too.
+    expect(got.apps[2]).toMatchObject({ state: "needs_setup" });
+    expect(got).toMatchObject({ provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2, partial: true });
     // The last page has no next cursor; a bad provider or cursor is never passed on.
     const last = await listApps(fake(200, { entries: [], by_key: true, provider: "composio", next_cursor: "" }, seen), BASE, "t1", "s", "", { provider: "../x", cursor: "a b" });
     expect(seen[1]!.url).toBe("https://planque.test/v1/accounts/t1/catalog");
