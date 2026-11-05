@@ -182,6 +182,8 @@ data class WireChatMessage(
   val door: JsonElement? = null,
   /** The card this owner's message answered, by id: they wrote while it waited, and their words were its answer. */
   val answers: String? = null,
+  /** On a job run's report: where its result went, in tafs cloud's words, one line drawn above the taf's own. */
+  val delivered: String? = null,
 )
 
 /** The run at work in a session. */

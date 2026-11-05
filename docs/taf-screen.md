@@ -30,9 +30,10 @@ Each tab has one job.
 
 - **Chat**: talk to the taf, or tell it to work differently. It works inside its Card
   either way.
-- **Activity**: what it's waiting for from you (its Needs you items) at the top, then what
-  it did, day by day, filtered **All / Done / Held / Refused**. An entry opens the request
-  step by step. The call's receipt opens from its Activity entry. Pages and filters
+- **Activity**: what it's waiting for from you (its Needs you items) at the top, then
+  **Runs**: when it runs next, with **Run now** and **Pause** (or Resume), or for a taf that
+  works from its chat, that no schedule runs it. Then what it did, day by day, filtered
+  **All / Done / Held / Refused**. An entry opens the request step by step. The call's receipt opens from its Activity entry. Pages and filters
   come from cloud; recent runs open their request steps.
 - **Card**: the Card itself, its limits, how they're counted, what it has used,
   **Changes to how it runs**, **Halt** and **Revoke**.
