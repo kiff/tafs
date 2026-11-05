@@ -161,6 +161,8 @@ describe("a message streamed (kiff/tafs#60)", () => {
       ev("r1", 2, "agent_message", "Miro las ejecuciones…"), ev("r1", 3, "usage"), ev("r1", 4, "tool_call"),
       ev("r1", 5, "agent_message", "Primero:\nreviso los pagos."), ev("r1", 6, "tool_call"),
       ev("r2", 7, "agent_message", "Otro run."), ev("r1", 8, "agent_message", "Todo en orden."), ev("r2", 9, "tool_call"),
+      // A component between them made it the answer on the stream: it stays in the thread too (agentgabo on #549).
+      ev("r3", 10, "agent_message", "Aquí tienes la tarjeta."), ev("r3", 11, "component"), ev("r3", 12, "tool_call"),
     ]);
     expect([...got].sort()).toEqual(["r1.2", "r2.7"]);
   });

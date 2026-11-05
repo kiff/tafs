@@ -4012,8 +4012,8 @@ export function heldLine(text: string): boolean {
 
 /**
  * The taf's messages that were lines before tool calls, by `<run>.<seq>`: a message one short line long
- * (heldLine) whose next message or call in its run is a call. kiff/agents records a turn's text before its
- * calls.
+ * (heldLine) whose next message, component or call in its run is a call. kiff/agents records a turn's text
+ * before its calls.
  */
 export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
   const out = new Set<string>();
@@ -4025,7 +4025,8 @@ export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; k
       pending.delete(e.run);
       continue;
     }
-    if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message") continue;
+    // Anything else the owner sees between them makes the message the answer, as the stream sends it.
+    if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message" && e.kind !== "component") continue;
     pending.delete(e.run);
     const text = (e.body as { text?: unknown } | undefined)?.text;
     if (e.kind === "agent_message" && typeof text === "string" && text.trim() && heldLine(text)) pending.set(e.run, `${e.run}.${e.seq}`);
