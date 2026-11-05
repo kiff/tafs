@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package bot.tafs.app
 
 import kotlinx.coroutines.cancel
