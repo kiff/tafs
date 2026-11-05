@@ -101,6 +101,11 @@ describe("kiff/agents client", () => {
     expect(JSON.parse(sent[1]!.body ?? "")).toEqual({ input: "Hello", requester: ana, chat: "live", background: true });
     await agents.startRun("t_acme", "taf1", "Hello");
     expect(JSON.parse(sent[2]!.body ?? "")).toEqual({ input: "Hello", background: true });
+    // A new session's skills go in the start (the Coach skills design, way 1); a session that exists keeps its own.
+    await agents.startRun("t_acme", "taf1", "Hello", { requester: ana, skills: ["set-up-a-taf@1"] });
+    expect(JSON.parse(sent[3]!.body ?? "")).toEqual({ input: "Hello", requester: ana, skills: ["set-up-a-taf@1"], background: true });
+    await agents.startRun("t_acme", "taf1", "Hello", { session: "s1", requester: ana, skills: ["set-up-a-taf@1"] });
+    expect(JSON.parse(sent[4]!.body ?? "")).toEqual({ input: "Hello", session_id: "s1", requester: ana, background: true });
   });
 
   it("reads and archives a person's sessions as theirs", async () => {
