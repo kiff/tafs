@@ -5221,16 +5221,27 @@ final class AppModel: ObservableObject {
     /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
     /// who uses it.
     func setUpFor(_ grant: PlanqueClient.Grant) -> String {
-        guard let t = holderIDs[grant.request.agent].flatMap({ taf($0) }), t.state != .revoked else { return "Its taf was removed" }
-        return "Set up for \(t.name)"
+        guard let name = tafOf(grant) else { return "Its taf was removed" }
+        return "Set up for \(name)"
+    }
+
+    /// The taf a connection was set up for, by name; nil once that taf was removed.
+    func tafOf(_ grant: PlanqueClient.Grant) -> String? {
+        guard let t = holderIDs[grant.request.agent].flatMap({ taf($0) }), t.state != .revoked else { return nil }
+        return t.name
     }
 
     /// The other tafs whose live Card has a rule on one of its tools, as a warning above
     /// Disconnect; nil when none.
     func alsoOnCards(_ grant: PlanqueClient.Grant) -> String? {
-        let names = tafsUsing(grant, except: grant.request.agent).map(\.name)
+        let names = alsoStops(grant)
         guard !names.isEmpty else { return nil }
-        return "Also on \(names.joined(separator: " and "))'s Card" + (names.count == 1 ? "" : "s")
+        return names.count == 1 ? "Also on \(DisconnectWords.possessive(names[0])) Card" : "Also on the Cards of \(names.joined(separator: " and "))"
+    }
+
+    /// The other tafs whose Card draws on a connection's tools: disconnecting it stops them too.
+    func alsoStops(_ grant: PlanqueClient.Grant) -> [String] {
+        tafsUsing(grant, except: grant.request.agent).map(\.name)
     }
 
     /// The tafs that use a connection: a live Card rule, or a tool, on one of the actions it
@@ -5285,7 +5296,7 @@ final class AppModel: ObservableObject {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant, let grant = grants.first(where: { $0.id == grantID }) else { return false }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.disconnect.v1|\(tenant)|\(grantID)".utf8), reason: "Disconnect \(grant.vendor)")
+            _ = try await signer.sign(Data("tafs.disconnect.v1|\(tenant)|\(grantID)".utf8), reason: DisconnectWords.title(grant.vendor, taf: tafOf(grant), alsoStops: alsoStops(grant)))
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer

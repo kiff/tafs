@@ -24,6 +24,15 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install"]);
   });
 
+  // The owner's first words came after every tool turn, about 22 s on 5 Nov: one short line first.
+  it("says what it's doing in one short line before its first tool, then nothing until its message", () => {
+    const core = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(core).toContain("When a reply will use tools, first write one short line in their language saying what you're doing now");
+    expect(core).toContain("then write nothing more until your message.");
+    expect(core).toContain("never the names of your tools or KIFF's and planque's parts");
+    expect(core).not.toContain("write none, or write it in their language");
+  });
+
   it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));

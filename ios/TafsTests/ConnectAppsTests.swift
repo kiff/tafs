@@ -199,4 +199,21 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertTrue(model.lastError?.contains("subscription must be stopped") == true)
     }
 
+
+    /// Disconnect names the one taf it ends, says other tafs' connections stay, and the Face ID
+    /// prompt asks the same; once its taf was removed, it says so (the owner's rule).
+    func testDisconnectNamesTheOneTafItEnds() {
+        XCTAssertEqual(DisconnectWords.title("Stripe", taf: "Invoice reminders"), "Disconnect Stripe from Invoice reminders?")
+        XCTAssertEqual(DisconnectWords.title("Stripe", taf: nil), "Disconnect Stripe?")
+        let message = DisconnectWords.message("Stripe", taf: "Invoice reminders")
+        XCTAssertTrue(message.hasPrefix("Invoice reminders' Stripe tools stop working."), message)
+        XCTAssertTrue(message.contains("Other connections to Stripe stay connected."), message)
+        XCTAssertTrue(DisconnectWords.message("Stripe", taf: nil).hasPrefix("No taf uses this Stripe connection now."))
+        // Another taf whose Card draws on these tools stops too, and is named (qa-kiff on tafs#546).
+        XCTAssertEqual(DisconnectWords.title("Stripe", taf: "Refunds", alsoStops: ["Chargebacks"]), "Disconnect Stripe from Refunds? Chargebacks stops too.")
+        let shared = DisconnectWords.message("Stripe", taf: "Refunds", alsoStops: ["Chargebacks"])
+        XCTAssertTrue(shared.contains("Chargebacks' Card also uses these tools, so it stops too."), shared)
+        XCTAssertEqual(DisconnectWords.possessive("Coach"), "Coach's")
+        XCTAssertEqual(DisconnectWords.footer, "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay.")
+    }
 }
