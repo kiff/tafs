@@ -161,6 +161,11 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   // The answer growing in its own row, a few words at a time: kept at its end without an animation. An animation started on
   // every word was cut off by the next before it finished, and the thread jumped about while Coach wrote.
   LaunchedEffect(thinking, live?.text?.length, live?.steps?.size, live?.state) { toEnd(animated = false) }
+  // And when the last row's height changes after it's drawn (its words laid out again, a card opening), at once, while it follows.
+  LaunchedEffect(listState) {
+    snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.let { it.key to it.size } }
+      .collect { if (opened && following) toEnd(animated = false) }
+  }
 
   Column(modifier.fillMaxSize()) {
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
@@ -190,7 +195,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
           }
           val i = (row as Chat.Row.Item).index
           val item = items[i]
-          item(key = item.id) {
+          item(key = row.key) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               // A time between parts of the thread that are far apart, not on every line.
               if (i == 0 || Duration.between(items[i - 1].at, item.at) >= Duration.ofHours(1)) {
@@ -224,7 +229,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         // One row with one key: when the answer takes the dots' place, the list keeps it where it is rather than dropping one
         // row and adding another at its end, which moved the thread back.
         // At least as tall as the dots and the live line, so neither taking the other's place shortens the thread's end.
-        if (live != null || thinking) item(key = WORKING) {
+        if (live != null || thinking) item(key = Chat.liveKey(items, live, WORKING)) {
           Box(Modifier.fillMaxWidth().heightIn(min = 28.dp), contentAlignment = Alignment.CenterStart) {
             if (live != null) LiveWork(live) else TypingDots()
           }

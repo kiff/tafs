@@ -188,6 +188,44 @@ class ChatFollowTest {
   }
 
   /**
+   * With tafs cloud's ids, as the stream and the thread give them: the owner's message keeps its row from `<run>.in` on, and
+   * Coach's answer lands in the row its live answer had, updated in place. No frame moves an earlier message back down.
+   */
+  @Test fun theAnswerLandsInItsLiveRowAndNothingMovesBack() {
+    val sent = ChatMessage(t0.plusSeconds(1900), ChatMessage.From.owner, "Coach message 31", "pending", serverId = "run_9.in")
+    val settled = sent.copy(session = "s1", at = t0.plusSeconds(1901))
+    fun with(thread: List<ChatMessage>, working: Boolean, live: LiveAnswer?) = coach(working, live).copy(chats = mapOf(COACH_CHAT to thread))
+    var current by mutableStateOf(with(coachThread, false, null))
+    rule.setShown {
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(current, actions, loadCoach = {}, onBack = {}) } }
+    }
+    rule.onNodeWithText("Coach message 30").assertIsDisplayed()
+
+    rule.mainClock.autoAdvance = false
+    var sawTop = false
+    val tops = mutableListOf<Float?>()
+    fun frames(n: Int = 2) = repeat(n) {
+      rule.mainClock.advanceTimeByFrame()
+      if (rule.onAllNodesWithText("Coach message 1").fetchSemanticsNodes().isNotEmpty()) sawTop = true
+      tops += rule.onAllNodesWithText("Coach message 29").fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
+    }
+    current = with(coachThread + sent, true, null); frames(4)
+    var live = LiveAnswer(started = t0.plusSeconds(1900), session = "s1", run = "run_9", state = LiveState("thinking", "Reading your payments"))
+    current = with(coachThread + sent, true, live); frames(4)
+    current = with(coachThread + settled, true, live); frames(4)
+    for (word in "Stripe is connected, so here is the Card I'd give Refunds.".split(" ")) {
+      live = live.copy(text = live.text + "$word ")
+      current = with(coachThread + settled, true, live); frames(2)
+    }
+    val answer = ChatMessage(t0.plusSeconds(1990), ChatMessage.From.taf, live.text.trim(), "s1", serverId = "run_9.12")
+    current = with(coachThread + settled + answer, false, null); frames(6)
+    rule.mainClock.autoAdvance = true
+    rule.waitForIdle()
+    assertTrue("Coach's thread jumped to its top: $tops", !sawTop)
+    assertFollowedForward(tops)
+  }
+
+  /**
    * Following the end, an earlier message only ever moves up the screen, or off its top for good: never down again (the
    * list scrolling back), nor back on screen once it left.
    */
