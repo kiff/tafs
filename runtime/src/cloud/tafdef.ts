@@ -22,7 +22,7 @@ export const MODEL = "claude-sonnet-5-5";
  * tools and instructions) an hour (kiff/agents#171), so an owner who writes again after a pause
  * doesn't wait while it is read again (kiff/tafs#138, item 58).
  */
-export const PRICE = { Input: 2_000_000, Output: 10_000_000, CacheRead: 200_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 } as const;
+export const PRICE = { Input: 2_000_000, Output: 10_000_000, CacheRead: 100_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 } as const;
 export const MAX_TOKENS = 16_000;
 /**
  * How hard the model works on each turn. Medium: a taf acts on money and records, and at low
