@@ -140,6 +140,14 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).not.toContain("refunds, billpay, access, deploys, chargebacks");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
     expect(SETUP_INSTRUCTIONS).toContain("at most every 15 minutes");
+    // Any app on demand (kiff/planque#87): find apps by words before connecting, never stop on a long
+    // catalog (kiff/tafs#476, gap 1), and an app set up on demand asks by default.
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("search {q} with two or three short searches of words from the job");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("an app that needs_setup can't be connected until an operator sets it up: say so and offer another");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A long catalog is never a reason to stop: catalog {grant, q} searches it by words");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never say a list was too long to read.");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("on_demand: true is an app whose sign-in was set up on the owner's pick");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("changes data or moves money to ask the owner each time");
     expect(SETUP_INSTRUCTIONS).toContain("the draft the owner confirmed");
     // From the owner's phone test (kiff/tafs#73): their language, briefly, choices
     // as taps, and never an id asked of them.

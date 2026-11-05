@@ -291,6 +291,12 @@ describe("tafs cloud", () => {
     expect(endless.statusCode).toBe(200);
     expect(JSON.parse(endless.body).filtered).toBe(false);
     expect(JSON.parse(endless.body).recipes.length).toBeGreaterThan(2);
+    // A read planque says is partial isn't filtered on either.
+    const partial = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
+        ? new Response(JSON.stringify({ entries: [{ entry: "stripe@3", title: "Stripe", how: "key" }], partial: true }), { status: 200 })
+        : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
+    expect(JSON.parse(partial.body).filtered).toBe(false);
     // planque down: unfiltered, never an error, so the page is never blank for that.
     const down = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
       { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("boom", { status: 500 }) : depsOf(w).fetch!(url, init)) as Deps["fetch"] });

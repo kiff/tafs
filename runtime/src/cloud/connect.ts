@@ -13,9 +13,15 @@ export interface CatalogApp {
   title: string;
   icon?: string;
   how: "oauth" | "key";
-  state: "available" | "connected" | "needs_reconnect";
+  /** `needs_setup`: the app needs setting up by an operator before anyone can connect it; the apps say so and offer no Connect. */
+  state: "available" | "connected" | "needs_reconnect" | "needs_setup";
+  /** For `needs_setup`: the line the apps show in place of Connect. */
+  words?: string;
   grant?: string;
 }
+
+/** What an app that needs setting up says in place of Connect. */
+export const NEEDS_SETUP_WORDS = "Needs setting up first. Ask tafs to enable it.";
 
 /** planque didn't answer as it should: the apps are told planque can't be reached. */
 export class ConnectError extends Error {
@@ -64,6 +70,8 @@ export interface AppsPage {
   next_cursor?: string;
   /** Entries planque left out of this page as malformed or unsupported. */
   skipped?: number;
+  /** The catalog read stopped with pages left: an app that isn't here isn't absent. */
+  partial?: true;
 }
 
 /** One page of the catalog, the account's connections marked, searched by q; page.cursor asks for the next. */
@@ -74,17 +82,17 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
   if (page.cursor && CURSOR.test(page.cursor)) params.set("cursor", page.cursor);
   const query = params.size ? `?${params.toString().replace(/\+/g, "%20")}` : "";
   const got = await call(fetchFn, `${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/catalog${query}`, bearer, { method: "GET" }) as
-    { entries?: unknown; by_key?: unknown; provider?: unknown; next_cursor?: unknown; skipped?: unknown };
+    { entries?: unknown; by_key?: unknown; provider?: unknown; next_cursor?: unknown; skipped?: unknown; partial?: unknown };
   const entries = Array.isArray(got.entries) ? got.entries : [];
   const apps: CatalogApp[] = [];
   for (const e of entries as Record<string, unknown>[]) {
     const how = e.how === "key" ? "key" : e.how === "oauth" ? "oauth" : undefined;
-    const state = e.state === "connected" || e.state === "needs_reconnect" ? e.state : "available";
+    const state = e.state === "connected" || e.state === "needs_reconnect" || e.state === "needs_setup" ? e.state : "available";
     if (typeof e.entry !== "string" || !ENTRY.test(e.entry) || typeof e.title !== "string" || !how) continue;
     apps.push({
       entry: e.entry, vendor: typeof e.vendor === "string" ? e.vendor : e.title, title: e.title,
       ...(typeof e.icon === "string" && e.icon.startsWith("https://") ? { icon: e.icon } : {}),
-      how, state, ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
+      how, state, ...(state === "needs_setup" ? { words: NEEDS_SETUP_WORDS } : {}), ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
     });
   }
   return {
@@ -92,6 +100,7 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     ...(typeof got.provider === "string" && PROVIDER.test(got.provider) ? { provider: got.provider } : {}),
     ...(typeof got.next_cursor === "string" && CURSOR.test(got.next_cursor) ? { next_cursor: got.next_cursor } : {}),
     ...(Number.isInteger(got.skipped) && (got.skipped as number) > 0 ? { skipped: got.skipped as number } : {}),
+    ...(got.partial === true ? { partial: true as const } : {}),
   };
 }
 
