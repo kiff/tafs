@@ -10,12 +10,12 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, readAccess, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
-import { type VendorPlace, vendorPlace } from "./places.js";
+import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { recipesFor, type RecipesView } from "./recipes.js";
@@ -2817,6 +2817,9 @@ async function recordLiveCards(event: HTTPEvent, me: KIFFIdentity, taf: Taf, sta
 
 /** Makes version n live, recording the Cards it runs under, and keeps the record in step. */
 async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+  // The version's places, drafted by Coach with no session to check them under: checked now, under the owner's.
+  const dial = taf.knobs?.[String(n)];
+  await refuseMoneyPlaces(dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.actionResults ?? [], event, taf, deps);
   const cards = await liveCards(event, taf, deps);
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
   await applyKnob(me, taf, n, deps);
@@ -2942,15 +2945,29 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
  * by its record: its name is the record's, never the request's, so the words the owner approves name
  * the taf the hand-over goes to; Coach and the taf itself are no destination. 400 says what's wrong.
  */
-async function vendorPlaces(raw: unknown[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<VendorPlace[]> {
+async function vendorPlaces(raw: unknown[], me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<VendorPlace[]> {
   let vendor: VendorPlace[];
   try { vendor = raw.map((p) => vendorPlace(p, taf.id)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  if (event) await refuseMoneyPlaces(vendor, event, taf, deps);
   return Promise.all(vendor.map(async (p) => {
     if (p.place !== "taf") return p;
     const to = await deps.tafs.get(me.tenantID, p.taf);
     if (!to || to.job === SETUP_JOB || to.removing) throw new HTTPError(400, `no taf of this account takes results by that id (${p.taf})`);
     return { ...p, name: to.name };
   }));
+}
+
+/**
+ * A place moves no money (places.ts): an action place the taf's Cards count in money is refused, read
+ * from KIFF with the person's own session. Checked where that session is: the dial from the app, and a
+ * version going live, which is where Coach's draft (made with no session) reaches. Cards that can't be
+ * read refuse the change: a place is never let through unchecked.
+ */
+async function refuseMoneyPlaces(places: VendorPlace[], event: HTTPEvent, taf: Taf, deps: Deps): Promise<void> {
+  if (!places.some((p) => p.place === "action")) return;
+  let mandates: Mandate[];
+  try { ({ mandates } = await readKIFF(bearer(event), deps.fetch, deps.kiffBase)); } catch { throw new HTTPError(503, "the taf's Cards couldn't be read, so its places can't be checked; try again"); }
+  try { checkNoMoneyPlace(places, mandates, taf.kiffAgent); } catch (err) { throw new HTTPError(400, (err as Error).message); }
 }
 
 async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
@@ -2971,7 +2988,7 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   if (body.results === undefined) results = [...placesOf(taf), ...(taf.actionResults ?? [])];
   else {
     const all = Array.isArray(body.results) ? body.results : [];
-    const vendor = await vendorPlaces(all.filter((p) => typeof p !== "string"), me, taf, deps);
+    const vendor = await vendorPlaces(all.filter((p) => typeof p !== "string"), me, taf, deps, event);
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
   }
   let what: KnobSetting["what"];

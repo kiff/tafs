@@ -1888,6 +1888,39 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(knob.body.results.find((r: { place: string }) => r.place === "action")).toMatchObject({ grant: "grt_n1", action: "notion_add_page_k3f9", tap: "Turn to stop: each result goes to Notion · Support log" });
   });
 
+  it("refuses a money tool as a place, from the taf's Cards: at the dial from the app, and at go-live for Coach's draft (agentgabo on #516)", async () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const refund = { place: "action", grant: "grt_s1", action: "Stripe_Refund_k3f9", args: { charge: "ch_1" }, name: "Stripe · Refunds" };
+    const put = (results: unknown[]) => call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results } });
+    // The taf's Card counts the action in EUR: never a place, whatever its name says.
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold",
+      grants: [{ action: "stripe_refund_k3f9", title: "Refund a charge" }],
+      aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "calendar_day", unit: "EUR", scale: 2 }] } as Mandate];
+    const bad = await put(["app", refund]);
+    expect(bad.status).toBe(400);
+    expect(bad.body.error).toBe("Stripe · Refunds can't be a place: Stripe_Refund_k3f9 moves money (counted in EUR on the taf's Card), and a place moves no money");
+    // Another taf's Card, or a Card that counts calls only: not money, so the place is taken.
+    w.account.mandates = [{ id: "card_max", subject: "max", active: true, grants: [{ action: "stripe_refund_k3f9" }], aggregates: [{ quantity: "sum(amount)", limit: 1, window: "calendar_day", unit: "EUR" }] },
+      { id: "card_rae", subject: "rae", active: true, grants: [{ action: "stripe_refund_k3f9" }], aggregates: [{ quantity: "count", limit: 5, window: "calendar_day" }] }] as Mandate[];
+    const ok = await put(["app", refund]);
+    expect(ok.status).toBe(200);
+    const n = ok.body.version as number;
+    // Coach's draft is made with no session to read the Cards under, so the version going live is
+    // where it's checked: a Card that now counts the action in money stops it.
+    w.account.mandates = [{ id: "card_rae2", subject: "rae", active: true, grants: [{ action: "stripe_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }] }], aggregates: [] } as Mandate];
+    const live = await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    expect(live.status).toBe(400);
+    expect(live.body.error).toContain("moves money");
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.actionResults).toBeUndefined();
+    // Cards KIFF can't read refuse the change rather than let the place through.
+    w.account.mandates = [];
+    w.account.status = 503;
+    const down = await put(["app", refund]);
+    expect(down.status).toBe(503);
+    expect(down.body.error).toContain("Cards couldn't be read");
+  });
+
   it("takes another taf as a place only by this account's record, named as the record names it (qa-kiff on #507)", async () => {
     const w = world();
     w.agents.versions.set(`t_acme|${RAE}`, []);

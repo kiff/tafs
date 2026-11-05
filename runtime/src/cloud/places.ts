@@ -125,6 +125,52 @@ export function placeWords(p: VendorPlace): { label: string; words: string } {
   return { label: p.name.split(" · ")[0] || p.name, words: `Each result goes to ${p.name}${fields}` };
 }
 
+/** A Card as KIFF lists it, as far as a place's check reads it: whose it is, its actions, what it counts. */
+export interface PlaceCard {
+  subject: string;
+  /** A shared Card's holders (KIFF's `subjects`): the taf may hold it as one of them. */
+  subjects?: string[] | null;
+  active?: boolean;
+  grants?: { action: string; per_action_max?: { quantity: string; unit?: string | null }[] | null }[] | null;
+  aggregates?: { quantity: string; unit?: string | null }[] | null;
+}
+
+/**
+ * The actions of agent's Cards that are counted in money, by the unit they count in: an action with a
+ * summed quantity of its own, or any action of a Card whose total is summed (KIFF counts a money tool
+ * by its amount, never by calls alone). Folded as KIFF matches a Card's action to a tool.
+ */
+export function moneyActions(cards: PlaceCard[], agent: string): Map<string, string> {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const summed = (q: { quantity: string; unit?: string | null }) => fold(q.quantity).startsWith("sum(");
+  const out = new Map<string, string>();
+  for (const card of cards) {
+    if ((card.subject !== agent && !card.subjects?.includes(agent)) || card.active === false) continue;
+    const total = (card.aggregates ?? []).find(summed);
+    for (const g of card.grants ?? []) {
+      const own = (g.per_action_max ?? []).find(summed);
+      const money = own ?? total;
+      if (money && fold(g.action)) out.set(fold(g.action), money.unit ?? "");
+    }
+  }
+  return out;
+}
+
+/**
+ * A place moves no money: an action place whose action the taf's Cards count in money is refused, in
+ * words Coach reads, so the rule holds in tafs cloud and not only in Coach's instructions (setupdef).
+ */
+export function checkNoMoneyPlace(places: VendorPlace[], cards: PlaceCard[], agent: string): void {
+  const money = moneyActions(cards, agent);
+  for (const p of places) {
+    if (p.place !== "action") continue;
+    const unit = money.get(p.action.trim().toLowerCase());
+    if (unit === undefined) continue;
+    const counted = unit ? `counted in ${unit}` : "counted as money";
+    throw new Error(`${p.name} can't be a place: ${p.action} moves money (${counted} on the taf's Card), and a place moves no money`);
+  }
+}
+
 /** What heads them in a version's instructions. */
 export const ACTION_PLACES_INTRO = "Where your results also go:\n";
 
