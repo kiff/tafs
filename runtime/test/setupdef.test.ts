@@ -145,7 +145,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("search {q} with two or three short searches of words from the job");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("an app that needs_setup can't be connected until an operator sets it up: say so and offer another");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A long catalog is never a reason to stop: catalog {grant, q} searches it by words");
-    expect(SETUP_INSTRUCTIONS).toContain("Never say a list was too long to read.");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never say a list was too long to read.");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("on_demand: true is an app whose sign-in was set up on the owner's pick");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("changes data or moves money to ask the owner each time");
     expect(SETUP_INSTRUCTIONS).toContain("the draft the owner confirmed");
