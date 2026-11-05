@@ -423,6 +423,15 @@ is that the owner hands it to the taf in its chat; the apps search finds come af
 connected only when the owner picks it (`set-up-a-taf@2`). A connection the owner didn't ask for
 is proposed, never assumed.
 
+## A vendor the account already connects
+
+Before proposing an app, Coach reads the account's connections (planque's grants it asked for,
+each with its `kind`: the vendor's own sign-in, a provider's app with its mode, a key, or a browser).
+For a vendor the account already connects, the first option is the same kind, named with the taf
+that uses it, and asked for the same way for the new taf; another kind comes only when the owner
+picks it (`connect-an-app@2`). A mode is said only as the grant gives it: a vendor's own sign-in
+has none planque knows.
+
 ## Skills
 
 Coach's know-how is in skills (`runtime/skills/coach/<name>/<version>/SKILL.md`, the Agent Skills
