@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { JOBS } from "../src/jobs.js";
-import { actionPlace, HANDOFF_HEADING, placesInstructions, placeWords, tafPlace, vendorPlace } from "../src/cloud/places.js";
+import { actionPlace, checkNoMoneyPlace, HANDOFF_HEADING, moneyActions, placesInstructions, placeWords, tafPlace, vendorPlace } from "../src/cloud/places.js";
+import { SETUP_INSTRUCTIONS } from "../src/cloud/setupdef.js";
 import { instructions, ownerNotesIn } from "../src/cloud/tafdef.js";
 
 const NOTION = { place: "action", grant: "grt_n1", action: "notion_add_page_content_k3f9", args: { parent_page_id: "p1" }, name: "Notion · Support log" };
@@ -60,5 +61,22 @@ describe("result places at connected apps", () => {
     expect(text).not.toContain("taf_inv1");
     expect(placesInstructions([tafPlace({ place: "taf", taf: "taf_inv1", name: "Invoices" })])).toContain("what it acts on (by its reference), and what it needs next.");
     expect(placesInstructions([tafPlace({ place: "taf", taf: "taf_inv1", name: "Invoices" })])).not.toContain("Where your results also go");
+  });
+
+  it("never a money tool as a place: the taf's Cards say which actions are counted in money, and Coach's rules agree", () => {
+    const cards = [
+      { subject: "rae", active: true, grants: [{ action: "Refund_k1" }, { action: "note_k2" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
+      { subject: "rae", active: true, grants: [{ action: "post_k3", per_action_max: [{ quantity: "sum(amount)", unit: "USD" }] }, { action: "read_k4" }], aggregates: [{ quantity: "count" }] },
+      { subject: "rae", active: false, grants: [{ action: "old_k5" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
+      { subject: "max", active: true, grants: [{ action: "pay_k6" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
+    ];
+    expect([...moneyActions(cards, "rae")]).toEqual([["refund_k1", "EUR"], ["note_k2", "EUR"], ["post_k3", "USD"]]);
+    const place = (action: string) => actionPlace({ place: "action", grant: "grt_1", action, args: {}, name: "Stripe · Refunds" });
+    expect(() => checkNoMoneyPlace([place("refund_k1")], cards, "rae")).toThrow("Stripe · Refunds can't be a place: refund_k1 moves money (counted in EUR on the taf's Card), and a place moves no money");
+    expect(() => checkNoMoneyPlace([place("POST_K3")], cards, "rae")).toThrow("counted in USD");
+    expect(() => checkNoMoneyPlace([place("read_k4"), place("old_k5"), place("pay_k6"), tafPlace({ place: "taf", taf: "taf_x", name: "Invoices" })], cards, "rae")).not.toThrow();
+    expect(() => checkNoMoneyPlace([place("refund_k1")], cards, "max")).not.toThrow();
+    // Coach's rules say the same, so a draft is refused in words Coach already knows.
+    expect(SETUP_INSTRUCTIONS).toContain("A place moves no money: never a money tool as a\n     place");
   });
 });
