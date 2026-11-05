@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Sign in to a site (kiff/planque#86).** tafs cloud offers `site_sign_in` on a connected browser connection. On Android, the connection's sheet shows it, and a tap opens planque's live sign-in view in a web view, under planque's words, where the owner signs in to the site themselves. Nothing else is shown, and the view never leaves planque's address.
 - **Android: any app on demand (kiff/planque#87).** Connect apps shows an app that isn't set up yet with tafs cloud's words in place of Connect, and nothing to tap. A taf's connection sheet says who keeps its sign-in, in tafs cloud's line.
 - **Recipes:** the words to say to Coach name the kind of app ("my accounting app", "my email"), never a brand, since an app sold in one country isn't in another and the account may already have a different one; Coach finds the apps by those words and proposes the ones the account has first (kiff/tafs#476, gap 2).
 - **tafs cloud, approvals:** a Card draft for an app set up on demand that would let one of its write or money tools run without asking isn't signed: Coach hears which tool, and drafts it again held. The default now holds in tafs cloud, not only in Coach's words (kiff/planque#87).

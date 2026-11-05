@@ -1112,4 +1112,46 @@ class PlanqueTest {
     assertEquals("Their user id", bot.tafs.app.model.DoorWords.pairHint(door))
     assertEquals("Ask them to write first.", door.words?.pairFromKnock)
   }
+
+  // MARK: A browser connection's sign-in to a site: planque's live view, signed, opened as it comes (kiff/planque#86)
+
+  private val signInRoute = "POST /v1/accounts/t_01/grants/gs/sign-in"
+
+  @Test fun theSignInViewIsAskedForSignedAndOpenedAsPlanqueSendsIt() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 200, """{"view":"https://planque.kiff.dev/browser/view/tok_1","expires":"2026-11-05T04:20:00Z","words":"Sign in, then tap Done."}""")
+    m.openSiteSignIn("gs")
+    val sent = transport.requestsTo(signInRoute).single()
+    assertTrue("device-signed", sent.headers.containsKey("Planque-Device-Signature"))
+    assertTrue("no fingerprint asked: it grants nothing", auth.asked.isEmpty())
+    assertEquals("https://planque.kiff.dev/browser/view/tok_1", m.state.value.siteSignIn?.view)
+    assertEquals("Sign in, then tap Done.", m.state.value.siteSignIn?.words)
+    assertNull(m.state.value.openingSiteSignIn)
+    m.closeSiteSignIn()
+    assertNull(m.state.value.siteSignIn)
+  }
+
+  @Test fun aViewOffPlanquesOwnAddressIsNeverOpened() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 200, """{"view":"https://elsewhere.example/browser/view/tok_1","words":"Sign in"}""")
+    m.openSiteSignIn("gs")
+    assertNull(m.state.value.siteSignIn)
+    assertTrue(m.state.value.coachNotes.getValue("gs").contains("wasn't on the connection's own address"))
+  }
+
+  @Test fun planquesRefusalIsSaidOnTheConnection() = runTest {
+    val m = slackModel()
+    transport.answer(signInRoute, 409, """{"error":"a sign-in view is open for this connection: finish it on the phone, or wait for it to lapse"}""")
+    m.openSiteSignIn("gs")
+    assertNull(m.state.value.siteSignIn)
+    assertTrue(m.state.value.coachNotes.getValue("gs").contains("a sign-in view is open for this connection"))
+  }
+
+  @Test fun aBrowserConnectionCarriesTafsCloudsSignInAction() {
+    val app = KiffClient.json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>(
+      """{"id":"gb","name":"Shop","status":"connected","site_sign_in":{"title":"Sign in to a site","words":"You sign in yourself."}}""",
+    )
+    assertEquals("Sign in to a site", app.siteSignIn?.title)
+    assertNull(KiffClient.json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>("""{"id":"g1","name":"Notion","status":"connected"}""").siteSignIn)
+  }
 }

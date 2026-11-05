@@ -83,6 +83,12 @@ describe("a taf's server-composed setup", () => {
     expect(own.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept by tafs' connection service; the taf never sees it." });
     expect(own.connections[0]).not.toHaveProperty("on_demand");
     expect(view.connections[0]).not.toHaveProperty("custody_words");
+    // A connected browser connection offers its own sign-in to a site, in tafs cloud's words; no other connection does.
+    const browser = setupView({ ...args, grants: [{ ...grant, provider: "browser" }] });
+    expect(browser.connections[0]).toMatchObject({ site_sign_in: { title: "Sign in to a site", words: expect.stringContaining("never to the taf") } });
+    expect(own.connections[0]).not.toHaveProperty("site_sign_in");
+    const signedOut = setupView({ ...args, grants: [{ ...grant, provider: "browser", status: "needs_reconnect" }] });
+    expect(signedOut.connections[0]).not.toHaveProperty("site_sign_in");
     expect(appDisplayName({ ...grant, vendor: undefined })).toBe("Connected app");
   });
   it("marks a step running only while its tool call has no result", () => {
