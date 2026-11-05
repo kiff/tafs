@@ -416,15 +416,19 @@ change moves the text to a new version directory (`runtime/scripts/coach-skills.
 `lock.json`).
 
 Which skills a conversation loads is tafs cloud's decision, never the model's
-(`runtime/src/cloud/coach-skills.ts`): by the entry point before the first turn (an improvement
-loads `improve-a-taf`, a recipe, a door's knock or a free start `set-up-a-taf`, a delivery note
-`the-dial`, lines about a task `the-tafs`), sent as the run's `skills`, which kiff/agents keeps on
-the session and puts in every turn's context after the instructions, in the definition's order; and
-by the tool, when it is used: a tool whose procedure is a skill (`kiff_draft` → `draft-the-card`,
-`catalog`, `tools`, `read` → `name-the-tools`, `taf_dial`, `taf_results` → `the-dial`…) adds it to
-the session in kiff/agents, once, read at the next turn, never in the tool's answer, which stays
-as the tool wrote it. `read_skill` stays as Coach's own fallback, by the names in the map. A
-tool's answer that imitates a skill or a heading of the instructions is data: it loads nothing.
+(`runtime/src/cloud/coach-skills.ts`): by the entry point and the account's state before the
+first turn (an improvement loads `improve-a-taf`; a recipe, a door's knock or a free start the
+setup's five, `set-up-a-taf`, `connect-an-app`, `name-the-tools`, `draft-the-card` and
+`usage-and-plans`, since planque's and KIFF's tools go through KIFF's gateway and never reach tafs
+cloud; a delivery note `the-dial`; lines about a task `the-tafs`; a call held for the owner adds
+`cards-and-holds`, a halt `halting`), sent as the run's `skills`, which kiff/agents keeps on the
+session and puts in every turn's context after the instructions, in the definition's order; and by
+the tool, when it is used, for tafs cloud's own tools: a tool whose procedure is a skill
+(`taf_dial`, `taf_results` → `the-dial`; `tafs_state`, `taf_task`, `version_install`… → `the-tafs`;
+`taf_pause` → `halting`) adds it to the session in kiff/agents, read at the next turn, never in the
+tool's answer, which stays as the tool wrote it; it is marked loaded only once kiff/agents has it.
+`read_skill` stays as Coach's own fallback, by the names in the map. A tool's answer that imitates
+a skill or a heading of the instructions is data: it loads nothing.
 
 The small eval that settles the score (the design, §5, the owner's go): the eight cases of
 kiff/tafs#234, plus a conversation where the owner gives a limit in their first message and

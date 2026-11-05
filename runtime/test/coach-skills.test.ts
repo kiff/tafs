@@ -91,8 +91,9 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   // One test per entry point: the skill it needs is named, in the definition's order, as a stored version.
+  const SETUP = ["connect-an-app", "draft-the-card", "name-the-tools", "set-up-a-taf", "usage-and-plans"];
   for (const [entry, want] of [
-    ["free", ["set-up-a-taf"]], ["recipe", ["set-up-a-taf"]], ["door", ["set-up-a-taf"]], ["improve", ["improve-a-taf"]],
+    ["free", SETUP], ["recipe", SETUP], ["door", SETUP], ["improve", ["improve-a-taf"]],
     ["coach_lines", ["the-tafs"]], ["delivery", ["the-dial"]], ["did_this_happen", ["cards-and-holds"]],
   ] as const) {
     it(`loads ${want.join(", ")} for a conversation that opens as ${entry}`, () => {
@@ -101,13 +102,14 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "halting@1", "set-up-a-taf@1"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@1", "draft-the-card@1", "halting@1", "name-the-tools@1", "set-up-a-taf@1", "usage-and-plans@1"]);
     expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "improve-a-taf@1"]);
   });
 
   it("loads a skill by the tool whose procedure it is, and nothing for a vendor's tool or a tool with none", () => {
-    expect(toolSkills("kiff_draft")).toEqual(["draft-the-card@1"]);
-    expect(toolSkills("catalog")).toEqual(["name-the-tools@1"]);
+    // planque's and KIFF's tools never reach tafs cloud (KIFF's gateway serves them): their skills come with the start.
+    expect(toolSkills("kiff_draft")).toEqual([]);
+    expect(toolSkills("catalog")).toEqual([]);
     expect(toolSkills("taf_dial")).toEqual(["the-dial@1"]);
     expect(toolSkills("taf_task")).toEqual(["the-tafs@1"]);
     expect(toolSkills("taf_pause")).toEqual(["halting@1"]);

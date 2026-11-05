@@ -18,7 +18,7 @@ import { requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
-import { entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills } from "./coach-skills.js";
+import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills } from "./coach-skills.js";
 import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
@@ -2525,9 +2525,21 @@ async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text:
  * Coach's skills for a new conversation (coach-skills.ts, way 1): the first message says how it opened, and
  * tafs cloud names the skills kiff/agents loads for the session. A session that exists keeps its own.
  */
-function withCoachSkills(taf: Taf, at: RunAt, text: string): void {
+async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, deps: Deps): Promise<void> {
   if (taf.job !== SETUP_JOB || at.session) return;
-  at.skills = startSkills(entryOf(text));
+  at.skills = startSkills(entryOf(text), await coachStartState(me, event, deps));
+}
+
+/**
+ * The account's state a Coach conversation starts from, as far as its skills care: a call held for the
+ * owner, and a halt. Best effort: what can't be read counts as absent, and Coach reads the skill itself.
+ */
+async function coachStartState(me: KIFFIdentity, event: HTTPEvent, deps: Deps): Promise<CoachState> {
+  const [held, halt] = await Promise.all([
+    readExceptions(bearer(event), deps.fetch, deps.kiffBase).catch(() => []),
+    deps.agents.halted(me.tenantID).catch(() => undefined),
+  ]);
+  return { heldCall: held.length > 0, halted: halt?.halted === true };
 }
 
 /** Stores Coach's skills in kiff/agents, each at its version, before a definition that names them is written. */
@@ -2550,9 +2562,12 @@ async function loadToolSkills(name: string, call: CoachCall, deps: Deps): Promis
     if (!setup) return;
     const run = await deps.agents.getRun(call.tenant, setup.id, runID);
     const until = new Date((deps.now?.() ?? new Date()).getTime() + LOADED_KEPT_MS);
-    const add: string[] = [];
-    for (const ref of refs) if (await deps.coach.once(loadedKey(call.tenant, run.session, ref), until)) add.push(ref);
-    if (add.length) await deps.agents.addSessionSkills(call.tenant, setup.id, run.session, add);
+    const add: typeof refs = [];
+    for (const ref of refs) if (!(await deps.coach.get(loadedKey(call.tenant, run.session, ref)))) add.push(ref);
+    if (!add.length) return;
+    // Marked only once kiff/agents has it: a failed add is tried again by the next call (the add is idempotent).
+    await deps.agents.addSessionSkills(call.tenant, setup.id, run.session, add);
+    for (const ref of add) await deps.coach.put(loadedKey(call.tenant, run.session, ref), true, until);
   } catch (err) {
     console.error(`coach skills: ${name} for ${call.tenant}:`, err);
   }
@@ -2563,7 +2578,7 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   const attached = files(event);
   if (attached.length) at.attachments = attached;
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
-  withCoachSkills(taf, at, text);
+  await withCoachSkills(me, taf, at, text, event, deps);
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, at, ai));
   return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created } };
 }
@@ -3293,7 +3308,7 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     heldCards(kiff.mandates, taf.kiffAgent));
   const ai = await aiBound(event, deps);
   const at = await granted(event, setup.kiffAgent, { requester: member(me) }, deps);
-  withCoachSkills(setup, at, input);
+  await withCoachSkills(me, setup, at, input, event, deps);
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, at, ai));
   return { setup: setup.id, session: run.session, new_session: true };
 }
@@ -3669,7 +3684,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
         // Coach's runs are announced when they pause, so a result it shows is
         // handed over by tafs cloud with no phone needed (handOver).
         const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
-        withCoachSkills(taf, at, text);
+        await withCoachSkills(me, taf, at, text, event, deps);
         run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai, notify);
         first = await run.next();
       } catch (err) {

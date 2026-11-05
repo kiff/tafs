@@ -42,29 +42,29 @@ export function allSkillRefs(): SkillRef[] {
  * knock) sets one up; an improvement improves; a delivery note is the dial's; a "Did this happen?" tap
  * is its own flow; coach lines (a task's outcome before the owner's words) are the tafs'.
  */
+const SETUP = ["set-up-a-taf", "connect-an-app", "name-the-tools", "draft-the-card", "usage-and-plans"];
 const ENTRY_SKILLS: Record<CoachEntry, string[]> = {
-  free: ["set-up-a-taf"],
-  recipe: ["set-up-a-taf"],
-  door: ["set-up-a-taf"],
+  // Setting up a taf connects an app, names its tools and drafts its Card; those tools (planque's, KIFF's)
+  // go through KIFF's gateway and never reach tafs cloud, so their skills come with the start, and so does
+  // what the owner asks on the way (usage and plans) (qa-kiff, the PM's call of 16:23).
+  free: SETUP,
+  recipe: SETUP,
+  door: SETUP,
   improve: ["improve-a-taf"],
   coach_lines: ["the-tafs"],
   delivery: ["the-dial"],
   did_this_happen: ["cards-and-holds"],
 };
 
-/** The tools whose procedure is a skill: calling one loads it for the session (way 2). */
+/**
+ * The tools whose procedure is a skill: calling one loads it for the session (way 2). Only tafs cloud's own
+ * tools reach it (`POST /v1/mcp`): planque's and KIFF's go through KIFF's gateway, so their skills load at
+ * the start (ENTRY_SKILLS) or by `read_skill`.
+ */
 const TOOL_SKILLS: Record<string, string[]> = {
-  // planque's tools, through KIFF's gateway: the connection and its tools.
-  request: ["connect-an-app"], grants: ["connect-an-app"], status: ["connect-an-app"], search: ["connect-an-app"],
-  events: ["connect-an-app"], sign_in: ["connect-an-app"],
-  catalog: ["name-the-tools"], tools: ["name-the-tools"], read: ["name-the-tools"],
-  // KIFF's: a Card's draft and a Card read.
-  kiff_draft: ["draft-the-card"], kiff_card: ["cards-and-holds"],
-  // tafs cloud's own.
   tafs_state: ["the-tafs"], taf_run: ["the-tafs"], taf_task: ["the-tafs"], run_stop: ["the-tafs"], taf_pause: ["halting"],
   version_try: ["the-tafs"], version_install: ["the-tafs"],
   taf_results: ["the-dial"], taf_dial: ["the-dial"],
-  usage: ["usage-and-plans"],
 };
 
 /** The state of the account the first turn starts from, as far as the skills care. */
