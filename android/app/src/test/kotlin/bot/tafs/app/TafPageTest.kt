@@ -80,6 +80,32 @@ class TafPageTest {
     assertFalse(m.state.value.sendingAgain.contains("run_2"))
   }
 
+  @Test fun aPlaceOfTheTafsOwnIsSentAgainByItsKeyAndCoachIsAskedInTafsCloudsWords() = runTest {
+    reads()
+    val placeWork = """{"taf":"taf_1","summary":{"status":"idle","line":"Last done at 22:43","needs_you":0},"counts":{},"skipped":[],
+      "requests":[{"id":"run_5","at":"2026-11-02T22:41:00Z","state":"done","line":"Invoice reminder · ACME",
+        "deliveries":[{"place":"action","key":"grant_sheets:append_row","name":"Invoices sheet","state":"not_sent","line":"Not added to the Invoices sheet",
+          "send_again":true,"open_coach":true,"coach_words":"The Invoices sheet didn't take the row for ACME. Why, and can you fix it?"}]}]}"""
+    transport.answer("GET /v1/tafs/taf_1/work", 200, placeWork)
+    transport.answer("GET /v1/tafs/taf_1/work", 200, placeWork)
+    transport.answer("POST /v1/tafs/taf_1/requests/run_5/deliveries/grant_sheets:append_row/send", 200, """{"state":"retrying"}""")
+    val m = model()
+    m.refresh()
+    m.loadWork("refunds-1")
+    val d = m.state.value.works.getValue("refunds-1").requests.single().deliveries.single()
+    assertEquals("grant_sheets:append_row", d.sendPlace)
+    m.sendAgain("refunds-1", "run_5", d.sendPlace)
+    // By its key, never as a door reply, which has nothing waiting for this run.
+    val sent = transport.requestsTo("POST /v1/tafs/taf_1/requests/run_5/deliveries/grant_sheets:append_row/send").single()
+    // The key goes URL-encoded, as tafs cloud reads it.
+    assertTrue(sent.url, sent.url.endsWith("/deliveries/grant_sheets%3Aappend_row/send"))
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/requests/run_5/deliveries/door_reply/send").isEmpty())
+    // Ask Coach: a conversation about the taf, tafs cloud's words in the message box, nothing sent.
+    m.askCoachAbout("refunds-1", d.coachWords!!)
+    assertEquals(d.coachWords, m.state.value.drafts[bot.tafs.app.app.COACH_CHAT])
+    assertTrue(transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
+  }
+
   @Test fun aSendAgainTafsCloudRefusesSaysSoInTheAppsWords() = runTest {
     reads()
     transport.answer("GET /v1/tafs/taf_1/work", 200, work)

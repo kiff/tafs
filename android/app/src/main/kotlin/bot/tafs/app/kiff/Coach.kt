@@ -320,7 +320,22 @@ data class RequestStep(
 
 /** Where a request's result went, and whether it can be sent again (a reply given up on after its tries). */
 @Serializable
-data class WorkDelivery(val place: String = "door_reply", val state: String = "", val line: String = "", @SerialName("send_again") val sendAgain: Boolean = false)
+data class WorkDelivery(
+  /** `door_reply`, or a place of the taf's own: `action` (an app's action) or `taf` (another taf). */
+  val place: String = "door_reply",
+  val state: String = "",
+  val line: String = "",
+  @SerialName("send_again") val sendAgain: Boolean = false,
+  /** A place of the taf's own: its key (`<grant>:<action>`), which Send again names, and its name in tafs cloud's words. */
+  val key: String? = null,
+  val name: String? = null,
+  /** Still not delivered: Coach may be asked about it, in tafs cloud's words for what to ask. */
+  @SerialName("open_coach") val openCoach: Boolean = false,
+  @SerialName("coach_words") val coachWords: String? = null,
+) {
+  /** What Send again names in its route: the door reply, or the place's own key. */
+  val sendPlace: String get() = if (place == "door_reply") place else key ?: place
+}
 
 /** A scheduled run that was skipped: when it was due, why (missed or busy), and tafs cloud's words for it. */
 @Serializable
