@@ -151,11 +151,15 @@ object KiffMapping {
       h.state == "paused" -> taf.copy(state = TafState.paused, now = "Paused")
       // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
       h.state == "halted" -> taf.copy(state = TafState.halted, now = "Halted · resume it from Halt")
+      // Its run waits for a connected app's event (the slow-tools design): not the owner's, in the connection's words.
+      h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = h.work.line)
       // A taf with no schedule isn't at work until it's told something in its chat (kiff/tafs#138, item 55).
       h.state == "working" && h.unscheduled == true -> taf.copy(state = TafState.idle, now = "Works from its chat")
       h.state == "working" -> taf.copy(state = TafState.working, now = h.nextRun?.let { "Next run ${shortTime(it)}" } ?: "Running")
       h.state == "idle" -> taf.copy(state = TafState.idle, now = "Acting under KIFF")
-      else -> taf.copy(state = TafState.revoked, now = "Card not active")
+      h.state == "stopped" -> taf.copy(state = TafState.revoked, now = "Card not active")
+      // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
+      else -> taf.copy(state = TafState.idle, now = h.work?.line.orEmpty())
     }
     return taf.copy(
       cloudId = h.id,

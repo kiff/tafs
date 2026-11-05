@@ -43,18 +43,14 @@ object RequestWords {
     else -> "○"
   }
 
-  /**
-   * Whether [step] is the wait for an app's event that tafs cloud names in the request's `waiting_for`: the run waits on the
-   * app, not on the owner, so it isn't drawn as needing them.
-   */
-  fun waitsOnApp(step: RequestStep, detail: RequestDetail): Boolean =
-    step.state == "waiting" && detail.waitingFor != null && step.label == detail.waitingFor
+  /** Whether tafs cloud says [step] waits for a connected app's event, not for the owner: it isn't drawn as needing them. */
+  fun waitsOnApp(step: RequestStep): Boolean = step.waitsOn == "app"
 }
 
-private fun markColor(step: RequestStep, detail: RequestDetail): Color = when {
+private fun markColor(step: RequestStep): Color = when {
   step.state == "done" -> Theme.ok
   step.state == "failed" -> Theme.no
-  RequestWords.waitsOnApp(step, detail) -> Theme.soft
+  RequestWords.waitsOnApp(step) -> Theme.soft
   step.state == "waiting" -> Theme.amberText
   else -> Theme.dim
 }
@@ -87,7 +83,7 @@ fun RequestSheet(
         Eyebrow(RequestWords.WHAT_HAPPENED)
         detail.steps.forEach { step ->
           Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(RequestWords.mark(step), style = scaled(14, FontWeight.Bold, markColor(step, detail)), modifier = Modifier.width(18.dp))
+            Text(RequestWords.mark(step), style = scaled(14, FontWeight.Bold, markColor(step)), modifier = Modifier.width(18.dp))
             Column(Modifier.weight(1f)) {
               Text(step.label, style = scaled(15, FontWeight.SemiBold, if (step.state == "next" || step.state == "not_made") Theme.dim else Theme.ink))
               val sub = listOfNotNull(step.line, step.at).joinToString(" · ")

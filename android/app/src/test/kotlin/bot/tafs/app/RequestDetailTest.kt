@@ -72,16 +72,15 @@ class RequestDetailTest {
       """{"id":"run_3","at":"2026-11-02T22:41:00Z","state":"waiting","line":"Waiting for the customer's reply","waiting_for":"Waiting for the customer's reply","from":"By email",
         "steps":[{"label":"Held for your approval","line":"Over its Card · 22:41","state":"waiting"},
                  {"label":"Sent the email","at":"22:42","state":"done"},
-                 {"label":"Waiting for the customer's reply","state":"waiting"}]}""",
+                 {"label":"Waiting for the customer's reply","state":"waiting","waits_on":"app"}]}""",
     )
     m.openRequest("refunds-1", "run_3")
     val d = m.state.value.openRequest!!.second
     assertEquals("Waiting for the customer's reply", d.waitingFor)
-    // The wait tafs cloud names is the app's, drawn as not needing the owner; a hold is still the owner's.
-    assertTrue(bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[2], d))
-    assertTrue(!bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[0], d))
-    // A request waiting on the owner has no waiting_for: none of its steps is the app's.
-    val held = d.copy(waitingFor = null)
-    assertTrue(!bot.tafs.app.views.RequestWords.waitsOnApp(held.steps[2], held))
+    // The step tafs cloud marks `waits_on: "app"` is the app's, drawn as not needing the owner; a hold is still the owner's,
+    // and so is a step whose words match but that tafs cloud doesn't mark.
+    assertTrue(bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[2]))
+    assertTrue(!bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[0]))
+    assertTrue(!bot.tafs.app.views.RequestWords.waitsOnApp(d.steps[2].copy(waitsOn = null)))
   }
 }
