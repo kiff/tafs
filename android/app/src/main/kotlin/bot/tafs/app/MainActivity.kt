@@ -380,6 +380,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       add = { taf, app -> model.addDoor(taf, app) },
       loadSlackChannels = model::loadSlackChannels,
       addSlack = { taf, app, grant, channel -> model.addSlackDoor(taf, app, grant, channel) },
+      addBot = { taf, app, grant -> model.addBotDoor(taf, app, grant) },
       setOpen = { taf, door, open -> model.setDoorOpen(taf, door, open) },
       remove = { taf, door -> model.removeDoor(taf, door) },
       pair = { taf, door, sender, name -> model.pairDoor(taf, door, sender, name) },

@@ -153,7 +153,7 @@ See [doors.md](doors.md). Reading and changing both need managing the taf: someo
 
 | Route | What |
 |---|---|
-| `GET /v1/tafs/{id}/doors` | The taf's doors, each with its `words` (`state`, `tap`, `settings`), the apps a door can open on here, and its open knocks, each with its door's `label` |
+| `GET /v1/tafs/{id}/doors` | The taf's doors, each with its `words` (`state`, `tap`, `settings`, and `pair_hint`, `pair_from_knock?` on a door that holds keys), the apps a door can open on here (a bot door's with `bot: {provider, words: {none, pick}}`), and its open knocks, each with its door's `label` |
 | `POST /v1/tafs/{id}/doors` | `{app, code?, phone_number_id?, waba_id?}`: turn a door on |
 | `PATCH /v1/tafs/{id}/doors/{door}` | `{open}` |
 | `DELETE /v1/tafs/{id}/doors/{door}` | Remove it |

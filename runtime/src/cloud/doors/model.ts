@@ -13,7 +13,7 @@
  *   information, never instructions.
  */
 
-export type DoorKind = "email" | "whatsapp" | "slack";
+export type DoorKind = "email" | "whatsapp" | "slack" | "telegram";
 
 /** A sender who may give the taf work through one door. */
 export interface Key {
@@ -46,7 +46,7 @@ export interface Door {
   created: string;
   /** A WhatsApp door's number, as the WhatsApp Business Platform names it. */
   phoneNumberID?: string;
-  /** A Slack door's connection in planque (the grant whose Slack bot it listens through) and its channel. */
+  /** A Slack or Telegram door's connection in planque (the grant whose bot it listens through); a Slack door's channel. */
   grant?: string;
   channel?: string;
   /** planque's subscription that hands this channel's messages over: the app deletes it when the door goes. */

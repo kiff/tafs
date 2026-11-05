@@ -76,7 +76,8 @@ object DoorWords {
 
   fun noKeys(d: Door, taf: String): String = "${d.how}, so no one here can give $taf work. Everything that comes through knocks."
 
-  fun pairHint(d: Door): String = when (d.kind) {
+  /** tafs cloud's hint for pairing by hand; these only stand in for an older tafs cloud that sends none. */
+  fun pairHint(d: Door): String = d.words?.pairHint ?: when (d.kind) {
     "email" -> "Email address"
     "whatsapp" -> "Phone number, with its country code"
     else -> "Who, as ${d.label} names them"

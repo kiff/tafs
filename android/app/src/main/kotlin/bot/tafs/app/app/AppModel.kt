@@ -452,6 +452,9 @@ data class AppState(
   /** The taf's connected Slack bot connections, which a Slack door listens through. */
   fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
 
+  /** The taf's connected bot connections from [provider] (tafs cloud names it on the door's app), which a bot door listens through. */
+  fun bots(tafId: String, provider: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isFrom(provider) && it.request.agent == tafId }
+
   /** The tafs an app can be connected for: on tafs cloud, and managed by this person. */
   val connectableTafs: List<Taf> get() = tafs.filter { it.cloudId != null && manages(it.id) }
 
@@ -2723,6 +2726,15 @@ class AppModel(
     }
   }
 
+  /**
+   * A bot door, such as Telegram's: the owner's bot connection, as tafs cloud's door (`{app, grant, bot?}`). planque listens to the bot
+   * from its connection on, so there's nothing to subscribe and nothing to sign; who may give work is paired after, from their knock.
+   */
+  suspend fun addBotDoor(tafId: String, app: DoorApp, grant: bot.tafs.app.kiff.Grant): Door? {
+    if (_state.value.mode != Mode.kiff) return null
+    return doorWork(tafId) { cloud.addDoor(it, app.id, mapOf("grant" to grant.id) + (grant.botName?.let { bot -> mapOf("bot" to bot) } ?: emptyMap())) }
+  }
+
   /** A subscription planque made for an approved event that tafs cloud hasn't recorded yet: kept only to record it again. */
   private data class EventReceipt(val version: Int, val approval: bot.tafs.app.kiff.KnobWire.Approval, val subscription: String)
 
@@ -4601,8 +4613,8 @@ class AppModel(
   }
 
   suspend fun removeDoor(tafId: String, door: Door) {
-    // A Slack door: planque's subscription goes first (a signed delete), then the door, so nothing listens for a door that's gone.
-    if (door.kind == "slack" && door.grant != null && door.trigger != null) {
+    // A door with planque's subscription (a Slack channel's, or a bot's): it goes first (a signed delete), then the door, so nothing listens for a door that's gone.
+    if (door.grant != null && door.trigger != null) {
       val tenant = kiffTenant ?: return
       val account = _state.value.grants.firstOrNull { it.id == door.grant }?.account
       if (account != null) {
@@ -4615,7 +4627,7 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          updateDoors(tafId) { it.copy(error = "The Slack bot still listens to that channel, so the door stays. ${ErrorWords.of(e)}") }
+          updateDoors(tafId) { it.copy(error = (if (door.kind == "slack") "The Slack bot still listens to that channel" else "The bot still listens") + ", so the door stays. ${ErrorWords.of(e)}") }
           return
         } finally {
           planque.signer = null

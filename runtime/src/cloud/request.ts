@@ -22,7 +22,7 @@ export interface RequestDetail extends RequestView {
   steps: RequestStep[];
 }
 
-const DOOR: Record<string, string> = { email: "email", whatsapp: "WhatsApp", slack: "Slack" };
+const DOOR: Record<string, string> = { email: "email", whatsapp: "WhatsApp", slack: "Slack", telegram: "Telegram" };
 
 /** Where a run came from, in words. */
 export function fromOf(r: Run): string {
