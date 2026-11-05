@@ -1123,14 +1123,14 @@ describe("Setup (kiff/agents#91)", () => {
 });
 
 describe("a taf Setup made (kiff/agents#91, #94)", () => {
-  const BODY = { name: "Refunds", job: "refunds", draft_id: "drf_s1", from_setup: true };
+  const BODY = { name: "Refunds", draft_id: "drf_s1", from_setup: true, kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *" };
 
   it("starts from Setup's draft: kiff/agents claims the key into the taf's reference", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
     const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
     expect(r.status).toBe(200);
-    expect(r.body.taf).toMatchObject({ id: NEW, name: "Refunds", job: "refunds", kiff_agent: "refunds-x" });
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Refunds", job: "custom", kiff_agent: "refunds-x" });
     expect(w.agents.setupDrafts.get("drf_s1")?.keyRef).toBe(`kiff/${NEW}`);
     expect(w.keys.held.has(`t_acme#${NEW}`)).toBe(false);
     expect(w.agents.agents.get(`t_acme|${NEW}`)).toMatchObject({ key_ref: `kiff/${NEW}` });
@@ -2431,7 +2431,7 @@ describe("deleting the account (kiff/tafs#185)", () => {
 
 describe("Coach's result, handed over by tafs cloud", () => {
   const COACH = "taf-c0ac4000000000000000";
-  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", taf: { agent: "refunds-x", name: "Refunds", job: "refunds", draft: "drf_s1" } };
+  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *" } };
 
   /** A world with the account's Coach, its run paused on a result Ana's chat showed, and the deps that hand it over. */
   async function paused(card: Record<string, unknown> = RESULT, requester: { kind: string; id: string } | undefined = { kind: "member", id: "u_ana" }) {
@@ -2486,6 +2486,16 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note2();
     expect(answer2()?.answer).toMatchObject({ failed: expect.stringContaining("kickoff") });
     expect(w2.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+    // A result that names a starter job under the owner's own summary would run that job's
+    // kickoff and instructions, not the one agreed: answered failed, in words, and no taf exists.
+    const starter = { agent: "invoices-x", name: "Invoice reminders", job: "billpay", draft: "drf_s1", summary: "Emails a polite reminder for overdue invoices." };
+    const { w: w3, note: note3, answer: answer3 } = await paused({ type: "result", id: "done", taf: starter });
+    w3.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
+    w3.agents.access.set("u_ana", { cards_manage: true });
+    await note3();
+    expect(answer3()?.answer).toMatchObject({ failed: expect.stringContaining("never a starter job") });
+    expect(w3.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+    expect(w3.agents.calls.filter((c) => c.startsWith("claimTafDraft"))).toEqual([]);
   });
 
   it("makes an improvement's version for the taf it improves, once, and answers with it; nothing goes live", async () => {
