@@ -1,7 +1,7 @@
 import { COACH_SKILLS } from "../coach-skills.js";
 import { type AgentDefinition, type Effort } from "./agents.js";
 import { TOOLS } from "./coach.js";
-import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE, PRICE_FAST, THINKING } from "./tafdef.js";
+import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, THINKING } from "./tafdef.js";
 
 /**
  * Setup, the agent that connects a company's tools for its tafs in the app's
@@ -16,10 +16,23 @@ import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, M
 export const PLANQUE = "https://planque.kiff.dev";
 
 /**
- * How hard Setup works on each turn: high, as measured through kiff/agents' gate.
- * A taf runs lower (tafdef's EFFORT); Setup's conversation plans and judges more.
+ * Coach's model: Opus 5.5, which plans a taf and its Cards with the owner. A taf runs on Sonnet
+ * (tafdef's MODEL). The owner's choice of 5 Nov 2026, measured through kiff/agents' Eval.
  */
-export const SETUP_EFFORT: Effort = "high";
+export const SETUP_MODEL = "claude-opus-5-5";
+/** What SETUP_MODEL costs, in millionths of a US dollar per million tokens (as tafdef's PRICE). */
+export const SETUP_PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 } as const;
+/** What SETUP_MODEL costs at its fast output (kiff/agents#197). */
+export const SETUP_PRICE_FAST = {
+  Input: 2 * SETUP_PRICE.Input, Output: 2 * SETUP_PRICE.Output, CacheRead: 2 * SETUP_PRICE.CacheRead,
+  CacheWrite: 2 * SETUP_PRICE.CacheWrite, CacheWrite1h: 2 * SETUP_PRICE.CacheWrite1h,
+} as const;
+
+/**
+ * How hard Setup works on each turn: low. Measured through kiff/agents' Eval on 5 Nov 2026,
+ * Opus 5.5 at low passed every Setup check, sooner than at high: the owner waits on each turn.
+ */
+export const SETUP_EFFORT: Effort = "low";
 
 /** Coach's tools on the account's tafs MCP server, by name: deferred, so an ordinary turn pays nothing for them. */
 export const COACH_TOOLS = TOOLS.map((t) => t.name);
@@ -28,7 +41,7 @@ export const COACH_TOOLS = TOOLS.map((t) => t.name);
 export const SETUP_BUDGET_CENTS = 600;
 /**
  * Coach runs at the standard output (the owner's decision of 5 Nov 2026, with the lighter Coach of
- * #525): the fast output costs several times it, and its turns are short now. PRICE_FAST stays on the
+ * #525): the fast output costs several times it, and its turns are short now. SETUP_PRICE_FAST stays on the
  * definition as what the fast output would cost, for a turn kiff/agents ever runs there.
  */
 export const SETUP_SPEED = "standard" as const;
@@ -187,10 +200,10 @@ export function setupDefinition(id: string): AgentDefinition {
     // Its skills, each a stored version in kiff/agents (cloud/coach-skills.ts): the ones a conversation
     // needs are loaded by tafs cloud, the rest read_skill reads by name.
     skills: COACH_SKILLS.map((s) => ({ name: s.name, version: s.version })),
-    model: MODEL,
-    price: { ...PRICE },
+    model: SETUP_MODEL,
+    price: { ...SETUP_PRICE },
     speed: SETUP_SPEED,
-    price_fast: { ...PRICE_FAST },
+    price_fast: { ...SETUP_PRICE_FAST },
     max_tokens: MAX_TOKENS,
     effort: SETUP_EFFORT,
     thinking: THINKING,
