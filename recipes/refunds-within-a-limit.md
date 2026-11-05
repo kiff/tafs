@@ -17,4 +17,4 @@ card:
     - A payout
     - A refund to another payment method
 ---
-Handle refund requests from my help desk. Refund in Stripe up to 150 EUR each and 2,000 EUR a day, only back to the original payment. Anything bigger waits for me. Offer store credit when a customer would take it.
+Handle refund requests from my help desk. Refund in my payment provider up to 150 EUR each and 2,000 EUR a day, only back to the original payment. Anything bigger waits for me. Offer store credit when a customer would take it.

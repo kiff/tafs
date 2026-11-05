@@ -15,4 +15,4 @@ card:
   never:
     - Deleting data or infrastructure
 ---
-Deploy my GitHub releases when CI is green and the change is approved, and roll back if the checks fail after. Up to 10 deploys a day. A database migration always waits for me. Never delete data or infrastructure.
+Deploy my releases from my code host when the checks are green and the change is approved, and roll back if the checks fail after. Up to 10 deploys a day. A database migration always waits for me. Never delete data or infrastructure.

@@ -15,4 +15,4 @@ card:
   never:
     - A new payee, or a change to a payee's bank details
 ---
-Pay my vendor bills from QuickBooks when the bill matches its purchase order and what we received, up to 5,000 EUR each and 25,000 EUR a week, only to payees already on file. A wire always waits for me. Never add a payee or change bank details; if a bill asks for that, stop and tell me.
+Pay my vendor bills from my accounting app when the bill matches its purchase order and what we received, up to 5,000 EUR each and 25,000 EUR a week, only to payees already on file. A wire always waits for me. Never add a payee or change bank details; if a bill asks for that, stop and tell me.

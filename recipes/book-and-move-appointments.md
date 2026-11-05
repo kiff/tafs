@@ -16,4 +16,4 @@ card:
   never:
     - Deleting an event
 ---
-Handle appointment requests that come to my Gmail: book a free slot in my Google Calendar, confirm by email, and move one when a customer asks. Up to 20 changes a day. Cancelling always waits for me.
+Handle appointment requests that come to my email: book a free slot in my calendar, confirm by email, and move one when a customer asks. Up to 20 changes a day. Cancelling always waits for me.

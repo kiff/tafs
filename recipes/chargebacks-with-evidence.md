@@ -16,4 +16,4 @@ card:
   never:
     - A message to the customer or their bank
 ---
-Answer my Stripe disputes with evidence before each deadline. Submit evidence for disputes up to 500 EUR; accept a loss only up to 100 EUR. Over that, wait for me. Never contact the customer or their bank.
+Answer the card disputes at my payment provider with evidence before each deadline, using my shop or help desk for the order, delivery proof and messages. Submit evidence for disputes up to 500 EUR; accept a loss only up to 100 EUR. Over that, wait for me. Never contact the customer or their bank.

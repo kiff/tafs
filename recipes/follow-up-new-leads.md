@@ -16,4 +16,4 @@ card:
   never:
     - Changing or deleting an existing deal
 ---
-When someone fills in my Typeform, add them as a deal in Pipedrive and send them a short reply from my Gmail within the hour. Up to 30 a day. Never change or delete an existing deal.
+When someone fills in my form, add them as a deal in my CRM and send them a short reply from my email within the hour. Up to 30 a day. Never change or delete an existing deal.

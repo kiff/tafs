@@ -87,6 +87,8 @@ describe("recipes", () => {
     const github = recipesFor([{ entry: "connector:composio:github", vendor: "GitHub" }]);
     expect(github.categories).toEqual([{ id: "operations", title: "Operations" }]);
     expect(github.recipes.map((r) => r.id)).toEqual(["ship-when-green"]);
-    expect(github.recipes[0]!.say).toContain("Deploy my GitHub releases");
+    expect(github.recipes[0]!.say).toContain("Deploy my releases from my code host");
+    // The words name the kind of app, never a brand (kiff/tafs#476, gap 2): the brands are the connections' alone.
+    for (const r of RECIPES) for (const vendor of r.connections.flat()) expect(r.say.toLowerCase()).not.toContain(vendor.replace(/[_-]/g, " ").split(" ")[0]!);
   });
 });

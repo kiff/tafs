@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Recipes:** the words to say to Coach name the kind of app ("my accounting app", "my email"), never a brand, since an app sold in one country isn't in another and the account may already have a different one; Coach finds the apps by those words and proposes the ones the account has first (kiff/tafs#476, gap 2).
 - **tafs cloud, approvals:** a Card draft for an app set up on demand that would let one of its write or money tools run without asking isn't signed: Coach hears which tool, and drafts it again held. The default now holds in tafs cloud, not only in Coach's words (kiff/planque#87).
 - **tafs cloud, Connect apps:** an app the connection service lists as needing setting up by an operator comes through as `state: "needs_setup"` with `words` for the apps to show in place of Connect, a taf's Setup connections say who holds the sign-in (`custody_words`) and whether the app was set up on the owner's pick (`on_demand`), and a catalog read that stopped with pages left as `partial`; the recipes route treats a partial read as unfiltered.
 - **Coach (any app on demand, kiff/planque#87; kiff/tafs#476 gap 1):** when the owner names no app, Coach searches tools by words across every app the catalog can connect and proposes the apps before connecting; a long catalog is searched by words, never a reason to stop; an app whose sign-in was set up on the owner's pick gets its writes and money drafted to ask the owner each time until the owner widens it.

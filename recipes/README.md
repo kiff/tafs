@@ -27,7 +27,7 @@ card:
   never:
     - A payout, or a refund to another method
 ---
-Handle refund requests from my help desk. Refund in Stripe up to 150 EUR each…
+Handle refund requests from my help desk. Refund in my payment provider up to 150 EUR each…
 ```
 
 - `id` is the file's name. `category` is `money`, `customers`, `operations` or `errands`.
@@ -39,7 +39,11 @@ Handle refund requests from my help desk. Refund in Stripe up to 150 EUR each…
 - `card` says in plain words what the Card allows, what waits for the person (`holds`) and
   what is refused outright (`never`). These are the owner's choices; the words to Coach carry
   the same limits, and the person edits them before sending.
-- The body is the words to say to Coach, in the person's own voice.
+- The body is the words to say to Coach, in the person's own voice. **It names the kind of
+  app, never a brand** ("my accounting app", "my email", "my help desk"): an app sold in one
+  country isn't in another, and the account may already have a different one. Coach finds the
+  apps by those words and proposes the ones the account has first. The brands live only in
+  `connections`, which filter the list to what the catalog can connect.
 
 tafs cloud serves them at `GET /v1/recipes`, filtered to those whose every connection has at
 least one vendor the account's catalog lists

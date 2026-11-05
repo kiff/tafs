@@ -15,4 +15,4 @@ card:
   never:
     - Deleting or moving an email
 ---
-Each evening, find receipts and invoices in my Gmail, save each PDF to my Receipts folder in Google Drive and add a row to my Expenses sheet with the date, vendor, amount and currency. Up to 50 a day. Never delete or move an email.
+Each evening, find receipts and invoices in my email, save each PDF to my Receipts folder in my file storage and add a row to my Expenses sheet with the date, vendor, amount and currency. Up to 50 a day. Never delete or move an email.
