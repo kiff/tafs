@@ -10,7 +10,12 @@ data class WorkStep(
   val notMade: Boolean = false,
   /** What it did, in tafs cloud's words; null for a step it has none for, which is never named by its tool. */
   val words: String? = null,
+  /** Why it failed, in tafs cloud's words: one line from what the tool answered; none when it said nothing readable. */
+  val why: String? = null,
 )
+
+/** A step as the thread lists it: tafs cloud's words, whether it failed and why, or that it was refused back unmade. */
+data class StepLine(val words: String, val failed: Boolean = false, val why: String? = null, val notMade: Boolean = false)
 
 /** How long a taf worked on a message, and the tools it called, in order, by name. */
 data class Work(val ms: Int, val steps: List<WorkStep>)
@@ -256,9 +261,12 @@ object Chat {
     return "Worked $took · $n ${if (n == 1) "step" else "steps"}" + if (failed > 0) ", $failed failed" else ""
   }
 
-  /** The steps tafs cloud has words for, in order, each with how it ended; a step without words is left out, never shown by its tool. */
-  fun steps(work: Work): List<String> = work.steps.mapNotNull { step ->
-    step.words?.let { it + if (step.error) " · failed" else if (step.notMade) " · not made" else "" }
+  /**
+   * The steps tafs cloud has words for, in order, each with how it ended; a step without words is left out, never shown by its tool.
+   * A failed one carries tafs cloud's reason when it sent one (gap 9); the app adds no word of its own for a failure.
+   */
+  fun steps(work: Work): List<StepLine> = work.steps.mapNotNull { step ->
+    step.words?.let { StepLine(it, failed = step.error, why = step.why?.trim()?.ifEmpty { null }, notMade = step.notMade) }
   }
 
   /**

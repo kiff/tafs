@@ -154,6 +154,9 @@ data class WireStep(
   /** What the step did, in tafs cloud's words: KIFF's title for the tool, or Coach's. None for a step it has no words for. */
   val words: String? = null,
   val error: Boolean? = null,
+  /** It failed, as tafs cloud says it (gap 9); and when the tool said something readable, [why], one line in the owner's words. */
+  val failed: Boolean? = null,
+  val why: String? = null,
   @SerialName("not_made") val notMade: Boolean? = null,
 )
 

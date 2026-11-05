@@ -47,9 +47,24 @@ class OwnWordsTest {
       WorkStep("kiff_pending"),
       WorkStep("send_reply", notMade = true, words = "Sent the reply"),
     )
-    assertEquals(listOf("Listed your charges", "Refunded a charge · failed", "Sent the reply · not made"), Chat.steps(Work(4200, steps)))
+    assertEquals(
+      listOf(bot.tafs.app.model.StepLine("Listed your charges"), bot.tafs.app.model.StepLine("Refunded a charge", failed = true), bot.tafs.app.model.StepLine("Sent the reply", notMade = true)),
+      Chat.steps(Work(4200, steps)),
+    )
     assertEquals("Worked 4.2 s · 4 steps, 1 failed", Chat.workLine(Work(4200, steps)))
-    assertTrue(Chat.steps(Work(4200, steps)).none { it.contains("_") })
+    assertTrue(Chat.steps(Work(4200, steps)).none { it.words.contains("_") })
+  }
+
+  @Test fun aFailedStepCarriesTafsCloudsReasonAndNoWordOfTheApps() {
+    val wire = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.WireWork>(
+      """{"ms":1200,"steps":[{"tool":"planque","words":"Working on the connection…","error":true,"failed":true,"why":"Agent Mail refused the key: it isn't a valid API key."},{"tool":"refund","words":"Refunded a charge","failed":true}]}""",
+    )
+    val work = Work(wire.ms, wire.steps.map { WorkStep(it.tool, it.error == true || it.failed == true, it.notMade == true, it.words, it.why) })
+    val lines = Chat.steps(work)
+    assertEquals("Agent Mail refused the key: it isn't a valid API key.", lines[0].why)
+    assertTrue(lines.all { it.failed })
+    assertEquals("failed with no reason says only that it failed", null, lines[1].why)
+    assertTrue("no ' · failed' of the app's own", lines.none { it.words.contains("failed") })
   }
 
   @Test fun theThreadsStepWordsAreRead() {
