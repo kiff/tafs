@@ -4040,11 +4040,13 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
   await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))
     .catch((err) => console.error(`presence: ${(err as Error).message}`));
-  const [records, removing, kiff, access] = await Promise.all([
+  // "Did this happen?" is read with the rest, not after: a KIFF that can't give it leaves only the Needs you count out.
+  const [records, removing, kiff, access, unsure] = await Promise.all([
     deps.tafs.list(me.tenantID),
     deps.removals.list(me.tenantID),
     readKIFF(bearer(event), deps.fetch, deps.kiffBase),
     readAccess(bearer(event), deps.fetch, deps.kiffBase),
+    readUnsure(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined),
   ]);
   const { cards, waiting } = byHolder(kiff.mandates, kiff.held);
   const all = records.filter((t) => !t.removing && t.job !== SETUP_JOB)
@@ -4111,7 +4113,6 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
-  const unsure = await readUnsure(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined);
   const needsYou = unsure === undefined ? undefined : (() => {
     const count = kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length + unsure + unitExceptions.length
       + lights.filter((l) => l.some((d) => d.knocks > 0)).length;
