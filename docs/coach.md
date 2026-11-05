@@ -428,6 +428,13 @@ catalog can't be read, or has more pages than tafs cloud reads, every recipe is 
 never blank for that; Coach says what it can't connect. The apps only draw the list and fill the
 message box: the words come from tafs cloud, so both apps show the same.
 
+On Android, a new Coach conversation draws only the recipes that come: none while tafs cloud's
+`shown` is false. Account › **Coach** has the **Show suggestions** switch, read and changed
+through `GET`/`PUT /v1/me/suggestions`, with tafs cloud's `words` under it. It's enabled for
+whoever KIFF lets manage the account's tafs (`cards.manage`), and a refusal is said in tafs
+cloud's words (`AppModel.setSuggestions`). The recipes are read again after a change. A tafs
+cloud without the route leaves the section out.
+
 **Android** reads them each time Coach opens, with Coach's setup (`AppModel.loadRecipes`), and
 draws them in an empty conversation that isn't improving a taf (`CoachStarts`): each category's
 title, then its recipes' `title` and `line`. A tap sets the conversation's draft to `say`. Recipes

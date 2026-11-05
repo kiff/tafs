@@ -85,6 +85,8 @@ fun SettingsSheet(
   onLoadTimeZones: (String) -> Unit = {},
   onPickTimeZone: (String) -> Unit = {},
   onOpenAlertTaf: (String) -> Unit = {},
+  onLoadSuggestions: () -> Unit = {},
+  onShowSuggestions: (Boolean) -> Unit = {},
 ) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
@@ -95,7 +97,7 @@ fun SettingsSheet(
   var zoneQuery by remember { mutableStateOf("") }
   var answeringTafs by remember { mutableStateOf(false) }
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { versionWords(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName) } }.getOrNull() ?: "–" }
-  LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) onLoadAlerts() }
+  LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions() } }
   if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
 
   ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
@@ -143,6 +145,14 @@ fun SettingsSheet(
                 AccountSwitch(choice.title, choice.words, choice.enabled, preferences.enabled && !state.phoneAlertsBusy) { onAlertKind(choice.id, it) }
                 if (choice.id == "answered" && preferences.answering.tafs.isNotEmpty()) Action(preferences.answering.title + " ›", Theme.amberText) { answeringTafs = true }
               }
+            }
+          }
+          // What a new Coach conversation offers, as tafs cloud keeps it: its words say what the switch does now.
+          if (state.mode == Mode.kiff && state.mayUseCoach) state.suggestions?.let { s ->
+            Section("Coach") {
+              val manages = state.kiffAccount?.capabilities?.contains("cards.manage") == true
+              AccountSwitch("Show suggestions", s.words, s.show, manages && !state.suggestionsBusy, onShowSuggestions)
+              state.suggestionsError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
             }
           }
           Section("Theme") {
