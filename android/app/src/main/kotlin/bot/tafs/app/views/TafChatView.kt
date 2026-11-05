@@ -401,6 +401,14 @@ private fun MessageRow(
   onResend: (String) -> Unit,
   onReport: (suspend (String, String?) -> ReportResult)? = null,
 ) {
+  // Where a job run's result went, tafs cloud's one line, above the taf's own words (docs/chat.md).
+  message.delivered?.takeIf { message.from == ChatMessage.From.taf }?.let { line ->
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(line, style = scaled(13, color = Theme.soft))
+      MessageRow(message.copy(delivered = null), tafId, files, onEdit, onResend, onReport)
+    }
+    return
+  }
   val door = message.door
   if (door != null && message.kind != ChatMessage.Kind.kickoff) {
     // A door's message, or its answer: marked with where it came from and how it went back.
