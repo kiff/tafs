@@ -72,7 +72,7 @@ describe("recipes", () => {
       return order(a) - order(b);
     }));
     expect(all.categories).toEqual(CATEGORIES);
-    expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true });
+    expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true, shown: true, suggestions: { show: true, words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
   });
 
   it("filters by every connection, taking any vendor that would do for it, by category", () => {

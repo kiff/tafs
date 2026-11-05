@@ -414,6 +414,11 @@ are suggestions, not finished products: there is no recipe-specific code, and wh
 build one, the gap is fixed generically (a connection, how Coach picks tools, a Card rule), so a
 person can prompt Coach freely. The five starter jobs tafs began with are recipes now.
 
+They show only while the account has no live taf, and while its "Show suggestions" setting is
+on (the owner's decision): tafs cloud decides, and `GET /v1/recipes` sends the list or an empty
+one with `shown: false` and the words why. A manager turns them off for good with
+`PUT /v1/me/suggestions {show: false}` (on by default). The apps draw only what comes.
+
 The source is one file per recipe in [`recipes/`](../recipes/README.md): its title, category
 (money, customers, operations, errands), one line on what the taf does, the vendors each
 connection needs (any of several where one stands in for another), what its Card allows, holds and
