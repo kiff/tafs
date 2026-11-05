@@ -15,4 +15,4 @@ card:
     - Editing an invoice
     - A credit note or a discount
 ---
-Each weekday morning, find my overdue invoices in QuickBooks and send a polite reminder to each customer from my Gmail, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.
+Each weekday morning, find my overdue invoices in my accounting app and send a polite reminder to each customer from my email, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.

@@ -16,4 +16,4 @@ card:
   never:
     - Deleting a user
 ---
-Manage access in Google Workspace and Slack. For each joiner, give the roles their team's template lists. For each leaver, deactivate every account on their last day. Admin or elevated access always waits for me. Never delete a user.
+Manage access in my workspace and team chat. For each joiner, give the roles their team's template lists. For each leaver, deactivate every account on their last day. Admin or elevated access always waits for me. Never delete a user.
