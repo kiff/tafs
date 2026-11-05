@@ -244,12 +244,12 @@ class PlanqueTest {
     transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
   }
 
-  private suspend fun model(signIn: VendorSignIn = FakeSignIn(), keyed: Boolean = true): AppModel {
+  private suspend fun model(signIn: VendorSignIn = FakeSignIn(), keyed: Boolean = true, scope: kotlinx.coroutines.CoroutineScope? = null): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     if (keyed) secrets.save("1", AppModel.KEYED)
     secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
-    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, vendorSignIn = signIn).also { it.restore() }
+    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, vendorSignIn = signIn, scope = scope).also { it.restore() }
   }
 
   private val grants = "GET /v1/accounts/t_01/grants"
@@ -1166,5 +1166,142 @@ class PlanqueTest {
     assertTrue(bot.tafs.app.views.sameHttpsOrigin("https://planque.kiff.dev/browser/view/t", "https://planque.kiff.dev:443"))
     assertFalse(bot.tafs.app.views.sameHttpsOrigin("http://planque.kiff.dev/browser/view/t", "https://planque.kiff.dev"))
     assertFalse(bot.tafs.app.views.sameHttpsOrigin("https://planque.kiff.dev.example/x", "https://planque.kiff.dev"))
+  }
+
+  // MARK: The approval window (kiff/tafs#494)
+
+  private val win = "win_abcdefghijklmnopqrstuvwxyz"
+  private val windowOpened = """{"window":{"id":"$win","expires":"2026-10-28T09:05:00Z","open":true,"words":"No fingerprint for the next 5 minutes"}}"""
+
+  /** tafs cloud's connection ask, with its hint that the call takes a window. */
+  private fun signConnectInWindow() = signConnect().replace(""""reason":"Connect Stripe to Refunds",""", """"reason":"Connect Stripe to Refunds","key":"window",""")
+
+  @Test fun aWindowAskOpensAWindowWithOneFingerprintAndTheConnectionGoesAsATap() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    transport.answer("GET /v1/me/window", 200, windowOpened.replace("5 minutes", "4 minutes"))
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    // One fingerprint, the window's, in tafs cloud's words: the connection's own prompt isn't asked.
+    assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
+    val opening = transport.requestsTo("POST /v1/me/window").single()
+    assertEquals("kiff.window.v1", bodyOf(opening).getValue("message").jsonPrimitive.content)
+    assertTrue(opening.headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    // planque's approve goes as a tap: the device key, with the window's id.
+    val header = transport.requestsTo(approve).single().headers.getValue("Planque-Device-Signature")
+    assertTrue(header, header.contains(",v2=") && header.contains(",w=$win,"))
+    // The report is signed as it always was (v1), and KIFF's words for the next tap are read again.
+    assertTrue(transport.requestsTo(reportRoute).single().headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    assertEquals("No fingerprint for the next 4 minutes", m.state.value.windowWords)
+  }
+
+  @Test fun aSecondWindowAskInsideTheWindowAsksNoFingerprint() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    repeat(2) {
+      transport.answer(askRoute, 200, signConnectInWindow())
+      transport.answer(approve, 200, """{"status":"connected"}""")
+      transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+      transport.answer("GET /v1/me/window", 200, windowOpened)
+    }
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals(1, auth.asked.size)
+    assertEquals(1, transport.requestsTo("POST /v1/me/window").size)
+    assertEquals(2, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
+  }
+
+  @Test fun planqueSayingTheWindowEndedOpensANewOneAndTriesOnceMore() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    transport.answer(approve, 403, """{"error":"Your approval window has ended.","code":"window_required"}""")
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    transport.answer("GET /v1/me/window", 200, windowOpened)
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals(2, transport.requestsTo("POST /v1/me/window").size)
+    assertEquals(2, auth.asked.size)
+    assertEquals(2, transport.requestsTo(approve).size)
+    assertEquals("connected", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+  }
+
+  @Test fun aKiffWithoutWindowsLeavesTheStepAsItWas() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnectInWindow())
+    transport.answer("POST /v1/me/window", 404, """{"error":"not_found"}""")
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    val header = transport.requestsTo(approve).single().headers.getValue("Planque-Device-Signature")
+    assertTrue(header, header.contains(",v1=") && !header.contains(",w="))
+    assertNull(m.state.value.windowWords)
+  }
+
+  @Test fun anAskWithNoHintOpensNoWindow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertTrue(transport.requestsTo("POST /v1/me/window").isEmpty())
+  }
+
+  @Test fun theWindowClosesAfterThirtySecondsInTheBackgroundAndAtOnceWhenTheScreenTurnsOff() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    repeat(2) {
+      transport.answer(askRoute, 200, signConnectInWindow())
+      transport.answer("POST /v1/me/window", 201, windowOpened)
+      transport.answer(approve, 200, """{"status":"connected"}""")
+      transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+      transport.answer("GET /v1/me/window", 200, windowOpened)
+      transport.answer("POST /v1/me/window/$win/close", 200, """{"window":{"id":"$win","open":false}}""")
+    }
+    val m = model(scope = backgroundScope)
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    // Back within 30 seconds: it stays.
+    m.wentToBackground()
+    testScheduler.advanceTimeBy(20_000)
+    m.cameToForeground()
+    testScheduler.advanceTimeBy(60_000)
+    assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
+    // Away for longer: closed, device-signed, and its words gone.
+    m.wentToBackground()
+    testScheduler.advanceTimeBy(31_000)
+    testScheduler.runCurrent()
+    val closed = transport.requestsTo("POST /v1/me/window/$win/close").single()
+    assertTrue(closed.headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    assertNull(m.state.value.windowWords)
+    // A new window, then the screen turns off: closed at once.
+    m.approveCoach(approvalComponent(), digest, null)
+    m.screenLocked()
+    testScheduler.runCurrent()
+    assertEquals(2, transport.requestsTo("POST /v1/me/window/$win/close").size)
   }
 }

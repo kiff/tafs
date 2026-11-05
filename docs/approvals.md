@@ -151,6 +151,34 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
 The simulator has no Secure Enclave; it uses a software key, fine for a demo and never
 for production.
 
+### One fingerprint, then taps: the approval window
+
+KIFF keeps an approval window (kiff/tafs#494): one fingerprint opens it, and for a few
+minutes a routine approval is a tap. Each approval is still signed on the phone, checked and
+recorded; only the prompt goes. Which acts are routine is KIFF's and planque's to decide,
+never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`; iOS follows):
+
+- **Opening.** Only on tafs cloud's hint: an approval card's ask with `key: window`
+  (connecting an app; a draft KIFF says widens nothing). The approval key signs KIFF's
+  `kiff.window.v1` (`POST /v1/me/window`, `{message, expires, nonce}`, five minutes at most),
+  behind one fingerprint in the card's words. The app opens none on its own guess, and a KIFF
+  without the route (404) leaves the step signing as it did.
+- **Inside it.** What the approval key would sign goes with the device key and the window's
+  id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
+  the window's id last. planque's calls are signed this way only for the step that took the
+  window. The report to tafs cloud is signed as before (v1).
+- **Refused.** KIFF's `critical_key_required` (the act takes the fingerprint every time, such
+  as **No** to "Did this happen?") is signed again by the approval key, once. KIFF's
+  `window_required` forgets the window and does the same. planque's `window_required` on an
+  approval card opens a new window, one fingerprint, and the call is made once more.
+- **Words.** While a window is held, Approve on an approval card reads "Approve" and KIFF's
+  words go under it ("No fingerprint for the next 4 minutes", `GET /v1/me/window`), read
+  again after each approval and on coming back to the app.
+- **Closing.** After 30 seconds in the background, and at once when the screen turns off, the
+  app closes it (`POST /v1/me/window/{id}/close`, device-signed). KIFF ends it itself at sign-out,
+  at its cap (15 minutes from the fingerprint), on a halt or a new approval key. Whether a window
+  is open is never decided on the phone: an ended one comes back as `window_required`.
+
 ## Set up approvals on this device
 
 Approving needs the approval key, and the approval key needs a fingerprint or face the phone

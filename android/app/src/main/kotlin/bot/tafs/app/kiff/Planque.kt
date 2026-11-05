@@ -21,6 +21,9 @@ sealed class PlanqueError(message: String) : Exception(message) {
   data object DigestMismatch : PlanqueError("This request doesn't match what it asks for. Nothing was approved.")
 
   class Server(val status: Int, message: String) : PlanqueError(message)
+
+  /** Signed in an approval window that has ended (kiff/tafs#494): nothing was done; a new window, then the same call again. */
+  class WindowRequired(message: String) : PlanqueError(message)
 }
 
 /** One tool of a grant's request. */
@@ -196,6 +199,12 @@ class PlanqueClient(
   /** This device's id in KIFF, sent with each signature (`d=`) so planque asks KIFF whether the device signed. */
   var deviceId: String? = null
 
+  /**
+   * The approval window [signer] signs in (kiff/tafs#494): set only while a step that takes one runs, so its calls go as a tap
+   * (`v2`, with the window's id); planque asks KIFF whether it is open. Null signs as before.
+   */
+  @Volatile var window: String? = null
+
   /** Reads [deviceId] from KIFF when it isn't known yet, right before a signature. */
   var deviceLoader: (suspend () -> String?)? = null
 
@@ -349,20 +358,27 @@ class PlanqueClient(
     // The account itself when path is empty (erasing it), else one of its routes.
     val uri = "/v1/accounts/${escaped(account)}" + if (path.isEmpty()) "" else "/$path"
     val signedAt = signingTime.next()
-    val message = message(baseUrl, account, method, uri, body ?: ByteArray(0), signedAt)
+    // Inside an approval window, the device key signs with the window's id; only the calls of a step that takes one.
+    val held = window.takeIf { override == null }
+    val message = messageWindow(baseUrl, account, method, uri, body ?: ByteArray(0), signedAt, held)
     // planque asks KIFF whether this device signed: never a key alone. One read while the account changed is kept only if the
     // account is still this request's: kept otherwise, it would name the last account's device to the next.
     val device = deviceId ?: deviceLoader?.invoke()?.also { if (tenant == account) deviceId = it } ?: throw PlanqueError.NoDevice
     val sent = linkedMapOf(
       "Accept" to "application/json",
       "User-Agent" to "tafs-android",
-      "Planque-Device-Signature" to "t=$signedAt,v1=${sign(message)},d=$device",
+      "Planque-Device-Signature" to if (held != null) "t=$signedAt,v2=${sign(message)},w=$held,d=$device" else "t=$signedAt,v1=${sign(message)},d=$device",
     )
     if (body != null) sent["Content-Type"] = "application/json"
     sent.putAll(headers)
     val response = transport.send(HttpRequest(method, baseUrl.trimEnd('/') + uri, sent, body))
     if (response.status !in 200..299) {
-      val said = runCatching { KiffClient.json.parseToJsonElement(String(response.body)).jsonObject["error"]?.jsonPrimitive?.content }.getOrNull()
+      val fields = runCatching { KiffClient.json.parseToJsonElement(String(response.body)).jsonObject }.getOrNull()
+      val said = runCatching { fields?.get("error")?.jsonPrimitive?.content }.getOrNull()
+      if (response.status == 403 && held != null && runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull() == KiffClient.WINDOW_REQUIRED) {
+        if (window == held) window = null
+        throw PlanqueError.WindowRequired(said ?: "The approval window has ended.")
+      }
       throw PlanqueError.Server(response.status, said ?: "The connection answered ${response.status}")
     }
     return response.body
@@ -371,6 +387,14 @@ class PlanqueClient(
   companion object {
     /** The header an API-key connection's key goes to planque in, once. */
     const val VENDOR_KEY = "Planque-Vendor-Key"
+
+    /**
+     * What the phone signs inside an approval window (planque's `device.MessageWindow`): [message]'s lines under
+     * `planque.request.v2`, with the window's id last. With no window, [message].
+     */
+    fun messageWindow(base: String, tenant: String, method: String, uri: String, body: ByteArray, signedAt: String, window: String?): ByteArray =
+      if (window == null) message(base, tenant, method, uri, body, signedAt)
+      else listOf("planque.request.v2", base.trimEnd('/'), tenant, method, uri, sha256Hex(body), signedAt, window).joinToString("\n").toByteArray()
 
     /** What the phone signs (planque's `device.Message`): seven lines, no trailing newline. */
     fun message(base: String, tenant: String, method: String, uri: String, body: ByteArray, signedAt: String): ByteArray =
