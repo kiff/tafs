@@ -5,7 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
-- **Android, Coach:** an answered approval stays folded to its one line, and a tap opens it again to read what was approved: the connection in planque's words, its profile in KIFF's, and its Card's lines. Nothing in it can be answered again. iOS follows.
+- **Android, Coach:** an answered approval stays folded to its one line, and when it had a Card, a tap opens it again to that Card's lines, KIFF's draft at the version approved. Nothing in it can be answered again. iOS follows.
 - **tafs cloud, a failed step says why (kiff/tafs#476, gap 9).** The stream's `step` event and the thread's steps carry `failed: true` and `why`: the first line of what the tool answered, in the owner's words, with ids and codes left out. The apps draw `why` under the step, and the " · failed" is the service's word, not theirs (`docs/chat.md`).
 - **Coach:** when its dial, install or results tool is refused because the owner hasn't given Coach that tool yet (an account from before it), Coach says so in one sentence and stops, instead of stopping silently (kiff/tafs#476, gap 5).
 - **Sign in to a site (kiff/planque#86).** tafs cloud offers `site_sign_in` on a connected browser connection. On Android, the connection's sheet shows it, and a tap opens planque's live sign-in view in a web view, under planque's words, where the owner signs in to the site themselves. Nothing else is shown, and the view never leaves planque's address.

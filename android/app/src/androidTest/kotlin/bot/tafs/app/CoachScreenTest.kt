@@ -112,9 +112,10 @@ class CoachScreenTest {
     // Folded: one line, and what it covered isn't shown.
     rule.onNodeWithText("Up to €20 a day").assertDoesNotExist()
     rule.onNodeWithText("Approved · Connect Stripe (test mode)", substring = true).performClick()
-    // Open: planque's words for the connection and its Card's lines in KIFF's words, with nothing to answer.
-    rule.onNodeWithText("Read your payments and refund one.").assertIsDisplayed()
+    // Open: its Card's lines in KIFF's words, at the version approved, with nothing to answer. Not planque's grant as it is now,
+    // which a later approval can widen.
     rule.onNodeWithText("Refund a payment, up to €5 each").assertIsDisplayed()
+    rule.onNodeWithText("Read your payments and refund one.").assertDoesNotExist()
     rule.onNodeWithText("Up to €20 a day").assertIsDisplayed()
     rule.onNodeWithText("Approve with your fingerprint").assertDoesNotExist()
     rule.onNodeWithText("Decline").assertDoesNotExist()
