@@ -376,7 +376,10 @@ data class AppState(
   val listApprovalNeedsKey: Boolean = false,
   /** A connection from Connect apps that just came back signed in or connected: said at once, over the list. */
   val connectedNow: bot.tafs.app.kiff.Grant? = null,
-  /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
+  /**
+   * KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). A grant's profile can change
+   * under the same id (tools added to a connection): read them through [profileWordsFor], which holds only the current profile's.
+   */
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
   val profileWordsErrors: Map<String, String> = emptyMap(),
@@ -675,6 +678,13 @@ data class AppState(
    * message twice in a thread) shows once.
    */
   fun chatItems(tafId: String): List<ChatItem> = chatItemsAsRead(tafId).distinctBy { it.id }
+
+  /** The digest of [grant]'s profile as planque sends it now, or null for a grant with none. */
+  fun profileDigest(grant: bot.tafs.app.kiff.Grant): String? = grant.request.profile?.let(bot.tafs.app.kiff.ProfileWords::digest)
+
+  /** KIFF's words for [grant]'s profile as it is now: none while the words read are an earlier profile's. */
+  fun profileWordsFor(grant: bot.tafs.app.kiff.Grant): bot.tafs.app.kiff.ProfileWords? =
+    profileDigest(grant)?.let { digest -> profileWords[grant.id]?.takeIf { it.profileSha256 == digest } }
 
   private fun chatItemsAsRead(tafId: String): List<ChatItem> {
     val messages = chats[tafId] ?: emptyList()
@@ -3103,9 +3113,8 @@ class AppModel(
         _state.update { s -> s.copy(grants = s.grants.map { if (it.id == grant.id) grant else it }) }
         return false.also { note(noteKey, VersionWords.OUT_OF_DATE_CARD) }
       }
-      val words = grant.request.profile?.let { profile ->
-        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
-          ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
+      val words = grant.request.profile?.let {
+        _state.value.profileWordsFor(grant) ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
       }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Give ${grant.vendor} its key for ${grant.request.agent}")
@@ -3133,8 +3142,13 @@ class AppModel(
    * the card shows them before any approval. Nothing is read for a grant with no profile.
    */
   suspend fun loadProfileWords(grantId: String) {
-    if (_state.value.mode != Mode.kiff || grantId in _state.value.profileWords) return
-    val profile = _state.value.grants.firstOrNull { it.id == grantId }?.request?.profile ?: return
+    if (_state.value.mode != Mode.kiff) return
+    val grant = _state.value.grants.firstOrNull { it.id == grantId } ?: return
+    val profile = grant.request.profile ?: return
+    // Read once per profile, not per connection: tools added to it change its profile under the same id.
+    if (_state.value.profileWordsFor(grant) != null) return
+    // An earlier profile's refusal isn't this one's.
+    _state.update { it.copy(profileWordsErrors = it.profileWordsErrors - grantId) }
     val generation = accountGeneration
     val result = try {
       Result.success(kiff.profileWords(profile))
@@ -3220,9 +3234,8 @@ class AppModel(
         return Connected.Stopped
       }
       // A connection with a profile is approved only with KIFF's words for exactly that profile, as the owner read them.
-      val words = grant.request.profile?.let { profile ->
-        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
-          ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
+      val words = grant.request.profile?.let {
+        _state.value.profileWordsFor(grant) ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
       }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Connect ${grant.vendor} to ${grant.request.agent}")
@@ -3335,7 +3348,8 @@ class AppModel(
     try {
       // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
       val proof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
-      val words = _state.value.profileWords[grantId]
+      // The words for the profile as it is now: an earlier profile's would name another digest, and tafs cloud refuses it.
+      val words = _state.value.grants.firstOrNull { it.id == grantId }?.let { _state.value.profileWordsFor(it) }
       val ask = kotlinx.serialization.json.buildJsonObject {
         put("grant", grantId)
         shownDigest?.let { put("shown_digest", it) }
