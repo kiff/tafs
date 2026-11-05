@@ -163,6 +163,7 @@ fun NeedsYouView(
   onRefresh: suspend () -> Unit = {},
   modifier: Modifier = Modifier,
   onAnswerUnsure: (suspend (bot.tafs.app.kiff.UnsureCall, Boolean) -> Unit)? = null,
+  onCheckUnsure: (suspend (bot.tafs.app.kiff.UnsureCall) -> Unit)? = null,
 ) {
   val unsureScope = rememberCoroutineScope()
   // Pulling reads KIFF again, as on iOS: a hold made while this screen was open shows without leaving it.
@@ -206,6 +207,7 @@ fun NeedsYouView(
         answering = state.answeringUnsure == call.proposal,
         error = state.unsureErrors[call.proposal],
         onAnswer = onAnswerUnsure?.takeIf { state.mayAnswerHolds }?.let { answer -> { c, happened -> unsureScope.launch { answer(c, happened) } } },
+        onCheck = onCheckUnsure?.takeIf { state.mayAnswerHolds }?.let { check -> { c -> unsureScope.launch { check(c) } } },
       )
     }
   }
