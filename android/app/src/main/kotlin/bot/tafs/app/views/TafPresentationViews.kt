@@ -109,6 +109,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
       Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(app.name, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
         Text(app.statusWords, style = scaled(14, color = if (app.reconnect) Theme.amberText else Theme.soft))
+        app.custodyWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
         if (app.reconnect && state.manages(taf.id)) TextButton({ actions.connections.reconnectId(app.id) }, enabled = state.connecting == null) { Text("Sign in again", color = Theme.amberText) }
         state.coachNotes[app.id]?.let { Text(it, color = Theme.no) }
         Eyebrow("What it may do")

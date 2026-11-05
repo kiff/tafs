@@ -188,4 +188,24 @@ class ConnectAppsTest {
     m.loadConnectApps()
     assertTrue(m.state.value.connectAppsError!!.startsWith("The apps couldn't be read."))
   }
+
+  @Test fun anAppNotSetUpKeepsTafsCloudsWords() {
+    val apps = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.ConnectApps>(
+      """{"apps":[{"entry":"connector:composio:jira","vendor":"jira","title":"Jira","how":"oauth","state":"needs_setup","words":"Needs setting up first. Ask tafs to enable it."}]}""",
+    )
+    val app = apps.apps.single()
+    org.junit.Assert.assertTrue(app.needsSetup)
+    org.junit.Assert.assertFalse(app.connected)
+    org.junit.Assert.assertEquals("Needs setting up first. Ask tafs to enable it.", app.words)
+  }
+
+  @Test fun aConnectionCarriesTafsCloudsCustodyLineOrNone() {
+    val json = bot.tafs.app.kiff.KiffClient.json
+    val kept = json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>(
+      """{"id":"g1","name":"Jira","status":"connected","status_words":"Connected","custody_words":"Your sign-in stays with the connection service; the taf never sees it.","on_demand":true}""",
+    )
+    org.junit.Assert.assertEquals("Your sign-in stays with the connection service; the taf never sees it.", kept.custodyWords)
+    val unsaid = json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>("""{"id":"g2","name":"Notion","status":"connected"}""")
+    org.junit.Assert.assertNull("nothing when tafs cloud says nothing", unsaid.custodyWords)
+  }
 }
