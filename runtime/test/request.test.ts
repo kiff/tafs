@@ -37,6 +37,17 @@ describe("a request, step by step", () => {
     const held: SessionEvent = { session: "s1", run: "run_1", seq: 1, time: "2026-11-02T22:41:30Z", kind: "tool_result", body: { state: "held", hold: { exception: "x" } } };
     const d = requestDetail({ ...run, status: "PAUSED", requirements: [{ exception: "x" } as never] }, [held], [], "UTC", now);
     expect(d.steps.map((s) => s.label)).toEqual(["Received", "Held for your approval", "Waiting for your approval"]);
+    // Waiting for the owner: no step is the app's.
+    expect(d.steps.some((s) => s.waits_on)).toBe(false);
+  });
+
+  it("a call whose outcome comes later waits for the app, in the connection's words, and the step says so", () => {
+    const wait = { call_id: "c1", tool: "desk_reply", input: {}, operation: "", expires: "2026-11-02T23:00:00Z", kind: "event", wait: { grant: "grt_desk", event: "DESK_NEW_TICKET", key: "reply_1", words: "The desk answers when the customer replies." } };
+    const d = requestDetail({ ...run, status: "PAUSED", requirements: [wait] }, [], [], "UTC", now);
+    expect(d.waiting_for).toBe("The desk answers when the customer replies.");
+    expect(d.steps.at(-1)).toEqual({ label: "The desk answers when the customer replies.", state: "waiting", waits_on: "app" });
+    // Answered, the run goes on: nothing waits on the app any more.
+    expect(requestDetail({ ...run, status: "RUNNING", requirements: [{ ...wait, answered: "2026-11-02T22:50:00Z" }] }, [], [], "UTC", now).steps.at(-1)).toEqual({ label: "Working on it", state: "next" });
   });
 
   it("where it came from", () => {

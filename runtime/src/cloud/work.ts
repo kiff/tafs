@@ -8,7 +8,7 @@ import type { Sent } from "./doors/model.js";
  */
 
 /** A taf's status, the most pressing first. */
-export type WorkStatus = "halted" | "needs_you" | "retrying" | "working" | "paused" | "idle";
+export type WorkStatus = "halted" | "needs_you" | "retrying" | "working" | "waiting_on_app" | "paused" | "idle";
 
 /** What else says where a taf stands: halted, its schedule off, no schedule at all, its next run. */
 export interface TafNow { paused?: boolean; halted?: boolean; unscheduled?: boolean; next?: string | null }
@@ -139,6 +139,11 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   const retrying = runs.find((r) => r.state === "retrying");
   if (retrying) return { status: "retrying", line: requestOf(retrying, zone, now).line, needs_you: 0 };
   if (runs.some((r) => r.status === "RUNNING" || r.status === "PENDING")) return { status: "working", line: "Working on it", needs_you: 0 };
+  // A run waiting for a connected app's event (the slow-tools design): the taf isn't idle, and the line is the
+  // connection's words for the wait. A run that also needs the owner was counted above. Named apart from the
+  // home item's `state: "waiting"`, which means a call held for the owner.
+  const waiting = runs.find((r) => r.status === "PAUSED" && r.requirements?.some((q) => q.kind === "event" && !q.answered && q.wait));
+  if (waiting) return { status: "waiting_on_app", line: requestOf(waiting, zone, now).line, needs_you: 0 };
   if (paused) return { status: "paused", line: "Paused", needs_you: 0 };
   if (unscheduled) return { status: "idle", line: "Works from its chat", needs_you: 0 };
   if (next) return { status: "idle", line: `Next run ${timeIn(next, zone, now)}`, needs_you: 0 };

@@ -14,6 +14,8 @@ export interface RequestStep {
   line?: string;
   /** done, failed, not made (refused back unsent), waiting on someone, or still to come. */
   state: "done" | "failed" | "not_made" | "waiting" | "next";
+  /** "app" when the wait is for a connected app's event (the slow-tools design), not for the owner: the apps draw it as the app's, never as needing them. */
+  waits_on?: "app";
 }
 
 export interface RequestDetail extends RequestView {
@@ -63,7 +65,7 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
       steps.push({ label: r.next_at ? `Next try ${at(r.next_at)}` : "Next try soon", line: r.try && r.of && r.try >= r.of ? "If it fails again, this needs you" : `Try ${(r.try ?? 0) + 1}${r.of ? ` of ${r.of}` : ""}`, state: "next" });
       break;
     case "needs_you": steps.push({ label: "Needs you", line: view.line, state: "waiting" }); break;
-    case "waiting": steps.push({ label: view.line, state: "waiting" }); break;
+    case "waiting": steps.push({ label: view.line, state: "waiting", ...(view.waiting_for ? { waits_on: "app" as const } : {}) }); break;
     case "working": steps.push({ label: "Working on it", state: "next" }); break;
     case "done": steps.push({ label: "Done", line: at(r.updated), state: "done" }); break;
     case "stopped": steps.push({ label: "Stopped", line: at(r.updated), state: "failed" }); break;
