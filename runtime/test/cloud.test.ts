@@ -1066,7 +1066,7 @@ describe("Setup (kiff/agents#91)", () => {
     // Its skills are stored first, each at its version, then its definition names them (the Coach skills design).
     expect(w.agents.calls.filter((c) => !c.startsWith("putSkill "))).toEqual([`putAgent ${NEW}`]);
     expect(w.agents.calls.filter((c) => c.startsWith("putSkill ")).length).toBe(def.skills?.length);
-    expect(def.skills?.length).toBe(11);
+    expect(def.skills?.length).toBe(12);
     expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body.setup).toMatchObject({ id: NEW, name: "Setup" });
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);

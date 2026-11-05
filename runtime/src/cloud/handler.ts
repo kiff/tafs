@@ -25,7 +25,8 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
-import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_WORDS, putResult, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -37,7 +38,7 @@ import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { CARD_UNIT_NOTICE, cardUnitExceptions } from "./card-unit.js";
-import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as settleApproval } from "./approval.js";
+import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, settle as settleApproval } from "./approval.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -51,10 +52,15 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *
  *   GET  /v1/jobs
  *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards
- *   GET  /v1/events                     halts, resumes and door events, newest first, for Activity (kiff/tafs#236)
+ *   GET  /v1/events                     halts, resumes, door events and Coach's drives, newest first, for Activity (kiff/tafs#236)
  *   GET  /v1/usage/ai                   the period's AI use against its bound (kiff/tafs#193)
  *   POST /v1/account/delete             erase what tafs cloud and kiff/agents keep for the account (kiff/tafs#185)
  *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
+ *   POST /v1/coach/drive                start the person's drive for one request, signed with the approval key (kiff/tafs#544, docs/drive.md)
+ *   GET  /v1/coach/drive                their drive as it stands, and its steps
+ *   POST /v1/coach/drive/stop           end it: the owner took over, left the app, stopped it, locked or signed out
+ *   POST /v1/coach/drive/{d}/results/{r} the app's answer to one of its requests
+ *   GET  /v1/coach/drive/{d}/stream     its requests, as server-sent events (the streaming function)
  *   GET  /v1/time-zones                 ?q=: the service's IANA zones, searched here, as {zones: [{id, title}]}
  *   POST /v1/account/time-zone          reapply KIFF's confirmed account zone to recurring taf schedules; no zone accepted from the caller
  *   GET  /v1/setup                      the account's Setup (Coach), or null
@@ -503,7 +509,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 }
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
-const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats components connect continue conversation " +
+const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats coach components connect continue conversation drive " +
   "activity delete deletions deliveries doors door email whatsapp ended events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
@@ -561,6 +567,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
+  if (parts[1] === "coach" && parts[2] === "drive") return driveRoute(event, method, parts, await person(event, deps), deps);
   // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
   if (parts[1] === "events" && parts.length === 2 && method === "GET") {
     const me = await person(event, deps);
@@ -2380,6 +2387,10 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
   if ("answered_by" in body) throw new HTTPError(400, "a person's answer is their own: answered_by is tafs cloud's alone");
   const card = await shownCard(me, taf, component, undefined, str(body.session).trim(), deps);
   if (!card) throw new HTTPError(404, "no card of yours by that id");
+  // A drive card is approved only with the approval key (POST /v1/coach/drive); declining is an answer.
+  if (body.answer !== "declined" && await shownCard(me, taf, component, "drive", card.session, deps)) {
+    throw new HTTPError(400, "a drive is approved with your fingerprint: POST /v1/coach/drive, signed with the approval key");
+  }
   try {
     const run = await deps.agents.answerCard(me.tenantID, taf.id, card.run, component, body.answer, member(me));
     return { session: card.session, run: run.id, status: run.status };
@@ -2389,6 +2400,66 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no card of yours by that id");
     throw agentsFailure(err);
   }
+}
+
+/**
+ * The person's drive (kiff/tafs#544, docs/drive.md), from their phone:
+ *
+ *   POST /v1/coach/drive {session, task, component?}  signed with the approval key (KIFF-Device-Signature): start it; with
+ *                                                     component, Coach's drive card is answered "approved", and its run goes on
+ *   GET  /v1/coach/drive                              the drive as it stands, and its steps (the "What I did" card)
+ *   POST /v1/coach/drive/stop {drive, why}            end it: the owner took over, left the app, stopped it, the phone locked
+ *   POST /v1/coach/drive/{drive}/results/{request}    the phone's answer to one request: {outcome, line, image?, tree?, diagnostics?, touched?, waited?}
+ *
+ * The requests come on GET /v1/coach/drive/{drive}/stream, served by the streaming function.
+ */
+async function driveRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  if (!deps.coach) throw new HTTPError(503, "driving the app isn't set up here");
+  const store = deps.coach;
+  const now = deps.now?.() ?? new Date();
+  const fail = (err: unknown): never => {
+    if (err instanceof DriveError) throw new HTTPError(err.status, err.message);
+    throw err;
+  };
+  if (parts.length === 3 && method === "GET") {
+    const d = await currentDrive(store, me.tenantID, me.subject, now);
+    if (!d) return { drive: null, steps: [] };
+    const { person: _p, ...shown } = d;
+    return { drive: { ...shown, ...(d.ended ? { ended: { ...d.ended, words: END_WORDS[d.ended.why] } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
+  }
+  if (parts.length === 3 && method === "POST") {
+    const body = parseBody(event);
+    const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
+    const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
+    // Only the approval key, behind the fingerprint, starts a drive: never the device key, never a window's tap.
+    await checkSigned({ tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: "", store, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase,
+      fetch: deps.fetch ?? fetch, now, newID: () => "", signed }, "approval").catch(approvalFailure);
+    const drive = await startDrive(store, me.tenantID, me.subject, body.session, body.task, now).catch(fail);
+    await logEvent(deps.events, me.tenantID, { kind: "drive_started", title: "Coach started driving", detail: drive.task }, now);
+    const component = str(body.component).trim();
+    let told: unknown;
+    if (component) {
+      const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+      const card = setup && await shownCard(me, setup, component, "drive", drive.session, deps);
+      if (!setup || !card) throw new HTTPError(404, "no drive card of yours by that id");
+      told = await tellCoach(me, setup, card, component, "approved: the drive is on", deps);
+    }
+    return { drive: { id: drive.id, session: drive.session, task: drive.task, started: drive.started }, ...(told ? { coach: told } : {}) };
+  }
+  if (parts.length === 4 && parts[3] === "stop" && method === "POST") {
+    const body = parseBody(event);
+    const why = (() => { try { return endWhyOf(body.why); } catch (err) { return fail(err); } })();
+    const d = await endDrive(store, me.tenantID, me.subject, why, now, str(body.drive).trim() || undefined);
+    if (d?.ended && d.ended.at === now.toISOString()) {
+      await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS[why] }, now);
+    }
+    return { ended: d?.ended ? { ...d.ended, words: END_WORDS[d.ended.why] } : null };
+  }
+  if (parts.length === 6 && parts[4] === "results" && method === "POST") {
+    const r = await putResult(store, me.tenantID, me.subject, parts[3] ?? "", parts[5] ?? "", parseBody(event), now).catch(fail);
+    return { taken: true, outcome: r.outcome };
+  }
+  throw new HTTPError(404, "not found");
 }
 
 /** An approval's decision and report (kiff/tafs#413) need the ask store, planque and the phone's read proof. */
@@ -3782,6 +3853,9 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     if (method === "GET" && parts.length === 6 && parts[0] === "v1" && parts[1] === "tafs" && parts[3] === "runs" && parts[5] === "stream") {
       return await resumeStream(event, parts[2] ?? "", parts[4] ?? "", deps);
     }
+    if (method === "GET" && parts.length === 5 && parts[0] === "v1" && parts[1] === "coach" && parts[2] === "drive" && parts[4] === "stream") {
+      return await driveStreamRoute(event, parts[3] ?? "", deps);
+    }
     if (!(method === "POST" && parts.length === 5 && parts[0] === "v1" && parts[1] === "tafs" && parts[3] === "messages" && parts[4] === "stream")) {
       throw new HTTPError(404, "not found");
     }
@@ -3827,6 +3901,20 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     if (status !== 500) console.warn(JSON.stringify({ msg: "stream refused", status, ...(typeof extra?.code === "string" ? { code: extra.code } : {}) }));
     return { statusCode: status, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: once(JSON.stringify({ error: message, ...extra })) };
   }
+}
+
+/**
+ * GET /v1/coach/drive/{drive}/stream: the requests of the person's drive, as Coach sends them,
+ * until the drive ends (kiff/tafs#544, docs/drive.md). Only their own drive, while it's on.
+ */
+async function driveStreamRoute(event: HTTPEvent, drive: string, deps: Deps): Promise<StreamResult> {
+  if (!deps.coach) throw new HTTPError(503, "driving the app isn't set up here");
+  const me = await person(event, deps);
+  const now = () => deps.now?.() ?? new Date();
+  const d = await currentDrive(deps.coach, me.tenantID, me.subject, now());
+  if (!d || d.id !== drive) throw new HTTPError(404, "that isn't your drive");
+  if (d.ended) throw new HTTPError(409, `the drive is over: ${END_WORDS[d.ended.why]}`);
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: driveStream(deps.coach, me.tenantID, me.subject, d.id, now, deps.sleep) };
 }
 
 /**
@@ -4820,14 +4908,53 @@ async function coachRun(call: CoachCall, deps: Deps): Promise<string | undefined
   return runs.find((r) => r.status === "RUNNING" && r.requester?.kind === "member" && r.requester.id === call.person?.subject)?.id;
 }
 
-export async function coachTool(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
+export async function coachTool(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer | Rich> {
   await loadToolSkills(name, call, deps);
+  if ((DRIVE_TOOLS as readonly string[]).includes(name)) return driveTool(name as DriveTool, args, call, deps);
   try {
     return await coachToolOf(name, args, call, deps);
   } catch (err) {
     if (err instanceof HTTPError && err.status < 500) throw new ToolRefusal(err.message);
     throw err;
   }
+}
+
+/**
+ * Coach's look or step in the person's drive (kiff/tafs#544, docs/drive.md): sent to their
+ * phone through the drive stream and held for its answer, at most 20 seconds. Only in a
+ * person's chat, while their drive is on; a halted account ends it. A step that touched
+ * something is in the drive's record, and `done` ends the drive.
+ */
+async function driveTool(name: DriveTool, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<Rich> {
+  const refuse = (why: string) => new Rich([{ type: "text", text: why }], true, why);
+  if (!deps.coach) return refuse("Driving the app isn't set up here.");
+  if (!call.person) return refuse("A drive is a person's: only in their chat, once they approve it.");
+  const store = deps.coach;
+  const now = () => deps.now?.() ?? new Date();
+  const person = call.person.subject;
+  const on = await currentDrive(store, call.tenant, person, now());
+  if (on && !on.ended && (await deps.agents.halted(call.tenant).then((h) => h.halted, () => false))) {
+    await endDrive(store, call.tenant, person, "halted", now(), on.id);
+    await logEvent(deps.events, call.tenant, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS.halted }, now());
+  }
+  let a;
+  try {
+    a = await askApp(store, call.tenant, person, name, args, now, deps.sleep);
+  } catch (err) {
+    if (err instanceof DriveRefusal) return refuse(`Refused by tafs: ${err.message}. Nothing was sent.`);
+    throw err;
+  }
+  if ("result" in a && name === "app_act" && args.action === "done" && a.result.outcome === "done") {
+    await endDrive(store, call.tenant, person, "done", now(), a.drive.id);
+    const steps = await driveSteps(store, call.tenant, a.drive.id);
+    await logEvent(deps.events, call.tenant, { kind: "drive_ended", title: "Coach finished driving", detail: `${a.drive.task} · ${steps.length} steps` }, now());
+  } else if ("result" in a && name === "app_act" && a.result.outcome === "done" && a.result.touched) {
+    const t = a.result.touched;
+    await logEvent(deps.events, call.tenant, { kind: "drive_step", title: `Coach: ${String(args.line ?? "").slice(0, 60)}`, detail: t.taf ? `${t.words} · ${t.taf}` : t.words, ...(t.taf ? { name: t.taf } : {}) }, now());
+  }
+  const { content, isError } = answerContent(a);
+  const words = content.filter((c) => c.type === "text").map((c) => String(c.text)).join("\n");
+  return new Rich(content, isError, `${words}\n(Answered earlier: look again before your next step.)`);
 }
 
 async function coachToolOf(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {

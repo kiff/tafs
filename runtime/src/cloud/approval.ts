@@ -126,6 +126,7 @@ export const WORDS = {
   cardsUnread: "The Card couldn't be checked yet. Read it again, then approve.",
   onDemandLetsRun: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   criticalKey: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
+  driveKey: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
   windowClosed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
   signInClosed: "The sign-in was closed. Nothing was connected.",
   noCode: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
@@ -306,7 +307,7 @@ export interface ReportContext extends DecideContext {
  * inside a window for a critical ask, since that phone took the window path for
  * a critical call, and a window that has ended.
  */
-export async function checkSigned(ctx: ReportContext, key: "window" | "critical" = "window"): Promise<void> {
+export async function checkSigned(ctx: ReportContext, key: "window" | "critical" | "approval" = "window"): Promise<void> {
   const { signed } = ctx;
   if (!signed.signature) throw new ApprovalError(403, "this answer isn't signed by your phone");
   let res: Response;
@@ -328,6 +329,8 @@ export async function checkSigned(ctx: ReportContext, key: "window" | "critical"
   // it, so only `signed` is read; the grant is dropped here and never kept or passed on.
   const out = (await res.json().catch(() => ({}))) as { signed?: unknown; key?: unknown; window?: { open?: unknown } };
   if (out.signed !== true) throw new ApprovalError(403, "this phone didn't sign that answer");
+  // Only the approval key, behind the fingerprint: a Coach drive's start (kiff/tafs#544).
+  if (key === "approval" && (out.key !== "critical" || out.window)) throw new ApprovalError(403, WORDS.driveKey, "critical_key_required");
   if (!out.window) return; // signed outside a window: as every report before (the device key's, v1)
   if (key === "critical") throw new ApprovalError(403, WORDS.criticalKey, "critical_key_required");
   if (out.key === "device" && out.window.open !== true) throw new ApprovalError(403, WORDS.windowClosed, "window_required");

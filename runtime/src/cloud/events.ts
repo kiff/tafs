@@ -14,7 +14,7 @@ import type { DoorStore } from "./doors/model.js";
  */
 export interface AccountEvent {
   at: string;
-  kind: "halted" | "resumed" | "knocked" | "knock_done" | "knock_ignored" | "paired" | "door_removed";
+  kind: "halted" | "resumed" | "knocked" | "knock_done" | "knock_ignored" | "paired" | "door_removed" | "drive_started" | "drive_step" | "drive_ended";
   /** The taf's id in tafs cloud; absent for all of the account's tafs. */
   taf?: string;
   /** The taf's name when it happened. */
@@ -23,6 +23,13 @@ export interface AccountEvent {
   app?: string;
   /** Who wrote: the name their message gave; for a pairing, else their address (now a key). */
   from?: string;
+  /**
+   * A Coach drive's event (kiff/tafs#544): its words, tafs cloud's, so an app shows a kind it
+   * doesn't know yet. The title says what Coach did ("Coach: Tapping Run now"); the detail what it
+   * touched, in the words on screen, and the taf whose screen it was.
+   */
+  title?: string;
+  detail?: string;
 }
 
 export interface EventLog {
