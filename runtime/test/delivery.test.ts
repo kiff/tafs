@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DELIVERY, DELIVERY_WORDS, handoffOf } from "../src/cloud/delivery.js";
+import { DELIVERY, DELIVERY_WORDS, deliveredLine, handoffOf } from "../src/cloud/delivery.js";
 import { type Deps, handle, type HTTPEvent, sweepDeliveries, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -232,5 +232,28 @@ describe("a taf's results reach their destination, checked by tafs cloud (result
     const gone = await w.ran(RAE, "Refunded.\n\nHand-off\nOne more.", []);
     const after = await w.call("GET", `/v1/tafs/${RAE}/work`);
     expect(after.body.requests.find((r: { id: string }) => r.id === gone.id).deliveries[0]).toMatchObject({ state: "not_sent", line: `Not delivered to Invoices: ${DELIVERY_WORDS.tafGone}` });
+  });
+
+  it("writes one line above the run's report in the thread: where its result went", () => {
+    const d = (state: "sent" | "handed" | "retrying" | "not_sent", name: string) => ({ place: "action" as const, key: name, name, state, at: NOW.toISOString(), tries: 0 });
+    expect(deliveredLine(undefined)).toBeUndefined();
+    expect(deliveredLine({ run: "r", taf: RAE, checked: "", places: [] })).toBeUndefined();
+    expect(deliveredLine({ run: "r", taf: RAE, checked: "", places: [d("sent", "Google Sheets · Refunds 2026")] })).toBe("Sent to Google Sheets · Refunds 2026.");
+    expect(deliveredLine({ run: "r", taf: RAE, checked: "", places: [d("sent", "Google Sheets · Refunds 2026"), d("handed", "Invoices"), d("retrying", "Slack · #ops")] }))
+      .toBe("Sent to Google Sheets · Refunds 2026 and handed to Invoices. Not sent to Slack · #ops yet: trying again.");
+    expect(deliveredLine({ run: "r", taf: RAE, checked: "", places: [d("not_sent", "Slack · #ops")] })).toBe("Not sent to Slack · #ops.");
+  });
+
+  it("puts the line on the report in the thread, and the sweep settles every taf with a place of its own", async () => {
+    const w = world();
+    const run = await w.ran(RAE, "Refunded 3 orders.", [{ tool: "sheets_append_k3" }]);
+    // Nobody read the page: the sweep settles it.
+    expect(await sweepDeliveries(w.deps)).toEqual([]);
+    const thread = await w.call("GET", `/v1/tafs/${RAE}/conversation`);
+    expect(thread.status).toBe(200);
+    const report = thread.body.messages.find((m: { from: string; text: string }) => m.from === "taf" && m.text === "Refunded 3 orders.");
+    expect(report.delivered).toBe(`Sent to ${SHEET.name}.`);
+    expect(thread.body.messages.filter((m: { delivered?: string }) => m.delivered)).toHaveLength(1);
+    expect(run.id).toBeDefined();
   });
 });

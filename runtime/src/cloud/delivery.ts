@@ -372,6 +372,21 @@ export async function sweepDeliveries(ctx: DeliveryContext): Promise<Array<{ run
 }
 
 /**
+ * The line above a run's report in the thread: where its result went, in a sentence ("Sent to
+ * Google Sheets · Refunds 2026 and handed to Invoices", "Not sent to Slack · #ops yet: trying
+ * again"), or none when the run had no place of its own.
+ */
+export function deliveredLine(rd: RunDeliveries | undefined): string | undefined {
+  if (!rd?.places.length) return undefined;
+  const went = rd.places.filter((d) => d.state === "sent" || d.state === "handed").map((d) => `${d.state === "handed" ? "handed to" : "sent to"} ${d.name}`);
+  const not = rd.places.filter((d) => d.state === "retrying" || d.state === "not_sent").map((d) => d.state === "retrying" ? `${d.name} yet: trying again` : d.name);
+  const parts: string[] = [];
+  if (went.length) parts.push(`${went[0]!.charAt(0).toUpperCase()}${went[0]!.slice(1)}${went.length > 1 ? ` and ${went.slice(1).join(" and ")}` : ""}`);
+  if (not.length) parts.push(`Not sent to ${not.join(" and ")}`);
+  return parts.join(". ") + ".";
+}
+
+/**
  * The sweep's scan: every taf whose live version has a place of its own, its latest runs settled,
  * so a hand-off and a retry happen on the sweep's cadence, whether or not anyone reads the page.
  */
