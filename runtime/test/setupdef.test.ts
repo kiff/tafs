@@ -140,6 +140,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).not.toContain("refunds, billpay, access, deploys, chargebacks");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
     expect(SETUP_INSTRUCTIONS).toContain("at most every 15 minutes");
+    // On an account from before Coach's dial tool, its Card isn't given yet: Coach says so and stops (kiff/tafs#476, gap 5).
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("the owner hasn't given you that tool yet: say so in one sentence");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("give Coach its tools from this screen, then ask again");
     // Any app on demand (kiff/planque#87): find apps by words before connecting, never stop on a long
     // catalog (kiff/tafs#476, gap 1), and an app set up on demand asks by default.
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("search {q} with two or three short searches of words from the job");
