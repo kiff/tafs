@@ -40,6 +40,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -162,9 +163,11 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   // every word was cut off by the next before it finished, and the thread jumped about while Coach wrote.
   LaunchedEffect(thinking, live?.text?.length, live?.steps?.size, live?.state) { toEnd(animated = false) }
   // And when the last row's height changes after it's drawn (its words laid out again, a card opening), at once, while it follows.
+  // This effect lives as long as the list: it calls the latest frame's toEnd, never the first's, whose thread may not have loaded.
+  val toEndNow by rememberUpdatedState<suspend () -> Unit> { toEnd(animated = false) }
   LaunchedEffect(listState) {
     snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.let { it.key to it.size } }
-      .collect { if (opened && following) toEnd(animated = false) }
+      .collect { if (opened && following) toEndNow() }
   }
 
   Column(modifier.fillMaxSize()) {
