@@ -2945,3 +2945,42 @@ describe("Coach's skills: what never loads them", () => {
     }
   });
 });
+
+describe("the calendar (kiff/tafs#534)", () => {
+  const daily = { tenant: "t_acme", id: RAE, agent: RAE, cron: "0 9 * * *", time_zone: "Europe/Paris", input: "", enabled: true };
+
+  it("lists the scheduled work to come on the dates, in the account's zone, for the tafs the person may see", async () => {
+    const w = world();
+    w.agents.schedules.set(`t_acme|${RAE}`, daily);
+    w.now = new Date("2026-11-05T10:00:00Z");
+    const r = await call(w, "GET", "/v1/calendar", { token: "ana_paris", query: "from=2026-11-05&to=2026-11-06" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({
+      time_zone: "Europe/Paris", from: "2026-11-05", to: "2026-11-06",
+      events: [{ taf: RAE, name: "Rae", color: 0, kind: "schedule", at: "2026-11-06T08:00:00Z", day: "2026-11-06", time: "09:00", minute: 540, words: "Every day at 09:00" }],
+      days: ["2026-11-06"], words: "1 to come",
+    });
+    // Someone KIFF says may not use or oversee the taf sees none of its work.
+    w.account.access = { rae: { use: false, oversee: false, manage: false } };
+    const none = await call(w, "GET", "/v1/calendar", { token: "ana_paris", query: "from=2026-11-05&to=2026-11-06" });
+    expect(none.body).toMatchObject({ events: [], days: [], words: "Nothing scheduled in these days" });
+  });
+
+  it("shows nothing for a paused taf, and a taf whose schedules can't be read", async () => {
+    const w = world();
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...daily, enabled: false });
+    w.now = new Date("2026-11-05T10:00:00Z");
+    expect((await call(w, "GET", "/v1/calendar", { token: "ana", query: "from=2026-11-05&to=2026-11-06" })).body.events).toEqual([]);
+    w.agents.schedules.set(`t_acme|${RAE}`, daily);
+    w.agents.api.listSchedules = async () => { throw new Error("scheduler down"); };
+    expect((await call(w, "GET", "/v1/calendar", { token: "ana", query: "from=2026-11-05&to=2026-11-06" })).body.events).toEqual([]);
+  });
+
+  it("refuses a range that isn't dates, runs backwards, or is longer than two months", async () => {
+    const w = world();
+    for (const query of ["from=2026-11-05", "from=today&to=2026-11-06", "from=2026-11-06&to=2026-11-05", "from=2026-11-01&to=2027-01-02"]) {
+      expect((await call(w, "GET", "/v1/calendar", { token: "ana", query })).status).toBe(400);
+    }
+    expect((await call(w, "GET", "/v1/calendar", { token: "ana", query: "from=2026-11-01&to=2027-01-01" })).status).toBe(200);
+  });
+});
