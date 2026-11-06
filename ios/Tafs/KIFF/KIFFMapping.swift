@@ -176,6 +176,7 @@ enum KIFFMapping {
             entry.amount = c.amount
             entry.readOnly = c.readOnly
             entry.entityID = c.entityID
+            entry.action = c.actionName
             entry.onHash = c.onHash
             entry.onArg = c.onArg
             entry.answer = c.answer

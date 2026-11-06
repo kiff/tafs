@@ -4946,7 +4946,22 @@ final class AppModel: ObservableObject {
     /// its vendor signed out, so the owner signs in again.
     func connections(for tafID: UUID) -> [PlanqueClient.Grant] {
         guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return [] }
-        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect) }
+        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect || $0.waitingSignIn) }
+    }
+
+    /// A connection's last failed call (gap 13): the newest call through one of its tools that
+    /// wasn't done, its taf's own first, in KIFF's words for it. Nil when none is in the record.
+    func lastFailure(_ g: PlanqueClient.Grant) -> String? {
+        Self.lastFailure(g, record: record, ownTaf: holderIDs[g.request.agent])
+    }
+
+    nonisolated static func lastFailure(_ g: PlanqueClient.Grant, record: [RecordEntry], ownTaf: UUID?) -> String? {
+        let actions = Set(g.tools ?? g.request.tools.filter(\.tafs).map(\.action))
+        guard !actions.isEmpty else { return nil }
+        let failed = record.filter { $0.kind == .notDone && $0.action.map(actions.contains) == true }
+        let own = failed.filter { $0.tafID == ownTaf }
+        guard let last = (own.isEmpty ? failed : own).max(by: { $0.at < $1.at }) else { return nil }
+        return "Last failed: \(last.title) · \(last.detail)"
     }
 
     /// The taf's connection its vendor signed out, if one is: the taf can't use those tools
