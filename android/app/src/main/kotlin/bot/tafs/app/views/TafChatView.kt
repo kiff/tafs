@@ -233,6 +233,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                   state.chatUnsent[tafId]?.firstOrNull { it.message == item.message }?.let { unsent ->
                     NotSentLine(
                       unsent.why,
+                      canRetry = !state.holdsRetry(tafId, unsent),
                       onRetry = { following = true; actions.retryUnsent(tafId, unsent.message) },
                       onEdit = { actions.editUnsent(tafId, unsent.message)?.let(setDraft) },
                     )
@@ -636,14 +637,17 @@ private fun NeedsYouPill(text: String, onClick: () -> Unit) {
   }
 }
 
-/** Under an owner's message that wasn't sent: why, then Retry (sends it once) and Edit (back to the box). */
+/**
+ * Under an owner's message that wasn't sent: why, then Retry (sends it once) and Edit (back to the box). Retry waits, greyed,
+ * while it can't go yet ([AppState.holdsRetry]).
+ */
 @Composable
-private fun NotSentLine(why: String, onRetry: () -> Unit, onEdit: () -> Unit) {
+private fun NotSentLine(why: String, canRetry: Boolean, onRetry: () -> Unit, onEdit: () -> Unit) {
   Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
     Text("${ChatWords.NOT_SENT} · $why", style = scaled(13, color = Theme.no), textAlign = TextAlign.End)
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
       TextButton(onClick = onEdit) { Text(ChatWords.EDIT, style = scaled(14, color = Theme.soft)) }
-      TextButton(onClick = onRetry) { Text(ChatWords.RETRY, style = scaled(14, color = Theme.ink)) }
+      TextButton(onClick = onRetry, enabled = canRetry) { Text(ChatWords.RETRY, style = scaled(14, color = if (canRetry) Theme.ink else Theme.soft)) }
     }
   }
 }

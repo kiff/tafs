@@ -512,6 +512,8 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var amount: KIFFClient.ActivityCall.Amount?
     var readOnly: Bool?
     var entityID: String?
+    /// The tool as KIFF names it ("list_inboxes_k3f9"): which connection it went through.
+    var action: String? = nil
     var onHash: String?
     var onArg: String?
     var onValue: String?

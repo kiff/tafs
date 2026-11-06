@@ -506,7 +506,8 @@ data class AppState(
    * A taf's connections: the grants made for its KIFF agent that are connected, or whose sign-in planque holds while Coach chooses
    * the tools, so the owner can see and end them.
    */
-  fun connections(tafId: String): List<Grant> = grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn || it.needsReconnect) }
+  fun connections(tafId: String): List<Grant> =
+    grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn || it.needsReconnect || it.waitingSignIn) }
 
   /**
    * The taf's connection its vendor signed out, if one is: the taf can't use those tools until the owner signs in again, so it
@@ -690,6 +691,13 @@ data class AppState(
    */
   fun holdsSend(tafId: String): Boolean =
     files(tafId).any { it.state == PendingFile.State.Uploading } || (thinking(tafId) && files(tafId).any { it.ref != null })
+
+  /**
+   * Whether Retry on a message that wasn't sent waits: while another message is on its way, and, for one with files, while the
+   * taf (or Coach) is at work, as Send waits for files. It stays Not sent meanwhile, words and files.
+   */
+  fun holdsRetry(tafId: String, unsent: Unsent): Boolean =
+    tafId in chatSending || (unsent.files.isNotEmpty() && thinking(tafId))
 
   /**
    * A taf's chat as one timeline: its messages, the calls held for the owner where they were
@@ -2016,12 +2024,17 @@ class AppModel(
       val since = s.chatAwaiting[tafId]
       val answered = since != null && thread.messages.any { it.from == ChatMessage.From.taf && it.at >= since }
       val settled = since != null && (thread.working != null || answered || java.time.Duration.between(since, now) > java.time.Duration.ofSeconds(120))
+      // Coach handed the taf over and said its last words: its run is done, whatever the stream still holds open. Stop goes
+      // (kiff/tafs#476); tafs cloud's `working` still says if a run is at work.
+      val handedOver = tafId == COACH_CHAT && thread.working == null && waiting.isEmpty() && tafId !in s.chatSending &&
+        CoachWords.handedOver(thread.messages, thread.components, s.chatLive[tafId]?.session)
       s.copy(
+        chatLive = if (handedOver) s.chatLive - tafId else s.chatLive,
         chats = s.chats + (tafId to messages),
         chatSent = if (waiting.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to waiting),
         chatErrors = s.chatErrors - tafId,
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
-        chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
+        chatAwaiting = if (settled || handedOver) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
         tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
@@ -2088,7 +2101,7 @@ class AppModel(
    * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
    */
   suspend fun reconnect(grant: Grant) {
-    val result = connect(grant.id, grant.id, grant.digest)
+    val result = connect(grant.id, grant.id, grant.digest, again = true)
     if (result is Connected.Failed) note(grant.id, result.why)
   }
 
@@ -3203,6 +3216,14 @@ class AppModel(
 
   fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
 
+  /**
+   * Replace a key-based connection's key (gap 13): the key sheet over Connect apps, for this grant. planque checks the signed
+   * key as for a first one; a grant it won't take a key for now says why there.
+   */
+  fun openReplaceKey(grant: bot.tafs.app.kiff.Grant) {
+    if (grant.takesKey) _state.update { it.copy(listApproval = grant.id, listApprovalNeedsKey = true) }
+  }
+
   /** Give the key on the sheet over Connect apps, run by the model as an approval is; then the list again. */
   fun startGiveKey(grantId: String, shownDigest: String, key: String) {
     scope.launch {
@@ -3298,7 +3319,11 @@ class AppModel(
       }
   }
 
-  suspend fun connect(cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null): Connected {
+  suspend fun connect(
+    cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null,
+    /** Sign in again (gap 13): a connected grant goes through its vendor's sign-in again, kept apart until this phone confirms it. */
+    again: Boolean = false,
+  ): Connected {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
       return Connected.Failed("Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.")
@@ -3328,7 +3353,7 @@ class AppModel(
       } catch (e: Exception) {
         return Connected.Failed("Couldn't read what to approve. ${ErrorWords.of(e)}", "couldn't read what to approve: ${e.message}")
       }
-      if (grant.connected) {
+      if (grant.connected && !again) {
         // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a draft. One confirmation confirms them.
         // Done only after a signature made here: a connection already connected with no Cards left to confirm signs nothing, so it
         // isn't approved. Coach hears that, and asks for what it needs as a new grant.
@@ -3357,7 +3382,8 @@ class AppModel(
         return Connected.Done(grant)
       }
       // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
-      if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect")) {
+      // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until this phone confirms the new one.
+      if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect") && !(again && grant.connected)) {
         return Connected.Failed("This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."))
       }
       if (!grant.digestMatches) return Connected.Failed(PlanqueError.DigestMismatch.message!!)
@@ -4007,17 +4033,36 @@ class AppModel(
   }
 
   /** [retryUnsent], waited for: whether it went. A second tap finds nothing left to send; refused again, deliverChat keeps it. */
-  suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean = takeUnsent(tafId, message) && deliverChat(message.text, tafId)
+  suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean {
+    val s = _state.value
+    val kept = s.chatUnsent[tafId]?.firstOrNull { it.message == message } ?: return false
+    // Nothing is tried while it can't go: it stays Not sent, words and files, for a later Retry. Checked before it leaves
+    // the thread, since a send refused before it starts keeps nothing.
+    if (s.holdsRetry(tafId, kept)) return false
+    if (s.mode == Mode.kiff && s.taf(tafId)?.cloudId == null) {
+      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to NOT_ON_CLOUD)) }
+      return false
+    }
+    val unsent = takeUnsent(tafId, message) ?: return false
+    // With its own files, never the tray's.
+    return if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
+    else deliverChat(message.text, tafId)
+  }
 
   /** Takes a message that wasn't sent out of the thread, to change it in the box: its words, or null when it's gone already. */
-  fun editUnsent(tafId: String, message: ChatMessage): String? = if (takeUnsent(tafId, message)) message.text else null
+  fun editUnsent(tafId: String, message: ChatMessage): String? {
+    val unsent = takeUnsent(tafId, message) ?: return null
+    // Its files go back in the tray, with its words in the box.
+    putBackFiles(unsent.files, tafId)
+    return message.text
+  }
 
-  private fun takeUnsent(tafId: String, message: ChatMessage): Boolean {
-    var taken = false
+  private fun takeUnsent(tafId: String, message: ChatMessage): Unsent? {
+    var taken: Unsent? = null
     _state.update { s ->
       val kept = s.chatUnsent[tafId].orEmpty()
+      taken = kept.firstOrNull { it.message == message }
       val left = kept.filterNot { it.message == message }
-      taken = left.size < kept.size
       s.copy(chatUnsent = if (left.isEmpty()) s.chatUnsent - tafId else s.chatUnsent + (tafId to left))
     }
     return taken
@@ -4060,17 +4105,18 @@ class AppModel(
    * step, or, when none is at work (or it just ended), as a new message that starts one. It shows at once, dimmed,
    * until the thread has it; then the thread is read and followed as the taf answers.
    */
-  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false): Boolean {
+  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false, again: List<PendingFile> = emptyList()): Boolean {
     val taf = _state.value.taf(tafId)
     val cloudId = taf?.cloudId
     if (cloudId == null) {
-      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "This taf isn't running on tafs cloud, so it can't be messaged.")) }
+      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to NOT_ON_CLOUD)) }
       return false
     }
     if (tafId in _state.value.chatSending) return false
     // Files go with a message of their own, never into a run at work, and never while one is still going up.
     if (withFiles && _state.value.holdsSend(tafId)) return false
-    val files = if (withFiles) takeFiles(tafId) else emptyList()
+    // A message sent again (Retry) goes with its own files; a new one takes the tray's.
+    val files = again.ifEmpty { if (withFiles) takeFiles(tafId) else emptyList() }
     val refs = files.mapNotNull { it.ref }
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     val generation = accountGeneration
@@ -4125,7 +4171,7 @@ class AppModel(
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
-          val unsent = Unsent(pending.copy(session = Unsent.SESSION, attachments = emptyList()), sendFailure(e, taf.name))
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files)
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
@@ -4133,8 +4179,8 @@ class AppModel(
             chatErrors = if (words.isBlank()) s.chatErrors + (tafId to sendFailure(e, taf.name)) else s.chatErrors,
           )
         }
-        // Its files didn't go: back in the tray for the next try.
-        putBackFiles(files, tafId)
+        // Its files didn't go. With its words kept as not sent, they stay with it for Retry; files alone go back in the tray.
+        if (words.isBlank()) putBackFiles(files, tafId)
       }
       return false
     } finally {
@@ -6173,6 +6219,9 @@ class AppModel(
   }
 
   companion object {
+    /** Why a message can't go to a taf that tafs cloud doesn't run. */
+    const val NOT_ON_CLOUD = "This taf isn't running on tafs cloud, so it can't be messaged."
+
     /**
      * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and the
      * digest the person was shown for the connect step; the card's draft and the version the person was shown for the Cards

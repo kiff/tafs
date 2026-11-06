@@ -4946,7 +4946,22 @@ final class AppModel: ObservableObject {
     /// its vendor signed out, so the owner signs in again.
     func connections(for tafID: UUID) -> [PlanqueClient.Grant] {
         guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return [] }
-        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect) }
+        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect || $0.waitingSignIn) }
+    }
+
+    /// A connection's last failed call (gap 13): the newest call through one of its tools that
+    /// wasn't done, its taf's own first, in KIFF's words for it. Nil when none is in the record.
+    func lastFailure(_ g: PlanqueClient.Grant) -> String? {
+        Self.lastFailure(g, record: record, ownTaf: holderIDs[g.request.agent])
+    }
+
+    nonisolated static func lastFailure(_ g: PlanqueClient.Grant, record: [RecordEntry], ownTaf: UUID?) -> String? {
+        let actions = Set(g.tools ?? g.request.tools.filter(\.tafs).map(\.action))
+        guard !actions.isEmpty else { return nil }
+        let failed = record.filter { $0.kind == .notDone && $0.action.map(actions.contains) == true }
+        let own = failed.filter { $0.tafID == ownTaf }
+        guard let last = (own.isEmpty ? failed : own).max(by: { $0.at < $1.at }) else { return nil }
+        return "Last failed: \(last.title) · \(last.detail)"
     }
 
     /// The taf's connection its vendor signed out, if one is: the taf can't use those tools
@@ -4971,7 +4986,7 @@ final class AppModel: ObservableObject {
         lastError = nil
         reconnectErrors[grant.id] = nil
         shownTermsChanged = false
-        let done = await connect(grantID: grant.id, shown: grant.digest)
+        let done = await connect(grantID: grant.id, shown: grant.digest, again: true)
         if done?.connected != true {
             reconnectErrors[grant.id] = lastError ?? quietStop ?? "Nothing was signed in. Try again."
             lastError = nil
@@ -5086,7 +5101,9 @@ final class AppModel: ObservableObject {
     /// draft's version: Face ID signs exactly that (kiff/tafs#115). Terms that changed since
     /// are put on screen and not signed, and the owner approves again; nothing shown, nothing
     /// signed.
-    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil) async -> PlanqueClient.Grant? {
+    /// `again`: sign in again (gap 13). A connected grant goes through its vendor's sign-in again,
+    /// kept apart by planque until this phone confirms it.
+    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil, again: Bool = false) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
             return nil
@@ -5121,7 +5138,7 @@ final class AppModel: ObservableObject {
             lastError = "Couldn't read what to approve: \(error.localizedDescription)"
             return nil
         }
-        if grant.connected {
+        if grant.connected, !again {
             // The second approval (kiff/agents#91): the vendor is connected, and the
             // taf's Cards over its tools wait as a draft. One Face ID confirms them.
             // Nothing left to sign: the grant is returned as it is, and noted, so an
@@ -5155,7 +5172,9 @@ final class AppModel: ObservableObject {
             return grant
         }
         // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
-        guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) else {
+        // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until
+        // this phone confirms the new one.
+        guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
             lastError = "This connection is \(grant.status.replacingOccurrences(of: "_", with: " "))\(grant.reason.map { ": \($0)" } ?? ".")"
             return nil
@@ -5720,6 +5739,13 @@ final class AppModel: ObservableObject {
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
+            // Coach handed the taf over and said its last words: its run is done, whatever the
+            // stream still holds open, so Stop goes (kiff/tafs#476). tafs cloud's `working` still
+            // says if a run is at work, and a message on its way keeps it.
+            if setupLive != nil, thread.working == nil, !setupSending, setupSent.isEmpty, thread.handedOver(session: setupLive?.session) {
+                setupLive = nil
+                setupAwaiting = nil
+            }
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupError = "The conversation couldn't be loaded: \(error.localizedDescription)"

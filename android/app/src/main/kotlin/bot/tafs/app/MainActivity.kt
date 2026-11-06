@@ -744,6 +744,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         },
         // One connection disconnected (the fingerprint asked first), then the list read again with the account's connections.
         onDisconnect = if (state.canManageCards) ({ id -> scope.launch { if (model.disconnect(id)) model.loadConnectApps(null) } }) else null,
+        // Gap 13: a new key on the key sheet over the list, or a sign-in again, each behind the fingerprint.
+        onReplaceKey = if (state.canManageCards) model::openReplaceKey else null,
+        onSignInAgain = if (state.canManageCards) model::startReconnect else null,
         onConnectedNow = { grant -> model.dismissConnectedNow(); showingConnectApps = false; model.improveInCoach(grant.request.agent) },
         dismissConnectedNow = model::dismissConnectedNow,
       )

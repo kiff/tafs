@@ -232,7 +232,7 @@ object KiffMapping {
         id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
-        entityId = c.entityId, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
+        entityId = c.entityId, action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
         madeAt = c.madeAt, reason = c.reason,
         refusedByTool = if (refusedByTool) true else null,
         refusedBy = if (byConnection) "The connection" else if (refusedByTool) vendors[c.actionName] else null,

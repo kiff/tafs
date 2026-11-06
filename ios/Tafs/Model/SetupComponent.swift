@@ -119,6 +119,19 @@ struct ShownComponent: Identifiable, Equatable {
     static func ref(_ session: String, _ id: String) -> String { "\(session)#\(id)" }
 }
 
+extension SetupThread {
+    /// Whether Coach's run handed its taf over and is done: the newest answered `result` card
+    /// (in `session` when the live answer names one) has Coach's words after its answer in its
+    /// session, and the owner wrote nothing since. The stream may stay open after that; the
+    /// chat no longer shows Coach at work for it (kiff/tafs#476). The same as Android's.
+    func handedOver(session: String?) -> Bool {
+        let results = components.filter { $0.component.type == .result && $0.answer?.at != nil && (session == nil || $0.session == session) }
+        guard let result = results.max(by: { $0.answer!.at! < $1.answer!.at! }), let answeredAt = result.answer?.at else { return false }
+        guard messages.contains(where: { $0.from == .taf && $0.session == result.session && $0.at > answeredAt }) else { return false }
+        return !messages.contains { $0.from == .owner && $0.at > answeredAt }
+    }
+}
+
 /// Setup's thread: the messages, and the components where they first appeared.
 struct SetupThread: Equatable {
     var messages: [TafsCloud.ChatMessage] = []

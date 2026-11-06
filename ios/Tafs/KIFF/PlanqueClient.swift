@@ -102,6 +102,8 @@ final class PlanqueClient {
             let agent: String
             let tools: [Tool]
             var connector: Connector?
+            /// `api_key` for a vendor reached with a key the owner gives; none for one signed in to.
+            var kind: String? = nil
         }
         struct Event: Decodable, Equatable {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
@@ -174,6 +176,12 @@ final class PlanqueClient {
         /// Its vendor signed it out: the owner signs in again, and it's connected only once
         /// planque says so.
         var needsReconnect: Bool { status == "needs_reconnect" }
+        /// Reached with a key the owner gives (planque's `api_key`), not a sign-in: it's fixed
+        /// with a new key (gap 13).
+        var takesKey: Bool { request.kind == "api_key" }
+        /// Approved, and waiting on a sign-in at the vendor that hasn't come back: the owner may
+        /// cancel it, which ends the grant, and connect again.
+        var waitingSignIn: Bool { status == "approved" && signedIn != true && !connectedNow }
         /// The signed-out connection in planque's words; before planque sends them, the app's.
         var signedOutWords: String {
             statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? "Signed out by \(vendor) · sign in again"

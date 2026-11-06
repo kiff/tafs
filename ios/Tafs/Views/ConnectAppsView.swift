@@ -109,6 +109,17 @@ struct ConnectAppsView: View {
 
 /// Disconnect's words, the same on every screen and in the Face ID prompt: it names the one taf
 /// it ends, and says other tafs' connections to the vendor stay.
+/// How a connection is fixed, and a sign-in that never came back cancelled (gap 13), the same
+/// as Android's words.
+enum ConnectionFixWords {
+    static let replaceKey = "Replace the key"
+    static let signInAgain = "Sign in again"
+    static let cancel = "Cancel"
+    static func waiting(_ vendor: String) -> String { "Waiting for the sign-in at \(vendor)" }
+    static func cancelTitle(_ vendor: String) -> String { "Cancel the sign-in to \(vendor)?" }
+    static func cancelBody(_ vendor: String) -> String { "Nothing is connected yet. Connect \(vendor) again from Coach or Connect apps when you're ready." }
+}
+
 enum DisconnectWords {
     static let footer = "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay."
 
@@ -146,6 +157,8 @@ struct AppConnectionsView: View {
     @State private var busy: String?
     /// The connection whose Disconnect waits for the owner's yes.
     @State private var confirming: PlanqueClient.Grant?
+    /// The key-based connection taking a new key (gap 13), on the key sheet.
+    @State private var replacing: PlanqueClient.Grant?
 
     var body: some View {
         List {
@@ -160,6 +173,23 @@ struct AppConnectionsView: View {
                             }
                             if let words = g.statusWords, !words.isEmpty {
                                 Text(words).scaledFont(13).foregroundColor(Theme.dim)
+                            }
+                            // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
+                            if let failed = model.lastFailure(g) {
+                                Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                            }
+                            if model.canManageCards {
+                                Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
+                                    if g.takesKey { replacing = g } else { Task { await model.reconnect(g) } }
+                                }
+                                .buttonStyle(.borderless)
+                                .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                                .disabled(model.connecting != nil || busy != nil)
+                                .accessibilityIdentifier("connect.fix." + g.id)
+                                .confirming()
+                            }
+                            if let why = model.reconnectErrors[g.id] {
+                                Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                             }
                         }
                         Spacer()
@@ -186,6 +216,9 @@ struct AppConnectionsView: View {
         }
         .navigationTitle("Your \(app.title) connections")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $replacing) { g in
+            ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
+        }
         // Asked first, naming the one taf it ends; only then Face ID, in the same words.
         .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0), alsoStops: model.alsoStops($0)) } ?? "",
                             isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
