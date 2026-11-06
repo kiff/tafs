@@ -27,29 +27,20 @@ final class ConnectionSheetTests: XCTestCase {
     }
 
     /// Connect apps lists every connection to an app (Android 36's phone round), as Android's
-    /// ConnectionSheetTest: the vendor's own sign-ins carry no catalog entry. Values as planque's
-    /// records have them.
+    /// ConnectionSheetTest: by the app planque names for it, its `entry`, which planque gives every
+    /// grant now, a vendor's own sign-in included. Values as planque lists them.
     func testEveryConnectionToAnAppIsListedUnderItWhateverStartedIt() throws {
+        let stripe = "connector:composio:stripe"
         let grants = [
-            try g("g1", #"{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}"#),
-            try g("g2", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-0","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#, entry: "connector:composio:stripe"),
-            try g("g3", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"chase-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#),
-            try g("g4", #"{"server":"https://notstripe.com/mcp","agent":"x-1","tools":[]}"#),
-            try g("g5", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"x-2","connector":{"provider":"composio","toolkit":"gmail"},"tools":[]}"#),
-            try g("g6", #"{"server":"https://mcp.stripe.com","agent":"refunds-9","tools":[]}"#, status: "disconnected"),
-            try g("g7", #"{"server":"mcp.stripe.com:443","agent":"refunds-2","tools":[]}"#, status: "approved"),
+            try g("g1", #"{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}"#, entry: stripe),
+            try g("g2", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-0","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#, entry: stripe),
+            try g("g3", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"x-2","connector":{"provider":"composio","toolkit":"gmail"},"tools":[]}"#, entry: "connector:composio:gmail"),
+            try g("g4", #"{"server":"https://mcp.stripe.com","agent":"refunds-9","tools":[]}"#, entry: stripe, status: "disconnected"),
+            try g("g5", #"{"server":"https://mcp.stripe.com","agent":"refunds-2","tools":[]}"#, entry: stripe, status: "approved"),
+            // planque left it unnamed (its app unclear): the phone never guesses one from its server.
+            try g("g6", #"{"server":"https://mcp.stripe.com","agent":"x-3","tools":[]}"#),
         ]
-        XCTAssertEqual(AppModel.connections(of: try app("connector:composio:stripe"), in: grants).map(\.id), ["g1", "g2", "g3", "g7"])
-        // A reviewed entry is the same app by its slug before "@"; g2, which planque named as the
-        // provider's app, stays that app's.
-        XCTAssertEqual(AppModel.connections(of: try app("stripe@1"), in: grants).map(\.id), ["g1", "g3", "g7"])
-        XCTAssertEqual(AppModel.connections(of: try app("composio@1"), in: grants).map(\.id), [], "a provider's host is never an app's")
-        XCTAssertEqual(AppMatch.slug("connector:composio:_1password"), "1password")
-        // planque's own entry wins: a grant it named lists under that app alone, never another
-        // by its host.
-        let named = [try g("g8", #"{"server":"https://mcp.stripe.com","agent":"refunds-3","tools":[]}"#, entry: "stripe@1")]
-        XCTAssertEqual(AppModel.connections(of: try app("connector:composio:stripe"), in: named).map(\.id), [])
-        XCTAssertEqual(AppModel.connections(of: try app("stripe@1"), in: named).map(\.id), ["g8"])
+        XCTAssertEqual(AppModel.connections(of: try app(stripe), in: grants).map(\.id), ["g1", "g2", "g5"])
     }
 
     /// A managed provider's connected grant isn't signed in again in place: planque refuses it.

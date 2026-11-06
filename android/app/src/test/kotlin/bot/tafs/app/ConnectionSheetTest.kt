@@ -23,34 +23,25 @@ class ConnectionSheetTest {
         "tool_outcome":{"status":"$status","message":"$message"}}"""
 
   /**
-   * Connect apps lists every connection to an app (Android 36's phone round): Stripe's row showed only the provider's
-   * leftover, never the vendor's own sign-ins Coach started, which carry no catalog entry. Values as planque's records have them.
+   * Connect apps lists every connection to an app (Android 36's phone round), by the app planque names for it: its `entry`,
+   * which planque gives every grant now (kiff/planque#115, #116), a vendor's own sign-in included. Values as planque lists them.
    */
   @Test fun everyConnectionToAnAppIsListedUnderItWhateverStartedIt() {
     fun g(id: String, request: String, entry: String? = null, status: String = "connected") =
       KiffClient.json.decodeFromString<Grant>("""{"id":"$id","status":"$status"${entry?.let { ",\"entry\":\"$it\"" } ?: ""},"request":$request}""")
-    val vendorsOwn = g("g1", """{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}""")
-    val provider = g("g2", """{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-0","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}""", entry = "connector:composio:stripe")
-    val providerNoEntry = g("g3", """{"server":"https://backend.composio.dev/api/v3.1","agent":"chase-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}""")
-    val notStripe = g("g4", """{"server":"https://notstripe.com/mcp","agent":"x-1","tools":[]}""")
-    val otherProviderApp = g("g5", """{"server":"https://backend.composio.dev/api/v3.1","agent":"x-2","connector":{"provider":"composio","toolkit":"gmail"},"tools":[]}""")
-    val gone = g("g6", """{"server":"https://mcp.stripe.com","agent":"refunds-9","tools":[]}""", status = "disconnected")
-    val waiting = g("g7", """{"server":"mcp.stripe.com:443","agent":"refunds-2","tools":[]}""", status = "approved")
-    val state = bot.tafs.app.app.AppState(grants = listOf(vendorsOwn, provider, providerNoEntry, notStripe, otherProviderApp, gone, waiting))
-    val stripe = bot.tafs.app.kiff.ConnectApps.App(entry = "connector:composio:stripe", vendor = "Stripe", title = "Stripe")
-    assertEquals(listOf("g1", "g2", "g3", "g7"), bot.tafs.app.views.connectionsOf(state, stripe).map { it.id })
-    // A reviewed entry is the same app by its slug before "@"; g2, which planque named as the provider's app, stays that app's.
-    assertEquals(listOf("g1", "g3", "g7"), bot.tafs.app.views.connectionsOf(state, stripe.copy(entry = "stripe@1")).map { it.id })
-    // The provider's host is never an app's: Composio's own row lists none of them.
-    val composio = bot.tafs.app.kiff.ConnectApps.App(entry = "composio@1", vendor = "Composio", title = "Composio")
-    assertEquals(emptyList<String>(), bot.tafs.app.views.connectionsOf(state, composio).map { it.id })
-    assertEquals("stripe", bot.tafs.app.views.AppMatch.slug(stripe))
-    assertEquals("1password", bot.tafs.app.views.AppMatch.slug(stripe.copy(entry = "connector:composio:_1password")))
-    // planque's own entry wins: a grant it named lists under that app alone, never another by its host.
-    val named = g("g8", """{"server":"https://mcp.stripe.com","agent":"refunds-3","tools":[]}""", entry = "stripe@1")
-    val withNamed = bot.tafs.app.app.AppState(grants = listOf(named))
-    assertEquals(emptyList<String>(), bot.tafs.app.views.connectionsOf(withNamed, stripe).map { it.id })
-    assertEquals(listOf("g8"), bot.tafs.app.views.connectionsOf(withNamed, stripe.copy(entry = "stripe@1")).map { it.id })
+    val stripeEntry = "connector:composio:stripe"
+    val vendorsOwn = g("g1", """{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}""", entry = stripeEntry)
+    val provider = g("g2", """{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-0","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}""", entry = stripeEntry)
+    val otherApp = g("g3", """{"server":"https://backend.composio.dev/api/v3.1","agent":"x-2","connector":{"provider":"composio","toolkit":"gmail"},"tools":[]}""", entry = "connector:composio:gmail")
+    val gone = g("g4", """{"server":"https://mcp.stripe.com","agent":"refunds-9","tools":[]}""", entry = stripeEntry, status = "disconnected")
+    val waiting = g("g5", """{"server":"https://mcp.stripe.com","agent":"refunds-2","tools":[]}""", entry = stripeEntry, status = "approved")
+    // planque left it unnamed (its app unclear): the phone never guesses one from its server.
+    val unnamed = g("g6", """{"server":"https://mcp.stripe.com","agent":"x-3","tools":[]}""")
+    val state = bot.tafs.app.app.AppState(grants = listOf(vendorsOwn, provider, otherApp, gone, waiting, unnamed))
+    val stripe = bot.tafs.app.kiff.ConnectApps.App(entry = stripeEntry, vendor = "Stripe", title = "Stripe")
+    assertEquals(listOf("g1", "g2", "g5"), bot.tafs.app.views.connectionsOf(state, stripe).map { it.id })
+    // The grant tafs cloud named for a row is listed under it too, whatever its entry.
+    assertEquals(listOf("g1", "g2", "g5", "g6"), bot.tafs.app.views.connectionsOf(state, stripe.copy(grant = "g6")).map { it.id })
   }
 
   @Test fun aKeyConnectionIsFixedWithANewKeyAndASignInOneBySigningInAgain() {
