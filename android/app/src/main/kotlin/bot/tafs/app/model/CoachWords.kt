@@ -294,7 +294,7 @@ object CoachWords {
    */
   fun cardKey(session: String?, id: String): String = "${session.orEmpty()}#$id"
 
-  private val ASKING = setOf("confirm", "questions", "approval", "sign_in", "result", "knob")
+  private val ASKING = setOf("confirm", "questions", "approval", "sign_in", "result", "knob", "drive")
 
   /** A plan's one line, as tafs cloud writes it; before it does, the plan's own title. Never counted on the phone. */
   fun planLine(plan: SetupComponent): String = plan.line?.takeIf { it.isNotBlank() } ?: plan.title?.takeIf { it.isNotBlank() } ?: "Plan"
