@@ -43,7 +43,7 @@ export const DRIVE = {
 export const END_WHY = ["owner_took_over", "left_app", "stopped", "locked", "signed_out", "halted", "done", "idle", "replaced"] as const;
 export type EndWhy = typeof END_WHY[number];
 
-/** What Coach is told, and the record shows, for each end. */
+/** What Coach is told, and the record shows, for each end. The person is shown END_SAID. */
 export const END_WORDS: Record<EndWhy, string> = {
   owner_took_over: "the owner touched the app, so they have it now",
   left_app: "the app left the screen, so the drive is over",
@@ -54,6 +54,23 @@ export const END_WORDS: Record<EndWhy, string> = {
   done: "the task is done",
   idle: "nothing was done for 15 minutes",
   replaced: "another drive started",
+};
+
+/**
+ * What the person is shown for each end, in their own words: the caption, the "What I did"
+ * card and the stop's answer. The same words the apps keep for an end whose words didn't
+ * come (docs/drive.md), so the caption reads the same either way.
+ */
+export const END_SAID: Record<EndWhy, string> = {
+  owner_took_over: "You touched the app, so it's yours now",
+  left_app: "The app left the screen, so Coach stopped",
+  stopped: "You stopped Coach",
+  locked: "The phone locked, so Coach stopped",
+  signed_out: "You signed out, so Coach stopped",
+  halted: "The account is halted, so Coach stopped",
+  done: "Coach is done",
+  idle: "Nothing was done for 15 minutes, so Coach stopped",
+  replaced: "Another drive started",
 };
 
 export interface Drive {
@@ -383,8 +400,8 @@ export async function* driveStream(store: CoachStore, tenant: string, person: st
   yield sse("drive", { drive });
   for (;;) {
     const d = await currentDrive(store, tenant, person, now());
-    if (!d || d.id !== drive) { yield sse("ended", { why: "replaced", words: END_WORDS.replaced }); return; }
-    if (d.ended) { yield sse("ended", { why: d.ended.why, words: END_WORDS[d.ended.why] }); return; }
+    if (!d || d.id !== drive) { yield sse("ended", { why: "replaced", words: END_SAID.replaced }); return; }
+    if (d.ended) { yield sse("ended", { why: d.ended.why, words: END_SAID[d.ended.why] }); return; }
     for (const r of (await store.take(driveKeys.queue(tenant, drive))) as DriveRequest[]) {
       // A request Coach has given up on, or nearly, is never sent: a reconnecting stream doesn't do stale steps.
       const left = Date.parse(r.at) + DRIVE.holdMs - now().getTime();

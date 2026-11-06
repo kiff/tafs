@@ -1,6 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type CoachCall, Rich } from "../src/cloud/coach.js";
-import { askApp, currentDrive, DRIVE, driveArgs, DriveError, DriveRefusal, driveStream, endDrive, putResult, resultOf, startDrive } from "../src/cloud/drive.js";
+import { askApp, currentDrive, DRIVE, driveArgs, DriveError, DriveRefusal, driveStream, endDrive, END_SAID, END_WHY, END_WORDS, putResult, resultOf, startDrive } from "../src/cloud/drive.js";
 import { coachTool, type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -115,8 +116,16 @@ describe("a drive, on its own", () => {
     expect(out[0]).toBe(`event: drive\ndata: ${JSON.stringify({ drive: d.id })}\n\n`);
     expect(out[1]).toContain("event: request");
     expect(out[1]).toContain("\"rq_1\"");
-    expect(out.at(-1)).toContain("event: ended");
-    expect(out.at(-1)).toContain("left_app");
+    expect(out.at(-1)).toBe(`event: ended\ndata: ${JSON.stringify({ why: "left_app", words: "The app left the screen, so Coach stopped" })}\n\n`);
+  });
+
+  it("tells the person each end in their own words, as docs/drive.md lists them, and Coach in its own", () => {
+    const doc = readFileSync(new URL("../../docs/drive.md", import.meta.url), "utf8");
+    for (const why of END_WHY) {
+      expect(doc).toContain(`| \`${why}\` | ${END_SAID[why]} |`);
+      expect(END_SAID[why]).not.toBe(END_WORDS[why]);
+      expect(END_SAID[why]).not.toMatch(/\bthe owner\b/i);
+    }
   });
 
   it("checks Coach's arguments: a point or an element, a caption, a text only for type", () => {
@@ -230,7 +239,8 @@ describe("a drive, from the phone", () => {
     const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
     const id = (started.body.drive as { id: string }).id;
     const stop = await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "owner_took_over" });
-    expect(stop.body).toMatchObject({ ended: { why: "owner_took_over" } });
+    expect(stop.body).toMatchObject({ ended: { why: "owner_took_over", words: "You touched the app, so it's yours now" } });
+    expect(w.events.at(-1)).toMatchObject({ kind: "drive_ended", detail: "the owner touched the app, so they have it now" });
     expect((await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "stopped" })).body).toMatchObject({ ended: { why: "owner_took_over" } });
     w.working();
     const a = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
@@ -238,7 +248,7 @@ describe("a drive, from the phone", () => {
     expect(a.content[0]).toMatchObject({ type: "text", text: expect.stringContaining("the owner touched the app") });
     expect((await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "replaced" })).status).toBe(400);
     const read = await w.call("GET", "/v1/coach/drive");
-    expect(read.body.drive).toMatchObject({ id, ended: { why: "owner_took_over" } });
+    expect(read.body.drive).toMatchObject({ id, ended: { why: "owner_took_over", words: "You touched the app, so it's yours now" } });
     expect(read.body.drive).not.toHaveProperty("person");
   });
 });
