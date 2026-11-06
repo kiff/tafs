@@ -94,6 +94,11 @@ export interface AgentDefinition {
   tenant?: string;
   id?: string;
   instructions: string;
+  /**
+   * A line saying an AI agent wrote it, put by kiff/agents in each call of `in`'s tools, in the
+   * first of their free-text fields the call carries, whatever the model wrote (kiff/agents#352).
+   */
+  disclose?: { line: string; in: Array<{ tool: string; fields: string[] }> };
   model: string;
   price: Price;
   max_tokens: number;

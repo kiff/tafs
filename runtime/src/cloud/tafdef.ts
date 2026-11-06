@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { type Job, systemPrompt } from "../jobs.js";
+import { DISCLOSURE_LINE, type Job, systemPrompt } from "../jobs.js";
 import { KIFF_SKILL } from "../kiff-skill.js";
 import { ACTION_PLACES_INTRO, placesInstructions, type VendorPlace } from "./places.js";
 import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
@@ -219,5 +219,7 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     max_cost_micro_usd: budget * 10_000,
     history: HISTORY,
     history_tokens: HISTORY_TOKENS,
+    // The AI disclosure in the job's outbound calls, by the runtime, never left to the model.
+    ...(job.disclose?.length ? { disclose: { line: DISCLOSURE_LINE, in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
   };
 }
