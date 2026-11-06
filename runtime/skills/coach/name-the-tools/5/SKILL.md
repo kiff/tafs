@@ -14,9 +14,8 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   in. Nothing is read from the owner's account before they approve the tools
   that read it, so don't try to read what the sign-in covers first: ask.
   A long catalog is never a reason to stop: catalog {grant, q} searches it by
-  words from the job ("find page", "list invoices") across its pages and
-  answers the matches in full; catalog {grant, cursor} reads on. Never say a
-  list was too long to read.
+  words from the job across its pages and answers the matches in full;
+  catalog {grant, cursor} reads on. Never say a list was too long to read.
   Choose, from the vendor's own catalog, the tools the whole job needs:
   to find the work (list or search), to check one item (read it), and to act
   (the write). Nothing more, and nothing less: a taf that can't find or check
@@ -29,7 +28,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   change: the account, and the mode, on every tool that takes them, reads
   included, as the vendor's own descriptions ask,
   and the operation that makes a tool the job's. A taf then never looks them
-  up: a lookup is a wait on every message (kiff/tafs#138, item 58). When one
+  up: a lookup is a wait on every message. When one
   vendor tool runs many operations chosen by an argument (an operation id, a
   method, a path or an endpoint), connect it once for each operation the job
   needs, each under its own name with that argument pinned to that operation:
@@ -39,20 +38,19 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   names aren't the thing's (a read of one item can take it as id): never guess
   or rename them. When the vendor has a read-only tool that
   lists an operation's fields, given its id, ask for it
-  first, as the first tools of the taf's one connection to that vendor
-  (tools {grant, tools} once it's listed, or added to the taf's connection
-  when improving it), read_only with setup_reads: true, so
+  in the first planque request (or add it to the taf's connection when
+  improving it), read_only with setup_reads: true, so
   you can read it yourself: it reads the vendor's documentation, not the
   owner's account. Once it's connected, it isn't among your tools until you
   look for it: search for it by its name in KIFF, as planque's status lists
-  it (such as api_details_k3f9), then call it. setup_reads goes on that tool only, never on the taf's
-  own reads: those read the owner's account. It needs no question of its own: the owner already agreed
-  to connect, and its approval is enough. The one exception: when you must
-  pin the account and the vendor has a read-only tool that lists the
-  accounts the sign-in covers, put that tool in the same first tools, with
-  setup_reads: true, and ask the owner's OK to read that list (only the
-  accounts' names, and whether each is test or live) among your first
-  questions, beside the one to connect. Never in a connection of its own:
+  it (such as api_details_k3f9), then call it. When you must pin the account,
+  the read-only tool that lists the accounts the sign-in covers goes in that
+  first request too, with setup_reads: true: search {q} finds both by name
+  before you connect. The connection's one approval and sign-in then cover
+  them, with no question of their own and no second approval: the owner
+  already agreed to connect, and its approval is enough. setup_reads goes on
+  those two only, never on the taf's own reads: those read the owner's
+  account. Never in a connection of its own:
   each new connection is one more approval and vendor sign-in for the owner. The job's own tools are then added to that same
   connection (tools on a connected grant adds them), with one approval and
   no sign-in. Once it's connected, read every
@@ -94,12 +92,13 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   the only one). Pin their answer on every call that takes the mode; until
   they answer, nothing you write names one, and "as you chose" is only ever
   their answer. A mode pinned on the calls is what the calls do; the account's
-  own mode is a fact only when the connection reports it (its status, or its
-  approval naming the account and mode). Say the two once, plainly, in one
-  place (the rules notice, or the result's sentence when there's none), and
-  never again: "Every call is pinned to test mode, as you chose. Whether the
-  account itself is test or live, check it before going live." Never say money
-  can't move unless the connection reports the mode. Never carry a mode over
+  own mode is a fact only when the connection reports it (the accounts list,
+  its status, or its approval naming the account and mode). When it does, say
+  it once, as soon as you read it, as reported, and never again: "Your
+  account there is in test mode." When it doesn't, say once, in the rules
+  notice, and never again: "Every call is pinned to test mode, as you chose.
+  Whether the account itself is test or live, check it before going live." Never say money can't move unless the
+  connection reports the mode. Never carry a mode over
   from earlier conversations or rules: ask again.
 
 ## Verification
