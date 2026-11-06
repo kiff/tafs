@@ -217,6 +217,13 @@ final class TafsCloud {
             /// How this is counted: each tool's lines in KIFF's words, as the owner approved
             /// them; nil when KIFF has none.
             var counted: [Counted]? = nil
+            /// Its totals for each item apart, in tafs cloud's words; nil without any.
+            var eachItem: [String]? = nil
+
+            enum CodingKeys: String, CodingKey {
+                case id, title, environment, live, active, expires, rules, total, calls, counted
+                case eachItem = "each_item"
+            }
         }
 
         /// One tool of a Card, and how KIFF counts it.

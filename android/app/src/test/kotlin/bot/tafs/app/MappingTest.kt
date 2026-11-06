@@ -126,10 +126,10 @@ class MappingTest {
   }
 
   /** A hold over a count of calls, as KIFF keeps it: the machine's reason, and KIFF's own words when [reasonText] is sent. */
-  private fun countHold(limit: Long, used: Long, window: String? = "calendar_day", reasonText: String? = null) = exceptions(
+  private fun countHold(limit: Long, used: Long, window: String? = "calendar_day", reasonText: String? = null, per: String = "") = exceptions(
     """{"exceptions":[{"id":"ce_5","subject":"setup-acme","action":"taf_results","created_at":"2026-10-30T22:50:00Z",
        ${reasonText?.let { "\"reason_text\":\"$it\"," } ?: ""}"can_approve_once":false,
-       "breaches":[{"outcome":"limit_reached","quantity":"count","limit":$limit,"used":$used,"draw":1,${window?.let { "\"window\":\"$it\"," } ?: ""}
+       "breaches":[{"outcome":"limit_reached","quantity":"count","limit":$limit,"used":$used,"draw":1,${window?.let { "\"window\":\"$it\"," } ?: ""}$per
          "reason":"count limit $limit per calendar_day reached: $used used, this action draws 1"}]}]}""",
   )[0]
 
@@ -143,6 +143,11 @@ class MappingTest {
     assertEquals("5 calls in any 7 days: this would be the 6th", KiffMapping.held(countHold(5, 5, "rolling_7d")).reason)
     assertEquals("5 calls calendar_week: this would be the 6th", KiffMapping.held(countHold(5, 5, "calendar_week")).reason)
     assertEquals("Over its limit of 10 calls: this would be the 11th", KiffMapping.held(countHold(10, 10, null)).reason)
+    // A total for each item apart says which: the argument it counts by, and this call's item.
+    assertEquals("1 call in any 7 days for each invoice id: this would be the 2nd for in_42",
+      KiffMapping.held(countHold(1, 1, "rolling_7d", per = "\"per\":\"invoice_id\",\"value\":\"in_42\",")).reason)
+    assertEquals("1 call in any 7 days for each invoice id: this would be the 2nd",
+      KiffMapping.held(countHold(1, 1, "rolling_7d", per = "\"per\":\"invoice_id\",")).reason)
     // KIFF's own words come first.
     assertEquals("Each call asks you first, in KIFF's words", KiffMapping.held(countHold(0, 0, reasonText = "Each call asks you first, in KIFF's words")).reason)
   }

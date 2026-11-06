@@ -337,9 +337,9 @@ final class HeldReasonWordsTests: XCTestCase {
         return KIFFMapping.held(try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data(json.utf8)), tafID: UUID())
     }
 
-    private func count(_ limit: Int, used: Int, window: String? = "calendar_day") -> String {
+    private func count(_ limit: Int, used: Int, window: String? = "calendar_day", per: String = "") -> String {
         #"{"mandate_id":"m","outcome":"limit_reached","quantity":"count","limit":\#(limit),"used":\#(used),"draw":1,"# +
-            (window.map { #""window":"\#($0)","# } ?? "") +
+            (window.map { #""window":"\#($0)","# } ?? "") + per +
             #""reason":"count limit \#(limit) per calendar_day reached: \#(used) used, this action draws 1"}"#
     }
 
@@ -354,6 +354,14 @@ final class HeldReasonWordsTests: XCTestCase {
         XCTAssertEqual(try held(breach: count(1, used: 1, window: "rolling_1h")).reason, "1 call in any hour: this would be the 2nd")
         XCTAssertEqual(try held(breach: count(5, used: 5, window: nil)).reason, "Over its limit of 5 calls: this would be the 6th")
         XCTAssertFalse(try held(breach: count(0, used: 0)).reason.contains("calendar_day"))
+    }
+
+    /// A total for each item apart says which: the argument it counts by, and this call's item.
+    func testACountForEachItemSaysItsItem() throws {
+        XCTAssertEqual(try held(breach: count(1, used: 1, window: "rolling_7d", per: #""per":"invoice_id","value":"in_42","#)).reason,
+                       "1 call in any 7 days for each invoice id: this would be the 2nd for in_42")
+        XCTAssertEqual(try held(breach: count(1, used: 1, window: "rolling_7d", per: #""per":"invoice_id","#)).reason,
+                       "1 call in any 7 days for each invoice id: this would be the 2nd")
     }
 
     func testOrdinals() {

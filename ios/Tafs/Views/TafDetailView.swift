@@ -343,6 +343,12 @@ struct TafDetailView: View {
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
+        // Its totals for each item apart ("1 call in any 7 days for each invoice id"), as tafs cloud says them.
+        ForEach(shown?.eachItem ?? [], id: \.self) { line in
+            Text(line).scaledFont(14).foregroundColor(Theme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
         // How KIFF counts each of its tools, as the owner approved it: its own screen.
         if let shown, let counted = shown.counted, !counted.isEmpty {
             PanelLink { CountedView(card: shown.title, counted: counted) } label: {
