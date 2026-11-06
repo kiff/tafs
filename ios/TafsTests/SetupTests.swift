@@ -237,7 +237,7 @@ final class SetupTests: XCTestCase {
             TafsCloud.ChatMessage(at: at(10), from: .owner, text: "[approval connect] approved, signed in", session: "s1"),
             TafsCloud.ChatMessage(at: at(12), from: .taf, text: "Connected.", session: "s1"),
         ]
-        thread.components = [try shown(#"{"type":"approval","id":"connect","grant":"g_01"}"#, 2),
+        thread.components = [try shown(#"{"type":"approval","id":"connect","waits":"owner","grant":"g_01"}"#, 2),
                              try shown(#"{"type":"notice","id":"note","tone":"info","text":"Reading Stripe's tools"}"#, 11)]
         let order = thread.items.map(\.id)
         let connect = try XCTUnwrap(order.firstIndex(of: "c|s1#connect"))
@@ -258,7 +258,7 @@ final class SetupTests: XCTestCase {
             TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Refunds, please", session: "s1"),
             TafsCloud.ChatMessage(at: at(3), from: .taf, text: "I'll connect Stripe. Approve below.", session: "s1"),
         ]
-        var card = ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01"}"#))
+        var card = ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(#"{"type":"approval","id":"connect","waits":"owner","grant":"g_01"}"#))
         thread.components = [card]
         XCTAssertEqual(thread.items.last?.id, "c|s1#connect", "waiting, after Coach's words")
         card.answer = TafsCloud.CardAnswer(words: "Approved")
@@ -276,7 +276,7 @@ final class SetupTests: XCTestCase {
             TafsCloud.ChatMessage(at: at(3), from: .taf, text: "That didn't go through. Try again?", session: "s1"),
             TafsCloud.ChatMessage(at: at(12), from: .taf, text: "Done: it went through.", session: "s1"),
         ]
-        var card = ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(#"{"type":"confirm","id":"retry","text":"Try again?","options":[{"value":"yes","label":"Try again"}]}"#))
+        var card = ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(#"{"type":"confirm","id":"retry","waits":"owner","text":"Try again?","options":[{"value":"yes","label":"Try again"}]}"#))
         card.answer = TafsCloud.CardAnswer(words: "Try again", at: at(10))
         thread.components = [card]
         XCTAssertEqual(thread.items.map(\.id), ["m|" + thread.messages[0].id, "m|" + thread.messages[1].id, "c|s1#retry", "m|" + thread.messages[2].id])

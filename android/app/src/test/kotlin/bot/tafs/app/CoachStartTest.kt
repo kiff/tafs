@@ -350,7 +350,7 @@ class CoachStartTest {
   }
 
   @Test fun anAnsweredCardStaysAfterTheWordsThatAskedForItAndCoachsLaterWordsComeBelow() {
-    val connect = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"connect","grant":"g1"}""")
+    val connect = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"connect","waits":"owner","grant":"g1"}""")
     fun said(at: Long, text: String) = bot.tafs.app.model.ChatMessage(t0.plusSeconds(at), bot.tafs.app.model.ChatMessage.From.taf, text, session = "s1")
     // Shown at 0 s; Coach's words with it are dated when written (2 s); answered at 10 s; Coach's next words at 12 s.
     val asked = said(2, "Approve the connection to Stripe.")
@@ -365,13 +365,60 @@ class CoachStartTest {
 
   /** A drive card waits for the person too: Coach's words with it come before it, never under "Approved" (as on iOS). */
   @Test fun aDriveCardComesAfterTheWordsThatAskedForIt() {
-    val drive = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"drive","id":"d1","text":"Show where Refunds' daily limit is set"}""")
+    val drive = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"drive","id":"d1","waits":"owner","text":"Show where Refunds' daily limit is set"}""")
     fun said(at: Long, text: String) = bot.tafs.app.model.ChatMessage(t0.plusSeconds(at), bot.tafs.app.model.ChatMessage.From.taf, text, session = "s1")
     val asked = said(1, "I'm waiting for you to approve the drive.")
     val next = said(30, "The daily limit for Refunds is on its Card tab.")
     val approved = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", drive, bot.tafs.app.kiff.CardAnswer(words = "Approved", atText = t0.plusSeconds(5).toString()))
     val order = CoachWords.items(listOf(asked, next), listOf(approved)).map { (it as? bot.tafs.app.model.ChatItem.Message)?.message?.text ?: "card" }
     assertEquals(listOf("I'm waiting for you to approve the drive.", "card", "The daily limit for Refunds is on its Card tab."), order)
+  }
+
+  /** A drive's end sits in the thread at the time it ended (kiff/tafs#568): Coach's words after it come below, never above. */
+  @Test fun aDrivesEndComesBeforeCoachsNextWords() {
+    val drive = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"drive","id":"d1","waits":"owner","text":"Show where Refunds' daily limit is set"}""")
+    fun said(at: Long, text: String) = bot.tafs.app.model.ChatMessage(t0.plusSeconds(at), bot.tafs.app.model.ChatMessage.From.taf, text, session = "s1")
+    val asked = said(1, "I'm waiting for you to approve the drive.")
+    val reply = said(62, "I left it on Refunds' Card tab.")
+    val approved = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", drive, bot.tafs.app.kiff.CardAnswer(words = "Approved", atText = t0.plusSeconds(5).toString()))
+    val recap = bot.tafs.app.drive.DriveRecap("dv_1", "s1", "Show where Refunds' daily limit is set", "done", "Coach is done", listOf(bot.tafs.app.drive.DriveStep(t0.plusSeconds(30).toString(), "Opening Refunds")), t0.plusSeconds(60).toString())
+    val order = CoachWords.items(listOf(asked, reply), listOf(approved), listOf(recap)).map {
+      when (it) { is bot.tafs.app.model.ChatItem.Message -> it.message.text; is bot.tafs.app.model.ChatItem.Drive -> "recap"; else -> "card" }
+    }
+    assertEquals(listOf("I'm waiting for you to approve the drive.", "card", "recap", "I left it on Refunds' Card tab."), order)
+  }
+
+  /** A card is placed by what kiff/agents marks it (`waits`), never by its type: tafs cloud marks every card, old ones too. */
+  @Test fun aCardWaitsAsKiffAgentsMarksIt() {
+    fun said(at: Long, text: String) = bot.tafs.app.model.ChatMessage(t0.plusSeconds(at), bot.tafs.app.model.ChatMessage.From.taf, text, session = "s1")
+    val words = said(2, "Read this below.")
+    fun card(json: String) = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", KiffClient.json.decodeFromString<SetupComponent>(json))
+    fun order(json: String) = CoachWords.items(listOf(words), listOf(card(json))).map { (it as? bot.tafs.app.model.ChatItem.Message)?.message?.text ?: "card" }
+    // Marked as waited on: after Coach's words, whatever its type.
+    assertEquals(listOf("Read this below.", "card"), order("""{"type":"notice","id":"n1","waits":"owner","text":"x"}"""))
+    assertEquals(listOf("Read this below.", "card"), order("""{"type":"result","id":"r1","waits":"service"}"""))
+    // Not marked: the run goes on past it, so it's at its own time, whatever its type. The app keeps no list of its own.
+    assertEquals(listOf("card", "Read this below."), order("""{"type":"notice","id":"n1","text":"x"}"""))
+    assertEquals(listOf("card", "Read this below."), order("""{"type":"approval","id":"a1","grant":"g1"}"""))
+  }
+
+  /** Coach's thread reads each drive's end from `items`, apart: one it can't read is left out, never the thread. */
+  @Test fun theThreadReadsItsDrivesEnds() = runTest {
+    val transport = FakeTransport()
+    transport.answer(
+      "GET /v1/tafs/setup_1/conversation", 200,
+      """{"messages":[{"at":"2026-10-28T09:00:00Z","from":"taf","text":"Done.","session":"s1"}],"components":[],
+        "items":[{"type":"message","message":{}},
+                 {"type":"drive","drive":{"id":"dv_1","session":"s1","task":"Run Chargebacks","why":"owner_took_over","words":"You touched the app, so it's yours now","steps":[{"at":"2026-10-28T09:00:30Z","line":"Opening Chargebacks","touched":{"words":"Chargebacks"}}],"at":"2026-10-28T09:01:00Z"}},
+                 {"type":"drive","drive":{"id":"dv_2"}},
+                 {"type":"drive","drive":{"id":"dv_3","at":"not a time"}}]}""",
+    )
+    val thread = bot.tafs.app.kiff.TafsCloud(transport).apply { token = "tok" }.conversation("setup_1")
+    assertEquals(listOf("dv_1"), thread.drives.map { it.id })
+    val recap = thread.drives.single()
+    assertEquals("You touched the app, so it's yours now", recap.words)
+    assertEquals("Chargebacks", recap.steps.single().touched?.words)
+    assertEquals(1, thread.messages.size)
   }
 
   @Test fun aCardsAnswerOutlivesTheCardShownAgainWithoutIt() {

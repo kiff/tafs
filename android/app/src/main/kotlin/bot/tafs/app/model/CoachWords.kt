@@ -294,7 +294,11 @@ object CoachWords {
    */
   fun cardKey(session: String?, id: String): String = "${session.orEmpty()}#$id"
 
-  private val ASKING = setOf("confirm", "questions", "approval", "sign_in", "result", "knob", "drive")
+  /**
+   * Whether the run waits on [c], as kiff/agents marks it (`waits`: owner or service, kiff/tafs#568). tafs cloud puts the mark on
+   * every card, one from before kiff/agents marked them too, so the app keeps no list of its own.
+   */
+  fun waits(c: SetupComponent): Boolean = !c.waits.isNullOrBlank()
 
   /** A plan's one line, as tafs cloud writes it; before it does, the plan's own title. Never counted on the phone. */
   fun planLine(plan: SetupComponent): String = plan.line?.takeIf { it.isNotBlank() } ?: plan.title?.takeIf { it.isNotBlank() } ?: "Plan"
@@ -307,9 +311,9 @@ object CoachWords {
    * after what Coach wrote with it, so its words lead to the card: Coach's messages in the same session after the card, up to
    * the owner's next message. Once answered, it stays after the words that asked for it, and Coach's words after its answer come below it.
    */
-  fun items(messages: List<ChatMessage>, components: List<ShownComponent>): List<ChatItem> {
+  fun items(messages: List<ChatMessage>, components: List<ShownComponent>, drives: List<bot.tafs.app.drive.DriveRecap> = emptyList()): List<ChatItem> {
     fun placedAt(c: ShownComponent): java.time.Instant {
-      if (c.component.type !in ASKING) return c.firstAt
+      if (!waits(c.component)) return c.firstAt
       // An answer with no time (from a tafs cloud before it said): at its own time, as before.
       if (c.answer != null && c.answer.at == null) return c.firstAt
       // After what Coach wrote with it, up to the owner's next message; once answered, up to its answer, so the words Coach
@@ -320,7 +324,9 @@ object CoachWords {
       return after.lastOrNull()?.at ?: c.firstAt
     }
     val placed = messages.map { ChatItem.Message(it) as ChatItem to it.at } +
-      components.filter { it.component.type != "steps" }.map { ChatItem.Card(it, placedAt(it)) as ChatItem to placedAt(it) }
+      components.filter { it.component.type != "steps" }.map { ChatItem.Card(it, placedAt(it)) as ChatItem to placedAt(it) } +
+      // Each drive's end at the time it ended, as tafs cloud keeps it (kiff/tafs#568): Coach's words after it come below.
+      drives.map { ChatItem.Drive(it) as ChatItem to ChatItem.Drive(it).at }
     // A message before a card placed at its time.
     return placed.withIndex().sortedWith(compareBy({ it.value.second }, { it.index })).map { it.value.first }
   }

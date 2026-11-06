@@ -35,6 +35,21 @@ data class DriveEnd(val why: String, val at: String? = null, val words: String? 
 @Serializable
 data class DriveStep(val at: String = "", val line: String = "", val touched: Touched? = null)
 
+/**
+ * A drive's end as Coach's chat has it (kiff/tafs#568): a `drive` item in the thread, written by tafs cloud when the drive
+ * ended, at that time. The request, why it ended in the person's words, and each step from tafs cloud's record.
+ */
+@Serializable
+data class DriveRecap(
+  val id: String,
+  val session: String = "",
+  val task: String = "",
+  val why: String = "",
+  val words: String = "",
+  val steps: List<DriveStep> = emptyList(),
+  val at: String,
+)
+
 /** What a step touched: the words on screen, and the taf whose screen it was. */
 @Serializable
 data class Touched(val words: String, val taf: String? = null)

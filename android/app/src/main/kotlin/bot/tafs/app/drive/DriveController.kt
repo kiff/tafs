@@ -154,6 +154,9 @@ class DriveController(
 
   private var job: Job? = null
 
+  /** The person's stop on its way to tafs cloud: its end is in Coach's chat once it lands. */
+  private var stopping: Job? = null
+
   /** The drive tafs cloud just started: follow its stream. A drive already on here is over first. */
   fun begin(drive: DriveInfo) {
     (_state.value as? DriveState.On)?.let { end(it.drive, "replaced", null) }
@@ -168,8 +171,13 @@ class DriveController(
   fun stop(why: String): Boolean {
     val on = _state.value as? DriveState.On ?: return false
     end(on.drive, why, null)
-    scope.launch(NonCancellable) { runCatching { api.stopDrive(on.drive.id, why) } }
+    stopping = scope.launch(NonCancellable) { runCatching { api.stopDrive(on.drive.id, why) } }
     return true
+  }
+
+  /** Waits for the person's stop to reach tafs cloud, if one is on its way: then the drive's end is in Coach's chat. */
+  suspend fun settled() {
+    stopping?.join()
   }
 
   /** The ended drive is read: back to no drive. */
@@ -277,10 +285,6 @@ class DriveController(
     // An answer that doesn't arrive is Coach's to notice: it looks again.
     runCatching { api.driveAnswer(drive.id, request.id, answer) }
   }
-
-  /** The steps of the drive just ended, for the "What I did" card: tafs cloud's record of them. */
-  suspend fun steps(drive: String): List<DriveStep> =
-    runCatching { api.readDrive() }.getOrNull()?.takeIf { it.drive?.id == drive }?.steps.orEmpty()
 }
 
 /** The app's own words in a drive (docs/drive.md, "The app's lines"), the same on iOS. */
@@ -354,5 +358,3 @@ class DriveHostProxy : DriveHost {
   }
 }
 
-/** A drive that ended, for the "What I did" card: the request, why it ended, and tafs cloud's record of its steps. */
-data class DoneDrive(val task: String, val words: String, val steps: List<DriveStep>)

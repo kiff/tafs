@@ -131,8 +131,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   val rows = remember(items, knocks) { Chat.withKnocks(items, knocks) }
   val live = state.chatLive[tafId]
   // Coach's lines and a drive's "What I did" card sit under the thread: rows too, so the thread's end is after them.
-  val driveDone = if (tafId == COACH_CHAT) state.driveDone else null
-  val extras = (if (tafId == COACH_CHAT && state.coachLines.isNotEmpty()) 1 else 0) + (if (driveDone != null) 1 else 0)
+  val extras = if (tafId == COACH_CHAT && state.coachLines.isNotEmpty()) 1 else 0
   val total = rows.size + extras + (if (thinking || live != null) 1 else 0)
   // Read again when the thread changes.
   LaunchedEffect(items.size, showKnocks) { if (showKnocks) actions.doors.load(tafId) }
@@ -164,8 +163,9 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   }
   // A new item at the end: the thread glides to it.
   LaunchedEffect(total, rows.lastOrNull()?.key) { toEnd(animated = true) }
-  // A drive that just ended: its "What I did" card comes into view, whatever was read back before (docs/drive.md).
-  LaunchedEffect(driveDone) { if (driveDone != null) { following = true; toEnd(animated = true) } }
+  // A drive that just ended: its end comes into view in the thread, whatever was read back before (docs/drive.md).
+  val lastDrive = if (tafId == COACH_CHAT) state.coachDrives.lastOrNull()?.id else null
+  LaunchedEffect(lastDrive) { if (lastDrive != null && opened) { following = true; toEnd(animated = true) } }
   // The answer growing in its own row, a few words at a time: kept at its end without an animation. An animation started on
   // every word was cut off by the next before it finished, and the thread jumped about while Coach wrote.
   LaunchedEffect(thinking, live?.text?.length, live?.steps?.size, live?.state) { toEnd(animated = false) }
@@ -229,14 +229,13 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                 is ChatItem.Held -> HeldCallCard(item.call, state, actions.answer)
                 is ChatItem.Outcome -> OutcomeLine(Chat.outcomeText(item.entry), outcomeTone(item.entry.kind), outcomeMark(item.entry.kind))
                 is ChatItem.Card -> CoachCard(item.shown, state, actions.coach)
+                is ChatItem.Drive -> DriveRecapCard(item.recap)
               }
             }
           }
         }
         // News of the tasks Coach handed tafs, until Coach reads it: what came while the owner was away, together.
         if (tafId == COACH_CHAT && state.coachLines.isNotEmpty()) item(key = "coach-lines") { CoachLines(state.coachLines) }
-        // A drive that just ended: what Coach did, from tafs cloud's record (docs/drive.md).
-        driveDone?.let { done -> item(key = "drive-done") { DriveDoneCard(done, actions.coach.closeDriveDone) } }
         // The answer as it's written, under the work that led to it (docs/chat.md, the work block); the dots until it begins.
         // One row with one key: when the answer takes the dots' place, the list keeps it where it is rather than dropping one
         // row and adding another at its end, which moved the thread back.

@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **The apps draw a drive's end where Coach's thread puts it, and place a card by its `waits` (kiff/tafs#568, the apps' side).** Both apps read the thread's `drive` items and show each "What I did" at the time the drive ended: after the drive's card, before what Coach writes next. Their own card after the list, with its Close, is gone. When a drive ends, the app reads Coach's thread again; on Android, once the stop call has landed. A card goes after Coach's words written with it, up to the owner's next message or its answer, only when it carries `waits`. Every other card stays at its own time. tafs cloud marks every card, old ones too, so the apps keep no list of card types of their own.
 - **Setting up a taf from a recipe: fewer consents, and nothing promised the connection or the Card can't do** (kiff/tafs#476, from "Chase overdue invoices" on Android 35). Coach's skills connect-an-app@3, draft-the-card@2, name-the-tools@5 and set-up-a-taf@3:
   - **Only what a connection can do:** Coach checks the vendor has an operation before offering it, and says so, and why, when an answer can't be met.
   - **One approval for Setup's reads:** the accounts list and the operations' field list go in the first connection request. The connection's approval and sign-in cover them, with no question of their own and no second fingerprint.

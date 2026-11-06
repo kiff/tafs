@@ -187,6 +187,12 @@ sealed interface ChatItem {
   data class Card(val shown: bot.tafs.app.kiff.ShownComponent, override val at: Instant) : ChatItem {
     override val id get() = "c|" + shown.ref
   }
+
+  /** A drive's end in Coach's chat, at the time it ended: what Coach did (kiff/tafs#568). */
+  data class Drive(val recap: bot.tafs.app.drive.DriveRecap) : ChatItem {
+    override val id get() = "d|" + recap.id
+    override val at: Instant get() = Instant.parse(recap.at)
+  }
 }
 
 object Chat {

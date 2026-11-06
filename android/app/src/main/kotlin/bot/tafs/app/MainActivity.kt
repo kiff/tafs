@@ -522,7 +522,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         loadKnob = model::loadKnob,
         confirmKnob = model::confirmKnobChange,
         approveDrive = model::approveDrive,
-        closeDriveDone = model::closeDriveDone,
       ),
     )
   }
