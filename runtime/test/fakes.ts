@@ -351,6 +351,11 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}${at.skills?.length ? ` skills=${at.skills.join(",")}` : ""}`);
       failing("startRun");
       if (!agents.has(k(tenant, agent))) throw gone();
+      // A new session's skills are the definition's, by name and version, as kiff/agents checks them (skill_not_named).
+      if (at.skills?.length && !at.session) {
+        const named = new Set((agents.get(k(tenant, agent))!.skills ?? []).map((s) => `${s.name}@${s.version}`));
+        for (const ref of at.skills) if (!named.has(ref)) throw new AgentsError(400, `registry: the definition doesn't name that skill: ${ref}`);
+      }
       fairUse(tenant, ai);
       // A run grant names its person, as kiff/agents resolves it with KIFF: here "krg_<subject>".
       if (at.grant) at = { ...at, requester: { kind: "member", id: at.grant.replace(/^krg_/, "") } };
