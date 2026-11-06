@@ -178,6 +178,12 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const resumed = ev(3, "usage", { timing: { ms: 900, resumed: true } });
     expect([...preToolLines([say(1, "Falta que lo apruebes para seguir."), ev(2, "tool_call"), resumed, say(4, "Conectado.")])]).toEqual([]);
     expect([...preToolLines([say(1, "Miro la cuenta…"), ev(2, "tool_call"), ev(3, "usage", { timing: { ms: 900 } }), say(4, "Conectado.")])]).toEqual(["r1.1"]);
+    // The owner's answer to a card (the connection's approval) before the run writes again, with no turn marked
+    // resumed between: it waited on them, so a short waiting line stays in the thread (Eval 42177781403's
+    // "Falta que apruebes la conexión…", kiff/agents#347).
+    const waited = "Falta que apruebes la conexión con tu proveedor de pagos.";
+    const answered = ev(4, "answered", { id: "conectar", type: "approval" });
+    expect([...preToolLines([say(1, waited), ev(2, "tool_call"), ev(3, "tool_result"), answered, ev(5, "usage", { timing: { ms: 700 } }), say(6, "Falta que elijas el modo.")])]).toEqual([]);
   });
 
   it("sends a one-line text its call follows as the answer when the run ends with nothing after it", async () => {
