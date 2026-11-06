@@ -182,12 +182,11 @@ struct SetupThread: Equatable {
         return sorted.filter { seen.insert($0.id).inserted }
     }
 
-    private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result, .drive]
     private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .drive]
 
-    /// Whether the run waits on a card: as kiff/agents says (`waits`), else, for a card from before it says,
-    /// by its type.
-    static func waits(_ c: SetupComponent) -> Bool { c.waits != nil || asking.contains(c.type) }
+    /// Whether the run waits on a card, as kiff/agents marks it (`waits`: owner or service, kiff/tafs#568). tafs cloud
+    /// puts the mark on every card, one from before kiff/agents marked them too, so the app keeps no list of its own.
+    static func waits(_ c: SetupComponent) -> Bool { !(c.waits ?? "").isEmpty }
 
     private func placedAt(_ c: ShownComponent) -> Date {
         guard Self.waits(c.component) else { return c.firstAt }

@@ -50,7 +50,7 @@ final class DriveRecapTests: XCTestCase {
         XCTAssertLessThan(card, try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[2].id)), "and before the owner's answer")
     }
 
-    /// Without `waits`, a card whose type doesn't ask stays at its own time.
+    /// Without `waits`, a card stays at its own time.
     func testACardWithoutWaitsStaysAtItsTime() throws {
         var thread = SetupThread()
         thread.messages = [
@@ -61,6 +61,10 @@ final class DriveRecapTests: XCTestCase {
         XCTAssertNil(thread.components.first?.component.waits)
         let order = thread.items.map(\.id)
         XCTAssertLessThan(try XCTUnwrap(order.firstIndex(of: "c|s1#dial")), try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[1].id)))
+        // Whatever its type: tafs cloud marks every card, old ones too, so the app keeps no list of its own.
+        thread.components = [try shown(#"{"type":"approval","id":"connect","grant":"g_01"}"#, 2)]
+        let approval = thread.items.map(\.id)
+        XCTAssertLessThan(try XCTUnwrap(approval.firstIndex(of: "c|s1#connect")), try XCTUnwrap(approval.firstIndex(of: "m|" + thread.messages[1].id)))
     }
 
     /// The thread's `drive` items are read; one the app can't read is left out, never the thread.

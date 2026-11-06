@@ -295,13 +295,10 @@ object CoachWords {
   fun cardKey(session: String?, id: String): String = "${session.orEmpty()}#$id"
 
   /**
-   * Whether the run waits on [c]: as kiff/agents marks it (`waits`, kiff/tafs#568), owner or service. A card recorded before
-   * kiff/agents marked them has no mark, and is read by its type, as the app did then.
+   * Whether the run waits on [c], as kiff/agents marks it (`waits`: owner or service, kiff/tafs#568). tafs cloud puts the mark on
+   * every card, one from before kiff/agents marked them too, so the app keeps no list of its own.
    */
-  fun waits(c: SetupComponent): Boolean = c.waits?.let { it.isNotBlank() } ?: (c.type in ASKING)
-
-  /** The types that waited before kiff/agents marked its cards: only for a card with no `waits`. */
-  private val ASKING = setOf("confirm", "questions", "approval", "sign_in", "result", "knob", "drive")
+  fun waits(c: SetupComponent): Boolean = !c.waits.isNullOrBlank()
 
   /** A plan's one line, as tafs cloud writes it; before it does, the plan's own title. Never counted on the phone. */
   fun planLine(plan: SetupComponent): String = plan.line?.takeIf { it.isNotBlank() } ?: plan.title?.takeIf { it.isNotBlank() } ?: "Plan"

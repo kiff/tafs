@@ -37,6 +37,10 @@ export const DRIVE = {
   textMax: 2_000,
   /** The steps kept for the "What I did" card. */
   stepsKept: 200,
+  /** How long a drive's end stays in Coach's chat (its recap): as long as the chat's own messages are kept. */
+  recapKeptMs: 30 * 24 * 3600_000,
+  /** The recaps a chat keeps, newest last. */
+  recapsKept: 50,
 } as const;
 
 /** Why a drive ended, as the app or tafs cloud says it. */
@@ -149,7 +153,27 @@ export const driveKeys = {
   request: (tenant: string, drive: string, request: string) => `${tenant}#drive-rq#${drive}#${request}`,
   result: (tenant: string, drive: string, request: string) => `${tenant}#drive-r#${drive}#${request}`,
   steps: (tenant: string, drive: string) => `${tenant}#drive-steps#${drive}`,
+  /** A drive's end as Coach's chat shows it (DriveRecap), written once, when it ends. */
+  recap: (tenant: string, drive: string) => `${tenant}#drive-recap#${drive}`,
+  /** The drives a Coach chat had, by id, in the order they ended: where its thread finds their recaps. */
+  recaps: (tenant: string, session: string) => `${tenant}#drive-recaps#${session}`,
 };
+
+/**
+ * A drive's end as a message in Coach's chat (kiff/tafs#568), written by tafs cloud when the drive
+ * ends, at that time: the request, why it ended, in the person's words and Coach's, and the steps
+ * from the drive's record. It's kept with the chat, so both apps draw it in place, by its time.
+ */
+export interface DriveRecap {
+  id: string;
+  session: string;
+  task: string;
+  why: EndWhy;
+  /** Why, in the person's words (END_SAID). */
+  words: string;
+  steps: Step[];
+  at: string;
+}
 
 const kept = (now: Date) => new Date(now.getTime() + DRIVE.keptMs);
 const str = (v: unknown) => (typeof v === "string" ? v : undefined);
@@ -199,7 +223,21 @@ export async function endDrive(store: CoachStore, tenant: string, person: string
   if (!d || d.ended || (id && d.id !== id)) return d;
   const ended: Drive = { ...d, ended: { why, at: now.toISOString() } };
   await store.put(driveKeys.drive(tenant, person), ended, kept(now));
+  // Its end, in Coach's chat, once: only the end that wrote the record writes it.
+  const recap: DriveRecap = { id: d.id, session: d.session, task: d.task, why, words: END_SAID[why], steps: await driveSteps(store, tenant, d.id), at: now.toISOString() };
+  const until = new Date(now.getTime() + DRIVE.recapKeptMs);
+  await store.put(driveKeys.recap(tenant, d.id), recap, until);
+  await store.append(driveKeys.recaps(tenant, d.session), d.id, until);
   return ended;
+}
+
+/** The ends of the drives a Coach chat had, oldest first: what its thread shows, at their times. */
+export async function driveRecaps(store: CoachStore, tenant: string, session: string): Promise<DriveRecap[]> {
+  const ids = (await store.get(driveKeys.recaps(tenant, session))) as unknown[] | undefined;
+  if (!Array.isArray(ids)) return [];
+  const picked = [...new Set(ids.filter((x): x is string => typeof x === "string"))].slice(-DRIVE.recapsKept);
+  const read = await Promise.all(picked.map((id) => store.get(driveKeys.recap(tenant, id)) as Promise<DriveRecap | undefined>));
+  return read.filter((r): r is DriveRecap => !!r && r.session === session);
 }
 
 /** Why, from the phone's words: one of END_WHY. */
@@ -373,8 +411,27 @@ export async function putResult(store: CoachStore, tenant: string, person: strin
   if (sent.tool !== "app_act" || r.outcome !== "done") return { result: r, drive: d };
   if (sent.action === "done") return { result: r, drive: d, ended: await endDrive(store, tenant, person, "done", now, d.id) };
   const step: Step = { at: now.toISOString(), line: sent.line ?? "", ...(r.touched ? { touched: r.touched } : {}) };
-  await store.append(driveKeys.steps(tenant, d.id), step, kept(now));
+  // A step again under the same caption ("Looking for Versions", then again on the next screen) is
+  // the same step gone on: one line in the record (kiff/tafs#568), which keeps every touch of it,
+  // in order ("Setup, Card"): the record says what was done, never less (qa-kiff on #569).
+  const steps = await driveSteps(store, tenant, d.id);
+  const last = steps.at(-1);
+  if (last && last.line === step.line) {
+    await store.put(driveKeys.steps(tenant, d.id), [...steps.slice(0, -1), sameStep(last, step)], kept(now));
+  } else {
+    await store.append(driveKeys.steps(tenant, d.id), step, kept(now));
+  }
   return { result: r, drive: d, step };
+}
+
+/** A step gone on under the same caption: the later time, and every touch of both, in order, once each. */
+function sameStep(before: Step, after: Step): Step {
+  const words = [...(before.touched?.words.split(", ") ?? []), ...(after.touched ? [after.touched.words] : [])];
+  const once = [...new Set(words.filter((w) => w))];
+  const tafs = new Set([before.touched?.taf, after.touched?.taf].filter((t) => t !== undefined));
+  const out: Step = { at: after.at, line: after.line };
+  if (once.length) out.touched = { words: once.join(", "), ...(tafs.size === 1 ? { taf: [...tafs][0]! } : {}) };
+  return out;
 }
 
 export interface Step { at: string; line: string; touched?: { words: string; taf?: string } }

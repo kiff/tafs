@@ -20,7 +20,7 @@ A drive is the owner's, one request at a time. Show a drive card, `show {type: "
 3. **Wait when the app is busy.** `app_look {wait: "screen_shown"}` (or `sheet_opened`, `refreshed`) instead of looking again and again.
 4. **Stop at the owner's steps.** A fingerprint, Face ID, an approval, Approve, Disconnect, Remove, Halt and resume, a purchase, the answer to "Did this happen?": these are the owner's. The app refuses your touch on them. Stop there, and say where it is: "Approve it when you're ready: the Approve button at the bottom." A vendor's sign-in in the browser is theirs too.
 5. **When it doesn't work,** `app_look {diagnostics: true}` gives the app's recent errors in its own words. Say what failed and why, not only that it did.
-6. **End it.** When the task is done, `app_act {action: "done", line: "Done"}`. Then say in one or two lines what you did. The app shows the steps from its own record.
+6. **End it.** When the task is done, `app_act {action: "done", line: "Done"}`. Then say in one or two lines what you did, and where you left the app: "I left it on Save Cancels' Versions." Never what's on screen now: once the drive ends the app is the owner's, and you no longer see it. The chat shows the steps from tafs's own record.
 
 ## The drive ends on its own
 
@@ -32,7 +32,7 @@ The drive ends, and every later call says so, when:
 - the phone locks, or the account is halted;
 - nothing is done for 15 minutes.
 
-Then say where you got to, in one line, and that they can ask you to go on. Never start a new drive by yourself.
+Then say, in one line, where you got to and where you left the app ("I left it on Refunds' Card"), never what's on screen now, and that they can ask you to go on. Never start a new drive by yourself.
 
 ## Never
 

@@ -138,7 +138,7 @@ class CoachTest {
 
   private val plan = """{"type":"steps","id":"plan","title":"Plan","steps":[{"label":"Connect Stripe","status":"done"},{"label":"Draft the Card","status":"active"},{"label":"Start the taf","status":"pending"}]}"""
   private val notice = """{"type":"notice","id":"n1","title":"Heads up","text":"Test mode only.","tone":"warning"}"""
-  private val confirm = """{"type":"confirm","id":"c1","title":"Refund up to?","text":"Pick one.","options":[{"value":"50","label":"50 a refund"},{"value":"100","label":"100 a refund"}]}"""
+  private val confirm = """{"type":"confirm","id":"c1","waits":"owner","title":"Refund up to?","text":"Pick one.","options":[{"value":"50","label":"50 a refund"},{"value":"100","label":"100 a refund"}]}"""
   private val questions = """{"type":"questions","id":"q1","title":"A few questions","questions":[
       {"id":"mode","text":"Which mode?","options":[{"value":"test","label":"Test mode"},{"value":"live","label":"Live"}]},
       {"id":"which","text":"Which refunds?","multi":true,"options":[{"value":"small","label":"Small"},{"value":"big","label":"Big"}]}]}"""

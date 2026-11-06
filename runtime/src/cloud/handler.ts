@@ -26,7 +26,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_SAID, END_WORDS, putResult, startDrive } from "./drive.js";
+import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_SAID, END_WORDS, putResult, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -827,17 +827,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles);
+    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, sessions, usage } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -1935,7 +1935,7 @@ export interface ThreadUsage {
   cost_micro_usd: number;
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; sessions: Session[]; usage?: ThreadUsage }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -2109,7 +2109,12 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
   held.sort((a, b) => a.at.localeCompare(b.at));
-  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
+  // Coach's drives' ends, in its chats, at their times (kiff/tafs#568): tafs cloud's record, never the model's.
+  const drives = taf.job === SETUP_JOB && deps.coach
+    ? (await Promise.all(picked.filter((x) => x.kind === "chat").map((x) => driveRecaps(deps.coach!, me.tenantID, x.id).catch(() => [])))).flat()
+    : [];
+  drives.sort((a, b) => a.at.localeCompare(b.at));
+  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -2117,8 +2122,15 @@ function sameOwnerMessage(messages: ThreadMessage[], session: string, at: string
   return messages.find((m) => m.from === "owner" && m.session === session && m.at === at && m.text === text);
 }
 
-/** One entry of the thread in order: a message, or a card at its place. */
-export type ThreadItem = { type: "message"; message: ThreadMessage } | { type: "card"; card: ThreadComponent } | { type: "held"; held: ThreadHeld };
+/** One entry of the thread in order: a message, a card at its place, a held call, or a drive's end. */
+export type ThreadItem = { type: "message"; message: ThreadMessage } | { type: "card"; card: ThreadComponent } | { type: "held"; held: ThreadHeld } | { type: "drive"; drive: ThreadDrive };
+
+/**
+ * A drive's end, as a message in Coach's chat at the time it ended (kiff/tafs#568): the request,
+ * why it ended (`words`, the person's), and the steps from the drive's record. Both apps draw it
+ * where the thread puts it, with no card of their own after the thread.
+ */
+export type ThreadDrive = DriveRecap;
 
 /**
  * A call KIFF held for the owner, at its place in the thread: only KIFF's keys for
@@ -2137,7 +2149,7 @@ export interface ThreadHeld {
  * time, a card shown again (the same id in the same chat) replacing its earlier version in place, at
  * the time it first appeared.
  */
-export function threadItems(messages: ThreadMessage[], components: ThreadComponent[], held: ThreadHeld[] = []): ThreadItem[] {
+export function threadItems(messages: ThreadMessage[], components: ThreadComponent[], held: ThreadHeld[] = [], drives: ThreadDrive[] = []): ThreadItem[] {
   const cards = new Map<string, ThreadComponent & { first: string }>();
   // How many cards each id has named in a chat: Coach's model names its cards, and may name two the same.
   const named = new Map<string, number>();
@@ -2158,8 +2170,26 @@ export function threadItems(messages: ThreadMessage[], components: ThreadCompone
   messages.forEach((m, i) => items.push({ at: m.at, order: i, item: { type: "message", message: m } }));
   [...cards.values()].forEach(({ first, ...c }, i) => items.push({ at: first, order: messages.length + i, item: { type: "card", card: c } }));
   held.forEach((h, i) => items.push({ at: h.at, order: messages.length + cards.size + i, item: { type: "held", held: h } }));
+  drives.forEach((d, i) => items.push({ at: d.at, order: messages.length + cards.size + held.length + i, item: { type: "drive", drive: d } }));
   return items.sort((a, b) => a.at.localeCompare(b.at) || a.order - b.order).map((x) => x.item);
 }
+
+/**
+ * Who a card's run waits on, as kiff/agents marks it (`waits`: "owner", "service"), or "" for a card the
+ * run goes on past (kiff/tafs#568). A component with no `waits` key at all is from before kiff/agents
+ * marked them (kiff/agents#351): it's read by its type, as kiff/agents' lists were then, so a thread
+ * from before, and a live line before that change is deployed, read the same (qa-kiff on #569).
+ */
+export function waitsOf(component: unknown): string {
+  const c = component as { waits?: unknown; type?: unknown } | null | undefined;
+  if (!c || typeof c !== "object") return "";
+  if ("waits" in c) return typeof c.waits === "string" ? c.waits : "";
+  if (c.type === "result") return "service";
+  return typeof c.type === "string" && UNMARKED_OWNER.has(c.type) ? "owner" : "";
+}
+
+/** The cards kiff/agents' runs waited on the person for before it marked them (show.Answerable less ByService). */
+const UNMARKED_OWNER = new Set(["confirm", "questions", "approval", "sign_in", "drive"]);
 
 /**
  * A plan (a `steps` component) with its one-line form, `line`: "Step 3 of 6 · Your rules", the step
@@ -2167,7 +2197,9 @@ export function threadItems(messages: ThreadMessage[], components: ThreadCompone
  * counting of its own. Any other component is as it came.
  */
 export function withLine(component: unknown): unknown {
-  const c = component as { type?: unknown; steps?: unknown } | null | undefined;
+  const c = component as { type?: unknown; steps?: unknown; waits?: unknown } | null | undefined;
+  // A card from before kiff/agents marked who it waits on gets the mark here, so an app reads `waits` on every card.
+  if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) });
   if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
   const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
   const n = steps.length;
@@ -2858,9 +2890,9 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const open = await openTrialOf(me, taf, deps);
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
     const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, sessions } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, drives, sessions } = await conversation(me, taf, deps, only, false, titles);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
   await needTaf(event, me, taf, deps);
   const token = bearer(event);
@@ -3834,6 +3866,52 @@ export interface StreamResult {
   body: AsyncIterable<string>;
 }
 
+/** Whether this process has streamed a message: the first one is cold. */
+let streamedOnce = false;
+
+/**
+ * Where a streamed message's wait goes (kiff-cloud#1487's latency hunt): each step before its run
+ * starts, in milliseconds, then the run's first event from kiff/agents, the first words sent to the
+ * phone (its text, or Coach's note on the line) and the end. One log line per message, numbers only:
+ * never a body, an id or a word.
+ */
+export class StreamTiming {
+  private readonly began = Date.now();
+  private last = this.began;
+  private readonly steps: Array<[string, number]> = [];
+  readonly cold = !streamedOnce;
+  constructor(private readonly log: (line: string) => void = console.log) {
+    streamedOnce = true;
+  }
+
+  /** The step that ended now. */
+  mark(step: string): void {
+    const t = Date.now();
+    this.steps.push([step, t - this.last]);
+    this.last = t;
+  }
+
+  /** The stream's body, as sent, timed: its first words and its end, then the log line. */
+  async *watch(body: AsyncIterable<string>): AsyncGenerator<string> {
+    let words: number | undefined;
+    let whole = false;
+    try {
+      for await (const chunk of body) {
+        if (words === undefined && (chunk.includes("event: text\n") || /event: state\ndata: \{[^\n]*"words":/.test(chunk))) words = Date.now() - this.began;
+        yield chunk;
+      }
+      whole = true;
+    } finally {
+      const line: Record<string, unknown> = { event: "stream", cold: this.cold };
+      for (const [step, ms] of this.steps) line[`${step}_ms`] = ms;
+      line.first_words_ms = words ?? null;
+      line.end_ms = Date.now() - this.began;
+      line.whole = whole;
+      this.log(JSON.stringify(line));
+    }
+  }
+}
+
 /**
  * POST /v1/tafs/{id}/messages/stream: the owner's message, as `messages`
  * takes it (the same checks, flood guard and chat), with its run held in the
@@ -3883,13 +3961,18 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     if (!(method === "POST" && parts.length === 5 && parts[0] === "v1" && parts[1] === "tafs" && parts[3] === "messages" && parts[4] === "stream")) {
       throw new HTTPError(404, "not found");
     }
+    const timing = new StreamTiming();
     const me = await person(event, deps);
+    timing.mark("person");
     const taf = await owned(me, parts[2] ?? "", deps);
+    timing.mark("taf");
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
     const answered = await oldFormAnswer(event, me, taf, owner, deps);
     if (answered) return answeredStream(me, taf, answered, deps, await titlesOf(event, me, taf, deps));
+    timing.mark("answer");
     const lines = await takeCoachLines(me, taf, deps);
+    timing.mark("lines");
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
     let at: RunAt;
@@ -3897,6 +3980,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     try {
       const text = lines.text(owner);
       const [chosen, ai, known] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps), titlesOf(event, me, taf, deps)]);
+      timing.mark("chat");
       at = chosen;
       titles = known;
       if (attached.length) at.attachments = attached;
@@ -3905,8 +3989,10 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
         // handed over by tafs cloud with no phone needed (handOver).
         const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
         const input = await withCoachSkills(me, taf, at, text, event, deps);
+        timing.mark("skills");
         run = deps.agents.streamRun(me.tenantID, taf.id, input, at, ai, notify);
         first = await run.next();
+        timing.mark("first_event");
       } catch (err) {
         throw agentsFailure(err);
       }
@@ -3915,7 +4001,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       await lines.putBack();
       throw err;
     }
-    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at, titles, Date.now, whyKeeper(me, deps)) };
+    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps))) };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
     if (status === 500) console.error(err);
@@ -4158,9 +4244,6 @@ export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; k
   return out;
 }
 
-/** The card types a run waits on the person for: while one shows, the line says it waits for them. */
-const WAITS_FOR_YOU = new Set(["confirm", "questions", "approval", "sign_in"]);
-
 /**
  * The stream's one calm line (`state`): what the taf does now, sent only on a change, and held at
  * least STATE_HOLD_MS so it doesn't flicker. A line the hold kept back goes with the next event
@@ -4346,8 +4429,9 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
       return pace.set(r.state === "held" ? "waiting_for_you" : "thinking");
     }
     if (kind === "component") {
-      const c = (e.event === "event" ? d.body : d.component) as { type?: unknown } | undefined;
-      return typeof c?.type === "string" && WAITS_FOR_YOU.has(c.type) ? pace.set("waiting_for_you") : undefined;
+      // A card the run waits on the person for, as kiff/agents marks it (`waits`, kiff/tafs#568): tafs cloud keeps no
+      // list of its own, which drifted from the apps' (the drive card wasn't in it).
+      return waitsOf(e.event === "event" ? d.body : d.component) === "owner" ? pace.set("waiting_for_you") : undefined;
     }
     return pace.flush();
   };
