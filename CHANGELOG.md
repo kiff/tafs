@@ -5,6 +5,22 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Failures the owner can fix (kiff/tafs#476, gap 10).**
+  - **Activity says why.** A refused call shows the words KIFF recorded for it, quoted as the app's: "The app refused it: "Agent Mail refused it (it answered 403): Forbidden."". Before, tafs cloud put the fixed line "The app refused it" in their place.
+  - **And what to do.** A `not_done` row carries `next: {kind, words, tool, taf, message?}`: `reconnect` for a 401 or 403, `ask_coach` (with Coach's first message) for a 404 or a wrong action, and `try_later` for a 429 or a vendor down. The apps draw the buttons.
+  - **Coach reads it too.** `taf_run` lists a run's `calls_not_done`, each with what came of it, the app's words and the next step, from kiff/agents' kept record lines. A new `taf_check` ("Check this taf") gives the latest failed call per tool across the taf's last runs, with no call to any app. It has its own Card, `coach-checks`.
+  - Coach checks a connection with one read before calling it ready, so a refused key is caught at connect (`connect-an-app@4`).
+- **One sign-in per vendor (gap 2).** A new taf reuses the account's sign-in to a vendor it already connects (`reuse`), and the owner approves its tools alone. That held for 3 of 3 recipes today.
+- **Who a taf writes for (gaps 16, 18 and 20), and "Built with tafs".**
+  - A result's `writes_for` (Coach asks once, offering the company's name) names the disclosure: "Written by an AI agent for Kiff Agents OÜ.", or "Written by an AI agent." when no one is named, never "for the company".
+  - "Built with tafs." follows it in messages to people. A disclose entry with `credit: false`, such as Chargebacks' evidence, carries the disclosure alone.
+  - With no name from Coach, a taf on a company account writes for the company's name as KIFF gives it, never a personal account's. The Upgrade gives that name to a taf from before that names no one.
+  - A version built before this one says "for the company". Installing it, or switching back to it, names no one, so the Upgrade still gives the taf the company's name.
+  - Coach sets a mail app's sender name and offers the company's own domain, with its DNS records checked (`draft-the-card@3`).
+- **Settings go to Coach (gap 15).** A taf says a setting change is Coach's, and shows an `ask_coach` card with the owner's request. Its definition shows that card alone.
+- Coach's `the-tafs@2` reads `taf_check` and `calls_not_done`.
+- **Order:** kiff/agents#358 (`credit`, `show_types`, `writes_for`, reasons on record lines) deploys first, since kiff/agents decodes definitions and results strictly. Coach's new skill versions load once the Upgrade names them.
+
 - **Coach's skills at the versions its live definition names (P0 after kiff/tafs#572).** tafs cloud named a new chat's skills, and a tool's add, at `lock.json`'s versions, which change with a deploy, while kiff/agents loads only the versions the account's live Coach definition names, which change with the Upgrade. After #572's deploy, every new setup chat was refused (`skill_not_named`) until the Upgrade. Now each skill is named at the version the live definition names, read from kiff/agents, and one it doesn't name yet is left out. A deploy can't run ahead of the Upgrade. The test fake refuses an unnamed skill as kiff/agents does.
 - **The apps draw a drive's end where Coach's thread puts it, and place a card by its `waits` (kiff/tafs#568, the apps' side).** Both apps read the thread's `drive` items and show each "What I did" at the time the drive ended: after the drive's card, before what Coach writes next. Their own card after the list, with its Close, is gone. When a drive ends, the app reads Coach's thread again; on Android, once the stop call has landed. A card goes after Coach's words written with it, up to the owner's next message or its answer, only when it carries `waits`. Every other card stays at its own time. tafs cloud marks every card, old ones too, so the apps keep no list of card types of their own.
 - **Setting up a taf from a recipe: fewer consents, and nothing promised the connection or the Card can't do** (kiff/tafs#476, from "Chase overdue invoices" on Android 35). Coach's skills connect-an-app@3, draft-the-card@2, name-the-tools@5 and set-up-a-taf@3:

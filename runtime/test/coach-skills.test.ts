@@ -40,7 +40,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@3", "did-this-happen@1", "draft-the-card@2", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@3", "the-dial@1", "the-tafs@1", "usage-and-plans@1"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@4", "did-this-happen@1", "draft-the-card@3", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@3", "the-dial@1", "the-tafs@2", "usage-and-plans@1"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -85,14 +85,17 @@ describe("Coach's core", () => {
   // owner took it (the Eval, 5 Nov): with no app named, the taf's own chat comes first.
   // A new Invoice reminders was connected to Stripe through a provider's live-only app while Chargebacks
   // used Stripe's own sign-in, in test (5 Nov): for a vendor the account already connects, the same kind first.
-  it("offers the kind of connection the account already uses for a vendor first, named with its taf", () => {
+  // Gap 2 (3 of 3 recipes on 6 Nov asked for a new sign-in): the account's own sign-in is reused, so the owner
+  // approves the new taf's tools alone; the same kind anew only when planque refuses the reuse.
+  it("offers the kind of connection the account already uses for a vendor first, named with its taf, by reusing its sign-in", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Before you propose any app, look at the account's connections: the lines after [tafs connections] in the conversation's first message are tafs' data");
     expect(body).toContain("Without them, planque grants with no agent lists the same");
-    expect(body).toContain("For a vendor the account already connects, the first option is that same kind, named with the taf that uses it");
-    expect(body).toContain("Say a mode only as the grant gives it; a mode it doesn't give isn't known.");
-    expect(body).toContain("request {server} for vendor_sign_in, {entry} for provider, {api} for key");
-    expect(body).toContain("Another kind for that vendor comes after, only if the owner picks it");
+    expect(body).toContain("For a vendor the account already connects, the first option is reusing its sign-in, named with the taf that uses it");
+    expect(body).toContain("Say a mode only as the grant gives it.");
+    expect(body).toContain("Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then approves the new taf's tools alone, with no new sign-in or key.");
+    expect(body).toContain("Only if planque refuses the reuse, ask for the same kind: {server}, {entry} or {api}.");
+    expect(body).toContain("Another kind comes only if the owner picks it");
   });
 
   it("offers the taf's chat first when the owner named no app for where the work comes from", () => {
@@ -141,8 +144,8 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@3", "draft-the-card@2", "halting@1", "name-the-tools@5", "set-up-a-taf@3", "usage-and-plans@1"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "connect-an-app@3", "draft-the-card@2", "improve-a-taf@1", "name-the-tools@5"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@4", "draft-the-card@3", "halting@1", "name-the-tools@5", "set-up-a-taf@3", "usage-and-plans@1"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "connect-an-app@4", "draft-the-card@3", "improve-a-taf@1", "name-the-tools@5"]);
   });
 
   it("loads a skill by the tool whose procedure it is, and nothing for a vendor's tool or a tool with none", () => {
@@ -150,7 +153,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     expect(toolSkills("kiff_draft")).toEqual([]);
     expect(toolSkills("catalog")).toEqual([]);
     expect(toolSkills("taf_dial")).toEqual(["the-dial@1"]);
-    expect(toolSkills("taf_task")).toEqual(["the-tafs@1"]);
+    expect(toolSkills("taf_task")).toEqual(["the-tafs@2"]);
     expect(toolSkills("taf_pause")).toEqual(["halting@1"]);
     expect(toolSkills("stripe_refund_k3f9")).toEqual([]);
     expect(toolSkills("show")).toEqual([]);

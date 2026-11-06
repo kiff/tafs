@@ -83,6 +83,7 @@ export class Steps {
       case "kiff_pending": return "Checking what waits for you…";
       case "tafs_state": return "Looking at your tafs…";
       case "taf_run": return "Checking the taf's run…";
+      case "taf_check": return "Checking what's wrong with the taf…";
       case "taf_task": return "Handing the task over…";
       case "run_stop": return "Stopping the run…";
       case "taf_pause": return "Pausing the taf…";

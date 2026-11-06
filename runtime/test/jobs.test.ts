@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { JOBS, jobById, ownJob, systemPrompt } from "../src/jobs.js";
+import { DISCLOSURE_LINE, disclosureLine, JOBS, jobById, OLD_DISCLOSURE_LINE, ownJob, systemPrompt, writesForIn } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 
 describe("jobs", () => {
@@ -14,7 +14,9 @@ describe("jobs", () => {
     expect(own).toEqual({ id: "custom", name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", cron: "",
       instructions: "What this job does: Reminds customers of overdue invoices.\n\nNever change an invoice." });
     const prompt = systemPrompt(own);
-    expect(prompt).toContain("Your job: Invoices.\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
+    expect(prompt).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
+    // Who it writes for, once the owner said (gaps 16 and 18): never "for the company".
+    expect(systemPrompt({ ...own, writesFor: "Kiff Agents OÜ" })).toContain('Your disclosure line: "Written by an AI agent for Kiff Agents OÜ."');
     expect(prompt).toContain("kiff_pending");
     // With nothing drafted but the name, it still says what it is.
     expect(ownJob({ name: "Leads", summary: " ", kickoff: "x" }).instructions).toBe("You do this job for the company: Leads.");
@@ -65,6 +67,15 @@ describe("jobs", () => {
     // had checked the payment. kiff/agents refuses an act beside a read now; this line
     // keeps the taf from paying a turn for it.
     expect(jobById("refunds")!.instructions.replace(/\n/g, " ")).toContain("Look up the payment before asking for a refund: read it with your payment tool (its get or list call) and read its result. That read is the look-up.");
+  });
+
+  // qa-kiff on #574: a version built before gap 18 says "for the company", a placeholder, never a name.
+  it("reads who a disclosure line names, and no one from the line before gap 18", () => {
+    expect(writesForIn(disclosureLine({ writesFor: "Kiff Agents OÜ" }))).toBe("Kiff Agents OÜ");
+    expect(writesForIn(DISCLOSURE_LINE)).toBeUndefined();
+    expect(OLD_DISCLOSURE_LINE).toBe("Written by an AI agent for the company.");
+    expect(writesForIn(OLD_DISCLOSURE_LINE)).toBeUndefined();
+    expect(writesForIn(undefined)).toBeUndefined();
   });
 
   it("has every taf say an AI agent wrote what it sends outside the company", () => {
