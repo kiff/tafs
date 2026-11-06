@@ -131,6 +131,8 @@ private const val TRIAL_SUFFIX = "#trial"
 
 /** Coach's chat id: the account's Setup, drawn as a taf in the chat screen. */
 const val COACH_CHAT = "#coach"
+/** A taf's card that hands a setting to Coach: its words, and a button that opens Coach on the taf with them written in. */
+const val ASK_COACH = "ask_coach"
 
 /** The KIFF agent Coach acts as. */
 const val COACH_AGENT = "setup"
@@ -324,6 +326,8 @@ data class AppState(
   val coachComponents: List<ShownComponent> = emptyList(),
   /** Each drive's end in Coach's chat, at its time, as tafs cloud keeps it (kiff/tafs#568). */
   val coachDrives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
+  /** A taf's own cards in its chat, by taf: its `ask_coach` cards alone, the settings it hands to Coach (kiff/tafs#476, gap 15). */
+  val tafCards: Map<String, List<ShownComponent>> = emptyMap(),
   /** The Coach conversation shown (kiff/tafs#73): one the owner reopened or started here, or null for the latest ones together. */
   val coachChat: String? = null,
   /** The owner asked for a new conversation: the next message starts one. */
@@ -716,6 +720,8 @@ data class AppState(
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }
     items += heldCalls(tafId).map { ChatItem.Held(it) }
+    // The settings it handed to Coach, each at its time (kiff/tafs#476, gap 15).
+    items += tafCards[tafId].orEmpty().map { ChatItem.Card(it, it.firstAt) }
     messages.firstOrNull()?.at?.let { first ->
       // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
       items += entries(tafId).filter {
@@ -2018,6 +2024,7 @@ class AppModel(
         chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
+        tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
         // A taken card is the thread's once it holds its answer.
         cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { it.ref }.toSet() else s.cardsTaken,
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,

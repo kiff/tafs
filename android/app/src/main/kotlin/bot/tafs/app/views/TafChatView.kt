@@ -240,7 +240,9 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                 }
                 is ChatItem.Held -> HeldCallCard(item.call, state, actions.answer)
                 is ChatItem.Outcome -> OutcomeLine(Chat.outcomeText(item.entry), outcomeTone(item.entry.kind), outcomeMark(item.entry.kind))
-                is ChatItem.Card -> CoachCard(item.shown, state, actions.coach)
+                is ChatItem.Card -> if (item.shown.component.type == bot.tafs.app.app.ASK_COACH && tafId != COACH_CHAT) {
+                  AskCoachCard(item.shown.component.text.orEmpty(), if (state.manages(tafId) && state.mayUseCoach) ({ words -> actions.askCoachAbout(tafId, words) }) else null)
+                } else CoachCard(item.shown, state, actions.coach)
                 is ChatItem.Drive -> DriveRecapCard(item.recap)
               }
             }
@@ -643,5 +645,18 @@ private fun NotSentLine(why: String, onRetry: () -> Unit, onEdit: () -> Unit) {
       TextButton(onClick = onEdit) { Text(ChatWords.EDIT, style = scaled(14, color = Theme.soft)) }
       TextButton(onClick = onRetry) { Text(ChatWords.RETRY, style = scaled(14, color = Theme.ink)) }
     }
+  }
+}
+
+/**
+ * A taf's card handing a setting to Coach (kiff/tafs#476, gap 15): the owner's request in the taf's words, and Ask Coach, which opens
+ * Coach on this taf with them in the box to send, as written or changed. Nothing is sent. Someone who can't change the taf reads it alone.
+ */
+@Composable
+private fun AskCoachCard(text: String, ask: ((String) -> Unit)?) {
+  if (text.isBlank()) return
+  bot.tafs.app.design.Panel {
+    Text(text, style = scaled(15, color = Theme.ink))
+    ask?.let { bot.tafs.app.design.OutlineButton(bot.tafs.app.model.ChatWords.ASK_COACH, { it(text) }, Modifier.fillMaxWidth()) }
   }
 }

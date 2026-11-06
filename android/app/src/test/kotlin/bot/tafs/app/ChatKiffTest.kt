@@ -93,6 +93,25 @@ class ChatKiffTest {
     assertEquals("Bearer at_1", request.headers["Authorization"])
   }
 
+  /** A taf hands a setting to Coach with an `ask_coach` card (kiff/tafs#476, gap 15): it's in its chat at its time, and no other card is. */
+  @Test fun aTafsAskCoachCardIsInItsChatAndNoOtherCardIs() = runTest {
+    readsOf()
+    val card = { type: String, id: String, at: String -> """{"at":"$at","session":"s1","run":"r1","component":{"type":"$type","id":"$id","text":"Send them from billing@acme.test"}}""" }
+    transport.answer(conversation, 200,
+      """{"messages":[${owner("send from billing", "2026-10-28T08:00:00Z")},${taf("That's Coach's to change.", "2026-10-28T08:00:05Z")}],
+          "components":[${card("ask_coach", "ask_1", "2026-10-28T08:00:06Z")},${card("notice", "n_1", "2026-10-28T08:00:07Z")}]}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    val items = m.state.value.chatItems("refunds-1")
+    assertEquals(listOf("send from billing", "That's Coach's to change."), items.filterIsInstance<ChatItem.Message>().map { it.message.text })
+    val cards = items.filterIsInstance<ChatItem.Card>()
+    assertEquals(listOf("ask_1"), cards.map { it.shown.component.id })
+    assertEquals("Send them from billing@acme.test", cards.single().shown.component.text)
+    assertTrue("after the taf's words", items.indexOf(cards.single()) > items.indexOfFirst { it is ChatItem.Message && it.message.from == ChatMessage.From.taf })
+    // Coach's own chat keeps its cards apart: none of a taf's.
+    assertTrue(m.state.value.coachComponents.isEmpty())
+  }
+
   @Test fun aRunsKickoffAndWhatATafDidAreKept() = runTest {
     readsOf()
     transport.answer(

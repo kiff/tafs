@@ -5,4 +5,6 @@ object ChatWords {
   const val NOT_SENT = "Not sent"
   const val RETRY = "Retry"
   const val EDIT = "Edit"
+  /** A taf's `ask_coach` card's button (kiff/tafs#476, gap 15). */
+  const val ASK_COACH = "Ask Coach"
 }

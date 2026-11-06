@@ -193,7 +193,7 @@ fun TafDetailView(
       // The thread scrolls on its own, with the field under it.
       TafChatView(taf.id, state, actions, Modifier.weight(1f))
     } else if (section == Section.Activity && state.mode == Mode.kiff && taf.cloudId != null) {
-      TafActivityList(taf, state, actions, activitySelection, { activitySelection = "" }, Modifier.weight(1f))
+      TafActivityList(taf, state, actions, activitySelection, { activitySelection = "" }, Modifier.weight(1f), onConnectApps = onConnectApps)
     } else {
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
