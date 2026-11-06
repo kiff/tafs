@@ -336,15 +336,20 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
   - **A touch** is `MotionEvent`s dispatched to the topmost window under the point, after the hit-test.
   - **Scrolling** is `ScrollBy`.
   - **The border, the caption and the dot** are application windows of their own: the glow and the dot take no touch, and the caption takes only its own. The capture and Coach's touches leave them out.
-- **iOS:** with VoiceOver off, the platform builds no accessibility tree. So the app keeps a registry of what Coach can use: each control registers its id, words, role, frame, actions and marks. That registry is the tree.
+- **iOS:** with VoiceOver off, the platform builds no accessibility tree. So the app keeps a registry of what Coach can use: each control registers its id, words, role, frame, actions and marks (`.drivable`; the app's button styles register every button). That registry is the tree.
   - A gesture runs the registered action of the element under the point:
     - tap: activate;
     - long press: its menu;
     - swipe: a row's action, or a scroll;
     - back: the top sheet's dismiss, or the navigation's pop.
   - A point with no registered action is refused ("Nothing Coach can use there").
-  - A test fails the build on a listed confirming control or a secret field without its mark.
+  - **What isn't in the registry, Coach can't touch.** Alerts, confirmation dialogs, menus, context menus and a row's swipe actions are never registered, so whatever confirms inside them is out of Coach's reach. While one is open, Coach's back is its Cancel. Some settings rows, toggles, pickers and toolbar buttons aren't registered yet, and are refused the same way.
+  - **Text fields** are found on screen by their text views, named by their placeholder. A secure field is secret.
+  - **Words:** a control that registered none is read from the screenshot.
+  - **A test fails the build** on a listed confirming control without its mark, and on any control whose words confirm without it, string constants included.
   - The overlay window draws the border, the caption and the dot, and the capture leaves it out.
+  - **Locking:** iOS doesn't say a lock apart from leaving the app. When the app resigns active, it reports `locked` if protected data is unavailable within 0.6 s, and `left_app` otherwise. A real lock may read as `left_app`; either way the drive ends.
+  - **iOS has no approval window,** so the signer's drive rule there is Face ID or Touch ID on every approval, with no reuse of a recent unlock.
 
 ### What the app reports, and when it starts
 
