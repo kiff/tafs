@@ -173,7 +173,7 @@ fun ConnectAppsSheet(
                 if (onDisconnect != null) Text(
                   ConnectAppsWords.DISCONNECT,
                   style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).clickable { confirmingDisconnect = g }.padding(top = 10.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
             }

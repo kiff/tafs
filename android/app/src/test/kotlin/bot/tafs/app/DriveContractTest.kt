@@ -126,11 +126,18 @@ class DriveContractTest {
       "Text(if (tafId == null) \"Halt all\" else \"Halt\", style = scaled(", // the halt screen's title, and the row that opens it
       "title = { Text(", // a dialog's title, never touched
     )
+    // Words kept as constants count too: `ConnectAppsWords.DISCONNECT` is "Disconnect" wherever it's used.
+    val constant = Regex("""const val (\w+)\s*=\s*("[^"]*")""")
+    val confirmingConstants = files().flatMap { f ->
+      val obj = Regex("""object (\w+)""").find(f.readText())?.groupValues?.get(1)
+      constant.findAll(f.readText()).filter { label.containsMatchIn(it.groupValues[2]) }.mapNotNull { m -> obj?.let { "$it.${m.groupValues[1]}" } }.toList()
+    }.toSet()
+    fun confirming(line: String) = label.containsMatchIn(line) || confirmingConstants.any { Regex("""\b${Regex.escape(it)}\b""").containsMatchIn(line) }
     val unmarked = files().filter { "/drive/" !in it.path }.flatMap { f ->
       val lines = f.readLines()
       lines.indices.filter { i ->
         val line = lines[i]
-        label.containsMatchIn(line) && notConfirming.none { it in line } &&
+        confirming(line) && notConfirming.none { it in line } &&
           touch.containsMatchIn(lines.subList(maxOf(0, i - 4), minOf(lines.size, i + 5)).joinToString("\n")) &&
           "confirms()" !in lines.subList(maxOf(0, i - 4), minOf(lines.size, i + 5)).joinToString("\n") &&
           "ApprovalGate" !in lines.subList(maxOf(0, i - 8), minOf(lines.size, i + 2)).joinToString("\n")

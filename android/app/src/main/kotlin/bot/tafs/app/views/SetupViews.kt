@@ -223,7 +223,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
               Text(
                 SetupWords.APPROVE,
                 style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-                modifier = Modifier.heightIn(min = 44.dp).clickable { approving = e.id }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { approving = e.id }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
               )
             } else if (e.approval?.state == "approved" || e.on) {
               Text(SetupWords.LISTENING, style = scaled(13, FontWeight.SemiBold, Theme.ok))
@@ -262,7 +262,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
               Text(
                 SetupWords.REMOVE,
                 style = scaled(14, FontWeight.SemiBold, Theme.no),
-                modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { work { actions.doors.removeFollowUp(taf.id, fid) } }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = !busy) { work { actions.doors.removeFollowUp(taf.id, fid) } }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
               )
             }
           }
@@ -276,7 +276,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
         OutlineButton(
           if (taf.paused) SetupWords.RESUME_EVERY else SetupWords.PAUSE_EVERY,
           { work { actions.setPaused(taf.id, !taf.paused); actions.doors.loadKnob(taf.id) } },
-          Modifier.fillMaxWidth(),
+          Modifier.fillMaxWidth().confirms(),
           enabled = knob.canPause && !busy,
         )
       }
