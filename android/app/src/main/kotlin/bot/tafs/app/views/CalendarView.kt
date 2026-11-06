@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveDatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -198,7 +199,7 @@ private fun Header(c: Ctx, compact: Boolean) {
     // The picker counts in UTC midnights: the selected date as one, and back, so the day it shows is the day it holds.
     val initial = runCatching { LocalDate.parse(c.state.selected).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }.getOrNull()
     val picker = rememberDatePickerState(initialSelectedDateMillis = initial)
-    DatePickerDialog(
+    DriveDatePicker(
       onDismissRequest = { picking = false },
       confirmButton = {
         TextButton(onClick = {

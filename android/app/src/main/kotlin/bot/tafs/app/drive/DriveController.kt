@@ -296,6 +296,14 @@ object DriveWords {
   const val WENT_BACK = "Went back"
   const val DONE = "Done"
 
+  const val DRIVE_CARD = "Coach asks to drive the app"
+  const val DRIVE_NOTE = "Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app or tap Stop to take over."
+  const val WHAT_I_DID = "What I did"
+  const val NO_STEPS = "Nothing was done."
+
+  /** What the fingerprint prompt says when the person approves a drive. */
+  fun approval(task: String) = "Let Coach drive the app: $task".take(120)
+
   fun tapped(words: String?) = words?.let { "Tapped $it" } ?: "Tapped"
 
   fun longPressed(words: String?) = words?.let { "Long-pressed $it" } ?: "Long-pressed"
@@ -328,3 +336,22 @@ object DriveWords {
     else -> "Coach stopped"
   }
 }
+
+/** The host of the activity on screen now, so the drive outlives no screen: with none, a step is refused and a look has no image. */
+class DriveHostProxy : DriveHost {
+  @Volatile
+  var current: DriveHost? = null
+
+  override suspend fun look(tree: Boolean, diagnostics: Boolean): Look = current?.look(tree, diagnostics) ?: Look(null)
+
+  override suspend fun act(action: Action): Acted = current?.act(action) ?: Acted.refused(DriveWords.NOTHING_THERE)
+
+  override suspend fun await(event: String, timeoutMs: Long): Boolean = DriveSignals.await(event, timeoutMs)
+
+  override fun show(state: DriveState) {
+    current?.show(state)
+  }
+}
+
+/** A drive that ended, for the "What I did" card: the request, why it ended, and tafs cloud's record of its steps. */
+data class DoneDrive(val task: String, val words: String, val steps: List<DriveStep>)

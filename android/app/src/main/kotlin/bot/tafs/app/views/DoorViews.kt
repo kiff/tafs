@@ -1,5 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveAlert
 import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -144,7 +148,7 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
 
   editing?.let { id -> doors.doors.firstOrNull { it.id == id } }?.let { door ->
     @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-    androidx.compose.material3.ModalBottomSheet(
+    DriveSheet(
       onDismissRequest = { editing = null },
       sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
       containerColor = Theme.background,
@@ -179,7 +183,7 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
     }
   }
   removing?.let { d ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { removing = null },
       title = { Text(DoorWords.removeTitle(d)) },
       text = { Text(DoorWords.removeBody(taf.name)) },
@@ -319,7 +323,7 @@ private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, bots: BotPicking,
   // Slack has a step of its own: the taf's Slack bot connection, then a channel it sees. A bot door's (tafs cloud says which) is the bot alone.
   var slackApp by remember { mutableStateOf<DoorApp?>(null) }
   var botApp by remember { mutableStateOf<DoorApp?>(null) }
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -383,7 +387,7 @@ private fun AppSection(title: String, apps: List<DoorApp>, busy: Boolean, onPick
 private fun PairDialog(door: Door, busy: Boolean, onClose: () -> Unit, onPair: (String, String) -> Unit) {
   var sender by remember { mutableStateOf("") }
   var name by remember { mutableStateOf("") }
-  AlertDialog(
+  DriveAlert(
     onDismissRequest = onClose,
     title = { Text("Pair someone") },
     text = {
@@ -393,7 +397,7 @@ private fun PairDialog(door: Door, busy: Boolean, onClose: () -> Unit, onPair: (
         Field(name, { name = it }, "Name (optional)")
       }
     },
-    confirmButton = { TextButton({ onPair(sender, name) }, enabled = sender.isNotBlank() && !busy) { Text("Pair", color = Theme.amber) } },
+    confirmButton = { TextButton({ onPair(sender, name) }, enabled = sender.isNotBlank() && !busy, modifier = Modifier.confirms()) { Text("Pair", color = Theme.amber) } },
     dismissButton = { TextButton(onClose) { Text("Cancel", color = Theme.soft) } },
     containerColor = Theme.panel,
   )
@@ -405,7 +409,7 @@ internal fun Field(value: String, onValue: (String) -> Unit, hint: String, minHe
   val shape = RoundedCornerShape(12.dp)
   BasicTextField(
     value = value,
-    onValueChange = onValue,
+    onValueChange = driveTyped(onValue),
     textStyle = scaled(15, color = Theme.ink),
     cursorBrush = SolidColor(Theme.amber),
     modifier = Modifier.fillMaxWidth().clip(shape).background(Theme.background).border(BorderStroke(1.dp, Theme.line), shape),
@@ -474,7 +478,7 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
 @Composable
 private fun DoItDialog(knock: Knock, tafName: String?, busy: Boolean, onClose: () -> Unit, onSend: (String) -> Unit) {
   var say by remember { mutableStateOf(DoorWords.DO_IT_DEFAULT) }
-  AlertDialog(
+  DriveAlert(
     onDismissRequest = onClose,
     title = { Text(DoorWords.doItTitle(tafName)) },
     text = {

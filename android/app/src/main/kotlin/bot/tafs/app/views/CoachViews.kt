@@ -1,5 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.DriveMenu
+import bot.tafs.app.drive.confirms
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -119,7 +122,7 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
         style = scaled(22, FontWeight.Bold, Theme.amberText),
         modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Coach's conversations") { menu = true }.padding(top = 6.dp, start = 12.dp),
       )
-      androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+      DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
         androidx.compose.material3.DropdownMenuItem(
           text = { Text("Previous conversations", style = scaled(15, color = Theme.ink)) },
           onClick = { menu = false; listing = true },
@@ -222,6 +225,10 @@ class CoachActions(
   /** A taf's dial, read again; and Coach's dial draft made live (the version switch), both by taf id. */
   val loadKnob: suspend (String) -> Unit = {},
   val confirmKnob: suspend (String) -> Boolean = { false },
+  /** Approves a drive card: the approval key, behind the fingerprint, signs the drive's Start (docs/drive.md). */
+  val approveDrive: (SetupComponent) -> Unit = {},
+  /** Closes the "What I did" card. */
+  val closeDriveDone: () -> Unit = {},
 )
 
 /** One of Coach's cards in its thread. What grants authority is read from planque and KIFF, and signed there. */
@@ -241,6 +248,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "approval" -> ApprovalCard(c, state, answered, error, actions)
     "sign_in" -> SignInCard(c, state, answered, error, actions)
     "knob" -> KnobDraftCard(c, state, answered, error, actions)
+    "drive" -> DriveCard(shown, state, answered, error, actions)
     "result" -> if (c.taf?.improves != null) ImprovementCard(shown, state, actions) else HandOverCard(shown, state, actions)
   }
 }
@@ -314,7 +322,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
               if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else if (state.windowWords != null) "Approve" else "Approve with $biometry",
               { actions.approve(c, grant.digest, draft?.version) },
-              Modifier.weight(1f),
+              Modifier.weight(1f).confirms(),
               // With a profile, nothing is approved before KIFF's words for it are read and shown.
               enabled = !busy && (!profiled || words != null),
             )
@@ -432,7 +440,7 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
   val shape = RoundedCornerShape(12.dp)
   BasicTextField(
     value = value,
-    onValueChange = onValue,
+    onValueChange = driveTyped(onValue),
     textStyle = scaled(15, color = Theme.ink),
     cursorBrush = SolidColor(Theme.amber),
     modifier = Modifier.fillMaxWidth().clip(shape).background(Theme.background).border(BorderStroke(1.dp, Theme.line), shape),
@@ -611,7 +619,7 @@ private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?,
             OutlineButton(
               if (busy) "Making it live…" else bot.tafs.app.model.KnobWords.confirmWith(LocalBiometry.current),
               { scope.launch { if (actions.confirmKnob(taf.id)) actions.answer("knob", c.id, "approved") } },
-              Modifier.weight(1f),
+              Modifier.weight(1f).confirms(),
               enabled = !busy,
             )
           }
@@ -620,5 +628,56 @@ private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?,
         Text(bot.tafs.app.model.KnobWords.ONE_CONFIRMATION, style = scaled(12, color = Theme.dim))
       }
     }
+  }
+}
+
+/**
+ * Coach asks to drive the app for one request (docs/drive.md): the request in the person's words, Approve (the approval key, behind
+ * the fingerprint: a driven touch on it is refused, as on every confirming control) and Not now. There's no standing approval:
+ * the next request asks again.
+ */
+@Composable
+private fun DriveCard(shown: ShownComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
+  val c = shown.component
+  val task = (c.text ?: c.title).orEmpty()
+  if (answered != null) {
+    Text("${bot.tafs.app.drive.DriveWords.DRIVE_CARD} · $answered · $task", style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    return
+  }
+  val starting = state.driveStarting == shown.ref
+  Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+    Eyebrow(bot.tafs.app.drive.DriveWords.DRIVE_CARD, Theme.amberText)
+    Text(task, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    Text(bot.tafs.app.drive.DriveWords.DRIVE_NOTE, style = scaled(13, color = Theme.soft))
+    val biometry = LocalBiometry.current
+    val readiness = LocalApprovalReadiness.current
+    if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready) ApprovalsUnavailable(readiness)
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+      if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready) OutlineButton(
+        if (starting) "Approving…" else "Approve with $biometry",
+        { actions.approveDrive(c) },
+        Modifier.weight(1f).confirms(),
+        enabled = state.driveStarting == null,
+      )
+      OutlineButton("Not now", { actions.answer("drive", c.id, "declined") }, Modifier.weight(1f), color = Theme.soft, enabled = !starting)
+    }
+    state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    error?.let { Text(it, style = scaled(13, color = Theme.no)) }
+  }
+}
+
+/** At the end of a drive, Coach's chat opens again with what was done: tafs cloud's record of each step, in a line. */
+@Composable
+fun DriveDoneCard(done: bot.tafs.app.drive.DoneDrive, onClose: () -> Unit) {
+  Panel {
+    Eyebrow(bot.tafs.app.drive.DriveWords.WHAT_I_DID)
+    Text(done.task, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    Text(done.words, style = scaled(13, color = Theme.soft))
+    if (done.steps.isEmpty()) Text(bot.tafs.app.drive.DriveWords.NO_STEPS, style = scaled(13, color = Theme.dim))
+    done.steps.forEach { step ->
+      val what = step.touched?.let { t -> listOfNotNull(t.words, t.taf).joinToString(" · ") }
+      Text("• " + step.line + (what?.let { " · $it" } ?: ""), style = scaled(13, color = Theme.ink))
+    }
+    Text("Close", style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable(onClick = onClose))
   }
 }

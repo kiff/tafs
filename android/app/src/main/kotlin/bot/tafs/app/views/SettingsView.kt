@@ -1,5 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -100,7 +103,7 @@ fun SettingsSheet(
   LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions() } }
   if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
 
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Account", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
@@ -192,16 +195,16 @@ fun SettingsSheet(
       }
     }
   }
-  if (zonePicker) androidx.compose.material3.AlertDialog(
+  if (zonePicker) DriveAlert(
     onDismissRequest = { zonePicker = false }, title = { Text("Time zone") }, containerColor = Theme.panel,
     text = { Column {
-      androidx.compose.material3.OutlinedTextField(zoneQuery, { zoneQuery = it }, label = { Text("Search time zones") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+      androidx.compose.material3.OutlinedTextField(zoneQuery, driveTyped({ zoneQuery = it }), label = { Text("Search time zones") }, singleLine = true, modifier = Modifier.fillMaxWidth())
       LazyColumn(Modifier.heightIn(max = 320.dp)) { items(state.timeZones, key = { it.id }) { zone ->
         TextButton({ zonePicker = false; onPickTimeZone(zone.id) }, Modifier.fillMaxWidth()) { Text(zone.title, color = Theme.ink, modifier = Modifier.fillMaxWidth()) }
       } }
     } }, confirmButton = { TextButton({ zonePicker = false }) { Text("Done", color = Theme.amberText) } },
   )
-  if (answeringTafs) androidx.compose.material3.AlertDialog(onDismissRequest = { answeringTafs = false }, title = { Text(AlertWords.ANSWERED) }, containerColor = Theme.panel,
+  if (answeringTafs) DriveAlert(onDismissRequest = { answeringTafs = false }, title = { Text(AlertWords.ANSWERED) }, containerColor = Theme.panel,
     text = { Column { state.phoneAlerts?.answering?.tafs?.forEach { taf -> TextButton({ answeringTafs = false; onClose(); onOpenAlertTaf(taf.id) }) { Text(taf.name, color = Theme.amberText) } } } },
     confirmButton = { TextButton({ answeringTafs = false }) { Text("Done", color = Theme.amberText) } })
   confirming?.let { way -> ConfirmSignOut(way, { confirming = null }) {
@@ -230,7 +233,7 @@ enum class SignOut(val title: String, val text: String, val confirm: String) {
 /** Asks before this phone signs out of KIFF, so a stray tap never ends the session. Cancel leaves everything as it is. */
 @Composable
 fun ConfirmSignOut(way: SignOut, onDismiss: () -> Unit, onConfirm: () -> Unit) {
-  androidx.compose.material3.AlertDialog(
+  DriveAlert(
     onDismissRequest = onDismiss,
     title = { Text(way.title) },
     text = { Text(way.text) },

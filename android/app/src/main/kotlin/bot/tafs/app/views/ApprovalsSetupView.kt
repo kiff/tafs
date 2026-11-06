@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
@@ -130,5 +131,6 @@ fun ApprovalsUnavailable(readiness: ApprovalReadiness, modifier: Modifier = Modi
 @Composable
 fun ApprovalGate(content: @Composable () -> Unit) {
   val readiness = LocalApprovalReadiness.current
-  if (readiness == ApprovalReadiness.Ready) content() else ApprovalsUnavailable(readiness)
+  // What signs with the approval key confirms: a driven touch on it is refused (docs/drive.md, "Coach never confirms").
+  if (readiness == ApprovalReadiness.Ready) androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.confirms()) { content() } else ApprovalsUnavailable(readiness)
 }

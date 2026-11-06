@@ -60,7 +60,7 @@ object DriveDiagnostics {
     val path = url.substringAfter("://", url).let { if (url.contains("://")) "/" + it.substringAfter('/', "") else it }
       .substringBefore('?').substringBefore('#')
     return path.split('/').joinToString("/") { part ->
-      if (part.isEmpty() || part.matches(Regex("[a-z]+(-[a-z]+)*"))) part else "{id}"
+      if (part.isEmpty() || part.matches(Regex("v[0-9]+|[a-z]+(-[a-z]+)*"))) part else "{id}"
     }
   }
 

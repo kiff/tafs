@@ -1,5 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.model.AnswerWords
 import kotlinx.coroutines.delay
 import androidx.compose.ui.semantics.liveRegion
@@ -99,7 +102,7 @@ fun AnswerWithActions(text: String, onReport: (suspend (String, String?) -> Repo
             .padding(horizontal = 10.dp, vertical = 8.dp),
         )
         // Opening the menu sends nothing: Report opens its sheet, which asks why first.
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+        DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
           DropdownMenuItem(text = { Text(ReportWords.MENU) }, onClick = { menu = false; reporting = true })
         }
       }
@@ -121,7 +124,7 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
   val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
   val focus = androidx.compose.ui.platform.LocalFocusManager.current
 
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -160,7 +163,7 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
       val shape = RoundedCornerShape(14.dp)
       BasicTextField(
         value = note,
-        onValueChange = { note = it.take(ReportWords.NOTE_MAX) },
+        onValueChange = driveTyped({ note = it.take(ReportWords.NOTE_MAX) }),
         enabled = !sending,
         textStyle = scaled(15, color = Theme.ink),
         cursorBrush = SolidColor(Theme.amber),

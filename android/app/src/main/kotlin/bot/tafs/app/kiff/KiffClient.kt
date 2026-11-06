@@ -665,6 +665,7 @@ class KiffClient(
 
     val response = transport.send(HttpRequest(method, url, headers, payload))
     val status = response.status
+    if (status !in 200..299) bot.tafs.app.drive.DriveDiagnostics.failed(method, path, status)
     if (status == 401) throw KiffError.Unauthorized
     if (status !in 200..299) {
       val fields = errorFields(response.body)

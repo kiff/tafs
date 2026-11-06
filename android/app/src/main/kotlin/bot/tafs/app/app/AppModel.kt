@@ -390,6 +390,10 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
+  /** A drive card being approved, by its key: Approve waits for the fingerprint and tafs cloud. */
+  val driveStarting: String? = null,
+  /** The drive that just ended, for the "What I did" card in Coach's chat, until the person closes it. */
+  val driveDone: bot.tafs.app.drive.DoneDrive? = null,
   /**
    * The calendar (kiff/tafs#534): what it shows, kept here so a rotation or a new layout keeps it; the last read, for the selected
    * month's grid; and why it couldn't be read. A new account starts a new state, so another account's events never show.
@@ -793,6 +797,7 @@ class AppModel(
     val token = secrets.load(TOKEN)
     if (token != null) {
       resumeSession(token, secrets.load(TENANT), keyed = secrets.load(KEYED) == "1")
+      endDriveLeftOn()
     } else {
       store?.load()?.let { startSample() }
     }
@@ -1052,6 +1057,8 @@ class AppModel(
     } finally {
       // Read or not, this account's list is no longer loading (KIFF's error shows).
       if (!cancelled && generation == accountGeneration && _state.value.mode == Mode.kiff) _state.update { it.copy(listLoaded = true) }
+      // What Coach waits on after a pull to refresh, while it drives (docs/drive.md).
+      if (!cancelled) bot.tafs.app.drive.DriveSignals.emit("refreshed")
     }
   }
 
@@ -1342,6 +1349,8 @@ class AppModel(
 
   /** Signs out of KIFF, or clears the sample: nothing of either stays on the phone. */
   suspend fun signOut(tellKiff: Boolean = true) {
+    // Signing out ends a drive at once (docs/drive.md, "When a drive ends").
+    drive.stop("signed_out")
     // This phone stops getting the account's alerts, while the session can still say so.
     if (tellKiff && _state.value.mode == Mode.kiff) pushToken?.let { token -> if (alertsWanted()) runCatching { cloud.unregisterPush(token) } }
     if (tellKiff && _state.value.mode == Mode.kiff) runCatching { kiff.signOut() }
@@ -2599,8 +2608,10 @@ class AppModel(
     data class Failed(val why: String, val told: String = why) : Connected
   }
 
-  private fun note(cardId: String, words: String?) =
+  private fun note(cardId: String, words: String?) {
+    words?.let(bot.tafs.app.drive.DriveDiagnostics::error)
     _state.update { it.copy(coachNotes = if (words == null) it.coachNotes - cardId else it.coachNotes + (cardId to words)) }
+  }
 
   /**
    * Reads the grants. A read asks for no confirmation: it is signed with the phone's plain key so planque shows them only to a
@@ -3556,6 +3567,8 @@ class AppModel(
    * windows; the step then signs as it did. Whether the window is open is KIFF's to say, at each call.
    */
   private suspend fun holdWindow(reason: String): Boolean {
+    // While Coach drives, the approval window is suspended: every confirming signature asks for the fingerprint (docs/drive.md).
+    if (drive.on) return false
     if (!sessionHasApprovalKey || kiff.approvalSigner == null) return false
     if (kiff.window != null) return true
     approvalReason = reason
@@ -3834,6 +3847,89 @@ class AppModel(
   /** The owner's answer to one of Coach's cards. */
   fun answerCoach(type: String, id: String, answer: String) {
     viewModelScope.launch { answerCard(type, id, answer) }
+  }
+
+  // MARK: Coach drives the app (docs/drive.md)
+
+  /** The activity on screen gives its windows to the drive; with none, a step is refused. */
+  val driveHost = bot.tafs.app.drive.DriveHostProxy()
+
+  /** The person's drive on this phone: one at a time, never outliving the app. */
+  val drive: bot.tafs.app.drive.DriveController by lazy { bot.tafs.app.drive.DriveController(cloud, driveHost, scope).also { watchDrive(it) } }
+
+  private fun watchDrive(d: bot.tafs.app.drive.DriveController) {
+    scope.launch {
+      d.state.collect { s ->
+        when (s) {
+          is bot.tafs.app.drive.DriveState.On -> bot.tafs.app.drive.DriveInput.turn(true)
+          is bot.tafs.app.drive.DriveState.Over -> {
+            bot.tafs.app.drive.DriveInput.turn(false)
+            // The chat opens again with what was done: tafs cloud's record of the steps, not Coach's memory of them.
+            val steps = d.steps(s.drive.id)
+            _state.update { it.copy(driveDone = bot.tafs.app.drive.DoneDrive(s.drive.task, s.words, steps)) }
+            runCatching { readThread(COACH_CHAT) }
+          }
+          bot.tafs.app.drive.DriveState.Off -> bot.tafs.app.drive.DriveInput.turn(false)
+        }
+      }
+    }
+  }
+
+  /**
+   * Approve on a drive card: the approval key, behind the fingerprint, signs the Start of this one request (docs/drive.md). tafs
+   * cloud starts it only for that key, outside any window; an approval window this phone holds is closed first, as the drive
+   * suspends it. A refusal is said on the card in tafs cloud's words, and nothing starts.
+   */
+  fun approveDrive(c: SetupComponent) {
+    viewModelScope.launch { startDrive(c) }
+  }
+
+  suspend fun startDrive(c: SetupComponent) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null) return
+    val shown = _state.value.coachComponents.lastOrNull { it.id == c.id && it.answer == null } ?: _state.value.coachComponents.lastOrNull { it.id == c.id }
+    val session = shown?.session?.ifEmpty { null } ?: _state.value.coachChat ?: return
+    val key = shown?.ref ?: CoachWords.cardKey(session, c.id)
+    if (_state.value.driveStarting != null) return
+    if (_state.value.approvalKeyLost) { note(c.id, KiffClient.APPROVAL_KEY_LOST); return }
+    val task = (c.text ?: c.title).orEmpty().trim().take(2_000)
+    _state.update { it.copy(driveStarting = key, coachNotes = it.coachNotes - c.id) }
+    val generation = accountGeneration
+    try {
+      if (kiff.window != null) closeWindow()
+      val info = cloud.startDrive(session, task, c.id, tenant) { built -> signer.signApproval(bot.tafs.app.drive.DriveWords.approval(task)) { built() } }
+      if (generation != accountGeneration) return
+      _state.update { it.copy(driveDone = null, cardsTaken = it.cardsTaken + key) }
+      drive.begin(info)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: SignerException) {
+      note(c.id, notSigned(e, "Not started: it wasn't confirmed."))
+    } catch (e: Exception) {
+      note(c.id, "Coach can't drive: ${ErrorWords.of(e)}")
+      bot.tafs.app.drive.DriveDiagnostics.error("Coach can't drive: ${ErrorWords.of(e)}")
+    } finally {
+      _state.update { it.copy(driveStarting = null) }
+    }
+  }
+
+  /** The person ended the drive: their touch, their back, Stop, the Coach button, the app leaving the screen, the lock. */
+  fun stopDrive(why: String) {
+    drive.stop(why)
+  }
+
+  /** The "What I did" card, closed. */
+  fun closeDriveDone() {
+    _state.update { it.copy(driveDone = null) }
+    drive.clear()
+  }
+
+  /** A drive still on after the app restarted outlived it: it ends now, and never resumes (docs/drive.md). */
+  private fun endDriveLeftOn() {
+    scope.launch {
+      val left = runCatching { cloud.readDrive() }.getOrNull()?.drive?.takeIf { it.ended == null } ?: return@launch
+      if (!drive.on) runCatching { cloud.stopDrive(left.id, "left_app") }
+    }
   }
 
   /**

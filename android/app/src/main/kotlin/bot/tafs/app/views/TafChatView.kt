@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.DriveMenu
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -228,6 +230,8 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         }
         // News of the tasks Coach handed tafs, until Coach reads it: what came while the owner was away, together.
         if (tafId == COACH_CHAT && state.coachLines.isNotEmpty()) item(key = "coach-lines") { CoachLines(state.coachLines) }
+        // A drive that just ended: what Coach did, from tafs cloud's record (docs/drive.md).
+        if (tafId == COACH_CHAT) state.driveDone?.let { done -> item(key = "drive-done") { DriveDoneCard(done, actions.coach.closeDriveDone) } }
         // The answer as it's written, under the work that led to it (docs/chat.md, the work block); the dots until it begins.
         // One row with one key: when the answer takes the dots' place, the list keeps it where it is rather than dropping one
         // row and adding another at its end, which moved the thread back.
@@ -341,7 +345,7 @@ private fun Composer(
     ) {
       BasicTextField(
         value = draft,
-        onValueChange = onDraft,
+        onValueChange = driveTyped(onDraft),
         textStyle = scaled(16, color = Theme.ink),
         cursorBrush = SolidColor(Theme.amber),
         maxLines = 6,
@@ -450,7 +454,7 @@ private fun MessageBody(
             .padding(horizontal = 10.dp, vertical = 8.dp),
         )
         // A sent message's menu (kiff/tafs#285): send it again (its words only), change it first, or copy it.
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+        DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
           DropdownMenuItem(text = { Text("Send again") }, onClick = { menu = false; onResend(message.text) })
           DropdownMenuItem(text = { Text("Edit and send") }, onClick = { menu = false; onEdit(message.text) })
           DropdownMenuItem(text = { Text("Copy") }, onClick = {

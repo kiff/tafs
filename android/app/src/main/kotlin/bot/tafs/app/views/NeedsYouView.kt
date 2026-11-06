@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.model.SecondStep
 import bot.tafs.app.model.shortTime
 import bot.tafs.app.model.dayTitle
@@ -367,8 +368,8 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         }
       }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        call.nextSteps.forEach { step -> OutlineButton(step, { send(Answer.NextStep(step)) }, Modifier.weight(1f), enabled = !sending) }
-        OutlineButton("Refuse", { send(Answer.Refuse) }, Modifier.weight(1f), color = Theme.no, enabled = !sending)
+        call.nextSteps.forEach { step -> OutlineButton(step, { send(Answer.NextStep(step)) }, Modifier.weight(1f).confirms(), enabled = !sending) }
+        OutlineButton("Refuse", { send(Answer.Refuse) }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !sending)
       }
     } else {
       Text(

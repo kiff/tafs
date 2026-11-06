@@ -32,7 +32,21 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
   override val canAuthenticate: Boolean
     get() = BiometricManager.from(context).canAuthenticate(ALLOWED) == BiometricManager.BIOMETRIC_SUCCESS
 
-  override suspend fun authenticate(reason: String): Boolean = suspendCancellableCoroutine { cont ->
+  override suspend fun authenticate(reason: String): Boolean = prompted { ask(reason) }
+
+  override suspend fun authenticate(reason: String, signature: Signature): Boolean = prompted { ask(reason, signature) }
+
+  /** The system's prompt, which Coach can wait on but never reach (docs/drive.md): shown, then done. */
+  private suspend fun prompted(block: suspend () -> Boolean): Boolean {
+    bot.tafs.app.drive.DriveSignals.emit("prompt_shown")
+    try {
+      return block()
+    } finally {
+      bot.tafs.app.drive.DriveSignals.emit("prompt_done")
+    }
+  }
+
+  private suspend fun ask(reason: String): Boolean = suspendCancellableCoroutine { cont ->
     val host = activity?.get()
     if (host == null) {
       cont.resume(false)
@@ -60,7 +74,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
     cont.invokeOnCancellation { prompt.cancelAuthentication() }
   }
 
-  override suspend fun authenticate(reason: String, signature: Signature): Boolean = suspendCancellableCoroutine { cont ->
+  private suspend fun ask(reason: String, signature: Signature): Boolean = suspendCancellableCoroutine { cont ->
     val host = activity?.get()
     if (host == null) {
       cont.resume(false)

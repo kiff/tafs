@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.layout.fillMaxWidth
 import bot.tafs.app.design.OutlineButton
 import androidx.compose.foundation.clickable
@@ -82,11 +84,11 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
     }
   }
   ending?.let { grant ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { ending = null },
       title = { Text(ConnectionWords.disconnectTitle(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
       text = { Text(ConnectionWords.disconnectBody(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
-      confirmButton = { TextButton({ ending = null; scope.launch { actions.disconnect(grant.id) } }) { Text("Disconnect", color = Theme.no) } },
+      confirmButton = { TextButton({ ending = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text("Disconnect", color = Theme.no) } },
       dismissButton = { TextButton({ ending = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )

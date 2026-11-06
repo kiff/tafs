@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveMenu
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -147,7 +148,7 @@ fun AttachButton(tafId: String, state: AppState, files: FileActions) {
     ) {
       Icon(painterResource(R.drawable.ic_paperclip), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(18.dp))
     }
-    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+    DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
       if (hasCamera) DropdownMenuItem(text = { Text("Take photo") }, onClick = {
         menu = false
         val file = File(File(context.cacheDir, "camera").apply { mkdirs() }, "${UUID.randomUUID()}.jpg")

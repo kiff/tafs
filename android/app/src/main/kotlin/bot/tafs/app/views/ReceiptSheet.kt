@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.model.ErrorWords
 import android.content.ClipData
 import android.content.Intent
@@ -97,7 +98,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
   LaunchedEffect(trace) { if (state.mode == Mode.kiff) loadReceipt() }
   val steps = raw?.let(ReceiptSteps::of).orEmpty()
 
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(
       Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),

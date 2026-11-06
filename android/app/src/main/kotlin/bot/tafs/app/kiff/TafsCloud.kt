@@ -677,6 +677,8 @@ class TafsCloud(
     headers.putAll(extra)
     val response = transport.send(HttpRequest(method, baseUrl + path, headers, body))
     if (response.status !in 200..299) {
+      // Kept for Coach's diagnostics by the route's template and status only (docs/drive.md).
+      bot.tafs.app.drive.DriveDiagnostics.failed(method, path, response.status)
       throw CloudError(response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}", blockingRuns(response.body), field(response.body, "words"))
     }
     return response.body

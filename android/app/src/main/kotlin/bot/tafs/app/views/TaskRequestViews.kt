@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.kiff.packsOffered
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +63,7 @@ fun TaskRequests(usage: Usage, state: AppState, actions: AccountActions) {
             // (a pack bought before Solo would add nothing).
             val product = usage.store?.packs?.firstOrNull { it.id == r.pack }?.googleProduct
             if (state.offersPurchases && usage.packsOffered && product != null) {
-              PrimaryButton("Approve", { scope.launch { actions.approveRequest(product, r.id) } }, Modifier.weight(1f), enabled = state.buying == null)
+              PrimaryButton("Approve", { scope.launch { actions.approveRequest(product, r.id) } }, Modifier.weight(1f).confirms(), enabled = state.buying == null)
             }
             OutlineButton("Decline", { declining = r }, Modifier.weight(1f))
           }
@@ -96,7 +98,7 @@ private fun AskAdminSheet(usage: Usage, state: AppState, actions: AccountActions
   var pack by remember { mutableStateOf<String?>(null) }
   var reason by remember { mutableStateOf("") }
   var sending by remember { mutableStateOf(false) }
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(
       Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -137,7 +139,7 @@ private fun DeclineRequestSheet(request: PackRequest, usage: Usage, state: AppSt
   val scope = rememberCoroutineScope()
   var note by remember { mutableStateOf("") }
   var sending by remember { mutableStateOf(false) }
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
       SheetTitle("Decline", onClose)
       Text("Decline the request for ${UsageWords.packLine(request.pack, usage)}?", style = scaled(16, FontWeight.SemiBold, Theme.ink))

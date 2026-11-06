@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveAlert
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -99,7 +100,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
   }
   }
   (state as? Dictation.State.Blocked)?.let { blocked ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = dictation::dismiss,
       title = { Text("Dictation") },
       text = { Text(blocked.why) },

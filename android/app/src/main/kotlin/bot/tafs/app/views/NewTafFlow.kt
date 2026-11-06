@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -83,7 +85,7 @@ fun NewTafFlow(
   var job by rememberSaveable { mutableStateOf("") }
   var draft by remember { mutableStateOf(TafDraft("", "", emptyList(), emptyList())) }
 
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -130,7 +132,7 @@ private fun JobStep(job: String, onJob: (String) -> Unit, onDraft: () -> Unit) {
     val shape = RoundedCornerShape(18.dp)
     BasicTextField(
       value = job,
-      onValueChange = onJob,
+      onValueChange = driveTyped(onJob),
       textStyle = scaled(17, color = Theme.ink),
       cursorBrush = SolidColor(Theme.amber),
       modifier = Modifier
@@ -181,7 +183,7 @@ private fun DraftStep(draft: TafDraft, onDraft: (TafDraft) -> Unit, onReview: ()
   Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
     BasicTextField(
       value = draft.name,
-      onValueChange = { onDraft(draft.copy(name = it)) },
+      onValueChange = driveTyped({ onDraft(draft.copy(name = it)) }),
       textStyle = scaled(34, FontWeight.Bold, Theme.ink, display = true),
       cursorBrush = SolidColor(Theme.amber),
       singleLine = true,
@@ -241,7 +243,7 @@ private fun AmountField(label: String, money: Money, onChange: (Money) -> Unit) 
     Text(label, style = scaled(14, color = Theme.soft))
     BasicTextField(
       value = (money.minor / 100).toString(),
-      onValueChange = { text -> text.filter(Char::isDigit).toLongOrNull()?.let { onChange(Money(it * 100, "USD", 2)) } },
+      onValueChange = driveTyped({ text -> text.filter(Char::isDigit).toLongOrNull()?.let { onChange(Money(it * 100, "USD", 2)) } }),
       textStyle = scaled(15, color = Theme.ink, mono = true).copy(textAlign = TextAlign.End),
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
       singleLine = true,

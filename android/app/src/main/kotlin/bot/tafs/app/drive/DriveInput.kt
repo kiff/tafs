@@ -14,10 +14,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
@@ -38,7 +38,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 object DriveInput {
   /** Whether a drive is on: Compose reads it, to hide the keyboard and guard. */
   var driving by mutableStateOf(false)
-    internal set
+    private set
 
   /** Ends the drive for the person's input, with why: set by the app while a drive is on. */
   @Volatile
@@ -76,9 +76,14 @@ object DriveInput {
   /** A touch a window got: true to deliver it; false when it's the person's during a drive, which ends it. */
   fun admit(event: MotionEvent): Boolean {
     if (!driving || isCoachs(event)) return true
-    personsInput("owner_took_over")
+    // On the Coach button, the person's touch is their Stop; anywhere else, they took over.
+    val onStop = stopZones.values.any { it.contains(event.rawX.toInt(), event.rawY.toInt()) }
+    personsInput(if (onStop) "stopped" else "owner_took_over")
     return false
   }
+
+  /** Where the Coach button is on screen: a touch there during a drive is the person's Stop. */
+  val stopZones = mutableMapOf<Any, Box>()
 
   /** A key a window got: the person's back stops the drive, any other key of theirs takes over. Volume keys stay theirs. */
   fun admit(event: KeyEvent): Boolean {
@@ -118,7 +123,7 @@ object DriveInput {
   }
 
   /** A drive started or ended: the person's back in each guarded window is caught first, or let go. */
-  internal fun turn(on: Boolean) {
+  fun turn(on: Boolean) {
     driving = on
     guarded.forEach { (window, g) -> if (on) g.backOn(window) else g.backOff(window) }
   }
@@ -237,16 +242,6 @@ fun <T> driveTyped(onValueChange: (T) -> Unit): (T) -> Unit = { value ->
   else DriveInput.personsInput("owner_took_over")
 }
 
-/**
- * On every text field: the keyboard stays down while Coach drives (Coach types through the field itself, not the keyboard),
- * so the keyboard can't commit text after a step ended.
- */
-@Composable
-fun Modifier.driveField(): Modifier {
-  val keyboard = LocalSoftwareKeyboardController.current
-  return onFocusChanged { if (it.isFocused && DriveInput.driving) keyboard?.hide() }
-}
-
 // MARK: The marks
 
 /** A control that confirms (docs/drive.md, "Coach never confirms"): a driven touch on it is refused before it's dispatched. */
@@ -270,3 +265,14 @@ fun Modifier.secret(): Modifier = semantics { secret = true }
 
 /** An open approval's terms, named [title] in the tree. */
 fun Modifier.approvalTerms(title: String): Modifier = semantics { approval = title }
+
+/** On the Coach button: the person's touch there during a drive ends it as `stopped`, not as taking over. */
+@Composable
+fun Modifier.driveStopZone(): Modifier {
+  val key = androidx.compose.runtime.remember { Any() }
+  DisposableEffect(key) { onDispose { DriveInput.stopZones.remove(key) } }
+  return this.then(Modifier.onGloballyPositioned { c ->
+    val p = c.positionOnScreen()
+    DriveInput.stopZones[key] = Box(p.x.toInt(), p.y.toInt(), p.x.toInt() + c.size.width, p.y.toInt() + c.size.height)
+  })
+}

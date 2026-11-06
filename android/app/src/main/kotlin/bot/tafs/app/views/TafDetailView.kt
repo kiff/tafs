@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveAlert
 import bot.tafs.app.model.Chat
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.background
@@ -230,19 +232,19 @@ fun TafDetailView(
     }
 
     if (confirmRevoke) {
-      AlertDialog(
+      DriveAlert(
         onDismissRequest = { confirmRevoke = false },
         title = { Text("Revoke ${taf.name}'s Card?") },
         text = { Text("No new action goes through. Anything already done stays done.") },
         confirmButton = {
-          TextButton({ confirmRevoke = false; actions.revoke(taf.id) }) { Text("Revoke and stop", color = Theme.no) }
+          TextButton({ confirmRevoke = false; actions.revoke(taf.id) }, modifier = Modifier.confirms()) { Text("Revoke and stop", color = Theme.no) }
         },
         dismissButton = { TextButton({ confirmRevoke = false }) { Text("Cancel", color = Theme.soft) } },
         containerColor = Theme.panel,
       )
     }
     if (confirmRemove) {
-      AlertDialog(
+      DriveAlert(
         onDismissRequest = { confirmRemove = false },
         title = { Text("Remove ${taf.name} for good?") },
         text = { Text("Its Cards are revoked, its schedule stopped, its chats, run reports, memory and key deleted, and its name freed. KIFF's receipts stay.") },
@@ -250,14 +252,14 @@ fun TafDetailView(
           TextButton({
             confirmRemove = false
             removeScope.launch { actions.remove(taf.id)?.let { removal = it } }
-          }) { Text("Remove", color = Theme.no) }
+          }, modifier = Modifier.confirms()) { Text("Remove", color = Theme.no) }
         },
         dismissButton = { TextButton({ confirmRemove = false }) { Text("Cancel", color = Theme.soft) } },
         containerColor = Theme.panel,
       )
     }
     removal?.let { words ->
-      AlertDialog(
+      DriveAlert(
         onDismissRequest = { removal = null },
         title = { Text("Remove ${taf.name}") },
         text = { Text(words) },
@@ -374,7 +376,7 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
             }
           }
         }, Modifier.weight(1f), enabled = !busy)
-        OutlineButton(if (taf.paused) "Resume" else "Pause", { scope.launch { actions.setPaused(taf.id, !taf.paused) } }, Modifier.weight(1f))
+        OutlineButton(if (taf.paused) "Resume" else "Pause", { scope.launch { actions.setPaused(taf.id, !taf.paused) } }, Modifier.weight(1f).confirms())
       }
     }
   }
@@ -503,7 +505,7 @@ internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?
     error?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
   forgetting?.let { note ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { forgetting = null },
       title = { Text("Forget this note?") },
       text = { Text("“${note.content}”\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.") },

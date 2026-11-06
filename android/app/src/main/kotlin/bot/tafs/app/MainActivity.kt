@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.drive.DriveAlert
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
@@ -110,6 +111,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
+import bot.tafs.app.drive.driveStopZone
 
 /** A FragmentActivity: the system's biometric prompt shows on one. */
 class MainActivity : FragmentActivity() {
@@ -118,6 +121,13 @@ class MainActivity : FragmentActivity() {
   /** The answer to the notification permission prompt, while it is up. */
   private var permissionAnswer: CompletableDeferred<Boolean>? = null
   private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> permissionAnswer?.complete(granted) }
+
+  /** This activity in the drive's list of the app's windows. */
+  private var driveEntry: bot.tafs.app.drive.DriveInput.Entry? = null
+
+  /** The taf whose screen is open now, for what a driven step touched. */
+  @Volatile
+  var drivenTaf: String? = null
 
   /** Where a tapped alert asked to go, until the model has it. */
   private var openFromAlert by mutableStateOf<String?>(null)
@@ -146,6 +156,12 @@ class MainActivity : FragmentActivity() {
     openFromAlert = intent?.getStringExtra(AlertNotifier.EXTRA_OPEN)
     deliverSignIn(intent)
     val store = SampleStore(File(filesDir, "sample.json"))
+    // While Coach drives, the person's input on this window is caught before any view has it (docs/drive.md), and Coach's back
+    // is the activity's own: never past the first screen, which would leave the app.
+    bot.tafs.app.drive.DriveInput.guard(window)
+    driveEntry = bot.tafs.app.drive.DriveInput.Entry(window.decorView, window) {
+      onBackPressedDispatcher.hasEnabledCallbacks().also { if (it) onBackPressedDispatcher.onBackPressed() }
+    }.also { bot.tafs.app.drive.DriveInput.windows.add(0, it) }
     setContent {
       TafsTheme {
         val model: AppModel = viewModel(factory = AppModel.Factory(store, app.signer, app.kiff, app.cloud, app.secrets, app.deviceName, app.push, app.planque, app.vendorSignIn, app.purchases, app.playBilling, java.io.File(cacheDir, "attachments")))
@@ -164,11 +180,29 @@ class MainActivity : FragmentActivity() {
         androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_START) { model.cameToForeground() }
         DisposableEffect(model) {
           val screenOff = object : android.content.BroadcastReceiver() {
-            override fun onReceive(context: android.content.Context, intent: Intent) = model.screenLocked()
+            override fun onReceive(context: android.content.Context, intent: Intent) {
+              model.stopDrive("locked")
+              model.screenLocked()
+            }
           }
           registerReceiver(screenOff, android.content.IntentFilter(Intent.ACTION_SCREEN_OFF))
           onDispose { unregisterReceiver(screenOff) }
         }
+        // Coach drives the app (docs/drive.md): this activity's windows are the drive's, while it's on screen.
+        DisposableEffect(model) {
+          val overlay = bot.tafs.app.drive.DriveOverlay(this@MainActivity, Theme.amber.toArgb()) { model.stopDrive("stopped") }
+          model.driveHost.current = bot.tafs.app.drive.AndroidDriveHost(this@MainActivity, overlay) { drivenTaf }
+          bot.tafs.app.drive.DriveInput.personsInput = { why -> model.stopDrive(why) }
+          bot.tafs.app.drive.DriveInput.coachStep = { model.drive.stepInFlight }
+          onDispose {
+            model.driveHost.current = null
+            overlay.show(bot.tafs.app.drive.DriveState.Off)
+            bot.tafs.app.drive.DriveInput.personsInput = {}
+          }
+        }
+        // The app leaving the screen ends a drive at once: a Custom Tab, a system dialog, the share sheet, Recents and Home all
+        // pause this activity, and a translucent one never stops it. Its own dialogs and sheets don't pause it.
+        androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_PAUSE) { model.stopDrive("left_app") }
         LaunchedEffect(openFromAlert, model) {
           model.requestOpen(openFromAlert)
           openFromAlert = null
@@ -192,6 +226,8 @@ class MainActivity : FragmentActivity() {
   }
 
   override fun onDestroy() {
+    driveEntry?.let { bot.tafs.app.drive.DriveInput.windows.remove(it) }
+    bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
     app.push.askPermission = null
     super.onDestroy()
@@ -270,7 +306,7 @@ fun RootView(model: AppModel) {
   if (signingIn) SignInSheet(model, onClose = { signingIn = false })
   // Alerts were on for this account before this phone signed out, and didn't come back on: said once, with the way back.
   if (state.alertsOffSinceSignOut && state.lastError == null) {
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = model::dismissAlertsOff,
       title = { Text("Alerts are off on this phone") },
       text = { Text("They went off when this phone signed out. Turn them on to get an alert when a taf needs you.") },
@@ -288,7 +324,7 @@ fun RootView(model: AppModel) {
 
   // Why something wasn't done, in words, until it is read.
   state.lastError?.let { error ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = model::dismissError,
       title = { Text("Not done") },
       text = { Text(error) },
@@ -300,7 +336,7 @@ fun RootView(model: AppModel) {
   val offer = state.timeZoneOffer
   if (offer != null && state.lastError == null && state.signedIn) {
     val zoneScope = rememberCoroutineScope()
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = {},
       title = { Text("Use $offer for times in tafs?") },
       text = { Text("Holds' deadlines, Activity, the Record and what your tafs write would use this phone's time zone. Your account uses ${state.kiffAccount?.timeZone ?: "UTC"} now.") },
@@ -426,6 +462,19 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     shownAccount = whose
     openTaf = null; trialTaf = null; versionsTaf = null; haltTaf = null; usageTaf = null; overviewOpen = false; calendarOpen = false; coachOpen = false
   }
+  // Coach drives the app (docs/drive.md): its chat minimizes into the Coach button while it drives, and opens again at the end
+  // with what it did. Each screen the person would see is Coach's `screen_shown`.
+  val driving by model.drive.state.collectAsState()
+  LaunchedEffect(driving::class) {
+    when (driving) {
+      is bot.tafs.app.drive.DriveState.On -> coachOpen = false
+      is bot.tafs.app.drive.DriveState.Over -> { tab = Tab.Tafs; trialTaf = null; coachOpen = true }
+      bot.tafs.app.drive.DriveState.Off -> Unit
+    }
+  }
+  val drivingActivity = androidx.compose.ui.platform.LocalContext.current as? MainActivity
+  LaunchedEffect(openTaf, state.tafs) { drivingActivity?.drivenTaf = state.tafs.firstOrNull { it.id == openTaf }?.name }
+  LaunchedEffect(tab, openTaf, coachOpen, showingSettings, overviewOpen, calendarOpen) { bot.tafs.app.drive.DriveSignals.emit("screen_shown") }
   val detailState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
   val coachVisibility = remember { androidx.compose.animation.core.MutableTransitionState(false) }
   LaunchedEffect(coachOpen) { coachVisibility.targetState = coachOpen }
@@ -470,6 +519,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         loadProfileWords = model::loadProfileWords,
         loadKnob = model::loadKnob,
         confirmKnob = model::confirmKnobChange,
+        approveDrive = model::approveDrive,
+        closeDriveDone = model::closeDriveDone,
       ),
     )
   }
@@ -511,6 +562,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
 
   // The keyboard pushes the screen up, and the tab bar leaves while it is up, as iOS's does.
   val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+  // While Coach drives, the keyboard stays down: Coach types through the field itself, and an open keyboard could commit text
+  // after a step ended, which would read as the person's (docs/drive.md, "Typing").
+  val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+  LaunchedEffect(keyboardUp, bot.tafs.app.drive.DriveInput.driving) { if (keyboardUp && bot.tafs.app.drive.DriveInput.driving) keyboard?.hide() }
   // A tablet, either way up, or a large phone on its side: the list and what's open side by side.
   val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= WIDE_DP
   // The list beside what's open, folded away by the owner: kept across rotation.
@@ -828,12 +883,15 @@ private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
 /** Coach, at the bar's end: filled, ink with a white label, so it reads as the one place to make or change a taf. */
 @Composable
 private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
+  // While Coach drives, the button shows it's acting, and the person's touch on it stops the drive (`stopped`).
+  val acting = bot.tafs.app.drive.DriveInput.driving
   Text(
     COACH,
     style = scaled(if (compact) 11 else 13, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.background),
     maxLines = 1,
     softWrap = false,
-    modifier = modifier.heightIn(min = 40.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.ink)
+    modifier = modifier.heightIn(min = 40.dp).then(Modifier.driveStopZone()).clip(androidx.compose.foundation.shape.CircleShape)
+      .background(if (acting) Theme.amber else Theme.ink)
       .clickable(onClick = onClick).semantics { role = androidx.compose.ui.semantics.Role.Button }
       .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 10.dp),
   )

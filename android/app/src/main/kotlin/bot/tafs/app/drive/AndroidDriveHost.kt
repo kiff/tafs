@@ -98,9 +98,11 @@ class AndroidDriveHost(
     val blank = mutableListOf<Box>()
     windows.forEachIndexed { w, (root, _) ->
       for (owner in composeRoots(root)) {
-        fun visit(n: SemanticsNode) {
+        fun visit(n: SemanticsNode, around: Boolean) {
           val c = n.config
           val box = boxOf(n)
+          // A confirming control, or one inside a container that confirms (the approval gate): the mark holds for both.
+          val confirm = around || c.getOrNull(DriveConfirms) == true
           val approval = c.getOrNull(DriveApproval)
           if (approval != null) {
             blank += box
@@ -117,11 +119,11 @@ class AndroidDriveHost(
           }
           val words = if (secret) "Secret field" else wordsOf(n)
           if (words != null || actions.isNotEmpty()) {
-            nodes += Node("$w.${n.id}", root, n, box, words, roleOf(n), actions, c.getOrNull(DriveConfirms) == true)
+            nodes += Node("$w.${n.id}", root, n, box, words, roleOf(n), actions, confirm)
           }
-          n.children.forEach(::visit)
+          n.children.forEach { visit(it, confirm) }
         }
-        runCatching { visit(owner.semanticsOwner.rootSemanticsNode) }
+        runCatching { visit(owner.semanticsOwner.rootSemanticsNode, false) }
       }
     }
     return Seen(nodes, blank)
