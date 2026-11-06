@@ -165,7 +165,9 @@ class MainActivity : FragmentActivity() {
     setContent {
       TafsTheme {
         val model: AppModel = viewModel(factory = AppModel.Factory(store, app.signer, app.kiff, app.cloud, app.secrets, app.deviceName, app.push, app.planque, app.vendorSignIn, app.purchases, app.playBilling, java.io.File(cacheDir, "attachments")))
-        val biometry = remember { Biometry.of(this@MainActivity) }
+        // Read again each time the app comes back: a fingerprint enrolled in Settings meanwhile is named at once.
+        var biometry by remember { mutableStateOf(Biometry.of(this@MainActivity)) }
+        androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { biometry = Biometry.of(this@MainActivity) }
         // Firebase gave the phone a new token: the model tells tafs cloud.
         DisposableEffect(model) {
           app.tokenListener = model::tokenArrived
