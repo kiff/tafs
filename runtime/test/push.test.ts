@@ -2,7 +2,7 @@ import { createHmac, generateKeyPairSync, verify } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { providerToken } from "../src/cloud/apns.js";
-import type { ReadyRun } from "../src/cloud/forward.js";
+import { NotPausedYet, type ReadyRun } from "../src/cloud/forward.js";
 import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
 import { type Device, type Notification, type PushStore, quietFor, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
 
@@ -70,6 +70,8 @@ function fakeForward(order: string[] = []) {
   const f = {
     got: [] as Array<{ signature: string; raw: string }>,
     down: false,
+    /** kiff/agents' 404 for a hold no run has paused on yet. */
+    early: false,
     tries: 0,
     /** The run kiff/agents names: one the answer left ready. */
     ready: undefined as ReadyRun | undefined,
@@ -77,6 +79,7 @@ function fakeForward(order: string[] = []) {
       f.tries++;
       order.push("forward");
       if (f.down) throw new Error("kiff/agents answered 503");
+      if (f.early) throw new NotPausedYet("kiff/agents answered 404: no run has paused on this hold yet");
       f.got.push({ signature, raw });
       return f.ready;
     },
@@ -273,6 +276,36 @@ describe("KIFF's alerts", () => {
     // What the give-up log says: kiff/agents was tried FORWARD_TRIES + 1 times.
     expect(forward.tries).toBe(FORWARD_TRIES + 1);
     expect(apns.sent).toHaveLength(2); // the phones were told once, on the first delivery
+  });
+
+  it("answers an early answer 409, with a warning, and tells the phones once; its retries never count as tries", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const slots = memorySlots();
+    const forward = fakeForward();
+    forward.early = true;
+    const warned: string[] = [];
+    const errors: string[] = [];
+    const warn = console.warn, error = console.error;
+    console.warn = (m: string) => { warned.push(m); };
+    console.error = (m: string) => { errors.push(m); };
+    try {
+      for (let i = 0; i < FORWARD_TRIES + 2; i++) {
+        const r = await alert(held(), push, { apns, slots, forward });
+        expect(r.status).toBe(409);
+      }
+    } finally {
+      console.warn = warn;
+      console.error = error;
+    }
+    expect(warned.every((m) => m.includes("no run has paused on this hold yet"))).toBe(true);
+    expect(warned).toHaveLength(FORWARD_TRIES + 2);
+    expect(errors).toEqual([]);
+    expect(apns.sent).toHaveLength(2); // the phones were told once
+    // The pause is stored: the next delivery is taken.
+    forward.early = false;
+    expect((await alert(held(), push, { apns, slots, forward })).body).toEqual({ duplicate: true });
+    expect(forward.got).toHaveLength(1);
   });
 
   it("hands kiff/agents nothing KIFF didn't sign", async () => {

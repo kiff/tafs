@@ -3,7 +3,7 @@ import { CUSTOM, type Job, JOBS, jobById, ownJob } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
-import type { ReadyRun } from "./forward.js";
+import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
@@ -914,7 +914,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
  * left a run ready, tafs cloud continues it at once rather than leave it to
  * the sweep. If handing it on fails, the phones are still told, and the answer
  * is 502 so KIFF delivers it again: the phones are told once, however often
- * it comes.
+ * it comes. An answer that came before its run's pause was stored is early,
+ * not failed: 409, with a warning, and KIFF delivers it again the same way.
  */
 async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const signature = header(event, "kiff-signature");
@@ -931,6 +932,7 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (!signer) throw new HTTPError(401, "not signed by KIFF");
 
   let handedOn = true;
+  let early = false;
   // A member's request for more tasks, and a vendor signing a connection out, are the phones' alone: no
   // run waits on them.
   if (str(parsed.outcome) === PACK_REQUESTED || str(parsed.outcome) === CONNECTION_SIGNED_OUT) {
@@ -953,7 +955,11 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const ready = await deps.forward(signature, raw);
     if (ready) await continueReady(deps, tenant, ready);
   } catch (err) {
-    console.error(`alert: kiff/agents: ${(err as Error).message}`);
+    // An answer that came before its run's pause was stored is early, not failed: a warning, and a 409 below.
+    if (err instanceof NotPausedYet) {
+      console.warn(`alert: kiff/agents: ${err.message}`);
+      early = true;
+    } else console.error(`alert: kiff/agents: ${(err as Error).message}`);
     handedOn = false;
   }
   const out = await receiveAlert(signature, raw, {
@@ -966,6 +972,9 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
     now,
   });
   if (handedOn) return out;
+  // Early: KIFF sends it again on its backoff (any status outside 2xx), and kiff/agents answers 404 only
+  // within its PauseWindow of the decision, so these retries end on their own and don't count as tries.
+  if (early) throw new HTTPError(409, "no run has paused on this hold yet; send it again");
   // Asked again, a few times. An alert kiff/agents keeps not taking (a
   // refusal, a 5xx, no answer, or the secret not written) would otherwise be a
   // 502 until KIFF switches the target off, and the phones' pushes with it:
