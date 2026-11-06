@@ -112,12 +112,12 @@ class DriveContractTest {
 
   /**
    * A control a person touches whose words take something away or grant it (Delete, Remove, Disconnect, Halt, Revoke, Sign out,
-   * Buy, Resume, Approve, Install, Refuse, Pair, Forget, Go back) carries the confirm mark, or sits behind ApprovalGate. So a
+   * Buy, Resume, Approve, Install, Refuse, Pair, Unpair, Forget, Go back) carries the confirm mark, or sits behind ApprovalGate. So a
    * new one can't be forgotten. Words that only name a screen or a title are listed here, each with why.
    */
   @Test
   fun everyControlWhoseWordsConfirmCarriesTheMark() {
-    val label = Regex(""""[^"]*\b(Delete|Remove|Disconnect|Halt|Revoke|Sign out|Buy|Resume|Approve|Install|Refuse|Pair|Forget|Go back)\b[^"]*"""")
+    val label = Regex(""""[^"]*\b(Delete|Remove|Disconnect|Halt|Revoke|Sign out|Buy|Resume|Approve|Install|Refuse|Pair|Unpair|Forget|Go back)\b[^"]*"""")
     val touch = Regex("""TextButton|DropdownMenuItem|OutlineButton|PrimaryButton|\bButton\(|clickable""")
     val notConfirming = setOf(
       "Modifier.clickable(onClickLabel = \"Open Halt\"", // the halt chip opens the halt screen, whose buttons carry the mark

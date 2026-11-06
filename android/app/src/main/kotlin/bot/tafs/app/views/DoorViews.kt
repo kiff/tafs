@@ -275,7 +275,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
             Text(
               "Unpair",
               style = scaled(13, FontWeight.Medium, Theme.soft),
-              modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.unpair(taf.id, door, key) } }.padding(start = 8.dp, top = 8.dp),
+              modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { scope.launch { actions.unpair(taf.id, door, key) } }.padding(start = 8.dp, top = 8.dp),
             )
           }
         }
