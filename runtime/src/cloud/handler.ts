@@ -4968,9 +4968,14 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
     await endDrive(store, call.tenant, person, "halted", now(), on.id);
     await logEvent(deps.events, call.tenant, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS.halted }, now());
   }
-  // The drive is the chat's that approved it: Coach's call carries no chat, so every run of
-  // this person's Coach at work now must be in that chat, or the call is refused (qa-kiff on #554).
-  if (on && !on.ended) {
+  // The drive is the chat's that approved it. kiff/agents names the chat on the call (SESSION_ARG),
+  // inside KIFF's permit: it must be the drive's, exactly. A call that doesn't name one (a kiff/agents
+  // or a connection from before) falls back: every run of this person's Coach at work now must be in
+  // that chat, or the call is refused (qa-kiff on #554).
+  if (on && !on.ended && call.session && call.session !== on.session) {
+    return refuse("This drive was approved in another chat with Coach, and only that chat drives. Nothing was sent.");
+  }
+  if (on && !on.ended && !call.session) {
     const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
     const working = setup ? (await deps.agents.runs(call.tenant, setup.id, true, 10).catch(() => []))
       .filter((r) => r.status === "RUNNING" && r.requester?.kind === "member" && r.requester.id === person) : [];
