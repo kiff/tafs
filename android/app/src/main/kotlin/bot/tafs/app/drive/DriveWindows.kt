@@ -92,7 +92,7 @@ fun DriveMenu(
   content: @Composable ColumnScope.() -> Unit,
 ) = DropdownMenu(
   expanded = expanded,
-  onDismissRequest = driveDismissal(onDismissRequest),
+  onDismissRequest = driveMenuDismissal(onDismissRequest),
   modifier = modifier.driveGuard(),
   containerColor = containerColor,
 ) {

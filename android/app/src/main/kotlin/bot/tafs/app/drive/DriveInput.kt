@@ -217,6 +217,16 @@ fun driveDismissal(onDismissRequest: () -> Unit): () -> Unit = {
 }
 
 /**
+ * A menu's dismissal. Its popup has no `Window` to guard, so the person's tap outside it reaches only this, and this runs inside
+ * the touch's own dispatch: Coach's outside tap is [DriveInput.coachIsActing] then. So no step window is needed here, and a tap
+ * outside that isn't Coach's ends the drive even while one of Coach's steps is under way.
+ */
+fun driveMenuDismissal(onDismissRequest: () -> Unit): () -> Unit = {
+  if (DriveInput.driving && !DriveInput.coachIsActing) DriveInput.personsInput("owner_took_over")
+  onDismissRequest()
+}
+
+/**
  * The person's input inside a window with no `Window` of its own (a menu's popup): caught on its way in, before any control
  * has it, and not delivered.
  */

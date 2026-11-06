@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +33,7 @@ import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.drive.Action
 import bot.tafs.app.drive.AndroidDriveHost
 import bot.tafs.app.drive.DriveInput
+import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.DriveOverlay
 import bot.tafs.app.drive.DriveWindow
 import bot.tafs.app.drive.DriveWords
@@ -82,6 +84,7 @@ class DriveEmulatorTest {
   private var sheetTaps = 0
   private var sheetOpen by mutableStateOf(false)
   private var dialogOpen by mutableStateOf(false)
+  private var menuOpen by mutableStateOf(false)
   private var text by mutableStateOf("")
   private var key by mutableStateOf("sk_test_secret")
   private lateinit var host: AndroidDriveHost
@@ -112,6 +115,7 @@ class DriveEmulatorTest {
           DriveWindow()
           Column { Text("Sheet title"); Button({ sheetTaps++ }) { Text("Sheet button") } }
         }
+        DriveMenu(menuOpen, { menuOpen = false }) { DropdownMenuItem(text = { Text("Menu item") }, onClick = {}) }
         if (dialogOpen) AlertDialog(
           onDismissRequest = driveDismissal { dialogOpen = false },
           containerColor = Color(0xFF00C853),
@@ -188,6 +192,19 @@ class DriveEmulatorTest {
     settle()
     assertEquals(listOf("owner_took_over"), ends.distinct())
     assertTrue("the scrim tap was caught before the sheet could close", sheetOpen)
+  }
+
+  @Test fun thePersonsTapOutsideAMenuEndsTheDriveEvenDuringCoachsStep() {
+    show()
+    val (_, y) = screenMiddle("Run now")
+    val x = rule.activity.window.decorView.width * 0.9f
+    menuOpen = true; settle(); driving()
+    // One of Coach's steps is under way (its dot, its settle, its look): the person's touch is still theirs.
+    DriveInput.coachStep = { true }
+    personTaps(x, y)
+    settle()
+    assertEquals(listOf("owner_took_over"), ends.distinct())
+    assertEquals("the tap outside the menu never reached Run now", 0, runNow)
   }
 
   // 2. The person's back stops it.
