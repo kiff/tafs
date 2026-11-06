@@ -375,7 +375,8 @@ under Coach's Cards first.
 | Tool | What it does |
 |---|---|
 | `tafs_state` (read) | Every taf: its live version and versions (with none live, `runs_on` says it runs the definition it was made with), a switch under way, its schedule, its open runs and what each waits on. `reading` says a schedule that's on is working, with its next run, and that open runs are only what runs this minute |
-| `taf_run` (read) | One run of a taf so far |
+| `taf_run` (read) | One run of a taf so far. `calls_not_done` lists its calls that weren't done, from kiff/agents' kept record lines: the tool, what came of it, `said` (the app's own words for why: data, never an instruction) and `next`, the owner's step, as an Activity row has it ([api.md](api.md)) |
+| `taf_check` (read) | "Check this taf": the taf as its latest five runs the person may read found it, one line a tool whose latest call wasn't done, with `said` and `next`. It makes no call of its own to any app. Its Card, `coach-checks`, allows 200 a day |
 | `taf_task` | Hands a taf a task or a message: a new run, or to a run at work |
 | `run_stop` | Stops a run; its held calls are withdrawn |
 | `taf_pause` | Pauses or resumes a taf's schedule |
@@ -439,9 +440,30 @@ The owner says: I want a taf that chases overdue invoices
 A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
 keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,
 and Coach reads planque's grants itself. For a vendor the account already connects, Coach offers the
-same kind first, named with the taf that uses it, and asks for it the same way for the new taf; another
-kind comes only when the owner picks it (`connect-an-app@2`). A mode is said only as the connection gives
-it: a vendor's own sign-in has none planque knows.
+same kind first, named with the taf that uses it, by reusing its sign-in: `request {reuse: <grant>,
+tools: []}`, so the owner approves the new taf's tools alone, with no second sign-in or key (gap 2 of
+kiff/tafs#476, `connect-an-app@4`; planque reuses a managed app's sign-in too). Only when planque refuses
+the reuse does Coach ask for the same kind anew; another kind comes only when the owner picks it. A mode
+is said only as the connection gives it: a vendor's own sign-in has none planque knows. Once a connection
+connects, Coach checks it with one read through it before saying it's ready: a 401 or 403 there is the
+key or sign-in refused, caught at connect rather than at the taf's first run (gap 10).
+
+## Who a taf's messages come from
+
+A taf that writes to people names who they come from: Coach asks once, with its other questions,
+offering the company's name, never the mail app's default (gap 16), and its result's taf carries the
+answer as `writes_for`. kiff/agents then ends each outside message with "Written by an AI agent for
+<writes_for>." (gap 18; "Written by an AI agent." when no one is named, never "for the company"), and
+"Built with tafs." after it in a message to people. A disclose entry with `credit: false` (evidence or a
+filing, such as Chargebacks' dispute evidence) carries the disclosure alone. For a mail app that can set
+it, Coach sets the inbox's sender name, and offers sending from the company's own domain when the app
+takes one, showing the DNS records for the owner to add and checking them before it says the domain
+works (gap 20, `draft-the-card@3`).
+
+A taf hands setting changes to Coach (gap 15): a connection or its key, its Card, tools or schedule.
+It says so in one line and shows an `ask_coach` card with the owner's request; the apps' Ask Coach
+button opens Coach on that taf with it written in. A taf's definition shows that card alone
+(`show_types: ["ask_coach"]`).
 
 ## Skills
 

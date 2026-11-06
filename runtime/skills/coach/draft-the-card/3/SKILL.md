@@ -69,7 +69,18 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   A tool that writes to anyone outside the company (an email, a reply,
   evidence) goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
-  ends each such call with "Written by an AI agent for the company.".
+  ends each such call with "Written by an AI agent for <writes_for>." and,
+  in a message to people, "Built with tafs.". Evidence or a filing (for a
+  bank, a card network) takes credit: false: the disclosure alone.
+- A taf that writes to people: ask once, with your other questions, who its
+  messages come from, offering the company's name ("Kiff Agents OÜ, or
+  another name?"); never the app's default. Put the answer in the result's
+  taf as writes_for. For a mail app whose connection can set it, set the
+  inbox's sender name to it with the app's own tool, and when the app sends
+  from a domain of its own and takes a custom one, offer sending from the
+  company's domain in the same question: the DNS records are the owner's to
+  add, so show them as the app gives them, and check them with the app's
+  tool before saying the domain works.
   A tool that changes data but moves no money is limited by its calls, each day
   ("post up to 20 replies a day"): never promise an amount limit for it,
   such as "up to €500 a reply", since the call carries no amount to check.

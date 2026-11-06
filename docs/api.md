@@ -217,8 +217,25 @@ setup view; the phones do not identify apps from tool names.
 A connection refusal is typed by KIFF as `tool_outcome.status: refused_by_tool`,
 `refused_by: connection` and a machine `code`. Its `detail` is drawn as supplied,
 or composed from that code if absent. Text prefixes never establish provenance.
-Old/vendor errors keep their previous behavior. The call's status, amounts,
-approval flags, receipts and counting remain KIFF's unchanged evidence.
+A vendor's refusal shows the words KIFF recorded for it, quoted as the app's:
+`The app refused it: "Agent Mail refused it (it answered 403): Forbidden."`, or
+"The app refused it and gave no reason". Those words never decide whether
+anything was done. The call's status, amounts, approval flags, receipts and
+counting remain KIFF's unchanged evidence.
+
+A `not_done` entry may carry `next`, what the owner can do about it
+(kiff/tafs#476, gap 10): `{kind, words, tool, taf?, message?}`.
+- `reconnect`: a vendor's 401 or 403, or the connection's `operation_changed`.
+  The app's button opens that connection, the one whose `tools` include `tool`.
+- `ask_coach`: a 400, 404, 405, 410 or 422, or the connection's `not_granted`,
+  `definition_invalid`, `definition_unread`, `bad_arguments` or
+  `permit_invalid`. The button opens Coach on the taf with `message` written in.
+- `try_later`: a 429 or a 5xx, KIFF's `not_sent`, or the connection's
+  `halt_unknown`, `record_unavailable`, `permit_expired` or
+  `profile_not_applied`. `words` is a line, with no button.
+
+The status comes from the "answered NNN" in KIFF's recorded words, as KIFF's
+gateway reads it. An app draws `words` as a line for a `kind` it doesn't know.
 
 A page is 20 entries by default, 1–50 when specified. Pass `next_cursor` unchanged.
 It is bound to the account, person, taf and filters. A changed snapshot returns

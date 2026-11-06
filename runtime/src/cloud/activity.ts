@@ -31,6 +31,81 @@ export interface ActivityEntry {
   id: string; at: string; kind: "done" | "approved" | "held" | "refused" | "not_done" | "sending" | "unknown";
   title: string; detail: string; time: string; day: string; day_title: string;
   amount_text?: string; call: ActivityCall;
+  /** What the owner can do about a call that wasn't done, when its outcome says (kiff/tafs#476, gap 10). */
+  next?: NextStep;
+}
+
+/**
+ * The owner's next step for a call that wasn't done (kiff/tafs#476, gap 10): the app draws `words` as a button
+ * for `reconnect` (the connection whose tools include `tool`) and `ask_coach` (Coach's chat with `message` written
+ * in), and as a line for `try_later`; a kind it doesn't know, as a line.
+ */
+export interface NextStep {
+  kind: "reconnect" | "ask_coach" | "try_later";
+  words: string;
+  /** The call's tool as KIFF names it: the connection to reconnect is the one whose tools include it. */
+  tool: string;
+  taf?: string;
+  /** ask_coach: Coach's first message, for the owner to send. */
+  message?: string;
+}
+
+/** The HTTP status a refusal's words name, as planque and the connectors write it ("it answered 403"), the form KIFF's gateway reads. */
+export function answeredStatus(message: string | null | undefined): number | undefined {
+  const m = /\banswered ([1-5]\d\d)\b/i.exec(message ?? "");
+  return m ? Number(m[1]) : undefined;
+}
+
+/** KIFF's message for a call the tool refused when it says why, never its fallback for none. */
+function saidWhy(message: string | null | undefined): string | undefined {
+  const said = (message ?? "").replace(/\s+/g, " ").trim();
+  return said && said !== "The tool returned an error." ? said : undefined;
+}
+
+/**
+ * The next step for a call that wasn't done, by what KIFF recorded: the vendor's status in its words, or the
+ * connection's code. A call that was done, held, refused by its Card, or whose answer was lost has none.
+ */
+export function nextStep(c: ActivityCall, taf?: string): NextStep | undefined {
+  const o = c.tool_outcome;
+  if (c.outcome !== "allowed" || !o) return;
+  const title = c.title || c.action_name;
+  const base = { tool: c.action_name, ...(taf ? { taf } : {}) };
+  const said = saidWhy(o.message);
+  const reconnect: NextStep = { kind: "reconnect", words: "Connect it again", ...base };
+  const later: NextStep = { kind: "try_later", words: "Try again later: the app was busy or down", ...base };
+  const ask: NextStep = { kind: "ask_coach", words: "Ask Coach to change the taf", ...base,
+    message: `${taf ? `Change ${taf}: ` : ""}${title} failed.${said ? ` ${said.replace(/[.…]?$/, ".")}` : ""}` };
+  if (o.status === "not_sent") return later;
+  if (o.status !== "refused_by_tool") return;
+  if (o.refused_by === "connection") {
+    switch (o.code) {
+      case "operation_changed": return reconnect;
+      case "not_granted": case "definition_invalid": case "definition_unread": case "bad_arguments": case "permit_invalid": return ask;
+      case "halt_unknown": case "record_unavailable": case "permit_expired": case "profile_not_applied": return later;
+      default: return;
+    }
+  }
+  return byStatus(answeredStatus(o.message), reconnect, ask, later);
+}
+
+/** The step a vendor's HTTP status calls for, when it calls for one. */
+function byStatus(status: number | undefined, reconnect: NextStep, ask: NextStep, later: NextStep): NextStep | undefined {
+  if (status === 401 || status === 403) return reconnect;
+  if (status === 400 || status === 404 || status === 405 || status === 410 || status === 422) return ask;
+  if (status === 429 || (status !== undefined && status >= 500)) return later;
+  return;
+}
+
+/**
+ * The next step for a failed call kiff/agents kept on its record line (Called: the tool and its result's
+ * words), as Coach reads it: by the vendor's status in those words, as for an Activity row.
+ */
+export function nextForCalled(tool: string, said: string | undefined, taf?: string): NextStep | undefined {
+  const base = { tool, ...(taf ? { taf } : {}) };
+  return byStatus(answeredStatus(said), { kind: "reconnect", words: "Connect it again", ...base },
+    { kind: "ask_coach", words: "Ask Coach to change the taf", ...base, message: `${taf ? `Change ${taf}: ` : ""}${tool} failed.${said ? ` ${said.replace(/[.…]?$/, ".")}` : ""}` },
+    { kind: "try_later", words: "Try again later: the app was busy or down", ...base });
 }
 
 export interface ActivityPage {
@@ -82,19 +157,23 @@ export function amountWords(amount: ActivityCall["amount"]): string | undefined 
   } catch { return `${amount.value} ${amount.unit}`; }
 }
 
-export function activityEntry(c: ActivityCall, zone: string, now: Date): ActivityEntry {
+export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string): ActivityEntry {
   const kind = kindOf(c);
   const connection = connectionRefusalWords(c.tool_outcome);
+  // The app's own words for why, as KIFF recorded them, quoted as the app's: never read for whether
+  // anything was done, which the outcome says (kiff/tafs#476, gap 10).
+  const said = saidWhy(c.tool_outcome?.message);
   const details = { done: "Done, within its Card", approved: "Approved, then done", held: "Waiting for you",
     refused: c.reason ? `Not sent · ${c.reason}` : "Not sent", not_done: connection
-      ? c.detail || connection : c.tool_outcome?.status === "refused_by_tool" ? "The app refused it" : "Nothing reached the app",
+      ? c.detail || connection : c.tool_outcome?.status === "refused_by_tool" ? (said ? `The app refused it: "${said}"` : "The app refused it and gave no reason") : "Nothing reached the app",
     sending: "Sent; waiting for the app's answer", unknown: "The app's answer wasn't recorded; check its records" };
   const raw = hash(c.proposal_id).slice(0, 32);
   const id = `${raw.slice(0, 8)}-${raw.slice(8, 12)}-5${raw.slice(13, 16)}-8${raw.slice(17, 20)}-${raw.slice(20)}`;
   const day = dayIn(c.created_at, zone);
   const dayTitle = day === dayIn(now.toISOString(), zone) ? "Today" : new Intl.DateTimeFormat("en-GB", { timeZone: zone, weekday: "long", day: "numeric", month: "short" }).format(new Date(c.created_at));
+  const next = kind === "not_done" ? nextStep(c, taf) : undefined;
   return { id, at: c.created_at, kind, title: c.title || c.action_name, detail: details[kind], time: timeIn(c.created_at, zone, now), day, day_title: dayTitle,
-    ...(amountWords(c.amount) ? { amount_text: amountWords(c.amount) } : {}), call: c };
+    ...(amountWords(c.amount) ? { amount_text: amountWords(c.amount) } : {}), call: c, ...(next ? { next } : {}) };
 }
 
 /** Bounded source scanning: a cursor advances even through a page with no matching outcomes. */
@@ -133,7 +212,7 @@ export async function activityPage(input: { token: string; tenant: string; subje
     for (const call of source.calls) {
       offset++;
       if (call.actor_id === input.agent && (!tools.length || tools.includes(call.action_name)) && (!from || Date.parse(call.created_at) >= Date.parse(from)) && activityMatches(call, filter as ActivityFilter)
-        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now));
+        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now, input.tafName));
       if (entries.length === take) break;
     }
     more = offset < source.shown && !(from && source.calls.some((c) => Date.parse(c.created_at) < Date.parse(from)) && entries.length < take);

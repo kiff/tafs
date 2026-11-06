@@ -99,6 +99,8 @@ export interface AgentDefinition {
    * first of their free-text fields the call carries, whatever the model wrote (kiff/agents#352).
    */
   disclose?: { line: string; in: Array<{ tool: string; fields: string[] }> };
+  /** The credit after the disclosure ("Built with tafs."), in the calls it names, joined on its line when the text ends with after (kiff/agents' Definition.Credit). */
+  credit?: { line: string; after?: string; in: Array<{ tool: string; fields: string[] }> };
   model: string;
   price: Price;
   max_tokens: number;
@@ -126,6 +128,8 @@ export interface AgentDefinition {
   history_tokens?: number;
   /** The show tool: UI components in the owner's chat (kiff/agents#91). Off unless set. */
   show?: boolean;
+  /** The cards the agent shows instead of Coach's: a taf's own, ask_coach (kiff/agents' show_types, kiff/tafs#476 gap 15). */
+  show_types?: string[];
   /** The planque the agent asks for vendor access through (kiff/agents#91). Off unless set. */
   planque?: string;
   /** The draft tool: Setup submits a taf's KIFF draft, its claim secret kept from the model (kiff/agents#94). */
@@ -433,9 +437,11 @@ export interface SessionEvent {
   /**
    * A kind the keep rules name, a `component` the agent showed (kiff/agents#91), or
    * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167), or
-   * `answered`: the owner's answer to a card, as data ({id, type, answer?, words?, wrote?, unanswered?}).
+   * `answered`: the owner's answer to a card, as data ({id, type, answer?, words?, wrote?, unanswered?}), or a
+   * `called`: a call to a tool outside the agent and what came of it ({tool, input?, outcome, reason?}), kept
+   * like messages after the run drops its results; reason is the result's words when it wasn't done.
    */
-  kind: EventKind | "component" | "call_ref" | "answered";
+  kind: EventKind | "component" | "call_ref" | "answered" | "called";
   body: unknown;
 }
 

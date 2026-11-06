@@ -63,7 +63,7 @@ const ENTRY_SKILLS: Record<CoachEntry, string[]> = {
  * the start (ENTRY_SKILLS) or by `read_skill`.
  */
 const TOOL_SKILLS: Record<string, string[]> = {
-  tafs_state: ["the-tafs"], taf_run: ["the-tafs"], taf_task: ["the-tafs"], run_stop: ["the-tafs"], taf_pause: ["halting"],
+  tafs_state: ["the-tafs"], taf_run: ["the-tafs"], taf_check: ["the-tafs"], taf_task: ["the-tafs"], run_stop: ["the-tafs"], taf_pause: ["halting"],
   version_try: ["the-tafs"], version_install: ["the-tafs"],
   taf_results: ["the-dial"], taf_dial: ["the-dial"],
   app_look: ["drive-the-app"], app_act: ["drive-the-app"],

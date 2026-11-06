@@ -21,7 +21,7 @@ describe("Setup's definition on kiff/agents", () => {
       ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "skills", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
-    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install", "app_look", "app_act"]);
+    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install", "app_look", "app_act"]);
   });
 
   // The owner's first words came after every tool turn, about 22 s on 5 Nov: one short line first.
@@ -79,7 +79,8 @@ describe("Setup's definition on kiff/agents", () => {
 
   it("a taf's definition doesn't get Setup's tools", () => {
     const taf = definition(ID, jobById("refunds"));
-    expect(taf.show).toBeUndefined();
+    // Its own card alone, never Coach's (gap 15): kiff/agents' show tool, limited to ask_coach.
+    expect([taf.show, taf.show_types]).toEqual([true, ["ask_coach"]]);
     expect(taf.planque).toBeUndefined();
     expect(taf.drafts).toBeUndefined();
   });
@@ -196,8 +197,10 @@ describe("Setup's definition on kiff/agents", () => {
     // After tafs cloud answers the result, one closing message, always (Eval 41042518957).
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("always write one closing message, even when nothing more is needed");
     expect(COACH_TEXT).not.toContain("The app starts the taf from that draft.");
-    // A reconnect is said only once the taf's own read works (the owner's phone, 30 Oct: "reconnected" before anything used it).
-    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Before saying it's fixed, check it the way the taf works");
+    // A connection, or a reconnect, is said only once a read through it works (the owner's phone, 30 Oct:
+    // "reconnected" before anything used it; gap 10: a refused key caught at connect, not at the first run).
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Before saying it's ready or fixed, check it: one read through it");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("A 401 or 403 there is the key or sign-in refused");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("never the names of your tools or KIFF's and planque's parts");
     // No closing offer of more help (Eval 41024236766: "Si quieres cambiarlos, dímelo aquí.").
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");

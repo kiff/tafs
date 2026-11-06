@@ -73,10 +73,36 @@ describe("Activity pages from the source", () => {
     expect(entry.call).toBe(original); expect(original.tool_outcome.status).toBe("refused_by_tool"); expect(original.held).toBe(true);
     const detail = "Not sent: the connection refused it. It still counts toward today's limits.";
     expect(activityEntry({ ...original, detail }, "UTC", now).detail).toBe(detail);
+    // An app's words are its own, quoted: never read as the connection's, nor as nothing done (gap 10).
     const vendor = { ...original, tool_outcome: { status: "refused_by_tool", code: "halt_unknown", message: "Refused by planque: nothing was sent" } };
-    expect(activityEntry(vendor, "UTC", now).detail).toBe("The app refused it");
+    expect(activityEntry(vendor, "UTC", now).detail).toBe(`The app refused it: "Refused by planque: nothing was sent"`);
+    expect(activityEntry(vendor, "UTC", now).kind).toBe("not_done");
     expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, code: "future_reason" } }, "UTC", now).detail).toBe("The connection refused it before sending. Nothing was sent.");
     expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, status: "done" } }, "UTC", now).kind).toBe("approved");
+  });
+  // kiff/tafs#476, gap 10: the owner read "The app refused it" with no reason, though KIFF kept the vendor's.
+  it("says why a call wasn't done, in the app's words, and what the owner can do about it", () => {
+    const refused = (message: string | undefined, extra: Partial<ActivityCall> = {}): ActivityCall =>
+      ({ ...call(0, "refused_by_tool"), action_name: "list_inboxes_k3f9", title: "List inboxes", tool_outcome: { status: "refused_by_tool", ...(message === undefined ? {} : { message }) }, ...extra });
+    const key = activityEntry(refused("Agent Mail refused it (it answered 403): Forbidden."), "UTC", now, "Chase invoices");
+    expect(key.detail).toBe(`The app refused it: "Agent Mail refused it (it answered 403): Forbidden."`);
+    expect(key.next).toEqual({ kind: "reconnect", words: "Connect it again", tool: "list_inboxes_k3f9", taf: "Chase invoices" });
+    expect(activityEntry(refused("Stripe answered 401: expired key"), "UTC", now).next?.kind).toBe("reconnect");
+    const missing = activityEntry(refused("Agent Mail refused it (it answered 404): Not found"), "UTC", now, "Chase invoices");
+    expect(missing.next).toEqual({ kind: "ask_coach", words: "Ask Coach to change the taf", tool: "list_inboxes_k3f9", taf: "Chase invoices",
+      message: "Change Chase invoices: List inboxes failed. Agent Mail refused it (it answered 404): Not found." });
+    for (const status of [429, 500, 503]) expect(activityEntry(refused(`Agent Mail refused it (it answered ${status}): busy`), "UTC", now).next?.kind).toBe("try_later");
+    // No status, or KIFF's fallback for no words: no guess, and no reason made up.
+    expect(activityEntry(refused("Agent Mail refused it: the inbox is archived."), "UTC", now).next).toBeUndefined();
+    const silent = activityEntry(refused("The tool returned an error."), "UTC", now);
+    expect([silent.detail, silent.next]).toEqual(["The app refused it and gave no reason", undefined]);
+    expect(activityEntry(refused(undefined), "UTC", now).detail).toBe("The app refused it and gave no reason");
+    // The connection's own codes, typed by KIFF.
+    const connection = (code: string) => activityEntry(refused(undefined, { tool_outcome: { status: "refused_by_tool", refused_by: "connection", code } }), "UTC", now).next?.kind;
+    expect([connection("operation_changed"), connection("not_granted"), connection("profile_not_applied"), connection("halted")]).toEqual(["reconnect", "ask_coach", "try_later", undefined]);
+    // Nothing reached the app: later. Done, held, refused by the Card, or an answer lost: no step.
+    expect(activityEntry({ ...call(0, "not_sent") }, "UTC", now).next?.kind).toBe("try_later");
+    for (const c of [call(0), call(0, "unknown"), { ...call(0), outcome: "owner_required" }, { ...call(0), outcome: "denied" }]) expect(activityEntry(c, "UTC", now).next).toBeUndefined();
   });
   it("returns twenty newest entries and a cursor, without dropping the next entry", async () => {
     const s = source(Array.from({ length: 45 }, (_, i) => call(i)));

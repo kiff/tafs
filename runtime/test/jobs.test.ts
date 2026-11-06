@@ -14,7 +14,9 @@ describe("jobs", () => {
     expect(own).toEqual({ id: "custom", name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", cron: "",
       instructions: "What this job does: Reminds customers of overdue invoices.\n\nNever change an invoice." });
     const prompt = systemPrompt(own);
-    expect(prompt).toContain("Your job: Invoices.\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
+    expect(prompt).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
+    // Who it writes for, once the owner said (gaps 16 and 18): never "for the company".
+    expect(systemPrompt({ ...own, writesFor: "Kiff Agents OÜ" })).toContain('Your disclosure line: "Written by an AI agent for Kiff Agents OÜ."');
     expect(prompt).toContain("kiff_pending");
     // With nothing drafted but the name, it still says what it is.
     expect(ownJob({ name: "Leads", summary: " ", kickoff: "x" }).instructions).toBe("You do this job for the company: Leads.");
