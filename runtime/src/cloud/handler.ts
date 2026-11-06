@@ -834,6 +834,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "conversation") {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
+    // What the person wrote that waits for the taf to be done goes now, if it's done (docs/chat.md).
+    await settleSteering(event, me, taf, deps).catch(() => undefined);
     const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
@@ -841,6 +843,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
+    await settleSteering(event, me, taf, deps).catch(() => undefined);
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
@@ -2282,6 +2285,8 @@ function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrot
  * Unknown (kiff/agents not answering) reads as neither.
  */
 async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null; capped?: Capped }> {
+  // What the person wrote that waits for the taf to be done, whatever run is latest.
+  const held = await heldFor(me, taf, deps).catch(() => undefined);
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
@@ -2291,10 +2296,20 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
     if (!run) return none;
     const r = await deps.agents.getRun(me.tenantID, taf.id, run);
     // Times as the thread's are (milliseconds): kiff/agents writes nanoseconds, which the app can't read.
-    const untaken = (r.steering ?? []).filter((m) => !m.taken).map(({ text, at }) => ({ text, at: iso(at) }));
+    let untaken = (r.steering ?? []).filter((m) => !m.taken).map(({ text, at }) => ({ text, at: iso(at) }));
+    let notSent: Array<{ text: string; at: string; why: string }> = [];
+    if (r.status === "CANCELLED" && deps.coach) {
+      // Stopped: what a run written to with `hold` never read, and what waited for it, isn't sent.
+      const [steered, unsent] = await Promise.all([deps.coach.get(steerKeys.run(me.tenantID, run)), deps.coach.get(steerKeys.unsent(me.tenantID, run))]);
+      const kept = (Array.isArray(unsent) ? unsent : []) as Array<{ text: string; at: string }>;
+      notSent = [...(steered ? untaken : []), ...kept].map((m) => ({ ...m, why: NOT_SENT_WORDS.stopped }));
+      if (steered) untaken = [];
+    }
     return {
       working: r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run } : null,
-      steering: untaken.length ? { run, status: r.status, untaken } : null,
+      steering: untaken.length || held || notSent.length
+        ? { run, status: r.status, untaken, ...(held ? { held } : {}), ...(notSent.length ? { not_sent: notSent } : {}) }
+        : null,
       ...(r.stop === "cost_cap" || r.stop === "turn_cap" ? { capped: { run, stop: r.stop } } : {}),
     };
   } catch {
@@ -2314,13 +2329,17 @@ interface Capped {
 /**
  * What the owner wrote to the latest run that it hasn't read (kiff/agents#102), as
  * kiff/agents says: while the run goes, it reads them at its next step (a paused one,
- * when it carries on); once it's over, they were never read, and the app offers to
- * send them again.
+ * when it carries on). With `hold` (docs/chat.md), tafs cloud deals with the rest:
+ * `held` is what waits to go as the person's next message once the taf is done;
+ * `not_sent` is what a stopped run never read, or what waited for it, with why. Without
+ * it, a run that's over lists what it never read, and the app deals with it, as before.
  */
 interface Steering {
   run: string;
   status: string;
   untaken: Array<{ text: string; at: string }>;
+  held?: { text: string; at: string };
+  not_sent?: Array<{ text: string; at: string; why: string }>;
 }
 
 /**
@@ -3661,21 +3680,169 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
  * be this taf's: kiff/agents answers another agent's as not found.
  */
 async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
-  const run = str(parseBody(event).run).trim();
+  const body = parseBody(event);
+  const run = str(body.run).trim();
   if (!run) throw new HTTPError(400, "name the run to write to");
   const text = chatText(event);
+  // `hold`: the app lets tafs cloud hold what the run doesn't take, and send it as the next
+  // message once the taf is done (docs/chat.md). Without it, a run that took nothing is 409,
+  // as before, for an app that still keeps its own queue.
+  const hold = body.hold === true && deps.coach !== undefined;
   // Coach's unread lines go with the owner's words, as with a new message: a run that stays at work
   // (paused on an approval) would otherwise never read them, and they'd stay under every later message.
   const lines = await takeCoachLines(me, taf, deps);
   try {
     const out = await deps.agents.steerRun(me.tenantID, taf.id, run, lines.text(text), member(me));
+    // What this run doesn't read, tafs cloud deals with once it's over.
+    if (hold) {
+      await deps.coach!.put(steerKeys.run(me.tenantID, out.id), { person: me.subject, session: out.session } satisfies SteeredRun, steerKept(deps));
+      await deps.coach!.put(steerKeys.chat(me.tenantID, taf.id, me.subject), { session: out.session }, steerKept(deps));
+    }
     return { run: out.id, status: out.status };
   } catch (err) {
     // Not read: Coach reads its lines with the message the app sends next.
     await lines.putBack();
+    if (hold && err instanceof AgentsError && err.status === 409) return holdSteer(event, me, taf, run, text, deps);
     if (refused(err, "run_ended", "not_paused")) throw new HTTPError(409, "the run has ended: send it as a new message");
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw agentsFailure(err);
+  }
+}
+
+/** How long tafs cloud keeps a held message, and a run's note that it deals with what the run doesn't read. */
+const STEER_KEPT_MS = 24 * 3600_000;
+
+function steerKept(deps: Deps): Date {
+  return new Date((deps.now?.() ?? new Date()).getTime() + STEER_KEPT_MS);
+}
+
+/** What tafs cloud keeps for messages written while a taf works, under the account's prefix. */
+const steerKeys = {
+  /** What a person wrote while the taf worked that its run didn't take: their next message, once the taf is done. */
+  held: (tenant: string, taf: string, person: string) => `${tenant}#steer-held#${taf}#${person}`,
+  /** A run the person wrote to with `hold`: tafs cloud deals with what it doesn't read. */
+  run: (tenant: string, run: string) => `${tenant}#steer-run#${run}`,
+  /** The chat a person last wrote to with `hold`, so its run is dealt with once it's over. */
+  chat: (tenant: string, taf: string, person: string) => `${tenant}#steer-chat#${taf}#${person}`,
+  /** Claimed once a run's unread messages are dealt with, so they go once. */
+  settled: (tenant: string, run: string) => `${tenant}#steer-settled#${run}`,
+  /** What a stopped run never read, and what was held for it: not sent, with why. */
+  unsent: (tenant: string, run: string) => `${tenant}#steer-unsent#${run}`,
+};
+
+interface HeldMessage {
+  text: string;
+  at: string;
+  /** The chat it goes in, and the run it was written to. */
+  session: string;
+  run: string;
+}
+
+interface SteeredRun {
+  person: string;
+  session: string;
+}
+
+/** Why a message wasn't sent, in the words every app shows as they are. */
+export const NOT_SENT_WORDS = {
+  stopped: "You stopped it before it read this.",
+} as const;
+
+/**
+ * A message the run didn't take (it had ended, or held as many as it takes), with
+ * `hold`: tafs cloud keeps it, joined to any already waiting, and sends it as the
+ * person's next message once the taf is done: now, when nothing of theirs is at work
+ * in that chat. 202 either way: `sent` names the new run, `held` says it waits.
+ */
+async function holdSteer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, runID: string, text: string, deps: Deps): Promise<PageResponse> {
+  // kiff/agents refused it as over or full, not as another person's (that's 404): it's theirs.
+  const r = await agentsCall(() => deps.agents.getRun(me.tenantID, taf.id, runID));
+  const at = (deps.now?.() ?? new Date()).toISOString();
+  await deps.coach!.append(steerKeys.held(me.tenantID, taf.id, me.subject), { text, at, session: r.session, run: r.id } satisfies HeldMessage, steerKept(deps));
+  const sent = await settleSteering(event, me, taf, deps);
+  if (sent) return new PageResponse(json(202, { sent: { run: sent.id, session: sent.session } }));
+  const held = await heldFor(me, taf, deps);
+  return new PageResponse(json(202, { held }));
+}
+
+/** The person's held messages for the taf, joined as they'll go: none, undefined. */
+async function heldFor(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ text: string; at: string } | undefined> {
+  const list = ((await deps.coach?.get(steerKeys.held(me.tenantID, taf.id, me.subject))) ?? []) as HeldMessage[];
+  if (!Array.isArray(list) || !list.length) return undefined;
+  return { text: joinHeld(list.map((m) => m.text)), at: list[0]!.at };
+}
+
+/** Messages that go as one, in the order written: a second message written while one waits joins it. */
+function joinHeld(texts: string[]): string {
+  return texts.join("\n\n").slice(0, CHAT.maxText);
+}
+
+/**
+ * Sends what waits for the person once the taf is done, as their next message in that
+ * chat: what they wrote that the run didn't take (held), and what a run they wrote to
+ * with `hold` never read, once it's over. When the run was stopped, what it never read,
+ * and what waited for it, is not sent: the thread says so, with why. Nothing goes while
+ * a run of theirs is at work or paused in the chat. Taken once, so two reads never send
+ * twice; a send that fails puts it all back. Undefined when nothing went.
+ */
+async function settleSteering(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Run | undefined> {
+  const store = deps.coach;
+  if (!store) return undefined;
+  const heldKey = steerKeys.held(me.tenantID, taf.id, me.subject);
+  const chatKey = steerKeys.chat(me.tenantID, taf.id, me.subject);
+  const [waiting, pointer] = await Promise.all([store.get(heldKey), store.get(chatKey)]);
+  const session = (waiting as HeldMessage[] | undefined)?.at(-1)?.session ?? (pointer as { session?: string } | undefined)?.session;
+  if (!session) return undefined;
+  // The chat's latest run: nothing goes while one is at work, or paused waiting on the person.
+  const latest = await latestOf(me, taf, session, deps);
+  if (!latest || !OVER.has(latest.status)) return undefined;
+  const steered = (await store.get(steerKeys.run(me.tenantID, latest.id))) as SteeredRun | undefined;
+  const untaken = steered ? (latest.steering ?? []).filter((m) => !m.taken).map((m) => m.text) : [];
+  const held = (await store.take(heldKey)) as HeldMessage[];
+  if (pointer) await store.remove(chatKey);
+  if (!held.length && !untaken.length) return undefined;
+  if (steered && !(await store.once(steerKeys.settled(me.tenantID, latest.id), steerKept(deps)))) {
+    // Another read is dealing with this run's unread messages: what was held goes back to wait.
+    for (const m of held) await store.append(heldKey, m, steerKept(deps));
+    return undefined;
+  }
+  if (latest.status === "CANCELLED") {
+    // Stopped: none of it goes. The thread shows it as not sent, with why.
+    for (const m of held) await store.append(steerKeys.unsent(me.tenantID, latest.id), { text: m.text, at: m.at }, steerKept(deps));
+    return undefined;
+  }
+  const text = joinHeld([...untaken, ...held.map((m) => m.text)]);
+  try {
+    return await sendNext(event, me, taf, latest.session, text, deps);
+  } catch (err) {
+    for (const m of held) await store.append(heldKey, m, steerKept(deps));
+    if (steered) await store.remove(steerKeys.settled(me.tenantID, latest.id));
+    if (untaken.length && !held.length) await store.append(heldKey, { text: joinHeld(untaken), at: (deps.now?.() ?? new Date()).toISOString(), session: latest.session, run: latest.id } satisfies HeldMessage, steerKept(deps));
+    console.warn(JSON.stringify({ msg: "held message not sent yet", status: err instanceof AgentsError ? err.status : 500 }));
+    return undefined;
+  }
+}
+
+/** A run's states once it's over: what it never read can't be read by it any more. */
+const OVER = new Set(["COMPLETED", "ERROR", "CANCELLED"]);
+
+/** The latest run in one of the person's chats, as kiff/agents keeps it. */
+async function latestOf(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<Run | undefined> {
+  const read = await deps.agents.session(me.tenantID, session, ownerKey(me)).catch(() => undefined);
+  const run = read?.events.at(-1)?.run;
+  return run ? deps.agents.getRun(me.tenantID, taf.id, run).catch(() => undefined) : undefined;
+}
+
+/** The person's next message in a chat, sent by tafs cloud with their session: Coach's unread lines go with it. */
+async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: string, text: string, deps: Deps): Promise<Run> {
+  const lines = await takeCoachLines(me, taf, deps);
+  try {
+    const [at, ai] = await Promise.all([granted(event, taf.kiffAgent, { session, requester: member(me) }, deps), aiBound(event, deps)]);
+    if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
+    return await deps.agents.startRun(me.tenantID, taf.id, lines.text(text), at, ai);
+  } catch (err) {
+    await lines.putBack();
+    throw err;
   }
 }
 
@@ -4098,7 +4265,9 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       await lines.putBack();
       throw err;
     }
-    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps))) };
+    // Once the answer ends, what the person wrote that waited for it goes (docs/chat.md).
+    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps))), () => settleSteering(event, me, taf, deps));
+    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
     if (status === 500) console.error(err);
@@ -4107,6 +4276,15 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     // A refusal is said in the log too, by its code: never a body, a token or an id.
     if (status !== 500) console.warn(JSON.stringify({ msg: "stream refused", status, ...(typeof extra?.code === "string" ? { code: extra.code } : {}) }));
     return { statusCode: status, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: once(JSON.stringify({ error: message, ...extra })) };
+  }
+}
+
+/** A stream that, once it ends, does `after`: best effort, never failing what was streamed. */
+async function* settleAfter(body: AsyncGenerator<string>, after: () => Promise<unknown>): AsyncGenerator<string> {
+  try {
+    yield* body;
+  } finally {
+    await after().catch(() => undefined);
   }
 }
 
@@ -4265,7 +4443,8 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID) };
+  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID), () => settleSteering(event, me, taf, deps));
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
 }
 
 /**
@@ -4609,12 +4788,28 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
   if (!run) return { stopped: false };
   try {
     const out = await deps.agents.cancelRun(me.tenantID, taf.id, run, member(me));
+    await stoppedSteering(me, taf, session, run, deps).catch(() => undefined);
     return { stopped: true, run: out.id, status: out.status };
   } catch (err) {
     // Already over: nothing is left to stop.
     if (refused(err, "run_ended", "run_changed")) return { stopped: false };
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw err instanceof AgentsError ? new HTTPError(err.status >= 500 ? 502 : err.status, err.message) : err;
+  }
+}
+
+/**
+ * The person stopped the run at work in a chat: what they wrote that waited for it to be
+ * done isn't sent, and what it never read won't be either. The thread says so, with why.
+ */
+async function stoppedSteering(me: KIFFIdentity, taf: Taf, session: string, run: string, deps: Deps): Promise<void> {
+  const store = deps.coach;
+  if (!store) return;
+  const heldKey = steerKeys.held(me.tenantID, taf.id, me.subject);
+  await store.once(steerKeys.settled(me.tenantID, run), steerKept(deps));
+  for (const m of (await store.take(heldKey)) as HeldMessage[]) {
+    if (m.session === session) await store.append(steerKeys.unsent(me.tenantID, run), { text: m.text, at: m.at }, steerKept(deps));
+    else await store.append(heldKey, m, steerKept(deps));
   }
 }
 

@@ -5,6 +5,16 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **tafs cloud holds a message written while the taf works, when its run doesn't take it (tafs cloud; apps opt in with `hold`).**
+  - **The refusal:** a steer refused because the run had ended, or held as many messages as it takes, was a 409, and each app kept its own queue: iOS held the message, while Android sent it at once.
+  - **With `hold: true`,** tafs cloud keeps the message instead, and answers 202:
+    - it's sent at once as the person's next message in that chat when the run is over (`sent`);
+    - otherwise it waits (`held`), and a second message joins it;
+    - it goes once the taf is done: at the end of the answer's stream, or on the next read of the thread, taken once, and put back if the send fails.
+  - **What the run never read:** for a run written to with `hold`, what it hadn't read when it ended goes as the next message.
+  - **When the person stops the run,** neither goes. The thread's `steering` shows them as `not_sent`, with why ("You stopped it before it read this.").
+  - **Without `hold`,** nothing changes. Android and iOS move to it in their own batches (docs/chat.md).
+
 - **Connect apps lists every connection to an app, and a connection's fix works and is where the owner looks (both apps; Android 36's phone round).**
   - **Every connection to an app:** an app's connections were only those made from its catalog entry, so the vendor's own sign-ins Coach started (which carry none) never showed under it. Stripe listed one leftover provider grant, not its 7 live sign-ins. A connection is now also the app's when it's a managed provider's whose toolkit is the app's slug, or, for any other, when a whole label of its server's host is (`mcp.stripe.com` is Stripe; `notstripe.com` and a provider's own host aren't).
   - **Sign in again reads KIFF's words first:** it refused before the fingerprint ("KIFF's words for this connection aren't read yet") wherever nothing had read them. It reads them now, as the approval card does, and says why when they can't be read.
