@@ -5,12 +5,13 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
-- **What's written while a taf or Coach works goes to its run once, and tafs cloud holds what it doesn't take (iOS; Android's side is in its own change).** iOS sends `hold: true` on `steer` (docs/chat.md) in a taf's chat and, new on iOS, in Coach's, which used to wait in the app.
+- **What's written while a taf or Coach works goes to its run once, and tafs cloud holds what it doesn't take (iOS, as Android does below).** iOS sends `hold: true` on `steer` (docs/chat.md) in a taf's chat and, new on iOS, in Coach's, which used to wait in the app.
   - The run reads it at its next step, or tafs cloud holds it for that chat. It shows dimmed with "Waits until it's done, then goes as your next message", as on Android, and goes as the person's next message once the taf is done.
   - More than tafs cloud holds (`held_full`) leaves the words in the composer, with tafs cloud's why as it says it. A message that didn't reach tafs cloud stays as not sent, with Retry.
   - The app's own queue is gone: it never sends what a run didn't read. What a stopped run never read shows once as not sent, with tafs cloud's why and Retry, which sends it as a new message.
 
 - **Connect apps lists a connection under the app planque names for it (both apps).** planque now gives every grant its app (`entry`), a vendor's own sign-in included (kiff/planque#115 and #116's reviewed list of vendors' own servers). The apps match by it, or by the grant tafs cloud named for a row, and no longer work an app out from a connection's toolkit or server: a connection planque leaves unnamed, because its app is unclear, lists under none.
+- **A message written while the taf works is sent once, and tafs cloud holds it (Android).** The app sends `hold: true` on a steer and never resends on a refusal. What waits shows as the person's own words, dimmed, with "Waits until it's done, then goes as your next message". What a stopped run never read shows as Not sent with tafs cloud's why, Edit and Retry. `409 held_full` shows tafs cloud's words and puts the text back in the box. An older tafs cloud's plain 409 still sends the message as a new one, so there's no deploy order. iOS follows in the next app batch.
 - **tafs cloud holds a message written while the taf works, when its run doesn't take it (tafs cloud; apps opt in with `hold`).**
   - **The refusal:** a steer refused because the run had ended, or held as many messages as it takes, was a 409, and each app kept its own queue: iOS held the message, while Android sent it at once.
   - **With `hold: true`,** tafs cloud keeps the message for the chat it was written in, and answers 202:
