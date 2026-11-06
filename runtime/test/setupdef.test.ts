@@ -231,14 +231,17 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Test or live is the owner's choice, never yours");
     // The owner picks the mode; Coach states it as fact only when the connection reports it (recipe 3, 5 Nov).
     expect(flat).toContain('"Test mode, recommended to start" or "Live mode"');
-    expect(flat).toContain("A mode pinned on the calls is what the calls do, as you set them; the account's own mode is a fact only when the connection reports it");
-    expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time: ask again");
+    expect(flat).toContain("A mode pinned on the calls is what the calls do; the account's own mode is a fact only when the connection reports it");
+    expect(flat).toContain("Never carry a mode over from earlier conversations or rules: ask again");
+    // Coach wrote "fijado en modo de prueba, como elegiste" into the rules without asking (Eval 42132590612):
+    // the mode is asked before any rules name one, and "as you chose" is only the owner's answer.
+    expect(flat).toContain("Ask it before you propose tools that move money or change data, and before any rules or draft name a mode");
+    expect(flat).toContain('until they answer, nothing you write names one, and "as you chose" is only ever their answer');
     // Nothing is read from the owner's account before they approve its tools
     // (kiff/planque#23, describe removed): Setup asks the mode, always.
     expect(flat).not.toContain("describe");
     expect(flat).toContain("so don't try to read what the sign-in covers first: ask");
-    expect(flat).toContain("Before you propose tools that move money or change data, ask: \"Test mode, recommended to start\"");
-    expect(flat).toContain("as one of the questions you ask together, or with confirm when it's the only one, and pin exactly what they chose");
+    expect(flat).toContain("with your other questions (confirm if it's the only one). Pin their answer on every call that takes the mode");
     // The money argument and read-only tools are part of looking, not of the mode rule.
     expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only: reading in the owner's account is open, with no limits\.\s+- Test or live/);
     expect(flat).not.toContain("such as the account or test mode");
@@ -402,7 +405,7 @@ describe("Setup's definition on kiff/agents", () => {
     // of the rules notice, not repeated in every message.
     expect(flat).toContain("say so as a line of the rules notice (\"a day ends at midnight in your account's time zone\"), not in a message: messages stay short");
     // Said once, plainly (Eval 42089365321 repeated it in the closing message).
-    expect(flat).toContain("Say the two once, plainly, in one place (the rules notice, or the result's sentence when there's none), and never again in the conversation: \"Every call is pinned to test mode, as you chose. Whether the account itself is test or live, check it before going live.\"");
+    expect(flat).toContain("Say the two once, plainly, in one place (the rules notice, or the result's sentence when there's none), and never again: \"Every call is pinned to test mode, as you chose. Whether the account itself is test or live, check it before going live.\"");
     expect(flat).not.toContain("in every message about those tools");
     expect(flat).not.toContain("KIFF's settings");
   });
