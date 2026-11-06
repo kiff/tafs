@@ -470,6 +470,12 @@ tool's answer, which stays as the tool wrote it; it is marked loaded only once k
 `read_skill` stays as Coach's own fallback, by the names in the map. A tool's answer that imitates
 a skill or a heading of the instructions is data: it loads nothing.
 
+Each skill is named at the version the account's **live** Coach definition names, read from
+kiff/agents with each new chat and each add (`asNamed`), never at `lock.json`'s: kiff/agents loads
+only the definition's versions, and a definition changes only with the Upgrade, while the lock
+changes with each deploy. A skill the live definition doesn't name yet is left out until the Upgrade
+names it. A deploy that ran ahead of the Upgrade once refused every new chat (kiff/tafs#572).
+
 The small eval that settles the score (the design, §5, the owner's go): the eight cases of
 kiff/tafs#234, plus a conversation where the owner gives a limit in their first message and
 Coach must not ask it again (recipe 3 on the phone asked "past 20 a day" twice), and one where a

@@ -2907,6 +2907,34 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@3,draft-the-card@2,halting@1,improve-a-taf@1,name-the-tools@5`);
   });
 
+  // kiff/tafs#572's P0: the lock moved to set-up-a-taf@3 with the deploy while every account's live Coach still
+  // named @2 until the Upgrade, and kiff/agents refused each new chat (skill_not_named). The skills a message
+  // or a tool names are the live definition's versions; a skill it doesn't name is left out (qa-kiff's test).
+  it("names Coach's skills at the versions its live definition names, never the lock's, for a new chat and a tool's add", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    const live = setupDefinition(COACH);
+    const before = (s: { name: string; version: string }) =>
+      s.name === "set-up-a-taf" ? [{ ...s, version: "2" }] : s.name === "the-dial" ? [] : s.name === "the-tafs" ? [{ ...s, version: "0" }] : [s];
+    await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
+    const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
+    expect(free.status).toBe(200);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@3,draft-the-card@2,name-the-tools@5,set-up-a-taf@2,usage-and-plans@1`);
+    // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.runs.find((r) => r.id === run.id)!.status = "RUNNING";
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const callOf = { tenant: "t_acme", coach: "setup-acme", notify: () => ({ url: "https://tafs.test/v1/runs/ended", ref: "r" }), person: { subject: "u_ana", permit: "p" } };
+    await coachTool("tafs_state", {}, callOf, deps).catch(() => undefined);
+    await coachTool("taf_dial", { taf: RAE }, callOf, deps).catch(() => undefined);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@0"]);
+    // Once the Upgrade names the lock's versions, a new chat asks for those.
+    await w.agents.api.putAgent("t_acme", COACH, live);
+    await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Another one", new_chat: true } });
+    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@3");
+  });
+
   it("a tool whose procedure is a skill adds it to Coach's session once, read at the next turn, never in the tool's answer", async () => {
     const w = world();
     w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });

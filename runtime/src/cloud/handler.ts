@@ -18,7 +18,7 @@ import { requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
-import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills } from "./coach-skills.js";
+import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
@@ -2718,8 +2718,11 @@ async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: stri
     }
   }
   const entry = entryOf(text);
-  const [state, lines] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? [] : startConnections(me, event, deps)]);
-  at.skills = startSkills(entry, state);
+  const [state, lines, live] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? [] : startConnections(me, event, deps),
+    // The skills at the versions Coach's live definition names: kiff/agents loads no other (asNamed).
+    deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined)]);
+  const skills = asNamed(startSkills(entry, state), live?.skills);
+  if (skills.length) at.skills = skills;
   return withConnections(text, lines);
 }
 
@@ -2789,10 +2792,11 @@ async function loadToolSkills(name: string, call: CoachCall, deps: Deps): Promis
     if (!runID) return;
     const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
     if (!setup) return;
-    const run = await deps.agents.getRun(call.tenant, setup.id, runID);
+    const [run, live] = await Promise.all([deps.agents.getRun(call.tenant, setup.id, runID), deps.agents.getAgent(call.tenant, setup.id)]);
     const until = new Date((deps.now?.() ?? new Date()).getTime() + LOADED_KEPT_MS);
     const add: typeof refs = [];
-    for (const ref of refs) if (!(await deps.coach.get(loadedKey(call.tenant, run.session, ref)))) add.push(ref);
+    // At the versions the live definition names (asNamed): kiff/agents adds no other.
+    for (const ref of asNamed(refs, live?.skills)) if (!(await deps.coach.get(loadedKey(call.tenant, run.session, ref)))) add.push(ref);
     if (!add.length) return;
     // Marked only once kiff/agents has it: a failed add is tried again by the next call (the add is idempotent).
     await deps.agents.addSessionSkills(call.tenant, setup.id, run.session, add);
