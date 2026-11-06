@@ -1395,7 +1395,12 @@ final class TafsCloud {
     /// Setup's thread from tafs cloud's answer: its messages, its cards, and the drives that ended in it
     /// (`items` of type `drive`, docs/drive.md). Anything the app can't read is left out, never the thread.
     static func setupThread(decoding data: Data) throws -> SetupThread {
-        struct Working: Decodable { let session: String }
+        struct Working: Decodable { let session: String; let run: String? }
+        /// Steering the app can't read is left out, never the thread with it.
+        struct LenientSteering: Decodable {
+            let steering: Steering?
+            init(from decoder: Decoder) throws { steering = try? Steering(from: decoder) }
+        }
         /// One the app can't read is left out, never the thread with it.
         struct LenientLine: Decodable {
             let line: CoachLine?
@@ -1412,13 +1417,13 @@ final class TafsCloud {
         }
         struct Response: Decodable {
             let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working?; let coachLines: [LenientLine]?
-            let items: [LenientDrive]?
-            enum CodingKeys: String, CodingKey { case messages, components, working, items, coachLines = "coach_lines" }
+            let items: [LenientDrive]?; let steering: LenientSteering?
+            enum CodingKeys: String, CodingKey { case messages, components, working, items, steering, coachLines = "coach_lines" }
         }
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
         return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
                            working: r.working?.session, coachLines: (r.coachLines ?? []).compactMap(\.line),
-                           drives: (r.items ?? []).compactMap(\.drive))
+                           drives: (r.items ?? []).compactMap(\.drive), workingRun: r.working?.run, steering: r.steering?.steering)
     }
 
     /// How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until

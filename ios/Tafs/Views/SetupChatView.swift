@@ -242,7 +242,23 @@ struct SetupChatView: View {
                         ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true, steady: true).id("live")
                     }
                     if !thinking { ended }
-                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued").pinnedTop(pinned == "queued") }
+                    // Written to Coach's run while it goes, not read yet, as kiff/agents says (docs/chat.md).
+                    if let steering = model.setupThread.steering, !steering.over {
+                        ForEach(Array(steering.untaken.enumerated()), id: \.offset) { i, m in
+                            VStack(alignment: .trailing, spacing: 4) {
+                                ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
+                                    .opacity(0.8)
+                                Text("Coach reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .accessibilityElement(children: .combine)
+                            .id("steer|\(i)")
+                            .pinnedTop("steer|\(i)" == pinned)
+                        }
+                    }
+                    // tafs cloud holds it, and sends it once Coach is done (docs/chat.md).
+                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer").id("queued").pinnedTop(pinned == "queued") }
                     Color.clear.frame(height: 0).threadFoot()
                     // Room under a pinned message, so a short one reaches the top at once (kiff/tafs#243):
                     // the screen less the turn it starts (the 845 test), so the answer grows into it

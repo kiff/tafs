@@ -5,6 +5,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **What's written while a taf or Coach works goes to its run once, and tafs cloud holds what it doesn't take (iOS; Android's side is in its own change).** iOS sends `hold: true` on `steer` (docs/chat.md) in a taf's chat and, new on iOS, in Coach's, which used to wait in the app.
+  - The run reads it at its next step, or tafs cloud holds it for that chat. It shows dimmed with "Waits until it's done, then goes as your next message", as on Android, and goes as the person's next message once the taf is done.
+  - More than tafs cloud holds (`held_full`) leaves the words in the composer, with tafs cloud's why as it says it. A message that didn't reach tafs cloud stays as not sent, with Retry.
+  - The app's own queue is gone: it never sends what a run didn't read. What a stopped run never read shows once as not sent, with tafs cloud's why and Retry, which sends it as a new message.
+
 - **Connect apps lists a connection under the app planque names for it (both apps).** planque now gives every grant its app (`entry`), a vendor's own sign-in included (kiff/planque#115 and #116's reviewed list of vendors' own servers). The apps match by it, or by the grant tafs cloud named for a row, and no longer work an app out from a connection's toolkit or server: a connection planque leaves unnamed, because its app is unclear, lists under none.
 - **tafs cloud holds a message written while the taf works, when its run doesn't take it (tafs cloud; apps opt in with `hold`).**
   - **The refusal:** a steer refused because the run had ended, or held as many messages as it takes, was a 409, and each app kept its own queue: iOS held the message, while Android sent it at once.

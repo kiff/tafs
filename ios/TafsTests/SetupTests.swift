@@ -970,14 +970,14 @@ final class SetupTests: XCTestCase {
         await model.sendSetup(short)
         XCTAssertEqual(model.setupUnsent.map(\.text), [short])
 
-        // Setup at work, with 1,950 characters queued: the retry can't join them.
+        // Setup at work, and tafs cloud already holds as much as it takes (409 held_full): the
+        // retry isn't taken, and the message stays where it was.
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":{"session":"s1","run":"r1"}}"#)
         await model.loadSetupThread()
-        let queued = await model.submitSetup(String(repeating: "y", count: 1950))
-        XCTAssertTrue(queued)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/steer"] = (409, #"{"error":"Up to 10 messages, 2,000 characters in all, can wait for the taf. Send this once it's done.","code":"held_full"}"#)
         await model.retrySetup(try XCTUnwrap(model.setupUnsent.first))
         XCTAssertEqual(model.setupUnsent.map(\.text), [short], "still there, not lost")
-        _ = model.unqueueSetup()
+        XCTAssertEqual(model.setupError, "Up to 10 messages, 2,000 characters in all, can wait for the taf. Send this once it's done.")
         model.discardUnsent(try XCTUnwrap(model.setupUnsent.first))
 
         Keychain.delete(AppModel.planqueAccount)
@@ -1035,38 +1035,51 @@ final class SetupTests: XCTestCase {
         XCTAssertNil(SetupThread.answer(TafsCloud.CardAnswer(state: "no_answer"), to: confirm), "it stopped waiting: not answered")
     }
 
-    /// What the owner writes while Setup works waits, and is sent once Setup is done, as
-    /// one message (#58 B1).
-    func testWhatsWrittenWhileSetupWorksIsSentWhenItsDone() async throws {
+    /// What the owner writes while Coach works goes to its run once, with `hold`, as a taf's
+    /// chat and Android do (docs/chat.md): the run reads it at its next step, or tafs cloud
+    /// holds it and sends it once Coach is done. The app sends nothing itself, and shows what a
+    /// stopped run never read as not sent, with tafs cloud's why.
+    func testWhatsWrittenWhileCoachWorksGoesToItsRunWithHold() async throws {
         let model = await model(signer: FaceIDSigner())
         model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":{"session":"s1","run":"r1"}}"#)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
         await model.loadSetup()
         XCTAssertTrue(model.setupThinking)
+        XCTAssertEqual(model.setupThread.workingRun, "r1")
         StubProtocol.sent = []
+
+        // The run takes it: shown at once, as it reads it at its next step.
+        StubProtocol.responses["POST /v1/tafs/taf-setup/steer"] = (200, #"{"run":"r1","status":"RUNNING"}"#)
         let first = await model.submitSetup("Use the test account")
-        let second = await model.submitSetup("and refunds under 50")
         XCTAssertTrue(first)
+        let steer = try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs/taf-setup/steer").first)
+        XCTAssertEqual(body(steer)["run"] as? String, "r1")
+        XCTAssertEqual(body(steer)["hold"] as? Bool, true)
+        XCTAssertEqual(model.setupThread.steering?.untaken.map(\.text), ["Use the test account"])
+
+        // It doesn't: tafs cloud holds it, shown as waiting; a second joins it, as tafs cloud says.
+        StubProtocol.responses["POST /v1/tafs/taf-setup/steer"] = (202, #"{"held":{"text":"and refunds under 50","at":"2026-10-18T09:00:02.000Z"}}"#)
+        let second = await model.submitSetup("and refunds under 50")
         XCTAssertTrue(second)
-        XCTAssertEqual(model.setupQueued, "Use the test account\n\nand refunds under 50")
-        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "nothing sent while Setup works")
+        XCTAssertEqual(model.setupQueued, "and refunds under 50")
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "nothing sent by the app")
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages/stream").isEmpty)
 
-        // Setup is done: what waited is sent, once.
+        // Coach is done: tafs cloud sent it; the app sends nothing itself.
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
         await model.loadSetupThread()
         XCTAssertNil(model.setupQueued)
-        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").map { body($0)["text"] as? String },
-                       ["Use the test account\n\nand refunds under 50"])
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty)
 
-        // Taken back, it isn't sent.
-        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":{"session":"s1","run":"r2"}}"#)
+        // Stopped: what it never read shows once as not sent, with tafs cloud's why.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[],"components":[],"working":null,"steering":{"run":"r2","status":"CANCELLED","untaken":[],"not_sent":[{"text":"never mind","at":"2026-10-18T09:00:05.000Z","why":"You stopped it before it read this."}]}}
+        """)
         await model.loadSetupThread()
-        await model.submitSetup("never mind")
-        XCTAssertEqual(model.unqueueSetup(), "never mind")
-        XCTAssertNil(model.setupQueued)
+        await model.loadSetupThread()
+        XCTAssertEqual(model.setupUnsent.map(\.text), ["never mind"], "shown once")
+        XCTAssertEqual(model.setupUnsent.first?.why, "You stopped it before it read this.")
         Keychain.delete(AppModel.planqueAccount)
     }
 
