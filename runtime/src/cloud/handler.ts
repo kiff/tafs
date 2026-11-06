@@ -4116,8 +4116,9 @@ export function heldLine(text: string): boolean {
 /**
  * The taf's messages that were lines before tool calls, by `<run>.<seq>`: a message one short line long
  * (heldLine) that its run's tool calls follow, and after which the run writes again before it shows a card,
- * waits on the owner (the next turn is marked resumed), ends or reads the owner. A message the run waits on
- * ("Falta que apruebes la conexión…", then the call that asks for the approval) stays.
+ * waits on the owner (the next turn is marked resumed, or the owner's answer to a card comes first), ends or reads
+ * the owner. A message the run waits on ("Falta que apruebes la conexión…", then the call that asks for the
+ * approval) stays.
  * The live stream does the same (relay). kiff/agents records a turn's text before its calls.
  */
 export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
@@ -4136,8 +4137,9 @@ export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; k
       if (turnTiming(e.body)?.resumed) called.delete(e.run);
       continue;
     }
-    if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message" && e.kind !== "component") continue;
-    // The run wrote again: what its calls followed were lines. A card or the owner's words first: they were messages.
+    if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message" && e.kind !== "component" && e.kind !== "answered") continue;
+    // The run wrote again: what its calls followed were lines. A card, the owner's words or their answer to a card
+    // (a connection's approval) first: they were messages, as kiff/agents' grader reads them (kiff/agents#347).
     if (e.kind === "agent_message" || e.kind === "report") for (const id of called.get(e.run) ?? []) out.add(id);
     called.delete(e.run);
     pending.delete(e.run);
