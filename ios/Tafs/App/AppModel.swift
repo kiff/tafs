@@ -4152,6 +4152,14 @@ final class AppModel: ObservableObject {
         chatStates[tafID]?.unsent.removeAll { $0.id == message.id }
     }
 
+    /// Takes a message that wasn't sent out of the thread, to change it in the composer
+    /// (kiff/tafs#476): its words, or nil when it's gone already (sent, or taken).
+    func editUnsentChat(_ message: UnsentMessage, from tafID: UUID) -> String? {
+        guard chatStates[tafID]?.unsent.contains(where: { $0.id == message.id }) == true else { return nil }
+        discardUnsentChat(message, from: tafID)
+        return message.text
+    }
+
     /// The stops at a cap of the run's own: it ends with no words for it.
     nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap"]
 
@@ -5921,6 +5929,15 @@ final class AppModel: ObservableObject {
     func discardUnsent(_ message: UnsentMessage) {
         setupUnsent.removeAll { $0.id == message.id }
         if let answer = SetupThread.Answer(message.text) { answered.remove(cardRef(answer.id)) }
+    }
+
+    /// Takes a message that didn't go through out of Setup's thread, to change it in the
+    /// composer (kiff/tafs#476): its words as the owner reads them, or nil when it's gone
+    /// already. An answer's card can be answered again, on the card.
+    func editUnsent(_ message: UnsentMessage) -> String? {
+        guard setupUnsent.contains(where: { $0.id == message.id }) else { return nil }
+        discardUnsent(message)
+        return setupThread.ownerWords(message.text)
     }
 
     /// Retry on a run that failed part-way: its message is sent again.

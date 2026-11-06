@@ -138,6 +138,9 @@ struct TafChatView: View {
                             UnsentBubble(message: unsent, words: unsent.text, busy: model.chatSending.contains(tafID),
                                          retry: { await model.retryChat(unsent, to: tafID) },
                                          discard: { model.discardUnsentChat(unsent, from: tafID) },
+                                         edit: {
+                                             if let words = model.editUnsentChat(unsent, from: tafID) { draft = words; typing = true }
+                                         },
                                          taf: (tafID, taf?.name ?? "This taf"))
                                 .id(unsent.id.uuidString)
                                 .pinnedTop(unsent.id.uuidString == pinned)
