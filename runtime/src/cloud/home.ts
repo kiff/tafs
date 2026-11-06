@@ -304,7 +304,8 @@ function toolWords(action: string): string {
 function shownTotal(m: Mandate) {
   const total = (m.aggregates ?? []).find((a) => isSum(a.quantity) && !a.per);
   if (!total) return undefined;
-  const line = (m.limits ?? []).find((l) => l.quantity === total.quantity && l.window === total.window);
+  // Never a total for each item apart: KIFF lists it with the same quantity and window, with no single use.
+  const line = (m.limits ?? []).find((l) => l.status !== "per_item" && l.quantity === total.quantity && l.window === total.window);
   return { total, line };
 }
 
@@ -394,7 +395,7 @@ export function cardView(m: Mandate): CardView {
   let calls: CardView["calls"] = null;
   const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity) && !a.per);
   if (count) {
-    const line = (m.limits ?? []).find((l) => l.quantity === count.quantity && l.window === count.window);
+    const line = (m.limits ?? []).find((l) => l.status !== "per_item" && l.quantity === count.quantity && l.window === count.window);
     const ok = line?.status === "ok";
     calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, ...window(count.window) };
     const r = room(line);
