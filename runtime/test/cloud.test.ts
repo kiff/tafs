@@ -227,7 +227,7 @@ function depsOf(w: World): Deps {
     apns: { send: async (d, n) => { w.pushed.push({ token: d.token, n }); return "sent" as const; } },
     forward: async () => undefined,
     sleep: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, ana_paris: { ...ME, time_zone: "Europe/Paris" }, viewer_paris: { ...VIEWER, time_zone: "Europe/Paris" }, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account,
+    fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, ana_paris: { ...ME, time_zone: "Europe/Paris" }, ana_co: { ...ME, tenant_display_name: "Kiff Agents OÜ", account_kind: "company" }, ana_me: { ...ME, tenant_display_name: "ana@example.com", account_kind: "personal" }, viewer_paris: { ...VIEWER, time_zone: "Europe/Paris" }, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account,
       () => [...[...w.tafs.held.values()].map((t) => t.kiffAgent), ...w.account.mandates.map((m) => m.subject), ...w.account.held.map((h) => h.subject)]),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
     events: {
@@ -2989,6 +2989,49 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, live);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Another one", new_chat: true } });
     expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@3");
+  });
+
+  // agentgabo on #574, the owner's call (11:32): with no one named, a taf writes for the account's company,
+  // as KIFF names it, never "for the company"; a personal account's name (an email) is never used.
+  it("names the account's company as who a taf writes for when no one else is named", async () => {
+    const w = world();
+    const made = await call(w, "POST", "/v1/tafs", { token: "ana_co", body: { ...START, job: "chargebacks", name: "Disputes" } });
+    expect(made.status).toBe(200);
+    const rec = (await w.tafs.list("t_acme")).find((t) => t.name === "Disputes")!;
+    expect(rec.writesFor).toBe("Kiff Agents OÜ");
+    expect(w.agents.agents.get(`t_acme|${rec.id}`)!.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+    // A personal account's display name is never a sender: the line names no one.
+    const mine = await call(w, "POST", "/v1/tafs", { token: "ana_me", body: { ...START, job: "chargebacks", name: "Mine" } });
+    expect(mine.status).toBe(200);
+    const own = (await w.tafs.list("t_acme")).find((t) => t.name === "Mine")!;
+    expect(own.writesFor).toBeUndefined();
+    expect(w.agents.agents.get(`t_acme|${own.id}`)!.disclose?.line).toBe(DISCLOSURE_LINE);
+  });
+
+  it("tells Coach the company, keeps it for a hand-over and the Upgrade, and fills a taf from before", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const coach = memoryCoach(() => w.now);
+    const deps = { ...depsOf(w), coach };
+    // A taf made before the name was known: it names no one.
+    expect((await handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" },
+      body: JSON.stringify({ ...START, job: "chargebacks", name: "Before" }) }, deps)).statusCode).toBe(200);
+    const before = (await w.tafs.list("t_acme")).find((t) => t.name === "Before")!;
+    expect(before.writesFor).toBeUndefined();
+    const r = await handle({ rawPath: `/v1/tafs/${COACH}/messages`, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana_co" },
+      body: JSON.stringify({ text: "Chase overdue invoices", new_chat: true }) }, deps);
+    expect(r.statusCode).toBe(200);
+    const session = JSON.parse(r.body).session as string;
+    const first = (w.agents.events.get(session)?.[0]?.body as { text: string }).text;
+    expect(first).toContain("The account is the company Kiff Agents OÜ (from KIFF, data)");
+    expect(first.endsWith("The owner says: Chase overdue invoices")).toBe(true);
+    expect(await coach.get("t_acme#company")).toBe("Kiff Agents OÜ");
+    // The taf from before: the Upgrade fills it from the kept name, and its line names it.
+    const out = await upgradeDefinitions(deps, { dryRun: false });
+    expect(out.find((o) => o.taf === before.id)?.outcome).toBe("written");
+    expect(w.tafs.held.get(`t_acme#${before.id}`)!.writesFor).toBe("Kiff Agents OÜ");
+    expect(w.agents.agents.get(`t_acme|${before.id}`)!.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
   });
 
   // kiff/tafs#476, gap 10: a taf couldn't say why a call failed ("my tool results from earlier runs aren't

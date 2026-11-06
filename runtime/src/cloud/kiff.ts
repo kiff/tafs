@@ -15,6 +15,12 @@ export interface KIFFIdentity {
   email?: string;
   /** The account's time zone (IANA), when KIFF gives it: the zone every time tafs cloud writes out is in. */
   timeZone?: string;
+  /**
+   * A company account's name, as KIFF gives it (tenant_display_name, account_kind "company"): who a taf's
+   * messages come from when the owner names no one else (kiff/tafs#476, gaps 16 and 18). Never a personal
+   * account's, whose name can be an email.
+   */
+  companyName?: string;
 }
 
 export class KIFFError extends Error {
@@ -42,6 +48,8 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     capabilities?: string[];
     email?: string;
     time_zone?: string;
+    tenant_display_name?: string;
+    account_kind?: string;
   };
   if (!me.tenant_id) throw new KIFFError(502, "KIFF did not say which account this is");
   return {
@@ -52,7 +60,15 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     capabilities: me.capabilities ?? [],
     ...(typeof me.email === "string" && me.email ? { email: me.email } : {}),
     ...(typeof me.time_zone === "string" && me.time_zone ? { timeZone: me.time_zone } : {}),
+    ...(companyNameOf(me.account_kind, me.tenant_display_name) ? { companyName: companyNameOf(me.account_kind, me.tenant_display_name) } : {}),
   };
+}
+
+/** A company account's name, one line of at most 100 characters, or undefined: never a personal account's. */
+export function companyNameOf(kind: unknown, name: unknown): string | undefined {
+  if (kind !== "company" || typeof name !== "string") return;
+  const one = name.replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").replace(/\s+/g, " ").trim();
+  return one && [...one].length <= 100 && Buffer.byteLength(one) <= 272 ? one : undefined;
 }
 
 /**

@@ -1248,6 +1248,8 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   let disclose: Job["disclose"];
   let writesFor: string | undefined;
   try { writesFor = writesForOf(body.writes_for); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  // No one named: the account's company, as KIFF names it (gap 18), never "for the company".
+  writesFor ??= me.companyName ?? await companyOf(me.tenantID, deps);
   if (body.job === undefined || body.job === CUSTOM) {
     const kickoff = str(body.kickoff).trim();
     if (!kickoff || kickoff.length > MAX_KICKOFF) throw new HTTPError(400, `a job of its own says what each run does (kickoff), in ${MAX_KICKOFF} characters at most`);
@@ -2731,8 +2733,33 @@ async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: stri
     deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined)]);
   const skills = asNamed(startSkills(entry, state), live?.skills);
   if (skills.length) at.skills = skills;
-  return withConnections(text, lines);
+  if (me.companyName) await keepCompany(me.tenantID, me.companyName, deps);
+  return withConnections(text, lines, me.companyName);
 }
+
+/** How long tafs cloud keeps an account's company name, read from KIFF with a person's session: a quarter. */
+const COMPANY_KEPT_MS = 90 * 24 * 60 * 60 * 1000;
+
+/**
+ * Keeps the account's company name, as KIFF gave it with a person's session, for what runs without one: a
+ * result's hand-over and an Upgrade name a taf's sender by it (gaps 16 and 18). Written only when it changed.
+ */
+async function keepCompany(tenant: string, name: string, deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  try {
+    if ((await deps.coach.get(companyKey(tenant))) !== name) await deps.coach.put(companyKey(tenant), name, new Date((deps.now?.() ?? new Date()).getTime() + COMPANY_KEPT_MS));
+  } catch (err) {
+    console.error(`company: ${tenant}:`, err);
+  }
+}
+
+/** The account's company name tafs cloud keeps, or undefined. */
+async function companyOf(tenant: string, deps: Deps): Promise<string | undefined> {
+  const v = await deps.coach?.get(companyKey(tenant)).catch(() => undefined);
+  return typeof v === "string" && v ? v : undefined;
+}
+
+const companyKey = (tenant: string) => `${tenant}#company`;
 
 /** How long after its last message a person's chat is still the one their next message goes on in: kiff/agents' live chat. */
 export const LIVE_CHAT_MS = 30 * 60_000;
@@ -4636,6 +4663,11 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
           }
           const notes = ownerNotesIn(stored.instructions);
           record = { ...record, budgetCents: stored.max_cost_micro_usd / 10_000, ...(notes ? { ownerNotes: notes } : {}) };
+        }
+        // A taf from before gap 18 names no sender: the account's company, as kept, when there is one.
+        if (record.job !== SETUP_JOB && !record.writesFor) {
+          const company = await companyOf(tenant, deps);
+          if (company) record = { ...record, writesFor: company };
         }
         let want: AgentDefinition;
         try {
