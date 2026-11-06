@@ -98,7 +98,7 @@ class CoachInstallTest {
     assertTrue(auth.asked.isEmpty())
   }
 
-  @Test fun anInstallWithNoCardAsksMakesTheVersionLiveThenApprovesCoachsCallWithAFingerprint() = runTest {
+  @Test fun anInstallWithNoCardAsksOnceMakesTheVersionLiveThenSendsCoachsApprovalSignedBeforeIt() = runTest {
     reads()
     transport.answer(versions, 200, state(v2Live = false, v2Draft = false))
     transport.answer(switch2, 200, """{"switching":{"n":2,"draft":null,"at":"2026-10-28T09:00:00Z"}}""")
@@ -113,35 +113,68 @@ class CoachInstallTest {
     // What's in the way is stopped first.
     assertEquals("true", KiffClient.json.parseToJsonElement(String(transport.requestsTo(switch2).first().body!!)).jsonObject.getValue("stop_blocking").jsonPrimitive.content)
     assertTrue(m.useVersion(ready.version, ready.tafId, null, approving = call))
-    // The switch, then Coach's held call: approving it takes its own fingerprint.
-    assertEquals(listOf("Use version 2 of Refunds", "Answer Install a version"), auth.asked)
-    assertEquals(listOf("Answer Install a version"), auth.fingerprints)
+    // One fingerprint: approving Coach's held call is the confirmation, signed before the version goes live.
+    assertEquals(listOf("Use version 2 of Refunds, as Coach asked"), auth.asked)
+    assertEquals(auth.asked, auth.fingerprints)
     val o = order()
     assertTrue("live before Coach hears", o.indexOf(live2) < o.indexOf(approve))
-    assertNotNull("signed", transport.requestsTo(approve).single().body)
+    val sent = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject
+    assertNotNull("signed", sent["signature"])
   }
 
-  @Test fun anInstallWithACardConfirmsTheCardShownThenGoesLiveThenApprovesCoachsCallEachWithAFingerprint() = runTest {
+  private val confirm = "POST /v1/me/agent-drafts/dr_1/confirm"
+
+  /** Coach's install of version 2 with its Card, up to the confirm, which KIFF answers with [confirmed]. */
+  private suspend fun installWithCard(confirmed: String): Boolean {
     reads()
     transport.answer(versions, 200, state(v2Live = false, v2Draft = true))
     transport.answer(switch2, 200, """{"switching":{"n":2,"draft":"dr_1","at":"2026-10-28T09:00:00Z"}}""")
     transport.answer("GET /v1/me/agent-drafts/dr_1", 200, """{"id":"dr_1","agent_id":"refunds-1","status":"draft","version":"v3","cards":[]}""")
-    transport.answer("POST /v1/me/agent-drafts/dr_1/confirm", 200, """{"id":"dr_1","status":"confirmed","version":"v3"}""")
+    transport.answer(confirm, 200, confirmed)
     transport.answer(live2, 200)
     transport.answer(approve, 200)
     val m = model()
     val call = m.state.value.held.single()
     val ready = m.beginCoachInstall(call)!!
     assertTrue(ready.hasCard)
-    assertTrue(m.useVersion(ready.version, ready.tafId, "v3", approving = call))
-    // No presence prompt: KIFF's confirm of the Card shown, then Coach's held call, each behind its own fingerprint.
-    assertEquals(listOf("Use version 2 of Refunds, with its Card", "Answer Install a version"), auth.fingerprints)
-    assertEquals(auth.fingerprints, auth.asked)
+    val done = m.useVersion(ready.version, ready.tafId, "v3", approving = call)
+    // The confirm names Coach's held call, at the version shown, so KIFF can approve it under the same signature.
+    val hold = KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject.getValue("hold").jsonObject
+    assertEquals("ce_7", hold.getValue("id").jsonPrimitive.content)
+    assertEquals("1", hold.getValue("accounting_version").jsonPrimitive.content)
     val o = order()
-    assertTrue(o.indexOf("POST /v1/me/agent-drafts/dr_1/confirm") < o.indexOf(live2))
-    assertTrue(o.indexOf(live2) < o.indexOf(approve))
+    assertTrue(o.indexOf(confirm) < o.indexOf(live2))
     // The new Card is read again once live, so the taf's page shows its limits, not the old ones.
     assertTrue(o.lastIndexOf("GET /v1/home") > o.indexOf(live2))
+    return done
+  }
+
+  @Test fun anInstallWithACardWhoseConfirmKiffTakesForCoachsCallAsksOnceAndSendsNoOtherAnswer() = runTest {
+    assertTrue(installWithCard("""{"id":"dr_1","status":"confirmed","version":"v3","hold":{"id":"ce_7","status":"approved"}}"""))
+    assertEquals(listOf("Use version 2 of Refunds, with its Card, as Coach asked"), auth.fingerprints)
+    assertEquals(auth.fingerprints, auth.asked)
+    assertTrue(transport.requestsTo(approve).isEmpty())
+  }
+
+  @Test fun aKiffThatDoesntTakeCoachsCallWithTheConfirmGetsItsOwnApprovalOnceLive() = runTest {
+    // A KIFF from before, which ignores the hold: the draft alone.
+    assertTrue(installWithCard("""{"id":"dr_1","status":"confirmed","version":"v3"}"""))
+    assertEquals(listOf("Use version 2 of Refunds, with its Card, as Coach asked", "Answer Install a version"), auth.fingerprints)
+    assertEquals(auth.fingerprints, auth.asked)
+    val o = order()
+    assertTrue(o.indexOf(live2) < o.indexOf(approve))
+  }
+
+  @Test fun aHoldKiffDidntApproveWithTheConfirmIsAnsweredAsAnyOther() = runTest {
+    // Signed in a window with the device key, say: a held answer takes the approval key.
+    assertTrue(installWithCard("""{"id":"dr_1","status":"confirmed","version":"v3","hold":{"id":"ce_7","status":"approval_key_required","detail":"…"}}"""))
+    assertEquals(1, transport.requestsTo(approve).size)
+    assertEquals("Answer Install a version", auth.fingerprints.last())
+  }
+
+  @Test fun anotherHoldsApprovalInTheAnswerDoesntCountForThisOne() = runTest {
+    assertTrue(installWithCard("""{"id":"dr_1","status":"confirmed","version":"v3","hold":{"id":"ce_8","status":"approved"}}"""))
+    assertEquals(1, transport.requestsTo(approve).size)
   }
 
   @Test fun aVersionLiveAlreadyIsOnlyToldToCoach() = runTest {

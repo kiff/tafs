@@ -62,7 +62,19 @@ saying someone who approves on the account answers it (`AppModel.mayAnswerHolds`
 KIFF still refuses an answer for the role (`role_forbidden`), the card says so in words.
 
 Coach's own held call to install a version is answered by installing it from its card:
-the version goes live, then Coach hears.
+the version goes live, then Coach hears. On Android it takes one fingerprint, whose prompt
+says "as Coach asked":
+
+- **With a Card:** the draft's confirm names the held call
+  (`{"version", "hold": {"id", "accounting_version"}}`), and KIFF approves it under the
+  confirm's signature, answering `hold: {id, status}`. With `approved`, nothing else is
+  signed or sent. Any other status, or no `hold` at all from a KIFF that ignores it, and the
+  call is answered as any other once the version is live, behind its own fingerprint. KIFF
+  takes the hold only with the approval key, so a confirm signed inside a window has no
+  prompt of its own, and the call's is the only one.
+- **Without a Card:** the approval of Coach's call is signed before the version goes live,
+  and sent once it is. Backing out at the prompt leaves the live version and Coach's call
+  as they were.
 
 ### How an answer is signed
 
@@ -109,8 +121,8 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     for nothing, and the screen lock never approves.
   - every request that grants authority asks for its own fingerprint, with the step's
     words. Approve, Resume, sharing a taf, starting a trial and installing a version with
-    its Card each take one. Installing Coach's held version takes two (the Card, then
-    Coach's call), and starting Coach the first time takes its "Connect your tools"
+    its Card each take one. Installing Coach's held version takes one too (see above; two
+    with a KIFF that doesn't take the hold with the Card), and starting Coach the first time takes its "Connect your tools"
     confirmation and a fingerprint for each of its two drafts, then signs the connect batch
     tafs cloud gave and asks a fingerprint for Coach's Card ("Give Coach its Card").
   - a phone with no strong biometric enrolled has no approval key and approves nothing: it

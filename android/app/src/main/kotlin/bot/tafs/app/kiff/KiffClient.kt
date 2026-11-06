@@ -415,6 +415,26 @@ class KiffClient(
     call("POST", "/v1/me/agent-drafts/${escaped(id)}/confirm", mapOf("version" to version))
 
   /**
+   * As [confirmDraft], naming Coach's held version_install this draft's version answers: KIFF approves that hold once under the
+   * same signature, so one fingerprint covers both, and says so in the draft's `hold`. A KIFF that doesn't take [hold] ignores it
+   * and confirms the draft alone: the hold is then answered as any other.
+   */
+  suspend fun confirmDraft(id: String, version: String, hold: HoldAnswered): AgentDraft {
+    val body = buildJsonObject {
+      put("version", version)
+      put("hold", buildJsonObject {
+        put("id", hold.id)
+        put("accounting_version", hold.accountingVersion)
+      })
+    }
+    val bytes = sendJson("POST", "/v1/me/agent-drafts/${escaped(id)}/confirm", body)
+    return json.decodeFromString(if (bytes.isEmpty()) "{}" else String(bytes))
+  }
+
+  /** Coach's held call a draft's confirm answers: its KIFF id, at the version it was shown. */
+  class HoldAnswered(val id: String, val accountingVersion: Int)
+
+  /**
    * Confirms a version's draft as a **trial**: KIFF issues its Cards as trial Cards of their own, with their own
    * counters, and the live Cards stay as they are. The draft's status becomes "trying". A signed setup call, as any confirm.
    */

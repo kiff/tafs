@@ -201,6 +201,10 @@ data class DraftCard(
 @Serializable
 data class DraftRetired(val id: String, val current: DraftTerms? = null)
 
+/** The held call a draft's confirm answered, as KIFF says: its id, and "approved" or why it wasn't. */
+@Serializable
+data class DraftHold(val id: String = "", val status: String = "")
+
 /** A draft of an agent's Cards, as KIFF keeps it: what confirming it would issue, change or remove. */
 @Serializable
 data class AgentDraft(
@@ -217,8 +221,13 @@ data class AgentDraft(
   val retires: List<DraftRetired>? = null,
   /** Shown once, when an agent with no tools is submitted: tafs cloud claims the agent's key with it, so the key never reaches the phone. */
   @SerialName("claim_secret") val claimSecret: String? = null,
+  /** What became of the held call a confirm named (KiffClient.confirmDraft with a hold): "approved", or why not. */
+  val hold: DraftHold? = null,
 ) {
   val confirmed: Boolean get() = status == "confirmed"
+
+  /** Whether KIFF approved held call [id] with this confirm, so it's answered already. */
+  fun approvedHold(id: String): Boolean = hold?.id == id && hold.status == "approved"
 
   /**
    * Each Card's lines, as the owner reads them together before one confirmation signs them all: two grants that
