@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { CUSTOM, type Job, JOBS, jobById, ownJob } from "../jobs.js";
+import { CUSTOM, discloseOf, type Job, JOBS, jobById, ownJob } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
@@ -299,7 +299,7 @@ export interface Taf {
    * to do (its kickoff, the first instruction) and how it works. A taf with one has the job `custom`;
    * one of the five starter jobs has none.
    */
-  work?: { kickoff: string; instructions?: string };
+  work?: { kickoff: string; instructions?: string; disclose?: Job["disclose"] };
   /** What it does in one word, for its dial's face ("Refund"), as Coach's result said it. */
   does?: string;
   /**
@@ -1243,8 +1243,10 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     const instructions = body.instructions === undefined ? undefined : str(body.instructions).trim();
     if (instructions !== undefined && instructions.length > MAX_KICKOFF) throw new HTTPError(400, `keep the job's instructions to ${MAX_KICKOFF} characters`);
     if (body.cron === undefined && !unscheduled) throw new HTTPError(400, "a job of its own says when it runs (cron), or that it works from its chat (unscheduled)");
-    work = { kickoff, ...(instructions ? { instructions } : {}) };
-    job = ownJob({ name, summary: summary ?? "", kickoff, instructions });
+    let disclose: Job["disclose"];
+    try { disclose = discloseOf(body.disclose); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    work = { kickoff, ...(instructions ? { instructions } : {}), ...(disclose?.length ? { disclose } : {}) };
+    job = ownJob({ name, summary: summary ?? "", kickoff, instructions, disclose });
   } else {
     try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   }
@@ -1381,7 +1383,7 @@ const MAX_KICKOFF = 2_000;
 
 /** The taf's job: its own, as Coach drafted it (kiff/tafs#476), or one of the five starter jobs. Throws for a job id tafs doesn't know. */
 export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work">): Job {
-  if (taf.job === CUSTOM) return ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions });
+  if (taf.job === CUSTOM) return ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions, disclose: taf.work?.disclose });
   return jobById(taf.job);
 }
 
@@ -5583,7 +5585,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
  * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. A `job` naming
  * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
-interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string }
+interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string; disclose?: unknown }
 
 async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
@@ -5609,6 +5611,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       ...(typeof taf.kickoff === "string" ? { kickoff: taf.kickoff } : {}),
       ...(typeof taf.instructions === "string" ? { instructions: taf.instructions } : {}),
       ...(typeof taf.cron === "string" ? { cron: taf.cron } : {}),
+      ...(Array.isArray(taf.disclose) ? { disclose: taf.disclose } : {}),
     }, me, deps);
     return { taf_id: (out.taf as { id: string }).id };
   } catch (err) {
