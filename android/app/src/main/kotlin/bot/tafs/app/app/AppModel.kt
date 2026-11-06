@@ -4585,9 +4585,18 @@ class AppModel(
    * not when the owner didn't confirm, and then the call still waits.
    *
    * [confirmed]: the owner confirmed this step already (installing the version Coach asked for), so the answer is signed
-   * without asking again. [installed]: the version Coach's held call names is live already.
+   * without asking again. [installed]: the version Coach's held call names is live already. [approvedWithCard]: KIFF approved
+   * the call with the Card's confirm, under its one fingerprint, so nothing is signed or sent. [presigned]: the answer was signed
+   * before the version went live, under the install's one fingerprint.
    */
-  suspend fun answer(call: HeldCall, answer: Answer, confirmed: Boolean = false, installed: Boolean = false): Boolean {
+  suspend fun answer(
+    call: HeldCall,
+    answer: Answer,
+    confirmed: Boolean = false,
+    installed: Boolean = false,
+    approvedWithCard: Boolean = false,
+    presigned: SignedAnswer? = null,
+  ): Boolean {
     val before = _state.value
     if (before.held.none { it.id == call.id }) return false
     // Approving Coach's install is installing it (kiff/tafs#206): the switch and its Card come first, then this answer, so
@@ -4597,6 +4606,13 @@ class AppModel(
       return false
     }
     val kiffId = call.kiffId
+    if (approvedWithCard && kiffId != null) {
+      // KIFF holds the answer already: the Record says so, and the paused run goes on.
+      applyAnswer(call, answer, null)
+      goOn(call.tafId, kiffId)
+      refresh()
+      return true
+    }
     // A call KIFF holds is answered here only when KIFF checks this phone's signature on it (kiff/tafs#138).
     if (kiffId != null && !before.canAnswer(call)) {
       fail(
@@ -4618,37 +4634,15 @@ class AppModel(
       return false
     }
     val generation = accountGeneration
-    val reason = "Answer ${call.proposed.summary}"
-    var signed: KiffClient.AnswerSignature? = null
-    val signature = try {
-      val tenant = kiffTenant
-      val version = call.accountingVersion
-      if (kiffId != null && tenant != null && version != null) {
-        // KIFF's message: this hold, this answer, the hold's version, and the time, taken once the owner confirmed.
-        val step = (answer as? Answer.NextStep)?.step
-        var signedAt = ""
-        val message = {
-          signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
-          KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
-        }
-        // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
-        // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
-        // approval key doesn't approve with the screen lock: it says to add a fingerprint. Refusing is the signing key's.
-        val approving = answer is Answer.ApproveOnce || answer is Answer.ExtraRoom
-        if (approving && !sessionHasApprovalKey && signer.approvalPublicKeyDER.isNotEmpty()) registerApprovalKey()
-        when {
-          approving && (sessionHasApprovalKey || signer.approvalPublicKeyDER.isEmpty()) -> signer.signApproval(reason, message)
-          confirmed -> signer.signConfirmed(message())
-          else -> signer.sign(reason, message)
-        }.also { signed = KiffClient.AnswerSignature(signedAt, it) }
-      } else {
-        signer.sign(Messages.answer(call.id, answer), reason)
-      }
+    val answered = try {
+      presigned ?: signAnswer(call, answer, "Answer ${call.proposed.summary}", confirmed)
     } catch (e: SignerException) {
       // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept).
       fail("${notSigned(e, "Not sent: it wasn't confirmed.")} ${bot.tafs.app.model.ApprovalWords.KEPT}")
       return false
     }
+    val signature = answered.value
+    val signed = answered.kiff
     // The session ended, or another began, while the prompt was up: nothing of this answer goes to the new one.
     if (generation != accountGeneration) return false
 
@@ -4683,6 +4677,50 @@ class AppModel(
     return true
   }
 
+  /** An answer to a held call, signed: [value] for the Record, and [kiff] what KIFF checks, for a call KIFF holds. */
+  class SignedAnswer(val value: String, val kiff: KiffClient.AnswerSignature?)
+
+  /**
+   * Signs [answer] to [call], behind the prompt with [reason]'s words: KIFF's message for a call KIFF holds, else the sample's.
+   * Throws [SignerException] when the owner didn't confirm.
+   */
+  private suspend fun signAnswer(call: HeldCall, answer: Answer, reason: String, confirmed: Boolean): SignedAnswer {
+    val kiffId = call.kiffId
+    val tenant = kiffTenant
+    val version = call.accountingVersion
+    if (kiffId == null || tenant == null || version == null) return SignedAnswer(signer.sign(Messages.answer(call.id, answer), reason), null)
+    // KIFF's message: this hold, this answer, the hold's version, and the time, taken once the owner confirmed.
+    val step = (answer as? Answer.NextStep)?.step
+    var signedAt = ""
+    val message = {
+      signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
+      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
+    }
+    // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
+    // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
+    // approval key doesn't approve with the screen lock: it says to add a fingerprint. Refusing is the signing key's.
+    val approving = answer is Answer.ApproveOnce || answer is Answer.ExtraRoom
+    if (approving && !sessionHasApprovalKey && signer.approvalPublicKeyDER.isNotEmpty()) registerApprovalKey()
+    val value = when {
+      approving && (sessionHasApprovalKey || signer.approvalPublicKeyDER.isEmpty()) -> signer.signApproval(reason, message)
+      confirmed -> signer.signConfirmed(message())
+      else -> signer.sign(reason, message)
+    }
+    return SignedAnswer(value, KiffClient.AnswerSignature(signedAt, value))
+  }
+
+  /**
+   * Coach's held call as a draft's confirm names it, so KIFF approves it under the confirm's fingerprint; null where this phone
+   * can't answer it (no signing key in KIFF, no approval key, a call KIFF doesn't hold).
+   */
+  private fun holdAnswered(call: HeldCall): KiffClient.HoldAnswered? {
+    val id = call.kiffId ?: return null
+    val version = call.accountingVersion ?: return null
+    val s = _state.value
+    if (!s.canAnswer(call) || s.approvalKeyLost) return null
+    return KiffClient.HoldAnswered(id, version)
+  }
+
   /**
    * The run paused on the answered call goes on with the answer (kiff/tafs#102): the chat shows the taf working
    * and then its reply, as after a message. It is asked to go on now, not when KIFF's alert reaches it
@@ -4705,7 +4743,7 @@ class AppModel(
     }
   }
 
-  private fun applyAnswer(call: HeldCall, answer: Answer, signature: String) {
+  private fun applyAnswer(call: HeldCall, answer: Answer, signature: String?) {
     resolve(call)
     val taf = _state.value.taf(call.tafId)
     val summary = call.proposed.summary
@@ -4833,7 +4871,10 @@ class AppModel(
    * version that brings a Card with nothing shown signs nothing.
    *
    * [approving]: the held version_install of Coach's this install answers (kiff/tafs#206): approved once the version is
-   * live, signed under the same confirmation. What's in the way of the switch is stopped first.
+   * live, under the same one fingerprint. With a Card, the Card's confirm names it, and KIFF approves it with the Card; a
+   * KIFF that doesn't, or a call it didn't take, is answered as before, with a fingerprint of its own. Without a Card, the
+   * answer is signed before the version goes live and sent after, so its fingerprint is the confirmation. What's in the
+   * way of the switch is stopped first.
    */
   suspend fun useVersion(version: Version, tafId: String, shownDraft: String? = null, approving: HeldCall? = null): Boolean {
     val s = _state.value
@@ -4843,15 +4884,22 @@ class AppModel(
     if (s.mode != Mode.kiff || tenant == null || taf == null || cloudId == null) return false
     if (version.live || tafId in s.switchingVersion) return false
     _state.update { it.copy(switchingVersion = it.switchingVersion + (tafId to version.n), changedVersionCards = it.changedVersionCards - tafId) }
+    val held = approving?.let { HeldInstall(it) }
     try {
-      if (!install(version, tafId, taf.name, cloudId, tenant, shownDraft, stopBlocking = approving != null)) return false
+      if (!install(version, tafId, taf.name, cloudId, tenant, shownDraft, stopBlocking = approving != null, held = held)) return false
     } finally {
       kiff.setupSigner = null
       _state.update { it.copy(switchingVersion = it.switchingVersion - tafId) }
     }
     // Live: now Coach's held call is approved, with the confirmation just given.
-    if (approving != null) answer(approving, Answer.ApproveOnce, confirmed = true)
+    if (held != null) answer(held.call, Answer.ApproveOnce, confirmed = true, approvedWithCard = held.approvedWithCard, presigned = held.signed)
     return true
+  }
+
+  /** Coach's held install as [install] goes: approved by KIFF with the Card's confirm, or its answer signed before going live. */
+  private class HeldInstall(val call: HeldCall) {
+    var approvedWithCard = false
+    var signed: SignedAnswer? = null
   }
 
   /** Coach's held install, ready for the owner: the taf, the version, and whether it brings a Card to read before the confirmation. */
@@ -4885,7 +4933,16 @@ class AppModel(
     return CoachInstall(call, taf.id, version, hasCard = sw.draft != null)
   }
 
-  private suspend fun install(version: Version, tafId: String, name: String, cloudId: String, tenant: String, shownDraft: String?, stopBlocking: Boolean = false): Boolean {
+  private suspend fun install(
+    version: Version,
+    tafId: String,
+    name: String,
+    cloudId: String,
+    tenant: String,
+    shownDraft: String?,
+    stopBlocking: Boolean = false,
+    held: HeldInstall? = null,
+  ): Boolean {
     val generation = accountGeneration
     versionError(tafId, null)
     kiff.tenant = tenant
@@ -4930,12 +4987,18 @@ class AppModel(
     }
     // A claimed draft is later than confirmed, its Cards issued all the same.
     if (draft != null && !draft.confirmed && draft.status != "claimed") {
+      // Coach's held install goes with the Card's confirm, so the one fingerprint approves both, and the prompt says so.
+      val hold = held?.let { holdAnswered(it.call) }
       try {
-        confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Use version ${version.n} of $name, with its Card")
+        confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Use version ${version.n} of $name, with its Card${if (hold != null) ", as Coach asked" else ""}")
         if (generation != accountGeneration) return false
         val signer = signer
         kiff.setupSigner = { signer.signConfirmed(it) }
-        kiff.confirmDraft(draft.id, draft.version)
+        if (hold == null) {
+          kiff.confirmDraft(draft.id, draft.version)
+        } else {
+          held.approvedWithCard = kiff.confirmDraft(draft.id, draft.version, hold).approvedHold(hold.id)
+        }
       } catch (e: SignerException) {
         // The owner backed out before the Card changed: the taf runs again as it was.
         if (generation == accountGeneration) {
@@ -4958,6 +5021,18 @@ class AppModel(
       }
       // Within the step the owner just confirmed: Coach's tools, if this phone hasn't given them yet.
       if (_state.value.coachTools?.toGive == true) giveCoachTools()
+    } else if (held != null && holdAnswered(held.call) != null) {
+      // Coach's install with no Card: approving Coach's held call is the confirmation, signed now, before the version goes
+      // live, and sent once it is. One fingerprint, and nothing goes live unless the owner gave it.
+      try {
+        held.signed = signAnswer(held.call, Answer.ApproveOnce, "Use version ${version.n} of $name, as Coach asked", confirmed = false)
+      } catch (e: SignerException) {
+        if (generation == accountGeneration) {
+          cancelSwitch(tafId)
+          notSigned(e, "").takeIf { it.isNotEmpty() }?.let { versionError(tafId, it) }
+        }
+        return false
+      }
     } else {
       try {
         signer.sign("tafs.version.v1|$tenant|$cloudId|${version.n}".toByteArray(), "Use version ${version.n} of $name")

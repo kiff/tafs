@@ -71,3 +71,28 @@ over the 250 US$ total" for the same hold (the 755 device retest). The held
 result's text, or its `dev.kiff/call` meta, should name the limit in the same
 words the owner sees: one call's limit, or a total kept across calls with what's
 left of it.
+
+## 7. One fingerprint approves Coach's install and its Card — open
+
+Tracked on KIFF's side, privately. Installing a version Coach asked for answers
+Coach's held `version_install` and, when the version brings one, confirms its
+Card. On Android the approval key signs once per fingerprint, so this took two.
+
+- **Asked of KIFF:** the draft's confirm may name the hold it answers,
+  `{"version", "hold": {"id", "accounting_version"}}`. The request's signature
+  covers the body, so it binds that hold at that version.
+- **KIFF's checks:** the hold is in the same account, still held, at that
+  version, and its call is a `version_install`. The same gate as approve-once applies (role, separation of duties).
+  Only a confirm signed with the approval key takes it, never one signed inside a
+  window, and never on a trial confirm (400).
+- **KIFF's answer:** the draft, plus `hold: {id, status}`, with `detail` when the
+  hold isn't approved. The statuses are `approved`, `not_this_install`,
+  `answered`, `expired`, `not_found`, `approval_key_required`, `refused` and
+  `failed`. The draft is never refused
+  for the hold, and the answer's proof on the receipt is the confirm's own
+  signature.
+
+**tafs's part — built (Android).** The app sends `hold` for Coach's held install
+only, and treats the hold as answered only on `approved` for that id. A KIFF
+that ignores the field answers with no `hold`, and the app answers the hold as
+before, so there's no deploy order. iOS already signs both under one Face ID.

@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **One fingerprint for Coach's install (Android).** Installing a version Coach asked for took two fingerprints: one for the Card, then one for Coach's held call. Now the Card's confirm names Coach's held call, and KIFF approves both under one signature (`hold` on `POST /v1/me/agent-drafts/{id}/confirm`, docs/needs-from-kiff.md item 7). Without a Card, Coach's approval is signed before the version goes live, so its fingerprint is the only prompt. A KIFF that ignores `hold` gets the call answered as before, so there's no deploy order. iOS already asked once.
 - **A message that wasn't sent stays in Coach's thread, marked Not sent, with Retry and Edit (both apps).** On Android, a message that didn't reach tafs cloud left the thread, with only an error above the box; iOS kept it, with Retry, but no way to change it. On both apps it now stays where it was written, marked "Not sent · " and why, with Edit, which puts its words back in the box, and Retry, which sends it once.
 - **A call that wasn't done says what the owner can do, and a taf's Ask Coach card (both apps, kiff/tafs#476, gaps 10 and 15).** An Activity row that wasn't done now shows tafs cloud's `next`. Each kind does this:
   - **`reconnect`:** "Connect it again" signs in again where the vendor signed out the connection whose tools include the call's tool, and otherwise opens Connect apps.
