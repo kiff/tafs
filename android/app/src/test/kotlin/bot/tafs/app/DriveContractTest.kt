@@ -17,6 +17,9 @@ import org.junit.Test
 class DriveContractTest {
   private val sources = File("src/main/kotlin/bot/tafs/app")
 
+  /** A file's text with Unix line endings, so a checkout with CRLF reads the same. */
+  private fun File.text(): String = readText().replace("\r\n", "\n")
+
   private fun files(): List<File> = sources.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
 
   @Test
@@ -56,7 +59,7 @@ class DriveContractTest {
   fun everyTextFieldsChangeIsChecked() {
     val field = Regex("""(?<![\w.])(?:androidx\.compose\.material3\.|androidx\.compose\.foundation\.text\.)?(OutlinedTextField|BasicTextField|TextField)\(""")
     val unchecked = files().flatMap { f ->
-      val s = f.readText()
+      val s = f.text()
       field.findAll(s).mapNotNull { m -> if ("driveTyped(" !in call(s, m.range.last + 1)) "${f.name}:${s.substring(0, m.range.first).count { it == '\n' } + 1}" else null }.toList()
     }
     assertTrue("A field's changes go through driveTyped (docs/drive.md, typing): $unchecked", unchecked.isEmpty())
@@ -66,7 +69,7 @@ class DriveContractTest {
   fun everyConfirmingControlCarriesTheMark() {
     // docs/drive.md's list: approve, disconnect, remove a taf, halt and resume, "Did this happen?", extra room, buying a pack,
     // dismissing a card that signs. What signs with the approval key sits in ApprovalGate, which carries the mark itself.
-    val gate = File(sources, "views/ApprovalsSetupView.kt").readText()
+    val gate = File(sources, "views/ApprovalsSetupView.kt").text()
     assertTrue("ApprovalGate carries the confirm mark", Regex("""fun ApprovalGate[\s\S]{0,400}confirms\(\)""").containsMatchIn(gate))
     val listed = listOf(
       "views/CoachViews.kt" to "{ actions.approve(c, grant.digest, draft?.version) }",
@@ -92,7 +95,7 @@ class DriveContractTest {
       "views/DoorViews.kt" to "onPair(sender, name)",
     )
     val unmarked = listed.filter { (file, anchor) ->
-      val s = File(sources, file).readText()
+      val s = File(sources, file).text()
       val at = s.indexOf(anchor)
       assertTrue("$file still has $anchor", at >= 0)
       "confirms()" !in enclosingButton(s, at)
@@ -103,10 +106,10 @@ class DriveContractTest {
       "views/DeleteAccountView.kt" to "heightIn(min = 48.dp).confirms()\n            .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }",
       "views/UsageViews.kt" to "Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
       "views/DevicesView.kt" to "scope.launch { remove(device) } }, modifier = Modifier.confirms())",
-    ).filter { (file, marked) -> marked !in File(sources, file).readText() }
+    ).filter { (file, marked) -> marked !in File(sources, file).text() }
     assertTrue("Delete account, a pack's price and signing out another device confirm: $onModifiers", onModifiers.isEmpty())
     // And everything ApprovalGate holds is inside it: the approvals, extra room, "Did this happen?", install, resume.
-    val gated = files().sumOf { Regex("""ApprovalGate \{""").findAll(it.readText()).count() }
+    val gated = files().sumOf { Regex("""ApprovalGate \{""").findAll(it.text()).count() }
     assertTrue("the approval gate is in use", gated >= 10)
   }
 
@@ -129,8 +132,8 @@ class DriveContractTest {
     // Words kept as constants count too: `ConnectAppsWords.DISCONNECT` is "Disconnect" wherever it's used.
     val constant = Regex("""const val (\w+)\s*=\s*("[^"]*")""")
     val confirmingConstants = files().flatMap { f ->
-      val obj = Regex("""object (\w+)""").find(f.readText())?.groupValues?.get(1)
-      constant.findAll(f.readText()).filter { label.containsMatchIn(it.groupValues[2]) }.mapNotNull { m -> obj?.let { "$it.${m.groupValues[1]}" } }.toList()
+      val obj = Regex("""object (\w+)""").find(f.text())?.groupValues?.get(1)
+      constant.findAll(f.text()).filter { label.containsMatchIn(it.groupValues[2]) }.mapNotNull { m -> obj?.let { "$it.${m.groupValues[1]}" } }.toList()
     }.toSet()
     fun confirming(line: String) = label.containsMatchIn(line) || confirmingConstants.any { Regex("""\b${Regex.escape(it)}\b""").containsMatchIn(line) }
     val unmarked = files().filter { "/drive/" !in it.path }.flatMap { f ->
@@ -148,7 +151,7 @@ class DriveContractTest {
 
   @Test
   fun aVendorsKeyIsNeverCaptured() {
-    val s = File(sources, "views/ConnectAppsViews.kt").readText()
+    val s = File(sources, "views/ConnectAppsViews.kt").text()
     assertTrue("the key field carries the secret mark", "driveTyped({ key = it }), Modifier.fillMaxWidth().secret()" in s)
   }
 
