@@ -299,7 +299,13 @@ export interface Taf {
    * to do (its kickoff, the first instruction) and how it works. A taf with one has the job `custom`;
    * one of the five starter jobs has none.
    */
-  work?: { kickoff: string; instructions?: string; disclose?: Job["disclose"] };
+  work?: { kickoff: string; instructions?: string };
+  /**
+   * Where the AI disclosure goes in its calls that write outside the company, as Coach's results named
+   * it (kiff/tafs#476, gap 9): at creation, and added to by improvements, never taken away. Merged with
+   * its job's own (jobOf), so a starter job's taf gets it too.
+   */
+  disclose?: Job["disclose"];
   /** What it does in one word, for its dial's face ("Refund"), as Coach's result said it. */
   does?: string;
   /**
@@ -1237,15 +1243,21 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // or one of the five starter jobs, for the apps and recipes from before.
   let job: Job;
   let work: Taf["work"];
+  let disclose: Job["disclose"];
   if (body.job === undefined || body.job === CUSTOM) {
     const kickoff = str(body.kickoff).trim();
     if (!kickoff || kickoff.length > MAX_KICKOFF) throw new HTTPError(400, `a job of its own says what each run does (kickoff), in ${MAX_KICKOFF} characters at most`);
     const instructions = body.instructions === undefined ? undefined : str(body.instructions).trim();
     if (instructions !== undefined && instructions.length > MAX_KICKOFF) throw new HTTPError(400, `keep the job's instructions to ${MAX_KICKOFF} characters`);
     if (body.cron === undefined && !unscheduled) throw new HTTPError(400, "a job of its own says when it runs (cron), or that it works from its chat (unscheduled)");
-    let disclose: Job["disclose"];
     try { disclose = discloseOf(body.disclose); } catch (err) { throw new HTTPError(400, (err as Error).message); }
-    work = { kickoff, ...(instructions ? { instructions } : {}), ...(disclose?.length ? { disclose } : {}) };
+    // Each tool it names is one of the taf's: a name that isn't would be kept and do nothing (agentgabo on #572).
+    if (disclose?.length) {
+      const tools = Array.isArray(body.tools) ? body.tools.filter((t): t is string => typeof t === "string") : [];
+      const unknown = disclose.filter((d) => !tools.includes(d.tool)).map((d) => d.tool);
+      if (unknown.length) throw new HTTPError(400, `disclose names ${unknown.join(", ")}, which isn't among the taf's tools (${tools.join(", ") || "none named"}): name each as the result's tools do`);
+    }
+    work = { kickoff, ...(instructions ? { instructions } : {}) };
     job = ownJob({ name, summary: summary ?? "", kickoff, instructions, disclose });
   } else {
     try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
@@ -1341,7 +1353,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   const taf: Taf = {
     id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
-    ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}), ...(work ? { work } : {}),
+    ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}), ...(work ? { work } : {}), ...(disclose?.length ? { disclose } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -1382,13 +1394,22 @@ const MAX_NAME = 60;
 const MAX_KICKOFF = 2_000;
 
 /** The taf's job: its own, as Coach drafted it (kiff/tafs#476), or one of the five starter jobs. Throws for a job id tafs doesn't know. */
-export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work">): Job {
-  if (taf.job === CUSTOM) return ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions, disclose: taf.work?.disclose });
-  return jobById(taf.job);
+export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work" | "disclose">): Job {
+  const job = taf.job === CUSTOM ? ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions }) : jobById(taf.job);
+  // The disclosure Coach named for this taf, on top of its job's own: a tool named again is the taf's.
+  const disclose = withDisclose(job.disclose, taf.disclose);
+  return disclose?.length ? { ...job, disclose } : job;
+}
+
+/** A taf's disclosure with more of it: a tool named again takes the newer fields, and none is ever dropped. */
+export function withDisclose(base: Job["disclose"], more: Job["disclose"]): Job["disclose"] {
+  if (!more?.length) return base;
+  const kept = (base ?? []).filter((d) => !more.some((m) => m.tool === d.tool));
+  return [...kept, ...more];
 }
 
 /** `jobOf`, or undefined for a job id tafs doesn't know: for what is shown, never for a definition. */
-function jobMaybe(taf: Pick<Taf, "name" | "job" | "summary" | "work">): Job | undefined {
+function jobMaybe(taf: Pick<Taf, "name" | "job" | "summary" | "work" | "disclose">): Job | undefined {
   try { return jobOf(taf); } catch { return undefined; }
 }
 
@@ -5433,12 +5454,14 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
   let took = false;
   let pending = false;
   for (const q of r.requirements ?? []) {
-    const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & NewTaf } | undefined;
+    const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & NewTaf; tools?: unknown } | undefined;
     if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
     const held = `handover#${tenant}#${r.id}#${card.id}`;
     if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
     took = true;
-    const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, card.taf as ImprovedTaf, tafs, deps) : newTafFor(tenant, coach.id, r, card.taf, tafs, deps);
+    // The result's tools, as KIFF names them: what a disclosure may name (kiff/tafs#476, agentgabo on #572).
+    const tools = Array.isArray(card.tools) ? card.tools.filter((t): t is string => typeof t === "string") : undefined;
+    const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
     const outcome = await make.catch(async (err) => {
       // Not told: it may still pass. The hold goes, and the sweep tries again.
       console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
@@ -5544,7 +5567,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * the card with. Throws only what may pass on a retry (a server error).
  */
 /** What an improvement result names: the taf it improves, and the version it describes. */
-interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string }
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string; disclose?: unknown; tools?: string[] }
 
 /**
  * The version an improvement result hands over, made once per result for the person whose run it
@@ -5553,7 +5576,7 @@ interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?
  * draft with their session.
  */
 async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID: string, want: ImprovedTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
-  const taf = tafs.find((t) => !t.removing && t.job !== SETUP_JOB && (t.id === want.improves || (!!want.agent && t.kiffAgent === want.agent)));
+  let taf = tafs.find((t) => !t.removing && t.job !== SETUP_JOB && (t.id === want.improves || (!!want.agent && t.kiffAgent === want.agent)));
   if (!taf) return { failed: "the taf this improves isn't on this account" };
   if (want.agent && want.agent !== taf.kiffAgent) return { failed: "that improvement is for another taf" };
   let access: { requester: Requester; cards_manage?: boolean };
@@ -5566,6 +5589,19 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   if (access.cards_manage === undefined) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
   if (!access.cards_manage) return { failed: "your role on this KIFF account can't manage Cards now" };
   const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
+  // A disclosure the improvement names is added to the taf's before its version is built: for a tool it
+  // adds, or for a taf from before disclosures. Never one taken away (agentgabo on kiff/agents#354).
+  if (want.disclose !== undefined) {
+    let more: Job["disclose"];
+    try { more = discloseOf(want.disclose); } catch (err) { return { failed: (err as Error).message }; }
+    const unknown = (more ?? []).filter((d) => !(want.tools ?? []).includes(d.tool)).map((d) => d.tool);
+    if (unknown.length) return { failed: `disclose names ${unknown.join(", ")}, which isn't among the taf's tools: name each as the result's tools do` };
+    if (more?.length) {
+      const cur = (await deps.tafs.get(tenant, taf.id)) ?? taf;
+      await deps.tafs.put(tenant, { ...cur, disclose: withDisclose(cur.disclose, more) });
+      taf = (await deps.tafs.get(tenant, taf.id)) ?? taf;
+    }
+  }
   try {
     // The key the apps make it under, so a version an app makes for the same result is this one.
     const what = want.draft || createHash("sha256").update(want.note ?? "").digest("hex").slice(0, 16);
@@ -5585,7 +5621,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
  * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. A `job` naming
  * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
-interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string; disclose?: unknown }
+interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string; disclose?: unknown; tools?: string[] }
 
 async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
@@ -5612,6 +5648,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       ...(typeof taf.instructions === "string" ? { instructions: taf.instructions } : {}),
       ...(typeof taf.cron === "string" ? { cron: taf.cron } : {}),
       ...(Array.isArray(taf.disclose) ? { disclose: taf.disclose } : {}),
+      ...(taf.tools ? { tools: taf.tools } : {}),
     }, me, deps);
     return { taf_id: (out.taf as { id: string }).id };
   } catch (err) {

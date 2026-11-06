@@ -1200,13 +1200,18 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
     const disclose = [{ tool: "send_message_k3f9", fields: ["text"] }];
-    const own = { name: "Invoices", draft_id: "drf_s1", from_setup: true, kickoff: "Remind each customer of an overdue invoice.", cron: "0 9 * * 1-5", disclose };
+    const own = { name: "Invoices", draft_id: "drf_s1", from_setup: true, kickoff: "Remind each customer of an overdue invoice.", cron: "0 9 * * 1-5", disclose,
+      tools: ["list_invoices_k3f9", "send_message_k3f9"] };
     expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: own })).status).toBe(200);
-    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ work: { disclose } });
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ disclose });
     expect(w.agents.agents.get(`t_acme|${NEW}`)!.disclose).toEqual({ line: DISCLOSURE_LINE, in: disclose });
     // As stored, it's the same job every time it's built again (an Upgrade, a new version).
     expect(jobOf(w.tafs.held.get(`t_acme#${NEW}`)!).disclose).toEqual(disclose);
     w.agents.setupDrafts.set("drf_s2", { tenant: "t_acme", agent: "leads-x" });
+    // A tool that isn't the taf's would be kept and do nothing: refused, in words for Coach (agentgabo on #572).
+    const stray = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...own, name: "Leads", draft_id: "drf_s2", disclose: [{ tool: "send_mail_x1", fields: ["body"] }] } });
+    expect(stray.status).toBe(400);
+    expect(stray.body.error).toContain("send_mail_x1, which isn't among the taf's tools");
     for (const bad of [[{ tool: "", fields: ["text"] }], [{ tool: "send", fields: [] }], [{ tool: "send", fields: ["a..b"] }], "send"]) {
       const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...own, name: "Leads", draft_id: "drf_s2", disclose: bad } });
       expect(r.status, JSON.stringify(bad)).toBe(400);
@@ -2677,11 +2682,37 @@ describe("Coach's result, handed over by tafs cloud", () => {
   // kiff/tafs#476, gap 9: the disclosure Coach names in its result reaches the taf it hands over.
   it("hands over the AI disclosure Coach's result names, into the taf's definition", async () => {
     const disclose = [{ tool: "send_message_k3f9", fields: ["text"] }];
-    const { w, note, answer } = await paused({ ...RESULT, taf: { ...RESULT.taf, disclose } });
+    const { w, note, answer } = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose } });
     w.agents.access.set("u_ana", { cards_manage: true });
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
     expect(w.agents.agents.get(`t_acme|${NEW}`)!.disclose).toEqual({ line: DISCLOSURE_LINE, in: disclose });
+  });
+
+  // agentgabo on kiff/agents#354: an improvement may add a disclosure (a tool it adds, or a taf from
+  // before), on top of the taf's, never taking one away; a tool that isn't the taf's fails the handover.
+  it("adds an improvement's disclosure to the taf's, and builds its version with both", async () => {
+    const better = { type: "result", id: "better", tools: ["reply_k3f9"], taf: { agent: "rae", improves: RAE, note: "Also replies to customers",
+      disclose: [{ tool: "reply_k3f9", fields: ["body"] }] } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }] });
+    await note();
+    expect(answer()).toMatchObject({ answer: { version: expect.any(Number) } });
+    const kept = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(kept.disclose).toEqual([{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "reply_k3f9", fields: ["body"] }]);
+    expect(jobOf(kept).disclose).toEqual(expect.arrayContaining([{ tool: "reply_k3f9", fields: ["body"] }, { tool: "send_message_k3f9", fields: ["text"] }]));
+  });
+
+  it("fails an improvement whose disclosure names a tool that isn't the taf's", async () => {
+    const better = { type: "result", id: "better", tools: ["reply_k3f9"], taf: { agent: "rae", improves: RAE, note: "Also replies",
+      disclose: [{ tool: "post_x1", fields: ["body"] }] } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    expect(answer()).toMatchObject({ answer: { failed: expect.stringContaining("post_x1, which isn't among the taf's tools") } });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.disclose).toBeUndefined();
   });
 
   it("changes a taf's job line to Coach's summary for an improvement only once that version goes live, and back with it", async () => {
