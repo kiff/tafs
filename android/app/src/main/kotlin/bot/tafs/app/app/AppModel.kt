@@ -256,6 +256,11 @@ data class AppState(
   /** The answer each taf is writing now, as its run streams; and how its chat's latest run ended, when the chat says so. */
   val chatLive: Map<String, LiveAnswer> = emptyMap(),
   val chatEnded: Map<String, ChatEnd> = emptyMap(),
+  /**
+   * What tafs cloud holds of the owner's in each chat (docs/chat.md, the thread's `steering`): what waits for the taf to be done, and
+   * what a stopped run never read. tafs cloud's to keep and send; the app only shows it.
+   */
+  val chatSteering: Map<String, bot.tafs.app.kiff.WireSteering> = emptyMap(),
   /** What the owner sent that tafs cloud's thread doesn't have yet, by taf: kept on screen until it does. */
   val chatSent: Map<String, List<ChatMessage>> = emptyMap(),
   /** The owner's messages that weren't sent, in each chat, kept as written until Retry or Edit (kiff/tafs#476). */
@@ -1539,7 +1544,7 @@ class AppModel(
       s.copy(
         coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
         chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
-        chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT,
+        chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT, chatSteering = s.chatSteering - COACH_CHAT,
         chatErrors = s.chatErrors - COACH_CHAT,
       )
     }
@@ -2035,6 +2040,7 @@ class AppModel(
         chatErrors = s.chatErrors - tafId,
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
         chatAwaiting = if (settled || handedOver) s.chatAwaiting - tafId else s.chatAwaiting,
+        chatSteering = thread.steering?.takeIf { it.held != null || it.notSent.isNotEmpty() }?.let { s.chatSteering + (tafId to it) } ?: (s.chatSteering - tafId),
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
         tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
@@ -4152,11 +4158,23 @@ class AppModel(
           var steered = false
           if (run != null && refs.isEmpty()) {
             try {
-              cloud.steer(cloudId, run, words)
+              val steer = cloud.steer(cloudId, run, words)
               steered = true
+              // Sent once (docs/chat.md): what the run didn't take is tafs cloud's, held in this chat until the taf is done, or sent
+              // at once as the next message. The thread shows which, a held one as what waits, so its pending copy goes now.
+              if (steer.sent != null || steer.held != null || steer.status.isEmpty()) {
+                if (current() && coach) steer.sent?.let { settleCoachChat(it.session) }
+                _state.update { s ->
+                  val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
+                  s.copy(
+                    chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
+                    chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
+                  )
+                }
+              }
             } catch (e: CloudError) {
-              // A run that has ended throws 409, and the message goes as a new one.
-              if (e.status != 409) throw e
+              // An older tafs cloud, which holds nothing: a run that has ended throws 409 with no code, and the message goes as a new one.
+              if (e.status != 409 || e.code != null) throw e
             }
           }
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
@@ -4172,6 +4190,18 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
+      if (current() && e is CloudError && e.code == HELD_FULL) {
+        // As much waits as one message can be: tafs cloud's words, as they are, and the owner's go back in the box to send later.
+        _state.update { s ->
+          val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
+          s.copy(
+            chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
+            chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
+            chatErrors = s.chatErrors + (tafId to (e.message ?: "")),
+          )
+        }
+        return false
+      }
       if (current()) {
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
@@ -6224,6 +6254,9 @@ class AppModel(
   }
 
   companion object {
+    /** tafs cloud's refusal of a message when as much as one message can be already waits for the taf (docs/chat.md). */
+    const val HELD_FULL = "held_full"
+
     /** Why a message can't go to a taf that tafs cloud doesn't run. */
     const val NOT_ON_CLOUD = "This taf isn't running on tafs cloud, so it can't be messaged."
 
