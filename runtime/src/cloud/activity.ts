@@ -74,8 +74,7 @@ export function nextStep(c: ActivityCall, taf?: string): NextStep | undefined {
   const said = saidWhy(o.message);
   const reconnect: NextStep = { kind: "reconnect", words: "Connect it again", ...base };
   const later: NextStep = { kind: "try_later", words: "Try again later: the app was busy or down", ...base };
-  const ask: NextStep = { kind: "ask_coach", words: "Ask Coach to change the taf", ...base,
-    message: `${taf ? `Change ${taf}: ` : ""}${title} failed.${said ? ` ${said.replace(/[.…]?$/, ".")}` : ""}` };
+  const ask: NextStep = { kind: "ask_coach", words: "Ask Coach to change the taf", ...base, message: askCoach(taf, title, said) };
   if (o.status === "not_sent") return later;
   if (o.status !== "refused_by_tool") return;
   if (o.refused_by === "connection") {
@@ -87,6 +86,14 @@ export function nextStep(c: ActivityCall, taf?: string): NextStep | undefined {
     }
   }
   return byStatus(answeredStatus(o.message), reconnect, ask, later);
+}
+
+/**
+ * Coach's first message for a failed call, for the owner to send: the app's words quoted as the app's, so
+ * nothing it answered reads as the owner's request (qa-kiff on #574, as kiff/agents#358 does for the record).
+ */
+function askCoach(taf: string | undefined, what: string, said: string | undefined): string {
+  return `${taf ? `Change ${taf}: ` : ""}${what} failed.${said ? ` The app said: "${said.replace(/"/g, "'")}"` : ""}`;
 }
 
 /** The step a vendor's HTTP status calls for, when it calls for one. */
@@ -104,7 +111,7 @@ function byStatus(status: number | undefined, reconnect: NextStep, ask: NextStep
 export function nextForCalled(tool: string, said: string | undefined, taf?: string): NextStep | undefined {
   const base = { tool, ...(taf ? { taf } : {}) };
   return byStatus(answeredStatus(said), { kind: "reconnect", words: "Connect it again", ...base },
-    { kind: "ask_coach", words: "Ask Coach to change the taf", ...base, message: `${taf ? `Change ${taf}: ` : ""}${tool} failed.${said ? ` ${said.replace(/[.…]?$/, ".")}` : ""}` },
+    { kind: "ask_coach", words: "Ask Coach to change the taf", ...base, message: askCoach(taf, tool, said) },
     { kind: "try_later", words: "Try again later: the app was busy or down", ...base });
 }
 

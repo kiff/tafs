@@ -300,16 +300,26 @@ export function discloseOf(v: unknown): Job["disclose"] {
   });
 }
 
-/** The most a name the taf writes for may be: one line. */
+/**
+ * The most a name the taf writes for may be: one line of 100 characters, and 272 bytes, so its disclosure
+ * line ("Written by an AI agent for " + name + ".") stays within the 300 bytes kiff/agents takes (qa-kiff on #574).
+ */
 export const WRITES_FOR_MAX = 100;
+export const WRITES_FOR_MAX_BYTES = 300 - Buffer.byteLength("Written by an AI agent for .");
 
 /** A result's writes_for, checked: a name on one line, or undefined for none. Throws, in words for Coach. */
 export function writesForOf(v: unknown): string | undefined {
   if (v === undefined || v === null || v === "") return undefined;
-  if (typeof v !== "string" || v.trim() !== v || /[\u0000-\u001f\u007f-\u009f]/.test(v) || [...v].length > WRITES_FOR_MAX) {
+  if (typeof v !== "string" || v.trim() !== v || /[\u0000-\u001f\u007f-\u009f]/.test(v) || [...v].length > WRITES_FOR_MAX || Buffer.byteLength(v) > WRITES_FOR_MAX_BYTES) {
     throw new Error(`writes_for is who the taf's messages come from, a name on one line of at most ${WRITES_FOR_MAX} characters`);
   }
   return v;
+}
+
+/** Who a disclosure line names, as disclosureLine wrote it; undefined for the line that names no one. */
+export function writesForIn(line: string | undefined): string | undefined {
+  const m = /^Written by an AI agent for (.+)\.$/.exec(line ?? "");
+  return m?.[1];
 }
 
 export function systemPrompt(job: Job): string {

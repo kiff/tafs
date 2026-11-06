@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForOf } from "../jobs.js";
+import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
@@ -3088,9 +3088,12 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   }
   // Its places, checked as the dial checks them: a taf place by this account's record (400 otherwise).
   const actionResults = Array.isArray(body.actionResults) ? await vendorPlaces(body.actionResults, me, taf, deps) : taf.actionResults;
+  let writesFor: string | undefined;
+  try { writesFor = writesForOf(body.writes_for); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   let def: AgentDefinition;
   try {
-    def = definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
+    // An improvement's sender name is this version's: the live taf takes it once it's installed (keepNotes).
+    def = definition(taf.id, { ...jobOf(taf), ...(writesFor ? { writesFor } : {}) }, { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -3477,12 +3480,16 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
     const dial = taf.knobs?.[String(n)];
     const actionResults = dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.actionResults;
-    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobOf(taf), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
+    // Who it writes for is the live version's, as its disclosure line names it (an improvement's, once installed).
+    const writesFor = live.disclose ? writesForIn(live.disclose.line) : taf.writesFor;
+    const named: Taf = { ...taf };
+    if (writesFor) named.writesFor = writesFor; else delete named.writesFor;
+    const next: Taf = { ...named, definition: digest(definition(taf.id, jobOf(named), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
     if (summary) next.summary = summary; else if (summary === "") delete next.summary;
-    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary) await deps.tafs.putIf(me.tenantID, next, taf);
+    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary || next.writesFor !== taf.writesFor) await deps.tafs.putIf(me.tenantID, next, taf);
   } catch (err) {
     // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
     console.error(`keep notes: ${taf.id} v${n}:`, err);
@@ -5674,21 +5681,15 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
       taf = (await deps.tafs.get(tenant, taf.id)) ?? taf;
     }
   }
-  // Who it writes for, when the improvement says (a taf from before gap 18 names no one): the next version's line.
-  if (want.writes_for !== undefined) {
-    let writesFor: string | undefined;
-    try { writesFor = writesForOf(want.writes_for); } catch (err) { return { failed: (err as Error).message }; }
-    if (writesFor) {
-      const cur = (await deps.tafs.get(tenant, taf.id)) ?? taf;
-      await deps.tafs.put(tenant, { ...cur, writesFor });
-      taf = (await deps.tafs.get(tenant, taf.id)) ?? taf;
-    }
-  }
+  // Who it writes for, when the improvement says (a taf from before gap 18 names no one): the next version's
+  // line alone. The live taf takes it when that version is installed (keepNotes), never before (qa-kiff on #574).
+  let writesFor: string | undefined;
+  try { writesFor = writesForOf(want.writes_for); } catch (err) { return { failed: (err as Error).message }; }
   try {
     // The key the apps make it under, so a version an app makes for the same result is this one.
     const what = want.draft || createHash("sha256").update(want.note ?? "").digest("hex").slice(0, 16);
     const { version } = await makeVersion({
-      note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}`,
+      note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}`, ...(writesFor ? { writes_for: writesFor } : {}),
       ...(typeof want.summary === "string" ? { summary: want.summary } : {}),
     }, me, taf, deps);
     return { version };

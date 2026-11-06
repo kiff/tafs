@@ -2732,12 +2732,31 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
     w.tafs.held.set(`t_acme#${RAE}`, { ...rae, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }] });
     await note();
-    expect(answer()).toMatchObject({ answer: { version: expect.any(Number) } });
+    const made = answer() as { answer: { version: number } };
+    expect(made).toMatchObject({ answer: { version: expect.any(Number) } });
+    // The version carries the new line; the live taf doesn't until the owner installs it (qa-kiff on #574).
+    const latest = [...w.agents.versionDefs.values()].at(-1) as { disclose?: { line: string } } | undefined;
+    expect(latest?.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.writesFor).toBeUndefined();
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${made.answer.version}/live`, { token: "ana" })).body).toEqual({ live: made.answer.version });
     const kept = w.tafs.held.get(`t_acme#${RAE}`)!;
     expect(kept.writesFor).toBe("Kiff Agents OÜ");
     expect(jobOf(kept).writesFor).toBe("Kiff Agents OÜ");
-    const latest = [...w.agents.versionDefs.values()].at(-1) as { disclose?: { line: string } } | undefined;
-    expect(latest?.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+  });
+
+  // qa-kiff on #574: the name fits kiff/agents' 300-byte line in any script, on one line, unpadded.
+  it("refuses a writes_for that doesn't fit the disclosure line", async () => {
+    for (const bad of ["株".repeat(91), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
+      const { w, note, answer } = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: bad } });
+      w.agents.access.set("u_ana", { cards_manage: true });
+      await note();
+      expect(JSON.stringify(answer()), bad).toContain("writes_for is who the taf's messages come from");
+    }
+    // 90 of a 3-byte script fits: 270 bytes, and the line is 298.
+    const fits = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(90) } });
+    fits.w.agents.access.set("u_ana", { cards_manage: true });
+    await fits.note();
+    expect(fits.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
   });
 
   // qa-kiff on #572: a merge only ever widens: Chargebacks' own fields for update_dispute stay when a taf names another.
@@ -3001,6 +3020,13 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(c.not_done.map((x) => [x.tool, x.run])).toEqual([["send_reminder_k3f9", run.id], ["list_inboxes_k3f9", run.id]]);
     // A run without kept lines answers as before.
     expect(await coachTool("taf_run", { taf: RAE, run: clean.id }, callOf, deps)).not.toHaveProperty("calls_not_done");
+    // Another person's run is theirs to read alone: taf_check leaves it out (the same rule as taf_run).
+    const theirs = await w.agents.api.startRun("t_acme", RAE, "Mine", { requester: { kind: "member", id: "u_bob" } });
+    w.agents.runs.find((x) => x.id === theirs.id)!.status = "COMPLETED";
+    const listOf = w.agents.events.get(theirs.session)!;
+    listOf.push({ session: theirs.session, run: theirs.id, seq: listOf.length + 1, time: "2026-11-06T10:29:00.000Z", kind: "called", body: { tool: "secret_tool_k3f9", outcome: "failed", reason: "Bob's customer said no" } });
+    const again = await coachTool("taf_check", { taf: RAE }, callOf, deps) as { not_done: Array<{ tool: string }> };
+    expect(again.not_done.map((x) => x.tool)).not.toContain("secret_tool_k3f9");
   });
 
   it("a tool whose procedure is a skill adds it to Coach's session once, read at the next turn, never in the tool's answer", async () => {
