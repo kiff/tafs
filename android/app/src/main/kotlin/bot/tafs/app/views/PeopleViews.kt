@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.DriveAlert
@@ -137,7 +138,7 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
       onDismissRequest = { deleting = null },
       title = { Text("Delete ${group.name}?") },
       text = { Text("Its people lose the tafs they used through it, unless another group or a share of their own gives them those tafs. Their chats stay theirs.") },
-      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }) { Text("Delete ${group.name}", color = Theme.no) } },
+      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }, Modifier.confirms()) { Text("Delete ${group.name}", color = Theme.no) } },
       dismissButton = { TextButton({ deleting = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )
@@ -167,7 +168,7 @@ private fun GroupPanel(
           Text("•••", style = scaled(16, FontWeight.SemiBold, Theme.soft), modifier = Modifier.heightIn(min = 44.dp).clickable { menu = true }.padding(horizontal = 6.dp, vertical = 8.dp))
           DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
             DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; onRename() })
-            DropdownMenuItem(text = { Text("Delete", color = Theme.no) }, onClick = { menu = false; onDelete() })
+            DropdownMenuItem(text = { Text("Delete", color = Theme.no) }, onClick = { menu = false; onDelete() }, modifier = Modifier.confirms())
           }
         }
       }
@@ -204,7 +205,7 @@ private fun MemberRow(member: GroupMember, group: Group, state: AppState, setMem
         val role = if (member.isManager) "member" else "manager"
         DropdownMenuItem(text = { Text(if (member.isManager) "Make a member" else "Make the manager") }, onClick = { menu = false; setMember(member.subject, role) })
       }
-      if (mayRemove) DropdownMenuItem(text = { Text("Remove from ${group.name}", color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) })
+      if (mayRemove) DropdownMenuItem(text = { Text("Remove from ${group.name}", color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) }, modifier = Modifier.confirms())
     }
   }
 }

@@ -79,7 +79,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
               if (device.thisDevice) {
                 Text("This device", style = scaled(13, color = Theme.dim))
               } else {
-                Text("Sign out", style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable { removing = device }.padding(top = 8.dp))
+                Text("Sign out", style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { removing = device }.padding(top = 8.dp))
               }
             }
           }

@@ -110,6 +110,35 @@ class DriveContractTest {
     assertTrue("the approval gate is in use", gated >= 10)
   }
 
+  /**
+   * A control a person touches whose words take something away or grant it (Delete, Remove, Disconnect, Halt, Revoke, Sign out,
+   * Buy, Resume, Approve, Install, Refuse, Pair, Forget, Go back) carries the confirm mark, or sits behind ApprovalGate. So a
+   * new one can't be forgotten. Words that only name a screen or a title are listed here, each with why.
+   */
+  @Test
+  fun everyControlWhoseWordsConfirmCarriesTheMark() {
+    val label = Regex(""""[^"]*\b(Delete|Remove|Disconnect|Halt|Revoke|Sign out|Buy|Resume|Approve|Install|Refuse|Pair|Forget|Go back)\b[^"]*"""")
+    val touch = Regex("""TextButton|DropdownMenuItem|OutlineButton|PrimaryButton|\bButton\(|clickable""")
+    val notConfirming = setOf(
+      "Modifier.clickable(onClickLabel = \"Open Halt\"", // the halt chip opens the halt screen, whose buttons carry the mark
+      "contentDescription = \"Remove \${file.name}\"", // takes a file off a message not sent yet
+      "Text(\"Delete account\", style = scaled(28", // the screen's title
+      "Text(if (tafId == null) \"Halt all\" else \"Halt\", style = scaled(", // the halt screen's title, and the row that opens it
+      "title = { Text(", // a dialog's title, never touched
+    )
+    val unmarked = files().filter { "/drive/" !in it.path }.flatMap { f ->
+      val lines = f.readLines()
+      lines.indices.filter { i ->
+        val line = lines[i]
+        label.containsMatchIn(line) && notConfirming.none { it in line } &&
+          touch.containsMatchIn(lines.subList(maxOf(0, i - 4), minOf(lines.size, i + 5)).joinToString("\n")) &&
+          "confirms()" !in lines.subList(maxOf(0, i - 4), minOf(lines.size, i + 5)).joinToString("\n") &&
+          "ApprovalGate" !in lines.subList(maxOf(0, i - 8), minOf(lines.size, i + 2)).joinToString("\n")
+      }.map { "${f.name}:${it + 1}" }
+    }
+    assertTrue("These controls' words confirm, so they carry .confirms() (docs/drive.md): $unmarked", unmarked.isEmpty())
+  }
+
   @Test
   fun aVendorsKeyIsNeverCaptured() {
     val s = File(sources, "views/ConnectAppsViews.kt").readText()

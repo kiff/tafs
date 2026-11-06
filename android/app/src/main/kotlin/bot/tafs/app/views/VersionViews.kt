@@ -180,9 +180,9 @@ private fun VersionRow(
     v.trials.orEmpty().forEach { Text(VersionWords.tried(it), style = scaled(12, color = Theme.soft)) }
     if (!v.live) {
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (trying) OutlineButton("Resume the trial", onResume, Modifier.weight(1f))
+        if (trying) OutlineButton("Resume the trial", onResume, Modifier.weight(1f).confirms())
         else OutlineButton("Try it", onTry, Modifier.weight(1f), enabled = canTry)
-        OutlineButton(if (installing) "Installing…" else "Install this version", onInstall, Modifier.weight(1f), enabled = canInstall)
+        OutlineButton(if (installing) "Installing…" else "Install this version", onInstall, Modifier.weight(1f).confirms(), enabled = canInstall)
       }
     }
   }
@@ -269,8 +269,8 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
           Chip("not live", Theme.amber)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          OutlineButton("Go back", { confirmBack = true }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
-          OutlineButton(if (busy) "Working…" else "Install", { confirmInstall = true }, Modifier.weight(1f), enabled = !busy)
+          OutlineButton("Go back", { confirmBack = true }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !busy)
+          OutlineButton(if (busy) "Working…" else "Install", { confirmInstall = true }, Modifier.weight(1f).confirms(), enabled = !busy)
         }
         state.trialErrors[tafId]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       }

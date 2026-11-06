@@ -192,7 +192,7 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
           removing = null
           editing = null
           scope.launch { actions.remove(taf.id, d) }
-        }) { Text("Remove", color = Theme.no) }
+        }, Modifier.confirms()) { Text("Remove", color = Theme.no) }
       },
       dismissButton = { TextButton({ removing = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
@@ -286,7 +286,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
     } else {
       Text(DoorWords.noKeys(door, taf.name), style = scaled(15, color = Theme.ink))
     }
-    Text("Remove door", style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onRemove).padding(top = 8.dp))
+    Text("Remove door", style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(onClick = onRemove).padding(top = 8.dp))
   }
 }
 

@@ -193,8 +193,13 @@ Enforced in the app, with no prompt:
    - extra room;
    - buying a pack or a plan;
    - dismissing a card that signs;
-   - deleting the account;
-   - signing out another device.
+   - deleting the account, a group or a door;
+   - signing out another device, and removing someone from a group;
+   - revoking a Card, forgetting a memory note, installing a version or going back to one;
+   - anything else whose words take something away or grant it: on Android a contract
+     test reads every control's words (Delete, Remove, Disconnect, Halt, Revoke, Sign
+     out, Buy, Resume, Approve, Install, Refuse, Pair, Forget, Go back) and fails on one
+     without the mark.
 2. **The signer's drive rule.** While a drive is on, every confirming signature needs the
    biometric prompt. The approval window is suspended, and the device key's approval and
    answer paths refuse a signature without the prompt.

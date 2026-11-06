@@ -349,7 +349,7 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
   }
   // Revoke: in the sample its own; signed in, KIFF's, for whoever manages it. Pausing is in Setup.
   if (taf.state != TafState.revoked && (taf.cloudId == null || manages)) {
-    OutlineButton("Revoke", onRevoke, Modifier.fillMaxWidth(), color = Theme.no)
+    OutlineButton("Revoke", onRevoke, Modifier.fillMaxWidth().confirms(), color = Theme.no)
   }
 }
 
@@ -491,7 +491,7 @@ internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?
           Text(
             "Forget",
             style = scaled(14, FontWeight.SemiBold, Theme.soft),
-            modifier = Modifier.heightIn(min = 44.dp).clickable { forgetting = note },
+            modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { forgetting = note },
           )
         }
       }
@@ -509,7 +509,7 @@ internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?
       onDismissRequest = { forgetting = null },
       title = { Text("Forget this note?") },
       text = { Text("“${note.content}”\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.") },
-      confirmButton = { TextButton({ forgetting = null; actions.forget(note, tafId) }) { Text("Forget", color = Theme.no) } },
+      confirmButton = { TextButton({ forgetting = null; actions.forget(note, tafId) }, Modifier.confirms()) { Text("Forget", color = Theme.no) } },
       dismissButton = { TextButton({ forgetting = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )

@@ -78,7 +78,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
         Text(
           "Disconnect",
           style = scaled(14, FontWeight.Medium, Theme.no),
-          modifier = Modifier.heightIn(min = 44.dp).clickable { ending = grant }.padding(top = 8.dp),
+          modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { ending = grant }.padding(top = 8.dp),
         )
       }
     }
