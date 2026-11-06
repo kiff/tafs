@@ -309,6 +309,8 @@ final class DriveTests: XCTestCase {
         ("Views/TafPresentationViews.swift", #"Button(ask.dismiss_title"#),
         ("Views/TafPresentationViews.swift", #"Button("Disconnect", role: .destructive) { disconnect = true }"#),
         ("Views/DoorsView.swift", #"Button("Remove door""#),
+        ("Views/DeleteAccountView.swift", #"Button(role: .destructive) {"#),
+        ("Views/DevicesView.swift", #"Button("Sign out") { removing = device }"#),
     ]
 
     func testEveryListedConfirmingControlCarriesTheMark() throws {

@@ -44,6 +44,7 @@ struct DeleteAccountView: View {
                             }
                         }
                     }
+                    .confirming()
                     .disabled(deleting)
                 } footer: {
                     Text("You confirm with \(Biometry.name) before anything is deleted. Signed in elsewhere, you're signed out there too.")
