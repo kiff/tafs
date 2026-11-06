@@ -200,6 +200,9 @@ struct SetupChatView: View {
                                 SetupComponentView(shown: c)
                                     .onAppear { cardsInView.insert(c.ref) }
                                     .onDisappear { cardsInView.remove(c.ref) }
+                            case .drive(let d):
+                                // What Coach did while it drove the app (docs/drive.md), where the drive ended.
+                                DriveRecapCard(recap: d)
                             }
                         }
                         .id(item.id)
@@ -210,8 +213,6 @@ struct SetupChatView: View {
                     if !away.isEmpty {
                         WhileYouWereAway(lines: away).id("while-away")
                     }
-                    // What Coach did while it drove the app (docs/drive.md), once the drive is over.
-                    DriveRecapView().id("drive-recap")
                     // How the tasks Coach handed tafs went, until Coach reads them (kiff/tafs#206).
                     ForEach(model.setupThread.coachLines.filter { $0.away != true }) { line in
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -437,6 +438,8 @@ struct SetupChatView: View {
             case .component(let c):
                 if holding { return false }
                 if streaming, c.firstAt > (lastOwner ?? .distantPast) { return false }
+                return true
+            case .drive:
                 return true
             }
         }

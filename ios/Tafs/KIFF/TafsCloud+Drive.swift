@@ -31,6 +31,31 @@ extension TafsCloud {
         var taf: String?
     }
 
+    /// A drive's end in Coach's thread, at the time it ended: what it did, from tafs cloud's record.
+    struct DriveRecap: Decodable, Equatable, Sendable {
+        let id: String
+        var session: String?
+        let task: String
+        var why: String?
+        /// tafs cloud's words for why it ended.
+        var words: String?
+        var steps: [DriveStep] = []
+        let at: Date
+
+        enum CodingKeys: String, CodingKey { case id, session, task, why, words, steps, at }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            session = try c.decodeIfPresent(String.self, forKey: .session)
+            task = try c.decode(String.self, forKey: .task)
+            why = try c.decodeIfPresent(String.self, forKey: .why)
+            words = try c.decodeIfPresent(String.self, forKey: .words)
+            steps = (try? c.decodeIfPresent([DriveStep].self, forKey: .steps)) ?? []
+            at = try c.decode(Date.self, forKey: .at)
+        }
+    }
+
     struct DriveRead: Decodable, Equatable, Sendable {
         var drive: Drive?
         var steps: [DriveStep]?

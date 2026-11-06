@@ -1319,14 +1319,37 @@ final class TafsCloud {
             let line: CoachLine?
             init(from decoder: Decoder) throws { line = try? CoachLine(from: decoder) }
         }
+        let path = "/v1/tafs/\(escaped(id))/conversation" + (session.map { "/\(escaped($0))" } ?? "")
+        return try Self.setupThread(decoding: try await sendData("GET", path, body: Optional<[String: String]>.none))
+    }
+
+    /// Setup's thread from tafs cloud's answer: its messages, its cards, and the drives that ended in it
+    /// (`items` of type `drive`, docs/drive.md). Anything the app can't read is left out, never the thread.
+    static func setupThread(decoding data: Data) throws -> SetupThread {
+        struct Working: Decodable { let session: String }
+        /// One the app can't read is left out, never the thread with it.
+        struct LenientLine: Decodable {
+            let line: CoachLine?
+            init(from decoder: Decoder) throws { line = try? CoachLine(from: decoder) }
+        }
+        /// Only a drive's end, of the thread's items: the rest the app reads from messages and components.
+        struct LenientDrive: Decodable {
+            let drive: DriveRecap?
+            enum CodingKeys: String, CodingKey { case type, drive }
+            init(from decoder: Decoder) throws {
+                let c = try? decoder.container(keyedBy: CodingKeys.self)
+                drive = (try? c?.decode(String.self, forKey: .type)) == "drive" ? (try? c?.decode(DriveRecap.self, forKey: .drive)) : nil
+            }
+        }
         struct Response: Decodable {
             let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working?; let coachLines: [LenientLine]?
-            enum CodingKeys: String, CodingKey { case messages, components, working, coachLines = "coach_lines" }
+            let items: [LenientDrive]?
+            enum CodingKeys: String, CodingKey { case messages, components, working, items, coachLines = "coach_lines" }
         }
-        let path = "/v1/tafs/\(escaped(id))/conversation" + (session.map { "/\(escaped($0))" } ?? "")
-        let r: Response = try await send("GET", path)
+        let r = try KIFFClient.decoder.decode(Response.self, from: data)
         return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
-                           working: r.working?.session, coachLines: (r.coachLines ?? []).compactMap(\.line))
+                           working: r.working?.session, coachLines: (r.coachLines ?? []).compactMap(\.line),
+                           drives: (r.items ?? []).compactMap(\.drive))
     }
 
     /// How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until
