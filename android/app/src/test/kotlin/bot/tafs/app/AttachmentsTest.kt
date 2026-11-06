@@ -255,6 +255,66 @@ class AttachmentsTest {
     assertNull(m.state.value.chatUnsent["refunds-1"])
   }
 
+  /** Retry while another message is on its way: nothing is tried, and the message stays Not sent, words and files. */
+  @Test fun retryWhileAnotherMessageIsGoingKeepsItNotSentWithItsFiles() = runTest {
+    reads(); declared(att1)
+    transport.answer("PUT /up/$att1", 200)
+    transport.answer(send, 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.attach(pdf, "refunds-1")
+    assertFalse(m.deliverChat("Refund this one", "refunds-1", withFiles = true))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    transport.answer(send, 200, """{"session":"s1","new_session":false}""")
+    transport.hold(send)
+    val going = launch { m.deliverChat("And this one", "refunds-1") }
+    testScheduler.runCurrent()
+    assertTrue("refunds-1" in m.state.value.chatSending)
+    assertTrue("Retry waits", m.state.value.holdsRetry("refunds-1", unsent))
+    assertFalse(m.resendUnsent("refunds-1", unsent.message))
+    assertEquals(listOf(unsent), m.state.value.chatUnsent["refunds-1"])
+    transport.release(send)
+    going.join()
+    // Only the first try and the other message went.
+    assertEquals(listOf("Refund this one", "And this one"), transport.requestsTo(send).indices.map { body(send, it).getValue("text").jsonPrimitive.content })
+    assertEquals(listOf(unsent), m.state.value.chatUnsent["refunds-1"])
+  }
+
+  /** Retry with files while the taf is at work: files never go into a run, so it waits, as Send does, and stays Not sent. */
+  @Test fun retryWithFilesWaitsWhileTheTafIsAtWork() = runTest {
+    reads(); declared(att1)
+    transport.answer("PUT /up/$att1", 200)
+    transport.answer(send, 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.attach(pdf, "refunds-1")
+    assertFalse(m.deliverChat("Refund this one", "refunds-1", withFiles = true))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    transport.answer(send, 200, """{"session":"s1","new_session":false}""")
+    assertTrue(m.deliverChat("And this one", "refunds-1"))
+    assertTrue("the taf is answering", m.state.value.thinking("refunds-1"))
+    assertTrue(m.state.value.holdsRetry("refunds-1", unsent))
+    assertFalse(m.resendUnsent("refunds-1", unsent.message))
+    assertEquals(2, transport.requestsTo(send).size)
+    assertEquals(listOf(unsent), m.state.value.chatUnsent["refunds-1"])
+  }
+
+  /** Retry on a taf tafs cloud no longer runs: why, and the message stays Not sent, words and files. */
+  @Test fun retryOnATafNotOnTafsCloudKeepsItNotSent() = runTest {
+    reads(); declared(att1)
+    transport.answer("PUT /up/$att1", 200)
+    transport.answer(send, 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.attach(pdf, "refunds-1")
+    assertFalse(m.deliverChat("Refund this one", "refunds-1", withFiles = true))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    transport.answer("GET /v1/home", 200, """{"tafs":[{"name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
+    m.refresh()
+    assertNull(m.state.value.taf("refunds-1")?.cloudId)
+    assertFalse(m.resendUnsent("refunds-1", unsent.message))
+    assertEquals(AppModel.NOT_ON_CLOUD, m.state.value.chatErrors["refunds-1"])
+    assertEquals(listOf(unsent), m.state.value.chatUnsent["refunds-1"])
+    assertEquals(1, transport.requestsTo(send).size)
+  }
+
   @Test fun editingAMessageThatWasNotSentPutsItsFilesBackInTheTray() = runTest {
     reads(); declared(att1)
     transport.answer("PUT /up/$att1", 200)

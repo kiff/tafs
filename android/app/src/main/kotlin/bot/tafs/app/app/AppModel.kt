@@ -693,6 +693,13 @@ data class AppState(
     files(tafId).any { it.state == PendingFile.State.Uploading } || (thinking(tafId) && files(tafId).any { it.ref != null })
 
   /**
+   * Whether Retry on a message that wasn't sent waits: while another message is on its way, and, for one with files, while the
+   * taf (or Coach) is at work, as Send waits for files. It stays Not sent meanwhile, words and files.
+   */
+  fun holdsRetry(tafId: String, unsent: Unsent): Boolean =
+    tafId in chatSending || (unsent.files.isNotEmpty() && thinking(tafId))
+
+  /**
    * A taf's chat as one timeline: its messages, the calls held for the owner where they were
    * held, and what became of earlier held calls (approved, refused) since the thread's first
    * message, each as one line.
@@ -4027,6 +4034,15 @@ class AppModel(
 
   /** [retryUnsent], waited for: whether it went. A second tap finds nothing left to send; refused again, deliverChat keeps it. */
   suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean {
+    val s = _state.value
+    val kept = s.chatUnsent[tafId]?.firstOrNull { it.message == message } ?: return false
+    // Nothing is tried while it can't go: it stays Not sent, words and files, for a later Retry. Checked before it leaves
+    // the thread, since a send refused before it starts keeps nothing.
+    if (s.holdsRetry(tafId, kept)) return false
+    if (s.mode == Mode.kiff && s.taf(tafId)?.cloudId == null) {
+      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to NOT_ON_CLOUD)) }
+      return false
+    }
     val unsent = takeUnsent(tafId, message) ?: return false
     // With its own files, never the tray's.
     return if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
@@ -4093,7 +4109,7 @@ class AppModel(
     val taf = _state.value.taf(tafId)
     val cloudId = taf?.cloudId
     if (cloudId == null) {
-      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "This taf isn't running on tafs cloud, so it can't be messaged.")) }
+      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to NOT_ON_CLOUD)) }
       return false
     }
     if (tafId in _state.value.chatSending) return false
@@ -6203,6 +6219,9 @@ class AppModel(
   }
 
   companion object {
+    /** Why a message can't go to a taf that tafs cloud doesn't run. */
+    const val NOT_ON_CLOUD = "This taf isn't running on tafs cloud, so it can't be messaged."
+
     /**
      * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and the
      * digest the person was shown for the connect step; the card's draft and the version the person was shown for the Cards
