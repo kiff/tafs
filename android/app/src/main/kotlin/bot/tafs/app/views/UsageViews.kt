@@ -198,7 +198,7 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
         Text(
           if (state.buying == id) "Buying…" else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-          modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+          modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
         )
       }
       PurchaseNoteLine(state, id, actions)

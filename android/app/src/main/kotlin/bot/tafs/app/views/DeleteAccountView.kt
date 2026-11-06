@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -82,7 +83,7 @@ fun DeleteAccountSheet(state: AppState, delete: suspend () -> Boolean, clearErro
             else -> "Try again"
           },
           style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.no),
-          modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+          modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).confirms()
             .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }
             .padding(horizontal = 12.dp, vertical = 8.dp),
         )

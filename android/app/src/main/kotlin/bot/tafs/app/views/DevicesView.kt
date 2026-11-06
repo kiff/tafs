@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
 import android.text.format.DateUtils
@@ -96,7 +97,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
       onDismissRequest = { removing = null },
       title = { Text("Sign ${device.name ?: "this device"} out?") },
       confirmButton = {
-        TextButton(onClick = { removing = null; scope.launch { remove(device) } }) { Text("Sign out", color = Theme.no) }
+        TextButton(onClick = { removing = null; scope.launch { remove(device) } }, modifier = Modifier.confirms()) { Text("Sign out", color = Theme.no) }
       },
       dismissButton = { TextButton(onClick = { removing = null }) { Text("Cancel") } },
     )

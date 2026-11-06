@@ -191,8 +191,10 @@ Enforced in the app, with no prompt:
    - Halt and resume;
    - the answers to "Did this happen?";
    - extra room;
-   - buying a pack;
-   - dismissing a card that signs.
+   - buying a pack or a plan;
+   - dismissing a card that signs;
+   - deleting the account;
+   - signing out another device.
 2. **The signer's drive rule.** While a drive is on, every confirming signature needs the
    biometric prompt. The approval window is suspended, and the device key's approval and
    answer paths refuse a signature without the prompt.

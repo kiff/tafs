@@ -98,6 +98,13 @@ class DriveContractTest {
       "confirms()" !in enclosingButton(s, at)
     }
     assertTrue("These confirm, so they carry .confirms() (docs/drive.md): $unmarked", unmarked.isEmpty())
+    // Controls that aren't buttons carry it on the modifier that takes the touch.
+    val onModifiers = listOf(
+      "views/DeleteAccountView.kt" to "heightIn(min = 48.dp).confirms()\n            .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }",
+      "views/UsageViews.kt" to "Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
+      "views/DevicesView.kt" to "scope.launch { remove(device) } }, modifier = Modifier.confirms())",
+    ).filter { (file, marked) -> marked !in File(sources, file).readText() }
+    assertTrue("Delete account, a pack's price and signing out another device confirm: $onModifiers", onModifiers.isEmpty())
     // And everything ApprovalGate holds is inside it: the approvals, extra room, "Did this happen?", install, resume.
     val gated = files().sumOf { Regex("""ApprovalGate \{""").findAll(it.readText()).count() }
     assertTrue("the approval gate is in use", gated >= 10)
