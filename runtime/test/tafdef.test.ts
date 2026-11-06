@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DISCLOSURE_LINE, JOBS, jobById, SHARED_INSTRUCTIONS } from "../src/jobs.js";
+import { DISCLOSURE_LINE, JOBS, jobById, SHARED_INSTRUCTIONS, systemPrompt } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 import {
   CALL_INSTRUCTIONS,
@@ -29,10 +29,12 @@ describe("a taf's definition on kiff/agents", () => {
       const d = definition(ID, job);
       expect(d.gateway, job.id).toBe("https://mcp.kiff.dev/mcp");
       expect(d.gateway).toBe(KIFF_GATEWAY);
-      // A job that writes outside the company also has `disclose`, which adds no tool and no server.
+      // A job that writes outside the company also has `disclose` and `credit`, which add no tool and no
+      // server; `show` with `show_types` adds kiff/agents' own show tool, limited to a taf's ask_coach card.
       expect(Object.keys(d).sort(), job.id).toEqual(
         ["effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price", "thinking",
-          ...(job.disclose ? ["disclose"] : [])].sort());
+          "show", "show_types", ...(job.disclose ? ["disclose"] : []), ...(job.disclose?.some((x) => x.credit !== false) ? ["credit"] : [])].sort());
+      expect(d.show_types, job.id).toEqual(["ask_coach"]);
     }
   });
 
@@ -41,9 +43,16 @@ describe("a taf's definition on kiff/agents", () => {
     expect(definition(ID, jobById("chargebacks")).disclose).toEqual({
       line: DISCLOSURE_LINE, in: [{ tool: "update_dispute", fields: ["evidence.uncategorized_text", "evidence.product_description"] }],
     });
-    // The line is the one the shared rule asks for, word for word.
-    expect(SHARED_INSTRUCTIONS).toContain(`it ends with "${DISCLOSURE_LINE}"`);
+    // The line is the one the taf's prompt asks for, word for word; the shared rule points to it.
+    expect(SHARED_INSTRUCTIONS).toContain("it ends with your disclosure line, word for word");
+    expect(systemPrompt(jobById("chargebacks"))).toContain(`Your disclosure line: "${DISCLOSURE_LINE}"`);
     expect(definition(ID, jobById("refunds"))).not.toHaveProperty("disclose");
+    // Evidence for a card network carries the disclosure alone: no credit (the owner's call).
+    expect(definition(ID, jobById("chargebacks"))).not.toHaveProperty("credit");
+    // Who it writes for, once the owner said: the line names them, here and in the prompt (gap 18).
+    const named = definition(ID, { ...jobById("chargebacks"), writesFor: "Kiff Agents OÜ" });
+    expect(named.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+    expect(named.instructions).toContain('Your disclosure line: "Written by an AI agent for Kiff Agents OÜ."');
   });
 
   // Eval 42193895936: a door's refund of one charge was refused because the owner had refused another's.

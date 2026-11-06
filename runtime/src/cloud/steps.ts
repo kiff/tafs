@@ -83,6 +83,7 @@ export class Steps {
       case "kiff_pending": return "Checking what waits for you…";
       case "tafs_state": return "Looking at your tafs…";
       case "taf_run": return "Checking the taf's run…";
+      case "taf_check": return "Checking what's wrong with the taf…";
       case "taf_task": return "Handing the task over…";
       case "run_stop": return "Stopping the run…";
       case "taf_pause": return "Pausing the taf…";
@@ -171,7 +172,7 @@ export type StepWhys = Array<{ call: string; tool: string; why: string }>;
  */
 /**
  * A step Coach retried and that later went through isn't shown to the owner as failed
- * (kiff-cloud#1487, recipe 3): a failed call followed by a real retry, the same tool with
+ * (recipe 3): a failed call followed by a real retry, the same tool with
  * the same input (kiff/agents' `input_hash` on the usage record), is dropped, and the
  * retry's outcome stands, done or failed again. A later call of the same tool with other
  * input is other work, and keeps its own step: a reminder to B says nothing about A's. A

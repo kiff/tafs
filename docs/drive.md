@@ -6,6 +6,9 @@ taps, types, swipes or scrolls inside the app. It never confirms anything. This 
 is the contract between tafs cloud and the apps (kiff/tafs#544). Both apps follow it,
 and each has a contract test against it.
 
+The guide for the person running tafs, in plain words, is
+[coach-drives-the-app.md](coach-drives-the-app.md).
+
 ## How a drive starts
 
 A drive is the person's, one request at a time.

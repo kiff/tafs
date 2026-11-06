@@ -181,8 +181,10 @@ A message written while the taf works goes to the run at work
 shows under the answer: "It reads this at its next step", or "when it carries on" while
 the run waits on a held call. When the run reads it, the stream says `taken`.
 
-If the run ended meanwhile (409), the message waits, and goes as a new message once the
-taf is done. A second message written while one waits joins it. A message with files
+In Coach's chat, the message carries Coach's unread lines in front of the owner's words,
+as a new message does, and the thread shows only the owner's words. If the run ended
+meanwhile (409), the message waits, and goes as a new message once the
+taf is done; the lines wait with it. A second message written while one waits joins it. A message with files
 always waits: files go with a message of their own, never into a run.
 
 What a run never read before it ended, as kiff/agents says, goes as the next message

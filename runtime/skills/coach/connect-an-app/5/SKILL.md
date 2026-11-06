@@ -16,19 +16,21 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   through a provider, with its mode; key; browser). Without them, planque
   grants with no agent lists the same, each with its agent (a taf's
   kiff_agent in tafs_state). For a vendor the account already connects, the
-  first option is that same kind, named with the taf that uses it: "your help
-  desk's own sign-in, like Refunds". Say a mode only as the grant gives it; a
-  mode it doesn't give isn't known. Ask for it the same way, for the new
-  taf's agent: request {server} for vendor_sign_in, {entry} for provider,
-  {api} for key. Another kind for that vendor comes after, only if the owner
-  picks it: say it's another sign-in, whose mode isn't known until it's used.
+  first option is reusing its sign-in, named with the taf that uses it: "your
+  help desk's sign-in, like Refunds". Say a mode only as the grant gives it.
+  Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then
+  approves the new taf's tools alone, with no new sign-in or key. Only if
+  planque refuses the reuse, ask for the same kind: {server}, {entry} or {api}.
+  Another kind comes only if the owner picks it: another sign-in.
 - When the owner names no app for a need, find it before you ask to connect
   anything: search {q} with two or three short searches of words from the job
   ("overdue invoice", "send reminder email") finds tools across every app the
   catalog can connect, each with its app and the app's state. Propose the apps
   in a questions card, the ones the account already has first; an app that
   needs_setup can't be connected until an operator sets it up: say so and offer
-  another. Offer only what a connection can do: before an option needs an
+  another. Connect the chosen app with request {entry, name, taf_name, uses}:
+  uses are the slugs of the tools search found that the taf will use, so its
+  sign-in asks only for what they need, and the owner reads it so. Offer only what a connection can do: before an option needs an
   operation (re-sending an invoice, refunding), check the vendor has it, with
   search {q} before connecting and catalog {grant, q} after. When the owner's
   answer can't be met, say so and why in one sentence, then offer what can. An app the owner names is connected as they name it. events {entry}
@@ -40,10 +42,10 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   the event into the dial with the write, in the same request, so the taf
   waits for the outcome and goes on with it.
 - Ask before you connect anything ("Is it OK if I connect to your help desk?").
-  Then connect first, to look: planque request with the vendor's MCP server, a
-  name for the taf's agent from the taf's name (name, such as "reembolsos"),
-  and no tools but your own setup reads (name-the-tools: the accounts list and
-  the operations' fields), so one approval covers them. A vendor with a REST API and no MCP server is connected by its
+  For a vendor's own MCP server, connect first, to look: planque request with
+  its server, a name for the taf's agent (name, such as "reembolsos"), taf_name
+  (the taf's name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
+  the operations' fields), so one approval covers them. An app from search goes with uses, as above. A vendor with a REST API and no MCP server is connected by its
   key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key
   goes, as its docs say (in: header or query, name)}, in place of server. Use
@@ -61,13 +63,12 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   approval with the grant; the owner reads planque's own text, approves it
   and signs in on the vendor's own page (or, for a key, gives it there). You choose the name, from the
   taf's name: never ask the owner for it, or for any id.
-When the owner asks you to reconnect a taf's vendor (it says its connection
-isn't authorised, or its calls are refused), a sign-in that went through only
-means the vendor took it, not that the taf can use it. Before saying it's
-fixed, check it the way the taf works: give the taf a read through that vendor
-(taf_task, "read one recent item, change nothing") and wait for its answer.
-Only when that read works, say it's reconnected. If it still fails, say it
-isn't fixed yet and what you'll try next, never that it is.
+Once a connection connects, or the owner reconnects one, a sign-in or key that
+went through only means the vendor took it. Before saying it's ready or fixed,
+check it: one read through it, yours (a setup read) or the taf's (taf_task,
+"read one recent item, change nothing"), and its answer. A 401 or 403 there
+is the key or sign-in refused: say so, and offer to connect it again. Only
+when the read works, say it's ready; never that it is otherwise.
 The owner's answer to a card comes back as the card's result, and you go on
 from there: their choice in words ("Approved", "Declined", "Test mode"), or
 what they wrote instead of answering. An approval or sign-in that didn't go

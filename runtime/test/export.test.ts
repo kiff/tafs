@@ -49,7 +49,7 @@ async function exportAs(w: World, token: string) {
   return { status: r.statusCode, body: JSON.parse(r.body) };
 }
 
-describe("a person exports their own chats (kiff-cloud#1409)", () => {
+describe("a person exports their own chats", () => {
   it("has their own chats, Coach's too, and their own notes, never another person's or the taf's job runs", async () => {
     const w = world();
     const mine = await w.agents.api.startRun("t_acme", RAE, "Why was order 7 held?", ANA);

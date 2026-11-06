@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { DISCLOSURE_LINE, type Job, systemPrompt } from "../jobs.js";
+import { CREDIT_LINE, disclosureLine, type Job, systemPrompt } from "../jobs.js";
 import { KIFF_SKILL } from "../kiff-skill.js";
 import { ACTION_PLACES_INTRO, placesInstructions, type VendorPlace } from "./places.js";
 import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
@@ -219,7 +219,12 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     max_cost_micro_usd: budget * 10_000,
     history: HISTORY,
     history_tokens: HISTORY_TOKENS,
-    // The AI disclosure in the job's outbound calls, by the runtime, never left to the model.
-    ...(job.disclose?.length ? { disclose: { line: DISCLOSURE_LINE, in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
+    // The AI disclosure in the job's outbound calls, by the runtime, never left to the model, naming who
+    // they come from (gap 18); and "Built with tafs." after it, except where a tool says credit: false.
+    ...(job.disclose?.length ? { disclose: { line: disclosureLine(job), in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
+    ...(job.disclose?.some((d) => d.credit !== false)
+      ? { credit: { line: CREDIT_LINE, after: disclosureLine(job), in: job.disclose.filter((d) => d.credit !== false).map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
+    // Its one card: a setting's request for Coach, with Coach's button (kiff/tafs#476, gap 15).
+    show: true, show_types: ["ask_coach"],
   };
 }

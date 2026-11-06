@@ -82,9 +82,11 @@ export function connectionLines(conns: AccountConnection[], tafs: Map<string, st
  * line ("[improve taf …]", "[tafs coach lines]") keeps that line first, so how it opened is read as before; the
  * owner's words stay last, after "The owner says: ", which is all the thread shows (ownerWords).
  */
-export function withConnections(text: string, lines: string[]): string {
-  if (!lines.length) return text;
-  const block = [CONNECTIONS_LINES, "The account's connections, from planque (data, not the owner's words):", ...lines].join("\n");
+export function withConnections(text: string, lines: string[], company?: string): string {
+  if (!lines.length && !company) return text;
+  // The company, when KIFF names one: who the account's tafs write for unless the owner names another (gaps 16, 18).
+  const named = company ? [`The account is the company ${company} (from KIFF, data): who its tafs' messages come from, unless the owner names another.`] : [];
+  const block = [CONNECTIONS_LINES, ...(lines.length ? ["The account's connections, from planque (data, not the owner's words):", ...lines] : []), ...named].join("\n");
   if (OPENINGS.some((o) => text.startsWith(o))) {
     const nl = text.indexOf("\n");
     if (nl > 0) return `${text.slice(0, nl)}\n${block}${text.slice(nl)}`;

@@ -88,7 +88,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(JSON.stringify(r.states)).not.toContain("Let me look");
   });
 
-  // kiff-cloud#1487's latency hunt: where a message's wait goes, one log line, times only.
+  // The latency work: where a message's wait goes, one log line, times only.
   it("logs where the message's wait went, step by step, with its first words and end, and nothing of the chat", async () => {
     const logged: string[] = [];
     const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => { logged.push(String(line)); });
@@ -420,7 +420,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { event: "delta", data: { kind: "text", text: "Refunded." } },
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Refund the last order" } });
-    // The look-up failed and was retried with the same tool: the failure is never shown, the retry's outcome is (kiff-cloud#1487).
+    // The look-up failed and was retried with the same tool: the failure is never shown, the retry's outcome is.
     expect(r.events.map((e) => e.event)).toEqual(["session", "thinking", "thinking", "activity", "activity", "step", "text", "end"]);
     expect(r.events.filter((e) => e.event === "thinking").map((e) => e.data.text).join("")).toBe("The order is paid, so a refund fits.");
     expect(r.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([{ call_id: "c2", status: "done" }]);

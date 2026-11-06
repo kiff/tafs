@@ -116,12 +116,12 @@ describe("a drive's tools are told the chat (kiff/tafs#544)", () => {
 });
 
 describe("Coach's tools (kiff/tafs#206)", () => {
-  it("speak MCP, and list the eleven tools, each with KIFF's operation argument", async () => {
+  it("speak MCP, and list the twelve tools, each with KIFF's operation argument", async () => {
     const w = world();
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install", "app_look", "app_act"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install", "app_look", "app_act"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });
@@ -397,6 +397,26 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const after = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
     expect(after.body.coach_lines).toBeUndefined();
     expect(after.body.messages.at(-1)).toMatchObject({ from: "owner", text: "How did it go?" });
+  });
+
+  // A phone test: words to a Coach run still at work (paused on an approval) go as a steer, and Coach's line
+  // stayed under every later message, never read by Coach.
+  it("a steer to Coach's run at work carries Coach's lines, and one never read leaves them for the next message", async () => {
+    const w = world();
+    await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "Connect my calendar" }, "ana");
+    const coachRun = w.agents.runs.find((r) => r.agent === SETUP)!;
+    coachRun.status = "PAUSED";
+    const line = (n: number) => ({ at: "2026-10-16T12:00:00.000Z", text: `[taf Refunds version ${n} live] The owner installed version ${n}, which you didn't make; it runs now.`,
+      taf: "Refunds", said: `Version ${n} is live.` });
+    await w.coach.append(`${T}#coach-notes#u_ana`, line(2), new Date("2026-10-17T12:00:00Z"));
+    expect((await w.send("POST", `/v1/tafs/${SETUP}/steer`, { run: coachRun.id, text: "And the shared one" }, "ana")).status).toBe(200);
+    expect(coachRun.steering?.at(-1)?.text).toBe(`[tafs coach lines]\n${line(2).text}\nThe owner says: And the shared one`);
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toBeUndefined();
+    // The run ended first: the steer is refused, and the line waits for the message the app sends instead.
+    await w.coach.append(`${T}#coach-notes#u_ana`, line(3), new Date("2026-10-17T12:00:00Z"));
+    coachRun.status = "COMPLETED";
+    expect((await w.send("POST", `/v1/tafs/${SETUP}/steer`, { run: coachRun.id, text: "Still there?" }, "ana")).status).toBe(409);
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toEqual([{ at: line(3).at, taf: "Refunds", said: "Version 3 is live." }]);
   });
 
   it("a run that ends while the owner is away pushes nothing, and its line waits for \"While you were away\" (kiff/tafs#210)", async () => {
