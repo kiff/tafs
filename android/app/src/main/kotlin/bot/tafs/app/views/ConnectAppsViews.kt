@@ -104,6 +104,9 @@ fun ConnectAppsSheet(
   onChooseActions: (ConnectApps.App) -> Unit = { onAskCoach() },
   /** Disconnects one of a connected app's connections (signed, with the owner's fingerprint); null for someone who can't. */
   onDisconnect: ((String) -> Unit)? = null,
+  /** Gives a key-based connection a new key, or signs a sign-in one in again (gap 13); null for someone who can't. */
+  onReplaceKey: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
+  onSignInAgain: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
   /** The connection that just came back signed in, and leaving that note. */
   onConnectedNow: (bot.tafs.app.kiff.Grant) -> Unit = {},
   dismissConnectedNow: () -> Unit = {},
@@ -169,6 +172,17 @@ fun ConnectAppsSheet(
                   Text(ConnectAppsWords.setUpFor(state, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
                   ConnectAppsWords.alsoOnCards(state, g)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
                   g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+                  // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
+                  bot.tafs.app.model.ConnectionWords.lastFailure(g, state.record)?.let { Text(it, style = scaled(13, color = Theme.no)) }
+                  val fix = if (g.takesKey) onReplaceKey else onSignInAgain
+                  fix?.let { act ->
+                    Text(
+                      if (g.takesKey) bot.tafs.app.model.ConnectionWords.REPLACE_KEY else bot.tafs.app.model.ConnectionWords.SIGN_IN_AGAIN,
+                      style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+                      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.connecting == null) { act(g) }.padding(top = 10.dp),
+                    )
+                  }
+                  state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
                 }
                 if (onDisconnect != null) Text(
                   ConnectAppsWords.DISCONNECT,

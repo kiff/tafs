@@ -51,6 +51,7 @@ class ConnectionActions(
 fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
   val scope = rememberCoroutineScope()
   var ending by remember { mutableStateOf<Grant?>(null) }
+  var cancelling by remember { mutableStateOf<Grant?>(null) }
   LaunchedEffect(taf.id) { actions.refresh() }
   val connections = state.connections(taf.id)
   if (!state.planqueReady || connections.isEmpty()) return
@@ -75,13 +76,24 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
           )
           state.coachNotes[grant.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
         }
+        // A sign-in that never came back is cancelled, not disconnected: nothing was connected.
         Text(
-          "Disconnect",
+          if (grant.waitingSignIn) ConnectionWords.CANCEL_SIGN_IN else "Disconnect",
           style = scaled(14, FontWeight.Medium, Theme.no),
-          modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { ending = grant }.padding(top = 8.dp),
+          modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (grant.waitingSignIn) cancelling = grant else ending = grant }.padding(top = 8.dp),
         )
       }
     }
+  }
+  cancelling?.let { grant ->
+    DriveAlert(
+      onDismissRequest = { cancelling = null },
+      title = { Text(ConnectionWords.cancelTitle(grant)) },
+      text = { Text(ConnectionWords.cancelBody(grant)) },
+      confirmButton = { TextButton({ cancelling = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text("Cancel the sign-in", color = Theme.no) } },
+      dismissButton = { TextButton({ cancelling = null }) { Text("Keep waiting", color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
   }
   ending?.let { grant ->
     DriveAlert(

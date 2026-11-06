@@ -506,7 +506,8 @@ data class AppState(
    * A taf's connections: the grants made for its KIFF agent that are connected, or whose sign-in planque holds while Coach chooses
    * the tools, so the owner can see and end them.
    */
-  fun connections(tafId: String): List<Grant> = grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn || it.needsReconnect) }
+  fun connections(tafId: String): List<Grant> =
+    grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn || it.needsReconnect || it.waitingSignIn) }
 
   /**
    * The taf's connection its vendor signed out, if one is: the taf can't use those tools until the owner signs in again, so it
@@ -3207,6 +3208,14 @@ class AppModel(
   fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
   fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
+
+  /**
+   * Replace a key-based connection's key (gap 13): the key sheet over Connect apps, for this grant. planque checks the signed
+   * key as for a first one; a grant it won't take a key for now says why there.
+   */
+  fun openReplaceKey(grant: bot.tafs.app.kiff.Grant) {
+    if (grant.takesKey) _state.update { it.copy(listApproval = grant.id, listApprovalNeedsKey = true) }
+  }
 
   /** Give the key on the sheet over Connect apps, run by the model as an approval is; then the list again. */
   fun startGiveKey(grantId: String, shownDigest: String, key: String) {

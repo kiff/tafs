@@ -567,6 +567,8 @@ data class RecordEntry(
   val amountUnit: String? = null,
   /** KIFF's key for the call (the gateway's "tc-…"), what the taf's call_ref names it by. */
   val entityId: String? = null,
+  /** The tool as KIFF names it ("list_inboxes_k3f9"): which connection it went through. */
+  val action: String? = null,
   /**
    * What it acted on, as KIFF signs it: "sha256:<hex>" of the value, and the name of the argument it came
    * from ("payment"). Its value is tafs' own, shown only when it matches KIFF's hash.
