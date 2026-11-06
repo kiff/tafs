@@ -44,6 +44,12 @@ final class LaunchListTests: XCTestCase {
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
     }
 
+    private func untilHeldRequestArrives() async {
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+    }
+
     private func kiffUnreachable() {
         for path in ["GET /v1/home", "GET /v1/me/card-exceptions?status=held"] {
             StubProtocol.responses[path] = (503, #"{"error":"unavailable"}"#)
@@ -67,10 +73,16 @@ final class LaunchListTests: XCTestCase {
     func testACancelledFirstRefreshDoesntShowAnEmptyList() async throws {
         serve()
         let model = model()
-        // A launch with nothing remembered, its task gone before KIFF answers.
+        // A launch with nothing remembered, its task gone before tafs cloud answers. The list
+        // is held until the task is cancelled: the stub answers at once otherwise, and an
+        // answer that came first is rightly shown, which made this test a race.
+        StubProtocol.holdOnce = "GET /v1/home"
         let launch = Task { await model.resumeSession("kiff_dev_x", tenant: "tenant-a", keyed: true) }
+        await untilHeldRequestArrives()
         launch.cancel()
         await launch.value
+        // The held answer, released, reaches nobody.
+        StubProtocol.release.signal()
         XCTAssertEqual(model.mode, .kiff)
         XCTAssertFalse(model.listLoaded, "nothing was read, so the list isn't shown as empty")
         // The next refresh reads it.
