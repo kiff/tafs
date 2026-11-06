@@ -844,7 +844,7 @@ struct UnsentBubble: View {
                     Image(systemName: "hand.raised.fill").foregroundColor(Theme.no)
                     Text("\(taf.name) is halted").foregroundColor(Theme.no)
                     Text("·").foregroundColor(Theme.dim)
-                    NavigationLink { HaltScreen(tafID: taf.id) } label: { Text("Resume").foregroundColor(Theme.ink).semibold() }
+                    NavigationLink { HaltScreen(tafID: taf.id) } label: { Text("Resume").foregroundColor(Theme.ink).semibold() }.confirming()
                 }
                 .scaledFont(13, relativeTo: .footnote)
                 Text("Nothing reaches it until you resume it. Then send this again.")

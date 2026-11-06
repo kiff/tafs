@@ -388,6 +388,7 @@ struct ApprovalKeyLostLine: View {
                     Label("Approve again in your browser", systemImage: Biometry.symbol)
                 }
                 .buttonStyle(PrimaryButtonStyle())
+                .confirming()
                 .disabled(starting)
                 Button {
                     confirming = .signInAgain

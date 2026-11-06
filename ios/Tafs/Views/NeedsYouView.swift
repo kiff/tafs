@@ -206,6 +206,7 @@ struct HeldCallCard: View {
                 }
                 Button("Refuse") { send(.refuse) }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                    .confirming()
             }
             .disabled(sending)
         } else {

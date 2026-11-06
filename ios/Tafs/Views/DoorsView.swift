@@ -246,7 +246,7 @@ struct DoorsView: View {
                     Text("\(door.how). A message counts as theirs only when that holds; anyone else knocks.")
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     if manages {
-                        Button("Pair someone") { pairing = door }.buttonStyle(OutlineButtonStyle())
+                        Button("Pair someone") { pairing = door }.buttonStyle(OutlineButtonStyle()).confirming()
                     }
                 } else {
                     Text("\(door.how), so no one here can give \(taf.name) work. Everything that comes through knocks.")
@@ -625,6 +625,7 @@ struct PairSheet: View {
                 }
             }
             .buttonStyle(PrimaryButtonStyle())
+            .confirming()
             .disabled(sender.trimmingCharacters(in: .whitespaces).isEmpty || doors.busy)
             Button("Cancel") { dismiss() }.frame(maxWidth: .infinity)
             Spacer()
@@ -676,7 +677,7 @@ struct KnockCard: View {
                     }
                     if knock.proof == "pass", !knock.paired {
                         Button("Pair \(knock.name?.components(separatedBy: " ").first ?? "them")") { Task { await doors.answer(knock, "pair") } }
-                            .buttonStyle(.drivablePlain).scaledFont(14, weight: .medium).foregroundColor(Theme.ink)
+                            .buttonStyle(.drivablePlain).confirming().scaledFont(14, weight: .medium).foregroundColor(Theme.ink)
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .overlay(Capsule().stroke(Theme.ink.opacity(0.2)))
                     }

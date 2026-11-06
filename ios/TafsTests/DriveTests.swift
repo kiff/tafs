@@ -333,6 +333,51 @@ final class DriveTests: XCTestCase {
         XCTAssertTrue(try source("Views/TafKnobRemote.swift").contains(#".environment(\.driveConfirm, power)"#))
     }
 
+    /// The words of a control that confirms, as both apps' contract tests read them.
+    static let confirmingWords = try! NSRegularExpression(
+        pattern: #""[^"\n]*\b(Delete|Remove|Disconnect|Halt|Revoke|Sign out|Buy|Resume|Approve|Install|Refuse|Pair|Forget|Go back)\b"#)
+
+    /// Containers a drive never reaches on iOS: nothing in them is registered, and back dismisses an alert or a
+    /// dialog as its cancel. A control inside one needs no mark.
+    static let outOfReach = [".alert(", ".confirmationDialog(", ".swipeActions", ".contextMenu", "Menu {"]
+
+    /// The few controls whose words match but that don't confirm, or are marked elsewhere.
+    static let notConfirming: Set<String> = [
+        // The knob's power button: marked inside remoteButton, by `power`.
+        #"remoteButton(paused ? "Resume" : "Pause""#,
+    ]
+
+    /// Every control whose words say it confirms (a Button, a Label, a drivable) carries the confirm mark, or
+    /// is in an ApprovalGate, or in a container a drive never reaches.
+    func testEveryControlWhoseWordsConfirmCarriesTheMark() throws {
+        let files = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
+            .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" && $0.lastPathComponent != "DriveTargets.swift" }
+        var checked = 0
+        for url in files {
+            let lines = try String(contentsOf: url, encoding: .utf8).components(separatedBy: "\n")
+            func indent(_ l: String) -> Int { l.prefix { $0 == " " }.count }
+            for (i, line) in lines.enumerated() {
+                let t = line.trimmingCharacters(in: .whitespaces)
+                if t.hasPrefix("//") || line.contains("accessibilityLabel(") { continue }
+                let control = line.contains("Button(") || line.contains("Label(") || line.contains(".drivable(")
+                    || (line.contains("Text(") && lines[max(0, i - 2)...i].contains { $0.contains("label:") })
+                guard control, Self.confirmingWords.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) != nil else { continue }
+                if Self.notConfirming.contains(where: line.contains) { continue }
+                checked += 1
+                var statement = [line]
+                for l in lines[(i + 1)..<min(lines.count, i + 15)] {
+                    if l.contains("Button(") || l.contains("Button {") { break }
+                    statement.append(l)
+                }
+                if statement.joined(separator: "\n").contains(".confirming()") { continue }
+                if lines[max(0, i - 4)..<i].contains(where: { $0.contains("ApprovalGate {") }) { continue }
+                let reach = lines[max(0, i - 20)..<i].reversed().contains { l in indent(l) < indent(line) && Self.outOfReach.contains(where: l.contains) }
+                XCTAssertTrue(reach, "\(url.lastPathComponent):\(i + 1): \(t) confirms but has no confirm mark")
+            }
+        }
+        XCTAssertGreaterThan(checked, 30)
+    }
+
     /// Every field goes through the wrapper, and a field for a key, a password or a recovery code is secret.
     func testEveryFieldIsTheWrappersAndSecretsAreMarked() throws {
         let files = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
