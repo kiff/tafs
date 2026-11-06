@@ -387,9 +387,8 @@ class ChatKiffTest {
     assertFalse(m.deliverChat("and this", "refunds-1"))
     val (first, second) = m.state.value.chatUnsent["refunds-1"]!!.map { it.message }
     transport.answer("POST /v1/tafs/taf_1/messages", 200, """{"session":"s1","run":"r1","message":{"id":"m_9"}}""")
-    m.retryUnsent("refunds-1", first)
-    m.retryUnsent("refunds-1", first) // a second tap finds nothing left to send
-    advanceUntilIdle()
+    assertTrue(m.resendUnsent("refunds-1", first))
+    assertFalse(m.resendUnsent("refunds-1", first)) // a second tap finds nothing left to send
     assertEquals(3, transport.requestsTo("POST /v1/tafs/taf_1/messages").size) // two refused, then one
     assertEquals(listOf(second), m.state.value.chatUnsent["refunds-1"]!!.map { it.message })
     assertEquals("and this", m.editUnsent("refunds-1", second))

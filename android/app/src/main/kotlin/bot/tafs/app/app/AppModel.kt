@@ -4003,8 +4003,11 @@ class AppModel(
    * send. Refused again, it's back, with the new reason.
    */
   fun retryUnsent(tafId: String, message: ChatMessage) {
-    if (takeUnsent(tafId, message)) sendChat(message.text, tafId) { }
+    viewModelScope.launch { resendUnsent(tafId, message) }
   }
+
+  /** [retryUnsent], waited for: whether it went. A second tap finds nothing left to send; refused again, deliverChat keeps it. */
+  suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean = takeUnsent(tafId, message) && deliverChat(message.text, tafId)
 
   /** Takes a message that wasn't sent out of the thread, to change it in the box: its words, or null when it's gone already. */
   fun editUnsent(tafId: String, message: ChatMessage): String? = if (takeUnsent(tafId, message)) message.text else null
