@@ -368,4 +368,27 @@ class CoachTest {
     assertEquals("taf_1", c.taf!!.improves)
     assertNotNull(ShownComponent(t0, "s", "r", c).component.taf)
   }
+
+  /**
+   * The late Stop after a hand-over (kiff/tafs#476): once the result card is answered and Coach has said its last words in that
+   * session, its run is done, even while the stream stays open. Not before its words, not once the owner wrote again.
+   */
+  @Test fun aHandOverIsDoneOnceCoachSpeaksAfterTheAnswerAndTheOwnerHasNotWrittenSince() {
+    val at = { s: Long -> t0.plusSeconds(s) }
+    val result = ShownComponent(at(10), "s1", "r1", SetupComponent(type = "result", id = "res"),
+      bot.tafs.app.kiff.CardAnswer(words = "Handed over", atText = at(20).toString()))
+    val asked = ChatMessage(at(0), ChatMessage.From.owner, "Set up Refunds", "s1")
+    val closing = ChatMessage(at(25), ChatMessage.From.taf, "Refunds is set up.", "s1")
+    assertTrue(CoachWords.handedOver(listOf(asked, closing), listOf(result), "s1"))
+    assertTrue("before the stream named its session", CoachWords.handedOver(listOf(asked, closing), listOf(result), null))
+    // Coach hasn't spoken since the answer: still at work.
+    assertFalse(CoachWords.handedOver(listOf(asked), listOf(result), "s1"))
+    // The owner wrote again: that's a new run.
+    assertFalse(CoachWords.handedOver(listOf(asked, closing, ChatMessage(at(30), ChatMessage.From.owner, "Now Chargebacks", "s1")), listOf(result), "s1"))
+    // Not answered yet, or another conversation's result.
+    assertFalse(CoachWords.handedOver(listOf(asked, closing), listOf(result.copy(answer = null)), "s1"))
+    assertFalse(CoachWords.handedOver(listOf(asked, closing), listOf(result), "s2"))
+    // Coach's words in another session don't count.
+    assertFalse(CoachWords.handedOver(listOf(asked, closing.copy(session = "s9")), listOf(result), null))
+  }
 }

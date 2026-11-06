@@ -2016,12 +2016,17 @@ class AppModel(
       val since = s.chatAwaiting[tafId]
       val answered = since != null && thread.messages.any { it.from == ChatMessage.From.taf && it.at >= since }
       val settled = since != null && (thread.working != null || answered || java.time.Duration.between(since, now) > java.time.Duration.ofSeconds(120))
+      // Coach handed the taf over and said its last words: its run is done, whatever the stream still holds open. Stop goes
+      // (kiff/tafs#476); tafs cloud's `working` still says if a run is at work.
+      val handedOver = tafId == COACH_CHAT && thread.working == null && waiting.isEmpty() && tafId !in s.chatSending &&
+        CoachWords.handedOver(thread.messages, thread.components, s.chatLive[tafId]?.session)
       s.copy(
+        chatLive = if (handedOver) s.chatLive - tafId else s.chatLive,
         chats = s.chats + (tafId to messages),
         chatSent = if (waiting.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to waiting),
         chatErrors = s.chatErrors - tafId,
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
-        chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
+        chatAwaiting = if (settled || handedOver) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
         tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
@@ -4007,17 +4012,27 @@ class AppModel(
   }
 
   /** [retryUnsent], waited for: whether it went. A second tap finds nothing left to send; refused again, deliverChat keeps it. */
-  suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean = takeUnsent(tafId, message) && deliverChat(message.text, tafId)
+  suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean {
+    val unsent = takeUnsent(tafId, message) ?: return false
+    // With its own files, never the tray's.
+    return if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
+    else deliverChat(message.text, tafId)
+  }
 
   /** Takes a message that wasn't sent out of the thread, to change it in the box: its words, or null when it's gone already. */
-  fun editUnsent(tafId: String, message: ChatMessage): String? = if (takeUnsent(tafId, message)) message.text else null
+  fun editUnsent(tafId: String, message: ChatMessage): String? {
+    val unsent = takeUnsent(tafId, message) ?: return null
+    // Its files go back in the tray, with its words in the box.
+    putBackFiles(unsent.files, tafId)
+    return message.text
+  }
 
-  private fun takeUnsent(tafId: String, message: ChatMessage): Boolean {
-    var taken = false
+  private fun takeUnsent(tafId: String, message: ChatMessage): Unsent? {
+    var taken: Unsent? = null
     _state.update { s ->
       val kept = s.chatUnsent[tafId].orEmpty()
+      taken = kept.firstOrNull { it.message == message }
       val left = kept.filterNot { it.message == message }
-      taken = left.size < kept.size
       s.copy(chatUnsent = if (left.isEmpty()) s.chatUnsent - tafId else s.chatUnsent + (tafId to left))
     }
     return taken
@@ -4060,7 +4075,7 @@ class AppModel(
    * step, or, when none is at work (or it just ended), as a new message that starts one. It shows at once, dimmed,
    * until the thread has it; then the thread is read and followed as the taf answers.
    */
-  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false): Boolean {
+  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false, again: List<PendingFile> = emptyList()): Boolean {
     val taf = _state.value.taf(tafId)
     val cloudId = taf?.cloudId
     if (cloudId == null) {
@@ -4070,7 +4085,8 @@ class AppModel(
     if (tafId in _state.value.chatSending) return false
     // Files go with a message of their own, never into a run at work, and never while one is still going up.
     if (withFiles && _state.value.holdsSend(tafId)) return false
-    val files = if (withFiles) takeFiles(tafId) else emptyList()
+    // A message sent again (Retry) goes with its own files; a new one takes the tray's.
+    val files = again.ifEmpty { if (withFiles) takeFiles(tafId) else emptyList() }
     val refs = files.mapNotNull { it.ref }
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     val generation = accountGeneration
@@ -4125,7 +4141,7 @@ class AppModel(
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
-          val unsent = Unsent(pending.copy(session = Unsent.SESSION, attachments = emptyList()), sendFailure(e, taf.name))
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files)
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
@@ -4133,8 +4149,8 @@ class AppModel(
             chatErrors = if (words.isBlank()) s.chatErrors + (tafId to sendFailure(e, taf.name)) else s.chatErrors,
           )
         }
-        // Its files didn't go: back in the tray for the next try.
-        putBackFiles(files, tafId)
+        // Its files didn't go. With its words kept as not sent, they stay with it for Retry; files alone go back in the tray.
+        if (words.isBlank()) putBackFiles(files, tafId)
       }
       return false
     } finally {

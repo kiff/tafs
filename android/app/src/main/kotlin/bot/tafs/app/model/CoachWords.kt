@@ -303,6 +303,19 @@ object CoachWords {
   /** A plan's one line, as tafs cloud writes it; before it does, the plan's own title. Never counted on the phone. */
   fun planLine(plan: SetupComponent): String = plan.line?.takeIf { it.isNotBlank() } ?: plan.title?.takeIf { it.isNotBlank() } ?: "Plan"
 
+  /**
+   * Whether Coach's run handed its taf over and is done: the newest answered `result` card (in [session] when the live answer
+   * names one) has Coach's words after its answer in its session, and the owner wrote nothing since. The stream may stay open
+   * after that, waiting on what comes next; the chat no longer shows Coach at work for it (kiff/tafs#476).
+   */
+  fun handedOver(messages: List<ChatMessage>, components: List<bot.tafs.app.kiff.ShownComponent>, session: String?): Boolean {
+    val result = components.filter { it.component.type == "result" && it.answer?.at != null && (session == null || it.session == session) }
+      .maxByOrNull { it.answer!!.at!! } ?: return false
+    val answeredAt = result.answer!!.at!!
+    if (messages.none { it.from == ChatMessage.From.taf && it.session == result.session && it.at > answeredAt }) return false
+    return messages.none { it.from == ChatMessage.From.owner && it.at > answeredAt }
+  }
+
   /** The plan, shown pinned above the thread rather than in it. */
   fun plan(components: List<ShownComponent>): ShownComponent? = components.lastOrNull { it.component.type == "steps" }
 

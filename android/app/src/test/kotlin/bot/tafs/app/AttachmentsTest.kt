@@ -237,14 +237,45 @@ class AttachmentsTest {
     assertEquals(1, m.state.value.files("refunds-1").size)
   }
 
-  @Test fun aSendThatFailsPutsItsFilesBackInTheTray() = runTest {
+  /** A message with files that isn't sent keeps them (kiff/tafs#476): Retry sends both, never the tray's instead. */
+  @Test fun aSendThatFailsKeepsItsFilesWithItAndRetrySendsThem() = runTest {
     reads(); declared(att1)
     transport.answer("PUT /up/$att1", 200)
     transport.answer(send, 503, """{"error":"unavailable"}""")
     val m = model()
     m.attach(pdf, "refunds-1")
     assertFalse(m.deliverChat("Refund this one", "refunds-1", withFiles = true))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals(listOf(att1), unsent.message.attachments.map { it.id })
+    assertTrue("the tray is empty: the files are with the message", m.state.value.files("refunds-1").isEmpty())
+    transport.answer(send, 200, """{"session":"s1","new_session":false}""")
+    assertTrue(m.resendUnsent("refunds-1", unsent.message))
+    assertEquals(listOf(att1), body(send, 1).getValue("attachments").jsonArray.map { it.jsonPrimitive.content })
+    assertEquals("Refund this one", body(send, 1).getValue("text").jsonPrimitive.content)
+    assertNull(m.state.value.chatUnsent["refunds-1"])
+  }
+
+  @Test fun editingAMessageThatWasNotSentPutsItsFilesBackInTheTray() = runTest {
+    reads(); declared(att1)
+    transport.answer("PUT /up/$att1", 200)
+    transport.answer(send, 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.attach(pdf, "refunds-1")
+    assertFalse(m.deliverChat("Refund this one", "refunds-1", withFiles = true))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("Refund this one", m.editUnsent("refunds-1", unsent.message))
     assertEquals(att1, m.state.value.files("refunds-1").single().ref?.id)
+  }
+
+  @Test fun filesAloneThatFailGoBackInTheTray() = runTest {
+    reads(); declared(att1)
+    transport.answer("PUT /up/$att1", 200)
+    transport.answer(send, 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.attach(pdf, "refunds-1")
+    assertFalse(m.deliverChat("", "refunds-1", withFiles = true))
+    assertEquals(att1, m.state.value.files("refunds-1").single().ref?.id)
+    assertNull(m.state.value.chatUnsent["refunds-1"])
   }
 
   @Test fun sendAgainSendsTheWordsOnly() = runTest {

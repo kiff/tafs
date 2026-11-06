@@ -137,7 +137,12 @@ data class ChatMessage(
  * An owner's message that wasn't sent, kept in the thread as written with why (kiff/tafs#476): marked "Not sent", with
  * Retry, which sends it once, and Edit, which puts it back in the box. Nothing the owner wrote is lost on a refused send.
  */
-data class Unsent(val message: ChatMessage, val why: String) {
+data class Unsent(
+  val message: ChatMessage,
+  val why: String,
+  /** The files it went with, uploaded already: Retry sends them again, and Edit puts them back in the tray. */
+  val files: List<PendingFile> = emptyList(),
+) {
   companion object {
     /** The session an unsent message carries, so the thread shows it as one. */
     const val SESSION = "unsent"

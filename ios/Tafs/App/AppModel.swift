@@ -5720,6 +5720,13 @@ final class AppModel: ObservableObject {
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
+            // Coach handed the taf over and said its last words: its run is done, whatever the
+            // stream still holds open, so Stop goes (kiff/tafs#476). tafs cloud's `working` still
+            // says if a run is at work, and a message on its way keeps it.
+            if setupLive != nil, thread.working == nil, !setupSending, setupSent.isEmpty, thread.handedOver(session: setupLive?.session) {
+                setupLive = nil
+                setupAwaiting = nil
+            }
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupError = "The conversation couldn't be loaded: \(error.localizedDescription)"
