@@ -5,6 +5,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **A refusal is that one call's, and a dispute's evidence always says an AI agent wrote it** (kiff/agents' Eval 42193895936).
+  - **A refusal ends that item only:** a door asked for a refund of one charge, and the taf answered "The owner already refused a refund of this charge": the owner had refused a refund of another charge, which kiff_pending listed. The taf's rule now says a refused or waiting call is that one call, on the item its arguments name, and settles nothing about another item.
+  - **The AI disclosure in a dispute's evidence:** Chargebacks sent evidence to the card network (a product description, a tracking number, a carrier) with no word that an AI agent wrote it. The job now has kiff/agents put "Written by an AI agent for the company." in its `update_dispute` evidence, at the end of its free text or product description, whatever the model wrote (kiff/agents#352), and the shared rule asks for that same line. This needs kiff/agents#352 deployed first: kiff/agents refuses a definition with a field it doesn't know. Accounts get it with the next Upgrade.
+
 - **A drive's end is a message in Coach's chat, and the cards' waits come from kiff/agents (kiff/tafs#568, tafs cloud's side).**
   - **The drive's end, in the thread at its time:** when a drive ends, tafs cloud keeps its end with Coach's chat, once: the request, why it ended in the person's words, and each step from its record. The thread has it as a `drive` item at the time it ended, so both apps can draw it in place, with no "What I did" card of their own after the thread. The apps' side comes in its own change.
   - **A step is recorded once:** a step again under the same caption ("Looking for Versions", once in Setup and again in Card) is one line, which keeps every touch of it ("Setup, Card").

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { JOBS, jobById } from "../src/jobs.js";
+import { DISCLOSURE_LINE, JOBS, jobById, SHARED_INSTRUCTIONS } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 import {
   CALL_INSTRUCTIONS,
@@ -29,9 +29,27 @@ describe("a taf's definition on kiff/agents", () => {
       const d = definition(ID, job);
       expect(d.gateway, job.id).toBe("https://mcp.kiff.dev/mcp");
       expect(d.gateway).toBe(KIFF_GATEWAY);
+      // A job that writes outside the company also has `disclose`, which adds no tool and no server.
       expect(Object.keys(d).sort(), job.id).toEqual(
-        ["effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price", "thinking"].sort());
+        ["effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price", "thinking",
+          ...(job.disclose ? ["disclose"] : [])].sort());
     }
+  });
+
+  // Eval 42193895936: a dispute's evidence reached the card network with no word that an AI agent wrote it.
+  it("has kiff/agents put the AI disclosure in a dispute's evidence, never leaving it to the model", () => {
+    expect(definition(ID, jobById("chargebacks")).disclose).toEqual({
+      line: DISCLOSURE_LINE, in: [{ tool: "update_dispute", fields: ["evidence.uncategorized_text", "evidence.product_description"] }],
+    });
+    // The line is the one the shared rule asks for, word for word.
+    expect(SHARED_INSTRUCTIONS).toContain(`it ends with "${DISCLOSURE_LINE}"`);
+    expect(definition(ID, jobById("refunds"))).not.toHaveProperty("disclose");
+  });
+
+  // Eval 42193895936: a door's refund of one charge was refused because the owner had refused another's.
+  it("tells the taf a refusal is that one call's, on the item it names", () => {
+    expect(SHARED_INSTRUCTIONS).toContain("A call it lists as refused or waiting\n  is that one call, on the item its arguments name: it settles nothing about\n  another item.");
+    expect(SHARED_INSTRUCTIONS).toContain("a refund refused on one charge\n  is never a refusal on another.");
   });
 
   it("names its KIFF key by reference, never the key", () => {
