@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **One fingerprint for Coach's install (Android).** Installing a version Coach asked for took two fingerprints: one for the Card, then one for Coach's held call. Now the Card's confirm names Coach's held call, and KIFF approves both under one signature (`hold` on `POST /v1/me/agent-drafts/{id}/confirm`, docs/needs-from-kiff.md item 7). Without a Card, Coach's approval is signed before the version goes live, so its fingerprint is the only prompt. A KIFF that ignores `hold` gets the call answered as before, so there's no deploy order. iOS already asked once.
 - **Coach hears every install.** Installing any version tells the owner's Coach, and Coach's chat shows "Version N is live." Before, only a version Coach made did: after v4 (Coach's), going back to v5 (an Upgrade's) said nothing, so Coach still read v4 as live. Coach's line says whether it made the version, and gives the version's own note when it didn't.
 - **A steer carries Coach's lines.** Words written to a Coach run that is still at work, such as one paused on an approval, now carry Coach's unread lines. Before, those lines stayed under every later message until the run ended, and Coach never read them. A refused steer leaves them for the next message.
 - **Docs:** the What I did card's steps stay 30 days with the drive's end in Coach's chat, not a day.
