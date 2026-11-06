@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { CUSTOM, discloseOf, type Job, JOBS, jobById, ownJob } from "../jobs.js";
+import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
@@ -1401,11 +1401,22 @@ export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work" | "disc
   return disclose?.length ? { ...job, disclose } : job;
 }
 
-/** A taf's disclosure with more of it: a tool named again takes the newer fields, and none is ever dropped. */
+/**
+ * A taf's disclosure with more of it, only ever wider (qa-kiff on #572): per tool, the newer fields
+ * in their order, then the earlier ones not named again. An earlier field is never dropped: when the
+ * two are over DISCLOSE_MAX.fields, the newer ones that are new are left out first.
+ */
 export function withDisclose(base: Job["disclose"], more: Job["disclose"]): Job["disclose"] {
   if (!more?.length) return base;
-  const kept = (base ?? []).filter((d) => !more.some((m) => m.tool === d.tool));
-  return [...kept, ...more];
+  const by = new Map((base ?? []).map((d) => [d.tool, [...d.fields]] as const));
+  for (const m of more) {
+    const earlier = by.get(m.tool) ?? [];
+    const named = [...new Set(m.fields)];
+    const added = named.filter((f) => !earlier.includes(f)).slice(0, Math.max(0, DISCLOSE_MAX.fields - earlier.length));
+    const newer = named.filter((f) => earlier.includes(f) || added.includes(f));
+    by.set(m.tool, [...newer, ...earlier.filter((f) => !newer.includes(f))]);
+  }
+  return [...by].map(([tool, fields]) => ({ tool, fields }));
 }
 
 /** `jobOf`, or undefined for a job id tafs doesn't know: for what is shown, never for a definition. */

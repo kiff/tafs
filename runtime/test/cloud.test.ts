@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, handle, type HTTPEvent, jobOf, oneLine, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, type Deps, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -2703,6 +2703,20 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const kept = w.tafs.held.get(`t_acme#${RAE}`)!;
     expect(kept.disclose).toEqual([{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "reply_k3f9", fields: ["body"] }]);
     expect(jobOf(kept).disclose).toEqual(expect.arrayContaining([{ tool: "reply_k3f9", fields: ["body"] }, { tool: "send_message_k3f9", fields: ["text"] }]));
+  });
+
+  // qa-kiff on #572: a merge only ever widens: Chargebacks' own fields for update_dispute stay when a taf names another.
+  it("only ever widens a disclosure: a tool named again keeps its earlier fields", () => {
+    const own = jobById("chargebacks").disclose;
+    const merged = withDisclose(own, [{ tool: "update_dispute", fields: ["evidence.shipping_carrier"] }]);
+    expect(merged).toEqual([{ tool: "update_dispute", fields: ["evidence.shipping_carrier", "evidence.uncategorized_text", "evidence.product_description"] }]);
+    // The newer fields keep their order, then the earlier ones not named again.
+    expect(withDisclose([{ tool: "send", fields: ["a", "b"] }], [{ tool: "send", fields: ["b", "c"] }])).toEqual([{ tool: "send", fields: ["b", "c", "a"] }]);
+    // The cap keeps the earlier fields: a merge never drops one.
+    const full = [{ tool: "send", fields: ["a", "b", "c", "d", "e"] }];
+    expect(withDisclose(full, [{ tool: "send", fields: ["f"] }])).toEqual(full);
+    expect(withDisclose(full, [{ tool: "send", fields: ["e", "f"] }])).toEqual([{ tool: "send", fields: ["e", "a", "b", "c", "d"] }]);
+    expect(withDisclose(own, undefined)).toBe(own);
   });
 
   it("fails an improvement whose disclosure names a tool that isn't the taf's", async () => {
