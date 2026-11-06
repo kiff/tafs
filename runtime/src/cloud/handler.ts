@@ -2175,12 +2175,31 @@ export function threadItems(messages: ThreadMessage[], components: ThreadCompone
 }
 
 /**
+ * Who a card's run waits on, as kiff/agents marks it (`waits`: "owner", "service"), or "" for a card the
+ * run goes on past (kiff/tafs#568). A component with no `waits` key at all is from before kiff/agents
+ * marked them (kiff/agents#351): it's read by its type, as kiff/agents' lists were then, so a thread
+ * from before, and a live line before that change is deployed, read the same (qa-kiff on #569).
+ */
+export function waitsOf(component: unknown): string {
+  const c = component as { waits?: unknown; type?: unknown } | null | undefined;
+  if (!c || typeof c !== "object") return "";
+  if ("waits" in c) return typeof c.waits === "string" ? c.waits : "";
+  if (c.type === "result") return "service";
+  return typeof c.type === "string" && UNMARKED_OWNER.has(c.type) ? "owner" : "";
+}
+
+/** The cards kiff/agents' runs waited on the person for before it marked them (show.Answerable less ByService). */
+const UNMARKED_OWNER = new Set(["confirm", "questions", "approval", "sign_in", "drive"]);
+
+/**
  * A plan (a `steps` component) with its one-line form, `line`: "Step 3 of 6 · Your rules", the step
  * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
  * counting of its own. Any other component is as it came.
  */
 export function withLine(component: unknown): unknown {
-  const c = component as { type?: unknown; steps?: unknown } | null | undefined;
+  const c = component as { type?: unknown; steps?: unknown; waits?: unknown } | null | undefined;
+  // A card from before kiff/agents marked who it waits on gets the mark here, so an app reads `waits` on every card.
+  if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) });
   if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
   const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
   const n = steps.length;
@@ -4412,8 +4431,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (kind === "component") {
       // A card the run waits on the person for, as kiff/agents marks it (`waits`, kiff/tafs#568): tafs cloud keeps no
       // list of its own, which drifted from the apps' (the drive card wasn't in it).
-      const c = (e.event === "event" ? d.body : d.component) as { waits?: unknown } | undefined;
-      return c?.waits === "owner" ? pace.set("waiting_for_you") : undefined;
+      return waitsOf(e.event === "event" ? d.body : d.component) === "owner" ? pace.set("waiting_for_you") : undefined;
     }
     return pace.flush();
   };

@@ -441,13 +441,14 @@ describe("a drive's end in Coach's chat", () => {
       await r.store.put(`${T}#drive-rq#${d.id}#${id}`, { tool: "app_act", action: "tap", line }, new Date(NOW.getTime() + 60_000));
       await putResult(r.store, T, ANA, d.id, id, { outcome: "done", line: `Tapped ${words}`, touched: { words } }, r.now());
     };
-    // "Looking for Versions" in Setup, then in Card (the owner's phone, 6 Nov): one step, ending in Card.
+    // "Looking for Versions" in Setup, then in Card (the owner's phone, 6 Nov): one line, which keeps both touches.
     await act("rq1", "Looking for Versions", "Setup");
     await act("rq2", "Looking for Versions", "Card");
+    await act("rq2b", "Looking for Versions", "Card");
     await act("rq3", "Opening Versions", "Versions");
     const steps = await driveSteps(r.store, T, d.id);
     expect(steps.map((x) => x.line)).toEqual(["Looking for Versions", "Opening Versions"]);
-    expect(steps[0]!.touched?.words).toBe("Card");
+    expect(steps[0]!.touched?.words).toBe("Setup, Card");
     // The same caption after another step is a step of its own.
     await act("rq4", "Looking for Versions", "Settings");
     expect((await driveSteps(r.store, T, d.id)).map((x) => x.line)).toEqual(["Looking for Versions", "Opening Versions", "Looking for Versions"]);

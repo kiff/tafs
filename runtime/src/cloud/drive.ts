@@ -412,14 +412,26 @@ export async function putResult(store: CoachStore, tenant: string, person: strin
   if (sent.action === "done") return { result: r, drive: d, ended: await endDrive(store, tenant, person, "done", now, d.id) };
   const step: Step = { at: now.toISOString(), line: sent.line ?? "", ...(r.touched ? { touched: r.touched } : {}) };
   // A step again under the same caption ("Looking for Versions", then again on the next screen) is
-  // the same step gone on, recorded once where it ended (kiff/tafs#568): never a second step.
+  // the same step gone on: one line in the record (kiff/tafs#568), which keeps every touch of it,
+  // in order ("Setup, Card"): the record says what was done, never less (qa-kiff on #569).
   const steps = await driveSteps(store, tenant, d.id);
-  if (steps.length && steps.at(-1)!.line === step.line) {
-    await store.put(driveKeys.steps(tenant, d.id), [...steps.slice(0, -1), step], kept(now));
+  const last = steps.at(-1);
+  if (last && last.line === step.line) {
+    await store.put(driveKeys.steps(tenant, d.id), [...steps.slice(0, -1), sameStep(last, step)], kept(now));
   } else {
     await store.append(driveKeys.steps(tenant, d.id), step, kept(now));
   }
   return { result: r, drive: d, step };
+}
+
+/** A step gone on under the same caption: the later time, and every touch of both, in order, once each. */
+function sameStep(before: Step, after: Step): Step {
+  const words = [...(before.touched?.words.split(", ") ?? []), ...(after.touched ? [after.touched.words] : [])];
+  const once = [...new Set(words.filter((w) => w))];
+  const tafs = new Set([before.touched?.taf, after.touched?.taf].filter((t) => t !== undefined));
+  const out: Step = { at: after.at, line: after.line };
+  if (once.length) out.touched = { words: once.join(", "), ...(tafs.size === 1 ? { taf: [...tafs][0]! } : {}) };
+  return out;
 }
 
 export interface Step { at: string; line: string; touched?: { words: string; taf?: string } }

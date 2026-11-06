@@ -392,7 +392,7 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
 
 - **The drive's steps:** each `app_act` the app did, with its caption and what it
   touched (`GET /v1/coach/drive`). A step again under the same caption is the same
-  step gone on: it's recorded once, where it ended.
+  step gone on: one line, with every touch of it in order ("Setup, Card").
 - **The drive's end, in Coach's chat:** when it ends, once, the request, why (in the
   person's words) and the steps, kept 30 days with the chat. The thread shows it at
   its time (`{type: "drive", drive}` in `items`, [chat.md](chat.md)).

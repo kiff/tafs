@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
-import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf, waitsOf, withLine } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -126,8 +126,20 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(await waiting({ type: "drive", id: "d1", text: "Open Refunds", waits: "owner" })).toBe(true);
     expect(await waiting({ type: "result", id: "r1", waits: "service" })).toBe(false);
     expect(await waiting({ type: "steps", id: "plan", steps: [{ label: "Connect", status: "active" }] })).toBe(false);
-    // No list of its own: an approval without the mark isn't taken for one that waits.
-    expect(await waiting({ type: "approval", id: "a1", grant: "g_1" })).toBe(false);
+    // A card with no mark at all is from before kiff/agents marked them (kiff/agents#351): read by its type, as its
+    // lists were then, so the line still waits on an approval while that change isn't deployed (qa-kiff on #569).
+    expect(await waiting({ type: "approval", id: "a1", grant: "g_1" })).toBe(true);
+    expect(await waiting({ type: "notice", id: "n1", text: "Connected" })).toBe(false);
+  });
+
+  it("gives every card its mark, the ones from before kiff/agents marked them too", () => {
+    expect(withLine({ type: "approval", id: "a1" })).toMatchObject({ waits: "owner" });
+    expect(withLine({ type: "drive", id: "d1" })).toMatchObject({ waits: "owner" });
+    expect(withLine({ type: "result", id: "r1" })).toMatchObject({ waits: "service" });
+    expect(withLine({ type: "notice", id: "n1" })).not.toHaveProperty("waits");
+    // kiff/agents' own mark is kept as it says.
+    expect(withLine({ type: "approval", id: "a1", waits: "service" })).toMatchObject({ waits: "service" });
+    expect(waitsOf({ type: "steps", steps: [] })).toBe("");
   });
 
   // On Claude Opus 5.5 Coach's line before a tool call comes back as a progress note, not as text, and
