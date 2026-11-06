@@ -352,6 +352,22 @@ final class DriveTests: XCTestCase {
     func testEveryControlWhoseWordsConfirmCarriesTheMark() throws {
         let files = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
             .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" && $0.lastPathComponent != "DriveTargets.swift" }
+        // Word constants whose value confirms ("static let disconnect = \"Disconnect\""): a control labelled with
+        // one is read as if its words were written there.
+        var constants: [String] = []
+        let constant = try NSRegularExpression(pattern: #"static (?:let|var) ([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*String)?\s*=\s*(".*")"#)
+        for url in files {
+            let text = try String(contentsOf: url, encoding: .utf8)
+            for m in constant.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                guard let name = Range(m.range(at: 1), in: text), let value = Range(m.range(at: 2), in: text) else { continue }
+                let v = String(text[value])
+                if Self.confirmingWords.firstMatch(in: v, range: NSRange(v.startIndex..., in: v)) != nil { constants.append(String(text[name])) }
+            }
+        }
+        XCTAssertTrue(constants.contains("approveNote"), "the word constants weren't read")
+        func usesConstant(_ line: String) -> Bool {
+            constants.contains { name in line.contains("." + name + ")") || line.contains("." + name + ",") || line.contains("(" + name + ")") }
+        }
         var checked = 0
         for url in files {
             let lines = try String(contentsOf: url, encoding: .utf8).components(separatedBy: "\n")
@@ -361,7 +377,8 @@ final class DriveTests: XCTestCase {
                 if t.hasPrefix("//") || line.contains("accessibilityLabel(") { continue }
                 let control = line.contains("Button(") || line.contains("Label(") || line.contains(".drivable(")
                     || (line.contains("Text(") && lines[max(0, i - 2)...i].contains { $0.contains("label:") })
-                guard control, Self.confirmingWords.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) != nil else { continue }
+                guard control, Self.confirmingWords.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) != nil || usesConstant(line) else { continue }
+                if line.contains("static let") || line.contains("static var") { continue }
                 if Self.notConfirming.contains(where: line.contains) { continue }
                 checked += 1
                 var statement = [line]
