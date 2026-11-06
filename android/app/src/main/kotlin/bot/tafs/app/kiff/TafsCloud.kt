@@ -29,7 +29,7 @@ class TafsCloud(
   val baseUrl: String = DEFAULT_URL,
   var token: String? = null,
   private val signingTime: SigningTime = SigningTime(),
-) {
+) : bot.tafs.app.drive.DriveApi {
   /**
    * The home list: the account's tafs, its other agents with Cards, and the removals still to finish,
    * made by tafs cloud from its tafs and KIFF's Cards and held calls.
@@ -721,6 +721,52 @@ class TafsCloud(
     if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: "tafs cloud answered ${response.status}", blockingRuns(response.refusal), field(response.refusal, "words"))
     return StreamEvent.parse(response.lines)
   }
+
+  // MARK: Coach drives the app (docs/drive.md)
+
+  /**
+   * Starts the person's drive for one request: `POST /v1/coach/drive {session, task, component}`, signed with the approval key
+   * as a setup call to KIFF (`kiff.request.v1` over this request, in `KIFF-Device-Signature`). [sign] asks for the fingerprint
+   * and signs what it's given only then, so the signed time is when the person approved. tafs cloud starts it only for the
+   * approval key, outside any window: 403 (`critical_key_required`) otherwise, and 404 for a card that isn't theirs.
+   */
+  suspend fun startDrive(session: String, task: String, component: String?, tenant: String, sign: suspend (() -> ByteArray) -> String): bot.tafs.app.drive.DriveInfo {
+    val path = "/v1/coach/drive"
+    val payload = KiffClient.json.encodeToString(
+      kotlinx.serialization.json.JsonObject.serializer(),
+      kotlinx.serialization.json.buildJsonObject {
+        put("session", session)
+        put("task", task)
+        component?.let { put("component", it) }
+      },
+    ).toByteArray()
+    var signedAt = ""
+    val signature = sign {
+      signedAt = signingTime.next()
+      KiffClient.requestMessage(tenant, "POST", path, payload, signedAt)
+    }
+    val headers = mapOf("KIFF-Device-Signature" to "t=$signedAt,v1=$signature")
+    return KiffClient.json.decodeFromString(bot.tafs.app.drive.DriveStarted.serializer(), String(send("POST", path, payload, headers))).drive
+  }
+
+  /** The drive's requests, on the streaming function's address (a stream lives 14 minutes, longer than a CDN waits). */
+  override suspend fun driveStream(drive: String): kotlinx.coroutines.flow.Flow<bot.tafs.app.drive.DriveEvent> {
+    val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
+    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer")
+    val response = transport.stream(HttpRequest("GET", streamUrl + "/v1/coach/drive/${escaped(drive)}/stream", headers))
+    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: "tafs cloud answered ${response.status}")
+    return bot.tafs.app.drive.DriveEvent.parse(response.lines)
+  }
+
+  override suspend fun driveAnswer(drive: String, request: String, answer: bot.tafs.app.drive.DriveAnswer) {
+    sendJson("POST", "/v1/coach/drive/${escaped(drive)}/results/${escaped(request)}", answer.body)
+  }
+
+  override suspend fun stopDrive(drive: String, why: String) {
+    send("POST", "/v1/coach/drive/stop", jsonBody("drive" to drive, "why" to why))
+  }
+
+  override suspend fun readDrive(): bot.tafs.app.drive.DriveRead = get("/v1/coach/drive")
 
   companion object {
     const val DEFAULT_URL = "https://cloud.tafs.kiff.dev"
