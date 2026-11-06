@@ -8,6 +8,7 @@
  * An amount carries the unit and decimal places KIFF declares for it, or none:
  * nothing here guesses a currency or a scale from a parameter's name.
  */
+import { amountWords } from "./activity.js";
 import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 
 /** A number with what KIFF says it means ("EUR", 2), or a bare number (unit null). */
@@ -35,7 +36,7 @@ export interface Rule {
   base_limit?: Money;
   room_window_end?: string;
   count_per_window: number | null;
-  /** KIFF's window, as KIFF names it: calendar_day, rolling_24h, rolling_1h or lifetime. */
+  /** KIFF's window, as KIFF names it: calendar_day, rolling_24h, rolling_1h, rolling_7d or lifetime. */
   window: string;
   /** The window in the owner's words, for the app to show as it is. */
   window_words: WindowWords;
@@ -56,6 +57,7 @@ const WINDOWS: Record<string, WindowWords> = {
   calendar_day: { each: "a day", now: "today" },
   rolling_24h: { each: "in any 24 hours", now: "in the last 24 hours" },
   rolling_1h: { each: "in any hour", now: "in the last hour" },
+  rolling_7d: { each: "in any 7 days", now: "in the last 7 days" },
   lifetime: { each: "in total", now: "so far" },
 };
 
@@ -118,6 +120,11 @@ export interface CardView {
   calls: Total<number> | null;
   /** How this is counted: each tool's lines in KIFF's words, as the owner approved them; absent when KIFF has none. */
   counted?: { tool: string; title: string; lines: string[] }[];
+  /**
+   * Its totals for each item apart, in the owner's words: "1 call in any 7 days for each invoice id". Each item has its
+   * own count, so none has a used or left here; absent without any.
+   */
+  each_item?: string[];
 }
 
 /**
@@ -145,7 +152,8 @@ export interface Mandate {
   /** Its title for people, when KIFF has one for it. */
   title?: string | null;
   grants?: { action: string; title?: string | null; per_action_max?: { quantity: string; max: number; unit?: string | null; scale?: number | null }[] | null }[] | null;
-  aggregates?: { quantity: string; limit: number; window: string; unit?: string | null; scale?: number | null }[] | null;
+  /** per: a total for each value of that argument apart ("for each invoice id"), never the Card's single total. */
+  aggregates?: { quantity: string; limit: number; window: string; unit?: string | null; scale?: number | null; per?: string | null }[] | null;
   limits?: {
     quantity: string; window?: string | null; limit: number; used?: number | null; status?: string | null; unit?: string | null; scale?: number | null;
     /** The Card's own limit, without extra room; limit is the ceiling now. */
@@ -294,7 +302,7 @@ function toolWords(action: string): string {
  * so a meter never divides one window's use by another's.
  */
 function shownTotal(m: Mandate) {
-  const total = (m.aggregates ?? []).find((a) => isSum(a.quantity));
+  const total = (m.aggregates ?? []).find((a) => isSum(a.quantity) && !a.per);
   if (!total) return undefined;
   const line = (m.limits ?? []).find((l) => l.quantity === total.quantity && l.window === total.window);
   return { total, line };
@@ -327,7 +335,7 @@ export function rules(m: Mandate): Rule[] {
   });
   const first = out[0];
   if (!first) return out;
-  const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity));
+  const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity) && !a.per);
   if (count) first.count_per_window = count.limit;
   const shown = shownTotal(m);
   if (shown) {
@@ -384,7 +392,7 @@ export function cardView(m: Mandate): CardView {
     }
   }
   let calls: CardView["calls"] = null;
-  const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity));
+  const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity) && !a.per);
   if (count) {
     const line = (m.limits ?? []).find((l) => l.quantity === count.quantity && l.window === count.window);
     const ok = line?.status === "ok";
@@ -405,10 +413,27 @@ export function cardView(m: Mandate): CardView {
     const title = (m.grants ?? []).find((g) => g.action === c.tool)?.title?.trim() || c.tool;
     return [{ tool: c.tool, title, lines }];
   });
+  const each_item = (m.aggregates ?? []).filter((a) => a.per).map(eachItemWords);
   return {
     id: m.id, title: m.title?.trim() || lines[0]?.label || "No actions yet", environment, live: isLive(environment),
     active: m.active, expires: m.valid_until ?? null, rules: lines, total, calls, ...(counted.length ? { counted } : {}),
+    ...(each_item.length ? { each_item } : {}),
   };
+}
+
+/**
+ * A total for each item apart, in the owner's words, as KIFF says it on a draft: "1 call in any 7 days for each invoice
+ * id", "€100.00 in total a day for each customer". A window tafs doesn't know is said as it was sent.
+ */
+export function eachItemWords(a: NonNullable<Mandate["aggregates"]>[number]): string {
+  const window = WINDOWS[a.window]?.each ?? a.window;
+  const item = (a.per ?? "").trim().toLowerCase().replaceAll("_", " ");
+  if (!isSum(a.quantity)) return `${a.limit} ${a.limit === 1 ? "call" : "calls"} ${window} for each ${item}`;
+  const scale = a.scale ?? 0;
+  const amount = amountWords({ value: (a.limit / 10 ** scale).toFixed(scale), unit: a.unit ?? "" }) ?? String(a.limit);
+  // An amount says it's a total where its window doesn't: "€100.00 in total a day", "€100.00 in any 7 days".
+  const over = a.window === "calendar_day" ? "in total a day" : window;
+  return `${amount} ${over} for each ${item}`;
 }
 
 /** The live Cards first, then the active ones, each group in KIFF's order. */

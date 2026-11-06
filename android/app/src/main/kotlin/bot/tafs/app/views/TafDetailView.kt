@@ -335,6 +335,8 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
   }
   // All of the front Card's limits: the face shows the main one.
   CardLines(shown?.rules ?: emptyList())
+  // Its totals for each item apart ("1 call in any 7 days for each invoice id"), as tafs cloud says them.
+  shown?.eachItem?.forEach { Text(it, style = scaled(14, color = Theme.ink), modifier = Modifier.fillMaxWidth()) }
   // How this is counted: KIFF's lines for each tool's profile, as approved, under its limits.
   shown?.counted?.takeIf { it.isNotEmpty() }?.let { HowCounted(it) }
   // How much of its totals is from calls the tool refused, in KIFF's words: for a live, active Card only.
