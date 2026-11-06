@@ -33,7 +33,7 @@ struct HomeView: View {
 
                 if let first = model.held.first, let taf = model.taf(first.tafID) {
                     Button { tab = .needsYou } label: { needsYouStrip(first, taf) }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.drivablePlain)
                 }
 
                 // Theirs, then the ones shared with them (kiff/tafs#306).
@@ -54,7 +54,8 @@ struct HomeView: View {
                         Eyebrow(text: "Other agents with Cards")
                         ForEach(model.otherAgents) { taf in
                             NavigationLink(value: taf.id) { TafRow(taf: taf, onHalted: { openHalt(taf.id) }) }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.drivablePlain)
+                                .driveWords(taf.name)
                         }
                     }
                 }
@@ -77,7 +78,7 @@ struct HomeView: View {
                         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Theme.line))
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                 }
 
                 if model.mode == .kiff, !model.cloudTafs.isEmpty, model.canManageCards {
@@ -191,10 +192,12 @@ struct HomeView: View {
     /// A taf in the list, and its open trial under it (kiff/tafs#173).
     @ViewBuilder private func tafLinks(_ taf: Taf) -> some View {
         NavigationLink(value: taf.id) { TafRow(taf: taf, onHalted: { openHalt(taf.id) }) }
-            .buttonStyle(.plain)
+            .buttonStyle(.drivablePlain)
+            .driveWords(taf.name)
         if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
             NavigationLink(value: chat) { TafRow(taf: trying) }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
+                .driveWords(trying.name)
         }
     }
 

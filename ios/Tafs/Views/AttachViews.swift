@@ -258,7 +258,7 @@ struct MessageFiles: View {
                     .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .accessibilityLabel("Open \(file.name)")
             }
         }

@@ -41,7 +41,7 @@ struct NeedsYouView: View {
                                 .contentShape(Rectangle())
                             }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.drivablePlain)
                         .accessibilityHint("Opens \(taf.name), where you answer it")
                     }
                 }

@@ -138,6 +138,7 @@ struct StartsWhenView: View {
                         if item.approval?.state == "needed", item.ok == "approve" {
                             Button("Approve") { approving = item }
                                 .buttonStyle(PrimaryButtonStyle())
+                                .confirming()
                                 .disabled(!manages || model.approvalBlocked)
                         } else if item.approval?.state == "approved" || item.on {
                             HStack {
@@ -198,6 +199,7 @@ struct StartsWhenView: View {
                                 Task { await model.removeFollowUp(tafID, id); busy = false }
                             }
                             .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                            .confirming()
                             .disabled(busy)
                         }
                     }
@@ -227,6 +229,7 @@ struct StartsWhenView: View {
                 }
             }
             .buttonStyle(OutlineButtonStyle(color: cloud.paused ? Theme.ok : Theme.no))
+            .confirming()
             .disabled(busy)
         }
     }

@@ -178,7 +178,10 @@ final class AppModel: ObservableObject {
     @Published private(set) var refreshing = false
     /// The tafs tafs cloud runs for this account, by the KIFF agent they act as.
     @Published private(set) var cloudTafs: [String: TafsCloud.CloudTaf] = [:]
-    @Published var lastError: String?
+    @Published var lastError: String? {
+        // The app's recent errors, in its own words, for a drive's diagnostics (docs/drive.md).
+        didSet { if let lastError, lastError != oldValue { DriveDiagnostics.shared.error(lastError) } }
+    }
 
     let ownerName: String
     /// Speaking a message instead of typing it, in any chat (kiff/tafs#208): one at a time.
@@ -994,6 +997,7 @@ final class AppModel: ObservableObject {
     @discardableResult
     func signOut() async -> Bool {
         signOutError = nil
+        await DriveSession.shared.stopAndWait("signed_out")
         if mode == .kiff {
             if alertsReady == true { UserDefaults.standard.set(true, forKey: alertsEnabledKey) }
             // Alerts are unregistered with the session, so before KIFF ends it; registered again
@@ -1016,6 +1020,7 @@ final class AppModel: ObservableObject {
     /// Forgets this device's session and everything read with it, without asking KIFF: for a
     /// session KIFF has already ended (a 401, the account deleted), and after `signOut`.
     func forgetSession() {
+        DriveSession.shared.stop("signed_out")
         Keychain.delete(Self.tokenAccount)
         Keychain.delete(Self.tenantAccount)
         Keychain.delete(Self.keyedAccount)
@@ -1434,6 +1439,7 @@ final class AppModel: ObservableObject {
         var cancelled = false
         defer {
             refreshing = false
+            DriveWaits.emit("refreshed")
             // Read or not, this account's list is no longer loading (KIFF's error shows).
             if mode == .kiff, gen == accountGeneration, !cancelled { listLoaded = true }
         }
@@ -5419,6 +5425,11 @@ final class AppModel: ObservableObject {
     /// Opens Coach on the taf in view; elsewhere it reopens the current conversation.
     /// Returning to the same taf keeps its thread. Accepted work continues on the service.
     func openCoach() {
+        // The Coach button while Coach drives the app stops it (docs/drive.md).
+        if DriveSession.shared.isOn {
+            DriveSession.shared.stop("stopped")
+            return
+        }
         if let taf = tafOnScreen, setupContextTafID != cloudTaf(for: taf)?.id {
             improveTaf(taf)
         }
@@ -6322,6 +6333,9 @@ final class AppModel: ObservableObject {
         case .signIn:
             if text == "signed in" || text == "not now" { return .text(text) }
             return failed.map { .text($0) }
+        case .drive:
+            // Only declining: a drive is approved by its signed start (docs/drive.md).
+            return text == "declined" ? .text("declined") : nil
         default:
             return nil
         }
@@ -6427,6 +6441,60 @@ final class AppModel: ObservableObject {
             cardNotes[component.id] = "Your answer didn't reach Setup. \(error.localizedDescription)"
             await loadSetupThread()
         }
+    }
+
+    /// Approve on Coach's drive card (docs/drive.md): the start is signed with the approval key, behind
+    /// Face ID or Touch ID, as a setup call (`kiff.request.v1` over this request). tafs cloud starts the
+    /// drive only for that key, and tells Coach the drive is on. Then Coach's chat closes into its
+    /// button, and the drive follows its stream until it ends.
+    func approveDrive(_ component: SetupComponent) async {
+        cardNotes[component.id] = nil
+        guard mode == .kiff, let tenant = kiffTenant else {
+            cardNotes[component.id] = "Sign in with KIFF on this \(ThisDevice.kind) first."
+            return
+        }
+        let ref = cardRef(component.id)
+        guard let session = setupThread.components.last(where: { $0.ref == ref })?.session ?? setupChat else { return }
+        let task = component.text ?? component.title ?? "Drive the app"
+        let body = TafsCloud.driveStartBody(session: session, task: task, component: component.id)
+        let signedAt = SigningTime.next()
+        let message = KIFFClient.requestMessage(tenant: tenant, method: "POST", uri: TafsCloud.drivePath, body: body, signedAt: signedAt)
+        let gen = accountGeneration
+        let signature: String
+        do {
+            signature = try await signer.signApproval(message, reason: "Let Coach drive the app: \(task)")
+        } catch {
+            guard gen == accountGeneration else { return }
+            cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            return
+        }
+        guard gen == accountGeneration else { return }
+        do {
+            let drive = try await cloud.startDrive(body: body, signature: "t=\(signedAt),v1=\(signature)")
+            guard gen == accountGeneration else { return }
+            answered.insert(ref)
+            let driving = DriveSession.shared
+            driving.onStart = { [weak self] in self?.coachOpen = false }
+            driving.onEnd = { [weak self] in
+                self?.coachOpen = true
+                Task { [weak self] in await self?.loadSetupThread() }
+            }
+            driving.tafOnScreen = { [weak self] in
+                guard let self, let id = self.tafOnScreen else { return nil }
+                return self.taf(id)?.name
+            }
+            driving.begin(drive, cloud: cloud)
+        } catch {
+            guard gen == accountGeneration else { return }
+            // tafs cloud's words: the approval key is needed, or the card isn't there any more.
+            cardNotes[component.id] = (error as? TafsCloud.CloudError)?.errorDescription ?? "Coach can't drive the app: \(error.localizedDescription)"
+        }
+    }
+
+    /// After a launch: a drive this phone left on when it closed is over (it never outlives the app).
+    func endLeftoverDrive() async {
+        guard mode == .kiff, signedIn else { return }
+        await DriveSession.shared.endLeftover(cloud)
     }
 
     /// tafs cloud asked this phone to sign a message that isn't this card's: refused, nothing signed.

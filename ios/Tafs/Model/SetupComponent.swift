@@ -5,7 +5,7 @@ import Foundation
 /// nothing: an approval names planque's grant and KIFF's draft, which the app reads from
 /// those services and the phone signs there.
 struct SetupComponent: Decodable, Equatable {
-    enum Kind: String, Decodable { case steps, notice, confirm, questions, approval, signIn = "sign_in", result, knob }
+    enum Kind: String, Decodable { case steps, notice, confirm, questions, approval, signIn = "sign_in", result, knob, drive }
 
     struct Step: Decodable, Equatable, Hashable {
         /// pending, active, done, failed or skipped.
@@ -172,8 +172,8 @@ struct SetupThread: Equatable {
         return sorted.filter { seen.insert($0.id).inserted }
     }
 
-    private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result]
-    private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn]
+    private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result, .drive]
+    private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .drive]
 
     private func placedAt(_ c: ShownComponent) -> Date {
         guard Self.asking.contains(c.component.type) else { return c.firstAt }
@@ -250,6 +250,9 @@ struct SetupThread: Equatable {
             text = failed ?? (words == "Declined" ? "declined" : "approved")
         case .signIn:
             text = failed ?? (words == "Signed in" ? "signed in" : "not now")
+        case .drive:
+            // A drive card is approved only by its signed start; anything else said of it is a no.
+            text = words.lowercased().hasPrefix("approved") ? "approved" : "declined"
         default:
             text = words
         }
@@ -270,6 +273,8 @@ struct SetupThread: Equatable {
         case .signIn?:
             if a.failed { return "Sign in · it didn't go through" }
             return a.text == "not now" ? "Not now" : "Signed in"
+        case .drive?:
+            return a.text == "declined" ? "Not now" : "Approve"
         case .questions?:
             let questions = components.first { $0.id == a.id }?.component.questions ?? []
             return QuestionAnswers.words(a.text, questions: questions) ?? a.text

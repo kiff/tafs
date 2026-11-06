@@ -23,7 +23,7 @@ struct ShareLine: View {
                             .overlay(Capsule().stroke(Theme.line))
                             .clipShape(Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                     .foregroundColor(Theme.ink)
                     .accessibilityIdentifier("share-taf")
                 }
@@ -150,7 +150,7 @@ struct ShareTafSheet: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityAddTraits(chosen.contains(share) ? .isSelected : [])
     }
 
@@ -220,7 +220,7 @@ struct OverviewView: View {
                             .frame(width: 44, height: 44)
                             .background(Circle().fill(Theme.raised))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                     .accessibilityLabel("Calendar")
                     .accessibilityIdentifier("overview.calendar")
                 }
@@ -257,7 +257,7 @@ struct OverviewView: View {
                         .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
                         .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                 }
             }
         }
@@ -297,7 +297,7 @@ struct OverviewView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.drivablePlain)
             .accessibilityLabel([taf.name, taf.now, Self.cardLine(taf), lastResult(taf)].compactMap { $0 }.joined(separator: ", "))
             .accessibilityHint("Opens the taf")
             Group {

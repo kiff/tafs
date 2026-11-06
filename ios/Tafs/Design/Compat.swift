@@ -53,41 +53,6 @@ struct NavStack<Content: View>: View {
     }
 }
 
-/// The chat's message field: it grows to six lines.
-struct ChatField: View {
-    let title: String
-    @Binding var text: String
-    /// Where the insertion point is, in characters, for dictation to put its words there;
-    /// told from iOS 18, which says where it is.
-    var cursor: ((Int) -> Void)? = nil
-
-    var body: some View {
-        if #available(iOS 18, *), let cursor {
-            SelectingField(title: title, text: $text, cursor: cursor)
-        } else {
-            TextField(title, text: $text, axis: .vertical).lineLimit(1...6)
-        }
-    }
-}
-
-/// A message box that says where its insertion point is.
-@available(iOS 18, *)
-private struct SelectingField: View {
-    let title: String
-    @Binding var text: String
-    let cursor: (Int) -> Void
-    @State private var selection: TextSelection?
-
-    var body: some View {
-        TextField(title, text: $text, selection: $selection, axis: .vertical).lineLimit(1...6)
-            .onChange(of: selection) { _, now in
-                // Gone when the box loses focus (the mic's tap): the last point stays.
-                guard let now, case .selection(let range) = now.indices, range.upperBound <= text.endIndex else { return }
-                cursor(text.distance(from: text.startIndex, to: range.upperBound))
-            }
-    }
-}
-
 enum Clipboard {
     static func copy(_ text: String) {
         UIPasteboard.general.string = text

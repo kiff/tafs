@@ -27,6 +27,8 @@ struct AppEventApprovalSheet: View {
                     Text(filters).scaledFont(13, design: .monospaced).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("event.filters")
+                        // An open approval's terms: blanked for a drive (docs/drive.md).
+                        .driveTerms(item.label)
                     if let error = model.lastError {
                         Text(error).scaledFont(13).foregroundColor(Theme.no)
                             .fixedSize(horizontal: false, vertical: true)

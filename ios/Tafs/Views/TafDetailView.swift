@@ -244,7 +244,7 @@ struct TafDetailView: View {
                         .overlay(Capsule().stroke(activityFilter == f ? Theme.ink : Theme.line))
                         .clipShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .accessibilityAddTraits(activityFilter == f ? .isSelected : [])
             }
         }
@@ -306,10 +306,12 @@ struct TafDetailView: View {
         if model.mode == .sample, taf.state != .revoked {
             Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
                 .buttonStyle(OutlineButtonStyle())
+                .confirming()
         }
         if model.mode == .kiff, cloud != nil, manages {
             Button("Remove for good") { confirmRemove = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                .confirming()
         }
     }
 
@@ -528,6 +530,7 @@ struct ConnectionsPanel: View {
                         }
                         Spacer(minLength: 0)
                         Button("Disconnect") { confirming = grant }
+                            .confirming()
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.no)
                     }
@@ -1084,7 +1087,7 @@ struct CardBar: View {
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityHint("Shows the Cards")
     }
 
@@ -1166,7 +1169,7 @@ struct CardStack: View {
                         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(Color.black.opacity(Self.shade(depth: ordered.count - 1 - index))))
                         .shadow(color: .black.opacity(0.16), radius: 4, y: -2)
-                }.buttonStyle(.plain).accessibilityLabel("\(card.title). Show this Card")
+                }.buttonStyle(.drivablePlain).accessibilityLabel("\(card.title). Show this Card")
             }
         }
         .frame(maxWidth: TafCardFace.width)

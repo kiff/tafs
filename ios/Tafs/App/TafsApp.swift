@@ -39,6 +39,8 @@ struct TafsApp: App {
                     // From launch: renewals, refunds and purchases made elsewhere reach KIFF.
                     model.purchases.start()
                     await model.restore()
+                    // A drive this phone left on when it closed is over (docs/drive.md).
+                    await model.endLeftoverDrive()
                     PushDelegate.registerIfAllowed()
                 }
         }
@@ -56,6 +58,7 @@ struct TafsApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
+    @ObservedObject private var drive = DriveSession.shared
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
     /// The keyboard is up: the bar keeps off it.
@@ -120,7 +123,7 @@ struct RootView: View {
                         if !rail && !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
                     }
                 }
-                .onChange(of: tab) { _ = opened.insert($0) }
+                .onChange(of: tab) { _ = opened.insert($0); DriveWaits.emit("screen_shown") }
             } else {
                 OnboardingView()
             }
@@ -143,7 +146,8 @@ struct RootView: View {
             }
         }
         // The keyboard's shortcuts on every screen (kiff/tafs#210).
-        .background { if model.signedIn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
+        // Off while Coach drives the app: a key the person presses then isn't a shortcut.
+        .background { if model.signedIn && !drive.isOn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         // Both sizes keep the underlying taf and tab mounted while Coach opens.

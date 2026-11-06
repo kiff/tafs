@@ -14,6 +14,7 @@ struct CardUnitExceptionPanel: View {
             if canDiscuss { Button(ask.action_title) { model.discussCardUnit(ask) } }
             if model.canAnswerHolds != false {
                 Button(ask.dismiss_title, role: .destructive) { Task { await model.dismissCardUnit(ask) } }
+                    .confirming()
                     .disabled(model.dismissingCardUnits.contains(ask.id))
             }
         }
@@ -86,7 +87,7 @@ struct ConnectedToolsRing: View {
                             Text(item.name).scaledFont(13, weight: .semibold).lineLimit(2)
                             Text(item.action_words).scaledFont(11).foregroundColor(item.running ? Theme.ok : Theme.soft).lineLimit(2)
                         }.frame(width: 78).padding(5).background(Theme.panel).clipShape(RoundedRectangle(cornerRadius: 14))
-                    }.buttonStyle(.plain).position(point)
+                    }.buttonStyle(.drivablePlain).position(point)
                 }
                 if model.manages(taf.id) {
                     let angle = -Double.pi / 2 + Double(apps.count) * 2 * .pi / Double(max(count, 1))
@@ -143,7 +144,7 @@ private struct ConnectedAppSheet: View {
                 if model.manages(tafID) {
                     Section {
                         Button("Add actions with Coach") { dismiss(); model.improveTaf(tafID); model.coachOpen = true }
-                        Button("Disconnect", role: .destructive) { disconnect = true }.disabled(busy)
+                        Button("Disconnect", role: .destructive) { disconnect = true }.confirming().disabled(busy)
                     }
                 }
             }
@@ -232,7 +233,7 @@ private struct SourceActivityRow: View {
                     if let amount = entry.amount_text { Text(amount).scaledFont(13, weight: .semibold).foregroundColor(Theme.ink) }
                 }
             }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5).contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityHint("Shows the receipt")
+        }.buttonStyle(.drivablePlain).accessibilityHint("Shows the receipt")
             .sheet(isPresented: $receipt) { if let evidence { ReceiptView(entry: evidence).environmentObject(model) } }
     }
 }

@@ -65,7 +65,7 @@ struct UsageView: View {
                                 }
                             }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.drivablePlain)
                     }
                     // Every taf is listed by KIFF, most at 0 on a busy account: only those that counted.
                     if let by = u.tasks.byAgent?.filter({ $0.counted > 0 }), !by.isEmpty {
@@ -165,7 +165,7 @@ struct UsageView: View {
                             }
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                 }
             } else if let mine = Self.waiting(u) {
                 Panel {
@@ -209,6 +209,7 @@ struct UsageView: View {
                                     Task { await model.buyPack(pack, answering: r) }
                                 }
                                 .buttonStyle(PrimaryButtonStyle())
+                                .confirming()
                                 .disabled(model.purchases.buying != nil)
                             }
                             Button("Decline") { declining = r }.buttonStyle(OutlineButtonStyle())
@@ -548,7 +549,7 @@ struct TafUsageView: View {
                             }
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                 } else if let why = model.usageError {
                     Panel { Text(why).scaledFont(14).foregroundColor(Theme.no) }
                 } else {
