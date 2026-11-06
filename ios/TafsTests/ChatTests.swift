@@ -137,6 +137,37 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(model.awaitingReply(id), "the taf hasn't answered yet")
     }
 
+    /// A taf hands a setting to Coach with an `ask_coach` card (kiff/tafs#476, gap 15): it's in
+    /// its chat at its time, and no other card of its thread is; Ask Coach opens Coach on the
+    /// taf with its words in the box, nothing sent.
+    func testATafsAskCoachCardIsInItsChatAndAskCoachWritesItsWordsIn() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-11-06T08:00:00Z","from":"owner","kind":"message","text":"send from billing","session":"s1"},
+                     {"at":"2026-11-06T08:00:05Z","from":"taf","kind":"message","text":"That's Coach's to change.","session":"s1"}],
+         "components":[{"at":"2026-11-06T08:00:06Z","session":"s1","run":"r1","component":{"type":"ask_coach","id":"ask_1","text":"Send them from billing@acme.test"}},
+                       {"at":"2026-11-06T08:00:07Z","session":"s1","run":"r1","component":{"type":"notice","id":"n_1","text":"A notice"}},
+                       {"at":"2026-11-06T08:00:08Z","session":"s1","run":"r1","component":{"type":"ask_coach","id":"ask_2","text":" "}},
+                       {"at":"nope","component":{"type":"ask_coach","id":"ask_3","text":"Unreadable"}}]}
+        """)
+        await model.loadChat(id)
+        let items = model.chatItems(id)
+        XCTAssertEqual(items.map(\.id).filter { $0.hasPrefix("a|") }, ["a|ask_1"], "the ask_coach card with words, and no other")
+        XCTAssertEqual(items.last?.id, "a|ask_1", "after the taf's words")
+        XCTAssertEqual(model.chats[id]?.count, 2, "a card the app can't read leaves the thread as it is")
+
+        guard case .askCoach(let card) = try XCTUnwrap(items.last) else { return XCTFail("an ask_coach card") }
+        // Someone who doesn't manage the taf gets nothing: the card reads alone.
+        model.askCoachAbout(id, words: card.text)
+        XCTAssertFalse(model.coachOpen)
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]},"setup":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        await model.refreshPeople()
+        model.askCoachAbout(id, words: card.text)
+        XCTAssertEqual(model.setupDraft, "Send them from billing@acme.test")
+        XCTAssertTrue(model.coachOpen)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 0, "nothing is sent")
+    }
+
     /// A door's run shows in an open chat without reopening it (kiff/tafs#423, item 3): tafs
     /// cloud's `taf` push re-reads the chat that's been read. One never opened isn't read.
     func testATafPushReadsTheOpenChatAgain() async throws {

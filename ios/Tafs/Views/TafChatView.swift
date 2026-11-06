@@ -129,6 +129,9 @@ struct TafChatView: View {
                                 case .knock(let knock):
                                     // Someone wrote through a door (docs/doors.md): the owner decides here.
                                     if let doors = model.doors(for: tafID) { KnockCard(knock: knock, taf: taf, doors: doors) }
+                                case .askCoach(let card):
+                                    AskCoachCardView(text: card.text, ask: model.mode == .kiff && model.mayUseCoach && model.manages(tafID)
+                                                     ? { model.askCoachAbout(tafID, words: card.text) } : nil)
                                 }
                             }
                             .id(item.id)
@@ -757,5 +760,24 @@ struct AnsweredCardLine: View {
     var body: some View {
         Text("Answered the card above").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
+/// A taf's card handing a setting to Coach (kiff/tafs#476, gap 15): the owner's request in the
+/// taf's words, and Ask Coach, which opens Coach on this taf with them in the box to send, as
+/// written or changed. Nothing is sent. Someone who can't change the taf reads it alone.
+struct AskCoachCardView: View {
+    /// Its button, the same as Android's.
+    static let askWord = "Ask Coach"
+    let text: String
+    let ask: (() -> Void)?
+    var body: some View {
+        Panel {
+            Text(text).scaledFont(15).foregroundColor(Theme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+            if let ask {
+                Button(Self.askWord, action: ask).buttonStyle(OutlineButtonStyle())
+            }
+        }
     }
 }
