@@ -374,6 +374,16 @@ class CoachStartTest {
     assertEquals(listOf("I'm waiting for you to approve the drive.", "card", "The daily limit for Refunds is on its Card tab."), order)
   }
 
+  /** Both apps place the same cards after Coach's words: read from iOS's source, so a new card type can't drift on one only. */
+  @Test fun bothAppsWaitOnTheSameCards() {
+    val swift = java.io.File("../../ios/Tafs/Model/SetupComponent.swift").readText()
+    val list = Regex("""static let asking: Set<SetupComponent\.Kind> = \[([^\]]*)]""").find(swift)?.groupValues?.get(1)
+    assertNotNull("iOS's asking set is where it was", list)
+    val ios = list!!.split(",").map { it.trim().removePrefix(".") }.map { if (it == "signIn") "sign_in" else it }.toSet()
+    assertEquals(setOf("confirm", "questions", "approval", "sign_in", "result", "knob", "drive"), CoachWords.ASKING)
+    assertEquals(CoachWords.ASKING, ios)
+  }
+
   @Test fun aCardsAnswerOutlivesTheCardShownAgainWithoutIt() {
     val card = KiffClient.json.decodeFromString<SetupComponent>(handOver)
     val first = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", card, bot.tafs.app.kiff.CardAnswer(outcome = bot.tafs.app.kiff.ResultOutcome(tafId = "c_9")))

@@ -249,6 +249,22 @@ final class SetupTests: XCTestCase {
                           "a notice stays where it happened")
     }
 
+    /// The cards that wait for the owner, the same on both apps (Android's test reads this set):
+    /// a knob card and a drive card each come after the words Coach wrote with it.
+    func testAKnobOrDriveCardComesAfterCoachsWords() throws {
+        XCTAssertEqual(SetupThread.asking, [.confirm, .questions, .approval, .signIn, .result, .knob, .drive])
+        func at(_ s: Int) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + Double(s)) }
+        for json in [#"{"type":"knob","id":"dial-v8","taf_id":"taf-01","version":8}"#, #"{"type":"drive","id":"dial-v8","text":"Run Chargebacks"}"#] {
+            var thread = SetupThread()
+            thread.messages = [
+                TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Refunds, please", session: "s1"),
+                TafsCloud.ChatMessage(at: at(3), from: .taf, text: "Approve below.", session: "s1"),
+            ]
+            thread.components = [ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(json))]
+            XCTAssertEqual(thread.items.last?.id, "c|s1#dial-v8", "\(json): after Coach's words")
+        }
+    }
+
     /// An answer with no time, from a tafs cloud that doesn't say, puts a card back at its own
     /// time, in line with what Coach said around it (kiff/tafs#385).
     func testAnAnsweredCardGoesBackToItsOwnTime() throws {
