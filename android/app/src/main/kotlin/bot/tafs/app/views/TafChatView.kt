@@ -260,9 +260,25 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
             if (live != null) LiveWork(live) else TypingDots()
           }
         }
+        // What tafs cloud holds of the owner's in this chat (docs/chat.md): it goes by itself once the taf is done.
+        state.chatSteering[tafId]?.held?.let { held -> item(key = "held") { SteeredWords(held.text, ChatWords.HELD) } }
         // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
         if (!thinking) state.chatEnded[tafId]?.let { end ->
           item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId, false) { } }) }
+        }
+        // What a stopped run never read, with tafs cloud's why: Retry sends it as a new message, Edit puts it in the box.
+        state.chatSteering[tafId]?.notSent.orEmpty().forEachIndexed { i, words ->
+          item(key = "not-sent-$i-${words.at}") {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+              SteeredWords(words.text, null)
+              NotSentLine(
+                words.why.orEmpty(),
+                canRetry = tafId !in state.chatSending,
+                onRetry = { following = true; actions.sendChat(words.text, tafId, false) { } },
+                onEdit = { setDraft(words.text) },
+              )
+            }
+          }
         }
       }
 
@@ -644,11 +660,24 @@ private fun NeedsYouPill(text: String, onClick: () -> Unit) {
 @Composable
 private fun NotSentLine(why: String, canRetry: Boolean, onRetry: () -> Unit, onEdit: () -> Unit) {
   Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-    Text("${ChatWords.NOT_SENT} · $why", style = scaled(13, color = Theme.no), textAlign = TextAlign.End)
+    Text(listOf(ChatWords.NOT_SENT, why).filter { it.isNotBlank() }.joinToString(" · "), style = scaled(13, color = Theme.no), textAlign = TextAlign.End)
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
       TextButton(onClick = onEdit) { Text(ChatWords.EDIT, style = scaled(14, color = Theme.soft)) }
       TextButton(onClick = onRetry, enabled = canRetry) { Text(ChatWords.RETRY, style = scaled(14, color = if (canRetry) Theme.ink else Theme.soft)) }
     }
+  }
+}
+
+/** The owner's words tafs cloud holds or didn't send, as their own message, dimmed, with [line] under them. */
+@Composable
+private fun SteeredWords(text: String, line: String?) {
+  Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(
+      text,
+      style = scaled(15, color = Color.White),
+      modifier = Modifier.alpha(0.7f).clip(RoundedCornerShape(18.dp)).brandBackground().padding(horizontal = 10.dp, vertical = 8.dp),
+    )
+    line?.let { Text(it, style = scaled(13, color = Theme.soft), textAlign = TextAlign.End) }
   }
 }
 

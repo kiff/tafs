@@ -307,10 +307,79 @@ class ChatKiffTest {
     val body = KiffClientJson.parse(transport.requestsTo("POST /v1/tafs/taf_1/steer").single().body!!)
     assertEquals("run_1", body.getValue("run").jsonPrimitive.content)
     assertEquals("also check #2", body.getValue("text").jsonPrimitive.content)
+    // tafs cloud holds what the run doesn't take (docs/chat.md): the app sends it once.
+    assertEquals("true", body.getValue("hold").jsonPrimitive.content)
     assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
   }
 
+  // MARK: What the run doesn't take, held by tafs cloud (docs/chat.md)
+
+  private val steer = "POST /v1/tafs/taf_1/steer"
+  private val held = """{"text":"one more","at":"2026-10-28T09:00:05Z"}"""
+  private fun steering(json: String) = ""","steering":$json"""
+
+  @Test fun aMessageTheRunDidntTakeWaitsAtTafsCloudShownAsWaitingNeverResentNorShownAsSent() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
+    transport.answer(steer, 202, """{"held":$held}""")
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working + steering("""{"run":"run_1","status":"RUNNING","untaken":[],"held":$held}""")))
+    val m = model()
+    m.loadChat("refunds-1")
+    assertTrue(m.deliverChat("one more", "refunds-1"))
+    assertEquals(1, transport.requestsTo(steer).size)
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages/stream").isEmpty())
+    assertEquals("one more", m.state.value.chatSteering["refunds-1"]?.held?.text)
+    assertTrue("shown as what waits, not as sent", m.messages().none { it.text == "one more" })
+    assertTrue(m.state.value.chatSent["refunds-1"].isNullOrEmpty())
+  }
+
+  @Test fun aMessageTafsCloudSentAtOnceAsTheNextMessageIsTheThreadsNotSentAgain() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
+    transport.answer(steer, 202, """{"sent":{"run":"run_2","session":"s1"}}""")
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), owner("one more", "2026-10-28T09:00:05Z"), working = ""","working":{"session":"s1","run":"run_2"}"""))
+    val m = model()
+    m.loadChat("refunds-1")
+    assertTrue(m.deliverChat("one more", "refunds-1"))
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages/stream").isEmpty())
+    assertEquals("once, as the thread has it", 1, m.messages().count { it.text == "one more" })
+    assertNull(m.state.value.chatSteering["refunds-1"])
+  }
+
+  @Test fun asMuchWaitingAsOneMessageCanBeSaysTafsCloudsWordsAndGivesTheWordsBackForLater() = runTest {
+    readsOf()
+    val full = "Up to 10 messages, 2,000 characters in all, can wait for the taf. Send this once it's done."
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
+    transport.answer(steer, 409, """{"error":"$full","code":"held_full","held":$held}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("and this", "refunds-1"))
+    assertEquals(full, m.state.value.chatErrors["refunds-1"])
+    // Not a "Not sent" row: the words go back to the box (sendChat's onNotSent), and nothing goes as a new message.
+    assertNull(m.state.value.chatUnsent["refunds-1"])
+    assertTrue(m.messages().none { it.text == "and this" })
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages/stream").isEmpty())
+  }
+
+  @Test fun whatAStoppedRunNeverReadShowsAsNotSentWithTafsCloudsWhyUntilTheThreadSaysOtherwise() = runTest {
+    readsOf()
+    val why = "You stopped it before it read this."
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = steering("""{"run":"run_1","status":"CANCELLED","untaken":[],"not_sent":[{"text":"one more","at":"2026-10-28T09:00:05Z","why":"$why"}]}""")))
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = steering("""{"run":"run_2","status":"COMPLETED","untaken":[]}""")))
+    val m = model()
+    m.loadChat("refunds-1")
+    val notSent = m.state.value.chatSteering["refunds-1"]!!.notSent.single()
+    assertEquals("one more", notSent.text)
+    assertEquals(why, notSent.why)
+    m.loadChat("refunds-1")
+    assertNull("nothing held or unsent: nothing shown", m.state.value.chatSteering["refunds-1"])
+  }
+
   @Test fun aRunThatEndedMeanwhileTakesTheMessageAsANewOne() = runTest {
+    // An older tafs cloud holds nothing: 409 with no code, and the message goes as a new one.
     readsOf(); sent()
     transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
     transport.answer("POST /v1/tafs/taf_1/steer", 409, """{"error":"run_over"}""")

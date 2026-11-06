@@ -238,8 +238,18 @@ Without `hold`, nothing changes for an older app:
 - a run that's over lists what it never read under `untaken`;
 - the app keeps its own queue, as before.
 
-Android stops resending on a refusal once it sends `hold`, and iOS drops its own queue
-the same way.
+**What the app shows (Android):** it sends `hold: true` on every steer, and never resends.
+- **A `202`:** the message's pending copy goes. The thread shows it as sent, or as what waits:
+  `held`'s words, dimmed as the person's own, with "Waits until it's done, then goes as your
+  next message" under them.
+- **`409 held_full`:** tafs cloud's `error` shows as it is, and the person's words go back in
+  the box to send later. It's not a "Not sent" row.
+- **`not_sent`:** each one shows under the stopped run, dimmed, with "Not sent · " and its
+  `why`, then Edit (the words back in the box) and Retry (sent as a new message). The row
+  leaves once a newer run is the chat's latest.
+- **An older tafs cloud's `409` with no code:** the message goes as a new one, as before.
+
+iOS drops its own queue the same way, with the same words.
 
 ## Stop, caps and failures
 
