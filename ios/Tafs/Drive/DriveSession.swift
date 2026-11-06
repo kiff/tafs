@@ -24,6 +24,7 @@ enum DriveLines {
     static let nothing = "Nothing Coach can use there"
     static let notOnScreen = "That isn't on screen now"
     static let noField = "No field is focused"
+    static let secretField = "That's yours to fill"
     static let noBack = "Nothing to go back to"
     static func cantScroll(_ direction: String) -> String { "Can't scroll \(direction) there" }
     static let unknown = "This app can't do that step"
@@ -79,6 +80,9 @@ final class DriveSession: ObservableObject {
     var isOn: Bool { live != nil && !ending }
     /// A step of Coach's is running: a field that changes now changed by Coach.
     private(set) var stepInFlight = false
+    /// The app is resigning active (a prompt, the app switcher, the lock): no step runs until it's active
+    /// again or the drive's stop lands.
+    private(set) var pausing = false
 
     private var cloud: TafsCloud?
     private var following: Task<Void, Never>?
@@ -140,6 +144,7 @@ final class DriveSession: ObservableObject {
         guard let live, !ending else { return }
         ending = true
         stepInFlight = false
+        pausing = false
         dot = nil
         let said = words.isEmpty ? (DriveLines.ended[why] ?? "Coach stopped") : Self.sentence(words)
         caption = said
@@ -182,13 +187,14 @@ final class DriveSession: ObservableObject {
         // ends. The lock says so a moment later, when the phone's data closes.
         on(UIApplication.willResignActiveNotification) { [weak self] in
             guard let self, self.isOn else { return }
-            self.stepInFlight = false
+            self.resigned()
             Task { [weak self] in
                 try? await Task.sleep(nanoseconds: 600_000_000)
                 self?.stop(UIApplication.shared.isProtectedDataAvailable ? "left_app" : "locked")
             }
         }
         on(UIApplication.protectedDataWillBecomeUnavailableNotification) { [weak self] in self?.stop("locked") }
+        on(UIApplication.didBecomeActiveNotification) { [weak self] in self?.becameActive() }
         on(UIApplication.didEnterBackgroundNotification) { [weak self] in self?.stop("left_app") }
         // A field the person typed in: Coach's own typing is a step in flight.
         for name in [UITextField.textDidChangeNotification, UITextView.textDidChangeNotification] {
@@ -233,9 +239,23 @@ final class DriveSession: ObservableObject {
         }
     }
 
+    /// The app is resigning active: nothing runs while it does.
+    func resigned() {
+        pausing = true
+        stepInFlight = false
+    }
+
+    func becameActive() { pausing = false }
+
+    /// A request's answer: refused while the app resigns active, else done or refused by the step itself.
+    func answer(_ r: TafsCloud.DriveRequest) async -> TafsCloud.DriveResult {
+        if pausing { return withScreen(.refused(DriveLines.tooLate)) }
+        return await run(r)
+    }
+
     /// One request: done or refused, and always answered with the screen after it.
     func handle(_ r: TafsCloud.DriveRequest, drive: String) async {
-        let result = await run(r)
+        let result = await answer(r)
         guard isOn || r.action == "done" else { return }
         do {
             try await cloud?.postDriveResult(drive, request: r.id, result: result)
@@ -379,7 +399,11 @@ final class DriveSession: ObservableObject {
             let place = DriveTargets.visibleFrame(field) ?? .null
             let entry = shown.filter { $0.entry.role == .textField && $0.frame.intersects(place) }
                 .max { $0.frame.intersection(place).width * $0.frame.intersection(place).height < $1.frame.intersection(place).width * $1.frame.intersection(place).height }
-            let words = entry.map { $0.entry.secret ? "" : $0.entry.words } ?? ""
+            // A secret field (a key, a password, a code) is the person's to fill: nothing is typed.
+            if entry?.entry.secret == true || (field as? UITextField)?.isSecureTextEntry == true {
+                return withScreen(.refused(DriveLines.secretField))
+            }
+            let words = entry?.entry.words ?? ""
             input.insertText(text)
             await settle(0.4)
             var result = withScreen(.done(DriveLines.typedInto(words)), keep: true)
