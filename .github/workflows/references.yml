@@ -1,0 +1,34 @@
+name: References
+
+# A private tracker is never named in this public repo: not in the tree, not
+# in a pull request's added lines. The pattern is split so this file never
+# matches it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  references:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: No private references
+        run: |
+          pattern='kiff-cloud''#|kiff/kiff''-cloud'
+          if git grep -nE "$pattern" -- .; then
+            echo "::error::a private reference is in the tree: name the gap or describe it instead"; exit 1
+          fi
+          if [ -n "$BASE" ]; then
+            git fetch --no-tags --depth=1 origin "$BASE"
+            if git diff "origin/$BASE" HEAD | grep -E '^\+' | grep -E "$pattern"; then
+              echo "::error::a private reference is in this pull request's diff"; exit 1
+            fi
+          fi
+        env:
+          BASE: ${{ github.base_ref }}

@@ -2396,7 +2396,7 @@ interface ExportedChat {
 
 /**
  * GET /v1/me/chats/export: a person's own data in tafs, for their rights of access and
- * portability (GDPR Articles 15 and 20, kiff-cloud#1409). Their own chats and trials with
+ * portability (GDPR Articles 15 and 20). Their own chats and trials with
  * every taf of the account, Coach's included, archived ones too, with what kiff/agents
  * still keeps of them (30 days), the names of the files they attached, and their own
  * notes. Never another person's chats, a door's, or a taf's job runs: only the person
@@ -3967,7 +3967,7 @@ export interface StreamResult {
 let streamedOnce = false;
 
 /**
- * Where a streamed message's wait goes (kiff-cloud#1487's latency hunt): each step before its run
+ * Where a streamed message's wait goes (the latency work): each step before its run
  * starts, in milliseconds, then the run's first event from kiff/agents, the first words sent to the
  * phone (its text, or Coach's note on the line) and the end. One log line per message, numbers only:
  * never a body, an id or a word.
@@ -4412,7 +4412,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   const toolOf = new Map<string, string>(); // call id → tool, for a failed step's reason
   let runID = resumed;
   // A step that failed is held, not sent: Coach often retries, and a retry that goes through
-  // shouldn't have shown the owner "failed" meanwhile (kiff-cloud#1487). A later call of the
+  // shouldn't have shown the owner "failed" meanwhile. A later call of the
   // same tool drops the held failure (its own outcome stands); the run's end sends what's
   // still held, so a failure Coach gave up on is said then, with its why.
   const heldFailures = new Map<string, string>(); // call id → its step event
