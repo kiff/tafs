@@ -175,6 +175,42 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
     }
 
+    /// A message that isn't sent for any reason stays where it was written, marked not sent
+    /// with why, through a reload (kiff/tafs#476). Retry sends it once, a second tap finds
+    /// nothing; Edit gives its words back for the composer and takes it out of the thread.
+    func testAMessageThatIsntSentStaysThroughAReloadWithRetryAndEdit() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.loadChat(id)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (500, #"{"error":"boom"}"#)
+        let first = await model.sendChat("hello", to: id)
+        let second = await model.sendChat("and this", to: id)
+        XCTAssertFalse(first || second)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["hello", "and this"])
+        XCTAssertFalse(model.chatState(id).unsent[0].why.isEmpty, "it says why")
+        XCTAssertNil(model.chatErrors[id], "said on the message, not under the thread")
+
+        // A reload keeps them where they were written.
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["hello", "and this"])
+
+        // Retry, tapped twice: sent once, and it leaves "Not sent".
+        let hello = model.chatState(id).unsent[0]
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.sent = []
+        async let a: Void = model.retryChat(hello, to: id)
+        async let b: Void = model.retryChat(hello, to: id)
+        _ = await (a, b)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["and this"])
+
+        // Edit: its words, for the composer, and it's gone from the thread; a second Edit has nothing.
+        let other = model.chatState(id).unsent[0]
+        XCTAssertEqual(model.editUnsentChat(other, from: id), "and this")
+        XCTAssertNil(model.editUnsentChat(other, from: id))
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty)
+    }
+
     /// A run kiff/agents refused says why in tafs cloud's words, on every path (kiff/tafs#396,
     /// #397): never the app's own line for the status, which shows only without words.
     func testARefusalSaysWhyInTafsCloudsWords() async throws {

@@ -897,6 +897,25 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Edit takes a message that wasn't sent out of Setup's thread and gives its words back
+    /// for the composer (kiff/tafs#476); a second Edit finds nothing.
+    func testEditGivesBackTheWordsOfAMessageThatIsntSent() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (429, #"{"error":"that's 10 messages in 10 minutes"}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (503, #"{"error":"down"}"#)
+        await model.sendSetup("Use the test account")
+        let unsent = try XCTUnwrap(model.setupUnsent.first)
+        XCTAssertEqual(model.editUnsent(unsent), "Use the test account")
+        XCTAssertNil(model.editUnsent(unsent))
+        XCTAssertTrue(model.setupUnsent.isEmpty)
+        XCTAssertEqual(UnsentBubble.notSent, "Not sent")
+        XCTAssertEqual([UnsentBubble.retryWord, UnsentBubble.editWord], ["Retry", "Edit"])
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// An answer written as a message that wasn't sent quiets its card by the card's `ref` while
     /// it's retried, never by its bare id: a later card under the same id in the next
     /// conversation isn't quieted by it. Discarding it lets the card be answered again
