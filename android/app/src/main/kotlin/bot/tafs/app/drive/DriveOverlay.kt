@@ -69,8 +69,8 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
     val top = roots.lastOrNull { !isOverlay(it) }
     val ours = listOfNotNull(glow, caption)
     if (top != null && ours.isNotEmpty() && roots.indexOf(top) > ours.maxOf { roots.indexOf(it) }) {
-      glow?.let { remove(it); wm.addView(it, it.params) }
-      caption?.let { val p = it.layoutParams; remove(it); wm.addView(it, p) }
+      glow?.let { remove(it); added(runCatching { wm.addView(it, it.params) }, "border").onFailure { glow = null } }
+      caption?.let { val p = it.layoutParams; remove(it); added(runCatching { wm.addView(it, p) }, "caption").onFailure { caption = null } }
     }
   }.let { }
 
@@ -82,7 +82,8 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
       (if (touchable) WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL else WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE),
     PixelFormat.TRANSLUCENT,
   ).apply {
-    token = activity.window.decorView.windowToken
+    // No token here: the activity's WindowManager gives an application window the activity's own token. The decor view's
+    // window token is a window's, which only a sub-window may take, so the system refused every overlay window with it.
     title = TITLE
     if (touchable) {
       gravity = Gravity.BOTTOM
@@ -92,7 +93,7 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
 
   private fun addGlow() {
     val g = Glow(activity, accent).apply { tag = TAG; params = params(touchable = false) }
-    runCatching { wm.addView(g, g.params) }.onSuccess { glow = g; g.start() }
+    added(runCatching { wm.addView(g, g.params) }, "border").onSuccess { glow = g; g.start() }
   }
 
   private fun addCaption() {
@@ -124,7 +125,12 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
       width = WindowManager.LayoutParams.MATCH_PARENT
       horizontalMargin = 0.04f
     }
-    runCatching { wm.addView(bar, p) }.onSuccess { caption = bar; captionText = line; stopButton = stopView }
+    added(runCatching { wm.addView(bar, p) }, "caption").onSuccess { caption = bar; captionText = line; stopButton = stopView }
+  }
+
+  /** A window the system refused is in the drive's diagnostics, never dropped without a word. */
+  private fun added(result: Result<Unit>, what: String): Result<Unit> = result.onFailure {
+    DriveDiagnostics.error("The drive's $what couldn't be shown: ${it.javaClass.simpleName} ${it.message.orEmpty()}".trim())
   }
 
   private fun remove(v: View) {

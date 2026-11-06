@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.inspector.WindowInspector
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,9 +33,11 @@ import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.drive.Action
 import bot.tafs.app.drive.AndroidDriveHost
+import bot.tafs.app.drive.DriveInfo
 import bot.tafs.app.drive.DriveInput
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.DriveOverlay
+import bot.tafs.app.drive.DriveState
 import bot.tafs.app.drive.DriveWindow
 import bot.tafs.app.drive.DriveWords
 import bot.tafs.app.drive.Target
@@ -205,6 +208,39 @@ class DriveEmulatorTest {
     settle()
     assertEquals(listOf("owner_took_over"), ends.distinct())
     assertEquals("the tap outside the menu never reached Run now", 0, runNow)
+  }
+
+  // The person sees the drive: the border and the caption are windows on screen while it's on, and the end's words after.
+
+  @Test fun theBorderAndTheCaptionAreOnScreenWhileADriveIsOn() {
+    show()
+    val drive = DriveInfo("d1", task = "Run Chargebacks")
+    fun overlays(): List<android.view.View> {
+      var found = emptyList<android.view.View>()
+      instrumentation.runOnMainSync { found = WindowInspector.getGlobalWindowViews().filter { DriveOverlay.isOverlay(it) && it.isAttachedToWindow } }
+      return found
+    }
+    try {
+      instrumentation.runOnMainSync { host.show(DriveState.On(drive)) }
+      rule.waitForIdle()
+      instrumentation.waitForIdleSync()
+      val on = overlays()
+      assertEquals("the border and the caption, each a window: $on", 2, on.size)
+      val caption = on.filterIsInstance<android.widget.LinearLayout>().single()
+      assertEquals("Coach is driving: Run Chargebacks", (caption.getChildAt(0) as android.widget.TextView).text.toString())
+      // The screenshot leaves them out: what Coach sees is the app, not its own marks.
+      assertTrue(tree().keys.none { it.contains("Coach is driving") })
+
+      instrumentation.runOnMainSync { host.show(DriveState.Over(drive, "owner_took_over", DriveWords.ended("owner_took_over"))) }
+      instrumentation.waitForIdleSync()
+      val over = overlays()
+      assertEquals("only the caption, with why it ended: $over", 1, over.size)
+      assertEquals(DriveWords.ended("owner_took_over"), ((over.single() as android.widget.LinearLayout).getChildAt(0) as android.widget.TextView).text.toString())
+    } finally {
+      instrumentation.runOnMainSync { host.show(DriveState.Off) }
+      instrumentation.waitForIdleSync()
+    }
+    assertTrue("gone once the drive is off", overlays().isEmpty())
   }
 
   // 2. The person's back stops it.

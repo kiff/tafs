@@ -139,6 +139,27 @@ class DriveTest {
     assertEquals("a drive starts only with your fingerprint", refused.message)
   }
 
+  /**
+   * An answer goes up as tafs cloud reads it (docs/drive.md, "Results"), through the app's own Json: an image carries its
+   * media_type even when it's the usual JPEG. Without it tafs cloud refused every answer with a screen (400), so Coach saw nothing.
+   */
+  @Test
+  fun anAnswerWithTheScreenCarriesItsMediaType() = runTest {
+    val transport = FakeTransport()
+    transport.answer("POST /v1/coach/drive/d_1/results/r1", 200, "{}")
+    val cloud = TafsCloud(transport).apply { token = "tok" }
+    val answer = DriveAnswer("done", "Tapped Run now", image = DriveImage(data = "/9j/AA=="), touched = Touched("Run now"))
+    cloud.driveAnswer("d_1", "r1", answer)
+    val sent = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/coach/drive/d_1/results/r1").single().body!!)).jsonObject
+    val image = sent.getValue("image").jsonObject
+    assertEquals("image/jpeg", image.getValue("media_type").jsonPrimitive.content)
+    assertEquals("/9j/AA==", image.getValue("data").jsonPrimitive.content)
+    assertEquals("done", sent.getValue("outcome").jsonPrimitive.content)
+    assertEquals("Run now", sent.getValue("touched").jsonObject.getValue("words").jsonPrimitive.content)
+    // A PNG says so too.
+    assertEquals("image/png", DriveAnswer("done", "Looked", image = DriveImage("image/png", "iVBO")).body.getValue("image").jsonObject.getValue("media_type").jsonPrimitive.content)
+  }
+
   @Test
   fun theStreamIsReadAsTheContractSays() = runTest {
     val lines = listOf(

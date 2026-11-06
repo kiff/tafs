@@ -125,7 +125,9 @@ data class DriveAnswer(
     get() = buildJsonObject {
       put("outcome", outcome)
       put("line", line)
-      image?.let { put("image", KiffClient.json.encodeToJsonElement(DriveImage.serializer(), it)) }
+      // By hand, as the rest is: tafs cloud refuses an image without its media_type, and the app's Json leaves out a value
+      // equal to its default.
+      image?.let { put("image", buildJsonObject { put("media_type", it.mediaType); put("data", it.data) }) }
       tree?.let { put("tree", it) }
       diagnostics?.let { put("diagnostics", it) }
       touched?.let { put("touched", KiffClient.json.encodeToJsonElement(Touched.serializer(), it)) }
