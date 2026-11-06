@@ -18,6 +18,13 @@ export const COACH_LINES = "[tafs coach lines]";
 /** The argument KIFF's gateway fills with the call's operation id, bound into its permit. */
 export const OP_ARG = "tafs_op";
 
+/**
+ * The argument kiff/agents fills with the chat a call comes from (its run's session), on the tools
+ * that declare it, over anything the model put there; the model never sees it. KIFF forwards it
+ * inside the call's permit. A drive is its chat's alone (kiff/tafs#544).
+ */
+export const SESSION_ARG = "agent_session";
+
 /** The protocol revisions this server speaks; the newest is offered otherwise. */
 const VERSIONS = ["2025-03-26", "2025-06-18", "2025-11-25"];
 
@@ -30,6 +37,8 @@ interface ToolDef {
   read?: boolean;
   /** What it lets Coach do, in the owner's words: the line the apps show when the owner gives it. */
   line: string;
+  /** Told which chat each call comes from (SESSION_ARG): a drive's tools. */
+  session?: boolean;
 }
 
 const TAF = { type: "string", description: "The taf's id, from tafs_state, or its name." };
@@ -132,7 +141,7 @@ export const TOOLS: ToolDef[] = [
   },
   // Coach drives the app (kiff/tafs#544, docs/drive.md): only while the person's drive is on.
   {
-    name: "app_look", line: "See the app on your phone while it drives", read: true,
+    name: "app_look", line: "See the app on your phone while it drives", read: true, session: true,
     properties: {
       tree: { type: "boolean", description: "Also the view tree: each element's id, words, role and bounds. Cheaper to read than the image for text." },
       diagnostics: { type: "boolean", description: "Also the app's recent errors and failed requests (route and status), version, platform, layout and display settings." },
@@ -144,7 +153,7 @@ export const TOOLS: ToolDef[] = [
       "Look before every step. Without a drive, it's refused: offer to show them with a drive card, and wait for their approval.",
   },
   {
-    name: "app_act", line: "Tap, type and scroll in the app on your phone while it drives",
+    name: "app_act", line: "Tap, type and scroll in the app on your phone while it drives", session: true,
     properties: {
       action: { type: "string", enum: ["tap", "long_press", "swipe", "scroll", "type", "back", "done"] },
       line: { type: "string", description: "The caption the person sees for this step, in their words, at most 60 characters: \"Tapping Run now\"." },
@@ -268,6 +277,11 @@ export interface CoachCall {
    * acts as itself, as before.
    */
   person?: { subject: string; permit: string };
+  /**
+   * The chat the call comes from, as kiff/agents set it (SESSION_ARG), on the tools that ask for it.
+   * Absent from a kiff/agents that doesn't set it yet, or a connection made before the tool asked.
+   */
+  session?: string;
 }
 
 /** Runs one tool; throws ToolRefusal for an answer Coach should read as a refusal. */
@@ -376,7 +390,10 @@ function listed(t: ToolDef) {
     description: t.description,
     inputSchema: {
       type: "object",
-      properties: { ...t.properties, [OP_ARG]: { type: "string", description: "Set by KIFF: the call's operation id." } },
+      properties: {
+        ...t.properties, [OP_ARG]: { type: "string", description: "Set by KIFF: the call's operation id." },
+        ...(t.session ? { [SESSION_ARG]: { type: "string", description: "Set by kiff/agents: the chat this call comes from." } } : {}),
+      },
       required: [...t.required, OP_ARG],
       additionalProperties: false,
     },
@@ -424,13 +441,15 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
   if (!(await cfg.store.once(`${opKey}#claim`, new Date(now.getTime() + OP_KEPT_MS)))) {
     return (await cfg.store.get(opKey)) ?? text("This call is already under way: ask again in a moment for its answer.", true);
   }
-  const { [OP_ARG]: _op, ...toolArgs } = a;
+  const { [OP_ARG]: _op, [SESSION_ARG]: sent, ...toolArgs } = a;
+  const session = tool.session && typeof sent === "string" && sent ? sent : undefined;
   let answer;
   let keep: unknown;
   try {
     const out = await cfg.run(tool.name, toolArgs, {
       tenant: p.tenant, coach, notify: () => ({ url: cfg.notifyURL, ref: newRef(p.tenant) }),
       ...(p.actor && token ? { person: { subject: p.actor, permit: token } } : {}),
+      ...(session ? { session } : {}),
     });
     if (out instanceof Rich) {
       answer = { content: out.content, isError: out.isError };
