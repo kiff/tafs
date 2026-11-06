@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -179,7 +181,7 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
             Text("Terms", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/terms#tafs") }.padding(vertical = 6.dp))
             Text("Privacy policy", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/privacy#tafs") }.padding(vertical = 6.dp))
           }
-          PrimaryButton(if (state.buying == id) "Buying…" else "Start Solo", { scope.launch { actions.buy(id) } }, enabled = state.buying == null)
+          PrimaryButton(if (state.buying == id) "Buying…" else "Start Solo", { scope.launch { actions.buy(id) } }, enabled = state.buying == null, modifier = Modifier.confirms())
           PurchaseNoteLine(state, id, actions)
         }
       }
@@ -196,7 +198,7 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
         Text(
           if (state.buying == id) "Buying…" else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-          modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+          modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
         )
       }
       PurchaseNoteLine(state, id, actions)
@@ -273,7 +275,7 @@ fun UsageRow(count: Int?, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UsageFrame(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,

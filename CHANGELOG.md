@@ -5,6 +5,28 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach drives the app, on the phone (kiff/tafs#544).**
+  - **Starting:** Coach's drive card asks to drive the app for one request. Approve signs its Start with the approval key, behind Face ID or the fingerprint; Not now declines.
+  - **While it drives:**
+    - the whole app's border glows;
+    - a caption above the tab bar says each step, with Stop;
+    - a dot marks each touch a moment before it;
+    - Coach's chat minimizes into the Coach button, which shows it's acting.
+  - **What Coach can do:** look at the app's own windows (the screenshot, and the view tree when it asks), tap, long-press, swipe, scroll, type, go back, and read the app's recent errors and failed requests. Requests are by route and status only.
+  - **What Coach can't do:**
+    - it never confirms: a touch on Approve, Disconnect, Remove, Halt, Resume, an answer to "Did this happen?", extra room or a purchase is refused before it reaches the control;
+    - while it drives, every approval asks for the fingerprint, since the approval window is suspended;
+    - secret fields and open approvals are blanked in its screenshots;
+    - the keyboard stays down.
+  - **The drive ends at once** when the person:
+    - touches the app (that touch isn't delivered);
+    - goes back;
+    - taps Stop or the Coach button;
+    - leaves the app;
+    - locks the phone;
+    - signs out.
+  - **At the end,** Coach's chat opens again with a "What I did" card.
+  - **Both apps** follow `docs/drive.md`, with contract tests for the coordinates, the signing vector, every window guarded, every field checked and every mark.
 - **A drive is its own chat's, exactly.** `app_look` and `app_act` now declare `agent_session`, which kiff/agents fills with the chat each call comes from, inside KIFF's permit; tafs cloud refuses a drive tool from any other chat. Before, it could only check that every Coach run of the person at work was in the drive's chat. A connection made before keeps that check. Needs kiff/agents' `agent_session` deployed first; the tools' schemas reach KIFF when each owner gives Coach its drive tools.
 - **Coach asks test or live before any rules name a mode.** In a Spanish setup in kiff/agents' Eval, Coach wrote into the rules that every refund was pinned to test mode "como elegiste", then admitted it had never asked. The core rule now says to pin a mode on the calls only once the owner chose it, asking first, and `name-the-tools@4` asks the mode before Coach proposes tools that move money and before any rules or draft name one; until the owner answers, nothing names a mode, and "as you chose" is only ever their answer. Accounts get it with the next Upgrade.
 - **Coach drives the app, tafs cloud's side (kiff/tafs#544).** Coach can operate the app on the owner's phone while they watch, one step at a time: it looks at a screenshot, then taps, types, swipes or scrolls inside the app, and never confirms anything. The person asks, or accepts Coach's suggestion, and approves that one request with the approval key (a drive card; `POST /v1/coach/drive`, refused for the device key or a window's tap). Coach's new tools, `app_look` and `app_act`, reach the phone through the drive stream (`GET /v1/coach/drive/{drive}/stream`) and come back with the screen as an image; KIFF decides each under two new Coach Cards. The drive ends, and never resumes, when the owner touches the app, leaves it, stops it, the phone locks, they sign out, the account is halted, Coach says it's done, or nothing happens for 15 minutes, and the person is told why in their own words ("You touched the app, so it's yours now"), the words the apps keep. Its starts, steps and end are in the account's events with tafs cloud's own words. Coach's new `drive-the-app` skill. The contract for the apps is `docs/drive.md`; the apps' side, the drive card in kiff/agents, and images in Coach's tool results follow. Existing accounts give Coach the two new tools and Cards once, as for any new Coach tool.

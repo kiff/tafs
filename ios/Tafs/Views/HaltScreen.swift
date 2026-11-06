@@ -44,6 +44,7 @@ struct HaltScreen: View {
                 case .running:
                     Button(busy ? "Halting…" : (tafID == nil ? "Halt all now" : "Halt now")) { halt() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                        .confirming()
                         .disabled(busy)
                 case .halting:
                     HStack(spacing: 8) {
@@ -53,6 +54,7 @@ struct HaltScreen: View {
                     // Halt again: a part that didn't take it the first time is asked again.
                     Button("Halt again") { halt() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                        .confirming()
                         .disabled(busy)
                 case .halted:
                     if !(h.account && tafID != nil) {
@@ -61,6 +63,7 @@ struct HaltScreen: View {
                             Task { await model.resumeHalt(tafID); busy = false }
                         }
                         .buttonStyle(OutlineButtonStyle())
+                        .confirming()
                         .disabled(busy)
                     }
                 }
@@ -149,7 +152,7 @@ struct HaltRow: View {
                 row
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .task(id: tafID) { await model.refreshHalt(tafID) }
     }
 

@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -97,7 +99,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
     follow()
   }
 
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -132,7 +134,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
           h.running -> OutlineButton(
             if (busy) underway!!.words else if (tafId == null) "Halt all now" else "Halt now",
             { scope.launch { underway = Underway.Halting; actions.halt(tafId); underway = null; follow() } },
-            Modifier.fillMaxWidth(), color = Theme.no, enabled = !busy,
+            Modifier.fillMaxWidth().confirms(), color = Theme.no, enabled = !busy,
           )
           h.halted -> if (!HaltWords.resumesWithAccount(h, tafId)) ApprovalGate {
             OutlineButton(
@@ -150,7 +152,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
             OutlineButton(
               "Halt again",
               { scope.launch { underway = Underway.Halting; actions.halt(tafId); underway = null; follow() } },
-              Modifier.fillMaxWidth(), color = Theme.no, enabled = !busy,
+              Modifier.fillMaxWidth().confirms(), color = Theme.no, enabled = !busy,
             )
           }
         }

@@ -210,6 +210,8 @@ struct SetupChatView: View {
                     if !away.isEmpty {
                         WhileYouWereAway(lines: away).id("while-away")
                     }
+                    // What Coach did while it drove the app (docs/drive.md), once the drive is over.
+                    DriveRecapView().id("drive-recap")
                     // How the tasks Coach handed tafs went, until Coach reads them (kiff/tafs#206).
                     ForEach(model.setupThread.coachLines.filter { $0.away != true }) { line in
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -529,7 +531,7 @@ struct SetupChatView: View {
                 .background(selected ? Theme.coach : Color.clear)
                 .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .disabled(model.setupSending)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
@@ -554,7 +556,7 @@ struct SetupChatView: View {
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .disabled(model.setupSending)
         .accessibilityHint("Puts its words in the message box")
     }
@@ -842,7 +844,7 @@ struct UnsentBubble: View {
                     Image(systemName: "hand.raised.fill").foregroundColor(Theme.no)
                     Text("\(taf.name) is halted").foregroundColor(Theme.no)
                     Text("·").foregroundColor(Theme.dim)
-                    NavigationLink { HaltScreen(tafID: taf.id) } label: { Text("Resume").foregroundColor(Theme.ink).semibold() }
+                    NavigationLink { HaltScreen(tafID: taf.id) } label: { Text("Resume").foregroundColor(Theme.ink).semibold() }.confirming()
                 }
                 .scaledFont(13, relativeTo: .footnote)
                 Text("Nothing reaches it until you resume it. Then send this again.")
@@ -931,6 +933,7 @@ struct NeedsYouBar: View {
         switch c.type {
         case .approval: return "Needs you · approve" + (vendor.map { " \($0)" } ?? "")
         case .signIn: return "Needs you · sign in" + (vendor.map { " at \($0)" } ?? "")
+        case .drive: return "Needs you · let Coach drive"
         default: return "Needs you · a question"
         }
     }
@@ -995,7 +998,7 @@ struct SetupPlan: View {
                 }
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.drivablePlain)
             .accessibilityHint(open ? "Folds the plan" : "Shows the whole plan")
             if open {
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
@@ -1059,6 +1062,7 @@ struct SetupComponentView: View {
         case .signIn: signIn(c)
         case .result: result(c)
         case .knob: KnobDraftCard(component: c)
+        case .drive: DriveCard(shown: shown)
         case .steps: EmptyView()
         }
     }
@@ -1282,14 +1286,14 @@ struct SetupApproval: View {
                 Button { withMotion(.easeOut(duration: 0.2)) { open = true } } label: {
                     OutcomeLine(text: replacedLine, tone: Theme.dim, mark: "arrow.down.circle.fill", more: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .accessibilityHint("Shows the earlier request")
             } else if (state == .done || state == .declined) && !open {
                 Button { withMotion(.easeOut(duration: 0.2)) { open = true } } label: {
                     OutcomeLine(text: outcome(state, grant), tone: state == .done ? Theme.ok : Theme.dim,
                                 mark: state == .done ? "checkmark.circle.fill" : "minus.circle.fill", more: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .accessibilityHint("Shows the approval")
             } else {
                 card(state, grant)
@@ -1364,6 +1368,8 @@ struct SetupApproval: View {
                 } else {
                     // planque's text says when the sign-in is already held (kiff/planque#7).
                     Text(grant.text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                        // An open approval's terms are the person's to read: blanked for a drive (docs/drive.md).
+                        .driveTerms(grant.vendor)
                     // The exact terms, for the owner who wants them (kiff/tafs#138, item 52).
                     if let terms = grant.terms, !terms.isEmpty {
                         DisclosureGroup {
@@ -1372,6 +1378,7 @@ struct SetupApproval: View {
                             }
                             .scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .driveTerms(grant.vendor)
                             .padding(.top, 6)
                         } label: {
                             Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)

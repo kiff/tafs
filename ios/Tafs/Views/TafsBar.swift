@@ -6,6 +6,8 @@ import SwiftUI
 /// bottom.
 struct TafsBar: View {
     @EnvironmentObject private var model: AppModel
+    /// While Coach drives the app, its button says so; a tap on it stops the drive.
+    @ObservedObject private var drive = DriveSession.shared
     @Binding var tab: Tab
     let coachAvailable: Bool
     let rail: Bool
@@ -70,7 +72,8 @@ struct TafsBar: View {
             .frame(maxWidth: .infinity, minHeight: 48)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
+        .driveWords(item.title)
         .accessibilityLabel(label(item, count: count))
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier("bar." + item.title)
@@ -91,20 +94,22 @@ struct TafsBar: View {
             Group {
                 if rail {
                     VStack(spacing: 3) {
-                        Image(systemName: "sparkle").scaledFont(18, weight: .semibold)
-                        Text("Coach").scaledFont(12, weight: .semibold)
+                        Image(systemName: drive.isOn ? "sparkles" : "sparkle").scaledFont(18, weight: .semibold)
+                        Text(drive.isOn ? "Driving" : "Coach").scaledFont(12, weight: .semibold)
                     }
                     .frame(maxWidth: .infinity, minHeight: 56)
                 } else {
-                    Label("Coach", systemImage: "sparkle").scaledFont(15, weight: .semibold)
+                    Label(drive.isOn ? "Driving" : "Coach", systemImage: drive.isOn ? "sparkles" : "sparkle").scaledFont(15, weight: .semibold)
                         .padding(.horizontal, 14).frame(minHeight: 44)
                 }
             }
             .foregroundColor(Theme.onFill)
-            .background(Theme.ink)
+            .background(drive.isOn ? Theme.amber : Theme.ink)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
+        // In the drive's registry with no action: Coach can't use it, and the person's tap on it stops the drive.
+        .drivable("Coach", id: DriveSession.coachButtonID)
         .accessibilityLabel("Coach mode")
         .accessibilityIdentifier("bar.Coach")
     }

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveSheet
 import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -88,7 +89,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     }
   }
 
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,

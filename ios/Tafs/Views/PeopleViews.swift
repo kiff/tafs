@@ -167,7 +167,7 @@ struct GroupNameSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Support, Finance…", text: $name)
+                DriveField("Support, Finance…", text: $name)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.done)
                     .onSubmit { save() }

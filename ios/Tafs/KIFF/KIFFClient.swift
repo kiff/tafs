@@ -1329,6 +1329,8 @@ final class KIFFClient {
 
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        // A failed request, by its route and status only, for a drive's diagnostics (docs/drive.md).
+        if !(200..<300).contains(status) { DriveDiagnostics.shared.failed(method: method, path: path, status: status) }
         if status == 401 { throw KIFFError.unauthorized }
         guard (200..<300).contains(status) else {
             let body = try? JSONDecoder().decode([String: String].self, from: data)

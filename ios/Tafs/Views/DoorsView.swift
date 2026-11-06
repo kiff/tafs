@@ -239,6 +239,7 @@ struct DoorsView: View {
                             Spacer()
                             if !key.auto, manages {
                                 Button("Unpair") { Task { await doors.unpair(door, key) } }
+                                    .confirming()
                                     .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
                             }
                         }
@@ -246,7 +247,7 @@ struct DoorsView: View {
                     Text("\(door.how). A message counts as theirs only when that holds; anyone else knocks.")
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     if manages {
-                        Button("Pair someone") { pairing = door }.buttonStyle(OutlineButtonStyle())
+                        Button("Pair someone") { pairing = door }.buttonStyle(OutlineButtonStyle()).confirming()
                     }
                 } else {
                     Text("\(door.how), so no one here can give \(taf.name) work. Everything that comes through knocks.")
@@ -254,6 +255,7 @@ struct DoorsView: View {
                 }
                 if manages {
                     Button("Remove door", role: .destructive) { confirmRemove = door }
+                        .confirming()
                         .scaledFont(14, weight: .medium)
                 }
             }
@@ -311,7 +313,7 @@ struct DoorDial: View {
                     stop(i, radius: r)
                 }
                 Button(action: press) { TafAvatar(taf: taf, size: 56) }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                     .offset(y: -6)
                     .accessibilityHidden(true)
                 Text(centerLine).scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(centerColor)
@@ -539,7 +541,7 @@ struct AddDoorSheet: View {
                 Spacer()
                 Button("Done") { dismiss() }
             }
-            TextField("Search apps", text: $query)
+            DriveField("Search apps", text: $query)
                 .textFieldStyle(.roundedBorder)
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
@@ -592,7 +594,7 @@ struct AddDoorSheet: View {
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .disabled(doors.busy)
             }
         }
@@ -612,11 +614,11 @@ struct PairSheet: View {
             Text("Pair someone").scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("Their messages to this \(door.label.lowercased()) door give work, within the Card. Anyone else's only knock.")
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            TextField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code"
+            DriveField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code"
                       : door.kind == "slack" ? "Slack member ID, such as U012AB3CD" : "Who, as \(door.label) names them", text: $sender)
                 .textFieldStyle(.roundedBorder)
                 .disableAutocorrection(true)
-            TextField("Name (optional)", text: $name).textFieldStyle(.roundedBorder)
+            DriveField("Name (optional)", text: $name).textFieldStyle(.roundedBorder)
             Button("Pair") {
                 Task {
                     await doors.pair(door, sender: sender, name: name)
@@ -624,6 +626,7 @@ struct PairSheet: View {
                 }
             }
             .buttonStyle(PrimaryButtonStyle())
+            .confirming()
             .disabled(sender.trimmingCharacters(in: .whitespaces).isEmpty || doors.busy)
             Button("Cancel") { dismiss() }.frame(maxWidth: .infinity)
             Spacer()
@@ -668,19 +671,19 @@ struct KnockCard: View {
                 HStack(spacing: 8) {
                     if knock.proof != "fail" {
                         Button("Do it") { asking = true }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.drivablePlain)
                             .scaledFont(14, weight: .semibold).foregroundColor(.white)
                             .padding(.horizontal, 14).padding(.vertical, 8)
                             .background(Theme.amber).clipShape(Capsule())
                     }
                     if knock.proof == "pass", !knock.paired {
                         Button("Pair \(knock.name?.components(separatedBy: " ").first ?? "them")") { Task { await doors.answer(knock, "pair") } }
-                            .buttonStyle(.plain).scaledFont(14, weight: .medium).foregroundColor(Theme.ink)
+                            .buttonStyle(.drivablePlain).confirming().scaledFont(14, weight: .medium).foregroundColor(Theme.ink)
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .overlay(Capsule().stroke(Theme.ink.opacity(0.2)))
                     }
                     Button("Ignore") { Task { await doors.answer(knock, "ignore") } }
-                        .buttonStyle(.plain).scaledFont(14, weight: .medium).foregroundColor(Theme.soft)
+                        .buttonStyle(.drivablePlain).scaledFont(14, weight: .medium).foregroundColor(Theme.soft)
                         .padding(.horizontal, 12).padding(.vertical, 8)
                 }
                 .disabled(doors.busy)
@@ -718,7 +721,7 @@ struct DoItSheet: View {
             Text("Tell \(taf?.name ?? "your taf") what to do").scaledFont(22, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("\(knock.who)'s message goes with your words, as information. \(taf?.name ?? "It") acts on what you say, within its Card, and doesn't write back to them unless you ask.")
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            TextEditor(text: $say)
+            DriveField("What to do", text: $say, kind: .editor)
                 .scaledFont(15)
                 .frame(minHeight: 110)
                 .padding(6)

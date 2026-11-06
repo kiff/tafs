@@ -1,5 +1,10 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.secret
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -118,7 +123,7 @@ fun ConnectAppsSheet(
     if (query.isNotEmpty()) delay(300)
     load(query.ifBlank { null })
   }
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -126,7 +131,7 @@ fun ConnectAppsSheet(
     // A sign-in that just came back: said at once, over the list, with the next step.
     state.connectedNow?.let { grant ->
       val taf = state.tafs.firstOrNull { it.id == grant.request.agent }?.name
-      androidx.compose.material3.AlertDialog(
+      DriveAlert(
         onDismissRequest = dismissConnectedNow,
         containerColor = Theme.background,
         text = {
@@ -151,7 +156,7 @@ fun ConnectAppsSheet(
     }
     managing?.let { app ->
       val connections = connectionsOf(state, app)
-      androidx.compose.material3.AlertDialog(
+      DriveAlert(
         onDismissRequest = { managing = null },
         containerColor = Theme.background,
         title = { Text(ConnectAppsWords.yourConnections(app.title), style = scaled(20, FontWeight.Bold, Theme.ink)) },
@@ -168,7 +173,7 @@ fun ConnectAppsSheet(
                 if (onDisconnect != null) Text(
                   ConnectAppsWords.DISCONNECT,
                   style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).clickable { confirmingDisconnect = g }.padding(top = 10.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
             }
@@ -183,20 +188,20 @@ fun ConnectAppsSheet(
     // Disconnect asks first, naming the one taf it ends; only then the fingerprint, in the same words.
     confirmingDisconnect?.let { g ->
       val taf = ConnectAppsWords.tafOf(state, g)
-      androidx.compose.material3.AlertDialog(
+      DriveAlert(
         onDismissRequest = { confirmingDisconnect = null },
         containerColor = Theme.panel,
         title = { Text(bot.tafs.app.model.ConnectionWords.disconnectTitle(g, taf, ConnectAppsWords.alsoStops(state, g))) },
         text = { Text(bot.tafs.app.model.ConnectionWords.disconnectBody(g, taf, ConnectAppsWords.alsoStops(state, g))) },
         confirmButton = {
-          androidx.compose.material3.TextButton({ confirmingDisconnect = null; onDisconnect?.invoke(g.id) }) { Text(ConnectAppsWords.DISCONNECT, color = Theme.no) }
+          androidx.compose.material3.TextButton({ confirmingDisconnect = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(ConnectAppsWords.DISCONNECT, color = Theme.no) }
         },
         dismissButton = { androidx.compose.material3.TextButton({ confirmingDisconnect = null }) { Text("Cancel", color = Theme.soft) } },
       )
     }
     // Which taf: asked over the list, wherever Connect was tapped, before anything starts.
     picking?.let { app ->
-      androidx.compose.material3.AlertDialog(
+      DriveAlert(
         onDismissRequest = { picking = null },
         containerColor = Theme.background,
         title = { Text(bot.tafs.app.model.ConnectWords.WHICH_TAF, style = scaled(20, FontWeight.Bold, Theme.ink)) },
@@ -227,7 +232,7 @@ fun ConnectAppsSheet(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
+        OutlinedTextField(query, driveTyped({ query = it }), Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
         if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
@@ -317,7 +322,7 @@ fun ConnectApprovalSheet(
 ) {
   // Kept only while the sheet is open, never saved: it goes to planque once.
   var key by androidx.compose.runtime.remember(grant?.id) { mutableStateOf("") }
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -347,7 +352,7 @@ fun ConnectApprovalSheet(
           val busy = state.connecting == grant.id
           if (needsKey) {
             OutlinedTextField(
-              key, { key = it }, Modifier.fillMaxWidth(),
+              key, driveTyped({ key = it }), Modifier.fillMaxWidth().secret(),
               placeholder = { Text(bot.tafs.app.model.ConnectWords.KEY) },
               singleLine = true,
               enabled = !busy,

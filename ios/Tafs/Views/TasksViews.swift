@@ -39,6 +39,7 @@ private struct AddTasksContent: View {
                                 }
                                 .scaledFont(15, weight: .semibold)
                                 .foregroundColor(Theme.amberText)
+                                .confirming()
                                 .disabled(purchases.products[pack.appleProduct] == nil || purchases.buying != nil)
                             }
                         }
@@ -93,12 +94,12 @@ struct AskAdminView: View {
                                 }
                                 .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.drivablePlain)
                         }
                     }
                     Panel {
                         Eyebrow(text: "Why (optional)")
-                        TextField("What the tasks are for", text: $reason)
+                        DriveField("What the tasks are for", text: $reason)
                             .scaledFont(15)
                     }
                     if let message = model.tasksMessage {
@@ -142,7 +143,7 @@ struct DeclineRequestView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Panel {
                     Eyebrow(text: "Note (optional)")
-                    TextField("Why, for them", text: $note).scaledFont(15)
+                    DriveField("Why, for them", text: $note).scaledFont(15)
                 }
                 if let message = model.tasksMessage {
                     Text(message).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
@@ -199,6 +200,7 @@ private struct SoloContent: View {
                     }
                     Button(SoloView.action(product)) { Task { await model.subscribeSolo() } }
                         .buttonStyle(PrimaryButtonStyle())
+                        .confirming()
                         .disabled(purchases.buying != nil)
                     Text(SoloView.terms(product)).scaledFont(13).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)

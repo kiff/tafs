@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -103,9 +105,9 @@ fun SetupTab(
   if (signedIn) MemorySummaryPanel(taf, state, actions) else if (state.mode == Mode.sample) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
   // In the sample, Pause is its own; signed in, it's every start, in Starts when.
   if (state.mode == Mode.sample && taf.state != bot.tafs.app.model.TafState.revoked) {
-    OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) "Resume" else "Pause", { actions.togglePause(taf.id) }, Modifier.fillMaxWidth())
+    OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) "Resume" else "Pause", { actions.togglePause(taf.id) }, Modifier.fillMaxWidth().confirms())
   }
-  onRemove?.let { OutlineButton("Remove for good", it, Modifier.fillMaxWidth(), color = Theme.no) }
+  onRemove?.let { OutlineButton("Remove for good", it, Modifier.fillMaxWidth().confirms(), color = Theme.no) }
 
   if (startsOpen && knob != null) StartsWhenSheet(taf, knob, state, actions) { startsOpen = false }
   if (resultsOpen && knob != null) ResultsSheet(taf, knob, state, actions) { resultsOpen = false }
@@ -177,7 +179,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
     if (busy) return
     scope.launch { busy = true; try { block() } finally { busy = false } }
   }
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(
       Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding(),
       verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -221,7 +223,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
               Text(
                 SetupWords.APPROVE,
                 style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-                modifier = Modifier.heightIn(min = 44.dp).clickable { approving = e.id }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { approving = e.id }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
               )
             } else if (e.approval?.state == "approved" || e.on) {
               Text(SetupWords.LISTENING, style = scaled(13, FontWeight.SemiBold, Theme.ok))
@@ -260,7 +262,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
               Text(
                 SetupWords.REMOVE,
                 style = scaled(14, FontWeight.SemiBold, Theme.no),
-                modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { work { actions.doors.removeFollowUp(taf.id, fid) } }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = !busy) { work { actions.doors.removeFollowUp(taf.id, fid) } }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
               )
             }
           }
@@ -274,7 +276,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
         OutlineButton(
           if (taf.paused) SetupWords.RESUME_EVERY else SetupWords.PAUSE_EVERY,
           { work { actions.setPaused(taf.id, !taf.paused); actions.doors.loadKnob(taf.id) } },
-          Modifier.fillMaxWidth(),
+          Modifier.fillMaxWidth().confirms(),
           enabled = knob.canPause && !busy,
         )
       }
@@ -305,7 +307,7 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
   }
   LaunchedEffect(taf.id) { actions.loadWork(taf.id) }
   val on = knob.results.filter { it.on }
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(
       Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding(),
       verticalArrangement = Arrangement.spacedBy(10.dp),

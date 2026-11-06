@@ -60,7 +60,7 @@ data class SetupTaf(
  */
 @Serializable
 data class SetupComponent(
-  /** steps, notice, confirm, questions, approval, sign_in or result. */
+  /** steps, notice, confirm, questions, approval, sign_in, result, knob or drive (Coach asks to drive the app: docs/drive.md). */
   val type: String,
   val id: String,
   val title: String? = null,
@@ -100,7 +100,7 @@ data class SetupComponent(
   val destination: String get() = service ?: "the vendor's page"
 
   companion object {
-    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob")
+    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob", "drive")
   }
 }
 

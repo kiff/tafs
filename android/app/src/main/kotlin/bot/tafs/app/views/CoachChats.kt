@@ -1,5 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveMenu
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -68,7 +72,7 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
   // The conversation waiting for the owner's yes: archiving takes it off every device's list.
   var archiving by remember { mutableStateOf<TafsCloud.Chat?>(null) }
   LaunchedEffect(archived) { if (archived) actions.loadArchived() else actions.load() }
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (archived) {
@@ -100,7 +104,7 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
     }
   }
   archiving?.let { chat ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { archiving = null },
       title = { Text("Archive this conversation?") },
       text = { Text("It leaves this list on all your devices. You'll find it under Archived, where you can open it or put it back.") },
@@ -129,7 +133,7 @@ private fun ChatRow(chat: TafsCloud.Chat, action: String, onOpen: () -> Unit, on
       Text(chat.title.ifBlank { "Conversation" }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 2)
       Text(endsWords(chat.updated), style = scaled(12, color = Theme.dim))
     }
-    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+    DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
       DropdownMenuItem(text = { Text(action) }, onClick = { menu = false; onAction() })
     }
   }
@@ -252,7 +256,7 @@ fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
               giving = false
             }
           },
-          enabled = !giving,
+          enabled = !giving, modifier = Modifier.confirms()
         )
       }
     }

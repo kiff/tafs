@@ -168,6 +168,7 @@ struct TrialScreen: View {
             HStack(spacing: 8) {
                 Button("Go back") { confirmBack = true }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                    .confirming()
                     .disabled(busy)
                     .confirmationDialog("Go back to the live version?", isPresented: $confirmBack, titleVisibility: .visible) {
                         Button("Go back", role: .destructive) { Task { if await model.goBackFromTrial(tafID) { ended() } } }
@@ -176,6 +177,7 @@ struct TrialScreen: View {
                     }
                 Button(busy ? "Working…" : "Install") { confirmInstall = true }
                     .buttonStyle(OutlineButtonStyle())
+                    .confirming()
                     .disabled(busy || model.approvalBlocked)
                     .confirmationDialog("Install version \(trial.n)?", isPresented: $confirmInstall, titleVisibility: .visible) {
                         Button("Install with \(Biometry.name)") { Task { if await model.installTrial(tafID) { ended() } } }

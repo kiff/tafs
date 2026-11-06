@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -76,7 +77,7 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
     actions.shares(agent)?.let { now -> had = now.toSet(); chosen = had }
     loaded = true
   }
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(

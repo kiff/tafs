@@ -68,7 +68,15 @@ struct Eyebrow: View {
     }
 }
 
-struct PrimaryButtonStyle: ButtonStyle {
+/// The app's main button. Drivable: a drive reaches it by its own action (docs/drive.md).
+struct PrimaryButtonStyle: PrimitiveButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        DriveButton(inner: PrimaryLook()).makeBody(configuration: configuration)
+    }
+}
+
+/// How the main button looks.
+struct PrimaryLook: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         StyledLabel(configuration: configuration)
     }
@@ -103,7 +111,17 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
-struct OutlineButtonStyle: ButtonStyle {
+/// The app's outlined button. Drivable, as `PrimaryButtonStyle`.
+struct OutlineButtonStyle: PrimitiveButtonStyle {
+    var color: Color = Theme.ink
+
+    func makeBody(configuration: Configuration) -> some View {
+        DriveButton(inner: OutlineLook(color: color)).makeBody(configuration: configuration)
+    }
+}
+
+/// How the outlined button looks.
+struct OutlineLook: ButtonStyle {
     var color: Color = Theme.ink
 
     func makeBody(configuration: Configuration) -> some View {
@@ -161,7 +179,7 @@ struct PanelLink<Destination: View, Label: View>: View {
             }
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
     }
 }
 
@@ -325,7 +343,7 @@ struct PlanLine: View {
                     Text(UsageView.title).scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.drivablePlain)
             .accessibilityElement(children: .combine)
             .accessibilityHint("Opens \(UsageView.title).")
             .accessibilityIdentifier("plan-line")
@@ -370,13 +388,14 @@ struct ApprovalKeyLostLine: View {
                     Label("Approve again in your browser", systemImage: Biometry.symbol)
                 }
                 .buttonStyle(PrimaryButtonStyle())
+                .confirming()
                 .disabled(starting)
                 Button {
                     confirming = .signInAgain
                 } label: {
                     Text("Sign in again instead").scaledFont(13)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .foregroundColor(Theme.soft)
                 .disabled(signingOut || starting)
                 if let why = model.signOutError {

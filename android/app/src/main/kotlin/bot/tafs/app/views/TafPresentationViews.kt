@@ -1,5 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -105,7 +108,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
   }
   source?.connections?.firstOrNull { it.id == chosen }?.let { app ->
     // Full height, as every sheet here: the back key closes it, rather than lowering it to half.
-    ModalBottomSheet(onDismissRequest = { chosen = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+    DriveSheet(onDismissRequest = { chosen = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
       Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(app.name, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
         Text(app.statusWords, style = scaled(14, color = if (app.reconnect) Theme.amberText else Theme.soft))
@@ -138,16 +141,16 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
           improve?.let { TextButton({ chosen = null; it(taf.id) }) { Text("Add actions with Coach", color = Theme.amberText) } }
           var confirming by remember { mutableStateOf(false) }
           TextButton({ confirming = true }) { Text("Disconnect", color = Theme.no) }
-          if (confirming) AlertDialog(onDismissRequest = { confirming = false }, title = { Text("Disconnect ${app.name}?") },
+          if (confirming) DriveAlert(onDismissRequest = { confirming = false }, title = { Text("Disconnect ${app.name}?") },
             text = { Text("Its actions stop working for this taf.") }, containerColor = Theme.panel,
-            confirmButton = { TextButton({ confirming = false; scope.launch { if (actions.connections.disconnect(app.id)) { chosen = null; actions.loadSetup(taf.id) } } }) { Text("Disconnect", color = Theme.no) } },
+            confirmButton = { TextButton({ confirming = false; scope.launch { if (actions.connections.disconnect(app.id)) { chosen = null; actions.loadSetup(taf.id) } } }, modifier = Modifier.confirms()) { Text("Disconnect", color = Theme.no) } },
             dismissButton = { TextButton({ confirming = false }) { Text("Cancel", color = Theme.soft) } })
         }
         Spacer(Modifier.height(20.dp))
       }
     }
   }
-  if (showJob) AlertDialog(onDismissRequest = { showJob = false }, title = { Text(taf.name) }, text = { Text(taf.job) },
+  if (showJob) DriveAlert(onDismissRequest = { showJob = false }, title = { Text(taf.name) }, text = { Text(taf.job) },
     confirmButton = { TextButton({ showJob = false }) { Text("Done", color = Theme.amberText) } }, containerColor = Theme.panel)
 }
 
@@ -225,7 +228,7 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
     source?.error?.let { Text(it, color = Theme.no) }
     TextButton({ all = true }) { Text(source?.pages?.firstOrNull()?.moreTitle ?: "Show all runs", color = Theme.amberText) }
   }
-  if (all) ModalBottomSheet(onDismissRequest = { all = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  if (all) DriveSheet(onDismissRequest = { all = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     val cache = state.runPages["${taf.id}:true"]; val list = rememberLazyListState()
     LaunchedEffect(taf.id) { actions.loadRuns(taf.id, false, true) }
     val next = cache?.pages?.lastOrNull()?.nextCursor
@@ -253,7 +256,7 @@ internal fun MemorySummaryPanel(taf: Taf, state: AppState, actions: TafActions) 
     summary?.let { Text(it.title, style = scaled(15, FontWeight.SemiBold, Theme.ink)); it.latest?.let { note -> Text(note, style = scaled(14, color = Theme.soft), maxLines = 2, overflow = TextOverflow.Ellipsis) } }
     TextButton({ all = true }) { Text("See all", color = Theme.amberText) }
   }
-  if (all) ModalBottomSheet(
+  if (all) DriveSheet(
     onDismissRequest = { all = false; scope.launch { actions.loadSetup(taf.id) } },
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background,
   ) {

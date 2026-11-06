@@ -146,7 +146,7 @@ struct HomeSplitView: View {
                     // Every taf at once, from its own screen, as on the phone's home.
                     // The owner looked for it here (kiff/tafs#138).
                     if !model.cloudTafs.isEmpty, model.canManageCards {
-                        NavigationLink(value: HomeSelection.haltAll) { haltAllRow }
+                        NavigationLink(value: HomeSelection.haltAll) { haltAllRow.modifier(drives("Halt all", .haltAll)) }
                     }
                 }
             }
@@ -154,7 +154,7 @@ struct HomeSplitView: View {
                 Section {
                     ForEach(model.held) { call in
                         if let taf = model.taf(call.tafID) {
-                            NavigationLink(value: HomeSelection.held(call.id, taf: taf.id)) { heldRow(call, taf) }
+                            NavigationLink(value: HomeSelection.held(call.id, taf: taf.id)) { heldRow(call, taf).modifier(drives(taf.name, .held(call.id, taf: taf.id))) }
                         }
                     }
                 } header: { Eyebrow(text: "Needs you", color: Theme.amber) }
@@ -204,10 +204,16 @@ struct HomeSplitView: View {
     @ViewBuilder private func tafLinks(_ taf: Taf) -> some View {
         // No tap gesture of its own: one on the row took the list's taps over its icon and
         // name, so only the row's empty end selected it (the 901 test).
-        NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+        NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf).modifier(drives(taf.name, .taf(taf.id))) }
         if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
-            NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying) }
+            NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying).modifier(drives(trying.name, .taf(chat))) }
         }
+    }
+
+    /// A sidebar row for a drive (docs/drive.md): choosing it is the person's tap on it.
+    private func drives(_ words: String, _ choice: HomeSelection) -> Drivable {
+        Drivable(words: words, role: .button, id: nil, confirm: false, secret: false, terms: false,
+                 actions: [.activate: { chosen = true; selection = choice }])
     }
 
     private func tafRow(_ taf: Taf) -> some View {

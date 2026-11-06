@@ -148,7 +148,8 @@ a drive with `ended` is over.
 - Before any touch, show the dot at the target for a moment.
 - **Hit-test every touch before dispatching it.** One that lands on a control with the
   confirm mark is refused, and nothing is dispatched: `outcome: refused`, `line: "That's
-  yours to confirm"`.
+  yours to confirm"`. A `type` into a secret field is refused the same way: `"That's
+  yours to fill"`.
 
 ## Results
 
@@ -195,14 +196,25 @@ Enforced in the app, with no prompt:
    - Halt and resume;
    - the answers to "Did this happen?";
    - extra room;
-   - buying a pack;
-   - dismissing a card that signs.
+   - buying a pack or a plan;
+   - dismissing a card that signs;
+   - deleting the account, a group or a door, and unpairing someone from a door;
+   - signing out another device, and removing someone from a group;
+   - revoking a Card, forgetting a memory note, installing a version or going back to one;
+   - anything else whose words take something away or grant it: on Android a contract
+     test reads every control's words (Delete, Remove, Disconnect, Halt, Revoke, Sign
+     out, Buy, Resume, Approve, Install, Refuse, Pair, Unpair, Forget, Go back) and fails
+     on one without the mark.
 2. **The signer's drive rule.** While a drive is on, every confirming signature needs the
    biometric prompt. The approval window is suspended, and the device key's approval and
    answer paths refuse a signature without the prompt.
 3. **The keys need the person.** The approval key requires the fingerprint or Face ID on
    each use, and that prompt is the system's window, which no screenshot or driven touch
    reaches.
+4. **A secret field is the person's to fill.** `type` into a focused field with the
+   secret mark (a vendor's key, a password) is refused, and nothing is typed:
+   `outcome: refused`, `line: "That's yours to fill"`. An instruction slipped into what
+   Coach reads can't put its own words into a key field.
 
 KIFF still decides every call Coach's tools make, under Coach's Cards: `coach-app-look`
 allows 2,000 a day and `coach-app-act` allows 1,000 a day, refused past that.
@@ -214,7 +226,8 @@ other apps or the system's prompts. "The app's own windows" means all of them, c
 in their order. A dialog, a sheet or a popup is a window of its own:
 
 - **Android:** `WindowInspector.getGlobalWindowViews()` lists them, and `PixelCopy`
-  copies each that has a `Window`.
+  copies each that has a `Window`. A menu's popup, which has none, is drawn in software. A
+  dialog's dim is drawn under it, as the person sees it.
 - **iOS:** each of the scene's windows, drawn with `drawHierarchy`.
 
 These are blanked in it:
@@ -272,17 +285,108 @@ the same either way. Coach, and the account's events, have their own words for i
 
 ### How each platform tells the person's input from Coach's
 
-- **Android:** catch every event on **every** window of the app, not only the
-  activity's. A dialog, a sheet and a popup have their own `Window.Callback`; wrap each,
-  from `WindowInspector.getGlobalWindowViews()`. An event is Coach's only when the app is
-  dispatching it right then, matched by the `downTime` and `eventTime` it created.
-  Anything else is the person's, and isn't delivered. End the drive in `ON_PAUSE`: a
-  Custom Tab, a system dialog, the share sheet, Recents and Home all pause the activity,
-  and a translucent one (a permission dialog, the share sheet) never stops it. The
-  app's own dialogs and sheets don't pause it.
-- **iOS:** Coach's steps never come through the touch stream (accessibility activation,
-  `insertText`), so any `UITouch`, key press or gesture is the person's. End the drive on
-  `sceneDidEnterBackground` or `willResignActive`.
+- **Android:**
+  - **Every window of the app is guarded,** not only the activity's. The activity's `Window.Callback` is wrapped. So is each dialog's and sheet's, since every sheet, dialog, date picker and menu opens through one wrapper (`DriveSheet`, `DriveAlert`, `DriveDialog`, `DriveDatePicker`, `DriveMenu`). A test fails the build on a raw one.
+  - **An event is Coach's only when the app is dispatching it right then,** matched by the `downTime` it created. Anything else is the person's: it isn't delivered, and it ends the drive. That includes a touch on a sheet's scrim, which the window's callback has before any view. A menu's popup has no `Window`, so a guard on its content catches touches inside it. A touch outside it reaches only the menu's dismissal, which runs inside that touch's dispatch: one that isn't Coach's ends the drive, even while one of Coach's steps is under way.
+  - **The person's back** (a key, or the back gesture, through an `OnBackInvokedCallback` at overlay priority from Android 13) ends it as `stopped`. So does their touch on the Coach button or on the caption's Stop. A dismissal Coach didn't make, if one gets past the guard, still ends it.
+  - **Coach's own `back`** is the topmost window's own dispatcher: a sheet or a dialog closes, a menu folds, a screen goes back. On the first screen it's refused ("Nothing to go back to"), since back there would leave the app.
+  - **The drive ends in `ON_PAUSE`:** a Custom Tab, a system dialog, the share sheet, Recents and Home all pause the activity, and a translucent one (a permission dialog, the share sheet) never stops it. The app's own dialogs and sheets don't pause it. The screen turning off ends it as `locked`.
+  - **Volume keys stay the person's** and don't end the drive.
+- **iOS:**
+  - Coach's steps never come through the touch stream: they're the app's registered actions and `insertText`. So any `UITouch`, key press or gesture is the person's.
+  - While a drive is on, a window of the app's own sits above its other windows, so it takes every touch, edge swipes included. Its Stop, and a back swipe from the edge, end the drive as `stopped`; any other touch ends it as `owner_took_over`.
+  - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
+
+### Typing
+
+- **The keyboard stays down while Coach drives.** Coach types through the focused field itself: on Android, its `InsertTextAtCursor` or `SetText` semantics; on iOS, `insertText`. An open keyboard could commit text after a step ended, such as an autocorrection or a finished composition, which would read as the person's.
+- **A field's change while none of Coach's steps is under way is the person's:** it isn't taken, and it ends the drive. Every text field's changes go through one check (`driveTyped` on Android). A test fails the build on a field without it. A value the app sets itself, such as a restored draft, isn't a change.
+
+## What each app sends
+
+### The tree
+
+A flat JSON array, the lowest window first, so the topmost window's nodes come last. A node is left out when it has neither words nor actions.
+
+```json
+{"id": "0.12", "words": "Run now", "role": "button", "bounds": {"x": 40, "y": 610, "w": 180, "h": 44}, "actions": ["tap"], "confirm": true}
+```
+
+| Field | What |
+|---|---|
+| `id` | Unique in the tree. `element` names it in the next `app_act`. |
+| `words` | The words on screen. A secret field is "Secret field", with no value. An open approval is a single node, "An approval is open: <title>", and none of its insides. |
+| `role` | `button`, `tab`, `text_field`, `toggle`, `checkbox`, `radio`, `image`, `text`, `scroll` or `menu`. |
+| `bounds` | In the screenshot's pixels, from the top left. |
+| `actions` | Some of `tap`, `long_press`, `swipe`, `scroll`, `type`. |
+| `confirm` | Only on a confirming control, or one inside a container that confirms. |
+
+### Diagnostics
+
+```json
+{"app": {"version": "25", "build": "250", "platform": "android 16", "orientation": "portrait", "size_class": "compact", "dark": false, "font_scale": 1.0},
+ "errors": [{"at": "2026-11-06T01:20:00Z", "words": "Coach can't drive: ..."}],
+ "requests": [{"at": "2026-11-06T01:20:00Z", "route": "GET /v1/tafs/{id}/work", "status": 500}]}
+```
+
+- The newest 30 of each, in memory only.
+- A route keeps only its own words, with every other part as `{id}`, and never a query.
+
+### The app's lines
+
+The same words on both apps.
+
+| When | `line` |
+|---|---|
+| A look | "Looked"; "Looked once screen_shown came"; "Looked: sheet_closed didn't come in time" |
+| A tap, a long press | "Tapped Run now", "Long-pressed Refunds" (the words of the control under the point) |
+| A swipe, a scroll | "Swiped", "Scrolled down" |
+| Typing | "Typed into Message" (the field's own words) |
+| Back, done | "Went back", "Done" |
+| Refused | "That's yours to confirm"; "That's yours to fill"; "Too late"; "Nothing Coach can use there"; "That isn't on screen now"; "No field is focused"; "Nothing to go back to"; "Can't scroll down there"; "This app can't do that step" |
+
+A scroll's `direction` is where the content comes from: `down` shows what's below.
+
+### The caption
+
+- **While Coach acts:** Coach's `line`.
+- **Before its first step:** "Coach is driving: <task>".
+- **Once it's over:** `words`, for 3 seconds. When tafs cloud's words didn't come, the app's own words for the same end: "You touched the app, so it's yours now", "The app left the screen, so Coach stopped", "You stopped Coach", "The phone locked, so Coach stopped", "You signed out, so Coach stopped", "The account is halted, so Coach stopped", "Coach is done", "Nothing was done for 15 minutes, so Coach stopped", "Another drive started".
+
+### How each app sees and acts
+
+- **Android:**
+  - **The tree** is Compose's semantics per window (`RootForTest.semanticsOwner`), the tree TalkBack and the UI tests read.
+  - **The marks** are semantics properties: `Modifier.confirms()`, `Modifier.secret()` (a `password()` field counts too) and `Modifier.approvalTerms(title)`. Everything behind `ApprovalGate`, which holds what the approval key signs, carries the confirm mark.
+  - **A touch** is `MotionEvent`s dispatched to the topmost window under the point, after the hit-test.
+  - **Scrolling** is `ScrollBy`.
+  - **The border, the caption and the dot** are application windows of their own: the glow and the dot take no touch, and the caption takes only its own. The capture and Coach's touches leave them out.
+- **iOS:** with VoiceOver off, the platform builds no accessibility tree. So the app keeps a registry of what Coach can use: each control registers its id, words, role, frame, actions and marks (`.drivable`; the app's button styles register every button). That registry is the tree.
+  - A gesture runs the registered action of the element under the point:
+    - tap: activate;
+    - long press: its menu;
+    - swipe: a row's action, or a scroll;
+    - back: the top sheet's dismiss, or the navigation's pop.
+  - A point with no registered action is refused ("Nothing Coach can use there").
+  - **What isn't in the registry, Coach can't touch.** Alerts, confirmation dialogs, menus, context menus and a row's swipe actions are never registered, so whatever confirms inside them is out of Coach's reach. While one is open, Coach's back is its Cancel. Some settings rows, toggles, pickers and toolbar buttons aren't registered yet, and are refused the same way.
+  - **Text fields** are found on screen by their text views, named by their placeholder. A secure field is secret.
+  - **Words:** a control that registered none is read from the screenshot.
+  - **A test fails the build** on a listed confirming control without its mark, and on any control whose words confirm without it, string constants included.
+  - The overlay window draws the border, the caption and the dot, and the capture leaves it out.
+  - **Locking:** iOS doesn't say a lock apart from leaving the app. When the app resigns active, it reports `locked` if protected data is unavailable within 0.6 s, and `left_app` otherwise. A real lock may read as `left_app`; either way the drive ends.
+  - **iOS has no approval window,** so the signer's drive rule there is Face ID or Touch ID on every approval, with no reuse of a recent unlock.
+
+### What the app reports, and when it starts
+
+- **The events a look can wait on:**
+  - `screen_shown`: another screen, tab, sheet or Coach's chat;
+  - `sheet_opened` / `sheet_closed`: any sheet, dialog or menu;
+  - `refreshed`: a refresh ended;
+  - `prompt_shown` / `prompt_done`: the system's fingerprint or Face ID prompt;
+  - `notification_shown`.
+- **One request at a time,** in the order they came. Each is checked against `start_within_ms` when it starts.
+- **After the app restarts,** a drive still on at tafs cloud ended with the app, so the app posts its stop as `left_app`.
+- **While Coach drives,** its chat minimizes into the Coach button, which shows it's acting. At the end the chat opens again with the "What I did" card: the task, why it ended, and each step from `GET /v1/coach/drive`.
 
 ## What tafs cloud records
 

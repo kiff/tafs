@@ -210,7 +210,7 @@ struct CalendarView: View {
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(day == today ? Theme.amber : Color.clear, lineWidth: 1.5))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityLabel("\(CalendarMath.dayHeading(day))\(count > 0 ? ", \(count) scheduled" : "")")
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
@@ -255,7 +255,7 @@ struct CalendarView: View {
             .background(RoundedRectangle(cornerRadius: 12).fill(selected ? Theme.amber : Theme.panel))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(day == today && !selected ? Theme.amber : Color.clear, lineWidth: 1.5))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityLabel(CalendarMath.dayHeading(day))
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
@@ -278,7 +278,7 @@ struct CalendarView: View {
                             }
                             .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.drivablePlain)
                         .accessibilityLabel(CalendarMath.dayHeading(day))
                     }
                 }
@@ -383,9 +383,9 @@ struct CalendarView: View {
     @ViewBuilder private func opening<Content: View>(_ cloudTaf: String, @ViewBuilder label: () -> Content) -> some View {
         if let id = model.tafID(forCloud: cloudTaf) {
             if let open {
-                Button { open(id) } label: { label() }.buttonStyle(.plain)
+                Button { open(id) } label: { label() }.buttonStyle(.drivablePlain)
             } else {
-                NavigationLink(value: id) { label() }.buttonStyle(.plain)
+                NavigationLink(value: id) { label() }.buttonStyle(.drivablePlain)
             }
         } else {
             label()

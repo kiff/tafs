@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -68,7 +69,7 @@ fun RequestSheet(
   onAskCoach: (() -> Unit)?,
   onClose: () -> Unit,
 ) {
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,

@@ -1,5 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -177,9 +180,9 @@ private fun VersionRow(
     v.trials.orEmpty().forEach { Text(VersionWords.tried(it), style = scaled(12, color = Theme.soft)) }
     if (!v.live) {
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (trying) OutlineButton("Resume the trial", onResume, Modifier.weight(1f))
+        if (trying) OutlineButton("Resume the trial", onResume, Modifier.weight(1f).confirms())
         else OutlineButton("Try it", onTry, Modifier.weight(1f), enabled = canTry)
-        OutlineButton(if (installing) "Installing…" else "Install this version", onInstall, Modifier.weight(1f), enabled = canInstall)
+        OutlineButton(if (installing) "Installing…" else "Install this version", onInstall, Modifier.weight(1f).confirms(), enabled = canInstall)
       }
     }
   }
@@ -266,8 +269,8 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
           Chip("not live", Theme.amber)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          OutlineButton("Go back", { confirmBack = true }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
-          OutlineButton(if (busy) "Working…" else "Install", { confirmInstall = true }, Modifier.weight(1f), enabled = !busy)
+          OutlineButton("Go back", { confirmBack = true }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !busy)
+          OutlineButton(if (busy) "Working…" else "Install", { confirmInstall = true }, Modifier.weight(1f).confirms(), enabled = !busy)
         }
         state.trialErrors[tafId]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       }
@@ -285,11 +288,11 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
   }
 
   if (confirmBack && trial != null && taf != null) {
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { confirmBack = false },
       title = { Text("Go back to the live version?") },
       text = { Text("Version ${trial.n}'s trial Card stops at once, and this chat is deleted. ${taf.name.substringBefore(" · v")} keeps working as it is.") },
-      confirmButton = { TextButton({ confirmBack = false; scope.launch { actions.goBack(tafId) } }) { Text("Go back", color = Theme.no) } },
+      confirmButton = { TextButton({ confirmBack = false; scope.launch { actions.goBack(tafId) } }, modifier = Modifier.confirms()) { Text("Go back", color = Theme.no) } },
       dismissButton = { TextButton({ confirmBack = false }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )
@@ -299,7 +302,7 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
     // Installing is an approval: while this phone can't approve, the dialog says why in the button's place.
     val readiness = LocalApprovalReadiness.current
     val ready = readiness == bot.tafs.app.model.ApprovalReadiness.Ready
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { confirmInstall = false },
       title = { Text("Install version ${trial.n}?") },
       text = {
@@ -308,7 +311,7 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
           if (!ready) ApprovalsUnavailable(readiness)
         }
       },
-      confirmButton = { if (ready) TextButton({ confirmInstall = false; scope.launch { actions.installTrial(tafId) } }) { Text("Install with $biometry", color = Theme.amber) } },
+      confirmButton = { if (ready) TextButton({ confirmInstall = false; scope.launch { actions.installTrial(tafId) } }, modifier = Modifier.confirms()) { Text("Install with $biometry", color = Theme.amber) } },
       dismissButton = { TextButton({ confirmInstall = false }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )
@@ -364,7 +367,7 @@ fun VersionCardSheet(
 
   // It opens, and only Cancel, Install or back close it: a sheet state that refused every change refused opening too, and lay
   // invisible over Versions, taking every tap. Back is Cancel, so the switch is never left with nothing on screen to end it.
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onCancel,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { it != SheetValue.Hidden }),
     containerColor = Theme.background,
@@ -442,7 +445,7 @@ private fun CardView(card: DraftCard, lines: List<String>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,

@@ -1,5 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveMenu
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -85,7 +89,7 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
       delay(PEOPLE_REFRESH_MS)
     }
   }
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -130,11 +134,11 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
   }
   adding?.let { group -> AddToGroupSheet(group, state, actions, onClose = { adding = null }) }
   deleting?.let { group ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { deleting = null },
       title = { Text("Delete ${group.name}?") },
       text = { Text("Its people lose the tafs they used through it, unless another group or a share of their own gives them those tafs. Their chats stay theirs.") },
-      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }) { Text("Delete ${group.name}", color = Theme.no) } },
+      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }, Modifier.confirms()) { Text("Delete ${group.name}", color = Theme.no) } },
       dismissButton = { TextButton({ deleting = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )
@@ -162,9 +166,9 @@ private fun GroupPanel(
       if (state.canManagePeople && group.everyone != true) {
         Box {
           Text("•••", style = scaled(16, FontWeight.SemiBold, Theme.soft), modifier = Modifier.heightIn(min = 44.dp).clickable { menu = true }.padding(horizontal = 6.dp, vertical = 8.dp))
-          DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+          DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
             DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; onRename() })
-            DropdownMenuItem(text = { Text("Delete", color = Theme.no) }, onClick = { menu = false; onDelete() })
+            DropdownMenuItem(text = { Text("Delete", color = Theme.no) }, onClick = { menu = false; onDelete() }, modifier = Modifier.confirms())
           }
         }
       }
@@ -196,12 +200,12 @@ private fun MemberRow(member: GroupMember, group: Group, state: AppState, setMem
         Text(if (member.isManager) "Manager" else "Member", style = scaled(12, color = if (member.isManager) Theme.amber else Theme.dim))
       }
     }
-    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+    DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
       if (mayRole) {
         val role = if (member.isManager) "member" else "manager"
         DropdownMenuItem(text = { Text(if (member.isManager) "Make a member" else "Make the manager") }, onClick = { menu = false; setMember(member.subject, role) })
       }
-      if (mayRemove) DropdownMenuItem(text = { Text("Remove from ${group.name}", color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) })
+      if (mayRemove) DropdownMenuItem(text = { Text("Remove from ${group.name}", color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) }, modifier = Modifier.confirms())
     }
   }
 }
@@ -213,7 +217,7 @@ private fun GroupNameDialog(group: Group?, onClose: () -> Unit, onSave: suspend 
   var name by remember { mutableStateOf(group?.name ?: "") }
   var saving by remember { mutableStateOf(false) }
   val trimmed = name.trim()
-  AlertDialog(
+  DriveAlert(
     onDismissRequest = onClose,
     title = { Text(if (group == null) "New group" else "Rename ${group.name}") },
     text = {
@@ -243,7 +247,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
   var asManager by remember { mutableStateOf(false) }
   val inside = group.members.map { it.subject }.toSet()
   val outside = state.people.filter { it.subject !in inside }
-  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Add to ${group.name}", style = scaled(24, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))

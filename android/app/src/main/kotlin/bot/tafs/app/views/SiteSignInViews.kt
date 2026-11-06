@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveDialog
 import android.annotation.SuppressLint
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -63,7 +64,7 @@ fun SiteSignInScreen(view: SiteSignInView, onClose: () -> Unit) {
       android.webkit.CookieManager.getInstance().apply { removeAllCookies(null); flush() }
     }
   }
-  Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+  DriveDialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
     Column(Modifier.fillMaxSize().background(Theme.background).statusBarsPadding().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(view.words.orEmpty(), style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f))

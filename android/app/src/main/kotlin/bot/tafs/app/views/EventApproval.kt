@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.DriveSheet
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -78,7 +79,7 @@ object KnobColors {
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 internal fun EventApprovalSheet(event: bot.tafs.app.kiff.KnobWire.Item, busy: Boolean, error: String?, onApprove: () -> Unit, onClose: () -> Unit) {
-  androidx.compose.material3.ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,

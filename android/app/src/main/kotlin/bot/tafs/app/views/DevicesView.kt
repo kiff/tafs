@@ -1,5 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.DriveAlert
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +54,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
   val scope = rememberCoroutineScope()
   var removing by remember { mutableStateOf<Device?>(null) }
   LaunchedEffect(Unit) { refresh() }
-  ModalBottomSheet(
+  DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
@@ -76,7 +79,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
               if (device.thisDevice) {
                 Text("This device", style = scaled(13, color = Theme.dim))
               } else {
-                Text("Sign out", style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable { removing = device }.padding(top = 8.dp))
+                Text("Sign out", style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { removing = device }.padding(top = 8.dp))
               }
             }
           }
@@ -90,11 +93,11 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
     }
   }
   removing?.let { device ->
-    AlertDialog(
+    DriveAlert(
       onDismissRequest = { removing = null },
       title = { Text("Sign ${device.name ?: "this device"} out?") },
       confirmButton = {
-        TextButton(onClick = { removing = null; scope.launch { remove(device) } }) { Text("Sign out", color = Theme.no) }
+        TextButton(onClick = { removing = null; scope.launch { remove(device) } }, modifier = Modifier.confirms()) { Text("Sign out", color = Theme.no) }
       },
       dismissButton = { TextButton(onClick = { removing = null }) { Text("Cancel") } },
     )

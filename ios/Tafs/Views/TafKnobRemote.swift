@@ -51,7 +51,10 @@ struct TafKnobRemote: View {
                     .background(RoundedRectangle(cornerRadius: power ? 26 : 16).fill(power ? (paused ? Theme.dim : Theme.ink) : Theme.panel))
                     .overlay(RoundedRectangle(cornerRadius: power ? 26 : 16).stroke(Theme.line))
             }
-            .buttonStyle(.plain).disabled(!enabled)
+            .buttonStyle(.drivablePlain).disabled(!enabled)
+            .driveWords(title)
+            // Pause and resume: the power button confirms (docs/drive.md).
+            .environment(\.driveConfirm, power)
             .accessibilityLabel(title).accessibilityIdentifier("knob." + (power ? "power" : title.lowercased()))
             Text(title.uppercased()).scaledFont(9, weight: .semibold, design: .monospaced).foregroundColor(Theme.dim)
                 .lineLimit(1).minimumScaleFactor(0.7)
