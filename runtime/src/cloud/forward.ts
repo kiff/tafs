@@ -1,7 +1,8 @@
 /**
  * Hands KIFF's alert to kiff/agents' alerts function, as KIFF signed it.
  * Two of its answers ask for the alert again, and fail here so tafs cloud
- * answers 502 and KIFF delivers it again:
+ * answers 502 (409 for an early answer, NotPausedYet) and KIFF delivers it
+ * again:
  *
  * - 401: the alert didn't check against the secret kiff/agents has for the
  *   account, or it has none. tafs cloud checked the signature and wrote the
@@ -17,6 +18,14 @@
  */
 /** kiff/agents' answers that ask for the alert again. */
 const AGAIN = new Set([401, 404]);
+
+/**
+ * kiff/agents' 404 for a hold no run has paused on yet: expected, since the owner can answer before the
+ * run's pause is stored. tafs cloud asks KIFF to send it again with a 409 and a warning, never a 502 and an
+ * error: nothing failed, the answer is early.
+ */
+export class NotPausedYet extends Error {}
+const NOT_PAUSED = "no run has paused on this hold yet";
 
 /** The run an answer left waiting for nothing more, as kiff/agents names it (kiffalert.Ready). */
 export interface ReadyRun {
@@ -46,5 +55,6 @@ export async function forwardAlert(doFetch: typeof fetch, url: string, signature
     console.error(`alert: kiff/agents answered ${res.status}: ${text}`);
     return;
   }
+  if (res.status === 404 && text.includes(NOT_PAUSED)) throw new NotPausedYet(`kiff/agents answered 404: ${text.trim()}`);
   throw new Error(`kiff/agents answered ${res.status}: ${text}`);
 }

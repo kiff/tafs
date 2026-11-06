@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forwardAlert } from "../src/cloud/forward.js";
+import { forwardAlert, NotPausedYet } from "../src/cloud/forward.js";
 
 const answering = (status: number, sent: Array<{ url: string; init?: RequestInit }> = [], body = "{}") =>
   (async (url: string, init?: RequestInit) => { sent.push({ url, init }); return new Response(status === 204 ? null : body, { status }); }) as unknown as typeof fetch;
@@ -27,6 +27,13 @@ describe("handing KIFF's alert to kiff/agents", () => {
 
   it("fails on a 404, so KIFF sends it again: the owner answered before the run's pause was stored", async () => {
     await expect(forwardAlert(answering(404), "https://a.example/kiff/alerts", "s", "{}")).rejects.toThrow(/404/);
+  });
+
+  it("tells an early answer apart: kiff/agents' 404 for a hold no run has paused on yet", async () => {
+    // kiff/agents' exact answer (server/kiffalert: http.Error adds a newline).
+    const early = forwardAlert(answering(404, [], "no run has paused on this hold yet\n"), "https://a.example/kiff/alerts", "s", "{}");
+    await expect(early).rejects.toBeInstanceOf(NotPausedYet);
+    await expect(forwardAlert(answering(404, [], "no such route"), "https://a.example/kiff/alerts", "s", "{}")).rejects.not.toBeInstanceOf(NotPausedYet);
   });
 
   it("fails on a 5xx, and takes any other 4xx as final", async () => {
