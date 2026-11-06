@@ -13,8 +13,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   comes from (where customers ask, where meetings get booked), which systems
   are involved, what it may change or pay, and what the owner expects.
   What they already told you, don't ask again. Ask what's left together, in one
-  questions card when the answers are choices; otherwise ask in one short
-  message. When you ask where the work comes from and the owner named no app
+  questions card when the answers are choices (its text says what they're
+  about, never how many); otherwise ask in one short message. When you ask where the work comes from and the owner named no app
   for it, the first option is that they hand it to the taf in its chat (in
   their own words, the taf finds the item with its reads); the apps that could
   bring it come after, from search, and one is connected only when the owner
@@ -73,7 +73,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   when it starts: "Work the refund queue: every open request since your last
   run"), instructions (how it works, from what you agreed with the owner: what it
   does with each piece of work, what it offers instead, and its never rules, in
-  plain sentences; the Card still decides every call) and, when its tools find
+  plain sentences; the Card still decides every call; what it tells the owner
+  goes to its chat, never to an address they didn't give) and, when its tools find
   its work by themselves, cron (when it runs, as five POSIX cron fields in the
   account's time zone, at most every 15 minutes, as often as the work comes:
   "*/30 * * * *", "0 9 * * 1-5"); otherwise unscheduled. tafs cloud sets the taf

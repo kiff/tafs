@@ -235,14 +235,38 @@ export const CUSTOM = "custom";
  * words. Its schedule is the taf's own, so `cron` is empty: a job of its own says when it runs
  * when it starts, or works from its chat.
  */
-export function ownJob(own: { name: string; summary: string; kickoff: string; instructions?: string }): Job {
+export function ownJob(own: { name: string; summary: string; kickoff: string; instructions?: string; disclose?: Job["disclose"] }): Job {
   const summary = own.summary.trim();
   const how = own.instructions?.trim();
   return {
     id: CUSTOM, name: own.name, summary, kickoff: own.kickoff, cron: "",
     instructions: [summary ? `What this job does: ${summary}` : "", how].filter(Boolean).join("\n\n")
       || `You do this job for the company: ${own.name}.`,
+    // Where the AI disclosure goes in its calls that write outside, as Coach named it (kiff/tafs#476, gap 9).
+    ...(own.disclose?.length ? { disclose: own.disclose } : {}),
   };
+}
+
+/** The most tools a job's disclosure names, and the most fields each. */
+export const DISCLOSE_MAX = { tools: 10, fields: 5, length: 120 } as const;
+
+/**
+ * A job's `disclose` as Coach's result gives it, checked: each tool by its name in KIFF, and its
+ * free-text fields by dotted path. Throws, in words for Coach, when one doesn't fit.
+ */
+export function discloseOf(v: unknown): Job["disclose"] {
+  if (v === undefined) return undefined;
+  if (!Array.isArray(v) || v.length > DISCLOSE_MAX.tools) throw new Error(`disclose is a list of at most ${DISCLOSE_MAX.tools} tools, each {tool, fields}`);
+  return v.map((d) => {
+    const tool = typeof d?.tool === "string" ? d.tool.trim() : "";
+    const fields = Array.isArray(d?.fields) ? d.fields : [];
+    if (!tool || tool.length > DISCLOSE_MAX.length) throw new Error("each of disclose names its tool, as KIFF names it");
+    if (!fields.length || fields.length > DISCLOSE_MAX.fields) throw new Error(`each of disclose has 1 to ${DISCLOSE_MAX.fields} fields`);
+    for (const f of fields) {
+      if (typeof f !== "string" || !f || f.length > DISCLOSE_MAX.length || f.split(".").some((part) => !part)) throw new Error("a field of disclose is a dotted path, such as body or evidence.uncategorized_text");
+    }
+    return { tool, fields: [...fields] as string[] };
+  });
 }
 
 export function systemPrompt(job: Job): string {

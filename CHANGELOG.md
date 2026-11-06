@@ -5,6 +5,15 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Setting up a taf from a recipe: fewer consents, and nothing promised the connection or the Card can't do** (kiff/tafs#476, from "Chase overdue invoices" on Android 35). Coach's skills connect-an-app@3, draft-the-card@2, name-the-tools@5 and set-up-a-taf@3:
+  - **Only what a connection can do:** Coach checks the vendor has an operation before offering it, and says so, and why, when an answer can't be met.
+  - **One approval for Setup's reads:** the accounts list and the operations' field list go in the first connection request. The connection's approval and sign-in cover them, with no question of their own and no second fingerprint.
+  - **The account's mode, as reported:** once the accounts list says it, Coach says it then ("Your account there is in test mode"), not "I can't confirm whether…".
+  - **Holds and limits as agreed:** a recipe's or the owner's hold stays a hold. A limit the Card can't count (one per item, or over a week) goes in the taf's instructions, and the rules say KIFF can't enforce it yet.
+  - **The disclosure in a taf Coach sets up:** a tool that writes outside the company is named in the result's `disclose`, and kiff/agents ends each such call with "Written by an AI agent for the company.". tafs cloud checks each tool is one of the taf's, keeps it on the taf for each later build, and merges it over the job's own, so a starter job's taf gets it too. An improvement may add to it, never take any away: its disclosure is written to the live taf as soon as the version is made, before it's installed, which only ever adds a line (a tool the live version doesn't have just gets none).
+  - **Small:** a questions card's text never counts its questions, and what a taf tells the owner goes to its chat, never to an address they didn't give.
+  - **Order:** kiff/agents' show tool must take a result's `disclose` before accounts get these skills with the next Upgrade.
+
 - **A refusal is that one call's, and a dispute's evidence always says an AI agent wrote it** (kiff/agents' Eval 42193895936).
   - **A refusal ends that item only:** a door asked for a refund of one charge, and the taf answered "The owner already refused a refund of this charge": the owner had refused a refund of another charge, which kiff_pending listed. The taf's rule now says a refused or waiting call is that one call, on the item its arguments name, and settles nothing about another item.
   - **The AI disclosure in a dispute's evidence:** Chargebacks sent evidence to the card network (a product description, a tracking number, a carrier) with no word that an AI agent wrote it. The job now has kiff/agents put "Written by an AI agent for the company." in its `update_dispute` evidence, at the end of its free text or product description, whatever the model wrote (kiff/agents#352), and the shared rule asks for that same line. This needs kiff/agents#352 deployed first: kiff/agents refuses a definition with a field it doesn't know. Accounts get it with the next Upgrade.

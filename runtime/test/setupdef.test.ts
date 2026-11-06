@@ -362,9 +362,12 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A vendor with a REST API and no MCP server is connected by its key instead: planque request with api {url: its published OpenAPI description");
     expect(flat).toContain("The owner gives the key on their phone as they approve, straight to planque: never ask for it in the chat");
     expect(flat).toContain("A step that waits on one call names it (call: the tool's name): it can't be shown done until that call went through");
-    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields, given its id, ask for it first, as the first tools of the taf's one connection to that vendor");
-    // The account list, when it must pin the account, joins that grant: one approval, not two (kiff/tafs#138).
-    expect(flat).toContain("put that tool in the same first tools, with setup_reads: true");
+    // Setup's own reads go in the first planque request: the connection's one approval and sign-in cover
+    // them, with no question and no second approval (kiff/tafs#476, gap 2: four consents before a draft).
+    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields, given its id, ask for it in the first planque request");
+    // The account list, when it must pin the account, joins that request: one approval, not two (kiff/tafs#138).
+    expect(flat).toContain("the read-only tool that lists the accounts the sign-in covers goes in that first request too, with setup_reads: true");
+    expect(flat).toContain("The connection's one approval and sign-in then cover them, with no question of their own and no second approval");
     // One connection per vendor per taf (kiff/tafs#138, the owner's retest: five Face IDs and Stripe sign-ins).
     expect(flat).toContain("Never in a connection of its own: each new connection is one more approval and vendor sign-in for the owner");
     expect(flat).toContain("A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has one to that vendor, add the tool to it");
@@ -391,9 +394,9 @@ describe("Setup's definition on kiff/agents", () => {
     // Setup reads the fields itself, through planque, once the owner approved that read
     // (kiff/tafs#174): the taf alone held the tool, so Setup could only guess.
     expect(flat).toContain("read_only with setup_reads: true, so you can read it yourself");
-    expect(flat).toContain("setup_reads goes on that tool only, never on the taf's own reads: those read the owner's account");
+    expect(flat).toContain("setup_reads goes on those two only, never on the taf's own reads: those read the owner's account");
     expect(flat).toContain("read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments}, and place each argument you name");
-    expect(flat).toContain("It needs no question of its own: the owner already agreed to connect, and its approval is enough");
+    expect(flat).toContain("with no question of their own and no second approval: the owner already agreed to connect, and its approval is enough");
     expect(flat).toContain("Reading first doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
     // The account and the mode, pinned on reads too: the owner's taf looked the account
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
@@ -404,8 +407,11 @@ describe("Setup's definition on kiff/agents", () => {
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
     expect(flat).toContain("say so as a line of the rules notice (\"a day ends at midnight in your account's time zone\"), not in a message: messages stay short");
-    // Said once, plainly (Eval 42089365321 repeated it in the closing message).
-    expect(flat).toContain("Say the two once, plainly, in one place (the rules notice, or the result's sentence when there's none), and never again: \"Every call is pinned to test mode, as you chose. Whether the account itself is test or live, check it before going live.\"");
+    // Said once, plainly (Eval 42089365321 repeated it in the closing message). The account's mode,
+    // when the connection reports it, is said as reported, right after it's read (kiff/tafs#476, gap 7:
+    // "I can't confirm whether the account itself is test or live" just after reading the accounts list).
+    expect(flat).toContain("When it does, say it once, as soon as you read it, as reported, and never again: \"Your account there is in test mode.\"");
+    expect(flat).toContain("When it doesn't, say once, in the rules notice, and never again: \"Every call is pinned to test mode, as you chose. Whether the account itself is test or live, check it before going live.\"");
     expect(flat).not.toContain("in every message about those tools");
     expect(flat).not.toContain("KIFF's settings");
   });

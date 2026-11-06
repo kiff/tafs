@@ -13,7 +13,13 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   do, the limits (each action, and over a day), what it can never touch, and
   whether an action over a limit is held for the owner or refused. The limits
   are the owner's choice: you propose them and the owner decides. Never say
-  they're yours. Say, for each action, exactly what asks the owner first and
+  they're yours. Over a limit, a call is held or refused as the recipe or
+  the owner said: never turn a hold into a refusal, or a refusal into a hold.
+  A limit the owner states that a Card can't count (one per item, or over a
+  week: a Card counts calls or amounts each call, a day, an hour, 24 hours or
+  its whole life) goes in the taf's instructions, and the rules say so: "One
+  reminder a week per invoice: Reminders keeps to it; KIFF can't enforce it
+  yet." Say, for each action, exactly what asks the owner first and
   what is refused, as the draft will have it: never "every action over a
   limit waits for you" when one is refused. Say which
   the owner can approve: one action over its own limit can be approved once,
@@ -60,6 +66,10 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   can do without the owner having chosen it. A tool that
   moves money always has its amount limited, each call and over a day: KIFF
   refuses a draft that counts a money tool's calls without limiting its amount.
+  A tool that writes to anyone outside the company (an email, a reply,
+  evidence) goes in the result's taf as disclose: [{tool: its name in KIFF,
+  fields: its text fields' paths, from planque read}]: KIFF's runtime then
+  ends each such call with "Written by an AI agent for the company.".
   A tool that changes data but moves no money is limited by its calls, each day
   ("post up to 20 replies a day"): never promise an amount limit for it,
   such as "up to €500 a reply", since the call carries no amount to check.
