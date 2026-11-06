@@ -18,6 +18,8 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [approvals.md](approvals.md) | Held calls: how they reach the owner, how an answer is signed, what happens next, halting |
 | [accounts.md](accounts.md) | Signing in, roles, people and groups, sharing a taf, usage, plans and purchases, the time zone, deleting the account |
 | [attachments.md](attachments.md) | Photos and files on a message |
+| [coach-drives-the-app.md](coach-drives-the-app.md) | Coach drives the app, for the person running tafs: starting and stopping a drive, what Coach can't do, and what it never sees |
+| [drive.md](drive.md) | The drive's contract between tafs cloud and the apps: routes, the stream, requests and results, never confirming, never captured, and how a drive ends |
 | [connect-apps.md](connect-apps.md) | Connect apps, for the person running tafs: connecting, what you approve, what a taf can do, app events, the Slack door vs an action, disconnecting |
 | [doors.md](doors.md) | Doors: email, Slack and WhatsApp addresses a taf takes work from |
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
