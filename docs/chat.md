@@ -182,13 +182,64 @@ shows under the answer: "It reads this at its next step", or "when it carries on
 the run waits on a held call. When the run reads it, the stream says `taken`.
 
 In Coach's chat, the message carries Coach's unread lines in front of the owner's words,
-as a new message does, and the thread shows only the owner's words. If the run ended
-meanwhile (409), the message waits, and goes as a new message once the
-taf is done; the lines wait with it. A second message written while one waits joins it. A message with files
+as a new message does, and the thread shows only the owner's words. A message with files
 always waits: files go with a message of their own, never into a run.
 
-What a run never read before it ended, as kiff/agents says, goes as the next message
-after the answer.
+**tafs cloud holds what the run doesn't take.** It's one contract, for every app. An app
+opts in with `hold: true` on `steer`:
+
+- **Sent once.** The app sends a message once, and never resends it on a refusal.
+- **Kept per chat.** What waits is kept for the chat it was written in, and only ever goes
+  there. Two chats with the taf each wait for their own run.
+- **What the run doesn't take is held.** When the run has ended, or holds as many
+  messages as it takes, tafs cloud keeps the message, and answers `202`:
+  - `{sent: {run, session}}`: the chat's run was over, so it went at once, as the person's
+    next message in that chat;
+  - `{held: {text, at}}`: what waits in that chat now, this message included.
+
+  Both can come at once: `sent`, with `held` for what didn't fit (below). Neither means
+  another read of the thread dealt with it meanwhile: the thread shows how.
+- **A second message joins it.** One written while another waits is added to it, after a
+  blank line.
+- **Never cut.** What waits in a chat is at most one message's worth: 10 messages, and
+  2,000 characters in all. A message that would pass either isn't held: `409` with
+  `code: "held_full"`, `held` (what waits), and `error` in words the app shows as they are:
+  "Up to 10 messages, 2,000 characters in all, can wait for the taf. Send this once it's
+  done." What waits is unchanged, and the app keeps the person's words to send later.
+- **It goes once the taf is done.** tafs cloud sends it as the person's next message in
+  that chat, with Coach's unread lines, as a message they sent. That happens at the first
+  of these to find the chat's latest run over:
+  - the end of an answer's stream, for each of the person's chats where something waits;
+  - the person's next read of the thread (every chat where something waits), or of that
+    chat (that chat only).
+
+  One read sends a chat's next message, so two reads never send twice. A send that fails,
+  such as the flood guard's 429, puts it back to wait.
+- **What the run never read goes too.** For a run written to with `hold`, what it hadn't
+  read when it ended joins what waits in its chat, before what was held after it, in the
+  order written, and goes as the next message. It joins once: a failed send and a retry
+  never send it twice.
+- **Whole messages, in order.** When what waits is more than one message can be (what a
+  run never read, with what was held), as many whole messages as fit go first, and the
+  rest goes as the next message, once that answer is over.
+- **Stopped: not sent, with why.** When the person stops the run, what it never read, and
+  what was written for it by the stop, isn't sent. A message written after the stop is
+  the person's next message, as any other, even when the app still writes it to the stopped
+  run because it hadn't seen the run end.
+- **The thread's `steering` says all of it,** for its latest chat:
+  - `untaken`: what the run at work hasn't read yet;
+  - `held: {text, at}`: what waits in that chat to go once the taf is done;
+  - `not_sent: [{text, at, why}]`: what a stopped run never read, and what was written for
+    it by the stop. `why` is the words the app shows as they are: "You stopped it before it
+    read this." The app offers Retry, which sends it as a new message.
+
+Without `hold`, nothing changes for an older app:
+- a run that took nothing is `409` ("the run has ended: send it as a new message");
+- a run that's over lists what it never read under `untaken`;
+- the app keeps its own queue, as before.
+
+Android stops resending on a refusal once it sends `hold`, and iOS drops its own queue
+the same way.
 
 ## Stop, caps and failures
 
