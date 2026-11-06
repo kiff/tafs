@@ -86,7 +86,8 @@ struct DriveFieldMark: ViewModifier {
             id: "field." + words.prefix(40).lowercased().replacingOccurrences(of: " ", with: "-"),
             words: secret ? "" : words, role: .textField, confirm: false, secret: secret, terms: false,
             actions: [.activate: { [anchor] in DriveFields.focus(near: anchor.view) }], anchor: nil))
-            .background(AnchorReader(into: anchor)))
+            .background(AnchorReader(into: anchor))
+            .accessibilityHidden(true))
     }
 
     /// Keeps a weak reference to a view in place behind the field, to find the field's own text view.
@@ -95,6 +96,8 @@ struct DriveFieldMark: ViewModifier {
         func makeUIView(context: Context) -> UIView {
             let v = UIView(frame: .zero)
             v.isUserInteractionEnabled = false
+            v.isAccessibilityElement = false
+            v.accessibilityElementsHidden = true
             into.view = v
             return v
         }

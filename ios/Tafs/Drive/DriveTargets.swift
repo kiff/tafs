@@ -189,7 +189,7 @@ struct Drivable: ViewModifier {
     func body(content: Content) -> some View {
         content.background(DriveAnchor(entry: DriveTargets.Entry(
             id: id ?? givenID ?? made, words: words, role: role, confirm: confirm || marked, secret: secret, terms: terms,
-            actions: enabled ? actions : [:], anchor: nil)))
+            actions: enabled ? actions : [:], anchor: nil)).accessibilityHidden(true))
     }
 }
 
@@ -205,6 +205,9 @@ struct DriveAnchor: UIViewRepresentable {
             super.init(frame: frame)
             isUserInteractionEnabled = false
             backgroundColor = .clear
+            // Never an element of its own: the control's identifier and label stay the control's.
+            isAccessibilityElement = false
+            accessibilityElementsHidden = true
         }
 
         required init?(coder: NSCoder) { nil }
