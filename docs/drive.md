@@ -194,7 +194,7 @@ Enforced in the app, with no prompt:
 1. **The confirm mark.** Every control that confirms carries it, and a driven touch on
    one is refused before dispatch. These are:
    - Approve, and any approval tapped inside an open approval window;
-   - Disconnect, and a connection's fix in Connect apps (Replace the key, Sign in again);
+   - Disconnect, and a connection's fix (Replace the key, Sign in again), in Connect apps and on a taf's own app;
    - Remove a taf;
    - Halt and resume;
    - the answers to "Did this happen?";
