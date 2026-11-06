@@ -144,6 +144,17 @@ class AndroidDriveHost(
     return parts.map(String::trim).filter(String::isNotEmpty).distinct().joinToString(" ").take(200).ifEmpty { null }
   }
 
+  /**
+   * What a touched control is called, for the caption and the "What I did" card: its description, else its first words that
+   * aren't a lone letter (a row's initial), never the whole row's text, which [wordsOf] keeps for Coach's tree.
+   */
+  private fun nameOf(n: SemanticsNode): String? {
+    val c = n.config
+    val described = c.getOrNull(SemanticsProperties.ContentDescription)?.map(String::trim)?.firstOrNull(String::isNotEmpty)
+    val texts = c.getOrNull(SemanticsProperties.Text)?.map { it.text.trim() }.orEmpty().filter(String::isNotEmpty)
+    return (described ?: texts.firstOrNull { it.length > 1 } ?: texts.firstOrNull() ?: wordsOf(n))?.take(60)
+  }
+
   private fun roleOf(n: SemanticsNode): String {
     val c = n.config
     return when (c.getOrNull(SemanticsProperties.Role)) {
@@ -309,7 +320,7 @@ class AndroidDriveHost(
         if (c.getOrNull(DriveConfirms) == true) confirm = true
         if (c.contains(SemanticsActions.OnClick) || c.contains(SemanticsActions.OnLongClick) || c.contains(SemanticsActions.SetText)) {
           val area = b.width * b.height
-          if (area < smallest) { smallest = area; words = if (c.getOrNull(DriveSecret) == true) "a secret field" else wordsOf(n) }
+          if (area < smallest) { smallest = area; words = if (c.getOrNull(DriveSecret) == true) "a secret field" else nameOf(n) }
         }
         n.children.forEach(::visit)
       }

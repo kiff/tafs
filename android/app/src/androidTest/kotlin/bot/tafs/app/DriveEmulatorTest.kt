@@ -5,9 +5,12 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inspector.WindowInspector
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -241,6 +244,29 @@ class DriveEmulatorTest {
       instrumentation.waitForIdleSync()
     }
     assertTrue("gone once the drive is off", overlays().isEmpty())
+  }
+
+  // What a touch is called, in the caption and "What I did": a row by its title, not all its words.
+
+  @Test fun aTappedRowIsNamedByItsTitleNotItsWholeText() = runBlocking {
+    var opened = 0
+    rule.setShown {
+      Row(Modifier.fillMaxWidth().clickable { opened++ }.padding(16.dp)) {
+        Text("R")
+        Column(Modifier.weight(1f)) { Text("Refunds"); Text("Works from its chat") }
+        Text("Ready")
+      }
+    }
+    hostIt(); driving()
+    // Coach's tree keeps the row's words whole.
+    val row = tree().entries.single { it.key.startsWith("R Refunds") }
+    assertEquals("R Refunds Works from its chat Ready", row.key)
+    val tapped = host.act(Action.Tap(Target.Element(row.value.first), "Opening Refunds"))
+    rule.waitForIdle()
+    assertTrue(tapped.line, tapped.done)
+    assertEquals(1, opened)
+    assertEquals("Refunds", tapped.touched?.words)
+    assertEquals(DriveWords.tapped("Refunds"), tapped.line)
   }
 
   // 2. The person's back stops it.
