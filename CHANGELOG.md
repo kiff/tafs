@@ -6,6 +6,16 @@ version headings refer to releases, not merely to merged pull requests.
 ## Unreleased
 
 - **Connect apps lists a connection under the app planque names for it (both apps).** planque now gives every grant its app (`entry`), a vendor's own sign-in included (kiff/planque#115 and #116's reviewed list of vendors' own servers). The apps match by it, or by the grant tafs cloud named for a row, and no longer work an app out from a connection's toolkit or server: a connection planque leaves unnamed, because its app is unclear, lists under none.
+- **tafs cloud holds a message written while the taf works, when its run doesn't take it (tafs cloud; apps opt in with `hold`).**
+  - **The refusal:** a steer refused because the run had ended, or held as many messages as it takes, was a 409, and each app kept its own queue: iOS held the message, while Android sent it at once.
+  - **With `hold: true`,** tafs cloud keeps the message for the chat it was written in, and answers 202:
+    - it's sent at once as the person's next message in that chat when the chat's run is over (`sent`);
+    - otherwise it waits (`held`), and a second message joins it;
+    - it goes once the taf is done in that chat, and only there: at the end of an answer's stream, or on the next read of the thread or of that chat. One read sends it, and a failed send puts it back.
+  - **Never cut:** at most 10 messages, 2,000 characters in all, wait in a chat. One more is refused whole (409 `held_full`), with words the app shows, and the app keeps it. When what a run never read and what was held make more than one message, whole messages go in order, and the rest goes next.
+  - **What the run never read:** for a run written to with `hold`, what it hadn't read when it ended joins what waits in its chat, once, and goes as the next message.
+  - **When the person stops the run,** what it never read, and what was written for it by then, isn't sent. The thread's `steering` shows them as `not_sent`, with why ("You stopped it before it read this."). A message written after the stop goes as the next message.
+  - **Without `hold`,** nothing changes. Android and iOS move to it in their own batches (docs/chat.md).
 
 - **Connect apps lists every connection to an app, and a connection's fix works and is where the owner looks (both apps; Android 36's phone round).**
   - **Every connection to an app:** an app's connections were only those made from its catalog entry, so the vendor's own sign-ins Coach started (which carry none) never showed under it. Stripe listed one leftover provider grant, not its 7 live sign-ins. A connection is now also the app's when it's a managed provider's whose toolkit is the app's slug, or, for any other, when a whole label of its server's host is (`mcp.stripe.com` is Stripe; `notstripe.com` and a provider's own host aren't).
