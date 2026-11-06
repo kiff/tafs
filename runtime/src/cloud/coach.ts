@@ -130,6 +130,36 @@ export const TOOLS: ToolDef[] = [
       "confirms the version's Card and makes it live. Say \"Waiting for your approval\" once, and don't call it again for the same version. " +
       "Don't name how the owner approves.",
   },
+  // Coach drives the app (kiff/tafs#544, docs/drive.md): only while the person's drive is on.
+  {
+    name: "app_look", line: "See the app on your phone while it drives", read: true,
+    properties: {
+      tree: { type: "boolean", description: "Also the view tree: each element's id, words, role and bounds. Cheaper to read than the image for text." },
+      diagnostics: { type: "boolean", description: "Also the app's recent errors and failed requests (route and status), version, platform, layout and display settings." },
+      wait: { type: "string", enum: ["screen_shown", "sheet_opened", "sheet_closed", "refreshed", "prompt_shown", "prompt_done", "notification_shown"], description: "Wait for this first, then look." },
+      timeout_s: { type: "integer", minimum: 1, maximum: 20, description: "How long to wait for it (default 10)." },
+    },
+    required: [],
+    description: "While the person's drive is on: a screenshot of the app on their phone (its own windows only), and the view tree or diagnostics if asked. " +
+      "Look before every step. Without a drive, it's refused: offer to show them with a drive card, and wait for their approval.",
+  },
+  {
+    name: "app_act", line: "Tap, type and scroll in the app on your phone while it drives",
+    properties: {
+      action: { type: "string", enum: ["tap", "long_press", "swipe", "scroll", "type", "back", "done"] },
+      line: { type: "string", description: "The caption the person sees for this step, in their words, at most 60 characters: \"Tapping Run now\"." },
+      at: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } }, description: "A point on the last screenshot (tap, long_press, swipe's start)." },
+      element: { type: "string", description: "Or an element's id from the last tree, instead of at." },
+      to: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } }, description: "swipe: where it ends." },
+      ms: { type: "integer", minimum: 50, maximum: 3000, description: "swipe: how long it takes." },
+      direction: { type: "string", enum: ["up", "down", "left", "right"], description: "scroll." },
+      text: { type: "string", description: "type: the text, into the focused field (any field, a taf's chat included)." },
+    },
+    required: ["action", "line"],
+    description: "While the person's drive is on: one step in the app on their phone, answered with the screen after it. done ends the drive when the task is done. " +
+      "The app refuses a touch on anything that confirms (Approve, Disconnect, Remove, Halt, a purchase): those are the person's, so tell them where it is. " +
+      "If they touch the app or leave it, the drive ends: tell them where you got to.",
+  },
 ];
 
 /**
@@ -147,6 +177,9 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-taf-results", actions: ["taf_results"], limit: 0, asks: true },
   // A dial draft makes a version and runs nothing: installing it is held above.
   { id: "coach-taf-dial", actions: ["taf_dial"], limit: 20, asks: false },
+  // A drive is the person's approval of one request; each look and step goes through KIFF all the same.
+  { id: "coach-app-look", actions: ["app_look"], limit: 2000, asks: false },
+  { id: "coach-app-act", actions: ["app_act"], limit: 1000, asks: false },
 ];
 
 /** A connection in KIFF's gateway, as tafs cloud reads it. */
@@ -214,6 +247,14 @@ export function coachCardsDraft(agentID: string, only?: ReadonlySet<string>): { 
 /** A tool's answer, as Coach reads it. */
 export type ToolAnswer = Record<string, unknown>;
 
+/**
+ * An answer in MCP's own content blocks, text and images (a drive's screenshot), as Coach
+ * reads it. `kept` is what a retry of the same operation gets: never the image again.
+ */
+export class Rich {
+  constructor(readonly content: Array<Record<string, unknown>>, readonly isError: boolean, readonly kept: string) {}
+}
+
 /** What a tool call acts with: the account, Coach, and where a task's end is announced. */
 export interface CoachCall {
   tenant: string;
@@ -230,7 +271,7 @@ export interface CoachCall {
 }
 
 /** Runs one tool; throws ToolRefusal for an answer Coach should read as a refusal. */
-export type RunTool = (name: string, args: Record<string, unknown>, call: CoachCall) => Promise<ToolAnswer>;
+export type RunTool = (name: string, args: Record<string, unknown>, call: CoachCall) => Promise<ToolAnswer | Rich>;
 
 /** A tool call refused in words Coach can act on (no such taf, a run that ended). */
 export class ToolRefusal extends Error {}
@@ -385,11 +426,16 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
   }
   const { [OP_ARG]: _op, ...toolArgs } = a;
   let answer;
+  let keep: unknown;
   try {
-    answer = text(await cfg.run(tool.name, toolArgs, {
+    const out = await cfg.run(tool.name, toolArgs, {
       tenant: p.tenant, coach, notify: () => ({ url: cfg.notifyURL, ref: newRef(p.tenant) }),
       ...(p.actor && token ? { person: { subject: p.actor, permit: token } } : {}),
-    }));
+    });
+    if (out instanceof Rich) {
+      answer = { content: out.content, isError: out.isError };
+      keep = text(out.kept, out.isError);
+    } else answer = text(out);
   } catch (err) {
     if (!(err instanceof ToolRefusal)) {
       cfg.log?.(`coach tool ${tool.name} failed`, err);
@@ -401,7 +447,7 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
     }
     answer = text(err.message, true);
   }
-  await cfg.store.put(opKey, answer, new Date(now.getTime() + OP_KEPT_MS));
+  await cfg.store.put(opKey, keep ?? answer, new Date(now.getTime() + OP_KEPT_MS));
   return answer;
 }
 

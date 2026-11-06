@@ -66,6 +66,7 @@ const TOOL_SKILLS: Record<string, string[]> = {
   tafs_state: ["the-tafs"], taf_run: ["the-tafs"], taf_task: ["the-tafs"], run_stop: ["the-tafs"], taf_pause: ["halting"],
   version_try: ["the-tafs"], version_install: ["the-tafs"],
   taf_results: ["the-dial"], taf_dial: ["the-dial"],
+  app_look: ["drive-the-app"], app_act: ["drive-the-app"],
 };
 
 /** The state of the account the first turn starts from, as far as the skills care. */

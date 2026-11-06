@@ -21,7 +21,7 @@ describe("Setup's definition on kiff/agents", () => {
       ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "skills", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
-    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install"]);
+    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install", "app_look", "app_act"]);
   });
 
   // The owner's first words came after every tool turn, about 22 s on 5 Nov: one short line first.
