@@ -3440,18 +3440,29 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
 }
 
 /**
- * A version Coach made is live: the owner's Coach hears it on its next turn, and the
- * app shows it in Coach's chat at once, so the improvement's plan can end. Best
- * effort: the switch stands either way.
+ * A version is live: the owner's Coach hears it on its next turn, and the app shows it in Coach's
+ * chat at once, so an improvement's plan can end. Every install says so, Coach's version or not (an
+ * Upgrade's, a dial's, going back), so Coach's view of what runs never goes stale; the line says
+ * which, with the version's own note when Coach didn't make it (agentgabo on 1487: v5, the
+ * Upgrade's, went live with no line, and Coach still read v4 as live). Best effort: the switch
+ * stands either way.
  */
 async function tellCoachLive(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
-  if (!deps.coach || !Object.values(taf.versionsFrom ?? {}).includes(n)) return;
+  if (!deps.coach) return;
   const at = deps.now?.() ?? new Date();
   const does = taf.summaries?.[String(n)];
-  const line = `[taf ${taf.name} version ${n} live] The owner installed version ${n}, the one you made; it runs now.${does ? ` It does: ${JSON.stringify(does)}` : ""}`;
+  let whose = ", the one you made";
+  if (!Object.values(taf.versionsFrom ?? {}).includes(n)) {
+    const note = await deps.agents.getVersion(me.tenantID, taf.id, n).then((v) => oneLine(v.version.note ?? "", LIVE_NOTE_MAX), () => "");
+    whose = `, which you didn't make${note ? ` (its note: ${JSON.stringify(note)})` : ""}`;
+  }
+  const line = `[taf ${taf.name} version ${n} live] The owner installed version ${n}${whose}; it runs now.${does ? ` It does: ${JSON.stringify(does)}` : ""}`;
   await deps.coach.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: line, taf: taf.name, said: `Version ${n} is live.` },
     new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${taf.id} v${n}:`, err));
 }
+
+/** The most of a version's note Coach reads in its live line. */
+const LIVE_NOTE_MAX = 200;
 
 function sameCards(a: CardRevision[], b: CardRevision[]): boolean {
   const key = (cs: CardRevision[]) => cs.map((c) => `${c.id}@${c.revision}`).sort().join(",");
@@ -3653,10 +3664,15 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
   const run = str(parseBody(event).run).trim();
   if (!run) throw new HTTPError(400, "name the run to write to");
   const text = chatText(event);
+  // Coach's unread lines go with the owner's words, as with a new message: a run that stays at work
+  // (paused on an approval) would otherwise never read them, and they'd stay under every later message.
+  const lines = await takeCoachLines(me, taf, deps);
   try {
-    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text, member(me));
+    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, lines.text(text), member(me));
     return { run: out.id, status: out.status };
   } catch (err) {
+    // Not read: Coach reads its lines with the message the app sends next.
+    await lines.putBack();
     if (refused(err, "run_ended", "not_paused")) throw new HTTPError(409, "the run has ended: send it as a new message");
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw agentsFailure(err);

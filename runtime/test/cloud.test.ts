@@ -2824,7 +2824,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Answers refund requests within its Card.");
   });
 
-  it("tells the owner's Coach when a version it made goes live, and not for one it didn't make", async () => {
+  // agentgabo on 1487: v5, an Upgrade's version, went live with no line, and Coach still read v4 as live.
+  it("tells the owner's Coach whenever a version goes live, and whether it made that version", async () => {
     const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Offers a free month first", summary: "Offers a free month to customers who cancel." } };
     const { w, note, answer, deps } = await paused(better);
     w.agents.access.set("u_ana", { cards_manage: true });
@@ -2837,9 +2838,13 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(said).toHaveLength(1);
     expect(said[0]).toMatchObject({ taf: "Rae", said: `Version ${n} is live.` });
     expect(said[0]!.text).toBe(`[taf Rae version ${n} live] The owner installed version ${n}, the one you made; it runs now. It does: "Offers a free month to customers who cancel."`);
-    // Version 1 wasn't Coach's: going back tells it nothing.
+    // Version 1 wasn't Coach's: going back says so, with that version's own note, so Coach never reads the last one it made as live.
+    w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.n === 1)!.note = "Its rules were updated";
     expect(await send(`/v1/tafs/${RAE}/versions/1/live`)).toEqual({ live: 1 });
-    expect(await lines()).toHaveLength(1);
+    const back = await lines();
+    expect(back).toHaveLength(2);
+    expect(back[1]).toMatchObject({ taf: "Rae", said: "Version 1 is live." });
+    expect(back[1]!.text).toBe(`[taf Rae version 1 live] The owner installed version 1, which you didn't make (its note: "Its rules were updated"); it runs now.`);
   });
 
   it("brings back a taf's job's line when going back to a version from before it had a summary", async () => {

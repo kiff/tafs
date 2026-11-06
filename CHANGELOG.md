@@ -5,6 +5,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach hears every install.** Installing any version tells the owner's Coach, and Coach's chat shows "Version N is live." Before, only a version Coach made did: after v4 (Coach's), going back to v5 (an Upgrade's) said nothing, so Coach still read v4 as live. Coach's line says whether it made the version, and gives the version's own note when it didn't.
+- **A steer carries Coach's lines.** Words written to a Coach run that is still at work, such as one paused on an approval, now carry Coach's unread lines. Before, those lines stayed under every later message until the run ended, and Coach never read them. A refused steer leaves them for the next message.
+- **Docs:** the What I did card's steps stay 30 days with the drive's end in Coach's chat, not a day.
+
 - **Failures the owner can fix (kiff/tafs#476, gap 10).**
   - **Activity says why.** A refused call shows the words KIFF recorded for it, quoted as the app's: "The app refused it: "Agent Mail refused it (it answered 403): Forbidden."". Before, tafs cloud put the fixed line "The app refused it" in their place.
   - **And what to do.** A `not_done` row carries `next: {kind, words, tool, taf, message?}`: `reconnect` for a 401 or 403, `ask_coach` (with Coach's first message) for a 404 or a wrong action, and `try_later` for a 429 or a vendor down. The apps draw the buttons.
