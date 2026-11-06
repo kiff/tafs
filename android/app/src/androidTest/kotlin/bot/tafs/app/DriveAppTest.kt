@@ -42,7 +42,7 @@ class DriveAppTest {
   private fun AppModel.endedFor(): String? = (drive.state.value as? DriveState.Over)?.why
 
   @After fun off() {
-    instrumentation.runOnMainSync { model?.let { it.stopDrive("stopped"); it.closeDriveDone() } }
+    instrumentation.runOnMainSync { model?.let { it.stopDrive("stopped"); it.drive.clear() } }
   }
 
   @Test fun leavingTheAppEndsTheDrive() {

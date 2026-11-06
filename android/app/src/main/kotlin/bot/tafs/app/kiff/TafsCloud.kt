@@ -49,6 +49,8 @@ class TafsCloud(
     val components: List<ShownComponent> = emptyList(),
     /** News of the tasks Coach handed tafs, until Coach reads it on its next turn (kiff/tafs#206). */
     val coachLines: List<CoachLine> = emptyList(),
+    /** Each drive's end in Coach's chat, at its time (kiff/tafs#568). */
+    val drives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
   )
 
   /** The account's Setup (Coach), or null before it is started. */
@@ -121,6 +123,13 @@ class TafsCloud(
       capped = wire.capped,
       components = CoachWords.fold(wire.components.orEmpty().mapNotNull { shown(it) }),
       coachLines = wire.coachLines.orEmpty().mapNotNull { runCatching { KiffClient.json.decodeFromJsonElement(CoachLine.serializer(), it) }.getOrNull() },
+      // A drive's end the app can't read is left out, never the thread with it.
+      drives = wire.items.orEmpty().mapNotNull { item ->
+        val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+        if ((o["type"] as? JsonPrimitive)?.contentOrNull != "drive") return@mapNotNull null
+        runCatching { KiffClient.json.decodeFromJsonElement(bot.tafs.app.drive.DriveRecap.serializer(), o.getValue("drive")) }.getOrNull()
+          ?.takeIf { runCatching { java.time.Instant.parse(it.at) }.isSuccess }
+      },
     )
   }
 

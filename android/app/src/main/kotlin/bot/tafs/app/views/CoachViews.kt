@@ -228,7 +228,6 @@ class CoachActions(
   /** Approves a drive card: the approval key, behind the fingerprint, signs the drive's Start (docs/drive.md). */
   val approveDrive: (SetupComponent) -> Unit = {},
   /** Closes the "What I did" card. */
-  val closeDriveDone: () -> Unit = {},
 )
 
 /** One of Coach's cards in its thread. What grants authority is read from planque and KIFF, and signed there. */
@@ -666,18 +665,20 @@ private fun DriveCard(shown: ShownComponent, state: AppState, answered: String?,
   }
 }
 
-/** At the end of a drive, Coach's chat opens again with what was done: tafs cloud's record of each step, in a line. */
+/**
+ * A drive's end in Coach's chat, where it happened (kiff/tafs#568): the request, why it ended, and tafs cloud's record of each
+ * step, in a line. It's the thread's, kept with it, so it never needs closing.
+ */
 @Composable
-fun DriveDoneCard(done: bot.tafs.app.drive.DoneDrive, onClose: () -> Unit) {
+fun DriveRecapCard(recap: bot.tafs.app.drive.DriveRecap) {
   Panel {
     Eyebrow(bot.tafs.app.drive.DriveWords.WHAT_I_DID)
-    Text(done.task, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-    Text(done.words, style = scaled(13, color = Theme.soft))
-    if (done.steps.isEmpty()) Text(bot.tafs.app.drive.DriveWords.NO_STEPS, style = scaled(13, color = Theme.dim))
-    done.steps.forEach { step ->
+    Text(recap.task, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    Text(recap.words, style = scaled(13, color = Theme.soft))
+    if (recap.steps.isEmpty()) Text(bot.tafs.app.drive.DriveWords.NO_STEPS, style = scaled(13, color = Theme.dim))
+    recap.steps.forEach { step ->
       val what = step.touched?.let { t -> listOfNotNull(t.words, t.taf).joinToString(" · ") }
       Text("• " + step.line + (what?.let { " · $it" } ?: ""), style = scaled(13, color = Theme.ink))
     }
-    Text("Close", style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable(onClick = onClose))
   }
 }

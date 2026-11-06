@@ -319,6 +319,8 @@ data class AppState(
   val cardErrors: Map<String, String> = emptyMap(),
   /** Coach's cards in its thread, folded. */
   val coachComponents: List<ShownComponent> = emptyList(),
+  /** Each drive's end in Coach's chat, at its time, as tafs cloud keeps it (kiff/tafs#568). */
+  val coachDrives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
   /** The Coach conversation shown (kiff/tafs#73): one the owner reopened or started here, or null for the latest ones together. */
   val coachChat: String? = null,
   /** The owner asked for a new conversation: the next message starts one. */
@@ -393,7 +395,6 @@ data class AppState(
   /** A drive card being approved, by its key: Approve waits for the fingerprint and tafs cloud. */
   val driveStarting: String? = null,
   /** The drive that just ended, for the "What I did" card in Coach's chat, until the person closes it. */
-  val driveDone: bot.tafs.app.drive.DoneDrive? = null,
   /**
    * The calendar (kiff/tafs#534): what it shows, kept here so a rotation or a new layout keeps it; the last read, for the selected
    * month's grid; and why it couldn't be read. A new account starts a new state, so another account's events never show.
@@ -706,7 +707,7 @@ data class AppState(
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
       // An older thread's answers, sent as text before cards were answered as data, read as what the owner chose.
-      return CoachWords.items(messages.map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents)
+      return CoachWords.items(messages.map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents, coachDrives)
     }
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }
@@ -1518,7 +1519,7 @@ class AppModel(
     leaveCoachChat()
     _state.update { s ->
       s.copy(
-        coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachLines = emptyList(),
+        coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
         chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
         chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT,
         chatErrors = s.chatErrors - COACH_CHAT,
@@ -2012,6 +2013,7 @@ class AppModel(
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
         chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
+        coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
         // A taken card is the thread's once it holds its answer.
         cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { it.ref }.toSet() else s.cardsTaken,
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
@@ -3864,9 +3866,9 @@ class AppModel(
           is bot.tafs.app.drive.DriveState.On -> bot.tafs.app.drive.DriveInput.turn(true)
           is bot.tafs.app.drive.DriveState.Over -> {
             bot.tafs.app.drive.DriveInput.turn(false)
-            // The chat opens again with what was done: tafs cloud's record of the steps, not Coach's memory of them.
-            val steps = d.steps(s.drive.id)
-            _state.update { it.copy(driveDone = bot.tafs.app.drive.DoneDrive(s.drive.task, s.words, steps)) }
+            // The chat opens again with what was done, in the thread at the time the drive ended (kiff/tafs#568): tafs cloud
+            // writes it from its record of the steps, not Coach's memory of them, once the end has reached it.
+            d.settled()
             runCatching { readThread(COACH_CHAT) }
           }
           bot.tafs.app.drive.DriveState.Off -> bot.tafs.app.drive.DriveInput.turn(false)
@@ -3899,7 +3901,7 @@ class AppModel(
       if (kiff.window != null) closeWindow()
       val info = cloud.startDrive(session, task, c.id, tenant) { built -> signer.signApproval(bot.tafs.app.drive.DriveWords.approval(task)) { built() } }
       if (generation != accountGeneration) return
-      _state.update { it.copy(driveDone = null, cardsTaken = it.cardsTaken + key) }
+      _state.update { it.copy(cardsTaken = it.cardsTaken + key) }
       drive.begin(info)
     } catch (e: CancellationException) {
       throw e
@@ -3916,12 +3918,6 @@ class AppModel(
   /** The person ended the drive: their touch, their back, Stop, the Coach button, the app leaving the screen, the lock. */
   fun stopDrive(why: String) {
     drive.stop(why)
-  }
-
-  /** The "What I did" card, closed. */
-  fun closeDriveDone() {
-    _state.update { it.copy(driveDone = null) }
-    drive.clear()
   }
 
   /** A drive still on after the app restarted outlived it: it ends now, and never resumes (docs/drive.md). */

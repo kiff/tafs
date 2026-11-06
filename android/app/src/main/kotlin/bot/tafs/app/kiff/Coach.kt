@@ -63,6 +63,8 @@ data class SetupComponent(
   /** steps, notice, confirm, questions, approval, sign_in, result, knob or drive (Coach asks to drive the app: docs/drive.md). */
   val type: String,
   val id: String,
+  /** Who the run waits on with this card, as kiff/agents marks it (kiff/tafs#568): `owner` or `service`; none when it goes on past it. */
+  val waits: String? = null,
   val title: String? = null,
   val text: String? = null,
   /** info, success, warning or error. */
