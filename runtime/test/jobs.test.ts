@@ -107,15 +107,27 @@ describe("jobs", () => {
       expect(flat).toContain("Say it in one sentence: the call waits for their approval, the one limit that holds it (the most for one call, the day's total, or how many calls a day), and until when");
       expect(flat).not.toContain("waits for their approval and nothing was sent");
       expect(flat).toContain("Nothing else: not what's left on the item, not the other limits, and not that nothing was sent, since the held call's card says so.");
+      // Until when, in the chat in words, as the chat's own rule says ("no clock times or time
+      // zones, a deadline included"); a time only in a scheduled run's report. The two rules
+      // disagreed, and a taf wrote "until 06:59 UTC today (2026-11-06)" (Eval 42176052141).
+      expect(flat).toContain("and until when, from KIFF's hold_expires_at, never a time you work out (kiff/tafs#206): in the chat in words (\"today\", \"in ten minutes\"), since the app shows the time in the owner's zone; in a scheduled run's report, the time in the owner's time zone.");
+      expect(flat).not.toContain("the time KIFF's hold_expires_at gives, in the owner's time zone");
       // A chat answer ends with no report: the judges read a scheduled run's "nothing else was
       // done or left undone" as filler.
       expect(flat).toContain("with no closing summary of what was or wasn't done: that's a scheduled run's report");
       // What was checked comes after what waits on the owner (Eval 41026186869, rule 1), and
       // only as a clause of that sentence: a sentence of its own about checking ("I read the
       // charge first.", "Antes lo revisé: …") is process the judges fail (Eval 42176052141).
-      expect(flat).toContain("What a check found goes inside that sentence, as one short clause at most, or not at all: never in a sentence of its own about what you read or checked.");
+      expect(flat).toContain("What a check found goes inside the sentence that says what you did, as one short clause at most, or not at all: never in a sentence of its own about what you read or checked");
       expect(flat).toContain("but \"I refunded €3 on the €1,000 charge, which had nothing refunded before.\"");
-      expect(flat).toContain("When the owner asked you to check something, what you found is the answer.");
+      // A held call's sentence carries none of it: the item's balance is what the held call's own
+      // rule leaves out, and this morning's "I read the charge first. It is €1,000 with nothing
+      // refunded yet." was on a held call (qa-kiff on #560).
+      expect(flat).toContain("and a held call's sentence carries none of it (above)");
+      // Only a check with nothing to do makes what was found the answer: "Check charge …, then
+      // refund" asks for a check too, and its "Antes lo revisé: …" failed (qa-kiff on #560).
+      expect(flat).toContain("When the owner asked only for a check, with nothing to do, what you found is the answer.");
+      expect(flat).not.toContain("When the owner asked you to check something");
       expect(flat).not.toContain("What you checked on the way comes after");
       // The example no longer has a held call carry the item's balance, which the held call's
       // own rule leaves out ("Nothing else: not what's left on the item").
