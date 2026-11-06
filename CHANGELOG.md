@@ -5,6 +5,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Customer mail from the company's own mailbox (`draft-the-card@4`).** A taf that writes to customers sends, by default, through a mail connection the company already has, so mail comes from its address and replies land where its staff work. Coach suggests a dedicated mailbox (`support@`), never a person's own inbox, and asks only for what the taf does: the send tool alone when it only sends. An inbox of the taf's own stays an option. The skill loads once the Upgrade names it.
+- **The reference check** in CI also fails on a comment that names "the PM", and the two left in the tree now state the decision alone.
+
 - **Coach hears every install.** Installing any version tells the owner's Coach, and Coach's chat shows "Version N is live." Before, only a version Coach made did: after v4 (Coach's), going back to v5 (an Upgrade's) said nothing, so Coach still read v4 as live. Coach's line says whether it made the version, and gives the version's own note when it didn't.
 - **A steer carries Coach's lines.** Words written to a Coach run that is still at work, such as one paused on an approval, now carry Coach's unread lines. Before, those lines stayed under every later message until the run ended, and Coach never read them. A refused steer leaves them for the next message.
 - **Docs:** the What I did card's steps stay 30 days with the drive's end in Coach's chat, not a day.

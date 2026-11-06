@@ -40,7 +40,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@5", "did-this-happen@1", "draft-the-card@3", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@3", "the-dial@1", "the-tafs@2", "usage-and-plans@1"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@1", "connect-an-app@5", "did-this-happen@1", "draft-the-card@4", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@3", "the-dial@1", "the-tafs@2", "usage-and-plans@1"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -144,8 +144,8 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@5", "draft-the-card@3", "halting@1", "name-the-tools@5", "set-up-a-taf@3", "usage-and-plans@1"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "connect-an-app@5", "draft-the-card@3", "improve-a-taf@1", "name-the-tools@5"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@1", "connect-an-app@5", "draft-the-card@4", "halting@1", "name-the-tools@5", "set-up-a-taf@3", "usage-and-plans@1"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@1", "connect-an-app@5", "draft-the-card@4", "improve-a-taf@1", "name-the-tools@5"]);
   });
 
   it("loads a skill by the tool whose procedure it is, and nothing for a vendor's tool or a tool with none", () => {

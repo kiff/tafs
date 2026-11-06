@@ -456,6 +456,14 @@ key or sign-in refused, caught at connect rather than at the taf's first run (ga
 
 ## Who a taf's messages come from
 
+A taf that writes to customers sends, by default, from a mailbox the company already has, through its
+own mail app's connection, found in the catalog like any app (an app the account connects comes first):
+mail then comes from the company's address, and replies land where its staff work. Coach suggests a
+dedicated mailbox (`support@`, a shared or a separate one), never a person's own inbox, since the app's
+access covers the whole mailbox, and asks for only what the taf does: the send tool alone when it only
+sends (`uses`, narrowed by planque). An inbox of the taf's own, from a mail app made for agents, stays an
+option Coach offers (`draft-the-card@4`).
+
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering the company's name, never the mail app's default (gap 16), and its result's taf carries the
 answer as `writes_for`. kiff/agents then ends each outside message with "Written by an AI agent for
@@ -467,7 +475,7 @@ the Upgrade gives that name to a taf from before that names no one. A version bu
 filing, such as Chargebacks' dispute evidence) carries the disclosure alone. For a mail app that can set
 it, Coach sets the inbox's sender name, and offers sending from the company's own domain when the app
 takes one, showing the DNS records for the owner to add and checking them before it says the domain
-works (gap 20, `draft-the-card@3`).
+works (gap 20, `draft-the-card@3` and on).
 
 A taf hands setting changes to Coach (gap 15): a connection or its key, its Card, tools or schedule.
 It says so in one line and shows an `ask_coach` card with the owner's request; the apps' Ask Coach
