@@ -253,6 +253,67 @@ final class DriveTests: XCTestCase {
         XCTAssertEqual(probe.taps, 1)
     }
 
+    final class Approval: ObservableObject {
+        @Published var open = false
+        @Published var approved = 0
+        @Published var dismissed = 0
+    }
+
+    /// An approval in a sheet, behind ApprovalGate, as the app's approvals are.
+    struct ApprovalScreen: View {
+        @ObservedObject var approval: Approval
+        let model: AppModel
+
+        var body: some View {
+            VStack {
+                Button("Review the request") { approval.open = true }.buttonStyle(PrimaryButtonStyle()).driveID("t.review")
+            }
+            .sheet(isPresented: $approval.open, onDismiss: { approval.dismissed += 1 }) {
+                VStack {
+                    Text("Stripe for Refunds").driveTerms("Stripe for Refunds")
+                    ApprovalGate {
+                        Button("Approve with Face ID") { approval.approved += 1 }.buttonStyle(PrimaryButtonStyle()).driveID("t.approve.sheet")
+                    }
+                }
+                .padding()
+                .environmentObject(model)
+            }
+            .environmentObject(model)
+        }
+    }
+
+    /// Back on an approval in progress dismisses it, as the person's own dismissal: it ends not approved,
+    /// nothing signs, and nothing asks again. Coach's tap on its Approve is refused before anything runs.
+    func testBackOnAnApprovalEndsItNotApproved() async throws {
+        targets.reset()
+        let approval = Approval()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let w = UIWindow(windowScene: scene)
+        w.windowLevel = .normal + 1
+        w.frame = scene.coordinateSpace.bounds
+        w.rootViewController = UIHostingController(rootView: ApprovalScreen(approval: approval, model: AppModel(signer: StubSigner())))
+        w.makeKeyAndVisible()
+        window = w
+        await settle(1.2)
+        let open = await act("tap", element: "t.review")
+        XCTAssertEqual(open.outcome, "done", open.line)
+        await settle(1.0)
+        XCTAssertTrue(approval.open)
+        let tap = await act("tap", element: "t.approve.sheet")
+        XCTAssertEqual(tap.line, "That's yours to confirm")
+        let look = await drive.run(TafsCloud.DriveRequest(id: "r", tool: "app_look", tree: true))
+        XCTAssertTrue(look.tree?.contains { $0.words == "An approval is open: Stripe for Refunds" && $0.actions.isEmpty } == true)
+        let back = await act("back")
+        XCTAssertEqual(back.line, "Went back")
+        await settle(1.5)
+        XCTAssertFalse(approval.open, "the approval is still open")
+        XCTAssertEqual(approval.dismissed, 1)
+        XCTAssertEqual(approval.approved, 0, "a dismissed approval approved")
+        await settle(1.0)
+        XCTAssertFalse(approval.open, "the approval asked again")
+        XCTAssertNil(DriveTargets.topPresented(), "something was presented again")
+    }
+
     func testAScrollShowsWhatsBelow() async throws {
         let probe = Probe()
         _ = try await show(probe)
