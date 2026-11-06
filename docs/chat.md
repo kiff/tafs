@@ -373,6 +373,10 @@ model names its cards, and may name a new one as it named one already answered: 
 no answer of the old one's. Each card carries `key`, unique in the thread, and an app keys a card, and what it
 took or is answering, by `key`, never by the model's `id` (which it still sends to answer). A call KIFF held is
 `{type: "held", held: {exception, invocation?, run, session, at}}`, at the point it was held: only
-KIFF's keys, and the app reads the call itself from KIFF. An app draws `items` as
+KIFF's keys, and the app reads the call itself from KIFF. In Coach's chat, a drive's end is
+`{type: "drive", drive: {id, session, task, why, words, steps, at}}`, at the time it ended: the request, why
+it ended in the person's words, and each step from tafs cloud's record (kiff/tafs#568, [drive.md](drive.md)).
+A card the run waits on carries `waits` (`owner`, or `service` for a result tafs cloud answers), as
+kiff/agents marks it: an app places a card by it, with no list of its own. An app draws `items` as
 they come, and places or folds nothing itself. `messages` and `components` stay, for apps from
 before.

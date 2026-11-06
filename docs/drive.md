@@ -386,12 +386,16 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
   - `notification_shown`.
 - **One request at a time,** in the order they came. Each is checked against `start_within_ms` when it starts.
 - **After the app restarts,** a drive still on at tafs cloud ended with the app, so the app posts its stop as `left_app`.
-- **While Coach drives,** its chat minimizes into the Coach button, which shows it's acting. At the end the chat opens again with the "What I did" card: the task, why it ended, and each step from `GET /v1/coach/drive`.
+- **While Coach drives,** its chat minimizes into the Coach button, which shows it's acting. At the end the chat opens again, with the drive's end in the thread at its time: the task, why it ended, and each step (a `drive` item, kiff/tafs#568). No card of the app's own follows the thread.
 
 ## What tafs cloud records
 
 - **The drive's steps:** each `app_act` the app did, with its caption and what it
-  touched, for the "What I did" card (`GET /v1/coach/drive`).
+  touched (`GET /v1/coach/drive`). A step again under the same caption is the same
+  step gone on: it's recorded once, where it ended.
+- **The drive's end, in Coach's chat:** when it ends, once, the request, why (in the
+  person's words) and the steps, kept 30 days with the chat. The thread shows it at
+  its time (`{type: "drive", drive}` in `items`, [chat.md](chat.md)).
 - **The account's events:** `drive_started`, `drive_step` (a step that touched
   something) and `drive_ended`, each with its own `title` and `detail` in tafs cloud's
   words, so an app shows them without new words of its own.

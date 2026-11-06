@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type CoachCall, Rich } from "../src/cloud/coach.js";
-import { askApp, currentDrive, DRIVE, driveArgs, DriveError, DriveRefusal, driveStream, endDrive, END_SAID, END_WHY, END_WORDS, putResult, resultOf, startDrive } from "../src/cloud/drive.js";
+import { askApp, currentDrive, DRIVE, driveArgs, DriveError, driveRecaps, DriveRefusal, driveSteps, driveStream, endDrive, END_SAID, END_WHY, END_WORDS, putResult, resultOf, startDrive } from "../src/cloud/drive.js";
 import { coachTool, type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -429,5 +429,51 @@ describe("a drive's chat, named on the call", () => {
     const other = await coachTool("app_look", {}, { ...w.coachCall, session: "another-chat" }, w.deps) as Rich;
     expect(other).toMatchObject({ isError: true });
     expect(other.content[0]).toMatchObject({ text: expect.stringContaining("approved in another chat") });
+  });
+});
+
+// kiff/tafs#568: a drive's end is a message in Coach's chat, from tafs cloud's record, and a step is recorded once.
+describe("a drive's end in Coach's chat", () => {
+  it("records a step again under the same caption once, where it ended", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Open Versions", r.now());
+    const act = async (id: string, line: string, words: string) => {
+      await r.store.put(`${T}#drive-rq#${d.id}#${id}`, { tool: "app_act", action: "tap", line }, new Date(NOW.getTime() + 60_000));
+      await putResult(r.store, T, ANA, d.id, id, { outcome: "done", line: `Tapped ${words}`, touched: { words } }, r.now());
+    };
+    // "Looking for Versions" in Setup, then in Card (the owner's phone, 6 Nov): one step, ending in Card.
+    await act("rq1", "Looking for Versions", "Setup");
+    await act("rq2", "Looking for Versions", "Card");
+    await act("rq3", "Opening Versions", "Versions");
+    const steps = await driveSteps(r.store, T, d.id);
+    expect(steps.map((x) => x.line)).toEqual(["Looking for Versions", "Opening Versions"]);
+    expect(steps[0]!.touched?.words).toBe("Card");
+    // The same caption after another step is a step of its own.
+    await act("rq4", "Looking for Versions", "Settings");
+    expect((await driveSteps(r.store, T, d.id)).map((x) => x.line)).toEqual(["Looking for Versions", "Opening Versions", "Looking for Versions"]);
+  });
+
+  it("keeps the end once, with the request, why and the steps, and Coach's thread shows it at its time", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    await w.coach.put(`${T}#drive-rq#${id}#rq1`, { tool: "app_act", action: "tap", line: "Opening Chargebacks" }, new Date(NOW.getTime() + 60_000));
+    await w.call("POST", `/v1/coach/drive/${id}/results/rq1`, { outcome: "done", line: "Tapped Chargebacks", touched: { words: "Chargebacks" } });
+    await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "owner_took_over" });
+    // A second end changes nothing, and writes no second recap.
+    await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "stopped" });
+    const recaps = await driveRecaps(w.coach, T, w.session);
+    expect(recaps).toHaveLength(1);
+    expect(recaps[0]).toMatchObject({ id, session: w.session, task: "Run Chargebacks", why: "owner_took_over", words: "You touched the app, so it's yours now",
+      steps: [{ line: "Opening Chargebacks", touched: { words: "Chargebacks" } }], at: NOW.toISOString() });
+    // Another chat of the same person has none.
+    expect(await driveRecaps(w.coach, T, "s_other")).toEqual([]);
+    const thread = await w.call("GET", `/v1/tafs/${COACH}/conversation`);
+    const items = thread.body.items as Array<{ type: string; card?: { component: { type?: string } }; drive?: Record<string, unknown> }>;
+    const card = items.findIndex((i) => i.type === "card" && i.card?.component.type === "drive");
+    const end = items.findIndex((i) => i.type === "drive");
+    expect(card).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(card);
+    expect(items[end]!.drive).toMatchObject({ id, why: "owner_took_over", words: "You touched the app, so it's yours now", task: "Run Chargebacks" });
   });
 });

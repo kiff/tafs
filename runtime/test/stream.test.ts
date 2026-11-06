@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
 import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
@@ -75,7 +75,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { event: "delta", data: { kind: "thinking", text: "Let me look at the charge first" } },
       { event: "delta", data: { kind: "text", text: "Checking." } },
       { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "show", input: { type: "approval" } } },
-      { event: "delta", data: { kind: "component", component: { type: "approval", id: "a1", grant: "g_1" } } },
+      { event: "delta", data: { kind: "component", component: { type: "approval", id: "a1", grant: "g_1", waits: "owner" } } },
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Refund order 42" } });
     const lines = r.states.map((s) => s.state);
@@ -86,6 +86,48 @@ describe("a message streamed (kiff/tafs#60)", () => {
     // Sent only on a change, and the model's thinking text is never in the line.
     expect(lines.every((l, i) => i === 0 || l !== lines[i - 1])).toBe(true);
     expect(JSON.stringify(r.states)).not.toContain("Let me look");
+  });
+
+  // kiff-cloud#1487's latency hunt: where a message's wait goes, one log line, times only.
+  it("logs where the message's wait went, step by step, with its first words and end, and nothing of the chat", async () => {
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => { logged.push(String(line)); });
+    try {
+      const w = world();
+      w.agents.streamed.push(
+        { event: "delta", data: { kind: "update", text: "Checking the charge…" } },
+        { event: "delta", data: { kind: "text", text: "Refunded order 42." } },
+      );
+      await stream(w, PATH, { token: "ana", body: { text: "Refund order 42" } });
+    } finally {
+      spy.mockRestore();
+    }
+    const lines = logged.filter((l) => l.includes('"event":"stream"'));
+    expect(lines).toHaveLength(1);
+    const line = JSON.parse(lines[0]!) as Record<string, unknown>;
+    expect(Object.keys(line)).toEqual(["event", "cold", "person_ms", "taf_ms", "answer_ms", "lines_ms", "chat_ms", "skills_ms", "first_event_ms", "first_words_ms", "end_ms", "whole"]);
+    expect(typeof line.first_words_ms).toBe("number");
+    expect(line.whole).toBe(true);
+    for (const word of ["Refund", "order", "42", "ana", RAE]) expect(lines[0]).not.toContain(word);
+  });
+
+  // kiff/tafs#568: which card waits for the person is kiff/agents' to say, on the card (`waits`), once for
+  // tafs cloud and both apps. A drive card waits for them; a result, which tafs cloud answers, and a plan don't.
+  it("waits for the person only on a card kiff/agents marks as theirs", async () => {
+    const waiting = async (component: Record<string, unknown>) => {
+      const w = world();
+      w.agents.streamed.push(
+        { event: "delta", data: { kind: "text", text: "One moment." } },
+        { event: "delta", data: { kind: "component", component } },
+      );
+      const r = await stream(w, PATH, { token: "ana", body: { text: "Show me in the app" } });
+      return r.states.some((s) => s.state === "waiting_for_you");
+    };
+    expect(await waiting({ type: "drive", id: "d1", text: "Open Refunds", waits: "owner" })).toBe(true);
+    expect(await waiting({ type: "result", id: "r1", waits: "service" })).toBe(false);
+    expect(await waiting({ type: "steps", id: "plan", steps: [{ label: "Connect", status: "active" }] })).toBe(false);
+    // No list of its own: an approval without the mark isn't taken for one that waits.
+    expect(await waiting({ type: "approval", id: "a1", grant: "g_1" })).toBe(false);
   });
 
   // On Claude Opus 5.5 Coach's line before a tool call comes back as a progress note, not as text, and

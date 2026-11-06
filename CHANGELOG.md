@@ -5,6 +5,13 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **A drive's end is a message in Coach's chat, and the cards' waits come from kiff/agents (kiff/tafs#568, tafs cloud's side).**
+  - **The drive's end, in the thread at its time:** when a drive ends, tafs cloud keeps its end with Coach's chat, once: the request, why it ended in the person's words, and each step from its record. The thread has it as a `drive` item at the time it ended, so both apps can draw it in place, with no "What I did" card of their own after the thread. The apps' side comes in its own change.
+  - **A step is recorded once:** a step again under the same caption ("Looking for Versions", once in Setup and again in Card) is one step, recorded where it ended.
+  - **Where Coach left the app:** after a drive, Coach says where it left the app ("I left it on Save Cancels' Versions"), never what is on screen now, which it no longer sees (Coach's skill drive-the-app@2).
+  - **Which card waits:** the live line says the run waits for the person on a card kiff/agents marks `waits: "owner"`, and keeps no list of its own. Its list had left out the drive card. This needs kiff/agents' change that marks cards (kiff/agents#351): until it's deployed, the line never says it waits on a card.
+- **Each streamed message logs where its wait went:** one line per message in tafs cloud's log, with each step before the run starts, the run's first event, the first words sent and the end, in milliseconds, and whether the function started cold. It holds numbers only, never a body, an id or a word.
+
 - **An answer to a hold that comes before its run has paused is early, not failed.** When the owner answers a hold before the taf's run has stored its pause, kiff/agents asks for the alert again. tafs cloud passed that on as a 502 with an error in its log, about 70 a day from the Eval's fast answers. It now answers KIFF 409 with a warning, and KIFF delivers it again the same way. The phones are still told once, and these early deliveries no longer count toward giving the alert up.
 - **On Android, Coach's words with a drive card come before it.** The drive card waits for the person like an approval, so Coach's line written with it ("I'm waiting for you to approve the drive.") goes above the card, as on iOS, not under "Approved".
 - **A drive names what Coach touched by its title.** The caption and the "What I did" card said all of a tapped row's words ("Refunds · R Refunds Works from its chat Ready Refund a charge …"); they now say its description, or its first words that aren't a lone letter ("Refunds"). Coach's tree keeps the row's words whole. Android; iOS names a touch by its registered label already.
