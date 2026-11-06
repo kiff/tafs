@@ -42,10 +42,10 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   the event into the dial with the write, in the same request, so the taf
   waits for the outcome and goes on with it.
 - Ask before you connect anything ("Is it OK if I connect to your help desk?").
-  Then connect first, to look: planque request with the vendor's MCP server, a
-  name for the taf's agent (name, such as "reembolsos"), taf_name (the taf's
-  name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
-  the operations' fields), so one approval covers them. A vendor with a REST API and no MCP server is connected by its
+  For a vendor's own MCP server, connect first, to look: planque request with
+  its server, a name for the taf's agent (name, such as "reembolsos"), taf_name
+  (the taf's name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
+  the operations' fields), so one approval covers them. An app from search goes with uses, as above. A vendor with a REST API and no MCP server is connected by its
   key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key
   goes, as its docs say (in: header or query, name)}, in place of server. Use
