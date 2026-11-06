@@ -78,8 +78,10 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.brandBackground
 import bot.tafs.app.design.scaled
 import bot.tafs.app.app.AppModel
+import androidx.compose.material3.TextButton
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatEnd
+import bot.tafs.app.model.ChatWords
 import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.LiveAnswer
@@ -217,15 +219,25 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                 )
               }
               when (item) {
-                is ChatItem.Message -> MessageRow(
-                  item.message,
-                  tafId = tafId,
-                  files = actions.files,
-                  onEdit = { text -> setDraft(text) },
-                  onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
-                  // An answer of Coach's or the taf's, reported by tafs cloud's id for it; none in the sample.
-                  onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
-                )
+                is ChatItem.Message -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                  MessageRow(
+                    item.message,
+                    tafId = tafId,
+                    files = actions.files,
+                    onEdit = { text -> setDraft(text) },
+                    onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
+                    // An answer of Coach's or the taf's, reported by tafs cloud's id for it; none in the sample.
+                    onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
+                  )
+                  // Not sent: why, and Retry or Edit, under the words as written (kiff/tafs#476).
+                  state.chatUnsent[tafId]?.firstOrNull { it.message == item.message }?.let { unsent ->
+                    NotSentLine(
+                      unsent.why,
+                      onRetry = { following = true; actions.retryUnsent(tafId, unsent.message) },
+                      onEdit = { actions.editUnsent(tafId, unsent.message)?.let(setDraft) },
+                    )
+                  }
+                }
                 is ChatItem.Held -> HeldCallCard(item.call, state, actions.answer)
                 is ChatItem.Outcome -> OutcomeLine(Chat.outcomeText(item.entry), outcomeTone(item.entry.kind), outcomeMark(item.entry.kind))
                 is ChatItem.Card -> CoachCard(item.shown, state, actions.coach)
@@ -619,5 +631,17 @@ private fun NeedsYouPill(text: String, onClick: () -> Unit) {
   ) {
     Box(Modifier.size(8.dp).clip(CircleShape).background(Theme.amber))
     Text(text, style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+  }
+}
+
+/** Under an owner's message that wasn't sent: why, then Retry (sends it once) and Edit (back to the box). */
+@Composable
+private fun NotSentLine(why: String, onRetry: () -> Unit, onEdit: () -> Unit) {
+  Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Text("${ChatWords.NOT_SENT} · $why", style = scaled(13, color = Theme.no), textAlign = TextAlign.End)
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+      TextButton(onClick = onEdit) { Text(ChatWords.EDIT, style = scaled(14, color = Theme.soft)) }
+      TextButton(onClick = onRetry) { Text(ChatWords.RETRY, style = scaled(14, color = Theme.ink)) }
+    }
   }
 }

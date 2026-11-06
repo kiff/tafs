@@ -86,6 +86,9 @@ class TafActions(
   val connections: ConnectionActions,
   /** Stops what the taf is doing in its chat. */
   val stopChat: suspend (String) -> Unit = {},
+  /** A message that wasn't sent: Retry sends it once; Edit gives its words back for the box, or null when it went already. */
+  val retryUnsent: (String, ChatMessage) -> Unit = { _, _ -> },
+  val editUnsent: (String, ChatMessage) -> String? = { _, _ -> null },
   /** Photos and files on a message (docs/attachments.md). */
   val files: FileActions = FileActions(),
   /** Runs it now, outside its schedule (tafs cloud). */

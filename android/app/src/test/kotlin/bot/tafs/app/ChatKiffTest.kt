@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -321,7 +322,7 @@ class ChatKiffTest {
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
     // Never "It changed in the meantime": tafs cloud's words for why.
-    assertEquals("The message wasn't sent. $spent", m.state.value.chatErrors["refunds-1"])
+    assertEquals("The message wasn't sent. $spent", m.state.value.chatUnsent["refunds-1"]!!.single().why)
   }
 
   @Test fun aRunKiffAgentsRefusedSaysWhyInTafsCloudsWordsOnThePlainRoute() = runTest {
@@ -332,20 +333,49 @@ class ChatKiffTest {
     val m = model()
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
-    assertEquals("The message wasn't sent. Refunds is halted. Resume it from Halt to go on.", m.state.value.chatErrors["refunds-1"])
+    assertEquals("The message wasn't sent. Refunds is halted. Resume it from Halt to go on.", m.state.value.chatUnsent["refunds-1"]!!.single().why)
   }
 
-  @Test fun aMessageThatDoesNotGoIsTakenOffTheScreenAndSaysWhy() = runTest {
+  /** A message that doesn't go stays in the thread as written, marked not sent with why (kiff/tafs#476): nothing is lost. */
+  @Test fun aMessageThatDoesNotGoStaysMarkedNotSentAndSaysWhy() = runTest {
     readsOf()
     transport.answer(conversation, 200, thread())
     transport.answer("POST /v1/tafs/taf_1/messages", 500, """{"error":"boom"}""")
     val m = model()
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
-    assertTrue(m.messages().isEmpty())
     assertTrue(m.state.value.chatSent.isEmpty())
-    assertEquals("The message wasn't sent. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.chatErrors["refunds-1"])
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("hello", unsent.message.text)
+    assertEquals(bot.tafs.app.model.Unsent.SESSION, unsent.message.session)
+    assertEquals("The message wasn't sent. It isn't working on our side right now. Nothing to do on your side; try again later.", unsent.why)
+    assertNull("said under the message, not above the box", m.state.value.chatErrors["refunds-1"])
+    // The thread shows it where it was written, and a reload keeps it.
+    assertTrue(m.state.value.chatItems("refunds-1").any { it is bot.tafs.app.model.ChatItem.Message && it.message == unsent.message })
+    m.loadChat("refunds-1")
+    assertEquals(listOf(unsent), m.state.value.chatUnsent["refunds-1"])
     assertFalse(m.state.value.thinking("refunds-1"))
+  }
+
+  /** Retry sends a message that wasn't sent once, and it leaves "Not sent"; Edit gives its words back and takes it away. */
+  @Test fun retrySendsANotSentMessageOnceAndEditGivesItsWordsBack() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages", 500, """{"error":"boom"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("hello", "refunds-1"))
+    assertFalse(m.deliverChat("and this", "refunds-1"))
+    val (first, second) = m.state.value.chatUnsent["refunds-1"]!!.map { it.message }
+    transport.answer("POST /v1/tafs/taf_1/messages", 200, """{"session":"s1","run":"r1","message":{"id":"m_9"}}""")
+    m.retryUnsent("refunds-1", first)
+    m.retryUnsent("refunds-1", first) // a second tap finds nothing left to send
+    advanceUntilIdle()
+    assertEquals(3, transport.requestsTo("POST /v1/tafs/taf_1/messages").size) // two refused, then one
+    assertEquals(listOf(second), m.state.value.chatUnsent["refunds-1"]!!.map { it.message })
+    assertEquals("and this", m.editUnsent("refunds-1", second))
+    assertNull(m.editUnsent("refunds-1", second))
+    assertNull(m.state.value.chatUnsent["refunds-1"])
   }
 
   @Test fun writingTooManyMessagesTooFastIsSaidKindly() = runTest {
@@ -355,7 +385,7 @@ class ChatKiffTest {
     val m = model()
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
-    assertEquals("That's a lot of messages in a few minutes. Give Refunds a moment, then try again.", m.state.value.chatErrors["refunds-1"])
+    assertEquals("That's a lot of messages in a few minutes. Give Refunds a moment, then try again.", m.state.value.chatUnsent["refunds-1"]!!.single().why)
   }
 
   @Test fun anEmptyOrTooLongMessageIsNotSent() = runTest {
