@@ -186,6 +186,7 @@ struct AppConnectionsView: View {
                                 .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                                 .disabled(model.connecting != nil || busy != nil)
                                 .accessibilityIdentifier("connect.fix." + g.id)
+                                .confirming()
                             }
                             if let why = model.reconnectErrors[g.id] {
                                 Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)

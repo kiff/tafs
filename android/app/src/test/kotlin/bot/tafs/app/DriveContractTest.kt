@@ -106,8 +106,9 @@ class DriveContractTest {
       "views/DeleteAccountView.kt" to "heightIn(min = 48.dp).confirms()\n            .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }",
       "views/UsageViews.kt" to "Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
       "views/DevicesView.kt" to "scope.launch { remove(device) } }, modifier = Modifier.confirms())",
+      "views/ConnectAppsViews.kt" to "Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { act(g) }",
     ).filter { (file, marked) -> marked !in File(sources, file).text() }
-    assertTrue("Delete account, a pack's price and signing out another device confirm: $onModifiers", onModifiers.isEmpty())
+    assertTrue("Delete account, a pack's price, signing out another device and a connection's fix confirm: $onModifiers", onModifiers.isEmpty())
     // And everything ApprovalGate holds is inside it: the approvals, extra room, "Did this happen?", install, resume.
     val gated = files().sumOf { Regex("""ApprovalGate \{""").findAll(it.text()).count() }
     assertTrue("the approval gate is in use", gated >= 10)

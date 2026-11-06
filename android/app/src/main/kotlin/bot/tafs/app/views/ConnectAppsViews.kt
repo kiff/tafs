@@ -179,7 +179,7 @@ fun ConnectAppsSheet(
                     Text(
                       if (g.takesKey) bot.tafs.app.model.ConnectionWords.REPLACE_KEY else bot.tafs.app.model.ConnectionWords.SIGN_IN_AGAIN,
                       style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-                      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.connecting == null) { act(g) }.padding(top = 10.dp),
+                      modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { act(g) }.padding(top = 10.dp),
                     )
                   }
                   state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }

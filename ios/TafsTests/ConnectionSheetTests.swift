@@ -44,6 +44,8 @@ final class ConnectionSheetTests: XCTestCase {
     func testASignInThatNeverCameBackIsWaitingAndCanBeCancelled() throws {
         XCTAssertTrue(try grant("g7", agent: "cal-1", status: "approved").waitingSignIn)
         XCTAssertFalse(try grant("g8", agent: "cal-1", status: "connected").waitingSignIn)
+        // Marked connected by this phone: not waiting, as on Android.
+        XCTAssertFalse(try grant("g7", agent: "cal-1", status: "approved").marked(connected: true).waitingSignIn)
         XCTAssertEqual(ConnectionFixWords.waiting("Google Calendar"), "Waiting for the sign-in at Google Calendar")
         XCTAssertEqual(ConnectionFixWords.cancelTitle("Google Calendar"), "Cancel the sign-in to Google Calendar?")
     }

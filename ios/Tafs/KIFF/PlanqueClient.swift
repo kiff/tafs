@@ -181,7 +181,7 @@ final class PlanqueClient {
         var takesKey: Bool { request.kind == "api_key" }
         /// Approved, and waiting on a sign-in at the vendor that hasn't come back: the owner may
         /// cancel it, which ends the grant, and connect again.
-        var waitingSignIn: Bool { status == "approved" && signedIn != true }
+        var waitingSignIn: Bool { status == "approved" && signedIn != true && !connectedNow }
         /// The signed-out connection in planque's words; before planque sends them, the app's.
         var signedOutWords: String {
             statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? "Signed out by \(vendor) · sign in again"
