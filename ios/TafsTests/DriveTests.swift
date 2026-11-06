@@ -397,6 +397,7 @@ final class DriveTests: XCTestCase {
         ("Views/HaltScreen.swift", #"Button(busy ? "Resuming…""#),
         ("Views/ConnectAppsView.swift", #"Button(busy == g.id ? "Disconnecting…""#),
         ("Views/ConnectAppsView.swift", #"Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain)"#),
+        ("Views/TafPresentationViews.swift", #"Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain)"#),
         ("Views/TafPresentationViews.swift", #"Button(ask.dismiss_title"#),
         ("Views/TafPresentationViews.swift", #"Button("Disconnect", role: .destructive) { disconnect = true }"#),
         ("Views/DoorsView.swift", #"Button("Remove door""#),

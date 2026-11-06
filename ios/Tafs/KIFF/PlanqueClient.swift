@@ -179,6 +179,10 @@ final class PlanqueClient {
         /// Reached with a key the owner gives (planque's `api_key`), not a sign-in: it's fixed
         /// with a new key (gap 13).
         var takesKey: Bool { request.kind == "api_key" }
+        /// A managed provider's connection, connected: planque can't sign it in again in place
+        /// (it can't tell which account a new sign-in at the provider is), so it's disconnected
+        /// and connected again instead.
+        var signsInThroughProvider: Bool { request.connector != nil && connected && !takesKey }
         /// Approved, and waiting on a sign-in at the vendor that hasn't come back: the owner may
         /// cancel it, which ends the grant, and connect again.
         var waitingSignIn: Bool { status == "approved" && signedIn != true && !connectedNow }

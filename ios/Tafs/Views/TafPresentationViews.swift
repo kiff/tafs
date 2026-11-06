@@ -113,6 +113,7 @@ private struct ConnectedAppSheet: View {
     let activity: (String) -> Void
     @State private var disconnect = false
     @State private var busy = false
+    @State private var replacing: PlanqueClient.Grant?
     var body: some View {
         NavStack {
             List {
@@ -120,6 +121,23 @@ private struct ConnectedAppSheet: View {
                     Text(app.status_words).foregroundColor(app.reconnect ? Theme.amberText : Theme.soft)
                     if app.reconnect, model.manages(tafID) {
                         Button("Sign in again") { Task { await model.reconnectApp(app.id); await model.loadTafSetup(tafID) } }
+                    }
+                    // Gap 13, where an owner whose taf fails looks first: its last failed call, and
+                    // how to fix the connection.
+                    if let g = model.grants.first(where: { $0.id == app.id }) {
+                        if let failed = model.lastFailure(g) { Text(failed).scaledFont(13).foregroundColor(Theme.no) }
+                        if !app.reconnect, model.manages(tafID), g.connected || g.needsReconnect {
+                            if g.signsInThroughProvider {
+                                Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
+                            } else {
+                                Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
+                                    if g.takesKey { replacing = g } else { Task { await model.reconnect(g); await model.loadTafSetup(tafID) } }
+                                }
+                                .disabled(model.connecting != nil)
+                                .accessibilityIdentifier("taf.fix." + g.id)
+                                .confirming()
+                            }
+                        }
                     }
                     if let error = model.reconnectErrors[app.id] { Text(error).foregroundColor(Theme.no) }
                 }
@@ -150,6 +168,9 @@ private struct ConnectedAppSheet: View {
             }
             .navigationTitle(app.name).screenBackground()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .sheet(item: $replacing) { g in
+                ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
+            }
             .confirmationDialog("Disconnect \(app.name)?", isPresented: $disconnect, titleVisibility: .visible) {
                 Button("Disconnect", role: .destructive) {
                     busy = true
