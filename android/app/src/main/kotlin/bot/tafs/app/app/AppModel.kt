@@ -2094,7 +2094,7 @@ class AppModel(
    * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
    */
   suspend fun reconnect(grant: Grant) {
-    val result = connect(grant.id, grant.id, grant.digest)
+    val result = connect(grant.id, grant.id, grant.digest, again = true)
     if (result is Connected.Failed) note(grant.id, result.why)
   }
 
@@ -3312,7 +3312,11 @@ class AppModel(
       }
   }
 
-  suspend fun connect(cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null): Connected {
+  suspend fun connect(
+    cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null,
+    /** Sign in again (gap 13): a connected grant goes through its vendor's sign-in again, kept apart until this phone confirms it. */
+    again: Boolean = false,
+  ): Connected {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
       return Connected.Failed("Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.")
@@ -3342,7 +3346,7 @@ class AppModel(
       } catch (e: Exception) {
         return Connected.Failed("Couldn't read what to approve. ${ErrorWords.of(e)}", "couldn't read what to approve: ${e.message}")
       }
-      if (grant.connected) {
+      if (grant.connected && !again) {
         // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a draft. One confirmation confirms them.
         // Done only after a signature made here: a connection already connected with no Cards left to confirm signs nothing, so it
         // isn't approved. Coach hears that, and asks for what it needs as a new grant.
@@ -3371,7 +3375,8 @@ class AppModel(
         return Connected.Done(grant)
       }
       // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
-      if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect")) {
+      // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until this phone confirms the new one.
+      if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect") && !(again && grant.connected)) {
         return Connected.Failed("This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."))
       }
       if (!grant.digestMatches) return Connected.Failed(PlanqueError.DigestMismatch.message!!)

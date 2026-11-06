@@ -626,6 +626,28 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Gap 13: a connection that's still connected signs in again in place: one Face ID, the
+    /// vendor's page, then planque's confirmation, on the same grant. Without `again`, a
+    /// connected grant is the second approval and nothing goes to planque.
+    func testAConnectedGrantSignsInAgainInPlace() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"connected","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grantJSON(status: "connected"))
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+        StubProtocol.sent = []
+
+        let connected = await model.connect(grantID: "g_01", shown: Self.digest, again: true)
+        XCTAssertEqual(connected?.status, "connected", model.lastError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)"])
+        XCTAssertEqual(vendor.opened.count, 1)
+        XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").count, 1)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Back from the vendor, it's signed in only once planque says connected, never because
     /// the page closed.
     func testASignInPlanqueDoesntConnectIsNotSignedIn() async throws {

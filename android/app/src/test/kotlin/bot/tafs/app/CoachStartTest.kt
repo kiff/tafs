@@ -509,6 +509,21 @@ class CoachStartTest {
     assertEquals(1, auth.asked.size)
   }
 
+  /** Gap 13: a connection that's still connected signs in again in place, approved, opened and confirmed like any sign-in. */
+  @Test fun aConnectedConnectionSignsInAgainInPlace() = runTest {
+    reads()
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("connected")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"connected","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("connected"))
+    val vendor = FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de")
+    val m = model(vendor)
+    m.reconnect(KiffClient.json.decodeFromString(grant("connected")))
+    assertEquals(1, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").size)
+    assertEquals("https://mcp.stripe.com/oauth", vendor.opened)
+    assertEquals(1, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/confirm").size)
+    assertNull(m.state.value.coachNotes["g1"])
+  }
+
   @Test fun aSignInThatCameBackButDidNotConnectIsNeverSignedIn() = runTest {
     reads()
     coachThread(signInCard)

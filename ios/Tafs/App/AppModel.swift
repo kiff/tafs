@@ -4986,7 +4986,7 @@ final class AppModel: ObservableObject {
         lastError = nil
         reconnectErrors[grant.id] = nil
         shownTermsChanged = false
-        let done = await connect(grantID: grant.id, shown: grant.digest)
+        let done = await connect(grantID: grant.id, shown: grant.digest, again: true)
         if done?.connected != true {
             reconnectErrors[grant.id] = lastError ?? quietStop ?? "Nothing was signed in. Try again."
             lastError = nil
@@ -5101,7 +5101,9 @@ final class AppModel: ObservableObject {
     /// draft's version: Face ID signs exactly that (kiff/tafs#115). Terms that changed since
     /// are put on screen and not signed, and the owner approves again; nothing shown, nothing
     /// signed.
-    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil) async -> PlanqueClient.Grant? {
+    /// `again`: sign in again (gap 13). A connected grant goes through its vendor's sign-in again,
+    /// kept apart by planque until this phone confirms it.
+    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil, again: Bool = false) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
             return nil
@@ -5136,7 +5138,7 @@ final class AppModel: ObservableObject {
             lastError = "Couldn't read what to approve: \(error.localizedDescription)"
             return nil
         }
-        if grant.connected {
+        if grant.connected, !again {
             // The second approval (kiff/agents#91): the vendor is connected, and the
             // taf's Cards over its tools wait as a draft. One Face ID confirms them.
             // Nothing left to sign: the grant is returned as it is, and noted, so an
@@ -5170,7 +5172,9 @@ final class AppModel: ObservableObject {
             return grant
         }
         // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
-        guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) else {
+        // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until
+        // this phone confirms the new one.
+        guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
             lastError = "This connection is \(grant.status.replacingOccurrences(of: "_", with: " "))\(grant.reason.map { ": \($0)" } ?? ".")"
             return nil
