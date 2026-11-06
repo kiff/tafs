@@ -172,9 +172,7 @@ struct SetupThread: Equatable {
         return sorted.filter { seen.insert($0.id).inserted }
     }
 
-    /// The cards that wait for the owner to act: each comes after the words Coach wrote with it.
-    /// The same set as Android's `CoachWords.ASKING`, which a test there reads from here.
-    static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result, .knob, .drive]
+    private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result, .drive]
     private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .drive]
 
     private func placedAt(_ c: ShownComponent) -> Date {
