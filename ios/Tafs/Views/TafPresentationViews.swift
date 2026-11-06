@@ -221,20 +221,60 @@ private struct SourceActivityRow: View {
         return result
     }
     var body: some View {
-        Button { receipt = true } label: {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                    Text(entry.detail).scaledFont(13).foregroundColor(Theme.soft)
+        VStack(alignment: .leading, spacing: 6) {
+            Button { receipt = true } label: {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(entry.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                        Text(entry.detail).scaledFont(13).foregroundColor(Theme.soft)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing) {
+                        Text(entry.time).scaledFont(12).foregroundColor(Theme.dim)
+                        if let amount = entry.amount_text { Text(amount).scaledFont(13, weight: .semibold).foregroundColor(Theme.ink) }
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5).contentShape(Rectangle())
+            }.buttonStyle(.drivablePlain).accessibilityHint("Shows the receipt")
+            if let next = entry.next { NextStepRow(tafID: tafID, entry: entry, next: next) }
+        }
+        .sheet(isPresented: $receipt) { if let evidence { ReceiptView(entry: evidence).environmentObject(model) } }
+    }
+}
+
+/// A not-done call's next step, as tafs cloud says it (kiff/tafs#476, gap 10): Connect it again
+/// (signing in again where its vendor signed it out, else Connect apps), Ask Coach (Coach on
+/// this taf, its first message written in, nothing sent), or a line. Only someone who manages
+/// the taf gets a button; anyone else, and a kind this app doesn't know, reads the words alone.
+private struct NextStepRow: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+    let entry: TafsCloud.ActivityEntry
+    let next: TafsCloud.NextStep
+    @State private var connect = false
+    @State private var busy = false
+    var body: some View {
+        let action = model.nextStep(next, tafID: tafID, fallback: "\(entry.title): \(entry.detail)")
+        let may: Bool = {
+            guard model.mode == .kiff, model.manages(tafID) else { return false }
+            if case .askCoach = action { return model.mayUseCoach }
+            return action != .line
+        }()
+        if may {
+            Button(next.words) {
+                switch action {
+                case .signInAgain(let grant):
+                    busy = true
+                    Task { await model.reconnect(grant); busy = false }
+                case .askCoach(let words): model.askCoachAbout(tafID, words: words)
+                case .connectApps: connect = true
+                case .line: break
                 }
-                Spacer()
-                VStack(alignment: .trailing) {
-                    Text(entry.time).scaledFont(12).foregroundColor(Theme.dim)
-                    if let amount = entry.amount_text { Text(amount).scaledFont(13, weight: .semibold).foregroundColor(Theme.ink) }
-                }
-            }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5).contentShape(Rectangle())
-        }.buttonStyle(.drivablePlain).accessibilityHint("Shows the receipt")
-            .sheet(isPresented: $receipt) { if let evidence { ReceiptView(entry: evidence).environmentObject(model) } }
+            }
+            .buttonStyle(OutlineButtonStyle()).disabled(busy)
+            .sheet(isPresented: $connect) { NavStack { ConnectAppsView().environmentObject(model) } }
+        } else {
+            Text(next.words).scaledFont(13).foregroundColor(Theme.soft)
+        }
     }
 }
 

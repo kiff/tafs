@@ -199,7 +199,7 @@ class ChatStreamTest {
     val m = model()
     assertTrue(!m.deliverChat("hello", "refunds-1"))
     assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
-    assertTrue(m.state.value.chatErrors["refunds-1"]!!.startsWith("That's a lot of messages"))
+    assertTrue(m.state.value.chatUnsent["refunds-1"]!!.single().why.startsWith("That's a lot of messages"))
   }
 
   @Test fun stopCancelsTheSessionsRunAndTheChatSaysSo() = runTest {

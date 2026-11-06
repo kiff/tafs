@@ -3577,6 +3577,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID, default: ChatState()].working = thread.working
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
+            chatStates[tafID]?.askCoach = thread.askCoach
             // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
             // run at work, or one that answered since, is past it.
             chatStates[tafID]?.capped = thread.working == nil ? thread.capped?.stop : nil
@@ -3854,6 +3855,8 @@ final class AppModel: ObservableObject {
         var awaiting: Date?
         var live: LiveAnswer?
         var unsent: [UnsentMessage] = []
+        /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
+        var askCoach: [TafsCloud.AskCoachCard] = []
         var queued: String?
         var ended: RunEnd?
         /// What the failed run did before it stopped (kiff/agents#249), said with Retry.
@@ -4152,6 +4155,14 @@ final class AppModel: ObservableObject {
         chatStates[tafID]?.unsent.removeAll { $0.id == message.id }
     }
 
+    /// Takes a message that wasn't sent out of the thread, to change it in the composer
+    /// (kiff/tafs#476): its words, or nil when it's gone already (sent, or taken).
+    func editUnsentChat(_ message: UnsentMessage, from tafID: UUID) -> String? {
+        guard chatStates[tafID]?.unsent.contains(where: { $0.id == message.id }) == true else { return nil }
+        discardUnsentChat(message, from: tafID)
+        return message.text
+    }
+
     /// The stops at a cap of the run's own: it ends with no words for it.
     nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap"]
 
@@ -4225,6 +4236,8 @@ final class AppModel: ObservableObject {
         /// Someone wrote through a door (docs/doors.md), at its time among the messages: the
         /// owner answers it there.
         case knock(TafsCloud.Knock)
+        /// A setting the taf hands to Coach (kiff/tafs#476, gap 15), at its time.
+        case askCoach(TafsCloud.AskCoachCard)
         var id: String {
             switch self {
             case .message(let m): return "m|" + m.id
@@ -4234,6 +4247,7 @@ final class AppModel: ObservableObject {
             case .outcome(let e): return "k|" + e.id.uuidString
             case .streaming(let id, _): return id
             case .knock(let k): return "d|" + k.id
+            case .askCoach(let c): return "a|" + c.id
             }
         }
         var at: Date {
@@ -4246,6 +4260,7 @@ final class AppModel: ObservableObject {
             case .outcome(let e): return e.answer?.at ?? e.madeAt ?? e.at
             case .streaming(_, let m): return m.at
             case .knock(let k): return k.at
+            case .askCoach(let c): return c.at
             }
         }
     }
@@ -4267,6 +4282,8 @@ final class AppModel: ObservableObject {
         var items = messages.map(ChatItem.message) + held.map(ChatItem.held)
         // A door's knocks sit at their own times, so a reply newer than a knock comes after it.
         if mode == .kiff, !doorsOffered.isEmpty { items += (chatKnocks[tafID] ?? []).map(ChatItem.knock) }
+        // The settings it handed to Coach, each at its time (kiff/tafs#476, gap 15).
+        if mode == .kiff { items += (chatStates[tafID]?.askCoach ?? []).map(ChatItem.askCoach) }
         if let first = messages.first?.at {
             // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
             items += entries(for: tafID).filter {
@@ -5464,6 +5481,21 @@ final class AppModel: ObservableObject {
         setupContextTafID = setupImproving?.id
     }
 
+    /// Coach on a taf, with words in the box for the owner to send (kiff/tafs#476, gaps 10 and
+    /// 15): a not-done call's Ask Coach, or a taf's ask_coach card. Nothing is sent. Only for
+    /// someone who may use Coach and manages the taf.
+    func askCoachAbout(_ tafID: UUID, words: String) {
+        guard mode == .kiff, mayUseCoach, manages(tafID) else { return }
+        improveTaf(tafID)
+        setupDraft = words
+        coachOpen = true
+    }
+
+    /// What a not-done call's next step does on this taf's Activity row (kiff/tafs#476, gap 10).
+    func nextStep(_ next: TafsCloud.NextStep, tafID: UUID, fallback: String) -> NextStepWords.Action {
+        NextStepWords.action(next, agent: cloudTaf(for: tafID)?.kiffAgent, grants: grants, fallback: fallback)
+    }
+
     func discussCardUnit(_ ask: TafsCloud.CardUnitException) {
         guard mode == .kiff, mayUseCoach,
               let taf = tafs.first(where: { cloudTaf(for: $0.id)?.id == ask.taf }), manages(taf.id) else { return }
@@ -5921,6 +5953,15 @@ final class AppModel: ObservableObject {
     func discardUnsent(_ message: UnsentMessage) {
         setupUnsent.removeAll { $0.id == message.id }
         if let answer = SetupThread.Answer(message.text) { answered.remove(cardRef(answer.id)) }
+    }
+
+    /// Takes a message that didn't go through out of Setup's thread, to change it in the
+    /// composer (kiff/tafs#476): its words as the owner reads them, or nil when it's gone
+    /// already. An answer's card can be answered again, on the card.
+    func editUnsent(_ message: UnsentMessage) -> String? {
+        guard setupUnsent.contains(where: { $0.id == message.id }) else { return nil }
+        discardUnsent(message)
+        return setupThread.ownerWords(message.text)
     }
 
     /// Retry on a run that failed part-way: its message is sent again.

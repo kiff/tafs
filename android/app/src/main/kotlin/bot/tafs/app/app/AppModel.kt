@@ -7,6 +7,7 @@ import bot.tafs.app.kiff.phoneAlerts
 import bot.tafs.app.kiff.timeZones
 
 import bot.tafs.app.model.ErrorWords
+import bot.tafs.app.model.Unsent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -130,6 +131,8 @@ private const val TRIAL_SUFFIX = "#trial"
 
 /** Coach's chat id: the account's Setup, drawn as a taf in the chat screen. */
 const val COACH_CHAT = "#coach"
+/** A taf's card that hands a setting to Coach: its words, and a button that opens Coach on the taf with them written in. */
+const val ASK_COACH = "ask_coach"
 
 /** The KIFF agent Coach acts as. */
 const val COACH_AGENT = "setup"
@@ -255,6 +258,8 @@ data class AppState(
   val chatEnded: Map<String, ChatEnd> = emptyMap(),
   /** What the owner sent that tafs cloud's thread doesn't have yet, by taf: kept on screen until it does. */
   val chatSent: Map<String, List<ChatMessage>> = emptyMap(),
+  /** The owner's messages that weren't sent, in each chat, kept as written until Retry or Edit (kiff/tafs#476). */
+  val chatUnsent: Map<String, List<Unsent>> = emptyMap(),
   /** Each halt as last read, by the taf's id, "" for the whole account. */
   val halts: Map<String, Halt> = emptyMap(),
   /** Why the last Halt or Resume didn't go through, shown on the Halt screen itself, where it was asked. */
@@ -321,6 +326,8 @@ data class AppState(
   val coachComponents: List<ShownComponent> = emptyList(),
   /** Each drive's end in Coach's chat, at its time, as tafs cloud keeps it (kiff/tafs#568). */
   val coachDrives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
+  /** A taf's own cards in its chat, by taf: its `ask_coach` cards alone, the settings it hands to Coach (kiff/tafs#476, gap 15). */
+  val tafCards: Map<String, List<ShownComponent>> = emptyMap(),
   /** The Coach conversation shown (kiff/tafs#73): one the owner reopened or started here, or null for the latest ones together. */
   val coachChat: String? = null,
   /** The owner asked for a new conversation: the next message starts one. */
@@ -703,7 +710,8 @@ data class AppState(
     profileDigest(grant)?.let { digest -> profileWords[grant.id]?.takeIf { it.profileSha256 == digest } }
 
   private fun chatItemsAsRead(tafId: String): List<ChatItem> {
-    val messages = chats[tafId] ?: emptyList()
+    // A message that wasn't sent stays where it was written, until Retry or Edit.
+    val messages = (chats[tafId] ?: emptyList()) + chatUnsent[tafId].orEmpty().map { it.message }
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
       // An older thread's answers, sent as text before cards were answered as data, read as what the owner chose.
@@ -712,6 +720,8 @@ data class AppState(
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }
     items += heldCalls(tafId).map { ChatItem.Held(it) }
+    // The settings it handed to Coach, each at its time (kiff/tafs#476, gap 15).
+    items += tafCards[tafId].orEmpty().map { ChatItem.Card(it, it.firstAt) }
     messages.firstOrNull()?.at?.let { first ->
       // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
       items += entries(tafId).filter {
@@ -1520,7 +1530,7 @@ class AppModel(
     _state.update { s ->
       s.copy(
         coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
-        chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
+        chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
         chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT,
         chatErrors = s.chatErrors - COACH_CHAT,
       )
@@ -1574,7 +1584,7 @@ class AppModel(
     _state.update { s ->
       s.copy(
         coachChat = session, coachFresh = false, coachImproving = null, coachContext = null,
-        chatSent = s.chatSent - COACH_CHAT, chatEnded = s.chatEnded - COACH_CHAT, chatErrors = s.chatErrors - COACH_CHAT,
+        chatSent = s.chatSent - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT, chatEnded = s.chatEnded - COACH_CHAT, chatErrors = s.chatErrors - COACH_CHAT,
       )
     }
     readThread(COACH_CHAT)
@@ -2014,6 +2024,7 @@ class AppModel(
         chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
+        tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
         // A taken card is the thread's once it holds its answer.
         cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { it.ref }.toSet() else s.cardsTaken,
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
@@ -3981,7 +3992,35 @@ class AppModel(
    * didn't go, so the screen can keep them.
    */
   fun sendChat(text: String, tafId: String, withFiles: Boolean = false, onNotSent: (String) -> Unit) {
-    viewModelScope.launch { if (!deliverChat(text, tafId, withFiles)) onNotSent(text) }
+    viewModelScope.launch {
+      // One that was tried and refused stays in the thread, marked not sent: it never comes back to the box as well.
+      if (!deliverChat(text, tafId, withFiles) && _state.value.chatUnsent[tafId].orEmpty().none { it.message.text == text.trim() }) onNotSent(text)
+    }
+  }
+
+  /**
+   * Sends a message that wasn't sent, once: it leaves the thread's "Not sent" as it goes, so a second tap finds nothing to
+   * send. Refused again, it's back, with the new reason.
+   */
+  fun retryUnsent(tafId: String, message: ChatMessage) {
+    viewModelScope.launch { resendUnsent(tafId, message) }
+  }
+
+  /** [retryUnsent], waited for: whether it went. A second tap finds nothing left to send; refused again, deliverChat keeps it. */
+  suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean = takeUnsent(tafId, message) && deliverChat(message.text, tafId)
+
+  /** Takes a message that wasn't sent out of the thread, to change it in the box: its words, or null when it's gone already. */
+  fun editUnsent(tafId: String, message: ChatMessage): String? = if (takeUnsent(tafId, message)) message.text else null
+
+  private fun takeUnsent(tafId: String, message: ChatMessage): Boolean {
+    var taken = false
+    _state.update { s ->
+      val kept = s.chatUnsent[tafId].orEmpty()
+      val left = kept.filterNot { it.message == message }
+      taken = left.size < kept.size
+      s.copy(chatUnsent = if (left.isEmpty()) s.chatUnsent - tafId else s.chatUnsent + (tafId to left))
+    }
+    return taken
   }
 
   /**
@@ -4085,10 +4124,13 @@ class AppModel(
       if (current()) {
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
+          // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION, attachments = emptyList()), sendFailure(e, taf.name))
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
-            chatErrors = s.chatErrors + (tafId to sendFailure(e, taf.name)),
+            chatUnsent = if (words.isBlank()) s.chatUnsent else s.chatUnsent + (tafId to (s.chatUnsent[tafId].orEmpty() + unsent)),
+            chatErrors = if (words.isBlank()) s.chatErrors + (tafId to sendFailure(e, taf.name)) else s.chatErrors,
           )
         }
         // Its files didn't go: back in the tray for the next try.
@@ -5205,6 +5247,7 @@ class AppModel(
           openTrials = it.openTrials - tafId,
           chats = it.chats - chat,
           chatSent = it.chatSent - chat,
+          chatUnsent = it.chatUnsent - chat,
           chatErrors = it.chatErrors - chat,
           chatWorking = it.chatWorking - chat,
           chatAwaiting = it.chatAwaiting - chat,

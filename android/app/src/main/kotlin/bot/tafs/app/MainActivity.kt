@@ -493,6 +493,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       doors = doorActions,
       connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId, siteSignIn = model::openSiteSignIn),
       stopChat = model::stopChat,
+      retryUnsent = model::retryUnsent,
+      editUnsent = model::editUnsent,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
       loadReport = model::loadReport,

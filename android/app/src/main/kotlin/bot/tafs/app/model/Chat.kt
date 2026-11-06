@@ -134,6 +134,17 @@ data class ChatMessage(
 }
 
 /**
+ * An owner's message that wasn't sent, kept in the thread as written with why (kiff/tafs#476): marked "Not sent", with
+ * Retry, which sends it once, and Edit, which puts it back in the box. Nothing the owner wrote is lost on a refused send.
+ */
+data class Unsent(val message: ChatMessage, val why: String) {
+  companion object {
+    /** The session an unsent message carries, so the thread shows it as one. */
+    const val SESSION = "unsent"
+  }
+}
+
+/**
  * What the owner sent that tafs cloud's thread doesn't have yet (kiff/tafs#82): a reload while the answer is on
  * its way must never take the owner's message off the screen. A sent message goes once the thread has it (the same
  * words, written about when it was sent), or after [KEPT]. One copy takes the place of one sent message, oldest

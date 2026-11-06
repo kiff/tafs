@@ -102,7 +102,9 @@ data class SetupComponent(
   val destination: String get() = service ?: "the vendor's page"
 
   companion object {
-    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob", "drive")
+    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob", "drive",
+      // A taf's own card in its chat: a setting it hands to Coach (kiff/tafs#476, gap 15).
+      "ask_coach")
   }
 }
 

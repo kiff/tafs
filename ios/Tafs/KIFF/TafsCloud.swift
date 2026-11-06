@@ -217,6 +217,13 @@ final class TafsCloud {
             /// How this is counted: each tool's lines in KIFF's words, as the owner approved
             /// them; nil when KIFF has none.
             var counted: [Counted]? = nil
+            /// Its totals for each item apart, in tafs cloud's words; nil without any.
+            var eachItem: [String]? = nil
+
+            enum CodingKeys: String, CodingKey {
+                case id, title, environment, live, active, expires, rules, total, calls, counted
+                case eachItem = "each_item"
+            }
         }
 
         /// One tool of a Card, and how KIFF counts it.
@@ -646,6 +653,31 @@ final class TafsCloud {
         /// The latest run stopped at a cap of its own (`cost_cap` or `turn_cap`), with no
         /// words for it: the app says why.
         var capped: Capped? = nil
+        /// The taf's `ask_coach` cards, the settings it hands to Coach (kiff/tafs#476, gap 15):
+        /// the only cards of a taf's own thread the app draws.
+        var askCoach: [AskCoachCard] = []
+    }
+
+    /// A taf's card handing a setting to Coach (kiff/tafs#476, gap 15): the owner's request in
+    /// the taf's words, which Ask Coach writes into Coach's box on that taf.
+    struct AskCoachCard: Equatable, Identifiable {
+        let id: String
+        let at: Date
+        let session: String
+        let text: String
+
+        /// One card of a thread's `components`: an `ask_coach` one with words, else nil. One the
+        /// app can't read is nil too, never the thread with it.
+        struct Lenient: Decodable {
+            let card: AskCoachCard?
+            init(from decoder: Decoder) throws {
+                struct Component: Decodable { let type: String; let id: String; let text: String? }
+                struct Shown: Decodable { let at: Date; let session: String?; let component: Component }
+                guard let shown = try? Shown(from: decoder), shown.component.type == "ask_coach",
+                      let text = shown.component.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { card = nil; return }
+                card = AskCoachCard(id: shown.component.id, at: shown.at, session: shown.session ?? "", text: text)
+            }
+        }
     }
 
     /// A run that stopped at its cost or turn cap, as tafs cloud reports it.
@@ -703,10 +735,13 @@ final class TafsCloud {
             let capped: Capped?
             init(from decoder: Decoder) throws { capped = try? Capped(from: decoder) }
         }
-        struct Response: Decodable { let messages: [ChatMessage]; let working: Working?; let steering: Lenient?; let capped: LenientCap? }
+        struct Response: Decodable {
+            let messages: [ChatMessage]; let working: Working?; let steering: Lenient?; let capped: LenientCap?
+            var components: [AskCoachCard.Lenient]? = nil
+        }
         let r: Response = try await send("GET", path)
         return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering,
-                      capped: r.capped?.capped)
+                      capped: r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card))
     }
 
     /// Writes to the run at work (kiff/tafs#64): it reads the message at its next step.

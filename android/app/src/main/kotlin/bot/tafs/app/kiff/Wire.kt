@@ -69,6 +69,8 @@ data class HomeCardView(
   val calls: HomeTotal<Int>? = null,
   /** How this is counted: each covered tool's lines in KIFF's words, as the owner approved them; none when KIFF has none. */
   val counted: List<CountedTool>? = null,
+  /** Its totals for each item apart, in tafs cloud's words ("1 call in any 7 days for each invoice id"); none without any. */
+  @SerialName("each_item") val eachItem: List<String>? = null,
 )
 
 /** One tool's "How this is counted": its title, and KIFF's lines for its profile, shown as they are. */
@@ -249,6 +251,9 @@ data class Breach(
   val used: Long? = null,
   val draw: Long? = null,
   val window: String? = null,
+  /** For a total for each item apart: the argument it counts by, and the item this call was on ("invoice_id", "in_42"). */
+  val per: String? = null,
+  val value: String? = null,
 )
 
 /** A parameter's declared unit and decimal places ("EUR", 2). */
