@@ -159,6 +159,12 @@ data class Grant(
    */
   val waitingSignIn: Boolean get() = status == "approved" && signedIn != true && !connectedNow
 
+  /**
+   * A managed provider's connection, connected: planque can't sign it in again in place (it can't tell which account a new
+   * sign-in at the provider is), so it's disconnected and connected again instead.
+   */
+  val signsInThroughProvider: Boolean get() = request.connector != null && connected && !takesKey
+
   /** Reached with a key the owner gives (planque's `api_key`), not a sign-in: it's fixed by a new key. */
   val takesKey: Boolean get() = request.kind == "api_key"
 

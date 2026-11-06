@@ -22,6 +22,32 @@ class ConnectionSheetTest {
     """{"proposal_id":"$id","action_name":"$action","title":"List inboxes","actor_id":"$actor","outcome":"allowed","held":false,"created_at":"$at",
         "tool_outcome":{"status":"$status","message":"$message"}}"""
 
+  /**
+   * Connect apps lists every connection to an app (Android 36's phone round): Stripe's row showed only the provider's
+   * leftover, never the vendor's own sign-ins Coach started, which carry no catalog entry. Values as planque's records have them.
+   */
+  @Test fun everyConnectionToAnAppIsListedUnderItWhateverStartedIt() {
+    fun g(id: String, request: String, entry: String? = null, status: String = "connected") =
+      KiffClient.json.decodeFromString<Grant>("""{"id":"$id","status":"$status"${entry?.let { ",\"entry\":\"$it\"" } ?: ""},"request":$request}""")
+    val vendorsOwn = g("g1", """{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}""")
+    val provider = g("g2", """{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-0","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}""", entry = "connector:composio:stripe")
+    val providerNoEntry = g("g3", """{"server":"https://backend.composio.dev/api/v3.1","agent":"chase-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}""")
+    val notStripe = g("g4", """{"server":"https://notstripe.com/mcp","agent":"x-1","tools":[]}""")
+    val otherProviderApp = g("g5", """{"server":"https://backend.composio.dev/api/v3.1","agent":"x-2","connector":{"provider":"composio","toolkit":"gmail"},"tools":[]}""")
+    val gone = g("g6", """{"server":"https://mcp.stripe.com","agent":"refunds-9","tools":[]}""", status = "disconnected")
+    val waiting = g("g7", """{"server":"mcp.stripe.com:443","agent":"refunds-2","tools":[]}""", status = "approved")
+    val state = bot.tafs.app.app.AppState(grants = listOf(vendorsOwn, provider, providerNoEntry, notStripe, otherProviderApp, gone, waiting))
+    val stripe = bot.tafs.app.kiff.ConnectApps.App(entry = "connector:composio:stripe", vendor = "Stripe", title = "Stripe")
+    assertEquals(listOf("g1", "g2", "g3", "g7"), bot.tafs.app.views.connectionsOf(state, stripe).map { it.id })
+    // A reviewed entry is the same app by its slug before "@".
+    assertEquals(listOf("g1", "g2", "g3", "g7"), bot.tafs.app.views.connectionsOf(state, stripe.copy(entry = "stripe@1")).map { it.id })
+    // The provider's host is never an app's: Composio's own row lists none of them.
+    val composio = bot.tafs.app.kiff.ConnectApps.App(entry = "composio@1", vendor = "Composio", title = "Composio")
+    assertEquals(emptyList<String>(), bot.tafs.app.views.connectionsOf(state, composio).map { it.id })
+    assertEquals("stripe", bot.tafs.app.views.AppMatch.slug(stripe))
+    assertEquals("1password", bot.tafs.app.views.AppMatch.slug(stripe.copy(entry = "connector:composio:_1password")))
+  }
+
   @Test fun aKeyConnectionIsFixedWithANewKeyAndASignInOneBySigningInAgain() {
     assertTrue(grant("g1", "chase-1", kind = "api_key").takesKey)
     assertFalse(grant("g2", "chase-1").takesKey)

@@ -87,6 +87,7 @@ class DriveContractTest {
       "views/SetupViews.kt" to "\"Remove for good\"",
       "views/ConnectAppsViews.kt" to "onDisconnect?.invoke(g.id)",
       "views/TafPresentationViews.kt" to "actions.connections.disconnect(app.id)",
+      "views/TafPresentationViews.kt" to "actions.connections.replaceKey(grant)",
       "views/ConnectionViews.kt" to "actions.disconnect(grant.id)",
       "views/NeedsYouView.kt" to "send(Answer.Refuse)",
       "views/NeedsYouView.kt" to "send(Answer.NextStep(step))",

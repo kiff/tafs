@@ -1,6 +1,7 @@
 package bot.tafs.app.views
 
 import bot.tafs.app.drive.confirms
+import bot.tafs.app.model.ConnectionWords
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.verticalScroll
@@ -122,6 +123,17 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
           if (action.words.isNotBlank()) Text(action.words, style = scaled(13, color = Theme.soft))
         }
         if (app.reconnect && state.manages(taf.id)) TextButton({ actions.connections.reconnectId(app.id) }, enabled = state.connecting == null) { Text("Sign in again", color = Theme.amberText) }
+        // Gap 13, where an owner whose taf fails looks first: its last failed call, and how to fix the connection.
+        state.grants.firstOrNull { it.id == app.id }?.let { grant ->
+          ConnectionWords.lastFailure(grant, state.record)?.let { Text(it, style = scaled(13, color = Theme.no)) }
+          if (!app.reconnect && state.manages(taf.id) && (grant.connected || grant.needsReconnect)) {
+            if (grant.signsInThroughProvider) Text(ConnectionWords.throughProvider(grant), style = scaled(13, color = Theme.soft))
+            else TextButton(
+              { if (grant.takesKey) actions.connections.replaceKey(grant) else actions.connections.reconnect(grant) },
+              enabled = state.connecting == null, modifier = Modifier.confirms(),
+            ) { Text(if (grant.takesKey) ConnectionWords.REPLACE_KEY else ConnectionWords.SIGN_IN_AGAIN, color = Theme.amberText) }
+          }
+        }
         state.coachNotes[app.id]?.let { Text(it, color = Theme.no) }
         Eyebrow("What it may do")
         app.actions.forEach { action ->
