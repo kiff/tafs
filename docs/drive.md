@@ -147,7 +147,8 @@ a drive with `ended` is over.
 - Before any touch, show the dot at the target for a moment.
 - **Hit-test every touch before dispatching it.** One that lands on a control with the
   confirm mark is refused, and nothing is dispatched: `outcome: refused`, `line: "That's
-  yours to confirm"`.
+  yours to confirm"`. A `type` into a secret field is refused the same way: `"That's
+  yours to fill"`.
 
 ## Results
 
@@ -209,6 +210,10 @@ Enforced in the app, with no prompt:
 3. **The keys need the person.** The approval key requires the fingerprint or Face ID on
    each use, and that prompt is the system's window, which no screenshot or driven touch
    reaches.
+4. **A secret field is the person's to fill.** `type` into a focused field with the
+   secret mark (a vendor's key, a password) is refused, and nothing is typed:
+   `outcome: refused`, `line: "That's yours to fill"`. An instruction slipped into what
+   Coach reads can't put its own words into a key field.
 
 KIFF still decides every call Coach's tools make, under Coach's Cards: `coach-app-look`
 allows 2,000 a day and `coach-app-act` allows 1,000 a day, refused past that.
@@ -318,7 +323,7 @@ The same words on both apps.
 | A swipe, a scroll | "Swiped", "Scrolled down" |
 | Typing | "Typed into Message" (the field's own words) |
 | Back, done | "Went back", "Done" |
-| Refused | "That's yours to confirm"; "Too late"; "Nothing Coach can use there"; "That isn't on screen now"; "No field is focused"; "Nothing to go back to"; "Can't scroll down there"; "This app can't do that step" |
+| Refused | "That's yours to confirm"; "That's yours to fill"; "Too late"; "Nothing Coach can use there"; "That isn't on screen now"; "No field is focused"; "Nothing to go back to"; "Can't scroll down there"; "This app can't do that step" |
 
 A scroll's `direction` is where the content comes from: `down` shows what's below.
 

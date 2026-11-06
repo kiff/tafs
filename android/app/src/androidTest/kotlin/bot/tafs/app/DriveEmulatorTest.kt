@@ -83,6 +83,7 @@ class DriveEmulatorTest {
   private var sheetOpen by mutableStateOf(false)
   private var dialogOpen by mutableStateOf(false)
   private var text by mutableStateOf("")
+  private var key by mutableStateOf("sk_test_secret")
   private lateinit var host: AndroidDriveHost
 
   @Before fun drive() {
@@ -106,7 +107,7 @@ class DriveEmulatorTest {
         Button({ runNow++ }, Modifier.fillMaxWidth().height(96.dp)) { Text("Run now") }
         Button({ approved++ }, Modifier.confirms()) { Text("Approve") }
         TextField(text, driveTyped<String> { text = it }, label = { Text("Note") })
-        TextField("sk_test_secret", {}, Modifier.secret(), label = { Text("Key") })
+        TextField(key, driveTyped<String> { key = it }, Modifier.secret(), label = { Text("Key") })
         if (sheetOpen) ModalBottomSheet(driveDismissal { sheetOpen = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
           DriveWindow()
           Column { Text("Sheet title"); Button({ sheetTaps++ }) { Text("Sheet button") } }
@@ -251,6 +252,18 @@ class DriveEmulatorTest {
     assertTrue(typed.line, typed.done)
     assertEquals("Refund 1042", text)
     assertTrue("Coach's typing isn't the person's", ends.isEmpty())
+  }
+
+  @Test fun coachNeverTypesIntoASecretField() = runBlocking {
+    show(); driving()
+    val field = tree().getValue("Secret field").first
+    host.act(Action.Tap(Target.Element(field), "Tapping the key"))
+    val typed = host.act(Action.Type("sk_live_other", "Typing the key"))
+    rule.waitForIdle()
+    assertFalse(typed.done)
+    assertEquals(DriveWords.SECRET_FIELD, typed.line)
+    assertEquals("nothing typed", "sk_test_secret", key)
+    assertTrue(ends.isEmpty())
   }
 
   // 6. A drive starts only on the person's approval: Coach's tap on the drive card's Approve is refused; the person's own reaches it.

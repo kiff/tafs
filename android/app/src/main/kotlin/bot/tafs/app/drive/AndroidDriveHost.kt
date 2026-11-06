@@ -419,18 +419,23 @@ class AndroidDriveHost(
 
   /** Text into the focused field, through the field itself (the path its own semantics give), never the keyboard. */
   private fun type(text: String): Acted {
-    var field: SemanticsNode? = null
+    var field: Pair<SemanticsNode, Boolean>? = null
     for ((root, _) in windows().asReversed()) {
       for (owner in composeRoots(root)) {
-        fun find(n: SemanticsNode): SemanticsNode? =
-          if (n.config.getOrNull(SemanticsProperties.Focused) == true && n.config.contains(SemanticsActions.SetText)) n
-          else n.children.firstNotNullOfOrNull(::find)
-        field = runCatching { find(owner.semanticsOwner.unmergedRootSemanticsNode) }.getOrNull()
+        // The mark may sit on the field's own node or on one around it: either way the field is secret.
+        fun find(n: SemanticsNode, secretAround: Boolean): Pair<SemanticsNode, Boolean>? {
+          val secret = secretAround || n.config.getOrNull(DriveSecret) == true || n.config.contains(SemanticsProperties.Password)
+          return if (n.config.getOrNull(SemanticsProperties.Focused) == true && n.config.contains(SemanticsActions.SetText)) n to secret
+          else n.children.firstNotNullOfOrNull { find(it, secret) }
+        }
+        field = runCatching { find(owner.semanticsOwner.unmergedRootSemanticsNode, false) }.getOrNull()
         if (field != null) break
       }
       if (field != null) break
     }
-    val f = field ?: return Acted.refused(DriveWords.NO_FIELD)
+    val (f, secret) = field ?: return Acted.refused(DriveWords.NO_FIELD)
+    // A secret field is the person's to fill (docs/drive.md, "Coach never confirms"): nothing is typed into it.
+    if (secret) return Acted.refused(DriveWords.SECRET_FIELD)
     val c = f.config
     val did = DriveInput.asCoach {
       c.getOrNull(SemanticsActions.InsertTextAtCursor)?.action?.invoke(AnnotatedString(text))

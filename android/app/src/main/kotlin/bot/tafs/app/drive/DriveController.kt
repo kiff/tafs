@@ -290,6 +290,7 @@ object DriveWords {
   const val NOTHING_THERE = "Nothing Coach can use there"
   const val NOT_ON_SCREEN = "That isn't on screen now"
   const val NO_FIELD = "No field is focused"
+  const val SECRET_FIELD = "That's yours to fill"
   const val NOTHING_BACK = "Nothing to go back to"
   const val UNKNOWN = "This app can't do that step"
   const val SWIPED = "Swiped"
