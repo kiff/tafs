@@ -17,6 +17,15 @@ extension TafsCloud {
     struct ActivityEntry: Decodable, Identifiable {
         let id: String; let at: Date; let kind: String; let title: String; let detail: String; let time: String
         let amount_text: String?; let call: KIFFClient.ActivityCall
+        /// What the owner can do about a call that wasn't done, as tafs cloud says it (kiff/tafs#476, gap 10).
+        var next: NextStep? = nil
+    }
+    /// The owner's next step for a call that wasn't done: `kind` is `reconnect` (the connection
+    /// whose tools include `tool`), `ask_coach` (Coach on the taf, `message` written in) or
+    /// `try_later`; `words` are its button's, or its line's for a kind the app doesn't know.
+    struct NextStep: Decodable, Equatable {
+        let kind: String; let words: String
+        var tool: String? = nil; var taf: String? = nil; var message: String? = nil
     }
     struct ActivityGroup: Decodable, Identifiable { let id: String; let title: String; let entries: [ActivityEntry] }
     struct ActivityPage: Decodable {

@@ -55,6 +55,54 @@ describe("each Card on its own (kiff/tafs#211)", () => {
     expect(v.title).toBe("List charges");
   });
 
+  // A total for each item apart (kiff/tafs#476, gap 6a) is never the Card's own count or money total: it has no single
+  // used or left, so it reads as its own line, in KIFF's words.
+  it("says a total for each item apart as its own line, never as the Card's count", () => {
+    const reminders: Mandate = {
+      id: "remind", subject: "chase-1", active: true,
+      grants: [{ action: "send_email", title: "Send an email" }],
+      aggregates: [
+        { quantity: "count", limit: 1, window: "rolling_7d", per: "invoice_id" },
+        { quantity: "count", limit: 20, window: "calendar_day" },
+        { quantity: "sum(amount)", limit: 10000, window: "calendar_day", unit: "EUR", scale: 2, per: "customer" },
+      ],
+      limits: [
+        { quantity: "count", window: "rolling_7d", limit: 1, status: "per_item" },
+        { quantity: "count", window: "calendar_day", limit: 20, used: 3, status: "ok" },
+      ],
+    };
+    const v = cardView(reminders);
+    expect(v.calls).toEqual({ limit: 20, used: 3, window: "calendar_day", window_words: { each: "a day", now: "today" } });
+    expect(v.total).toBeNull();
+    expect(v.each_item).toEqual(["1 call in any 7 days for each invoice id", "€100.00 in total a day for each customer"]);
+    expect(v.rules[0].count_per_window).toBe(20);
+    expect(cardView(reads).each_item).toBeUndefined();
+    expect(windowWords("rolling_7d")).toEqual({ each: "in any 7 days", now: "in the last 7 days" });
+  });
+
+  it("reads the Card's own total and count from their line, never a total for each item on the same window listed first", () => {
+    const daily: Mandate = {
+      id: "daily", subject: "chase-1", active: true,
+      grants: [{ action: "send_email", title: "Send an email" }],
+      aggregates: [
+        { quantity: "count", limit: 1, window: "calendar_day", per: "invoice_id" },
+        { quantity: "count", limit: 20, window: "calendar_day" },
+        { quantity: "sum(amount)", limit: 5000, window: "calendar_day", unit: "EUR", scale: 2, per: "customer" },
+        { quantity: "sum(amount)", limit: 80000, window: "calendar_day", unit: "EUR", scale: 2 },
+      ],
+      limits: [
+        { quantity: "count", window: "calendar_day", limit: 1, status: "per_item" },
+        { quantity: "sum(amount)", window: "calendar_day", limit: 5000, status: "per_item" },
+        { quantity: "count", window: "calendar_day", limit: 20, used: 3, status: "ok" },
+        { quantity: "sum(amount)", window: "calendar_day", limit: 80000, used: 18000, status: "ok" },
+      ],
+    };
+    const v = cardView(daily);
+    expect(v.calls).toEqual({ limit: 20, used: 3, window: "calendar_day", window_words: { each: "a day", now: "today" } });
+    expect(v.total?.limit.minor).toBe(80000);
+    expect(v.total?.used?.minor).toBe(18000);
+  });
+
   it("never reads use KIFF couldn't read as zero", () => {
     const unread: Mandate = { ...refunds, limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 80000, status: "unavailable" }] };
     expect(cardView(unread).total?.used).toBeNull();

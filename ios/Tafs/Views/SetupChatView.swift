@@ -225,7 +225,8 @@ struct SetupChatView: View {
                     }
                     ForEach(model.setupUnsent) { unsent in
                         UnsentBubble(message: unsent, words: model.setupThread.ownerWords(unsent.text), busy: model.setupSending,
-                                     retry: { await model.retrySetup(unsent) }, discard: { model.discardUnsent(unsent) })
+                                     retry: { await model.retrySetup(unsent) }, discard: { model.discardUnsent(unsent) },
+                                     edit: { if let words = model.editUnsent(unsent) { model.setupDraft = words } })
                             .id(unsent.id.uuidString)
                             .pinnedTop(unsent.id.uuidString == pinned)
                     }
@@ -819,15 +820,21 @@ struct ArchivedSetupChats: View {
     }
 }
 
-/// A message that didn't go through, kept where it was written (#58): why, and Retry.
-/// Setup's chat and a taf's share it.
+/// A message that didn't go through, kept where it was written (#58, kiff/tafs#476):
+/// "Not sent" and why, then Edit (back to the composer) and Retry (sent once). Setup's chat
+/// and a taf's share it, in the words Android uses.
 struct UnsentBubble: View {
+    /// The bubble's own words, the same on Android (ChatWords).
+    static let notSent = "Not sent", retryWord = "Retry", editWord = "Edit"
+
     let message: AppModel.UnsentMessage
     /// What the bubble shows: the owner's words for the message.
     let words: String
     let busy: Bool
     let retry: () async -> Void
     let discard: () -> Void
+    /// Puts its words back in the composer and takes it out of the thread.
+    var edit: (() -> Void)? = nil
     /// The taf the chat is with, when it has one: a send refused for its halt says so and
     /// offers Resume, since Retry can't pass a halt (kiff/tafs#236, item 14).
     var taf: (id: UUID, name: String)? = nil
@@ -854,17 +861,21 @@ struct UnsentBubble: View {
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
             } else {
-                HStack(spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Image(systemName: "exclamationmark.circle.fill").foregroundColor(Theme.no)
-                    Text("Not sent").foregroundColor(Theme.no)
-                    Text("·").foregroundColor(Theme.dim)
-                    Button("Retry") { Task { await retry() } }
+                    Text("\(Self.notSent) · \(message.why)").foregroundColor(Theme.no)
+                        .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
+                }
+                .scaledFont(13, relativeTo: .footnote)
+                HStack(spacing: 14) {
+                    if let edit {
+                        Button(Self.editWord, action: edit).foregroundColor(Theme.soft)
+                    }
+                    Button(Self.retryWord) { Task { await retry() } }
                         .foregroundColor(Theme.ink).semibold()
                         .disabled(busy)
                 }
-                .scaledFont(13, relativeTo: .footnote)
-                Text(message.why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                    .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
+                .scaledFont(14, relativeTo: .footnote)
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -873,7 +884,8 @@ struct UnsentBubble: View {
             Button("Delete", role: .destructive, action: discard)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityAction(named: "Retry") { Task { await retry() } }
+        .accessibilityAction(named: Text(Self.retryWord)) { Task { await retry() } }
+        .accessibilityAction(named: Text(Self.editWord)) { edit?() }
     }
 }
 
