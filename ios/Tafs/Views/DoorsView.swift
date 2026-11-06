@@ -239,6 +239,7 @@ struct DoorsView: View {
                             Spacer()
                             if !key.auto, manages {
                                 Button("Unpair") { Task { await doors.unpair(door, key) } }
+                                    .confirming()
                                     .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
                             }
                         }

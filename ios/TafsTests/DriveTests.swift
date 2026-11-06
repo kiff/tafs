@@ -364,7 +364,7 @@ final class DriveTests: XCTestCase {
 
     /// The words of a control that confirms, as both apps' contract tests read them.
     static let confirmingWords = try! NSRegularExpression(
-        pattern: #""[^"\n]*\b(Delete|Remove|Disconnect|Halt|Revoke|Sign out|Buy|Resume|Approve|Install|Refuse|Pair|Forget|Go back)\b"#)
+        pattern: #""[^"\n]*\b(Delete|Remove|Disconnect|Halt|Revoke|Sign out|Buy|Resume|Approve|Install|Refuse|Pair|Unpair|Forget|Go back)\b"#)
 
     /// Containers a drive never reaches on iOS: nothing in them is registered, and back dismisses an alert or a
     /// dialog as its cancel. A control inside one needs no mark.
