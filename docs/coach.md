@@ -457,12 +457,15 @@ key or sign-in refused, caught at connect rather than at the taf's first run (ga
 ## Who a taf's messages come from
 
 A taf that writes to customers sends, by default, from a mailbox the company already has, through its
-own mail app's connection, found in the catalog like any app (an app the account connects comes first):
-mail then comes from the company's address, and replies land where its staff work. Coach suggests a
-dedicated mailbox (`support@`, a shared or a separate one), never a person's own inbox, since the app's
-access covers the whole mailbox, and asks for only what the taf does: the send tool alone when it only
-sends (`uses`, narrowed by planque). An inbox of the taf's own, from a mail app made for agents, stays an
-option Coach offers (`draft-the-card@4`).
+own mail app's connection, found in the catalog like any app: mail then comes from the company's
+address, and replies land where its staff work. Coach suggests a dedicated mailbox (`support@`, a shared
+or a separate one), never a person's own inbox, since the app's access covers the whole mailbox. A
+connection the account has comes first only when it is that dedicated mailbox, and since the
+connections lines don't say which mailbox a connection is, Coach asks. One that is a person's own inbox,
+such as a Gmail connected for another taf, is never reused for customer mail (the one exception to gap
+2's reuse): Coach suggests connecting the dedicated one. Coach asks for only what the taf does: the send
+tool alone when it only sends (`uses`, narrowed by planque). An inbox of the taf's own, from a mail app
+made for agents, stays an option Coach offers (`draft-the-card@4`).
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering the company's name, never the mail app's default (gap 16), and its result's taf carries the

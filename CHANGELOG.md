@@ -5,7 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
-- **Customer mail from the company's own mailbox (`draft-the-card@4`).** A taf that writes to customers sends, by default, through a mail connection the company already has, so mail comes from its address and replies land where its staff work. Coach suggests a dedicated mailbox (`support@`), never a person's own inbox, and asks only for what the taf does: the send tool alone when it only sends. An inbox of the taf's own stays an option. The skill loads once the Upgrade names it.
+- **Customer mail from the company's own mailbox (`draft-the-card@4`).** A taf that writes to customers sends, by default, through a mail connection the company already has, so mail comes from its address and replies land where its staff work. Coach suggests a dedicated mailbox (`support@`), never a person's own inbox, and asks only for what the taf does: the send tool alone when it only sends. A connection the account has comes first only when it is that dedicated mailbox: one that is a person's own inbox is never reused for customer mail. An inbox of the taf's own stays an option. The skill loads once the Upgrade names it.
 - **The reference check** in CI also fails on a comment that names who decided rather than what was decided, and the two left in the tree now state the decision alone.
 
 - **Coach hears every install.** Installing any version tells the owner's Coach, and Coach's chat shows "Version N is live." Before, only a version Coach made did: after v4 (Coach's), going back to v5 (an Upgrade's) said nothing, so Coach still read v4 as live. Coach's line says whether it made the version, and gives the version's own note when it didn't.

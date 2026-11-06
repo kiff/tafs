@@ -104,6 +104,17 @@ describe("Coach's core", () => {
     expect(body).toContain("A connection the owner didn't ask for is proposed, never assumed.");
   });
 
+  // Customer mail goes from the company's own mailbox. The ordinary case: the account already connects one
+  // person's Gmail for another taf (a calendar summary). Reusing it would send to customers from that
+  // person's address, on a sign-in whose access covers their whole mailbox: the reuse above doesn't apply.
+  it("sends customer mail from the company's dedicated mailbox, and never reuses a person's own inbox for it", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("Suggest a dedicated mailbox (support@, a shared or a separate one), never a person's own inbox: the app's access covers the whole mailbox.");
+    expect(body).toContain("A connection the account has comes first only when it is that dedicated mailbox (its lines don't say which mailbox: ask, with your other questions); one that is a person's own inbox is never reused for customer mail: suggest connecting the dedicated one.");
+    expect(body).toContain("Ask only for what the taf does (uses: the send tool alone when it only sends).");
+    expect(body).not.toContain("an app the account connects comes first");
+  });
+
   it("has no skill that states a mode or no real money as fact", () => {
     for (const s of COACH_SKILLS) {
       expect(s.body, s.name).not.toContain("no real money");
