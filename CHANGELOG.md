@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **A taf says what a check found in a clause, not in a sentence about checking.** In kiff/agents' Eval a taf wrote "I read the charge first. It is €1,000 with nothing refunded yet." and "Antes lo revisé: el cobro era de €1.000 y no tenía reembolsos previos", as its chat rule's own example showed, and the judges read it as narrating its process. The rule now puts what a check found inside the sentence that says what was done or what waits, as one short clause at most, or leaves it out: "I refunded €3 on the €1,000 charge, which had nothing refunded before." After a held call the owner approved or refused, the check made before asking gets no word. When the owner asked for the check, what was found is the answer. The example no longer gives a held call the item's balance, which the held call's own rule leaves out. Accounts get it with the next Upgrade.
 - **Coach drives the app, on the phone (kiff/tafs#544).**
   - **Starting:** Coach's drive card asks to drive the app for one request. Approve signs its Start with the approval key, behind Face ID or the fingerprint; Not now declines.
   - **While it drives:**

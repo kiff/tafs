@@ -110,12 +110,23 @@ describe("jobs", () => {
       // A chat answer ends with no report: the judges read a scheduled run's "nothing else was
       // done or left undone" as filler.
       expect(flat).toContain("with no closing summary of what was or wasn't done: that's a scheduled run's report");
-      // What was checked comes after what waits on the owner (Eval 41026186869, rule 1).
-      expect(flat).toContain("What you checked on the way comes after, in a few words.");
+      // What was checked comes after what waits on the owner (Eval 41026186869, rule 1), and
+      // only as a clause of that sentence: a sentence of its own about checking ("I read the
+      // charge first.", "Antes lo revisé: …") is process the judges fail (Eval 42176052141).
+      expect(flat).toContain("What a check found goes inside that sentence, as one short clause at most, or not at all: never in a sentence of its own about what you read or checked.");
+      expect(flat).toContain("but \"I refunded €3 on the €1,000 charge, which had nothing refunded before.\"");
+      expect(flat).toContain("When the owner asked you to check something, what you found is the answer.");
+      expect(flat).not.toContain("What you checked on the way comes after");
+      // The example no longer has a held call carry the item's balance, which the held call's
+      // own rule leaves out ("Nothing else: not what's left on the item").
+      expect(flat).not.toContain("I checked the charge first: €1,000, nothing refunded yet.");
       // No closing offer (Eval 41043640507: "If you still want this refund, ask me again…").
       expect(flat).toContain("end when it's said: no offer of more help");
       // Each outcome said once (Eval 41015204757: "it was sent once. The refund went through.").
-      expect(flat).toContain("each thing once: after a held call the owner approved, one sentence says what went through");
+      // After a held call, approved or refused, the check made before asking gets no word
+      // (Eval 42176052141: "Before asking, I checked the charge: …").
+      expect(flat).toContain("each thing once: after a held call the owner answered, one sentence says what came of it");
+      expect(flat).toContain("and no word on the check you made before asking;");
       // The scheduled run's report still names each item by its reference.
       expect(flat).toContain("End every scheduled run with a short report");
     }
