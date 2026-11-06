@@ -454,7 +454,10 @@ A taf that writes to people names who they come from: Coach asks once, with its 
 offering the company's name, never the mail app's default (gap 16), and its result's taf carries the
 answer as `writes_for`. kiff/agents then ends each outside message with "Written by an AI agent for
 <writes_for>." (gap 18; "Written by an AI agent." when no one is named, never "for the company"), and
-"Built with tafs." after it in a message to people. A disclose entry with `credit: false` (evidence or a
+"Built with tafs." after it in a message to people. With no name from Coach, a taf on a company account
+writes for the company's name as KIFF gives it (never a personal account's, which can be an email), and
+the Upgrade gives that name to a taf from before that names no one. A version built before gap 18 says
+"for the company": installing it, or switching back to it, names no one. A disclose entry with `credit: false` (evidence or a
 filing, such as Chargebacks' dispute evidence) carries the disclosure alone. For a mail app that can set
 it, Coach sets the inbox's sender name, and offers sending from the company's own domain when the app
 takes one, showing the DNS records for the owner to add and checking them before it says the domain

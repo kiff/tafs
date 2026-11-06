@@ -14,6 +14,8 @@ version headings refer to releases, not merely to merged pull requests.
 - **Who a taf writes for (gaps 16, 18 and 20), and "Built with tafs".**
   - A result's `writes_for` (Coach asks once, offering the company's name) names the disclosure: "Written by an AI agent for Kiff Agents OÜ.", or "Written by an AI agent." when no one is named, never "for the company".
   - "Built with tafs." follows it in messages to people. A disclose entry with `credit: false`, such as Chargebacks' evidence, carries the disclosure alone.
+  - With no name from Coach, a taf on a company account writes for the company's name as KIFF gives it, never a personal account's. The Upgrade gives that name to a taf from before that names no one.
+  - A version built before this one says "for the company". Installing it, or switching back to it, names no one, so the Upgrade still gives the taf the company's name.
   - Coach sets a mail app's sender name and offers the company's own domain, with its DNS records checked (`draft-the-card@3`).
 - **Settings go to Coach (gap 15).** A taf says a setting change is Coach's, and shows an `ask_coach` card with the owner's request. Its definition shows that card alone.
 - Coach's `the-tafs@2` reads `taf_check` and `calls_not_done`.

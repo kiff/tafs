@@ -316,8 +316,15 @@ export function writesForOf(v: unknown): string | undefined {
   return v;
 }
 
-/** Who a disclosure line names, as disclosureLine wrote it; undefined for the line that names no one. */
+/**
+ * The line a version built before gap 18 carries: "the company" is the placeholder gap 18 removed, never
+ * who the owner named, so it names no one (qa-kiff on #574).
+ */
+export const OLD_DISCLOSURE_LINE = "Written by an AI agent for the company.";
+
+/** Who a disclosure line names, as disclosureLine wrote it; undefined for a line that names no one, the old one too. */
 export function writesForIn(line: string | undefined): string | undefined {
+  if (line === OLD_DISCLOSURE_LINE) return undefined;
   const m = /^Written by an AI agent for (.+)\.$/.exec(line ?? "");
   return m?.[1];
 }

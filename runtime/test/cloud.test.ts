@@ -8,7 +8,7 @@ import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } f
 import type { Held, Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, ownerWords, recentCalls } from "../src/cloud/improve.js";
-import { DISCLOSURE_LINE, jobById } from "../src/jobs.js";
+import { DISCLOSURE_LINE, jobById, OLD_DISCLOSURE_LINE } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
 
@@ -1636,6 +1636,24 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     // Back to version 1: its Cards are the agent's current ones, so no draft to wait for.
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" })).body).toEqual({ live: 1 });
     expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
+  });
+
+  // qa-kiff on #574: a version built before gap 18 carries "for the company", the placeholder it removed.
+  // Installing one names no one, so the Upgrade still gives the taf the company's name.
+  it("reads no sender from a version's line from before gap 18 when it is installed", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "confirmed" };
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rae.writesFor).toBeUndefined();
+    w.agents.versionDefs.set(`t_acme|${RAE}|2`, { ...definition(RAE, jobOf(rae)), tenant: "t_acme", id: RAE,
+      disclose: { line: OLD_DISCLOSURE_LINE, in: [{ tool: "send_message_k3f9", fields: ["text"] }] } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.writesFor).toBeUndefined();
+    // The same version, once it names someone, gives the taf that name.
+    w.agents.versionDefs.set(`t_acme|${RAE}|2`, { ...w.agents.versionDefs.get(`t_acme|${RAE}|2`)!,
+      disclose: { line: "Written by an AI agent for Kiff Agents OÜ.", in: [{ tool: "send_message_k3f9", fields: ["text"] }] } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.writesFor).toBe("Kiff Agents OÜ");
   });
 
   it("begins a switch, and the next read of the versions ends it once KIFF has the Card", async () => {

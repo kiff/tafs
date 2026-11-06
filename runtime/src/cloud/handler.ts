@@ -2730,10 +2730,11 @@ async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: stri
   const entry = entryOf(text);
   const [state, lines, live] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? [] : startConnections(me, event, deps),
     // The skills at the versions Coach's live definition names: kiff/agents loads no other (asNamed).
-    deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined)]);
+    deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined),
+    // Beside the start's reads, never after them: a chat's first words wait on none of it (qa-kiff on #574).
+    me.companyName ? keepCompany(me.tenantID, me.companyName, deps) : undefined]);
   const skills = asNamed(startSkills(entry, state), live?.skills);
   if (skills.length) at.skills = skills;
-  if (me.companyName) await keepCompany(me.tenantID, me.companyName, deps);
   return withConnections(text, lines, me.companyName);
 }
 
