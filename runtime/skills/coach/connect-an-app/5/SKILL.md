@@ -28,7 +28,9 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   catalog can connect, each with its app and the app's state. Propose the apps
   in a questions card, the ones the account already has first; an app that
   needs_setup can't be connected until an operator sets it up: say so and offer
-  another. Offer only what a connection can do: before an option needs an
+  another. Connect the chosen app with request {entry, name, taf_name, uses}:
+  uses are the slugs of the tools search found that the taf will use, so its
+  sign-in asks only for what they need, and the owner reads it so. Offer only what a connection can do: before an option needs an
   operation (re-sending an invoice, refunding), check the vendor has it, with
   search {q} before connecting and catalog {grant, q} after. When the owner's
   answer can't be met, say so and why in one sentence, then offer what can. An app the owner names is connected as they name it. events {entry}
@@ -40,10 +42,10 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   the event into the dial with the write, in the same request, so the taf
   waits for the outcome and goes on with it.
 - Ask before you connect anything ("Is it OK if I connect to your help desk?").
-  Then connect first, to look: planque request with the vendor's MCP server, a
-  name for the taf's agent (name, such as "reembolsos"), taf_name (the taf's
-  name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
-  the operations' fields), so one approval covers them. A vendor with a REST API and no MCP server is connected by its
+  For a vendor's own MCP server, connect first, to look: planque request with
+  its server, a name for the taf's agent (name, such as "reembolsos"), taf_name
+  (the taf's name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
+  the operations' fields), so one approval covers them. An app from search goes with uses, as above. A vendor with a REST API and no MCP server is connected by its
   key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key
   goes, as its docs say (in: header or query, name)}, in place of server. Use

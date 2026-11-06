@@ -96,8 +96,9 @@ The pictures are used for the steps and then dropped: tafs holds each one only u
 Coach call that asked for it picks it up, under a minute, and Coach keeps them only while
 it works on that request. They're never stored with the chat. What stays is the record in
 words:
-- **the What I did card's steps:** each caption and what it touched, kept for a day after
-  the drive's last use;
+- **the What I did card's steps:** each caption and what it touched. The drive's own record
+  is kept for a day after its last use, and its end in Coach's chat keeps the same steps for
+  30 days, as long as the chat's own messages;
 - **the account's activity:** "Coach started driving", each step that touched something,
   and how it ended;
 - **Coach's chat:** like any of its tools, with what the app answered;

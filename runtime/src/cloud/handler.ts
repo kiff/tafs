@@ -2396,7 +2396,7 @@ interface ExportedChat {
 
 /**
  * GET /v1/me/chats/export: a person's own data in tafs, for their rights of access and
- * portability (GDPR Articles 15 and 20, kiff-cloud#1409). Their own chats and trials with
+ * portability (GDPR Articles 15 and 20). Their own chats and trials with
  * every taf of the account, Coach's included, archived ones too, with what kiff/agents
  * still keeps of them (30 days), the names of the files they attached, and their own
  * notes. Never another person's chats, a door's, or a taf's job runs: only the person
@@ -3440,18 +3440,29 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
 }
 
 /**
- * A version Coach made is live: the owner's Coach hears it on its next turn, and the
- * app shows it in Coach's chat at once, so the improvement's plan can end. Best
- * effort: the switch stands either way.
+ * A version is live: the owner's Coach hears it on its next turn, and the app shows it in Coach's
+ * chat at once, so an improvement's plan can end. Every install says so, Coach's version or not (an
+ * Upgrade's, a dial's, going back), so Coach's view of what runs never goes stale; the line says
+ * which, with the version's own note when Coach didn't make it (a phone test: an Upgrade's
+ * version went live with no line, and Coach still read the one before as live). Best effort: the switch
+ * stands either way.
  */
 async function tellCoachLive(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
-  if (!deps.coach || !Object.values(taf.versionsFrom ?? {}).includes(n)) return;
+  if (!deps.coach) return;
   const at = deps.now?.() ?? new Date();
   const does = taf.summaries?.[String(n)];
-  const line = `[taf ${taf.name} version ${n} live] The owner installed version ${n}, the one you made; it runs now.${does ? ` It does: ${JSON.stringify(does)}` : ""}`;
+  let whose = ", the one you made";
+  if (!Object.values(taf.versionsFrom ?? {}).includes(n)) {
+    const note = await deps.agents.getVersion(me.tenantID, taf.id, n).then((v) => oneLine(v.version.note ?? "", LIVE_NOTE_MAX), () => "");
+    whose = `, which you didn't make${note ? ` (its note: ${JSON.stringify(note)})` : ""}`;
+  }
+  const line = `[taf ${taf.name} version ${n} live] The owner installed version ${n}${whose}; it runs now.${does ? ` It does: ${JSON.stringify(does)}` : ""}`;
   await deps.coach.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: line, taf: taf.name, said: `Version ${n} is live.` },
     new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${taf.id} v${n}:`, err));
 }
+
+/** The most of a version's note Coach reads in its live line. */
+const LIVE_NOTE_MAX = 200;
 
 function sameCards(a: CardRevision[], b: CardRevision[]): boolean {
   const key = (cs: CardRevision[]) => cs.map((c) => `${c.id}@${c.revision}`).sort().join(",");
@@ -3653,10 +3664,15 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
   const run = str(parseBody(event).run).trim();
   if (!run) throw new HTTPError(400, "name the run to write to");
   const text = chatText(event);
+  // Coach's unread lines go with the owner's words, as with a new message: a run that stays at work
+  // (paused on an approval) would otherwise never read them, and they'd stay under every later message.
+  const lines = await takeCoachLines(me, taf, deps);
   try {
-    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text, member(me));
+    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, lines.text(text), member(me));
     return { run: out.id, status: out.status };
   } catch (err) {
+    // Not read: Coach reads its lines with the message the app sends next.
+    await lines.putBack();
     if (refused(err, "run_ended", "not_paused")) throw new HTTPError(409, "the run has ended: send it as a new message");
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw agentsFailure(err);
@@ -3951,7 +3967,7 @@ export interface StreamResult {
 let streamedOnce = false;
 
 /**
- * Where a streamed message's wait goes (kiff-cloud#1487's latency hunt): each step before its run
+ * Where a streamed message's wait goes (the latency work): each step before its run
  * starts, in milliseconds, then the run's first event from kiff/agents, the first words sent to the
  * phone (its text, or Coach's note on the line) and the end. One log line per message, numbers only:
  * never a body, an id or a word.
@@ -4396,7 +4412,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   const toolOf = new Map<string, string>(); // call id → tool, for a failed step's reason
   let runID = resumed;
   // A step that failed is held, not sent: Coach often retries, and a retry that goes through
-  // shouldn't have shown the owner "failed" meanwhile (kiff-cloud#1487). A later call of the
+  // shouldn't have shown the owner "failed" meanwhile. A later call of the
   // same tool drops the held failure (its own outcome stands); the run's end sends what's
   // still held, so a failure Coach gave up on is said then, with its why.
   const heldFailures = new Map<string, string>(); // call id → its step event
