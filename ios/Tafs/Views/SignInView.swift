@@ -146,6 +146,7 @@ struct SettingsView: View {
                             }
                         }
                         .disabled(!model.canManageCards || model.suggestionsBusy)
+                        .drivable("Show suggestions", role: .toggle, id: "show-suggestions") { Task { await model.setSuggestions(!shown.show) } }
                         .accessibilityIdentifier("show-suggestions")
                         if let why = model.suggestionsError { Text(why).scaledFont(13).foregroundColor(Theme.no) }
                     }

@@ -7,8 +7,8 @@ import Vision
 /// long side, under 200,000 bytes.
 @MainActor
 enum DriveCapture {
-    static let longSide: CGFloat = 1100
-    static let maxBytes = 200_000
+    nonisolated static let longSide: CGFloat = 1100
+    nonisolated static let maxBytes = 200_000
 
     /// The screen in points, and how its points become the screenshot's pixels.
     struct Geometry: Equatable {
