@@ -2,6 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// A drive's end in Coach's thread, and where a card that waits goes.
+@MainActor
 final class DriveRecapTests: XCTestCase {
     private func at(_ s: Int) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + Double(s)) }
 
