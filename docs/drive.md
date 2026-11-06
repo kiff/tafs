@@ -69,10 +69,13 @@ fea4f2ebc2091cd2cbf48e1cc3b6285603bcc194cddea23f5737dfdc2a78414f
 There's no standing approval. The next request takes a new card. A new drive ends the
 person's earlier one, if any.
 
-**The drive is the chat's that approved it.** Coach's calls don't say which chat they come
-from. So tafs cloud refuses a drive tool unless every Coach run of that person at work is
-in the drive's chat. Another chat, on another phone or the same one, can't look or act
-while the drive is on.
+**The drive is the chat's that approved it.** `app_look` and `app_act` declare
+`agent_session`, which kiff/agents fills with the chat each call comes from (its run's
+session), over anything the model put there. The model never sees it, and KIFF forwards it
+inside the call's permit. tafs cloud refuses a drive tool whose named chat isn't the drive's.
+A call that names no chat (a connection made before the tools declared it) falls back: every
+Coach run of that person at work must be in the drive's chat. Either way, another chat, on
+another phone or the same one, can't look or act while the drive is on.
 
 ## Routes
 

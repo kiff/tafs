@@ -1,6 +1,7 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { OP_ARG, TOOLS } from "../src/cloud/coach.js";
+import { OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
+import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -90,6 +91,29 @@ function world() {
   };
   return { agents, tafs, coach, deps, permit, rpc, tool, send, pushed };
 }
+
+describe("a drive's tools are told the chat (kiff/tafs#544)", () => {
+  it("declare it to kiff/agents only on app_look and app_act, never required, and refuse another chat's call", async () => {
+    const w = world();
+    const list = await w.rpc("tools/list");
+    const tools = (list.result?.tools ?? []) as Array<{ name: string; inputSchema: { properties: Record<string, unknown>; required: string[] } }>;
+    for (const t of tools) {
+      const asks = t.name === "app_look" || t.name === "app_act";
+      expect(SESSION_ARG in t.inputSchema.properties, t.name).toBe(asks);
+      expect(t.inputSchema.required).not.toContain(SESSION_ARG);
+    }
+    let clock = new Date("2026-10-16T12:00:00Z");
+    w.deps.now = () => clock;
+    w.deps.sleep = async (ms) => { clock = new Date(clock.getTime() + ms); };
+    await startDrive(w.coach, T, "u_ana", "s_drive_chat", "Run Refunds", clock);
+    // Another chat of the same person: refused, nothing sent, whatever runs are at work.
+    const other = await w.tool("app_look", { [SESSION_ARG]: "s_other_chat" }, { act: "u_ana" });
+    expect(other).toMatchObject({ isError: true, text: expect.stringContaining("approved in another chat") });
+    // The drive's own chat goes through to the phone (which doesn't answer here).
+    const own = await w.tool("app_look", { [SESSION_ARG]: "s_drive_chat" }, { act: "u_ana" });
+    expect(own.text).toContain("didn't answer in 20 seconds");
+  });
+});
 
 describe("Coach's tools (kiff/tafs#206)", () => {
   it("speak MCP, and list the eleven tools, each with KIFF's operation argument", async () => {

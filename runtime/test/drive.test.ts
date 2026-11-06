@@ -402,3 +402,22 @@ describe("a request Coach gave up on never runs, and done always ends", () => {
     expect(await currentDrive(w.coach, T, ANA, NOW)).toBeUndefined();
   });
 });
+
+// kiff/agents names the chat on Coach's calls (SESSION_ARG): exact, with no need of the runs at work.
+describe("a drive's chat, named on the call", () => {
+  it("lets the drive's own chat drive, and refuses another, without reading the runs", async () => {
+    const w = await world();
+    const d = await startDrive(w.coach, T, ANA, w.session, "Run Chargebacks", NOW);
+    w.deps.sleep = async () => {
+      for (const req of (await w.coach.take(`${T}#drive-q#${d.id}`)) as Array<{ id: string }>) {
+        await w.call("POST", `/v1/coach/drive/${d.id}/results/${req.id}`, { outcome: "done", line: "Looked" });
+      }
+    };
+    // Coach's run isn't at work in the fake (it's paused on its card): the named chat is enough.
+    const own = await coachTool("app_look", {}, { ...w.coachCall, session: w.session }, w.deps) as Rich;
+    expect(own.content[0]).toMatchObject({ text: "Looked" });
+    const other = await coachTool("app_look", {}, { ...w.coachCall, session: "another-chat" }, w.deps) as Rich;
+    expect(other).toMatchObject({ isError: true });
+    expect(other.content[0]).toMatchObject({ text: expect.stringContaining("approved in another chat") });
+  });
+});
