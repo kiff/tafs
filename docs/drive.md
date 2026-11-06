@@ -102,7 +102,8 @@ in front. The stream sends these events:
   cloud never sends a request Coach has given up on, or will within 2 seconds, so a stream
   that reconnects late doesn't replay stale steps.
 - `ended {why, words}`: the drive is over. Stop at once: drop the border, the caption and
-  the dot, and say `words` in the caption.
+  the dot, and say `words` in the caption: the end in the person's own words
+  ([What the person is told](#what-the-person-is-told)).
 - `reopen`: the stream lived its 14 minutes. Open it again.
 - A comment line (`: ping`) every 15 seconds.
 
@@ -249,6 +250,25 @@ tafs cloud ends a drive itself in these cases:
 | `done` | Coach's `done`. |
 | `idle` | Nothing was done for 15 minutes. |
 | `replaced` | Another drive started. |
+
+### What the person is told
+
+`words`, in the stream's `ended`, the stop's answer and `GET /v1/coach/drive`, is the end in
+the person's own words: the caption says it, and the "What I did" card says why it ended.
+They're the words an app keeps for an end whose words didn't come, so the caption reads
+the same either way. Coach, and the account's events, have their own words for it.
+
+| `why` | `words` |
+|---|---|
+| `owner_took_over` | You touched the app, so it's yours now |
+| `left_app` | The app left the screen, so Coach stopped |
+| `stopped` | You stopped Coach |
+| `locked` | The phone locked, so Coach stopped |
+| `signed_out` | You signed out, so Coach stopped |
+| `halted` | The account is halted, so Coach stopped |
+| `done` | Coach is done |
+| `idle` | Nothing was done for 15 minutes, so Coach stopped |
+| `replaced` | Another drive started |
 
 ### How each platform tells the person's input from Coach's
 

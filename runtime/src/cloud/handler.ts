@@ -26,7 +26,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_WORDS, putResult, startDrive } from "./drive.js";
+import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_SAID, END_WORDS, putResult, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -2425,7 +2425,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await currentDrive(store, me.tenantID, me.subject, now);
     if (!d) return { drive: null, steps: [] };
     const { person: _p, ...shown } = d;
-    return { drive: { ...shown, ...(d.ended ? { ended: { ...d.ended, words: END_WORDS[d.ended.why] } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
+    return { drive: { ...shown, ...(d.ended ? { ended: { ...d.ended, words: END_SAID[d.ended.why] } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
   }
   if (parts.length === 3 && method === "POST") {
     const body = parseBody(event);
@@ -2459,7 +2459,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     if (d?.ended && d.ended.at === now.toISOString()) {
       await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS[why] }, now);
     }
-    return { ended: d?.ended ? { ...d.ended, words: END_WORDS[d.ended.why] } : null };
+    return { ended: d?.ended ? { ...d.ended, words: END_SAID[d.ended.why] } : null };
   }
   if (parts.length === 6 && parts[4] === "results" && method === "POST") {
     const t = await putResult(store, me.tenantID, me.subject, parts[3] ?? "", parts[5] ?? "", parseBody(event), now).catch(fail);
