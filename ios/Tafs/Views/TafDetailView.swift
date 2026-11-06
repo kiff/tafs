@@ -244,7 +244,7 @@ struct TafDetailView: View {
                         .overlay(Capsule().stroke(activityFilter == f ? Theme.ink : Theme.line))
                         .clipShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .accessibilityAddTraits(activityFilter == f ? .isSelected : [])
             }
         }
@@ -306,10 +306,12 @@ struct TafDetailView: View {
         if model.mode == .sample, taf.state != .revoked {
             Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
                 .buttonStyle(OutlineButtonStyle())
+                .confirming()
         }
         if model.mode == .kiff, cloud != nil, manages {
             Button("Remove for good") { confirmRemove = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                .confirming()
         }
     }
 
@@ -405,6 +407,7 @@ struct TafDetailView: View {
         if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
             Button("Revoke") { confirmRevoke = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                .confirming()
         }
     }
 }
@@ -528,6 +531,7 @@ struct ConnectionsPanel: View {
                         }
                         Spacer(minLength: 0)
                         Button("Disconnect") { confirming = grant }
+                            .confirming()
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.no)
                     }
@@ -682,6 +686,7 @@ struct VersionsPanel: View {
                             Text("Resume the trial")
                         }
                         .buttonStyle(OutlineButtonStyle())
+                        .confirming()
                     } else {
                         // One trial per taf: another waits for the open one to end.
                         Button("Try it") { starting = v }
@@ -692,6 +697,7 @@ struct VersionsPanel: View {
                         use(v)
                     }
                     .buttonStyle(OutlineButtonStyle())
+                    .confirming()
                     // One switch at a time, and none while a trial is open: Install ends the trial.
                     .disabled(switching != nil || trial != nil || model.switches[tafID].map { $0.n != v.n } ?? false)
                 }
@@ -799,6 +805,7 @@ struct VersionCardSheet: View {
                         dismiss()
                         Task { await model.useVersion(version, of: tafID, shownDraft: shown, approving: approving) }
                     }
+                    .confirming()
                     .disabled(draft?.cards == nil || model.approvalBlocked)
                 }
             }
@@ -887,6 +894,7 @@ struct MemoryPanel: View {
                         }
                         Spacer(minLength: 0)
                         Button("Forget") { forgetting = note }
+                            .confirming()
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.soft)
                             .frame(minHeight: 44)
@@ -1084,7 +1092,7 @@ struct CardBar: View {
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityHint("Shows the Cards")
     }
 
@@ -1166,7 +1174,7 @@ struct CardStack: View {
                         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(Color.black.opacity(Self.shade(depth: ordered.count - 1 - index))))
                         .shadow(color: .black.opacity(0.16), radius: 4, y: -2)
-                }.buttonStyle(.plain).accessibilityLabel("\(card.title). Show this Card")
+                }.buttonStyle(.drivablePlain).accessibilityLabel("\(card.title). Show this Card")
             }
         }
         .frame(maxWidth: TafCardFace.width)

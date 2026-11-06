@@ -46,7 +46,7 @@ struct QuestionsCard: View {
                         Label("Chat about this", systemImage: "bubble.left")
                             .scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drivablePlain)
                 }
                 CardNote(id: component.id)
             }
@@ -68,7 +68,7 @@ struct QuestionsCard: View {
                 choice("Something else…", detail: nil, on: selection.ownOpen.contains(q.id)) { selection.toggleOwn(q) }
             }
             if selection.ownOpen.contains(q.id) {
-                TextField("Your own answer", text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))
+                DriveField("Your own answer", text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))
                     .scaledFont(15)
                     .padding(.horizontal, 14).padding(.vertical, 12)
                     .background(Theme.panel)
@@ -103,7 +103,7 @@ struct QuestionsCard: View {
             .overlay(RoundedRectangle(cornerRadius: 22).stroke(on ? Theme.coach : Theme.ink.opacity(0.18)))
             .clipShape(RoundedRectangle(cornerRadius: 22))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .disabled(busy)
         .accessibilityAddTraits(on ? .isSelected : [])
     }

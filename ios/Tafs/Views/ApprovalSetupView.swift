@@ -94,12 +94,13 @@ struct ApprovalGate<Approve: View>: View {
     @ViewBuilder let button: () -> Approve
 
     var body: some View {
+        // An approval confirms: a drive's touch on it is refused (docs/drive.md).
         if model.mode != .kiff {
-            button()
+            button().confirming()
         } else {
             ReadinessReader { readiness, checkAgain in
                 if readiness.isReady {
-                    button()
+                    button().confirming()
                 } else {
                     ApprovalNotReady(readiness: readiness, checkAgain: checkAgain)
                 }

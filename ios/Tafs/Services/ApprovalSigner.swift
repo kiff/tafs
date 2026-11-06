@@ -286,8 +286,11 @@ final class ApprovalSigner: ApprovalSigning {
     /// `biometricsOnly`: an approval's prompt, which offers no passcode; the device key's
     /// takes either, as Android's signing key does.
     private func authenticate(reason: String, biometricsOnly: Bool = false) async throws {
-        let policy: LAPolicy = biometricsOnly ? .deviceOwnerAuthenticationWithBiometrics : .deviceOwnerAuthentication
+        // The signer's drive rule (docs/drive.md): while Coach drives the app, every confirming
+        // signature takes Face ID or Touch ID, never the passcode or an unlock given before.
+        let policy: LAPolicy = biometricsOnly || DriveRule.on ? .deviceOwnerAuthenticationWithBiometrics : .deviceOwnerAuthentication
         let context = LAContext()
+        if reusesUnlock && DriveRule.on { reusesUnlock = false }
         if reusesUnlock {
             reusesUnlock = false
             context.touchIDAuthenticationAllowableReuseDuration = Self.unlockReuse
@@ -304,6 +307,8 @@ final class ApprovalSigner: ApprovalSigning {
         }
         pendingAuthentication = context
         defer { if pendingAuthentication === context { pendingAuthentication = nil } }
+        DriveWaits.emit("prompt_shown")
+        defer { DriveWaits.emit("prompt_done") }
         let ok = try await context.evaluatePolicy(policy, localizedReason: reason)
         try Task.checkCancellation()
         guard pendingAuthentication === context else { throw SignerError.notAuthenticated }

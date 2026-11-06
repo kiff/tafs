@@ -25,6 +25,7 @@ struct DevicesView: View {
                         } else {
                             Button("Sign out") { removing = device }
                                 .buttonStyle(.borderless)
+                                .confirming()
                                 .foregroundColor(Theme.no)
                         }
                     }

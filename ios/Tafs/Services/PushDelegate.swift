@@ -79,6 +79,7 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
                           ? [.list] : [.banner, .list, .sound])
         let hold = content.userInfo["hold_id"] as? String
         Task { @MainActor in
+            DriveWaits.emit("notification_shown")
             // The alert can come before KIFF's list of held calls has the hold: Needs you then
             // said "Nothing is waiting" under it (the 755 retest). It reads again until it's there.
             if let hold, let onHoldAlert = self.onHoldAlert { await onHoldAlert(hold) } else { await self.onHeldChanged?() }

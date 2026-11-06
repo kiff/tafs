@@ -146,6 +146,7 @@ struct SettingsView: View {
                             }
                         }
                         .disabled(!model.canManageCards || model.suggestionsBusy)
+                        .drivable("Show suggestions", role: .toggle, id: "show-suggestions") { Task { await model.setSuggestions(!shown.show) } }
                         .accessibilityIdentifier("show-suggestions")
                         if let why = model.suggestionsError { Text(why).scaledFont(13).foregroundColor(Theme.no) }
                     }
@@ -178,6 +179,7 @@ struct SettingsView: View {
                         if model.mode == .kiff { confirming = .signOut }
                         else { Task { if await model.signOut() { dismiss() } } }
                     }
+                    .confirming()
                     if let why = model.signOutError { Text(why).foregroundColor(Theme.no) }
                 }
                 Color.clear.frame(height: 1).listRowBackground(Color.clear).onAppear { atEnd = true }.onDisappear { atEnd = false }
@@ -278,7 +280,7 @@ struct AccountView: View {
             // Their own copy, for their rights of access and portability (kiff/tafs#424).
             ExportChatsSection()
             if model.mayDeleteAccount { Section {
-                Button("Delete account…", role: .destructive) { deletingAccount = true }
+                Button("Delete account…", role: .destructive) { deletingAccount = true }.confirming()
             } footer: {
                 Text("Deletes every taf, its runs, chats and notes, your Cards and your connections. It can't be undone.")
             } }

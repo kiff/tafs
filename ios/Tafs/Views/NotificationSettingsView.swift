@@ -50,6 +50,7 @@ struct NotificationSettingsView: View {
             }
             Section {
                 Toggle("Haptics", isOn: $haptics)
+                    .drivable("Haptics", role: .toggle, id: "haptics") { haptics.toggle() }
             } footer: {
                 Text("The light taps when you send or answer.")
             }

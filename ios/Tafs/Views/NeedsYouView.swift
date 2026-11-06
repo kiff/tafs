@@ -41,7 +41,7 @@ struct NeedsYouView: View {
                                 .contentShape(Rectangle())
                             }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.drivablePlain)
                         .accessibilityHint("Opens \(taf.name), where you answer it")
                     }
                 }
@@ -206,6 +206,7 @@ struct HeldCallCard: View {
                 }
                 Button("Refuse") { send(.refuse) }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                    .confirming()
             }
             .disabled(sending)
         } else {

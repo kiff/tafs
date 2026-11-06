@@ -83,7 +83,7 @@ final class TafsCloud {
     /// tafs-cloud-stream: the one route whose answer streams (#60).
     let streamURL: URL
     var token: String?
-    private let session: URLSession
+    let session: URLSession
 
     /// Keeps the server's representation validator; 304 leaves cached pages intact.
     func representation(_ path: String, etag: String? = nil, headers: [String: String] = [:]) async throws -> (Data?, String?) {
@@ -98,7 +98,10 @@ final class TafsCloud {
         let status = http?.statusCode ?? 0
         let tag = http?.value(forHTTPHeaderField: "ETag") ?? etag
         if status == 304 { return (nil, tag) }
-        guard (200..<300).contains(status) else { throw Self.refusal(status, data) }
+        guard (200..<300).contains(status) else {
+            DriveDiagnostics.shared.failed(method: "GET", path: path, status: status)
+            throw Self.refusal(status, data)
+        }
         return (data, tag)
     }
 
@@ -1650,6 +1653,8 @@ final class TafsCloud {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
+            // By its route and status only, for a drive's diagnostics (docs/drive.md).
+            DriveDiagnostics.shared.failed(method: method, path: path, status: status)
             throw Self.refusal(status, data)
         }
         return data

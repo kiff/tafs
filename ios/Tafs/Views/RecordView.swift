@@ -33,7 +33,7 @@ struct RecordView: View {
                             Text("· \(day.reads.count == 1 ? "1 read" : "\(day.reads.count) reads") of data, within its Card · \(openReads.contains(day.key) ? "Hide" : "Show")")
                                 .scaledFont(13).foregroundColor(Theme.ok).padding(.horizontal, 4)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.drivablePlain)
                     }
                 }
                 if days.isEmpty {
@@ -81,7 +81,7 @@ struct RecordView: View {
             .overlay(Capsule().stroke(selected ? Theme.ink : Theme.line))
             .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
@@ -243,7 +243,7 @@ struct RecordRow: View {
             row.accessibilityElement(children: .combine)
         } else {
             Button { showingReceipt = true } label: { row }
-                .buttonStyle(.plain)
+                .buttonStyle(.drivablePlain)
                 .sheet(isPresented: $showingReceipt) { ReceiptView(entry: entry).environmentObject(model) }
                 .accessibilityHint("Shows the receipt")
         }

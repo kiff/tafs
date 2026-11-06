@@ -39,7 +39,7 @@ struct NewTafFlow: View {
             Text("What's the job?").scaledFont(38, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("Say it the way you'd brief a new hire. Include what it must never do.")
                 .scaledFont(15).foregroundColor(Theme.soft)
-            TextEditor(text: $job)
+            DriveField("What's the job?", text: $job, kind: .editor)
                 .scaledFont(17)
                 .scrollContentBackground(.hidden)
                 .padding(12)
@@ -65,7 +65,7 @@ struct NewTafFlow: View {
 
     private var draftStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            TextField("Name", text: $draft.name)
+            DriveField("Name", text: $draft.name)
                 .scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title)
                 .foregroundColor(Theme.ink)
             Text("Drafted from your words. Change anything.").scaledFont(13).foregroundColor(Theme.dim)
@@ -166,7 +166,7 @@ struct RuleEditor: View {
         HStack {
             Text(label).scaledFont(14).foregroundColor(Theme.soft)
             Spacer()
-            TextField("0", text: Binding(
+            DriveField("0", text: Binding(
                 get: { money.wrappedValue.map { String($0.minor / 100) } ?? "" },
                 set: { if let dollars = Int64($0.filter(\.isNumber)) { money.wrappedValue = Money(minor: dollars * 100, currency: "USD", scale: 2) } }
             ))
@@ -205,7 +205,7 @@ struct JobRow: View {
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Theme.pink.opacity(0.6) : Theme.line))
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

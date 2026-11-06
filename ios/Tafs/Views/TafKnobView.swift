@@ -66,7 +66,7 @@ struct TafKnobView: View {
                     .background(Capsule().fill(Theme.panel))
                     .overlay(Capsule().stroke(Theme.line))
             }
-            .buttonStyle(.plain).accessibilityIdentifier("knob.coach")
+            .buttonStyle(.drivablePlain).accessibilityIdentifier("knob.coach")
             serviceMenu
             GeometryReader { g in
                 let k = min(g.size.width, g.size.height) / Grid.size
@@ -223,7 +223,7 @@ struct TafKnobView: View {
                     .frame(width: labelWidth, height: 36 * k)
                     .rotationEffect(.degrees(flip))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.drivablePlain)
             .overlay(alignment: .bottom) { arrivalLight(item, ring: ring, k: k) }
             .offset(y: -mid * k)
             .rotationEffect(.degrees(angle))
@@ -331,7 +331,7 @@ struct TafKnobView: View {
             .background(Circle().fill(Theme.panel).shadow(color: tint.opacity(0.18), radius: 14 * k))
             .overlay(Circle().stroke(tint.opacity(0.4), lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.drivablePlain)
         .accessibilityLabel([kicker, big, hint].filter { !$0.isEmpty }.joined(separator: ", "))
         .accessibilityIdentifier("knob.face")
     }

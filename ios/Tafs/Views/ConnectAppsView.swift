@@ -168,6 +168,7 @@ struct AppConnectionsView: View {
                                 confirming = g
                             }
                             .buttonStyle(.borderless)
+                            .confirming()
                             .disabled(busy != nil)
                             .accessibilityIdentifier("connect.disconnect." + g.id)
                         }
@@ -233,7 +234,7 @@ struct ConnectApprovalSheet: View {
                                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         }
                         if start.needsKey {
-                            SecureField("The key", text: $key)
+                            DriveField("The key", text: $key, kind: .secure)
                                 .textContentType(.password).autocorrectionDisabled().textInputAutocapitalization(.never)
                                 .padding(12).background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 .accessibilityIdentifier("connect.key")
