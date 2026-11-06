@@ -2724,6 +2724,22 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(jobOf(kept).disclose).toEqual(expect.arrayContaining([{ tool: "reply_k3f9", fields: ["body"] }, { tool: "send_message_k3f9", fields: ["text"] }]));
   });
 
+  // agentgabo on #574: a taf made before writes_for gets its sender's name from an improvement, never remade.
+  it("lets an improvement name who an existing taf writes for, in its next version's disclosure", async () => {
+    const better = { type: "result", id: "named", tools: ["send_message_k3f9"], taf: { agent: "rae", improves: RAE, note: "Signs as the company", writes_for: "Kiff Agents OÜ" } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }] });
+    await note();
+    expect(answer()).toMatchObject({ answer: { version: expect.any(Number) } });
+    const kept = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(kept.writesFor).toBe("Kiff Agents OÜ");
+    expect(jobOf(kept).writesFor).toBe("Kiff Agents OÜ");
+    const latest = [...w.agents.versionDefs.values()].at(-1) as { disclose?: { line: string } } | undefined;
+    expect(latest?.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+  });
+
   // qa-kiff on #572: a merge only ever widens: Chargebacks' own fields for update_dispute stay when a taf names another.
   it("only ever widens a disclosure: a tool named again keeps its earlier fields", () => {
     const own = jobById("chargebacks").disclose;
