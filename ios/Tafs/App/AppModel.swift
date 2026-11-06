@@ -3900,8 +3900,8 @@ final class AppModel: ObservableObject {
         return working != nil || s.awaiting != nil || s.live != nil
     }
 
-    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false) {
-        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy))
+    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil) {
+        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle))
     }
 
     /// Why a message wasn't sent when the owner wrote too many too fast: the runtime's limit
@@ -4116,10 +4116,11 @@ final class AppModel: ObservableObject {
         chatState(tafID).settled.contains(key) || (remembered?.stringArray(forKey: Self.settledKey) ?? []).contains(key)
     }
 
-    private func rememberSettled(_ keys: [String], _ tafID: UUID) {
-        chatStates[tafID, default: ChatState()].settled.formUnion(keys)
-        guard let remembered else { return }
-        let kept = (remembered.stringArray(forKey: Self.settledKey) ?? []) + keys
+    /// Keeps a steering row's hash across launches: only when Retry, Edit or Delete took it,
+    /// never when it's shown, so a restart before that brings the row back.
+    private func rememberTaken(_ message: UnsentMessage) {
+        guard let key = message.settle, let remembered else { return }
+        let kept = (remembered.stringArray(forKey: Self.settledKey) ?? []).filter { $0 != key } + [key]
         remembered.set(Array(kept.suffix(Self.settledKept)), forKey: Self.settledKey)
     }
 
@@ -4136,8 +4137,9 @@ final class AppModel: ObservableObject {
         let unread = s.over ? s.untaken.map { ($0, s.status == "CANCELLED" ? "You stopped it before it read this." : "It wasn't read before the work ended.") } : []
         let fresh = (s.notSent.map { ($0.message, $0.why) } + unread).filter { !wasSettled(key($0.0), tafID) }
         guard !fresh.isEmpty else { return }
-        rememberSettled(fresh.map { key($0.0) }, tafID)
-        for (m, why) in fresh { keepUnsent(m.text, tafID, why: why) }
+        // Shown: dealt with in memory only, until Retry, Edit or Delete takes it.
+        chatStates[tafID, default: ChatState()].settled.formUnion(fresh.map { key($0.0) })
+        for (m, why) in fresh { keepUnsent(m.text, tafID, why: why, settle: key(m)) }
     }
 
     /// Sends a message that didn't go through again. It stays where it was until it's
@@ -4145,15 +4147,22 @@ final class AppModel: ObservableObject {
     func retryChat(_ message: UnsentMessage, to tafID: UUID) async {
         guard !chatSending.contains(tafID), let at = chatStates[tafID]?.unsent.firstIndex(where: { $0.id == message.id }) else { return }
         chatStates[tafID]?.unsent.remove(at: at)
+        let left = chatState(tafID).unsent.count
         // Not taken at all (too long to join the queue): back in its place. A send that
         // fails keeps it again itself.
         if !(await submitChat(message.text, to: tafID)) {
             chatStates[tafID]?.unsent.insert(message, at: min(at, chatState(tafID).unsent.count))
+        } else if chatState(tafID).unsent.count > left, message.settle != nil, let i = chatStates[tafID]?.unsent.indices.last {
+            // Tried and kept as not sent again: still owed, so the new row carries its hash on.
+            chatStates[tafID]?.unsent[i].settle = message.settle
+        } else {
+            rememberTaken(message)
         }
     }
 
     func discardUnsentChat(_ message: UnsentMessage, from tafID: UUID) {
         chatStates[tafID]?.unsent.removeAll { $0.id == message.id }
+        rememberTaken(message)
     }
 
     /// Takes a message that wasn't sent out of the thread, to change it in the composer
@@ -5419,6 +5428,10 @@ final class AppModel: ObservableObject {
         let at: Date
         /// Not sent only because the owner wrote too many too fast.
         var busy = false
+        /// Its hash when it came from the thread's steering (a `not_sent`, or what a run that's
+        /// over didn't read): kept across launches only once Retry, Edit or Delete takes the
+        /// row, so a restart before that shows it again.
+        var settle: String? = nil
     }
     @Published private(set) var setupUnsent: [UnsentMessage] = []
     /// What the owner is typing to Coach, not sent yet (kiff/tafs#245, item 3): kept here, not in the
@@ -6001,15 +6014,12 @@ final class AppModel: ObservableObject {
         }
         let fresh = s.notSent.filter { !setupSettled.contains(key($0)) && !(remembered?.stringArray(forKey: Self.settledKey) ?? []).contains(key($0)) }
         guard !fresh.isEmpty else { return }
+        // Shown: dealt with in memory only, until Retry, Edit or Delete takes it.
         setupSettled.formUnion(fresh.map(key))
-        if let remembered {
-            let kept = (remembered.stringArray(forKey: Self.settledKey) ?? []) + fresh.map(key)
-            remembered.set(Array(kept.suffix(Self.settledKept)), forKey: Self.settledKey)
-        }
-        for m in fresh { setupUnsent.append(UnsentMessage(text: m.text, why: m.why, at: clock())) }
+        for m in fresh { setupUnsent.append(UnsentMessage(text: m.text, why: m.why, at: clock(), settle: key(m))) }
     }
 
-    /// Coach's `not_sent` messages already shown, by hash.
+    /// Coach's `not_sent` messages shown in this launch, by hash.
     private var setupSettled: Set<String> = []
 
     /// Sends a message that didn't go through again; an answer's card goes quiet again.
@@ -6021,6 +6031,7 @@ final class AppModel: ObservableObject {
         // The card was answered since: sending this too would answer it twice.
         if let answer, setupThread.answer(to: answer.id) != nil {
             setupUnsent.remove(at: at)
+            rememberTaken(message)
             return
         }
         setupUnsent.remove(at: at)
@@ -6030,9 +6041,13 @@ final class AppModel: ObservableObject {
             // Not taken at all (too long to join the queue, or no Setup): back in its place.
             if let answer { answered.remove(cardRef(answer.id)) }
             setupUnsent.insert(message, at: min(at, setupUnsent.count))
-        } else if setupUnsent.count > left, let answer {
-            // Tried and kept again as not sent: its card can be answered again.
-            answered.remove(cardRef(answer.id))
+        } else if setupUnsent.count > left {
+            // Tried and kept again as not sent: its card can be answered again, and the new row
+            // is still owed, so it carries its hash on.
+            if let answer { answered.remove(cardRef(answer.id)) }
+            if message.settle != nil { setupUnsent[setupUnsent.count - 1].settle = message.settle }
+        } else {
+            rememberTaken(message)
         }
     }
 
@@ -6040,6 +6055,7 @@ final class AppModel: ObservableObject {
     func discardUnsent(_ message: UnsentMessage) {
         setupUnsent.removeAll { $0.id == message.id }
         if let answer = SetupThread.Answer(message.text) { answered.remove(cardRef(answer.id)) }
+        rememberTaken(message)
     }
 
     /// Takes a message that didn't go through out of Setup's thread, to change it in the

@@ -246,7 +246,9 @@ Without `hold`, nothing changes for an older app:
   the box to send later. It's not a "Not sent" row.
 - **`not_sent`:** each one shows under the stopped run, dimmed, with "Not sent · " and its
   `why`, then Edit (the words back in the box) and Retry (sent as a new message). The row
-  leaves once a newer run is the chat's latest.
+  leaves once a newer run is the chat's latest. The app remembers a row as handled only when
+  Retry, Edit or Delete takes it, never when it's shown, so a restart before that shows it
+  again, and a second Retry has nothing to resend.
 - **An older tafs cloud's `409` with no code:** the message goes as a new one, as before.
 
 iOS drops its own queue the same way, with the same words.

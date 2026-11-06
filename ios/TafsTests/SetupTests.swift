@@ -97,7 +97,7 @@ final class SetupTests: XCTestCase {
 
     private static let setupJSON = #"{"id":"taf-setup","name":"Setup","job":"setup","kiff_agent":"setup","status":"active","next_run":null,"last_run":null}"#
 
-    private func model(signer: FaceIDSigner, vendor: StubVendor = StubVendor()) async -> AppModel {
+    private func model(signer: FaceIDSigner, vendor: StubVendor = StubVendor(), remembered: UserDefaults? = nil) async -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.thenRespond = [:]
         StubProtocol.sent = []
@@ -108,7 +108,7 @@ final class SetupTests: XCTestCase {
         let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, gatewayURL: URL(string: "https://mcp.test")!, token: "kiff_dev_x", session: session)
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
-        let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: vendor)
+        let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: vendor, remembered: remembered)
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
@@ -1080,6 +1080,43 @@ final class SetupTests: XCTestCase {
         await model.loadSetupThread()
         XCTAssertEqual(model.setupUnsent.map(\.text), ["never mind"], "shown once")
         XCTAssertEqual(model.setupUnsent.first?.why, "You stopped it before it read this.")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Coach's `not_sent` is remembered as handled only when Retry, Edit or Delete takes it,
+    /// never when it's shown: a restart before that shows it again, and after Retry it doesn't.
+    func testCoachsNotSentComesBackAfterARestartUntilRetryTakesIt() async throws {
+        let suite = "tafs.tests.settled.\(UUID().uuidString)"
+        let remembered = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { remembered.removePersistentDomain(forName: suite) }
+        let thread = """
+        {"messages":[],"components":[],"working":null,"steering":{"run":"r2","status":"CANCELLED","untaken":[],"not_sent":[{"text":"never mind","at":"2026-10-18T09:00:05.000Z","why":"You stopped it before it read this."}]}}
+        """
+        func launch() async -> AppModel {
+            let model = await model(signer: FaceIDSigner(), remembered: remembered)
+            model.planqueSetUp(for: "t_01")
+            StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+            StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread)
+            await model.loadSetup()
+            await model.loadSetupThread()
+            return model
+        }
+        var model = await launch()
+        XCTAssertEqual(model.setupUnsent.map(\.text), ["never mind"])
+        XCTAssertNil(remembered.stringArray(forKey: AppModel.settledKey), "shown is not handled")
+
+        // Restarted before Retry or Edit: the owner's words are back.
+        model = await launch()
+        XCTAssertEqual(model.setupUnsent.map(\.text), ["never mind"], "back after a restart")
+
+        // Retry takes it: after a restart it isn't back, and a second Retry has nothing to resend.
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s3","new_session":false}"#)
+        let shown = try XCTUnwrap(model.setupUnsent.first)
+        await model.retrySetup(shown)
+        XCTAssertTrue(model.setupUnsent.isEmpty)
+        XCTAssertEqual(remembered.stringArray(forKey: AppModel.settledKey)?.count, 1)
+        model = await launch()
+        XCTAssertTrue(model.setupUnsent.isEmpty, "taken by Retry, so not back")
         Keychain.delete(AppModel.planqueAccount)
     }
 

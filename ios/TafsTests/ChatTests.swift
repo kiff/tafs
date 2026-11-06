@@ -664,6 +664,53 @@ final class ChatTests: XCTestCase {
         XCTAssertNil(remembered.stringArray(forKey: AppModel.settledKey))
     }
 
+    /// A `not_sent` is remembered as handled only when Retry, Edit or Delete takes it, never
+    /// when it's shown: a restart before that shows it again, and after Retry it doesn't, so a
+    /// second Retry has nothing to resend.
+    func testANotSentComesBackAfterARestartUntilRetryTakesIt() async throws {
+        let suite = "tafs.tests.settled.\(UUID().uuidString)"
+        let remembered = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { remembered.removePersistentDomain(forName: suite) }
+        let thread = """
+        {"messages":[],"steering":{"run":"r9","status":"CANCELLED","untaken":[],"not_sent":[{"text":"skip 4410","at":"2026-10-18T09:00:01.000Z","why":"You stopped it before it read this."}]}}
+        """
+        func launch() async -> (AppModel, UUID) {
+            let session = stubbedSession()
+            let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, session: session)
+            let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session)
+            let model = AppModel(signer: StubSigner(), kiff: kiff, cloud: cloud, remembered: remembered)
+            stubKIFF(cards: [Self.raeCard])
+            StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, thread)
+            await model.useSession("kiff_dev_x")
+            let id = model.tafs.first { $0.name == "Rae" }!.id
+            await model.loadChat(id)
+            return (model, id)
+        }
+        var (model, id) = await launch()
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["skip 4410"])
+        XCTAssertNil(remembered.stringArray(forKey: AppModel.settledKey), "shown is not handled")
+
+        // Restarted before Retry or Edit: the owner's words are back.
+        (model, id) = await launch()
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["skip 4410"], "back after a restart")
+
+        // A Retry that fails keeps it as not sent again, still owed: back after a restart too.
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (500, #"{"error":"down"}"#)
+        await model.retryChat(try XCTUnwrap(model.chatState(id).unsent.first), to: id)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["skip 4410"])
+        XCTAssertNil(remembered.stringArray(forKey: AppModel.settledKey), "not taken yet")
+        (model, id) = await launch()
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["skip 4410"])
+
+        // Retry takes it: after a restart it isn't back.
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        await model.retryChat(try XCTUnwrap(model.chatState(id).unsent.first), to: id)
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty)
+        XCTAssertEqual(remembered.stringArray(forKey: AppModel.settledKey)?.count, 1)
+        (model, id) = await launch()
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty, "taken by Retry, so not back")
+    }
+
     /// A run that fails part-way offers Retry, which sends its message again; a stopped
     /// one is marked stopped.
     func testARunThatFailsPartWayOffersRetry() async throws {
