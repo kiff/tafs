@@ -59,22 +59,11 @@ final class DriveSession: ObservableObject {
         let session: String
     }
 
-    /// The "What I did" card: the drive's steps from tafs cloud's record, and why it ended.
-    struct Recap: Identifiable {
-        let id: String
-        let task: String
-        let words: String
-        let steps: [TafsCloud.DriveStep]
-        /// The screens after the last steps that touched something, as this phone saw them.
-        let shots: [UIImage]
-    }
-
     @Published private(set) var live: Live?
     /// Ended, its words still in the caption for a moment.
     @Published private(set) var ending = false
     @Published private(set) var caption: String?
     @Published private(set) var dot: CGPoint?
-    @Published var recap: Recap?
 
     /// Coach is driving: the overlay takes every touch.
     var isOn: Bool { live != nil && !ending }
@@ -87,9 +76,8 @@ final class DriveSession: ObservableObject {
     private var cloud: TafsCloud?
     private var following: Task<Void, Never>?
     private var observers: [NSObjectProtocol] = []
-    private var shots: [UIImage] = []
 
-    /// The app around the drive: Coach's chat closes as it starts and opens with the recap at its end.
+    /// The app around the drive: Coach's chat closes as it starts and opens at its end, its thread read again.
     var onStart: (@MainActor () -> Void)?
     var onEnd: (@MainActor () -> Void)?
     /// The taf whose screen is up, by name, for the record's words.
@@ -104,8 +92,6 @@ final class DriveSession: ObservableObject {
         ending = false
         caption = drive.task
         dot = nil
-        recap = nil
-        shots = []
         DriveRule.on = true
         DriveOverlay.shared.show()
         observe()
@@ -153,14 +139,10 @@ final class DriveSession: ObservableObject {
         following = nil
         for o in observers { NotificationCenter.default.removeObserver(o) }
         observers = []
-        let cloud = self.cloud
-        let shots = self.shots
         Task { [weak self] in
             try? await Task.sleep(nanoseconds: 2_500_000_000)
-            let steps = (try? await cloud?.readDrive())?.steps ?? []
             guard let self, self.live == live else { return }
             DriveOverlay.shared.hide()
-            self.recap = Recap(id: live.id, task: live.task, words: said, steps: steps, shots: shots)
             self.live = nil
             self.ending = false
             self.caption = nil
@@ -276,24 +258,11 @@ final class DriveSession: ObservableObject {
         }
     }
 
-    private func withScreen(_ result: TafsCloud.DriveResult, keep: Bool = false) -> TafsCloud.DriveResult {
+    private func withScreen(_ result: TafsCloud.DriveResult) -> TafsCloud.DriveResult {
         var out = result
         let shot = DriveCapture.capture()
         if let jpeg = shot.jpeg { out.image = TafsCloud.DriveResult.Image(mediaType: "image/jpeg", data: jpeg.base64EncodedString()) }
-        if keep {
-            shots.append(Self.thumbnail(shot.image))
-            if shots.count > 3 { shots.removeFirst(shots.count - 3) }
-        }
         return out
-    }
-
-    private static func thumbnail(_ image: UIImage) -> UIImage {
-        let side: CGFloat = 360
-        let s = min(1, side / max(image.size.width, image.size.height))
-        let size = CGSize(width: (image.size.width * s).rounded(), height: (image.size.height * s).rounded())
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        return UIGraphicsImageRenderer(size: size, format: format).image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }
     }
 
     private func settle(_ seconds: Double) async {
@@ -368,7 +337,7 @@ final class DriveSession: ObservableObject {
             await showDot(p)
             perform()
             await settle(0.6)
-            var result = withScreen(.done(action == "tap" ? DriveLines.tapped(words) : DriveLines.longPressed(words)), keep: true)
+            var result = withScreen(.done(action == "tap" ? DriveLines.tapped(words) : DriveLines.longPressed(words)))
             result.touched = touched(words)
             return result
         case "swipe":
@@ -406,7 +375,7 @@ final class DriveSession: ObservableObject {
             let words = entry?.entry.words ?? ""
             input.insertText(text)
             await settle(0.4)
-            var result = withScreen(.done(DriveLines.typedInto(words)), keep: true)
+            var result = withScreen(.done(DriveLines.typedInto(words)))
             result.touched = touched(words.isEmpty ? "a field" : words)
             return result
         case "back":

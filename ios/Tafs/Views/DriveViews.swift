@@ -43,42 +43,31 @@ struct DriveCard: View {
     }
 }
 
-/// "What I did": the drive's steps from tafs cloud's record, with the last screens that mattered.
-struct DriveRecapView: View {
-    @ObservedObject private var drive = DriveSession.shared
+/// "What I did": a drive's end in Coach's thread, its steps from tafs cloud's record and why it ended.
+struct DriveRecapCard: View {
+    let recap: TafsCloud.DriveRecap
 
     var body: some View {
-        if let recap = drive.recap {
-            Panel {
-                Eyebrow(text: "What I did", color: Theme.amber)
-                Text(recap.task).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                if recap.steps.isEmpty {
-                    Text("No step was done.").scaledFont(14).foregroundColor(Theme.soft)
-                }
-                ForEach(Array(recap.steps.enumerated()), id: \.offset) { _, step in
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Image(systemName: "circle.fill").font(.system(size: 5)).foregroundColor(Theme.dim)
-                        Text(step.touched.map { "\(step.line) · \($0.words)" + ($0.taf.map { " · \($0)" } ?? "") } ?? step.line)
-                            .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                if !recap.shots.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(Array(recap.shots.enumerated()), id: \.offset) { _, shot in
-                                Image(uiImage: shot).resizable().scaledToFit().frame(height: 160)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Theme.line))
-                            }
-                        }
-                    }
-                    .accessibilityHidden(true)
-                }
-                Text(recap.words).scaledFont(13).foregroundColor(Theme.soft)
-                Button("OK") { drive.recap = nil }
-                    .buttonStyle(OutlineButtonStyle())
+        Panel {
+            Eyebrow(text: "What I did", color: Theme.amber)
+            Text(recap.task).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            if recap.steps.isEmpty {
+                Text("No step was done.").scaledFont(14).foregroundColor(Theme.soft)
             }
+            ForEach(Array(recap.steps.enumerated()), id: \.offset) { _, step in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Image(systemName: "circle.fill").font(.system(size: 5)).foregroundColor(Theme.dim)
+                    Text(step.touched.map { "\(step.line) · \($0.words)" + ($0.taf.map { " · \($0)" } ?? "") } ?? step.line)
+                        .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Text(words).scaledFont(13).foregroundColor(Theme.soft)
         }
+    }
+
+    private var words: String {
+        if let w = recap.words, !w.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return DriveSession.sentence(w) }
+        return recap.why.flatMap { DriveLines.ended[$0] } ?? "Coach stopped"
     }
 }

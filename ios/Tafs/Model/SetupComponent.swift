@@ -85,9 +85,12 @@ struct SetupComponent: Decodable, Equatable {
     var version: Int? = nil
     /// The tafs cloud id of the taf a dial card is for.
     var tafID: String? = nil
+    /// The run pauses on this card: `owner` (the owner's answer) or `service` (a service's). None: the run
+    /// goes on past it (kiff/agents' cards from before this say nothing, and the card's type decides).
+    var waits: String? = nil
 
     enum CodingKeys: String, CodingKey {
-        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version
+        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits
         case tafID = "taf_id"
     }
 
@@ -124,6 +127,8 @@ struct SetupThread: Equatable {
     var working: String?
     /// How the tasks Coach handed tafs went, waiting for Coach's next turn (kiff/tafs#206).
     var coachLines: [TafsCloud.CoachLine] = []
+    /// The drives that ended in the thread (docs/drive.md), each at its end.
+    var drives: [TafsCloud.DriveRecap] = []
 
     /// The plan, shown pinned above the thread rather than in it.
     var plan: ShownComponent? { components.last { $0.component.type == .steps } }
@@ -140,16 +145,20 @@ struct SetupThread: Equatable {
     enum Item: Identifiable, Equatable {
         case message(TafsCloud.ChatMessage)
         case component(ShownComponent)
+        /// A drive's end: what Coach did in the app.
+        case drive(TafsCloud.DriveRecap)
         var id: String {
             switch self {
             case .message(let m): return "m|" + m.id
             case .component(let c): return "c|" + c.ref
+            case .drive(let d): return "d|" + d.id
             }
         }
         var at: Date {
             switch self {
             case .message(let m): return m.at
             case .component(let c): return c.firstAt
+            case .drive(let d): return d.at
             }
         }
     }
@@ -162,7 +171,8 @@ struct SetupThread: Equatable {
     /// from a tafs cloud that doesn't say, puts it back at its own time.
     var items: [Item] {
         let placed: [(Item, Date)] = messages.map { (Item.message($0), $0.at) } +
-            components.filter { $0.component.type != .steps }.map { c in (Item.component(c), placedAt(c)) }
+            components.filter { $0.component.type != .steps }.map { c in (Item.component(c), placedAt(c)) } +
+            drives.map { (Item.drive($0), $0.at) }
         let sorted = placed.enumerated().sorted { a, b in
             if a.element.1 != b.element.1 { return a.element.1 < b.element.1 }
             return a.offset < b.offset // a message before a component placed at its time
@@ -175,8 +185,12 @@ struct SetupThread: Equatable {
     private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result, .drive]
     private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .drive]
 
+    /// Whether the run waits on a card: as kiff/agents says (`waits`), else, for a card from before it says,
+    /// by its type.
+    static func waits(_ c: SetupComponent) -> Bool { c.waits != nil || asking.contains(c.type) }
+
     private func placedAt(_ c: ShownComponent) -> Date {
-        guard Self.asking.contains(c.component.type) else { return c.firstAt }
+        guard Self.waits(c.component) else { return c.firstAt }
         if let answer = c.answer, answer.at == nil { return c.firstAt }
         // After what Coach wrote with it, up to the owner's next message; once answered, up to
         // its answer, so the words Coach wrote after the answer stay below it.
