@@ -224,6 +224,35 @@ final class DriveTests: XCTestCase {
         XCTAssertEqual(probe.text, "50")
     }
 
+    /// A secret field is the person's to fill: typing into it is refused, and nothing is typed.
+    func testTypingIntoASecretFieldIsRefused() async throws {
+        let probe = Probe()
+        _ = try await show(probe)
+        let focus = await act("tap", element: "field.the-key")
+        XCTAssertEqual(focus.outcome, "done", focus.line)
+        let typed = await act("type", text: "sk_live_123")
+        XCTAssertEqual(typed.outcome, "refused")
+        XCTAssertEqual(typed.line, "That's yours to fill")
+        XCTAssertNotNil(typed.image)
+        XCTAssertEqual(probe.secret, "")
+    }
+
+    /// While the app resigns active, no step runs: each is refused as too late until it's active again.
+    func testNoStepRunsWhileTheAppResigns() async throws {
+        let probe = Probe()
+        _ = try await show(probe)
+        drive.resigned()
+        let request = TafsCloud.DriveRequest(id: "r", tool: "app_act", action: "tap", line: "Tapping Run now", element: "t.run")
+        let paused = await drive.answer(request)
+        XCTAssertEqual(paused.outcome, "refused")
+        XCTAssertEqual(paused.line, "Too late")
+        XCTAssertEqual(probe.taps, 0)
+        drive.becameActive()
+        let active = await drive.answer(request)
+        XCTAssertEqual(active.line, "Tapped Run now")
+        XCTAssertEqual(probe.taps, 1)
+    }
+
     func testAScrollShowsWhatsBelow() async throws {
         let probe = Probe()
         _ = try await show(probe)
