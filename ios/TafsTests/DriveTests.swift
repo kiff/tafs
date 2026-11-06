@@ -51,10 +51,10 @@ final class DriveTests: XCTestCase {
     private var drive: DriveSession { DriveSession.shared }
     private var targets: DriveTargets { DriveTargets.shared }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         window?.isHidden = true
         window = nil
-        try await super.tearDown()
+        super.tearDown()
     }
 
     private func settle(_ seconds: Double) async {
