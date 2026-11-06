@@ -6905,6 +6905,9 @@ enum AppMatch {
     /// of its server's host labels names whole ("mcp.stripe.com" is Stripe, "notstripe.com"
     /// isn't), never a provider's host, which serves every one of its apps.
     static func isOf(_ g: PlanqueClient.Grant, _ entry: String) -> Bool {
+        // planque's own entry wins: a grant it named is only ever that app's, never another's
+        // by its host.
+        if let named = g.entry, !named.isEmpty { return false }
         guard let slug = slug(entry) else { return false }
         if let connector = g.request.connector { return connector.toolkit.map(fold) == slug }
         return host(g.request.server).split(separator: ".").contains { fold(String($0)) == slug }

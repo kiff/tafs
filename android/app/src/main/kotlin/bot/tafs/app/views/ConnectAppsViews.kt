@@ -109,6 +109,8 @@ object AppMatch {
    * whole ("mcp.stripe.com" is Stripe, "notstripe.com" isn't), never a provider's host, which serves every one of its apps.
    */
   fun isOf(g: bot.tafs.app.kiff.Grant, app: ConnectApps.App): Boolean {
+    // planque's own entry wins: a grant it named is only ever that app's, never another's by its host.
+    if (!g.entry.isNullOrEmpty()) return false
     val slug = slug(app) ?: return false
     val connector = g.request.connector
     if (connector != null) return connector.toolkit?.let(::fold) == slug

@@ -39,13 +39,18 @@ class ConnectionSheetTest {
     val state = bot.tafs.app.app.AppState(grants = listOf(vendorsOwn, provider, providerNoEntry, notStripe, otherProviderApp, gone, waiting))
     val stripe = bot.tafs.app.kiff.ConnectApps.App(entry = "connector:composio:stripe", vendor = "Stripe", title = "Stripe")
     assertEquals(listOf("g1", "g2", "g3", "g7"), bot.tafs.app.views.connectionsOf(state, stripe).map { it.id })
-    // A reviewed entry is the same app by its slug before "@".
-    assertEquals(listOf("g1", "g2", "g3", "g7"), bot.tafs.app.views.connectionsOf(state, stripe.copy(entry = "stripe@1")).map { it.id })
+    // A reviewed entry is the same app by its slug before "@"; g2, which planque named as the provider's app, stays that app's.
+    assertEquals(listOf("g1", "g3", "g7"), bot.tafs.app.views.connectionsOf(state, stripe.copy(entry = "stripe@1")).map { it.id })
     // The provider's host is never an app's: Composio's own row lists none of them.
     val composio = bot.tafs.app.kiff.ConnectApps.App(entry = "composio@1", vendor = "Composio", title = "Composio")
     assertEquals(emptyList<String>(), bot.tafs.app.views.connectionsOf(state, composio).map { it.id })
     assertEquals("stripe", bot.tafs.app.views.AppMatch.slug(stripe))
     assertEquals("1password", bot.tafs.app.views.AppMatch.slug(stripe.copy(entry = "connector:composio:_1password")))
+    // planque's own entry wins: a grant it named lists under that app alone, never another by its host.
+    val named = g("g8", """{"server":"https://mcp.stripe.com","agent":"refunds-3","tools":[]}""", entry = "stripe@1")
+    val withNamed = bot.tafs.app.app.AppState(grants = listOf(named))
+    assertEquals(emptyList<String>(), bot.tafs.app.views.connectionsOf(withNamed, stripe).map { it.id })
+    assertEquals(listOf("g8"), bot.tafs.app.views.connectionsOf(withNamed, stripe.copy(entry = "stripe@1")).map { it.id })
   }
 
   @Test fun aKeyConnectionIsFixedWithANewKeyAndASignInOneBySigningInAgain() {

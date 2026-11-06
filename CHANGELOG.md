@@ -5,6 +5,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **planque's app for a connection wins (both apps).** A connection planque names an app for (its `entry`) lists under that app alone. The apps' own match by toolkit or host label now applies only to a connection planque left unnamed, so a named one never also shows under a second app. That match goes once planque names every live connection (kiff/planque#115, and its reviewed list of vendors' own servers).
+
 - **Connect apps lists every connection to an app, and a connection's fix works and is where the owner looks (both apps; Android 36's phone round).**
   - **Every connection to an app:** an app's connections were only those made from its catalog entry, so the vendor's own sign-ins Coach started (which carry none) never showed under it. Stripe listed one leftover provider grant, not its 7 live sign-ins. A connection is now also the app's when it's a managed provider's whose toolkit is the app's slug, or, for any other, when a whole label of its server's host is (`mcp.stripe.com` is Stripe; `notstripe.com` and a provider's own host aren't).
   - **Sign in again reads KIFF's words first:** it refused before the fingerprint ("KIFF's words for this connection aren't read yet") wherever nothing had read them. It reads them now, as the approval card does, and says why when they can't be read.

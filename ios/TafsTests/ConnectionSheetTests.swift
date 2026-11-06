@@ -40,9 +40,16 @@ final class ConnectionSheetTests: XCTestCase {
             try g("g7", #"{"server":"mcp.stripe.com:443","agent":"refunds-2","tools":[]}"#, status: "approved"),
         ]
         XCTAssertEqual(AppModel.connections(of: try app("connector:composio:stripe"), in: grants).map(\.id), ["g1", "g2", "g3", "g7"])
-        XCTAssertEqual(AppModel.connections(of: try app("stripe@1"), in: grants).map(\.id), ["g1", "g2", "g3", "g7"])
+        // A reviewed entry is the same app by its slug before "@"; g2, which planque named as the
+        // provider's app, stays that app's.
+        XCTAssertEqual(AppModel.connections(of: try app("stripe@1"), in: grants).map(\.id), ["g1", "g3", "g7"])
         XCTAssertEqual(AppModel.connections(of: try app("composio@1"), in: grants).map(\.id), [], "a provider's host is never an app's")
         XCTAssertEqual(AppMatch.slug("connector:composio:_1password"), "1password")
+        // planque's own entry wins: a grant it named lists under that app alone, never another
+        // by its host.
+        let named = [try g("g8", #"{"server":"https://mcp.stripe.com","agent":"refunds-3","tools":[]}"#, entry: "stripe@1")]
+        XCTAssertEqual(AppModel.connections(of: try app("connector:composio:stripe"), in: named).map(\.id), [])
+        XCTAssertEqual(AppModel.connections(of: try app("stripe@1"), in: named).map(\.id), ["g8"])
     }
 
     /// A managed provider's connected grant isn't signed in again in place: planque refuses it.
