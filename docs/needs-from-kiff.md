@@ -81,13 +81,14 @@ Card. On Android the approval key signs once per fingerprint, so this took two.
 - **Asked of KIFF:** the draft's confirm may name the hold it answers,
   `{"version", "hold": {"id", "accounting_version"}}`. The request's signature
   covers the body, so it binds that hold at that version.
-- **KIFF's checks:** the hold is in the same account, still held, and at that
-  version. The same gate as approve-once applies (role, separation of duties).
+- **KIFF's checks:** the hold is in the same account, still held, at that
+  version, and its call is a `version_install`. The same gate as approve-once applies (role, separation of duties).
   Only a confirm signed with the approval key takes it, never one signed inside a
   window, and never on a trial confirm (400).
 - **KIFF's answer:** the draft, plus `hold: {id, status}`, with `detail` when the
-  hold isn't approved. The statuses are `approved`, `expired`, `answered`,
-  `not_found`, `approval_key_required` and `refused`. The draft is never refused
+  hold isn't approved. The statuses are `approved`, `not_this_install`,
+  `answered`, `expired`, `not_found`, `approval_key_required`, `refused` and
+  `failed`. The draft is never refused
   for the hold, and the answer's proof on the receipt is the confirm's own
   signature.
 
