@@ -399,7 +399,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(after.body.messages.at(-1)).toMatchObject({ from: "owner", text: "How did it go?" });
   });
 
-  // agentgabo on 1487: words to a Coach run still at work (paused on an approval) go as a steer, and Coach's line
+  // A phone test: words to a Coach run still at work (paused on an approval) go as a steer, and Coach's line
   // stayed under every later message, never read by Coach.
   it("a steer to Coach's run at work carries Coach's lines, and one never read leaves them for the next message", async () => {
     const w = world();

@@ -3443,8 +3443,8 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
  * A version is live: the owner's Coach hears it on its next turn, and the app shows it in Coach's
  * chat at once, so an improvement's plan can end. Every install says so, Coach's version or not (an
  * Upgrade's, a dial's, going back), so Coach's view of what runs never goes stale; the line says
- * which, with the version's own note when Coach didn't make it (agentgabo on 1487: v5, the
- * Upgrade's, went live with no line, and Coach still read v4 as live). Best effort: the switch
+ * which, with the version's own note when Coach didn't make it (a phone test: an Upgrade's
+ * version went live with no line, and Coach still read the one before as live). Best effort: the switch
  * stands either way.
  */
 async function tellCoachLive(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {

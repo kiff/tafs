@@ -2824,7 +2824,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Answers refund requests within its Card.");
   });
 
-  // agentgabo on 1487: v5, an Upgrade's version, went live with no line, and Coach still read v4 as live.
+  // A phone test: an Upgrade's version went live with no line, and Coach still read the one before as live.
   it("tells the owner's Coach whenever a version goes live, and whether it made that version", async () => {
     const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Offers a free month first", summary: "Offers a free month to customers who cancel." } };
     const { w, note, answer, deps } = await paused(better);
