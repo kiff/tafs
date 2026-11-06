@@ -82,7 +82,7 @@ final class DriveTargets {
     /// The entries the person can see now, in the topmost screen, each with its frame on the screen.
     func shown() -> [Shown] {
         guard let top = Self.topView() else { return [] }
-        return entries.values.compactMap { e in
+        return (Array(entries.values) + DriveFields.entries(in: top)).compactMap { e in
             guard let anchor = e.anchor, anchor.isDescendant(of: top), let frame = Self.visibleFrame(anchor) else { return nil }
             return Shown(entry: e, frame: frame)
         }

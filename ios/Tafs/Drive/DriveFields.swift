@@ -22,15 +22,16 @@ struct DriveField: View {
         self.secret = secret
     }
 
-    var body: some View {
-        field.modifier(DriveFieldMark(words: title, secret: secret || kind == .secure))
-    }
-
-    @ViewBuilder private var field: some View {
-        switch kind {
-        case .line: TextField(title, text: $text)
-        case .secure: SecureField(title, text: $text)
-        case .editor: TextEditor(text: $text)
+    // No modifier of the drive's own around the field: an identifier set on it stays one element. The drive
+    // finds the field's text view on screen (DriveTargets.shown), by its placeholder, and a secret field by
+    // its secure entry.
+    @ViewBuilder var body: some View {
+        if secret || kind == .secure {
+            SecureField(title, text: $text)
+        } else if kind == .editor {
+            TextEditor(text: $text)
+        } else {
+            TextField(title, text: $text)
         }
     }
 }
@@ -43,15 +44,12 @@ struct ChatField: View {
     /// told from iOS 18, which says where it is.
     var cursor: ((Int) -> Void)? = nil
 
-    var body: some View {
-        Group {
-            if #available(iOS 18, *), let cursor {
-                SelectingField(title: title, text: $text, cursor: cursor)
-            } else {
-                TextField(title, text: $text, axis: .vertical).lineLimit(1...6)
-            }
+    @ViewBuilder var body: some View {
+        if #available(iOS 18, *), let cursor {
+            SelectingField(title: title, text: $text, cursor: cursor)
+        } else {
+            TextField(title, text: $text, axis: .vertical).lineLimit(1...6)
         }
-        .modifier(DriveFieldMark(words: title, secret: false))
     }
 }
 
@@ -73,38 +71,6 @@ private struct SelectingField: View {
     }
 }
 
-/// Registers a field with the drive: a tap focuses it, so Coach's `type` goes into it.
-struct DriveFieldMark: ViewModifier {
-    let words: String
-    let secret: Bool
-    @State private var anchor = WeakView()
-
-    final class WeakView { weak var view: UIView? }
-
-    func body(content: Content) -> some View {
-        content.background(DriveAnchor(entry: DriveTargets.Entry(
-            id: "field." + words.prefix(40).lowercased().replacingOccurrences(of: " ", with: "-"),
-            words: secret ? "" : words, role: .textField, confirm: false, secret: secret, terms: false,
-            actions: [.activate: { [anchor] in DriveFields.focus(near: anchor.view) }], anchor: nil))
-            .background(AnchorReader(into: anchor))
-            .accessibilityHidden(true))
-    }
-
-    /// Keeps a weak reference to a view in place behind the field, to find the field's own text view.
-    private struct AnchorReader: UIViewRepresentable {
-        let into: WeakView
-        func makeUIView(context: Context) -> UIView {
-            let v = UIView(frame: .zero)
-            v.isUserInteractionEnabled = false
-            v.isAccessibilityElement = false
-            v.accessibilityElementsHidden = true
-            into.view = v
-            return v
-        }
-        func updateUIView(_ view: UIView, context: Context) { into.view = view }
-    }
-}
-
 @MainActor
 enum DriveFields {
     /// The app's text views in a window, shown and editable.
@@ -120,15 +86,24 @@ enum DriveFields {
         return out
     }
 
-    /// Focuses the text view a field's anchor sits behind: the one that overlaps it most.
-    static func focus(near anchor: UIView?) {
-        guard let anchor, let window = anchor.window, let place = DriveTargets.visibleFrame(anchor) else { return }
-        let best = textViews(in: window).compactMap { v -> (UIView, CGFloat)? in
-            guard let f = DriveTargets.visibleFrame(v) else { return nil }
-            let i = f.intersection(place)
-            return i.isNull ? nil : (v, i.width * i.height)
-        }.max { $0.1 < $1.1 }
-        _ = best?.0.becomeFirstResponder()
+    /// The fields in a screen as the drive's entries: a tap focuses one. Named by its placeholder; a secure
+    /// field is secret, its words left out.
+    static func entries(in top: UIView) -> [DriveTargets.Entry] {
+        var unnamed = 0
+        return textViews(in: top).map { v in
+            let field = v as? UITextField
+            let placeholder = (field?.placeholder ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let secret = field?.isSecureTextEntry == true
+            let id: String
+            if placeholder.isEmpty {
+                unnamed += 1
+                id = "field.\(unnamed)"
+            } else {
+                id = "field." + placeholder.prefix(40).lowercased().replacingOccurrences(of: " ", with: "-")
+            }
+            return DriveTargets.Entry(id: id, words: secret ? "" : placeholder, role: .textField, confirm: false, secret: secret, terms: false,
+                                      actions: [.activate: { [weak v] in _ = v?.becomeFirstResponder() }], anchor: v)
+        }
     }
 
     /// The field that has the focus, in the app's own windows.
