@@ -1093,7 +1093,7 @@ final class SetupTests: XCTestCase {
         {"messages":[],"components":[],"working":null,"steering":{"run":"r2","status":"CANCELLED","untaken":[],"not_sent":[{"text":"never mind","at":"2026-10-18T09:00:05.000Z","why":"You stopped it before it read this."}]}}
         """
         func launch() async -> AppModel {
-            let model = await model(signer: FaceIDSigner(), remembered: remembered)
+            let model = await self.model(signer: FaceIDSigner(), remembered: remembered)
             model.planqueSetUp(for: "t_01")
             StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
             StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread)
