@@ -363,6 +363,17 @@ class CoachStartTest {
     assertEquals(listOf("Approve the connection to Stripe.", "card"), waiting)
   }
 
+  /** A drive card waits for the person too: Coach's words with it come before it, never under "Approved" (as on iOS). */
+  @Test fun aDriveCardComesAfterTheWordsThatAskedForIt() {
+    val drive = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"drive","id":"d1","text":"Show where Refunds' daily limit is set"}""")
+    fun said(at: Long, text: String) = bot.tafs.app.model.ChatMessage(t0.plusSeconds(at), bot.tafs.app.model.ChatMessage.From.taf, text, session = "s1")
+    val asked = said(1, "I'm waiting for you to approve the drive.")
+    val next = said(30, "The daily limit for Refunds is on its Card tab.")
+    val approved = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", drive, bot.tafs.app.kiff.CardAnswer(words = "Approved", atText = t0.plusSeconds(5).toString()))
+    val order = CoachWords.items(listOf(asked, next), listOf(approved)).map { (it as? bot.tafs.app.model.ChatItem.Message)?.message?.text ?: "card" }
+    assertEquals(listOf("I'm waiting for you to approve the drive.", "card", "The daily limit for Refunds is on its Card tab."), order)
+  }
+
   @Test fun aCardsAnswerOutlivesTheCardShownAgainWithoutIt() {
     val card = KiffClient.json.decodeFromString<SetupComponent>(handOver)
     val first = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", card, bot.tafs.app.kiff.CardAnswer(outcome = bot.tafs.app.kiff.ResultOutcome(tafId = "c_9")))
