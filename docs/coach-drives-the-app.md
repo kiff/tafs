@@ -30,7 +30,8 @@ if you accept.
   Coach is doing ("Tapping Run now"), and a dot shows where Coach is about to touch, a
   moment before it does.
 - **Coach's chat folds into the Coach button,** which shows Coach is acting.
-- **The keyboard stays down.** Coach types straight into the field it chose.
+- **Coach types straight into the field it chose.** On Android the keyboard stays down. On an
+  iPhone or iPad it may show, and typing on it yourself takes over.
 - **Every approval asks for your fingerprint or Face ID,** even if you unlocked a moment
   ago. Nothing is signed without you while a drive is on.
 
