@@ -246,9 +246,10 @@ Without `hold`, nothing changes for an older app:
   the box to send later. It's not a "Not sent" row.
 - **`not_sent`:** each one becomes its own Not sent row once, where it was written, with "Not
   sent · " and its `why`, then Edit (the words back in the box) and Retry (sent as a new
-  message). The app remembers it by a hash of its run, time and words, never the words,
-  across launches (the latest 500, as iOS). So once Retry or Edit takes it, it never comes
-  back, and a second Retry has nothing to send.
+  message). Once Retry or Edit takes it, the app remembers it by a hash of its run, time
+  and words, never the words, across launches (the latest 500, as iOS), so it never comes
+  back, and a second Retry has nothing to send. Until then a restart shows it again: the
+  rows live in memory, and tafs cloud still lists it.
 - **An older tafs cloud's `409` with no code:** the message goes as a new one, as before.
 
 iOS drops its own queue the same way, with the same words.

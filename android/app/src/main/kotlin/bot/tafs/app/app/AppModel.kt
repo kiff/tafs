@@ -1988,16 +1988,16 @@ class AppModel(
   private fun handingOver(run: String): Boolean =
     _state.value.coachComponents.any { it.run == run && it.component.type == "result" && it.answer == null }
 
-  /** The keys of the `not_sent` messages already shown as Not sent rows (their hashes, never their words), kept across launches. */
-  private var notSentShown: MutableSet<String>? = null
+  /** The keys of the `not_sent` messages Retry or Edit took (their hashes, never their words), kept across launches. */
+  private var notSentTaken: MutableSet<String>? = null
 
   private fun settledNotSent(): Set<String> =
-    notSentShown ?: (secrets.load(NOT_SENT_SHOWN)?.split('\n')?.filter { it.isNotBlank() }.orEmpty().toMutableSet()).also { notSentShown = it }
+    notSentTaken ?: (secrets.load(NOT_SENT_TAKEN)?.split('\n')?.filter { it.isNotBlank() }.orEmpty().toMutableSet()).also { notSentTaken = it }
 
   private fun rememberNotSent(keys: List<String>) {
     val shown = (settledNotSent() as MutableSet<String>).apply { addAll(keys) }
     // The latest ones only: an older run is no longer a chat's latest, so its `not_sent` doesn't come back.
-    secrets.save(shown.toList().takeLast(NOT_SENT_KEPT).joinToString("\n"), NOT_SENT_SHOWN)
+    secrets.save(shown.toList().takeLast(NOT_SENT_KEPT).joinToString("\n"), NOT_SENT_TAKEN)
   }
 
   /** One `not_sent` message, by its run, time and words, hashed. */
@@ -2037,8 +2037,8 @@ class AppModel(
     }
     if (!current() || _state.value.mode != Mode.kiff) return
     val now = clock()
-    // What a stopped run never read (docs/chat.md): each becomes its own Not sent row once, in tafs cloud's words, and is remembered,
-    // so Retry or Edit takes it for good and a second Retry finds nothing to send, as on iOS.
+    // What a stopped run never read (docs/chat.md): each becomes its own Not sent row once, in tafs cloud's words. It's remembered when
+    // Retry or Edit takes it, never before, so a restart brings it back until then, and a second Retry finds nothing, as on iOS.
     val notSent = thread.steering?.let { st -> st.notSent.map { it to notSentKey(st.run, it) } }.orEmpty().filter { (_, key) -> key !in settledNotSent() }
     _state.update { read ->
       val s = alongside?.invoke(read) ?: read
@@ -2061,10 +2061,14 @@ class AppModel(
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
         chatAwaiting = if (settled || handedOver) s.chatAwaiting - tafId else s.chatAwaiting,
         chatSteering = thread.steering?.takeIf { it.held != null }?.let { s.chatSteering + (tafId to it) } ?: (s.chatSteering - tafId),
-        chatUnsent = if (notSent.isEmpty()) s.chatUnsent else s.chatUnsent + (tafId to s.chatUnsent[tafId].orEmpty() + notSent.map { (words, _) ->
-          val at = runCatching { java.time.Instant.parse(words.at) }.getOrNull() ?: now
-          Unsent(ChatMessage(at, ChatMessage.From.owner, words.text, Unsent.SESSION), words.why.orEmpty())
-        }),
+        chatUnsent = s.chatUnsent[tafId].orEmpty().let { kept ->
+          // One already on screen isn't added again.
+          val fresh = notSent.filter { (_, key) -> kept.none { it.notSentKey == key } }
+          if (fresh.isEmpty()) s.chatUnsent else s.chatUnsent + (tafId to kept + fresh.map { (words, key) ->
+            val at = runCatching { java.time.Instant.parse(words.at) }.getOrNull() ?: now
+            Unsent(ChatMessage(at, ChatMessage.From.owner, words.text, Unsent.SESSION), words.why.orEmpty(), notSentKey = key)
+          })
+        },
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
         tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
@@ -2073,7 +2077,6 @@ class AppModel(
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
       )
     }
-    if (notSent.isNotEmpty()) rememberNotSent(notSent.map { it.second })
     if (tafId == COACH_CHAT) {
       readApprovals()
       followHandOvers()
@@ -4101,6 +4104,8 @@ class AppModel(
       val left = kept.filterNot { it.message == message }
       s.copy(chatUnsent = if (left.isEmpty()) s.chatUnsent - tafId else s.chatUnsent + (tafId to left))
     }
+    // One of tafs cloud's `not_sent`, taken by Retry or Edit: remembered now, so it never comes back.
+    taken?.notSentKey?.let { rememberNotSent(listOf(it)) }
     return taken
   }
 
@@ -6279,8 +6284,8 @@ class AppModel(
   }
 
   companion object {
-    /** Where the `not_sent` messages already shown are kept, and how many: iOS keeps the same 500. */
-    const val NOT_SENT_SHOWN = "tafs.chat.not-sent-shown"
+    /** Where the keys of the `not_sent` messages Retry or Edit took are kept, and how many: iOS keeps the same 500. */
+    const val NOT_SENT_TAKEN = "tafs.chat.not-sent-taken"
     const val NOT_SENT_KEPT = 500
 
     /** tafs cloud's refusal of a message when as much as one message can be already waits for the taf (docs/chat.md). */

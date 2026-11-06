@@ -395,7 +395,25 @@ class ChatKiffTest {
     val again = model()
     again.loadChat("refunds-1")
     assertNull(again.state.value.chatUnsent["refunds-1"])
-    assertFalse("one more" in secrets.load(AppModel.NOT_SENT_SHOWN).orEmpty())
+    assertFalse("one more" in secrets.load(AppModel.NOT_SENT_TAKEN).orEmpty())
+  }
+
+  @Test fun aNotSentRowNotYetTakenComesBackAfterARestartAndOneRetryTookDoesnt() = runTest {
+    readsOf(); sent()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    val m = model()
+    m.loadChat("refunds-1")
+    assertEquals("one more", m.state.value.chatUnsent["refunds-1"]!!.single().message.text)
+    // A restart before Retry or Edit: the same store, the same thread. The owner's words are back.
+    val restarted = model()
+    restarted.loadChat("refunds-1")
+    val unsent = restarted.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("one more", unsent.message.text)
+    // Retry takes it, then another restart: it doesn't come back.
+    assertTrue(restarted.resendUnsent("refunds-1", unsent.message))
+    val again = model()
+    again.loadChat("refunds-1")
+    assertNull(again.state.value.chatUnsent["refunds-1"])
   }
 
   @Test fun retrySendsANotSentRowOnceAndASecondRetryFindsNothing() = runTest {
