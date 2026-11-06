@@ -116,6 +116,21 @@ function ordered(names: Set<string>): SkillRef[] {
   return COACH_SKILLS.filter((s) => names.has(s.name as string)).map((s) => `${s.name}@${s.version}` as SkillRef);
 }
 
+/**
+ * refs at the versions the live definition names, the only ones kiff/agents loads ("name@version", both): a
+ * definition changes with the Upgrade, while this module's versions change with each deploy, so a deploy
+ * ahead of the Upgrade asked for versions kiff/agents refused, and every new chat was refused with them
+ * (kiff/tafs#572). A skill the definition doesn't name is left out: Coach reads what it has with read_skill.
+ */
+export function asNamed(refs: SkillRef[], named: ReadonlyArray<{ name: string; version: string }> | undefined): SkillRef[] {
+  const live = new Map((named ?? []).map((s) => [s.name, s.version]));
+  return refs.flatMap((ref) => {
+    const name = ref.slice(0, ref.lastIndexOf("@"));
+    const version = live.get(name);
+    return version ? [`${name}@${version}` as SkillRef] : [];
+  });
+}
+
 /** The SKILL.md of each skill, to store in kiff/agents with Setup's definition. */
 export function skillFiles(): Array<{ name: string; version: string; skillMD: string }> {
   return COACH_SKILLS.map((s) => ({ name: s.name, version: s.version, skillMD: s.skill_md }));
