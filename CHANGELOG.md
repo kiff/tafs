@@ -5,6 +5,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Connect apps lists every connection to an app, and a connection's fix works and is where the owner looks (both apps; Android 36's phone round).**
+  - **Every connection to an app:** an app's connections were only those made from its catalog entry, so the vendor's own sign-ins Coach started (which carry none) never showed under it. Stripe listed one leftover provider grant, not its 7 live sign-ins. A connection is now also the app's when it's a managed provider's whose toolkit is the app's slug, or, for any other, when a whole label of its server's host is (`mcp.stripe.com` is Stripe; `notstripe.com` and a provider's own host aren't).
+  - **Sign in again reads KIFF's words first:** it refused before the fingerprint ("KIFF's words for this connection aren't read yet") wherever nothing had read them. It reads them now, as the approval card does, and says why when they can't be read.
+  - **A provider's connection:** planque can't sign a connected managed-provider grant in again in place, so neither app offers it. The row says to disconnect it and connect it again, before any fingerprint.
+  - **A taf's own app sheet** (Setup › an app) shows the connection's last failed call and its fix, Replace the key or Sign in again, with the confirm mark, as Connect apps does.
+
 - **A connection says what's wrong with it and how to fix it, and a sign-in that never came back can be cancelled (both apps, gap 13).**
   - **In Connect apps,** each of an app's connections says its last failed call in KIFF's words: the newest call through its tools that wasn't done, its taf's own first. Beside it is **Replace the key** for a key-based connection, or **Sign in again** for a sign-in one, behind the fingerprint, next to Disconnect and the tafs that use it. Both carry the confirm mark, so Coach can point at them but never tap them. A record keeps the call's tool as KIFF names it, to tell which connection a call went through.
   - **Needs planque:** replacing a key, or signing in again, on a connection that's still connected needs planque to take it. Until then, planque answers why, and the app says so. A signed-out connection works today.

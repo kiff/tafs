@@ -4986,6 +4986,19 @@ final class AppModel: ObservableObject {
         lastError = nil
         reconnectErrors[grant.id] = nil
         shownTermsChanged = false
+        // A provider's connection is disconnected and connected again instead: planque would
+        // refuse, so nothing is asked.
+        if grant.signsInThroughProvider {
+            reconnectErrors[grant.id] = ConnectionFixWords.throughProvider(grant.vendor)
+            return
+        }
+        // KIFF's words for its profile, which the approval signs: read now, as the approval
+        // card reads them, wherever Sign in again starts.
+        await loadProfileWords(for: grant)
+        if let why = profileWordsError[grant.id] {
+            reconnectErrors[grant.id] = why
+            return
+        }
         let done = await connect(grantID: grant.id, shown: grant.digest, again: true)
         if done?.connected != true {
             reconnectErrors[grant.id] = lastError ?? quietStop ?? "Nothing was signed in. Try again."
@@ -5256,10 +5269,15 @@ final class AppModel: ObservableObject {
         return connected
     }
 
-    /// The account's live connections to a Connect apps entry: by its catalog entry, or the
-    /// grant tafs cloud named for it.
+    /// The account's live connections to a Connect apps entry: by its catalog entry, the grant
+    /// tafs cloud named for it, or the app itself (`AppMatch`), so a sign-in Coach started at the
+    /// vendor's own server is listed under its app too.
     func connections(of app: TafsCloud.ConnectApps.App) -> [PlanqueClient.Grant] {
-        grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
+        Self.connections(of: app, in: grants)
+    }
+
+    static func connections(of app: TafsCloud.ConnectApps.App, in grants: [PlanqueClient.Grant]) -> [PlanqueClient.Grant] {
+        grants.filter { ($0.entry == app.entry || $0.id == app.grant || AppMatch.isOf($0, app.entry)) && !["disconnected", "failed"].contains($0.status) }
     }
 
     /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
@@ -6851,4 +6869,44 @@ extension AppModel {
     /// This device can't approve now, so an approval's button is disabled. Sample mode signs
     /// nothing for real, so nothing is blocked there.
     var approvalBlocked: Bool { mode == .kiff && !approvalReadiness.isReady }
+}
+
+/// Which catalog app a connection is to, when planque doesn't name its catalog entry.
+enum AppMatch {
+    /// A name as tafs cloud's recipes fold it: lower case, no leading "_", no spaces, dots,
+    /// dashes or underscores.
+    static func fold(_ name: String) -> String {
+        String(name.lowercased().drop(while: { $0 == "_" }).filter { !" \t\n._-".contains($0) })
+    }
+
+    /// The app's slug, folded: after `connector:<provider>:`, or before `@` in a reviewed entry.
+    static func slug(_ entry: String) -> String? {
+        let raw: String?
+        if entry.hasPrefix("connector:") {
+            let parts = entry.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+            raw = parts.count == 3 ? String(parts[2]) : nil
+        } else {
+            raw = entry.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init)
+        }
+        guard let folded = raw.map(fold), !folded.isEmpty else { return nil }
+        return folded
+    }
+
+    /// The host of a server planque names, with or without its scheme, path or port.
+    static func host(_ server: String) -> String {
+        var s = Substring(server)
+        if let r = s.range(of: "://") { s = s[r.upperBound...] }
+        if let slash = s.firstIndex(of: "/") { s = s[..<slash] }
+        if let colon = s.firstIndex(of: ":") { s = s[..<colon] }
+        return s.lowercased()
+    }
+
+    /// A managed provider's connection is the app its toolkit names. Any other is the app one
+    /// of its server's host labels names whole ("mcp.stripe.com" is Stripe, "notstripe.com"
+    /// isn't), never a provider's host, which serves every one of its apps.
+    static func isOf(_ g: PlanqueClient.Grant, _ entry: String) -> Bool {
+        guard let slug = slug(entry) else { return false }
+        if let connector = g.request.connector { return connector.toolkit.map(fold) == slug }
+        return host(g.request.server).split(separator: ".").contains { fold(String($0)) == slug }
+    }
 }

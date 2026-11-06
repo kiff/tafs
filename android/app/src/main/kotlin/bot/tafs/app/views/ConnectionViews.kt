@@ -39,6 +39,8 @@ class ConnectionActions(
   /** Signs in again to a connection its vendor signed out: one approval, then the vendor's page. */
   val reconnect: (Grant) -> Unit = {},
   val reconnectId: (String) -> Unit = {},
+  /** Gives a key-based connection a new key, on the key sheet, behind the fingerprint (gap 13). */
+  val replaceKey: (Grant) -> Unit = {},
   /** A browser connection's sign-in to a site: asks planque for its live view, by the connection's id. */
   val siteSignIn: suspend (String) -> Unit = {},
 )

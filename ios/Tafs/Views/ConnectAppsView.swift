@@ -114,6 +114,10 @@ struct ConnectAppsView: View {
 enum ConnectionFixWords {
     static let replaceKey = "Replace the key"
     static let signInAgain = "Sign in again"
+    /// In place of Sign in again on a provider's connection, as planque says it.
+    static func throughProvider(_ vendor: String) -> String {
+        "\(vendor) signs in through its connection provider. To sign in again, disconnect it and connect it again."
+    }
     static let cancel = "Cancel"
     static func waiting(_ vendor: String) -> String { "Waiting for the sign-in at \(vendor)" }
     static func cancelTitle(_ vendor: String) -> String { "Cancel the sign-in to \(vendor)?" }
@@ -178,7 +182,11 @@ struct AppConnectionsView: View {
                             if let failed = model.lastFailure(g) {
                                 Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                             }
-                            if model.canManageCards {
+                            if model.canManageCards, g.signsInThroughProvider {
+                                // A provider's connection isn't signed in again in place: said before any Face ID.
+                                Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            } else if model.canManageCards {
                                 Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
                                     if g.takesKey { replacing = g } else { Task { await model.reconnect(g) } }
                                 }

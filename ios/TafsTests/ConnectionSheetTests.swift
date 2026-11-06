@@ -16,6 +16,45 @@ final class ConnectionSheetTests: XCTestCase {
         #"{"proposal_id":"\#(id)","action_name":"\#(action)","title":"List inboxes","actor_id":"\#(actor)","outcome":"allowed","held":false,"created_at":"\#(at)","tool_outcome":{"status":"\#(status)","message":"\#(message)"}}"#
     }
 
+    private func g(_ id: String, _ request: String, entry: String? = nil, status: String = "connected") throws -> PlanqueClient.Grant {
+        let e = entry.map { #","entry":"\#($0)""# } ?? ""
+        let json = #"{"id":"\#(id)","status":"\#(status)","text":"","digest":"d","vendor":"Stripe"\#(e),"request":\#(request),"events":[]}"#
+        return try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(json.utf8))
+    }
+
+    private func app(_ entry: String) throws -> TafsCloud.ConnectApps.App {
+        try JSONDecoder().decode(TafsCloud.ConnectApps.App.self, from: Data(#"{"entry":"\#(entry)","vendor":"Stripe","title":"Stripe","how":"oauth","state":"connected"}"#.utf8))
+    }
+
+    /// Connect apps lists every connection to an app (Android 36's phone round), as Android's
+    /// ConnectionSheetTest: the vendor's own sign-ins carry no catalog entry. Values as planque's
+    /// records have them.
+    func testEveryConnectionToAnAppIsListedUnderItWhateverStartedIt() throws {
+        let grants = [
+            try g("g1", #"{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}"#),
+            try g("g2", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-0","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#, entry: "connector:composio:stripe"),
+            try g("g3", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"chase-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#),
+            try g("g4", #"{"server":"https://notstripe.com/mcp","agent":"x-1","tools":[]}"#),
+            try g("g5", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"x-2","connector":{"provider":"composio","toolkit":"gmail"},"tools":[]}"#),
+            try g("g6", #"{"server":"https://mcp.stripe.com","agent":"refunds-9","tools":[]}"#, status: "disconnected"),
+            try g("g7", #"{"server":"mcp.stripe.com:443","agent":"refunds-2","tools":[]}"#, status: "approved"),
+        ]
+        XCTAssertEqual(AppModel.connections(of: try app("connector:composio:stripe"), in: grants).map(\.id), ["g1", "g2", "g3", "g7"])
+        XCTAssertEqual(AppModel.connections(of: try app("stripe@1"), in: grants).map(\.id), ["g1", "g2", "g3", "g7"])
+        XCTAssertEqual(AppModel.connections(of: try app("composio@1"), in: grants).map(\.id), [], "a provider's host is never an app's")
+        XCTAssertEqual(AppMatch.slug("connector:composio:_1password"), "1password")
+    }
+
+    /// A managed provider's connected grant isn't signed in again in place: planque refuses it.
+    func testAProvidersConnectionSaysToDisconnectAndConnectAgain() throws {
+        let managed = try g("g9", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#)
+        XCTAssertTrue(managed.signsInThroughProvider)
+        XCTAssertFalse(try g("g9", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#, status: "needs_reconnect").signsInThroughProvider)
+        XCTAssertFalse(try g("g1", #"{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}"#).signsInThroughProvider)
+        XCTAssertEqual(ConnectionFixWords.throughProvider("Stripe"),
+                       "Stripe signs in through its connection provider. To sign in again, disconnect it and connect it again.")
+    }
+
     func testAKeyConnectionIsFixedWithANewKeyAndASignInOneBySigningInAgain() throws {
         XCTAssertTrue(try grant("g1", agent: "chase-1", kind: "api_key").takesKey)
         XCTAssertFalse(try grant("g2", agent: "chase-1").takesKey)

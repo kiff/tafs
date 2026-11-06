@@ -27,6 +27,10 @@ object ConnectionWords {
   const val REPLACE_KEY = "Replace the key"
   const val SIGN_IN_AGAIN = "Sign in again"
 
+  /** In place of Sign in again on a provider's connection ([Grant.signsInThroughProvider]), as planque says it. */
+  fun throughProvider(g: Grant): String =
+    "${g.vendor} signs in through its connection provider. To sign in again, disconnect it and connect it again."
+
   /** Where a connection stands. */
   fun status(g: Grant): String = when {
     g.connected -> "Connected"

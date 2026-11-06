@@ -2101,6 +2101,11 @@ class AppModel(
    * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
    */
   suspend fun reconnect(grant: Grant) {
+    // A provider's connection is disconnected and connected again instead: planque would refuse, so nothing is asked.
+    if (grant.signsInThroughProvider) return note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant))
+    // KIFF's words for its profile, which the approval signs: read now, as the approval card reads them, wherever this starts.
+    loadProfileWords(grant.id)
+    _state.value.profileWordsErrors[grant.id]?.let { return note(grant.id, it) }
     val result = connect(grant.id, grant.id, grant.digest, again = true)
     if (result is Connected.Failed) note(grant.id, result.why)
   }
