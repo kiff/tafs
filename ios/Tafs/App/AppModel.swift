@@ -3587,7 +3587,6 @@ final class AppModel: ObservableObject {
             chatErrors[tafID] = "The thread couldn't be loaded: \(error.localizedDescription)"
             return
         }
-        await sendQueuedChatIfIdle(tafID)
     }
 
     /// Sends the owner's message to the taf. It shows at once; on KIFF the thread is then
@@ -3857,7 +3856,10 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
         var askCoach: [TafsCloud.AskCoachCard] = []
-        var queued: String?
+        /// What waits in this chat to go once the taf is done: tafs cloud holds it
+        /// (docs/chat.md, `hold`), and sends it as the person's next message. The app keeps no
+        /// queue of its own.
+        var queued: String? { steering?.held?.text }
         var ended: RunEnd?
         /// What the failed run did before it stopped (kiff/agents#249), said with Retry.
         var wentThrough: [TafsCloud.DoneCall] = []
@@ -3869,8 +3871,6 @@ final class AppModel: ObservableObject {
         var steering: TafsCloud.Steering?
         /// The unread messages of runs that are over, once dealt with here.
         var settled: Set<String> = []
-        /// The run whose stream ended answered or failed: what it didn't read goes next.
-        var sendNext: String?
         /// Where each held call was made in the chat (kiff/tafs#206): the item it came after,
         /// by its held call's key (`heldKey`). Its card, and what became of it, stay there.
         var anchors: [String: String] = [:]
@@ -4011,16 +4011,14 @@ final class AppModel: ObservableObject {
             chatStates[tafID]?.wentThrough = didBefore
         }
         if ended == "CANCELLED" { chatStates[tafID]?.ended = .stopped }
-        // A run that answered or failed never reads what it didn't take: it goes next.
-        // One the owner stopped keeps it, not sent, for them to decide.
-        if let run = chatStates[tafID]?.live?.run, ended == "COMPLETED" || ended == "ERROR" { chatStates[tafID]?.sendNext = run }
+        // What the run didn't read, and what waited for it, is tafs cloud's to send now
+        // (docs/chat.md, `hold`): reading the thread sends it, and shows what was stopped.
         // The recorded answer first, then the live one goes: no gap between them. Each held
         // call keeps its place: after what the taf wrote before it (kiff/tafs#206).
         await loadChat(tafID)
         guard gen == accountGeneration else { return }
         if let live = chatStates[tafID]?.live { anchorHeld(live, tafID: tafID) }
         chatStates[tafID]?.live = nil
-        await sendQueuedChatIfIdle(tafID)
     }
 
     /// What a taf is doing, in the owner's words: a connected tool by the title its
@@ -4049,9 +4047,11 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The composer's Send: now, or once the taf is done when it's at work. A second
-    /// message while one waits joins it. True once the message is taken: sent, queued,
-    /// or kept in the thread as not sent. False leaves it with the composer.
+    /// The composer's Send: now, or, while the taf is at work, to its run, once, with
+    /// `hold` (docs/chat.md): what the run doesn't take, tafs cloud holds and sends once the
+    /// taf is done; a second message joins what waits. True once the message is taken:
+    /// sent, written to the run, held, or kept in the thread as not sent. False leaves it with
+    /// the composer: nothing to send, no run to write to yet, or more than tafs cloud holds.
     @discardableResult
     func submitChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -4060,37 +4060,48 @@ final class AppModel: ObservableObject {
         if !files.isEmpty { return await deliverChat(text, to: tafID, files: files) == .sent }
         guard !text.isEmpty else { return false }
         if mode == .kiff, chatThinking(tafID) || chatSending.contains(tafID) {
-            // To the run at work, which reads it at its next step (kiff/agents#102). With
-            // something queued already, this waits behind it, in order.
+            // To the run at work, which reads it at its next step (kiff/agents#102). The
+            // message that starts it is still on its way: no run yet, so it stays in the composer.
             let s = chatState(tafID)
-            if s.queued == nil, let run = s.live?.run ?? s.workingRun, let c = cloudTaf(for: tafID) {
-                do {
-                    let status = try await cloud.steer(c.id, run: run, text: text)
+            guard let run = s.live?.run ?? s.workingRun, let c = cloudTaf(for: tafID) else { return false }
+            do {
+                switch try await cloud.steer(c.id, run: run, text: text) {
+                case .taken(let status):
                     // Shown at once, as the run now holds it; the next reload says the same.
-                    let held = chatState(tafID).steering.flatMap { $0.run == run ? $0.untaken : nil } ?? []
+                    let current = chatState(tafID).steering.flatMap { $0.run == run ? $0 : nil }
                     chatStates[tafID, default: ChatState()].steering = TafsCloud.Steering(
-                        run: run, status: status, untaken: held + [TafsCloud.Steering.Message(text: text, at: clock())])
-                    clearBusyUnsent(tafID)
-                    return true
-                } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
-                    keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
-                    return true
-                } catch {
-                    // Ended meanwhile (409), or not reached: it waits, and goes once the taf is done.
+                        run: run, status: status, untaken: (current?.untaken ?? []) + [TafsCloud.Steering.Message(text: text, at: clock())],
+                        held: current?.held, notSent: current?.notSent ?? [])
+                case .kept(let sent, let held):
+                    // tafs cloud holds what the run didn't take, for this chat, and sends it once the taf
+                    // is done; shown at once as waiting. Sent already: the new run is in the thread.
+                    let current = chatState(tafID).steering
+                    chatStates[tafID, default: ChatState()].steering = TafsCloud.Steering(
+                        run: current?.run ?? run, status: current?.status ?? "RUNNING", untaken: current?.untaken ?? [],
+                        held: held, notSent: current?.notSent ?? [])
+                    if sent != nil {
+                        chatStates[tafID]?.awaiting = clock()
+                        await loadChat(tafID)
+                    }
                 }
+                clearBusyUnsent(tafID)
+                return true
+            } catch let e as TafsCloud.CloudError where e.code == "held_full" {
+                // More than tafs cloud holds: nothing is cut, and the words stay in the composer,
+                // with tafs cloud's why as it says it.
+                chatErrors[tafID] = e.message
+                return false
+            } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
+                keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
+                return true
+            } catch {
+                // Not reached: it stays in the thread as not sent, with why and Retry. The app
+                // never resends it on its own.
+                keepUnsent(text, tafID, why: error.localizedDescription)
+                return true
             }
-            let joined = chatStates[tafID]?.queued.map { $0 + "\n\n" + text } ?? text
-            guard joined.count <= Self.chatLimit else { return false }
-            chatStates[tafID, default: ChatState()].queued = joined
-            return true
         }
         return await deliverChat(text, to: tafID) != .notTried
-    }
-
-    /// Takes back what waits to be sent, for the composer.
-    func unqueueChat(_ tafID: UUID) -> String? {
-        defer { chatStates[tafID]?.queued = nil }
-        return chatStates[tafID]?.queued
     }
 
     /// Where the unread messages already dealt with are kept across launches, so one the
@@ -4112,31 +4123,21 @@ final class AppModel: ObservableObject {
         remembered.set(Array(kept.suffix(Self.settledKept)), forKey: Self.settledKey)
     }
 
-    /// What a run that's over never read, as kiff/agents says, dealt with once: after a
-    /// streamed answer or failure it goes as the next message; otherwise (the owner
-    /// stopped it, or no stream said how it ended) it shows as not sent, with Retry.
+    /// What a run never got to, as the thread says, shown once as not sent, with why and
+    /// Retry, which sends it as a new message (docs/chat.md): tafs cloud's `not_sent`, in its
+    /// words; and what a run that's over lists unread, from before the app wrote with `hold`.
+    /// tafs cloud sends the rest itself, so nothing here is sent on its own.
     private func settleSteering(_ tafID: UUID) {
-        guard let s = chatStates[tafID]?.steering, s.over else { return }
+        guard let s = chatStates[tafID]?.steering else { return }
         func key(_ m: TafsCloud.Steering.Message) -> String {
             let digest = SHA256.hash(data: Data("\(s.run)|\(m.at.timeIntervalSince1970)|\(m.text)".utf8))
             return digest.map { String(format: "%02x", $0) }.joined()
         }
-        let fresh = s.untaken.filter { !wasSettled(key($0), tafID) }
+        let unread = s.over ? s.untaken.map { ($0, s.status == "CANCELLED" ? "You stopped it before it read this." : "It wasn't read before the work ended.") } : []
+        let fresh = (s.notSent.map { ($0.message, $0.why) } + unread).filter { !wasSettled(key($0.0), tafID) }
         guard !fresh.isEmpty else { return }
-        rememberSettled(fresh.map(key), tafID)
-        if chatState(tafID).sendNext == s.run, s.status != "CANCELLED" {
-            let texts = [chatState(tafID).queued].compactMap { $0 } + fresh.map(\.text)
-            chatStates[tafID]?.queued = texts.joined(separator: "\n\n")
-        } else {
-            let why = s.status == "CANCELLED" ? "You stopped it before it read this." : "It wasn't read before the work ended."
-            for m in fresh { keepUnsent(m.text, tafID, why: why) }
-        }
-    }
-
-    private func sendQueuedChatIfIdle(_ tafID: UUID) async {
-        guard let queued = chatStates[tafID]?.queued, !chatThinking(tafID), !chatSending.contains(tafID) else { return }
-        chatStates[tafID]?.queued = nil
-        await sendChat(queued, to: tafID)
+        rememberSettled(fresh.map { key($0.0) }, tafID)
+        for (m, why) in fresh { keepUnsent(m.text, tafID, why: why) }
     }
 
     /// Sends a message that didn't go through again. It stays where it was until it's

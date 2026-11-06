@@ -891,20 +891,24 @@ struct UnsentBubble: View {
 
 /// What the owner wrote while the chat's agent works: sent once it's done, or not.
 struct QueuedBubble: View {
+    /// What waits, held by tafs cloud (docs/chat.md, `hold`): the same words on both apps.
+    static let heldWords = "Waits until it's done, then goes as your next message"
     let text: String
     /// Who it waits for: "this answer" in the setup chat, or the taf's name.
     let who: String
-    let unqueue: () -> Void
+    /// Takes it back, while the app holds it; nil once tafs cloud does, which says
+    /// `heldWords` under it instead.
+    var unqueue: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
             ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .owner, text: text, session: "queued"), taf: nil)
                 .opacity(0.6)
-            Text("Sends when \(who) is done").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            Text(unqueue == nil ? Self.heldWords : "Sends when \(who) is done").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
-            Button("Don't send", role: .destructive, action: unqueue)
+            if let unqueue { Button("Don't send", role: .destructive, action: unqueue) }
         }
         .accessibilityElement(children: .combine)
     }
