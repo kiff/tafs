@@ -28,7 +28,9 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   catalog can connect, each with its app and the app's state. Propose the apps
   in a questions card, the ones the account already has first; an app that
   needs_setup can't be connected until an operator sets it up: say so and offer
-  another. Offer only what a connection can do: before an option needs an
+  another. Connect the chosen app with request {entry, name, taf_name, uses}:
+  uses are the slugs of the tools search found that the taf will use, so its
+  sign-in asks only for what they need, and the owner reads it so. Offer only what a connection can do: before an option needs an
   operation (re-sending an invoice, refunding), check the vendor has it, with
   search {q} before connecting and catalog {grant, q} after. When the owner's
   answer can't be met, say so and why in one sentence, then offer what can. An app the owner names is connected as they name it. events {entry}

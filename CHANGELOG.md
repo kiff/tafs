@@ -8,6 +8,7 @@ version headings refer to releases, not merely to merged pull requests.
 - **Coach hears every install.** Installing any version tells the owner's Coach, and Coach's chat shows "Version N is live." Before, only a version Coach made did: after v4 (Coach's), going back to v5 (an Upgrade's) said nothing, so Coach still read v4 as live. Coach's line says whether it made the version, and gives the version's own note when it didn't.
 - **A steer carries Coach's lines.** Words written to a Coach run that is still at work, such as one paused on an approval, now carry Coach's unread lines. Before, those lines stayed under every later message until the run ended, and Coach never read them. A refused steer leaves them for the next message.
 - **Docs:** the What I did card's steps stay 30 days with the drive's end in Coach's chat, not a day.
+- **Narrow sign-ins (gap 5).** Coach connects an app found by search with the tools the taf will use (`request {entry, uses}`, `connect-an-app@5`). planque then asks the app's sign-in for only what those tools need, or tells the owner plainly that it asks for more. Order: kiff/planque#113, then kiff/agents#361, then this. The skill loads once the Upgrade names it.
 
 - **Failures the owner can fix (kiff/tafs#476, gap 10).**
   - **Activity says why.** A refused call shows the words KIFF recorded for it, quoted as the app's: "The app refused it: "Agent Mail refused it (it answered 403): Forbidden."". Before, tafs cloud put the fixed line "The app refused it" in their place.
