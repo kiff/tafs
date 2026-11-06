@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
+import { CHAT, chatTitle, handle, HELD_FULL_WORDS, type HTTPEvent, MEMORY, NOT_SENT_WORDS, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -46,7 +46,7 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; fetch?: typeof fetch; headers?: Record<string, string> } = {}) {
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; fetch?: typeof fetch; headers?: Record<string, string>; now?: Date } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
@@ -60,7 +60,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
     fetch: opts.fetch ?? kiff({ ana: ME, viewer: VIEWER, approver: APPROVER, editor: EDITOR }),
-    now: () => NOW,
+    now: () => opts.now ?? NOW,
   });
   return { status: r.statusCode, body: JSON.parse(r.body) };
 }
@@ -577,15 +577,19 @@ describe("steer", () => {
 });
 
 describe("steer with hold: tafs cloud holds what the run doesn't take (docs/chat.md)", () => {
-  const steer = (w: ReturnType<typeof world>, run: string, text: string) =>
-    call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run, text, hold: true } });
+  const steer = (w: ReturnType<typeof world>, run: string, text: string, now?: Date) =>
+    call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run, text, hold: true }, now });
   const conversation = (w: ReturnType<typeof world>) => call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+  /** One chat of the thread, as the app reads it when it's open. */
+  const chatRead = (w: ReturnType<typeof world>, session: string) => call(w, "GET", `/v1/tafs/${RAE}/conversation/${session}`, { token: "ana" });
   const full = () => new AgentsError(409, "the run holds as many messages as it takes while it goes", undefined, "steering_full");
   const status = (w: ReturnType<typeof world>, id: string, to: string) => { (w.agents.runs.find((x) => x.id === id) as { status: string }).status = to; };
   /** The newest run, and the last message in a chat, as the fake keeps them. */
   const newest = (w: ReturnType<typeof world>) => w.agents.runs[0]!;
   const lastSaid = (w: ReturnType<typeof world>, session: string) => (w.agents.events.get(session)?.at(-1)?.body as { text?: string } | undefined)?.text;
   const started = (w: ReturnType<typeof world>) => w.agents.calls.filter((x) => x.startsWith("startRun"));
+  /** The runs of one chat, as kiff/agents keeps them. */
+  const runsIn = (w: ReturnType<typeof world>, session: string) => w.agents.runs.filter((x) => x.session === session);
 
   it("sends a message the run didn't take as the next message at once, when the run is over", async () => {
     const w = world();
@@ -677,6 +681,263 @@ describe("steer with hold: tafs cloud holds what the run doesn't take (docs/chat
     c = await conversation(w);
     expect(lastSaid(w, chat.session)).toBe("only the €20 one");
     expect(c.body.steering?.held).toBeUndefined();
+  });
+
+  it("keeps what waits per chat: each chat's held words go into that chat only, once its own run is over", async () => {
+    const w = world();
+    const a = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    const b = await w.agents.api.startRun("t_acme", RAE, "Draft the replies", ANA);
+    expect(a.session).not.toBe(b.session);
+    w.agents.fail.set("steerRun", full());
+    expect((await steer(w, a.id, "for the queue")).body.held).toMatchObject({ text: "for the queue" });
+    w.agents.fail.set("steerRun", full());
+    expect((await steer(w, b.id, "for the replies")).body.held).toMatchObject({ text: "for the replies" });
+    // B's run is over, A's still works: only B's words go, into B.
+    status(w, b.id, "COMPLETED");
+    w.agents.calls.length = 0;
+    await conversation(w);
+    expect(started(w)).toEqual([`startRun ${RAE} ${b.session}`]);
+    expect(lastSaid(w, b.session)).toBe("for the replies");
+    expect(lastSaid(w, a.session)).toBe("Work the queue");
+    expect((await chatRead(w, a.session)).body.steering).toMatchObject({ run: a.id, held: { text: "for the queue" } });
+    // A's run is over: a read of B's chat settles B's only; A's goes on a read of A's chat.
+    status(w, a.id, "COMPLETED");
+    status(w, newest(w).id, "COMPLETED");
+    w.agents.calls.length = 0;
+    await chatRead(w, b.session);
+    expect(started(w)).toEqual([]);
+    const read = await chatRead(w, a.session);
+    expect(started(w)).toEqual([`startRun ${RAE} ${a.session}`]);
+    expect(lastSaid(w, a.session)).toBe("for the queue");
+    expect(read.body.steering?.held).toBeUndefined();
+  });
+
+  it("deals with every chat written to with hold: steering A then B still sends what A's run never read", async () => {
+    const w = world();
+    const a = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    const b = await w.agents.api.startRun("t_acme", RAE, "Draft the replies", ANA);
+    expect((await steer(w, a.id, "only the €20 one")).status).toBe(200);
+    expect((await steer(w, b.id, "sign them Ana")).status).toBe(200);
+    status(w, a.id, "COMPLETED");
+    w.agents.calls.length = 0;
+    await conversation(w);
+    expect(started(w)).toEqual([`startRun ${RAE} ${a.session}`]);
+    expect(lastSaid(w, a.session)).toBe("only the €20 one");
+    // B's run still works: its unread message waits for it.
+    expect(lastSaid(w, b.session)).toBe("Draft the replies");
+    status(w, b.id, "COMPLETED");
+    w.agents.calls.length = 0;
+    await conversation(w);
+    expect(started(w)).toEqual([`startRun ${RAE} ${b.session}`]);
+    expect(lastSaid(w, b.session)).toBe("sign them Ana");
+  });
+
+  it("sends what each chat's run never read into that chat only, when both are over at a read of one", async () => {
+    const w = world();
+    const a = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    const b = await w.agents.api.startRun("t_acme", RAE, "Draft the replies", ANA);
+    expect((await steer(w, a.id, "only the €20 one")).status).toBe(200);
+    expect((await steer(w, b.id, "sign them Ana")).status).toBe(200);
+    status(w, a.id, "COMPLETED");
+    status(w, b.id, "COMPLETED");
+    w.agents.calls.length = 0;
+    await chatRead(w, b.session);
+    expect(started(w)).toEqual([`startRun ${RAE} ${b.session}`]);
+    expect(lastSaid(w, b.session)).toBe("sign them Ana");
+    await chatRead(w, a.session);
+    expect(started(w)).toEqual([`startRun ${RAE} ${b.session}`, `startRun ${RAE} ${a.session}`]);
+    expect(lastSaid(w, a.session)).toBe("only the €20 one");
+  });
+
+  it("sends a chat's next message once: one written while it goes waits for that answer", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    w.agents.fail.set("steerRun", full());
+    await steer(w, chat.id, "only the €20 one");
+    status(w, chat.id, "COMPLETED");
+    // kiff/agents takes a moment to start the next run: the person writes again meanwhile.
+    const start = w.agents.api.startRun;
+    let open!: () => void;
+    const gate = new Promise<void>((resolve) => { open = resolve; });
+    let waiting = 0;
+    w.agents.api.startRun = async (...args: Parameters<typeof start>) => { waiting++; await gate; return start(...args); };
+    const read = chatRead(w, chat.session);
+    while (waiting === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+    const r = await steer(w, chat.id, "and say when it's done");
+    expect(r.status).toBe(202);
+    expect(r.body).toEqual({ held: { text: "and say when it's done", at: NOW.toISOString() } });
+    open();
+    await read;
+    w.agents.api.startRun = start;
+    expect(waiting).toBe(1);
+    expect(runsIn(w, chat.session)).toHaveLength(2);
+    expect(lastSaid(w, chat.session)).toBe("only the €20 one");
+    // That answer over, the second goes.
+    status(w, newest(w).id, "COMPLETED");
+    await chatRead(w, chat.session);
+    expect(runsIn(w, chat.session)).toHaveLength(3);
+    expect(lastSaid(w, chat.session)).toBe("and say when it's done");
+  });
+
+  it("keeps a run of the chat that's still at work: what it never reads goes once it's over", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    expect((await steer(w, chat.id, "only the €20 one")).status).toBe(200);
+    status(w, chat.id, "COMPLETED");
+    // As this read finds the run over, the person starts the next one and writes to it: the read is from just before.
+    const session = w.agents.api.session;
+    let steered: number | undefined;
+    w.agents.api.session = async (...args: Parameters<typeof session>) => {
+      const read = await session(...args);
+      const before = { ...read, events: [...read.events] };
+      if (steered === undefined) {
+        steered = 0;
+        const next = await w.agents.api.startRun("t_acme", RAE, "And the refunds", { ...ANA, session: chat.session });
+        steered = (await steer(w, next.id, "skip the €5 ones")).status;
+      }
+      return before;
+    };
+    await chatRead(w, chat.session);
+    w.agents.api.session = session;
+    expect(steered).toBe(200);
+    expect(lastSaid(w, chat.session)).toBe("only the €20 one");
+    // Every run of the chat over: what the next one never read goes too.
+    for (const r of runsIn(w, chat.session)) status(w, r.id, "COMPLETED");
+    await chatRead(w, chat.session);
+    expect(lastSaid(w, chat.session)).toBe("skip the €5 ones");
+  });
+
+  it("keeps a chat's next message claimed once it went: a read from before the send sends nothing", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    w.agents.fail.set("steerRun", full());
+    await steer(w, chat.id, "only the €20 one");
+    status(w, chat.id, "COMPLETED");
+    // This read finds the run over, then waits: another read sends meanwhile, and the person writes again.
+    const session = w.agents.api.session;
+    let meanwhile: { said?: string; held?: unknown } | undefined;
+    w.agents.api.session = async (...args: Parameters<typeof session>) => {
+      const read = await session(...args);
+      if (meanwhile) return read;
+      meanwhile = {};
+      const before = { ...read, events: [...read.events] };
+      await chatRead(w, chat.session);
+      meanwhile.said = lastSaid(w, chat.session);
+      meanwhile.held = (await steer(w, chat.id, "and say when it's done")).body;
+      return before;
+    };
+    await chatRead(w, chat.session);
+    w.agents.api.session = session;
+    expect(meanwhile).toEqual({ said: "only the €20 one", held: { held: { text: "and say when it's done", at: NOW.toISOString() } } });
+    expect(runsIn(w, chat.session)).toHaveLength(2);
+    expect((await chatRead(w, chat.session)).body.steering?.held).toMatchObject({ text: "and say when it's done" });
+  });
+
+  it("sends what a run never read once when the first send fails: the retry doesn't repeat it", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    expect((await steer(w, chat.id, "only the €20 one")).status).toBe(200);
+    status(w, chat.id, "COMPLETED");
+    w.agents.fail.set("startRun", new AgentsError(429, "too many messages"));
+    let c = await conversation(w);
+    expect(c.status).toBe(200);
+    expect(runsIn(w, chat.session)).toHaveLength(1);
+    // It waits, shown once: as held, no longer as unread.
+    expect(c.body.steering).toMatchObject({ run: chat.id, untaken: [], held: { text: "only the €20 one" } });
+    c = await conversation(w);
+    expect(runsIn(w, chat.session)).toHaveLength(2);
+    expect(lastSaid(w, chat.session)).toBe("only the €20 one");
+    expect(c.body.steering?.held).toBeUndefined();
+    status(w, newest(w).id, "COMPLETED");
+    await conversation(w);
+    expect(runsIn(w, chat.session)).toHaveLength(2);
+  });
+
+  it("refuses, whole and with words, a message that would make what waits more than one message: nothing is cut", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    const first = "a".repeat(1500), second = "b".repeat(1500);
+    w.agents.fail.set("steerRun", full());
+    expect((await steer(w, chat.id, first)).body.held).toMatchObject({ text: first });
+    w.agents.fail.set("steerRun", full());
+    const r = await steer(w, chat.id, second);
+    expect(r.status).toBe(409);
+    expect(r.body).toMatchObject({ error: HELD_FULL_WORDS, code: "held_full", held: { text: first } });
+    expect(HELD_FULL_WORDS).toBe("Up to 10 messages, 2,000 characters in all, can wait for the taf. Send this once it's done.");
+    // What waits is unchanged, and goes whole.
+    expect((await conversation(w)).body.steering?.held).toMatchObject({ text: first });
+    status(w, chat.id, "COMPLETED");
+    await conversation(w);
+    expect(lastSaid(w, chat.session)).toBe(first);
+  });
+
+  it("holds what joins to exactly one message's worth, and sends it as one", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    const first = "a".repeat(999), second = "b".repeat(999);
+    w.agents.fail.set("steerRun", full());
+    await steer(w, chat.id, first);
+    w.agents.fail.set("steerRun", full());
+    const r = await steer(w, chat.id, second);
+    expect(r.status).toBe(202);
+    expect(r.body.held.text).toHaveLength(CHAT.maxText);
+    status(w, chat.id, "COMPLETED");
+    await conversation(w);
+    expect(lastSaid(w, chat.session)).toBe(`${first}\n\n${second}`);
+    expect(runsIn(w, chat.session)).toHaveLength(2);
+  });
+
+  it("holds at most ten messages in a chat", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    for (let i = 1; i <= 10; i++) {
+      w.agents.fail.set("steerRun", full());
+      expect((await steer(w, chat.id, `note ${i}`)).status).toBe(202);
+    }
+    w.agents.fail.set("steerRun", full());
+    const r = await steer(w, chat.id, "note 11");
+    expect(r.status).toBe(409);
+    expect(r.body.code).toBe("held_full");
+    expect(r.body.held.text).toBe(Array.from({ length: 10 }, (_, i) => `note ${i + 1}`).join("\n\n"));
+  });
+
+  it("sends what waits whole, in order: what doesn't fit one message goes as the next, never cut", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    const unread = "a".repeat(1500), later = "b".repeat(1500);
+    expect((await steer(w, chat.id, unread)).status).toBe(200);
+    w.agents.fail.set("steerRun", full());
+    expect((await steer(w, chat.id, later)).body.held).toMatchObject({ text: later });
+    status(w, chat.id, "COMPLETED");
+    let c = await conversation(w);
+    expect(lastSaid(w, chat.session)).toBe(unread);
+    expect(c.body.steering).toMatchObject({ run: newest(w).id, held: { text: later } });
+    // The answer is over: the rest goes as the next message.
+    status(w, newest(w).id, "COMPLETED");
+    c = await conversation(w);
+    expect(lastSaid(w, chat.session)).toBe(later);
+    expect(c.body.steering?.held).toBeUndefined();
+    expect(runsIn(w, chat.session)).toHaveLength(3);
+  });
+
+  it("sends a message written after the stop as the next message: only what was written for the stopped run isn't sent", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue", ANA);
+    w.agents.fail.set("steerRun", full());
+    expect((await steer(w, chat.id, "and say when it's done")).status).toBe(202);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "ana", body: { session: chat.session } })).body.stopped).toBe(true);
+    expect((await chatRead(w, chat.session)).body.steering?.not_sent).toEqual([{ text: "and say when it's done", at: NOW.toISOString(), why: NOT_SENT_WORDS.stopped }]);
+    // The app hadn't seen the run end: it writes to the stopped run, a minute after the stop.
+    w.agents.calls.length = 0;
+    const r = await steer(w, chat.id, "do the €40 one instead", new Date(NOW.getTime() + 60_000));
+    expect(r.status).toBe(202);
+    expect(r.body).toEqual({ sent: { run: newest(w).id, session: chat.session } });
+    expect(started(w)).toEqual([`startRun ${RAE} ${chat.session}`]);
+    // Only the new words: what was written for the stopped run never goes.
+    expect(lastSaid(w, chat.session)).toBe("do the €40 one instead");
+    status(w, newest(w).id, "COMPLETED");
+    await conversation(w);
+    expect(runsIn(w, chat.session)).toHaveLength(2);
   });
 
   it("without hold, nothing changes: a run that took nothing is 409, and the app keeps its own queue", async () => {

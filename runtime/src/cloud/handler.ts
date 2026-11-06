@@ -834,8 +834,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "conversation") {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
-    // What the person wrote that waits for the taf to be done goes now, if it's done (docs/chat.md).
-    await settleSteering(event, me, taf, deps).catch(() => undefined);
+    // What the person wrote that waits for the taf to be done goes now, in each chat where it's done (docs/chat.md).
+    await settleChats(event, me, taf, deps).catch(() => undefined);
     const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
@@ -843,7 +843,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
-    await settleSteering(event, me, taf, deps).catch(() => undefined);
+    // What waits in this chat goes now, if the taf is done in it: only this chat's.
+    await settleChat(event, me, taf, parts[4] ?? "", deps).catch(() => undefined);
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
@@ -2285,11 +2286,11 @@ function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrot
  * Unknown (kiff/agents not answering) reads as neither.
  */
 async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null; capped?: Capped }> {
-  // What the person wrote that waits for the taf to be done, whatever run is latest.
-  const held = await heldFor(me, taf, deps).catch(() => undefined);
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
+  // What the person wrote that waits in this chat for the taf to be done, whatever run is latest.
+  const held = await heldFor(me, taf, latest.id, deps).catch(() => undefined);
   try {
     const read = await deps.agents.session(me.tenantID, latest.id, readerOf(me, latest));
     const run = read.events.at(-1)?.run;
@@ -2298,12 +2299,18 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
     // Times as the thread's are (milliseconds): kiff/agents writes nanoseconds, which the app can't read.
     let untaken = (r.steering ?? []).filter((m) => !m.taken).map(({ text, at }) => ({ text, at: iso(at) }));
     let notSent: Array<{ text: string; at: string; why: string }> = [];
-    if (r.status === "CANCELLED" && deps.coach) {
-      // Stopped: what a run written to with `hold` never read, and what waited for it, isn't sent.
-      const [steered, unsent] = await Promise.all([deps.coach.get(steerKeys.run(me.tenantID, run)), deps.coach.get(steerKeys.unsent(me.tenantID, run))]);
-      const kept = (Array.isArray(unsent) ? unsent : []) as Array<{ text: string; at: string }>;
-      notSent = [...(steered ? untaken : []), ...kept].map((m) => ({ ...m, why: NOT_SENT_WORDS.stopped }));
-      if (steered) untaken = [];
+    if (OVER.has(r.status) && deps.coach) {
+      const steered = await deps.coach.get(steerKeys.run(me.tenantID, run));
+      if (r.status === "CANCELLED") {
+        // Stopped: what a run written to with `hold` never read, and what waited for it, isn't sent.
+        const unsent = await deps.coach.get(steerKeys.unsent(me.tenantID, run));
+        const kept = (Array.isArray(unsent) ? unsent : []) as Array<{ text: string; at: string }>;
+        notSent = [...(steered ? untaken : []), ...kept].map((m) => ({ ...m, why: NOT_SENT_WORDS.stopped }));
+        if (steered) untaken = [];
+      } else if (steered) {
+        // Over: what a run written to with `hold` never read has joined what's held (settleChat), and shows there.
+        untaken = [];
+      }
     }
     return {
       working: r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run } : null,
@@ -3693,10 +3700,11 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
   const lines = await takeCoachLines(me, taf, deps);
   try {
     const out = await deps.agents.steerRun(me.tenantID, taf.id, run, lines.text(text), member(me));
-    // What this run doesn't read, tafs cloud deals with once it's over.
+    // What this run doesn't read, tafs cloud deals with once it's over: its chat says to look.
     if (hold) {
       await deps.coach!.put(steerKeys.run(me.tenantID, out.id), { person: me.subject, session: out.session } satisfies SteeredRun, steerKept(deps));
-      await deps.coach!.put(steerKeys.chat(me.tenantID, taf.id, me.subject), { session: out.session }, steerKept(deps));
+      await deps.coach!.append(chatKeys(me, taf, out.session).steered, { run: out.id } satisfies SteeredChat, steerKept(deps));
+      await listChat(me, taf, out.session, deps);
     }
     return { run: out.id, status: out.status };
   } catch (err) {
@@ -3711,24 +3719,42 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
 
 /** How long tafs cloud keeps a held message, and a run's note that it deals with what the run doesn't read. */
 const STEER_KEPT_MS = 24 * 3600_000;
+/** How long a chat's next message is claimed by the read sending it: longer than any request runs, so it goes once. */
+const STEER_SENDING_MS = 10 * 60_000;
 
-function steerKept(deps: Deps): Date {
-  return new Date((deps.now?.() ?? new Date()).getTime() + STEER_KEPT_MS);
+function steerKept(deps: Deps, ms = STEER_KEPT_MS): Date {
+  return new Date(nowOf(deps).getTime() + ms);
 }
 
-/** What tafs cloud keeps for messages written while a taf works, under the account's prefix. */
+function nowOf(deps: Deps): Date {
+  return deps.now?.() ?? new Date();
+}
+
+/**
+ * What tafs cloud keeps for messages written while a taf works, under the account's prefix.
+ * What waits is kept per chat: it only ever goes in the chat it was written in.
+ */
 const steerKeys = {
-  /** What a person wrote while the taf worked that its run didn't take: their next message, once the taf is done. */
-  held: (tenant: string, taf: string, person: string) => `${tenant}#steer-held#${taf}#${person}`,
+  /** What a person wrote in one chat while the taf worked that its run didn't take: their next message there, once the taf is done. */
+  held: (tenant: string, taf: string, person: string, session: string) => `${tenant}#steer-held#${taf}#${person}#${session}`,
+  /** The runs of one chat the person wrote to with `hold`: once each is over, what it didn't read joins what's held there. */
+  chat: (tenant: string, taf: string, person: string, session: string) => `${tenant}#steer-chat#${taf}#${person}#${session}`,
+  /** The person's chats with the taf where something may wait: what a read of the whole thread, or an answer's end, settles. */
+  chats: (tenant: string, taf: string, person: string) => `${tenant}#steer-chats#${taf}#${person}`,
   /** A run the person wrote to with `hold`: tafs cloud deals with what it doesn't read. */
   run: (tenant: string, run: string) => `${tenant}#steer-run#${run}`,
-  /** The chat a person last wrote to with `hold`, so its run is dealt with once it's over. */
-  chat: (tenant: string, taf: string, person: string) => `${tenant}#steer-chat#${taf}#${person}`,
-  /** Claimed once a run's unread messages are dealt with, so they go once. */
-  settled: (tenant: string, run: string) => `${tenant}#steer-settled#${run}`,
+  /** Claimed while the next message after a run goes, and kept once it went, so it goes once. */
+  sending: (tenant: string, run: string) => `${tenant}#steer-sending#${run}`,
+  /** When the person stopped a run: what they wrote for it by then isn't sent; what came after is their next message. */
+  stopped: (tenant: string, run: string) => `${tenant}#steer-stopped#${run}`,
   /** What a stopped run never read, and what was held for it: not sent, with why. */
   unsent: (tenant: string, run: string) => `${tenant}#steer-unsent#${run}`,
 };
+
+/** One chat's keys, for the person. */
+function chatKeys(me: KIFFIdentity, taf: Taf, session: string): { held: string; steered: string } {
+  return { held: steerKeys.held(me.tenantID, taf.id, me.subject, session), steered: steerKeys.chat(me.tenantID, taf.id, me.subject, session) };
+}
 
 interface HeldMessage {
   text: string;
@@ -3736,6 +3762,8 @@ interface HeldMessage {
   /** The chat it goes in, and the run it was written to. */
   session: string;
   run: string;
+  /** Taken by that run, which ended before it read it: it was written before what the run refused at the same time. */
+  unread?: true;
 }
 
 interface SteeredRun {
@@ -3743,84 +3771,188 @@ interface SteeredRun {
   session: string;
 }
 
+/** A run of the chat the person wrote to with `hold`. */
+interface SteeredChat {
+  run: string;
+}
+
+/** At most this many messages wait in a chat, and at most CHAT.maxText characters in all: one message's worth. */
+const HELD_MESSAGES = 10;
+
 /** Why a message wasn't sent, in the words every app shows as they are. */
 export const NOT_SENT_WORDS = {
   stopped: "You stopped it before it read this.",
 } as const;
 
+/** Why a message wasn't held (409 `held_full`), in the words every app shows as they are: the app keeps it to send later. */
+export const HELD_FULL_WORDS = `Up to ${HELD_MESSAGES} messages, ${CHAT.maxText.toLocaleString("en-US")} characters in all, can wait for the taf. Send this once it's done.`;
+
 /**
  * A message the run didn't take (it had ended, or held as many as it takes), with
- * `hold`: tafs cloud keeps it, joined to any already waiting, and sends it as the
- * person's next message once the taf is done: now, when nothing of theirs is at work
- * in that chat. 202 either way: `sent` names the new run, `held` says it waits.
+ * `hold`: tafs cloud keeps it for that chat, after any already waiting there, and sends
+ * it as the person's next message in the chat once the taf is done: now, when the chat's
+ * run is over. 202: `sent` names the new run, `held` says what still waits; neither, when
+ * another read dealt with it meanwhile (the thread says how). A message that would make
+ * what waits more than one message is refused, whole, with words the app shows (409
+ * `held_full`): nothing the person wrote is ever cut.
  */
 async function holdSteer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, runID: string, text: string, deps: Deps): Promise<PageResponse> {
+  const store = deps.coach!;
   // kiff/agents refused it as over or full, not as another person's (that's 404): it's theirs.
   const r = await agentsCall(() => deps.agents.getRun(me.tenantID, taf.id, runID));
-  const at = (deps.now?.() ?? new Date()).toISOString();
-  await deps.coach!.append(steerKeys.held(me.tenantID, taf.id, me.subject), { text, at, session: r.session, run: r.id } satisfies HeldMessage, steerKept(deps));
-  const sent = await settleSteering(event, me, taf, deps);
-  if (sent) return new PageResponse(json(202, { sent: { run: sent.id, session: sent.session } }));
-  const held = await heldFor(me, taf, deps);
-  return new PageResponse(json(202, { held }));
+  const key = chatKeys(me, taf, r.session).held;
+  const waiting = heldOf(await store.get(key));
+  if (waiting.length >= HELD_MESSAGES || joinHeld([...waiting.map((m) => m.text), text]).length > CHAT.maxText) {
+    throw new HTTPError(409, HELD_FULL_WORDS, { code: "held_full", ...(waiting.length ? { held: shownHeld(waiting) } : {}) });
+  }
+  await store.append(key, { text, at: nowOf(deps).toISOString(), session: r.session, run: r.id } satisfies HeldMessage, steerKept(deps));
+  await listChat(me, taf, r.session, deps);
+  const sent = await settleChat(event, me, taf, r.session, deps);
+  const held = await heldFor(me, taf, r.session, deps);
+  return new PageResponse(json(202, { ...(sent ? { sent: { run: sent.id, session: sent.session } } : {}), ...(held ? { held } : {}) }));
 }
 
-/** The person's held messages for the taf, joined as they'll go: none, undefined. */
-async function heldFor(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ text: string; at: string } | undefined> {
-  const list = ((await deps.coach?.get(steerKeys.held(me.tenantID, taf.id, me.subject))) ?? []) as HeldMessage[];
-  if (!Array.isArray(list) || !list.length) return undefined;
+/** A chat's held messages, as stored: in the order written, whatever order they were put back in. */
+function heldOf(stored: unknown): HeldMessage[] {
+  const list = Array.isArray(stored) ? (stored as HeldMessage[]).filter((m) => m && typeof m.text === "string" && typeof m.at === "string") : [];
+  return list.sort((a, b) => Date.parse(a.at) - Date.parse(b.at) || Number(b.unread === true) - Number(a.unread === true));
+}
+
+/** What waits, as the thread shows it: the messages joined as they'll go, from the first one's time. */
+function shownHeld(list: HeldMessage[]): { text: string; at: string } {
   return { text: joinHeld(list.map((m) => m.text)), at: list[0]!.at };
 }
 
-/** Messages that go as one, in the order written: a second message written while one waits joins it. */
+/** What waits in one of the person's chats, as the thread shows it: none, undefined. */
+async function heldFor(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<{ text: string; at: string } | undefined> {
+  const list = heldOf(await deps.coach?.get(chatKeys(me, taf, session).held));
+  return list.length ? shownHeld(list) : undefined;
+}
+
+/** Messages that go as one, in the order written: a second message written while one waits joins it. Never cut. */
 function joinHeld(texts: string[]): string {
-  return texts.join("\n\n").slice(0, CHAT.maxText);
+  return texts.join("\n\n");
+}
+
+/** How many of these messages, in order, go as one message: whole ones, as many as fit CHAT.maxText, at least one. */
+function fitting(texts: string[]): number {
+  let n = 1;
+  while (n < texts.length && joinHeld(texts.slice(0, n + 1)).length <= CHAT.maxText) n++;
+  return n;
+}
+
+/** Lists the chat as one where something may wait for the person: done after anything is kept for it. */
+async function listChat(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<void> {
+  await deps.coach?.append(steerKeys.chats(me.tenantID, taf.id, me.subject), session, steerKept(deps));
+}
+
+/** Whether something waits in the chat: held messages, or a run written to with `hold` to deal with. */
+async function waitsIn(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<boolean> {
+  const keys = chatKeys(me, taf, session);
+  const [held, steered] = await Promise.all([deps.coach?.get(keys.held), deps.coach?.get(keys.steered)]);
+  return heldOf(held).length > 0 || (Array.isArray(steered) && steered.length > 0);
 }
 
 /**
- * Sends what waits for the person once the taf is done, as their next message in that
- * chat: what they wrote that the run didn't take (held), and what a run they wrote to
- * with `hold` never read, once it's over. When the run was stopped, what it never read,
- * and what waited for it, is not sent: the thread says so, with why. Nothing goes while
- * a run of theirs is at work or paused in the chat. Taken once, so two reads never send
- * twice; a send that fails puts it all back. Undefined when nothing went.
+ * Every chat of the person's with the taf where something may wait, each settled on its own
+ * (settleChat): what a read of the whole thread, or an answer's end, does. A chat is listed
+ * again before anything slow while something waits in it, so none is dropped while it does;
+ * one that's done drops out here.
  */
-async function settleSteering(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Run | undefined> {
+async function settleChats(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
   const store = deps.coach;
-  if (!store) return undefined;
-  const heldKey = steerKeys.held(me.tenantID, taf.id, me.subject);
-  const chatKey = steerKeys.chat(me.tenantID, taf.id, me.subject);
-  const [waiting, pointer] = await Promise.all([store.get(heldKey), store.get(chatKey)]);
-  const session = (waiting as HeldMessage[] | undefined)?.at(-1)?.session ?? (pointer as { session?: string } | undefined)?.session;
-  if (!session) return undefined;
+  if (!store) return;
+  const listed = [...new Set((await store.take(steerKeys.chats(me.tenantID, taf.id, me.subject))).filter((s): s is string => typeof s === "string" && s !== ""))];
+  const waiting = (await Promise.all(listed.map(async (s) => ((await waitsIn(me, taf, s, deps)) ? s : undefined)))).filter((s): s is string => s !== undefined);
+  for (const session of waiting) await listChat(me, taf, session, deps);
+  for (const session of waiting) await settleChat(event, me, taf, session, deps).catch(() => undefined);
+}
+
+/**
+ * Sends what waits in one of the person's chats once the taf is done there, as their next
+ * message in that chat (docs/chat.md), and only there:
+ * - what they wrote that a run didn't take (held), in the order written;
+ * - what a run they wrote to with `hold` never read, once it's over: it joins what's held, once.
+ *
+ * As many whole messages as fit one go, never cut; the rest waits for the next. When the run
+ * was stopped, what it never read, and what was written for it by the stop, isn't sent: the
+ * thread says so, with why. What was written after the stop goes. Nothing goes while a run is
+ * at work or paused in the chat. One read sends the chat's next message, so two reads never
+ * send twice; a send that fails puts back what it took. Undefined when nothing went.
+ */
+async function settleChat(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<Run | undefined> {
+  const store = deps.coach;
+  if (!store || !(await waitsIn(me, taf, session, deps))) return undefined;
   // The chat's latest run: nothing goes while one is at work, or paused waiting on the person.
   const latest = await latestOf(me, taf, session, deps);
   if (!latest || !OVER.has(latest.status)) return undefined;
-  const steered = (await store.get(steerKeys.run(me.tenantID, latest.id))) as SteeredRun | undefined;
-  const untaken = steered ? (latest.steering ?? []).filter((m) => !m.taken).map((m) => m.text) : [];
-  const held = (await store.take(heldKey)) as HeldMessage[];
-  if (pointer) await store.remove(chatKey);
-  if (!held.length && !untaken.length) return undefined;
-  if (steered && !(await store.once(steerKeys.settled(me.tenantID, latest.id), steerKept(deps)))) {
-    // Another read is dealing with this run's unread messages: what was held goes back to wait.
-    for (const m of held) await store.append(heldKey, m, steerKept(deps));
-    return undefined;
-  }
-  if (latest.status === "CANCELLED") {
-    // Stopped: none of it goes. The thread shows it as not sent, with why.
-    for (const m of held) await store.append(steerKeys.unsent(me.tenantID, latest.id), { text: m.text, at: m.at }, steerKept(deps));
-    return undefined;
-  }
-  const text = joinHeld([...untaken, ...held.map((m) => m.text)]);
+  const keys = chatKeys(me, taf, session);
+  // One read sends the next message after this run: another leaves what waits to it. The claim is
+  // kept once the message went, so a read that saw this run before the send can't send it again.
+  const claim = steerKeys.sending(me.tenantID, latest.id);
+  if (!(await store.once(claim, steerKept(deps, STEER_SENDING_MS)))) return undefined;
+  let sent: Run | undefined;
   try {
-    return await sendNext(event, me, taf, latest.session, text, deps);
-  } catch (err) {
-    for (const m of held) await store.append(heldKey, m, steerKept(deps));
-    if (steered) await store.remove(steerKeys.settled(me.tenantID, latest.id));
-    if (untaken.length && !held.length) await store.append(heldKey, { text: joinHeld(untaken), at: (deps.now?.() ?? new Date()).toISOString(), session: latest.session, run: latest.id } satisfies HeldMessage, steerKept(deps));
-    console.warn(JSON.stringify({ msg: "held message not sent yet", status: err instanceof AgentsError ? err.status : 500 }));
-    return undefined;
+    await moveUnread(me, taf, session, latest, deps);
+    let held = heldOf(await store.take(keys.held));
+    if (latest.status === "CANCELLED") {
+      // Stopped: what was written for it by then isn't sent, and the thread says why. What came after goes.
+      const by = await stoppedAt(me, latest, deps);
+      for (const m of held.filter((m) => Date.parse(m.at) <= by)) await store.append(steerKeys.unsent(me.tenantID, latest.id), { text: m.text, at: m.at }, steerKept(deps));
+      held = held.filter((m) => Date.parse(m.at) > by);
+    }
+    if (!held.length) return undefined;
+    const n = fitting(held.map((m) => m.text));
+    const goes = held.slice(0, n);
+    // What doesn't fit waits for the message after: put back before the send, so nothing is lost on the way.
+    for (const m of held.slice(n)) await store.append(keys.held, m, steerKept(deps));
+    if (held.length > n) await listChat(me, taf, session, deps);
+    try {
+      sent = await sendNext(event, me, taf, session, joinHeld(goes.map((m) => m.text)), deps);
+      return sent;
+    } catch (err) {
+      for (const m of goes) await store.append(keys.held, m, steerKept(deps));
+      await listChat(me, taf, session, deps);
+      console.warn(JSON.stringify({ msg: "held message not sent yet", status: err instanceof AgentsError ? err.status : 500 }));
+      return undefined;
+    }
+  } finally {
+    // Nothing went: the next read may send. Once something went, the claim stays until it lapses.
+    if (!sent) await store.remove(claim).catch(() => undefined);
   }
+}
+
+/**
+ * What the chat's runs written to with `hold` never read, once each is over, joins what's held
+ * in the chat, in the order written: a stopped run's never does (the thread lists it as not sent).
+ * Each run is taken off the chat's list as it's dealt with, under the chat's claim, so what it
+ * never read joins once. A run still at work stays listed, to be dealt with when it's over.
+ */
+async function moveUnread(me: KIFFIdentity, taf: Taf, session: string, latest: Run, deps: Deps): Promise<void> {
+  const store = deps.coach!;
+  const keys = chatKeys(me, taf, session);
+  const runs = [...new Set(((await store.take(keys.steered)) as SteeredChat[]).map((s) => s?.run).filter((r): r is string => typeof r === "string"))];
+  for (const id of runs) {
+    // Unread here (kiff/agents not answering): undefined, and dealt with on a later read. Gone: null.
+    const r = id === latest.id ? latest : await deps.agents.getRun(me.tenantID, taf.id, id).catch((err) => (err instanceof AgentsError && err.status === 404 ? null : undefined));
+    if (r === undefined || (r && !OVER.has(r.status))) {
+      await store.append(keys.steered, { run: id } satisfies SteeredChat, steerKept(deps));
+      await listChat(me, taf, session, deps);
+      continue;
+    }
+    // Gone, or stopped: what it never read isn't sent (the thread lists a stopped run's as not sent).
+    if (!r || r.status === "CANCELLED") continue;
+    const unread = (r.steering ?? []).filter((m) => !m.taken);
+    for (const m of unread) await store.append(keys.held, { text: m.text, at: iso(m.at), session, run: id, unread: true } satisfies HeldMessage, steerKept(deps));
+    if (unread.length) await listChat(me, taf, session, deps);
+  }
+}
+
+/** When a stopped run was stopped, in milliseconds: as the person's Stop recorded it, else as kiff/agents last changed it. */
+async function stoppedAt(me: KIFFIdentity, run: Run, deps: Deps): Promise<number> {
+  const recorded = (await deps.coach?.get(steerKeys.stopped(me.tenantID, run.id))) as { at?: string } | undefined;
+  const at = Date.parse(recorded?.at ?? iso(run.updated));
+  return Number.isNaN(at) ? Number.POSITIVE_INFINITY : at;
 }
 
 /** A run's states once it's over: what it never read can't be read by it any more. */
@@ -4266,7 +4398,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       throw err;
     }
     // Once the answer ends, what the person wrote that waited for it goes (docs/chat.md).
-    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps))), () => settleSteering(event, me, taf, deps));
+    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps))), () => settleChats(event, me, taf, deps));
     return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
@@ -4443,7 +4575,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID), () => settleSteering(event, me, taf, deps));
+  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID), () => settleChats(event, me, taf, deps));
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
 }
 
@@ -4786,9 +4918,11 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
   if (read.session.agent !== taf.id) throw new HTTPError(404, "no such session");
   const run = read.events.at(-1)?.run;
   if (!run) return { stopped: false };
+  // When the person stopped it: what they write from now on is their next message, not the run's.
+  const at = nowOf(deps);
   try {
     const out = await deps.agents.cancelRun(me.tenantID, taf.id, run, member(me));
-    await stoppedSteering(me, taf, session, run, deps).catch(() => undefined);
+    await stoppedSteering(me, run, at, deps).catch(() => undefined);
     return { stopped: true, run: out.id, status: out.status };
   } catch (err) {
     // Already over: nothing is left to stop.
@@ -4799,18 +4933,12 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
 }
 
 /**
- * The person stopped the run at work in a chat: what they wrote that waited for it to be
- * done isn't sent, and what it never read won't be either. The thread says so, with why.
+ * The person stopped the run at work in a chat: when, as tafs cloud saw it. Once the run is over,
+ * what they wrote for it by then that waited for it to be done isn't sent, nor what it never read:
+ * the thread says so, with why. What they write after the stop is their next message there.
  */
-async function stoppedSteering(me: KIFFIdentity, taf: Taf, session: string, run: string, deps: Deps): Promise<void> {
-  const store = deps.coach;
-  if (!store) return;
-  const heldKey = steerKeys.held(me.tenantID, taf.id, me.subject);
-  await store.once(steerKeys.settled(me.tenantID, run), steerKept(deps));
-  for (const m of (await store.take(heldKey)) as HeldMessage[]) {
-    if (m.session === session) await store.append(steerKeys.unsent(me.tenantID, run), { text: m.text, at: m.at }, steerKept(deps));
-    else await store.append(heldKey, m, steerKept(deps));
-  }
+async function stoppedSteering(me: KIFFIdentity, run: string, at: Date, deps: Deps): Promise<void> {
+  await deps.coach?.put(steerKeys.stopped(me.tenantID, run), { at: at.toISOString() }, steerKept(deps));
 }
 
 /**
