@@ -165,6 +165,94 @@ On Android the same is on Usage (`TaskRequests`, `UsageWords.waiting`, `lastAnsw
 Play for that request, so it shows only where the app offers buying; until then, an
 admin on Android declines, or approves on an iPhone.
 
+### Credits
+
+Credits will replace tasks. Until they do, **Plan & usage** shows them read-only, beside the
+tasks, which stay as they are: nothing is charged in credits yet.
+
+**What a run uses:** the AI it used, in whole credits, rounded up once per run. KIFF works
+them out from what kiff/agents records for the run, so every screen gives the same number. A run
+counts once, when it ends, in the period it ends in, so a run that waits on an approval counts
+when it ends. A run that used no AI (refused before it began) isn't listed.
+
+**What isn't counted:**
+- Coach and setting tafs up, within Coach's fair use (`coach`). Past it, Coach's runs count, and
+  show as their own row;
+- a trial of a new version, which sends nothing (`trial`);
+- a run that failed on our side: it couldn't start, or kiff/agents or the model failed it
+  (`failed`). A run carried on after it stopped on our side counts once: what the stopped
+  attempt used isn't counted.
+
+A call KIFF refused, or one held and then refused, doesn't change its run's credits: the run's
+AI was used.
+
+**The reads** (tafs cloud, `runtime/src/cloud/credits.ts`), in the account's zone, every line in
+tafs cloud's words. The apps draw the words as they are and derive nothing from the numbers but
+their order. `GET /v1/usage/credits` is the period:
+
+```json
+{
+  "period": { "start": "2026-11-01T00:00:00Z", "end": "2026-12-01T00:00:00Z", "current": true },
+  "credits": 1240,
+  "runs": 61,
+  "words": "This period: 1,240 credits used · ends on 1 Dec",
+  "tafs": [
+    { "taf": "refunds-7k2m", "credits": 820, "runs": 41, "words": "Refunds · 820 credits · 41 runs" },
+    { "taf": "chargebacks-q81z", "credits": 374, "runs": 18, "words": "Chargebacks · 374 credits · 18 runs" }
+  ],
+  "coach": { "credits": 46, "runs": 2, "words": "Coach, past its fair use · 46 credits · 2 runs" },
+  "not_counted": {
+    "runs": 12,
+    "words": "Not counted: 12 runs",
+    "lines": [
+      { "why": "coach", "runs": 7, "words": "Coach, within its fair use · 7 runs" },
+      { "why": "trial", "runs": 3, "words": "Trials of a new version · 3 runs" },
+      { "why": "failed", "runs": 2, "words": "Failed on our side · 2 runs" }
+    ]
+  },
+  "note": "Credits will replace tasks. Nothing is charged in credits yet."
+}
+```
+
+The period before reads "Last period: 980 credits used · 1 Oct to 31 Oct", and one with nothing
+used "This period: no credits used yet · ends on 1 Dec". `GET /v1/usage/credits/tafs/{id}` is one
+taf's runs, newest first:
+
+```json
+{
+  "period": { "start": "2026-11-01T00:00:00Z", "end": "2026-12-01T00:00:00Z", "current": true },
+  "taf": "refunds-7k2m",
+  "credits": 820,
+  "runs": 41,
+  "words": "Refunds · 820 credits · 41 runs this period",
+  "items": [
+    { "run": "4f0c2a9e…", "at": "2026-11-07T08:00:41Z", "credits": 6, "counted": true, "why": null,
+      "words": "Its schedule · 6 credits", "opens": true },
+    { "run": "b71d03c5…", "at": "2026-11-06T17:12:09Z", "credits": 15, "counted": true, "why": null,
+      "words": "From its chat · 15 credits", "opens": true },
+    { "run": "0a9e77d1…", "at": "2026-11-05T10:31:55Z", "credits": 0, "counted": false, "why": "trial",
+      "words": "A trial of a new version · not counted", "opens": false }
+  ],
+  "next": "MjAyNi0xMS0wNVQxMDozMTo1NVp8MGE5ZTc3ZDE"
+}
+```
+
+Where a run came from is said as the request view says it: "Its schedule", "From its chat",
+"By email", "Run now".
+
+**In the apps:** a **Credits** panel in Plan & usage, above the tasks: the period's `words`, each
+taf's row, Coach's row when there is one, then `not_counted` and `note`. A taf's row opens its runs
+(the second read), and a run's row opens its request while `opens` is true; otherwise it doesn't
+open. A 404 from a tafs cloud from before this shows no panel, so the apps and tafs cloud can ship
+in any order.
+
+**Settled for this first version:**
+- **Runs are the unit** of a taf's row and its list, since a run is what credits count. Items
+  can come later.
+- **Every run's row carries its `run`**, a chat's included, and opens its request (what it did,
+  step by step, with its Record entries) while kiff/agents keeps it.
+- **`previous` is the only other period.** A list of periods can come with billing.
+
 ### AI use
 
 What chats with the tafs and Coach cost the model is bounded per period at half the
