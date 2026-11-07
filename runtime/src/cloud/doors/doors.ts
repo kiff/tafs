@@ -10,6 +10,7 @@ import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
 import { eventLog, logEvent } from "../events.js";
+import { disclosureLineFor } from "../../jobs.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
 export interface DoorsConfig {
@@ -652,7 +653,10 @@ async function dropPending(ctx: DoorsContext, tenant: string, taf: string | unde
   }, addDays(ctx.now, DOOR.replyDays));
 }
 
-/** The reply: the taf's answer, what it didn't read, and who is writing (an AI assistant). */
+/**
+ * The reply: first who is writing (an AI agent, for the company it writes for, in the answer's language,
+ * as kiff/agents heads a taf's own messages), then the taf's answer and what it didn't read.
+ */
 export function replyText(taf: Taf, r: Run, reply: Pick<Reply, "attachments" | "cut">): string {
   const answer = r.status === "COMPLETED"
     ? (r.output?.trim() || "Done. I have nothing to add.")
@@ -662,7 +666,7 @@ export function replyText(taf: Taf, r: Run, reply: Pick<Reply, "attachments" | "
   const notes: string[] = [];
   if (reply.attachments) notes.push(`I read only the text of your message; I didn't open its ${reply.attachments === 1 ? "attachment" : `${reply.attachments} attachments`}.`);
   if (reply.cut) notes.push(`Your message was long, so I read its first ${DOOR.maxChars.toLocaleString("en")} characters.`);
-  return [answer, ...(notes.length ? [notes.join(" ")] : []), `${taf.name}, an AI assistant in tafs`].join("\n\n");
+  return [disclosureLineFor({ writesFor: taf.writesFor }, answer), answer, ...(notes.length ? [notes.join(" ")] : [])].join("\n\n");
 }
 
 /** Sends through the door. `retry`: the provider didn't take it for now (it was down, or refused for a while). */
