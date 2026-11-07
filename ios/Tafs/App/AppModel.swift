@@ -2789,7 +2789,7 @@ final class AppModel: ObservableObject {
                                             .init(taf: "sample-invoices", credits: 830, runs: 52, words: "Overdue invoices · 830 credits · 52 runs")],
                                      note: Self.sampleCreditsNote)
         }
-        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: "This period: 1,240 credits used",
+        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: "This period: 1,240 credits used · ends on 30 Nov",
                                  tafs: [.init(taf: "sample-refunds", credits: 820, runs: 41, words: "Refunds · 820 credits · 41 runs"),
                                         .init(taf: "sample-invoices", credits: 420, runs: 28, words: "Overdue invoices · 420 credits · 28 runs")],
                                  notCounted: .init(runs: 9, words: "Not counted: 9 runs",
@@ -2801,11 +2801,12 @@ final class AppModel: ObservableObject {
 
     static let sampleCreditsNote = "Each run counts once, when it ends, in whole credits."
 
-    /// The sample's balance, as tafs cloud words it: Solo, most of the period's credits left.
+    /// The sample's balance, as tafs cloud words it, the same as Android's: Solo, about half the
+    /// period's credits left.
     static let sampleBalance = TafsCloud.Balance(
-        balance: .init(state: "ok", meterPct: 62, words: "Solo · 62% of this period's credits used",
-                       detail: "Then the credits in your packs, which never expire."),
-        planLine: "Solo · 62% of this period's credits used", planTone: "ok", homeLine: nil)
+        balance: .init(state: "ok", meterPct: 48, words: "Solo · 260 of 500 credits left this period",
+                       detail: "Then 900 in packs, which never expire"),
+        planLine: "Solo · 260 credits left", planTone: "ok", homeLine: nil)
 
     /// A balance read, kept with its failure: nil for a tafs cloud without it (404).
     private func balanceResult() async -> Result<TafsCloud.Balance?, Error> {

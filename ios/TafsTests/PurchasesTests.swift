@@ -248,8 +248,8 @@ final class PurchasesTests: XCTestCase {
         let (model, store, _) = await signedIn(log)
         let u = try XCTUnwrap(model.usage)
         XCTAssertEqual(UsageView.openRequests(u).map(\.id), ["pr_1", "pr_2"])
-        XCTAssertEqual(UsageView.requestLine(u.requests![0], in: u), "A member asks for Rayo · a pack of credits.")
-        XCTAssertEqual(UsageView.requestLine(u.requests![1], in: u), "A member asks to raise the spend limit.")
+        XCTAssertEqual(UsageView.requestLine(u.requests![0], in: u), "Someone asks for Rayo · a pack of credits.")
+        XCTAssertEqual(UsageView.requestLine(u.requests![1], in: u), "Someone asks to raise the spend limit.")
         StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (200, #"{"recorded":true,"action":"pack"}"#)
         let pack = try XCTUnwrap(u.store?.packs.first)
         let request = try XCTUnwrap(u.requests?.first)
@@ -346,22 +346,22 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(sent("POST", "/v1/me/pack-requests"), ["kind": "raise", "reason": "Month end"], "a raise names no pack")
     }
 
-    /// What a member asks for: a raise on Company (the limit reached, or KIFF bills), a pack on
-    /// Solo (the credits used up, or a store bills); nothing while the balance is fine, or with
-    /// no plan.
+    /// What someone who doesn't manage billing asks for, as on Android: a raise on Company
+    /// (KIFF's `team`), a pack on Solo while packs are on sale; nothing on other plans.
     func testAMemberAsksForARaiseOnCompanyAndAPackOnSolo() throws {
-        func line(_ state: String, _ why: String?) -> TafsCloud.Balance {
-            .init(balance: .init(state: state, why: why, words: "x"))
+        var u = Self.usage(source: "stripe", canAdd: false)
+        u.plan = "team"
+        XCTAssertEqual(UsageView.asks(u), true)
+        u.plan = "solo"
+        XCTAssertEqual(UsageView.asks(u), false)
+        u.store?.packs = []
+        XCTAssertNil(UsageView.asks(u), "no pack on sale: nothing to ask for")
+        for plan in ["company", "internal", nil] {
+            u.plan = plan
+            XCTAssertNil(UsageView.asks(u), plan ?? "no plan")
         }
-        let company = Self.usage(source: "stripe", canAdd: false)
-        let solo = Self.usage(source: "apple", canAdd: false)
-        XCTAssertEqual(UsageView.asksForRaise(line("waiting", "limit_reached"), company), true)
-        XCTAssertEqual(UsageView.asksForRaise(line("waiting", "credits_used_up"), solo), false)
-        XCTAssertEqual(UsageView.asksForRaise(line("warning", nil), company), true)
-        XCTAssertEqual(UsageView.asksForRaise(line("warning", nil), solo), false)
-        XCTAssertNil(UsageView.asksForRaise(line("ok", nil), company), "nothing to ask while it's fine")
-        XCTAssertNil(UsageView.asksForRaise(line("waiting", "no_plan"), Self.usage(source: "", canAdd: false)))
-        XCTAssertNil(UsageView.asksForRaise(line("warning", nil), Self.usage(source: "contract", canAdd: false)))
+        let read = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
+        XCTAssertEqual(read.plan, "team")
     }
 
     /// Raising the spend limit is the act of someone who manages billing: signed behind Face

@@ -138,17 +138,20 @@ the app in sample mode.
     time in the account's zone, as on Android, and a run opens its request
     (`KnobRequestDetail`) while `opens` is true. The row for tafs removed since doesn't open. A
     404 shows no panel, and a 503 shows tafs cloud's `words`.
-  - **Requests** (`PlanViews.swift`): from KIFF's usage read, which the app reads only for
-    `store`, `billing` and `requests`. Someone who manages billing answers a raise with
-    **Raise the limit** and a pack by buying it for that request, or declines either, signed.
-    Anyone else, while the balance needs someone, asks an admin (`AskAdminView`): for a raise
-    on Company, for a pack on Solo, with the request lines both apps share.
+  - **Who bills and requests** (`PlanViews.swift`), after the balance and before the credits,
+    as on Android: from KIFF's usage read, which the app reads only for `plan`, `store`,
+    `billing` and `requests`. Someone who manages billing answers a raise with **Raise the
+    limit** and a pack by buying it for that request, or declines either, signed. Anyone else
+    asks an admin (`AskAdminView`): for a raise on Company (KIFF's `team`), for a pack on Solo
+    while packs are on sale, with the request lines both apps share.
+  - **A taf's Usage row** (its Card tab, for those who manage it) opens its credits this period,
+    its runs (`TafCreditsView`), as on Android.
   - **Settings' Plan card** (`PlanRow`) shows `plan_line` in `plan_tone`'s colour, and
     **Home** (`PlanLine`) shows `home_line` when it's set. Both are read with each refresh.
   - **A chat, Coach or Run now refused for credits** (409 `credits_used_up`, `limit_reached` or
     `no_plan`) shows tafs cloud's `words`, with no Retry, and the message stays in the composer.
-  - **Gone:** the tasks, packs of tasks and counted tasks, a taf's Usage row, AI use and Go on,
-    and the plan's trial.
+  - **Gone:** the tasks, packs of tasks and counted tasks, AI use and Go on, and the plan's
+    trial.
 - **Record** (`RecordView`): chips for "All tafs" and each taf (its colour) above the type
   filter, combined with it. Each entry starts with its taf's dot and name; each day's header
   shows that day's spend (`RecordView.spent`, a sum per currency of the money moved).

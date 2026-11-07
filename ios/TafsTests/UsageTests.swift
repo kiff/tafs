@@ -177,15 +177,17 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(model.previousCreditsError, "The last period can't be read right now.")
     }
 
-    /// The sample shows a balance and credits, as tafs cloud words them, with no prices or plan
-    /// amounts and nothing of the trial.
+    /// The sample shows a balance and credits, as tafs cloud words them and as Android's sample
+    /// does, with no prices and nothing of the trial or tasks.
     func testTheSampleShowsTheBalance() async {
         let model = AppModel(signer: StubSigner())
         await model.startSample()
         await model.refreshUsage()
         let b = try? XCTUnwrap(model.balance)
-        XCTAssertEqual(b?.balance.words, "Solo · 62% of this period's credits used")
-        XCTAssertEqual(b?.balance.meterPct, 62)
+        XCTAssertEqual(b?.balance.words, "Solo · 260 of 500 credits left this period", "Android's sample words")
+        XCTAssertEqual(b?.balance.detail, "Then 900 in packs, which never expire")
+        XCTAssertEqual(b?.balance.meterPct, 48)
+        XCTAssertEqual(b?.planLine, "Solo · 260 credits left")
         XCTAssertNil(b?.homeLine, "Home stays about the tafs")
         XCTAssertEqual(model.credits?.note, AppModel.sampleCreditsNote)
         for line in [b?.balance.words, b?.balance.detail, b?.planLine, model.credits?.note].compactMap({ $0 }) {

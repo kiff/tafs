@@ -397,6 +397,13 @@ struct TafDetailView: View {
                 }
             }
         }
+        // Its Usage row opens its credits this period, its runs, as on Android.
+        if model.mode == .kiff, model.manages(taf.id), let cloud = model.cloudTaf(for: taf.id) {
+            PanelLink { TafCreditsView(taf: cloud.id, previous: false).environmentObject(model) } label: {
+                Label("Usage", systemImage: "chart.bar").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                Spacer()
+            }
+        }
         if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
             Button("Revoke") { confirmRevoke = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))

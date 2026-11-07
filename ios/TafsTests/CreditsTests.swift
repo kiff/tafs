@@ -163,7 +163,7 @@ final class CreditsTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         await model.startSample()
         await model.refreshUsage()
-        XCTAssertEqual(model.credits?.words, "This period: 1,240 credits used")
+        XCTAssertEqual(model.credits?.words, "This period: 1,240 credits used · ends on 30 Nov")
         await model.readPreviousCredits()
         XCTAssertEqual(model.previousCredits?.words, "Last period: 2,310 credits used · 1 Oct to 31 Oct")
     }

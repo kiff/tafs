@@ -17,19 +17,20 @@ struct UsageView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if read {
+                    // In Android's order: the balance and buying, who bills, requests, then credits.
                     BalancePanel(buyCredits: { buyingCredits = true })
-                    CreditsPanel()
-                    if model.mode == .kiff {
-                        if let u = model.usage {
-                            askPanel(u)
-                            requestsPanel(u)
-                            billingPanel(u)
-                        } else if let why = model.usageError {
-                            Panel { Text(why).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true) }
-                        }
-                    }
                     if let message = model.planMessage {
                         Panel { Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
+                    }
+                    if model.mode == .kiff, let u = model.usage {
+                        billingPanel(u)
+                        askPanel(u)
+                        requestsPanel(u)
+                    }
+                    CreditsPanel()
+                    // KIFF's read failed: buying and requests wait on it, said once.
+                    if model.mode == .kiff, model.usage == nil, let why = model.usageError {
+                        Panel { Text(why).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true) }
                     }
                 } else {
                     // Loading draws the screen at its full width, never a narrow strip (kiff/tafs#245, item 2).
@@ -46,18 +47,18 @@ struct UsageView: View {
         .task { await model.refreshUsage(); read = true }
         .refreshable { await model.refreshUsage() }
         .sheet(isPresented: $buyingCredits) { BuyCreditsView().environmentObject(model) }
-        .sheet(isPresented: $asking) { AskAdminView(raise: Self.asksForRaise(model.balance, model.usage)).environmentObject(model) }
+        .sheet(isPresented: $asking) { AskAdminView(raise: model.usage.flatMap(Self.asks)).environmentObject(model) }
         .sheet(item: $declining) { DeclineRequestView(request: $0).environmentObject(model) }
     }
 
-    /// For a member who doesn't manage billing, while the balance needs someone: their request
+    /// For someone who doesn't manage billing, on a plan where they can ask: their request
     /// waiting, with Withdraw; else the last answer, and Ask an admin.
     @ViewBuilder private func askPanel(_ u: KIFFClient.Usage) -> some View {
         if !u.managesBilling {
             if let mine = Self.waiting(u) {
                 Panel {
                     Eyebrow(text: "Waiting")
-                    Text(Self.askedLine(mine, in: u)).scaledFont(15).foregroundColor(Theme.ink)
+                    Text("\(Self.askedLine(mine, in: u)) An admin answers.").scaledFont(15).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Button("Withdraw") { Task { await model.withdrawRequest(mine) } }.buttonStyle(OutlineButtonStyle())
                 }
@@ -65,8 +66,8 @@ struct UsageView: View {
                 if let answer = Self.lastAnswer(u) {
                     Panel { Text(answer).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                 }
-                if Self.asksForRaise(model.balance, u) != nil, let b = model.balance?.balance {
-                    if b.waiting {
+                if Self.asks(u) != nil {
+                    if model.balance?.balance.waiting == true {
                         Button(Self.askAdmin) { asking = true }.buttonStyle(PrimaryButtonStyle())
                     } else {
                         Button(Self.askAdmin) { asking = true }.buttonStyle(OutlineButtonStyle())
@@ -178,22 +179,14 @@ struct UsageView: View {
 
     static func managedByApple(_ u: KIFFClient.Usage) -> Bool { u.billing?.source == "apple" }
 
-    /// What a member asks an admin for while the balance needs someone, as docs/accounts.md
-    /// has it: a raise on Company (the limit reached, or a plan KIFF bills), a pack on Solo
-    /// (the credits used up, or a plan a store bills). Nil while the balance is fine, and where
-    /// no one can be asked (an agreement, no plan). `true` is a raise.
-    static func asksForRaise(_ b: TafsCloud.Balance?, _ u: KIFFClient.Usage?) -> Bool? {
-        guard let line = b?.balance, line.state != "ok" else { return nil }
-        switch line.why {
-        case "limit_reached": return true
-        case "credits_used_up": return false
-        case "no_plan": return nil
-        default:
-            switch u?.billing?.source {
-            case "stripe": return true
-            case "apple", "google": return false
-            default: return nil
-            }
+    /// What someone who doesn't manage billing asks an admin for on this plan, as Android does:
+    /// a raise of the spend limit on Company (KIFF's `team`), a pack on Solo while packs are on
+    /// sale; nothing on others. `true` is a raise.
+    static func asks(_ u: KIFFClient.Usage) -> Bool? {
+        switch u.plan {
+        case "team": return true
+        case "solo": return (u.store?.packs.isEmpty ?? true) ? nil : false
+        default: return nil
         }
     }
 
@@ -222,10 +215,10 @@ struct UsageView: View {
         }
     }
 
-    /// An open request, for someone who manages billing: "A member asks to raise the spend
-    /// limit.", "A member asks for Rayo."
+    /// An open request, as someone who manages billing reads it, in Android's words: "Someone
+    /// asks to raise the spend limit.", "Someone asks for Rayo."
     static func requestLine(_ r: KIFFClient.PackRequest, in u: KIFFClient.Usage?) -> String {
-        r.kind == "raise" ? "A member asks to raise the spend limit." : "A member asks for \(packLine(r.pack, in: u))."
+        r.kind == "raise" ? "Someone asks to raise the spend limit." : "Someone asks for \(packLine(r.pack, in: u))."
     }
 
     /// Open requests, for someone who manages billing.
