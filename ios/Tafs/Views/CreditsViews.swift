@@ -54,6 +54,10 @@ struct CreditsPanel: View {
         Panel {
             Eyebrow(text: Self.title)
             picker
+            // A refresh that failed keeps what was read and says why, as Android does.
+            if let why = previous ? model.previousCreditsError : model.creditsError {
+                Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+            }
             Text(c.words).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
             if let note = c.note {
