@@ -230,6 +230,18 @@ final class AppModel: ObservableObject {
     /// A go-on went through but the AI use couldn't be read after it: what `aiUse` says is
     /// from before, so Go on isn't offered again until it's read (kiff/tafs#433).
     @Published private(set) var aiUseStale = false
+    /// The credits the tafs used, read only from tafs cloud (pricing phase 1): this period and
+    /// the one before, each nil until read or where tafs cloud has no such read.
+    @Published private(set) var credits: TafsCloud.Credits?
+    @Published private(set) var previousCredits: TafsCloud.Credits?
+    /// One taf's credits and runs, by its tafs cloud id and period (`CreditsKey`).
+    @Published private(set) var tafCredits: [CreditsKey: TafsCloud.TafCredits] = [:]
+    struct CreditsKey: Hashable { let taf: String; let previous: Bool }
+    /// Why a credits read failed, in tafs cloud's words when it gives them (a 503 when KIFF
+    /// can't be read): this period's, the one before's, and a taf's runs, by key.
+    @Published private(set) var creditsError: String?
+    @Published private(set) var previousCreditsError: String?
+    @Published private(set) var tafCreditsError: [CreditsKey: String] = [:]
 
     /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
     /// midnight (kiff/tafs#96): a signed setup call, which KIFF takes from
@@ -690,7 +702,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
@@ -1044,7 +1056,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
@@ -2655,27 +2667,120 @@ final class AppModel: ObservableObject {
     func refreshUsage() async {
         switch mode {
         case .signedOut:
-            usage = nil; countedTasks = []; aiUse = nil; aiUseStale = false
+            usage = nil; countedTasks = []; aiUse = nil; aiUseStale = false; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         case .sample:
             usage = Self.sampleUsage(now: clock()); countedTasks = []; usageError = nil
             aiUse = .init(usedPct: 30, asksAtPct: 100, paused: false)
+            credits = Self.sampleCredits(now: clock())
         case .kiff:
             let gen = accountGeneration
+            // Credits are tafs cloud's: read alongside, and the tasks screen doesn't wait on them.
+            async let creditsRead = creditsResult(previous: false)
             do {
                 let read = try await kiff.usage()
                 let page = try? await kiff.countedTasks()
                 // AI use is tafs cloud's; the rest of the screen doesn't wait on it.
                 let ai = try? await cloud.aiUse()
+                let c = await creditsRead
                 guard gen == accountGeneration else { return }
+                applyCredits(c)
                 usage = read; countedTasks = page?.tasks ?? []; usageError = nil
                 // A read that failed keeps what was known, and says it's stale after a go-on.
                 if let ai { aiUse = ai; aiUseStale = false } else if !aiUseStale { aiUse = nil }
                 if let store = read.store { await purchases.load([store.soloProduct] + store.packs.map(\.appleProduct)) }
             } catch {
+                let c = await creditsRead
                 guard gen == accountGeneration else { return }
+                applyCredits(c)
                 usageError = "Usage couldn't be read: \(error.localizedDescription)"
             }
         }
+    }
+
+    /// Reads the period before's credits, the first time they're asked for.
+    func readPreviousCredits() async {
+        switch mode {
+        case .signedOut: previousCredits = nil
+        case .sample: previousCredits = Self.sampleCredits(now: clock(), previous: true)
+        case .kiff:
+            let gen = accountGeneration
+            let read = await creditsResult(previous: true)
+            guard gen == accountGeneration else { return }
+            switch read {
+            case .success(let c): previousCredits = c; previousCreditsError = nil
+            case .failure(let e): previousCreditsError = Self.creditsWords(e)
+            }
+        }
+    }
+
+    /// A credits read, kept with its failure: nil for a tafs cloud without it (404).
+    private func creditsResult(previous: Bool) async -> Result<TafsCloud.Credits?, Error> {
+        do { return .success(try await cloud.credits(previous: previous)) } catch { return .failure(error) }
+    }
+
+    /// This period's read: a tafs cloud without it shows no panel; a failure keeps what was
+    /// read, and says why in tafs cloud's words.
+    private func applyCredits(_ read: Result<TafsCloud.Credits?, Error>) {
+        switch read {
+        case .success(let c): credits = c; creditsError = nil
+        case .failure(let e): creditsError = Self.creditsWords(e)
+        }
+    }
+
+    /// Why credits couldn't be read: tafs cloud's words when it gives them.
+    static func creditsWords(_ e: Error, what: String = "Credits") -> String {
+        (e as? TafsCloud.CloudError)?.words ?? "\(what) couldn't be read: \(e.localizedDescription)"
+    }
+
+    /// Reads one taf's credits and its newest runs in a period; with `more`, the next page,
+    /// added after the runs already read.
+    func readTafCredits(_ taf: String, previous: Bool = false, more: Bool = false) async {
+        guard mode == .kiff else { return }
+        let key = CreditsKey(taf: taf, previous: previous)
+        let after = more ? tafCredits[key]?.next : nil
+        if more, after == nil { return }
+        let gen = accountGeneration
+        let read: TafsCloud.TafCredits
+        do {
+            guard let got = try await cloud.credits(taf: taf, previous: previous, after: after) else {
+                guard gen == accountGeneration else { return }
+                tafCreditsError[key] = nil
+                return
+            }
+            read = got
+        } catch {
+            guard gen == accountGeneration else { return }
+            tafCreditsError[key] = Self.creditsWords(error, what: more ? "More runs" : "Its runs")
+            return
+        }
+        guard gen == accountGeneration else { return }
+        tafCreditsError[key] = nil
+        if more, var known = tafCredits[key] {
+            let seen = Set(known.items.map(\.run))
+            known.items += read.items.filter { !seen.contains($0.run) }
+            known.next = read.next
+            tafCredits[key] = known
+        } else {
+            tafCredits[key] = read
+        }
+    }
+
+    /// The sample's credits: its tafs' words, as tafs cloud writes them.
+    static func sampleCredits(now: Date, previous: Bool = false) -> TafsCloud.Credits {
+        if previous {
+            return TafsCloud.Credits(period: nil, credits: 2310, runs: 126, words: "Last period: 2,310 credits used · 1 Oct to 31 Oct",
+                                     tafs: [.init(taf: "sample-refunds", credits: 1480, runs: 74, words: "Refunds · 1,480 credits · 74 runs"),
+                                            .init(taf: "sample-invoices", credits: 830, runs: 52, words: "Overdue invoices · 830 credits · 52 runs")],
+                                     note: "Credits will replace tasks. Nothing is charged in credits yet.")
+        }
+        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: "This period: 1,240 credits used",
+                                 tafs: [.init(taf: "sample-refunds", credits: 820, runs: 41, words: "Refunds · 820 credits · 41 runs"),
+                                        .init(taf: "sample-invoices", credits: 420, runs: 28, words: "Overdue invoices · 420 credits · 28 runs")],
+                                 notCounted: .init(runs: 9, words: "Not counted: 9 runs",
+                                                   lines: [.init(why: "coach", runs: 6, words: "Coach, within its fair use · 6 runs"),
+                                                           .init(why: "trial", runs: 2, words: "Trials of a new version · 2 runs"),
+                                                           .init(why: "failed", runs: 1, words: "Failed on our side · 1 run")]),
+                                 note: "Credits will replace tasks. Nothing is charged in credits yet.")
     }
 
     /// The plan as KIFF says it, with no counted tasks or AI use (Plan & usage reads those): a
