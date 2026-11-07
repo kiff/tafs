@@ -243,7 +243,10 @@ one its request opens by. Where a run came from is said as the request view says
 schedule", "From its chat", "By email", "Run now".
 
 **In the apps:** a **Credits** panel in Plan & usage, above the tasks: the period's `words`, each
-taf's row, Coach's row when there is one, then `not_counted` and `note`. A taf's row opens its runs
+taf's row, Coach's row when there is one, then `not_counted` and `note`. The period's numbers are the
+account's, as the tasks are, but a taf the person doesn't use or oversee isn't named: it goes on the one
+row with `taf: null`, "Other tafs" (or "Removed tafs" when that's all it holds), which doesn't open. A
+taf's list holds the person's own runs, and everyone's on a taf they manage. A taf's row opens its runs
 (the second read), and a run's row opens its request while `opens` is true; otherwise it doesn't
 open. A 404 from a tafs cloud from before this shows no panel, so the apps and tafs cloud can ship
 in any order.

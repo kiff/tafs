@@ -29,9 +29,14 @@ const DOOR: Record<string, string> = { email: "email", whatsapp: "WhatsApp", sla
 
 /** Where a run came from, in words. */
 export function fromOf(r: Run): string {
-  if (r.requester?.kind === "door" || (r.source && DOOR[r.source])) return `By ${DOOR[r.source ?? ""] ?? "its door"}`;
-  if (r.trigger === "schedule" || r.trigger === "cron") return "Its schedule";
-  if (r.requester?.kind === "member") return "From its chat";
+  return fromWords(r.trigger, r.source, r.requester?.kind);
+}
+
+/** Where a run came from, in words, from what started it: its trigger, its source and who asked. */
+export function fromWords(trigger: string | undefined, source: string | undefined, requesterKind: string | undefined): string {
+  if (requesterKind === "door" || (source && DOOR[source])) return `By ${DOOR[source ?? ""] ?? "its door"}`;
+  if (trigger === "schedule" || trigger === "cron") return "Its schedule";
+  if (requesterKind === "member") return "From its chat";
   return "Run now";
 }
 
