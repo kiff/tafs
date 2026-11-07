@@ -240,7 +240,24 @@ and `openCreditsRun` in `AppModel`); on iPhone and iPad, `CreditsViews.swift`
 - **A door's message, or an app's event,** is kept for 48 hours, the door's replay window, and runs
   when the tafs go on, oldest first. The door sends nothing by itself meanwhile: no words go out in
   the business's name. One still waiting after 48 hours doesn't run, and the taf's screen says it
-  went unanswered.
+  went unanswered (`runtime/src/cloud/doors/hold.ts`):
+  - **Kept:** a key's message refused for credits (kiff/agents' 409 `credits_used_up`,
+    `limit_reached` or `no_plan`) answers its door's webhook `{"outcome": "held"}`, and an app's
+    event answers 202 `{"outcome": "held"}`. Each is kept on its own, under its taf's list, in the
+    order it came; an event delivered again is kept once. One that comes while any of its taf's
+    wait goes behind them, even once the tafs go on. A refusal for anything else is the
+    provider's to send again, as before.
+  - **Run:** the sweep, and each new arrival, tries the account's kept items oldest first, across
+    its tafs, until kiff/agents refuses for credits again. Each runs as it would have: a message in
+    its sender's chat, answered by its door once the run ends; an event as its wake's run. One
+    whose door closed, whose sender was unpaired, or whose event is no longer approved meanwhile
+    is dropped, unsaid: the owner chose that.
+  - **Unanswered after 48 hours:** its door's stop on the taf's dial (`GET /v1/tafs/{id}/knob`),
+    or its event's, adds "· 1 message went unanswered while your tafs waited for credits"
+    ("2 messages", "1 event"…) for 7 days, in tafs cloud's words, so no app change. The people who
+    answer the taf's holds are told once, by push, titled with the taf's name: "A message by email
+    from Ben went unanswered: your tafs waited for credits for 48 hours.", or "An event from
+    HubSpot · new deal went unanswered: …". It opens the taf.
 - **Coach within its fair use doesn't wait** while a plan runs. Past it, Coach waits as the tafs do.
 
 **Warnings,** each once a period, by push to the people who manage billing (`billing.manage`) and

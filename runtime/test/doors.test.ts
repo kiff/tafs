@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { AgentsError, type Run } from "../src/cloud/agents.js";
-import { type Deps, handle, type HTTPEvent, sweepReplies, type Taf } from "../src/cloud/handler.js";
+import { type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
@@ -1390,5 +1390,124 @@ describe("a door's reply (kiff/agents#363)", () => {
       .toBe("Escrito por un agente de IA para Acme.\n\nHecho: te hemos devuelto 42,00 EUR del pedido 1043.");
     expect(replyText(taf, ran("Refunded the duplicate on order 4471."), { attachments: 1 }))
       .toBe("Written by an AI agent for Acme.\n\nRefunded the duplicate on order 4471.\n\nI read only the text of your message; I didn't open its attachment.");
+  });
+});
+
+describe("while the account's tafs wait for credits", () => {
+  const wakes = (w: World) => {
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+  };
+  // In the order they started: kiff/agents' list is newest first.
+  const started = (w: World) => w.agents.runs.filter((r) => r.agent === REFUNDS).reverse()
+    .map((r) => (w.agents.events.get(r.session)![0]!.body as { text: string }).text);
+
+  it("keeps a door's message and an app's event, sends nothing back, and runs them oldest first once the tafs go on", async () => {
+    const w = world();
+    await emailDoor(w);
+    await pairBen(w);
+    wakes(w);
+    w.agents.credits.set("t_acme", "credits_used_up");
+    expect((await emailHook(w, mail(w, { from: BEN, text: "First: refund order 1." }))).body).toEqual({ outcome: "held" });
+    w.at(new Date(NOW.getTime() + 60_000));
+    expect((await appEvent(w, { id: "ev_held1", payload: { deal: "Second" } })).body).toEqual({ outcome: "held" });
+    // The same event again is kept once.
+    expect((await appEvent(w, { id: "ev_held1", payload: { deal: "Second" } })).body).toEqual({ outcome: "held" });
+    w.at(new Date(NOW.getTime() + 120_000));
+    expect((await emailHook(w, mail(w, { from: BEN, text: "Third: refund order 3." }))).body).toEqual({ outcome: "held" });
+    // No run, and nothing in the business's name: no reply, no alert.
+    expect(w.agents.runs.filter((r) => r.agent === REFUNDS)).toHaveLength(0);
+    expect(w.outbox).toHaveLength(0);
+    expect(w.pushed).toHaveLength(0);
+    // Still waiting: the sweep tries the oldest, and stops at the refusal.
+    w.at(new Date(NOW.getTime() + 3600_000));
+    const tries = w.agents.calls.filter((c) => c.startsWith("startRun")).length;
+    expect(await sweepHeld(depsOf(w))).toEqual([{ tenant: "t_acme", started: 0, unanswered: 0, waiting: true }]);
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun")).length).toBe(tries + 1);
+    // The tafs go on: all three run, in the order they came, the door's in its chat.
+    w.agents.credits.delete("t_acme");
+    expect(await sweepHeld(depsOf(w))).toEqual([{ tenant: "t_acme", started: 3, unanswered: 0, waiting: false }]);
+    const texts = started(w);
+    expect(texts).toHaveLength(3);
+    expect(texts[0]).toContain("First: refund order 1.");
+    expect(texts[1]).toContain('"deal":"Second"');
+    expect(texts[2]).toContain("Third: refund order 3.");
+    expect(w.agents.runs.find((r) => r.agent === REFUNDS)!.source).toBe("email");
+    // Nothing waits any more: the next sweep starts nothing again.
+    expect(await sweepHeld(depsOf(w))).toEqual([]);
+    // The door's answer goes back as any run's does.
+    const first = w.agents.runs.filter((r) => r.agent === REFUNDS).find((r) => (w.agents.events.get(r.session)![0]!.body as { text: string }).text.includes("First"))!;
+    await finish(w, first, "Refunded order 1.");
+    expect(w.outbox).toHaveLength(1);
+  });
+
+  it("a message that comes once the tafs go on waits behind those kept before it", async () => {
+    const w = world();
+    await emailDoor(w);
+    await pairBen(w);
+    w.agents.credits.set("t_acme", "limit_reached");
+    await emailHook(w, mail(w, { from: BEN, text: "Older message." }));
+    w.agents.credits.delete("t_acme");
+    w.at(new Date(NOW.getTime() + 60_000));
+    expect((await emailHook(w, mail(w, { from: BEN, text: "Newer message." }))).body).toEqual({ outcome: "held" });
+    const texts = started(w);
+    expect(texts).toHaveLength(2);
+    expect(texts[0]).toContain("Older message.");
+    expect(texts[1]).toContain("Newer message.");
+  });
+
+  it("one still waiting after 48 hours doesn't run: the dial says it went unanswered for 7 days, and the phones that answer holds are told once", async () => {
+    const w = world();
+    await emailDoor(w);
+    await pairBen(w);
+    wakes(w);
+    w.agents.credits.set("t_acme", "no_plan");
+    await emailHook(w, mail(w, { from: BEN, text: "Refund order 9." }));
+    await appEvent(w, { id: "ev_late" });
+    w.at(new Date(NOW.getTime() + 47 * 3600_000));
+    expect(await sweepHeld(depsOf(w))).toEqual([{ tenant: "t_acme", started: 0, unanswered: 0, waiting: true }]);
+    w.at(new Date(NOW.getTime() + 48 * 3600_000));
+    w.agents.credits.delete("t_acme");
+    expect(await sweepHeld(depsOf(w))).toEqual([{ tenant: "t_acme", started: 0, unanswered: 2, waiting: false }]);
+    expect(w.agents.runs.filter((r) => r.agent === REFUNDS)).toHaveLength(0);
+    // Told once each, to the phones of the people who answer holds only.
+    expect(w.pushed.map((p) => [p.token, (p.payload.aps as { alert: { body: string } }).alert.body])).toEqual([
+      ["phone1", "A message by email from Ben went unanswered: your tafs waited for credits for 48 hours."],
+      ["phone1", "An event from HubSpot · new deal went unanswered: your tafs waited for credits for 48 hours."],
+    ]);
+    expect(w.pushed[0]!.payload).toMatchObject({ open: "taf", taf_id: REFUNDS });
+    expect(await sweepHeld(depsOf(w))).toEqual([]);
+    expect(w.pushed).toHaveLength(2);
+    // The taf's dial says so on the door's stop, in tafs cloud's words (an event's stop: knob.test.ts).
+    const knob = await send(w, "GET", `/v1/tafs/${REFUNDS}/knob`, { token: "ana" });
+    const stops = knob.body.wakes as Array<{ kind: string; words: string }>;
+    expect(stops.find((s) => s.kind === "door")!.words).toMatch(/ · 1 message went unanswered while your tafs waited for credits$/);
+    // A week on, the dial no longer says it.
+    w.at(new Date(NOW.getTime() + (48 + 7 * 24) * 3600_000));
+    const later = await send(w, "GET", `/v1/tafs/${REFUNDS}/knob`, { token: "ana" });
+    expect((later.body.wakes as Array<{ words: string }>).some((s) => s.words.includes("unanswered"))).toBe(false);
+  });
+
+  it("a kept message whose door closed, or whose sender was unpaired, meanwhile is dropped unsaid", async () => {
+    const w = world();
+    await emailDoor(w);
+    await pairBen(w);
+    w.agents.credits.set("t_acme", "credits_used_up");
+    await emailHook(w, mail(w, { from: BEN, text: "Refund order 5." }));
+    expect((await send(w, "DELETE", `/v1/tafs/${REFUNDS}/doors/email/keys/ben%40partner.example`, { token: "ana" })).status).toBe(200);
+    w.agents.credits.delete("t_acme");
+    expect(await sweepHeld(depsOf(w))).toEqual([]);
+    expect(w.agents.runs.filter((r) => r.agent === REFUNDS)).toHaveLength(0);
+    expect(w.pushed).toHaveLength(0);
+  });
+
+  it("a refusal for anything else is the provider's to send again, as before", async () => {
+    const w = world();
+    await emailDoor(w);
+    await pairBen(w);
+    w.agents.fail.set("startRun", new AgentsError(503, "unavailable"));
+    const id = mail(w, { from: BEN });
+    expect((await emailHook(w, id)).status).toBe(502);
+    expect((await emailHook(w, id)).body).toEqual({ outcome: "run" });
   });
 });

@@ -215,6 +215,12 @@ export const doorKeys = {
   /** An app's event that answered a run's wait, by planque's event id: a delivery repeated answers the same, and starts no run. */
   answeredEvent: (tenant: string, id: string) => `${tenant}#app-event-answered#${id}`,
   bound: (tenant: string) => `${tenant}#door-ai`,
+  /** A taf's door messages and app events waiting for credits, in the order they came (hold.ts): ids only. */
+  held: (tenant: string, taf: string) => `${tenant}#door-held#${taf}`,
+  /** One held item: the message or event itself, kept apart, as one can be 40,000 characters. */
+  heldItem: (tenant: string, id: string) => `${tenant}#door-held-item#${id}`,
+  /** A taf's held items that went unanswered in the last 7 days, for its dial. */
+  unanswered: (tenant: string, taf: string) => `${tenant}#door-unanswered#${taf}`,
 };
 
 /** A WhatsApp number's business token, in the secret store. */
