@@ -102,12 +102,15 @@ function day(at: Date, zone: string): string {
   }
 }
 
-/** The period's line: "This period: 1,240 credits used · ends on 1 Dec", or the last one's dates. */
+/**
+ * The period's line, with its last day, never its exclusive end: "This period: 1,240 credits used ·
+ * ends on 30 Nov", or the last one's first and last days.
+ */
 export function periodWords(k: Pick<KIFFCredits, "period" | "current" | "credits">, zone: string): string {
-  const start = new Date(k.period.start), end = new Date(k.period.end);
+  const start = new Date(k.period.start), last = new Date(new Date(k.period.end).getTime() - 1);
   const used = k.credits > 0 ? `${credits(k.credits)} used` : k.current ? "no credits used yet" : "no credits used";
-  if (k.current) return `This period: ${used} · ends on ${day(end, zone)}`;
-  return `Last period: ${used} · ${day(start, zone)} to ${day(new Date(end.getTime() - 1), zone)}`;
+  if (k.current) return `This period: ${used} · ends on ${day(last, zone)}`;
+  return `Last period: ${used} · ${day(start, zone)} to ${day(last, zone)}`;
 }
 
 /** Why runs weren't counted, in words, in the order they're shown. */

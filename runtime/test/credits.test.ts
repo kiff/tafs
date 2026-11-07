@@ -29,22 +29,24 @@ const tafs = [
 
 describe("the period's credits, in words", () => {
   it("says what the period used and when it ends, or the last one's dates", () => {
-    expect(periodWords({ period: NOV, current: true, credits: 1240 }, "UTC")).toBe("This period: 1,240 credits used · ends on 1 Dec");
-    expect(periodWords({ period: NOV, current: true, credits: 0 }, "UTC")).toBe("This period: no credits used yet · ends on 1 Dec");
+    expect(periodWords({ period: NOV, current: true, credits: 1240 }, "UTC")).toBe("This period: 1,240 credits used · ends on 30 Nov");
+    expect(periodWords({ period: NOV, current: true, credits: 0 }, "UTC")).toBe("This period: no credits used yet · ends on 30 Nov");
     expect(periodWords({ period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" }, current: false, credits: 1 }, "UTC"))
       .toBe("Last period: 1 credit used · 1 Oct to 31 Oct");
     expect(periodWords({ period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" }, current: false, credits: 0 }, "UTC"))
       .toBe("Last period: no credits used · 1 Oct to 31 Oct");
-    // In the account's zone.
+    // In the account's zone: November in Madrid ends on 30 Nov, though it ends at 23:00 UTC.
     expect(periodWords({ period: { start: "2026-10-31T23:00:00Z", end: "2026-11-30T23:00:00Z" }, current: true, credits: 5 }, "Europe/Madrid"))
-      .toBe("This period: 5 credits used · ends on 1 Dec");
+      .toBe("This period: 5 credits used · ends on 30 Nov");
+    expect(periodWords({ period: { start: "2026-10-31T23:00:00Z", end: "2026-11-30T23:00:00Z" }, current: true, credits: 5 }, "UTC"))
+      .toBe("This period: 5 credits used · ends on 30 Nov");
   });
 
   it("names each taf that used credits, most first, Coach past its fair use, and what wasn't counted", () => {
     expect(creditsView(kiffCredits(), tafs, "UTC")).toEqual({
       period: { ...NOV, current: true },
       credits: 1240, runs: 61,
-      words: "This period: 1,240 credits used · ends on 1 Dec",
+      words: "This period: 1,240 credits used · ends on 30 Nov",
       tafs: [
         { taf: REFUNDS, credits: 820, runs: 41, words: "Refunds · 820 credits · 41 runs" },
         { taf: CHARGEBACKS, credits: 374, runs: 18, words: "Chargebacks · 374 credits · 18 runs" },
@@ -135,7 +137,7 @@ describe("a run, in words", () => {
 });
 
 /** KIFF as the routes read it: who the token is, what they may use, and the credits reads. */
-function kiff(opts: { credits?: object; status?: number; runs?: object; asked?: string[] } = {}) {
+function kiff(opts: { credits?: object; status?: number; accessStatus?: number; runs?: object; asked?: string[] } = {}) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     if (token !== "ana") return new Response("{}", { status: 401 });
@@ -143,6 +145,7 @@ function kiff(opts: { credits?: object; status?: number; runs?: object; asked?: 
     opts.asked?.push(u.pathname + u.search);
     if (u.pathname === "/v1/me") return new Response(JSON.stringify(ME), { status: 200 });
     if (u.pathname === "/v1/me/access") {
+      if (opts.accessStatus) return new Response("{}", { status: opts.accessStatus });
       return new Response(JSON.stringify({ agents: { "agt-refunds": { use: true }, "agt-chargebacks": { oversee: true } } }), { status: 200 });
     }
     if (u.pathname === "/v1/me/usage/credits") {
@@ -185,7 +188,7 @@ describe("GET /v1/usage/credits", () => {
     const credits = kiffCredits({ by_agent: [...kiffCredits().by_agent, { agent: "agt-hidden", runtime_agent: HIDDEN, credits: 9, runs: 1 }] });
     const r = await get(world(kiff({ credits })), "/v1/usage/credits");
     expect(r.status).toBe(200);
-    expect(r.body.words).toBe("This period: 1,240 credits used · ends on 1 Dec");
+    expect(r.body.words).toBe("This period: 1,240 credits used · ends on 30 Nov");
     expect(r.body.tafs.map((t: { taf: string | null }) => t.taf)).toEqual([REFUNDS, CHARGEBACKS, null]);
     expect(r.body.tafs[2].words).toBe("Other tafs · 9 credits · 1 run");
     expect(JSON.stringify(r.body)).not.toContain("Payroll");
@@ -200,6 +203,14 @@ describe("GET /v1/usage/credits", () => {
   it("answers 503 with words when KIFF can't be read", async () => {
     for (const status of [500, 503, 404]) {
       const r = await get(world(kiff({ status })), "/v1/usage/credits");
+      expect(r.status).toBe(503);
+      expect(r.body.words).toBe(UNREADABLE);
+    }
+  });
+
+  it("answers the same 503 when what the person may use can't be read, on both reads", async () => {
+    for (const path of ["/v1/usage/credits", `/v1/usage/credits/tafs/${REFUNDS}`]) {
+      const r = await get(world(kiff({ accessStatus: 502 })), path);
       expect(r.status).toBe(503);
       expect(r.body.words).toBe(UNREADABLE);
     }

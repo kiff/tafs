@@ -195,7 +195,7 @@ their order. `GET /v1/usage/credits` is the period:
   "period": { "start": "2026-11-01T00:00:00Z", "end": "2026-12-01T00:00:00Z", "current": true },
   "credits": 1240,
   "runs": 61,
-  "words": "This period: 1,240 credits used · ends on 1 Dec",
+  "words": "This period: 1,240 credits used · ends on 30 Nov",
   "tafs": [
     { "taf": "taf-3f9a1c0b7d2e4a6f8b91", "credits": 820, "runs": 41, "words": "Refunds · 820 credits · 41 runs" },
     { "taf": "taf-0b7c2e9d4a1f6e3b8c50", "credits": 374, "runs": 18, "words": "Chargebacks · 374 credits · 18 runs" }
@@ -215,7 +215,7 @@ their order. `GET /v1/usage/credits` is the period:
 ```
 
 The period before reads "Last period: 980 credits used · 1 Oct to 31 Oct", and one with nothing
-used "This period: no credits used yet · ends on 1 Dec". `GET /v1/usage/credits/tafs/{id}` is one
+used "This period: no credits used yet · ends on 30 Nov". `GET /v1/usage/credits/tafs/{id}` is one
 taf's runs, newest first:
 
 ```json
