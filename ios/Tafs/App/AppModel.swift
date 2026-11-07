@@ -5434,7 +5434,8 @@ final class AppModel: ObservableObject {
         return (groups, others)
     }
 
-    /// The taf a connection was set up for, by name; nil once that taf was removed.
+    /// The taf a connection was set up for, by name; nil when this app can't name it: removed,
+    /// one this person doesn't see, or an agent that isn't a taf. Never proof it was removed.
     func tafOf(_ grant: PlanqueClient.Grant) -> String? {
         guard let t = holderIDs[grant.request.agent].flatMap({ taf($0) }), t.state != .revoked else { return nil }
         return t.name
