@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
+import { CreditsError, type CreditsView, creditsView, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
@@ -54,6 +55,8 @@ import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, 
  *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards
  *   GET  /v1/events                     halts, resumes, door events and Coach's drives, newest first, for Activity (kiff/tafs#236)
  *   GET  /v1/usage/ai                   the period's AI use against its bound (kiff/tafs#193)
+ *   GET  /v1/usage/credits              the period's credits, read-only, in words (docs/accounts.md, "Credits")
+ *   GET  /v1/usage/credits/tafs/{id}    one taf's runs in the period and their credits, a page at a time
  *   POST /v1/account/delete             erase what tafs cloud and kiff/agents keep for the account (kiff/tafs#185)
  *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
  *   POST /v1/coach/drive                start the person's drive for one request, signed with the approval key (kiff/tafs#544, docs/drive.md)
@@ -608,6 +611,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     throw new HTTPError(503, words, { words });
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
+  if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 3) return usageCredits(event, await person(event, deps), deps);
+  if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 5 && parts[3] === "tafs") {
+    return tafCredits(event, await person(event, deps), parts[4] ?? "", deps);
+  }
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
   if (parts.length === 3 && parts[1] === "me" && parts[2] === "suggestions" && (method === "GET" || method === "PUT")) {
@@ -5267,6 +5274,52 @@ async function aiUsage(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   const canGoOn = me.capabilities.includes("billing.manage"), zone = me.timeZone ?? "UTC";
   if (!plan || base(plan) <= 0) return aiView(plan, 0, canGoOn, zone);
   return aiView(plan, await agentsCall(() => deps.agents.aiSpent(me.tenantID, periodName(plan.start))), canGoOn, zone);
+}
+
+/**
+ * GET /v1/usage/credits: the period's credits, read-only, from KIFF with the person's session
+ * (docs/accounts.md, "Credits"). Each taf that used credits is named as the person may see it: a taf
+ * they don't use or oversee, and one removed since, go on the one row that doesn't open.
+ */
+async function usageCredits(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<CreditsView> {
+  const token = bearer(event), previous = new URLSearchParams(event.rawQueryString ?? "").get("period") === "previous";
+  const [k, records, access] = await Promise.all([
+    creditsRead(() => readCredits(token, previous, deps.fetch, deps.kiffBase)),
+    deps.tafs.list(me.tenantID),
+    creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase)),
+  ]);
+  const tafs = records.filter((t) => t.job !== SETUP_JOB)
+    .map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, opens: !t.removing && listable(access, t.kiffAgent) }));
+  return creditsView(k, tafs, me.timeZone ?? "UTC");
+}
+
+/**
+ * GET /v1/usage/credits/tafs/{id}: one taf's runs in the period, newest first, a page at a time
+ * (?after= with the page before's next), each in words and whether it opens its request. KIFF
+ * gives the person's own runs, and everyone's on a taf they manage. 404 for a taf they can't see.
+ */
+async function tafCredits(event: HTTPEvent, me: KIFFIdentity, id: string, deps: Deps): Promise<TafCreditsView> {
+  const taf = await owned(me, id, deps);
+  const token = bearer(event), q = new URLSearchParams(event.rawQueryString ?? "");
+  if (!listable(await creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase)), taf.kiffAgent)) throw new HTTPError(404, "no such taf");
+  const previous = q.get("period") === "previous", after = q.get("after") ?? "";
+  const [k, page] = await Promise.all([
+    creditsRead(() => readCredits(token, previous, deps.fetch, deps.kiffBase)),
+    creditsRead(() => readCreditRuns(token, taf.id, previous, after, deps.fetch, deps.kiffBase)),
+  ]);
+  return tafCreditsView(k, page, { id: taf.id, name: taf.name, kiffAgent: taf.kiffAgent, opens: true }, deps.now?.() ?? new Date());
+}
+
+/**
+ * A read of KIFF for the credits, its credits or what the person may use: one that failed answers
+ * 503 with words the apps show as they are. A sign-in KIFF refuses stays the person's to fix.
+ */
+async function creditsRead<T>(work: () => Promise<T>): Promise<T> {
+  try { return await work(); } catch (err) {
+    if (err instanceof CreditsError) throw new HTTPError(err.status, err.message, { words: err.message });
+    if (err instanceof KIFFError && err.status === 401) throw err;
+    throw new HTTPError(503, UNREADABLE, { words: UNREADABLE });
+  }
 }
 
 /** A kiff/agents call a route depends on: its 404 is the taf's, anything else says the runtime didn't answer. */
