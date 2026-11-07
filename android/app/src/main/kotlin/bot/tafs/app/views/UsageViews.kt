@@ -69,6 +69,8 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
   UsageFrame(UsageWords.TITLE, onClose) {
     val usage = state.usage
     val why = state.usageError
+    // Credits above the tasks, read-only until they replace them; tafs cloud's, so shown whether or not KIFF's tasks were read.
+    if (read) CreditsPanel(state, actions)
     if (read && usage != null) {
       TasksPanel(usage)
       UsageWords.notice(usage)?.let { notice ->
@@ -228,6 +230,78 @@ private fun PurchaseNoteLine(state: AppState, at: String, actions: AccountAction
       style = scaled(14, FontWeight.SemiBold, Theme.amberText),
       modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 10.dp),
     )
+  }
+}
+
+/**
+ * The credits the runs used (docs/accounts.md#credits), every line in tafs cloud's words as they are: the period, each taf's row,
+ * which opens its runs, Coach's past its fair use, what wasn't counted, and the note. Nothing from a tafs cloud from before credits.
+ */
+@Composable
+private fun CreditsPanel(state: AppState, actions: AccountActions) {
+  val credits = state.credits
+  val why = state.creditsError
+  if (state.mode != Mode.kiff || (credits == null && why == null)) return
+  val scope = rememberCoroutineScope()
+  Panel {
+    Eyebrow(UsageWords.CREDITS)
+    credits?.let { c ->
+      Text(c.words, style = scaled(17, FontWeight.SemiBold, Theme.ink))
+      c.tafs.forEach { row ->
+        // The row for tafs removed since has no taf, and doesn't open.
+        val taf = row.taf
+        Row(
+          Modifier.fillMaxWidth().heightIn(min = 44.dp).then(if (taf != null) Modifier.clickable { scope.launch { actions.openTafCredits(taf) } } else Modifier),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Text(row.words, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
+          if (taf != null) Text("›", style = scaled(20, color = Theme.dim))
+        }
+      }
+      c.coach?.let { Text(it.words, style = scaled(15, color = Theme.ink)) }
+      c.notCounted?.let { n ->
+        Text(n.words, style = scaled(14, FontWeight.SemiBold, Theme.soft))
+        n.lines.forEach { Text(it.words, style = scaled(14, color = Theme.soft)) }
+      }
+      c.note?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+    }
+    why?.let { Text(it, style = scaled(14, color = Theme.no)) }
+    // The other period: the one before, or back to this one.
+    val previous = state.creditsPrevious
+    Text(
+      if (previous) UsageWords.THIS_PERIOD else UsageWords.LAST_PERIOD,
+      style = scaled(15, FontWeight.SemiBold, if (state.readingCredits) Theme.dim else Theme.amberText),
+      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !state.readingCredits) { scope.launch { actions.showCreditsPeriod(!previous) } }.padding(vertical = 10.dp),
+    )
+  }
+}
+
+/** One taf's runs and their credits, newest first, from its Credits row: each opens its request while tafs cloud says it can. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreditsRunsSheet(open: bot.tafs.app.kiff.TafCredits, state: AppState, actions: AccountActions, onClose: () -> Unit) {
+  val scope = rememberCoroutineScope()
+  UsageFrame(state.tafs.firstOrNull { it.cloudId == open.taf }?.name ?: UsageWords.CREDITS, onClose) {
+    Panel { Text(open.words, style = scaled(17, FontWeight.SemiBold, Theme.ink)) }
+    if (open.items.isNotEmpty()) Panel {
+      open.items.forEach { run ->
+        Row(
+          Modifier.fillMaxWidth().heightIn(min = 48.dp).then(if (run.opens) Modifier.clickable { scope.launch { actions.openCreditsRun(open.taf, run.run) } } else Modifier),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(run.words, style = scaled(15, color = if (run.counted) Theme.ink else Theme.soft))
+            Text(shortTime(run.at), style = scaled(12, color = Theme.dim))
+          }
+          if (run.opens) Text("›", style = scaled(20, color = Theme.dim))
+        }
+      }
+    }
+    if (open.next != null) {
+      OutlineButton(if (state.readingCredits) "Reading…" else UsageWords.MORE_RUNS, { scope.launch { actions.moreTafCredits() } }, Modifier.fillMaxWidth(), enabled = !state.readingCredits)
+    }
+    state.tafCreditsError?.let { Text(it, style = scaled(14, color = Theme.no)) }
+    state.requestError?.let { Text(it, style = scaled(14, color = Theme.no)) }
   }
 }
 

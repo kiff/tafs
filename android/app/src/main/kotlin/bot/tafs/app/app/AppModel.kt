@@ -287,6 +287,17 @@ data class AppState(
   val aiUseStale: Boolean = false,
   /** Read it again is on its way. */
   val readingAIUse: Boolean = false,
+  /**
+   * The credits the runs used (docs/accounts.md#credits), read with Plan & usage: null until read, and from a tafs cloud from
+   * before credits. [creditsPrevious] shows the period before. And why they couldn't be read, in tafs cloud's words where it sends some.
+   */
+  val credits: bot.tafs.app.kiff.Credits? = null,
+  val creditsPrevious: Boolean = false,
+  val creditsError: String? = null,
+  /** One taf's runs, open from its Credits row, the pages read so far; why they couldn't be read; and More on its way. */
+  val tafCredits: bot.tafs.app.kiff.TafCredits? = null,
+  val tafCreditsError: String? = null,
+  val readingCredits: Boolean = false,
   /** What this person may do with each KIFF agent, as KIFF says; empty until read, and then nothing is shown that needs it. */
   val access: Map<String, Access> = emptyMap(),
   /** Each taf's versions, oldest first, as tafs cloud keeps them; and why one couldn't be loaded or installed. */
@@ -6186,7 +6197,7 @@ class AppModel(
 
   suspend fun refreshUsage() {
     when (_state.value.mode) {
-      Mode.signedOut -> _state.update { it.copy(usage = null, countedTasks = emptyList(), aiUse = null) }
+      Mode.signedOut -> _state.update { it.copy(usage = null, countedTasks = emptyList(), aiUse = null, credits = null, creditsError = null, tafCredits = null) }
       Mode.sample -> {
         val now = clock()
         _state.update { it.copy(usage = sampleUsage(now), countedTasks = emptyList(), usageError = null, aiUse = AIUse(30, 100, false)) }
@@ -6210,8 +6221,82 @@ class AppModel(
         } catch (e: Exception) {
           if (generation == accountGeneration) _state.update { it.copy(usageError = "Usage couldn't be read. ${ErrorWords.of(e)}") }
         }
+        // Credits are tafs cloud's, beside KIFF's tasks: read whether or not the tasks were.
+        readCredits(_state.value.creditsPrevious)
       }
     }
+  }
+
+  /** Shows this period's credits, or the period before's with [previous]. */
+  suspend fun showCreditsPeriod(previous: Boolean) {
+    if (_state.value.mode != Mode.kiff) return
+    readCredits(previous)
+  }
+
+  private suspend fun readCredits(previous: Boolean) {
+    val generation = accountGeneration
+    _state.update { it.copy(readingCredits = true) }
+    try {
+      val read = cloud.credits(previous)
+      if (generation == accountGeneration) _state.update { it.copy(credits = read, creditsPrevious = previous, creditsError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // tafs cloud's words when it can't read KIFF (503); what was shown stays, said as not read now.
+      if (generation == accountGeneration) _state.update { it.copy(creditsError = (e as? CloudError)?.words ?: "Credits couldn't be read. ${ErrorWords.of(e)}") }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(readingCredits = false) }
+    }
+  }
+
+  /** Opens one taf's runs in the period shown, from its Credits row ([taf] is tafs cloud's id for it). */
+  suspend fun openTafCredits(taf: String) {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    _state.update { it.copy(tafCreditsError = null, requestError = null) }
+    try {
+      val read = cloud.tafCredits(taf, _state.value.creditsPrevious) ?: return
+      if (generation == accountGeneration) _state.update { it.copy(tafCredits = read) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(tafCreditsError = (e as? CloudError)?.words ?: "Its runs couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
+  /** The next page of the open taf's runs, after the last one read. */
+  suspend fun moreTafCredits() {
+    val open = _state.value.tafCredits ?: return
+    val after = open.next ?: return
+    if (_state.value.readingCredits) return
+    val generation = accountGeneration
+    _state.update { it.copy(readingCredits = true, tafCreditsError = null) }
+    try {
+      val page = cloud.tafCredits(open.taf, !open.period.current, after) ?: return
+      if (generation == accountGeneration) _state.update {
+        // Only onto the list it follows: one closed or opened again since keeps its own.
+        if (it.tafCredits?.taf != open.taf || it.tafCredits.next != after) it
+        else it.copy(tafCredits = page.copy(items = it.tafCredits.items + page.items.filter { r -> it.tafCredits.items.none { o -> o.run == r.run } }))
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(tafCreditsError = (e as? CloudError)?.words ?: "More runs couldn't be read. ${ErrorWords.of(e)}") }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(readingCredits = false) }
+    }
+  }
+
+  fun closeTafCredits() = _state.update { it.copy(tafCredits = null, tafCreditsError = null) }
+
+  /** Opens a run's request from its Credits row, on the taf tafs cloud names by its own id. */
+  suspend fun openCreditsRun(taf: String, run: String) {
+    val tafId = _state.value.tafs.firstOrNull { it.cloudId == taf }?.id
+    if (tafId == null) {
+      _state.update { it.copy(requestError = "That request couldn't be read: its taf isn't on this phone.") }
+      return
+    }
+    openRequest(tafId, run)
   }
 
   /** The plan as KIFF says it, with no counted tasks or AI use (Plan & usage reads those): a failure leaves what was read. */
