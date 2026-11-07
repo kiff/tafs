@@ -17,11 +17,19 @@ struct CreditsPanel: View {
             Panel {
                 Eyebrow(text: Self.title)
                 picker
-                if previousRead {
+                if let why = model.previousCreditsError {
+                    Text(why).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                } else if previousRead {
                     Text(Self.unread).scaledFont(14).foregroundColor(Theme.soft)
                 } else {
                     ProgressView().frame(maxWidth: .infinity, alignment: .leading)
                 }
+            }
+        } else if let why = model.creditsError {
+            // This period couldn't be read: tafs cloud's words (a 503 when KIFF can't be read).
+            Panel {
+                Eyebrow(text: Self.title)
+                Text(why).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
         } else {
             EmptyView()
@@ -30,8 +38,8 @@ struct CreditsPanel: View {
 
     private var picker: some View {
         Picker(Self.title, selection: $previous) {
-            Text(Self.thisPeriod).tag(false)
             Text(Self.lastPeriod).tag(true)
+            Text(Self.thisPeriod).tag(false)
         }
         .pickerStyle(.segmented)
         .task(id: previous) {
@@ -108,10 +116,13 @@ struct TafCreditsView: View {
                                 Button(Self.more) { Task { await model.readTafCredits(taf, previous: previous, more: true) } }
                                     .buttonStyle(OutlineButtonStyle())
                             }
+                            if let why = model.tafCreditsError[key] {
+                                Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                 } else if read {
-                    Panel { Text(Self.unread).scaledFont(14).foregroundColor(Theme.soft) }
+                    Panel { Text(model.tafCreditsError[key] ?? Self.unread).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                 } else {
                     Panel { ProgressView().frame(maxWidth: .infinity, alignment: .leading) }
                 }
@@ -127,7 +138,7 @@ struct TafCreditsView: View {
         .refreshable { await model.readTafCredits(taf, previous: previous) }
     }
 
-    static let more = "Earlier runs"
+    static let more = "More runs"
     static let unread = "These runs couldn't be read. Pull to try again."
 }
 

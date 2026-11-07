@@ -89,9 +89,18 @@ final class CreditsTests: XCTestCase {
         StubProtocol.responses["GET /v1/usage/credits"] = (200, Self.period)
         await model.refreshUsage()
         XCTAssertNotNil(model.credits)
-        StubProtocol.responses["GET /v1/usage/credits"] = (503, #"{"error":"down"}"#)
+        StubProtocol.responses["GET /v1/usage/credits"] = (503, #"{"error":"kiff unavailable","words":"Credits can't be read right now. Try again in a minute."}"#)
         await model.refreshUsage()
         XCTAssertEqual(model.credits?.credits, 1240, "a failed read keeps what was read")
+        XCTAssertEqual(model.creditsError, "Credits can't be read right now. Try again in a minute.", "tafs cloud's words, as Android shows them")
+        StubProtocol.responses["GET /v1/usage/credits"] = (200, Self.period)
+        await model.refreshUsage()
+        XCTAssertNil(model.creditsError, "a read that works clears it")
+
+        // A taf's runs that can't be read say so, in tafs cloud's words.
+        StubProtocol.responses["GET /v1/usage/credits/tafs/depl_1"] = (503, #"{"error":"kiff unavailable","words":"Its runs can't be read right now."}"#)
+        await model.readTafCredits("depl_1")
+        XCTAssertEqual(model.tafCreditsError[.init(taf: "depl_1", previous: false)], "Its runs can't be read right now.")
     }
 
     /// A taf's runs, newest first, each in tafs cloud's words; a run opens its request while
