@@ -123,7 +123,9 @@ Stripe?”, with Keep waiting).
 The connections of tafs since removed come last, under **From removed tafs**, with no Sign in again and no Disconnect
 of their own. One action, **Clear these connections**, asks first (“Clear 3 connections from removed tafs?”), then
 Face ID once disconnects each one no live taf uses. One another taf's Card draws on is kept, and the result says so
-(“Kept 1: another taf uses it.”). On iPhone and iPad, `AppConnectionsView` with `AppModel.connectionGroups` and
+(“Kept 1: another taf uses it.”). Before the tafs are read, every taf would look removed, so Clear is offered only
+after a read of the tafs that worked this session, and reads them again first: if that read fails, nothing is cleared
+or signed (“Your tafs couldn't be read just now, so nothing was cleared.”). On iPhone and iPad, `AppConnectionsView` with `AppModel.connectionGroups` and
 `clearRemovedConnections`. Disconnect asks first, naming the one taf it ends (“Disconnect
 Stripe from Refunds?”, with Cancel), names any other taf whose Card draws on its tools, which stops too (“Chargebacks
 stops too.”), and says other connections to the app stay; Face ID or the fingerprint then asks the same words. It calls planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes that

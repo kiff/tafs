@@ -68,6 +68,44 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertTrue(AppModel.connectionGroups([], taf: { _ in nil }, attention: { _ in false }).tafs.isEmpty)
     }
 
+    /// Clear never acts on a list that wasn't read: every taf would look removed, and one Face
+    /// ID could disconnect live tafs' connections. Not before a read that worked this session,
+    /// and not when the fresh read inside the clear fails; nothing is signed or sent either way.
+    func testClearWaitsForATafReadThatWorked() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let signer = RecordingSigner()
+        let model = AppModel(signer: signer,
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (500, #"{"error":"down"}"#)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme"}"#)
+        await model.useSession("kiff_dev_x", tenant: "t1")
+        let stripe = try app("connector:composio:stripe")
+        XCTAssertTrue(model.listLoaded, "loaded, though the read failed")
+        XCTAssertEqual(model.listReads, 0, "but never read")
+        let unread = await model.clearRemovedConnections(of: stripe)
+        XCTAssertEqual(unread, ConnectionGroupWords.unread)
+
+        // Read once; then the fresh read inside the clear fails: nothing either.
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
+        await model.refresh()
+        XCTAssertEqual(model.listReads, 1)
+        StubProtocol.responses["GET /v1/home"] = (500, #"{"error":"down"}"#)
+        let stale = await model.clearRemovedConnections(of: stripe)
+        XCTAssertEqual(stale, ConnectionGroupWords.unread)
+
+        XCTAssertTrue(signer.signed.isEmpty, "no Face ID")
+        XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "DELETE" }, "nothing disconnected")
+        await model.signOut()
+        XCTAssertEqual(model.listReads, 0, "a new session reads again")
+    }
+
     /// The words of the grouping, the same on Android.
     func testTheGroupingsWords() {
         XCTAssertEqual(ConnectionGroupWords.removed, "From removed tafs")

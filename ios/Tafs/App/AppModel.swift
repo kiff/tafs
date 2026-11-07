@@ -322,6 +322,10 @@ final class AppModel: ObservableObject {
     private var holderIDs: [String: UUID] = [:]
     /// Whether the tafs shown are this account's: remembered, or read from KIFF (#91).
     @Published private(set) var listLoaded = false
+    /// How many times this session's taf list was read from tafs cloud: `listLoaded` is set
+    /// after a failed read too, and a remembered list may be stale. What acts on "this taf is
+    /// gone" waits for a read that worked.
+    @Published private(set) var listReads = 0
     /// Signed in to KIFF and its tafs not shown yet: the first launch after a sign-in.
     var loadingList: Bool { mode == .kiff && !listLoaded }
     /// KIFF couldn't be read and no list was shown yet: "Couldn't load", never "No tafs yet".
@@ -690,7 +694,7 @@ final class AppModel: ObservableObject {
         cloud.token = token
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
-        listLoaded = false; listUnread = false
+        listLoaded = false; listUnread = false; listReads = 0
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
         doorsOffered = []
@@ -1044,7 +1048,7 @@ final class AppModel: ObservableObject {
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
-        listLoaded = false; listUnread = false
+        listLoaded = false; listUnread = false; listReads = 0
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
         doorsOffered = []
@@ -1489,6 +1493,7 @@ final class AppModel: ObservableObject {
                 offerTimeZone(account)
             }
             show(list, exceptions)
+            listReads += 1
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
             if let done {
@@ -5437,13 +5442,21 @@ final class AppModel: ObservableObject {
     /// each one no live taf uses is disconnected; one another taf's Card draws on is kept, and
     /// said. Nil when all went; else what to say, empty when Face ID was closed.
     func clearRemovedConnections(of app: TafsCloud.ConnectApps.App) async -> String? {
+        // A taf that only looks removed, because the list wasn't read, must never lose its
+        // connections: only after a read that worked, and then on a fresh one, read here.
+        guard mode == .kiff, listReads > 0 else { return ConnectionGroupWords.unread }
+        let gen = accountGeneration
+        let reads = listReads
+        await refresh()
+        await refreshConnections()
+        guard gen == accountGeneration else { return "" }
+        guard listReads > reads else { return ConnectionGroupWords.unread }
         let removed = connectionGroups(of: app).removed
         guard !removed.isEmpty else { return nil }
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return "Sign in with KIFF again: this sign-in can't sign for the \(ThisDevice.kind)." }
         let clear = removed.filter { alsoStops($0).isEmpty }
         let kept = removed.count - clear.count
         guard !clear.isEmpty else { return ConnectionGroupWords.kept(kept) }
-        let gen = accountGeneration
         do {
             _ = try await signer.sign(Data("tafs.disconnect-removed.v1|\(tenant)|\(clear.map(\.id).sorted().joined(separator: ","))".utf8),
                                       reason: ConnectionGroupWords.clearTitle(clear.count))

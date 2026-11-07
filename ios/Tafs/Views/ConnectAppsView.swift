@@ -159,6 +159,8 @@ enum ConnectionGroupWords {
     static func clearTitle(_ n: Int) -> String { n == 1 ? "Clear 1 connection from removed tafs?" : "Clear \(n) connections from removed tafs?" }
     static let clearBody = "Each one is disconnected, and its sign-in ended, unless another taf's Card uses it. Connecting again asks you to approve and sign in again."
     static func kept(_ n: Int) -> String { n == 1 ? "Kept 1: another taf uses it." : "Kept \(n): other tafs use them." }
+    /// Clear waits for the tafs to be read: one only looking removed keeps its connections.
+    static let unread = "Your tafs couldn't be read just now, so nothing was cleared. Try again in a moment."
     static func notCleared(_ n: Int) -> String { n == 1 ? "1 couldn't be cleared. Try again." : "\(n) couldn't be cleared. Try again." }
 }
 
@@ -199,7 +201,8 @@ struct AppConnectionsView: View {
                         }
                         .frame(minHeight: 44)
                     }
-                    if model.canManageCards {
+                    // Only after the tafs were read this session: before that, every taf looks removed.
+                    if model.canManageCards, model.listReads > 0 {
                         Button(busy == ConnectionGroupWords.removed ? "Clearing…" : ConnectionGroupWords.clear, role: .destructive) { clearing = true }
                             .buttonStyle(.borderless)
                             .confirming()
