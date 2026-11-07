@@ -98,6 +98,7 @@ struct UsageView: View {
                                     ApprovalGate {
                                         Button(Self.raiseLimit) { Task { await model.answerRaise() } }
                                             .buttonStyle(PrimaryButtonStyle())
+                                            .disabled(model.raising)
                                     }
                                 }
                             } else if model.balance?.balance.buy?.packs == true,
@@ -290,10 +291,10 @@ struct BalancePanel: View {
                             raising = false
                         }
                     } label: {
-                        Label(raising ? "Raising…" : raise.words, systemImage: Biometry.symbol)
+                        Label(raising || model.raising ? "Raising…" : raise.words, systemImage: Biometry.symbol)
                     }
                     .buttonStyle(PrimaryButtonStyle())
-                    .disabled(raising)
+                    .disabled(raising || model.raising)
                     .accessibilityIdentifier("raise-limit")
                 }
             }

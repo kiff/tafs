@@ -219,6 +219,8 @@ final class AppModel: ObservableObject {
     /// A raise went through but the balance couldn't be read after it: what `balance` says
     /// is from before, so no other raise is offered until it's read.
     @Published private(set) var balanceStale = false
+    /// A raise is under way, from the tap until it's over: a second tap starts nothing.
+    @Published private(set) var raising = false
     /// The account's groups, its people and what KIFF says this person may do with each taf,
     /// once read: the app shows what KIFF says and decides nothing itself.
     @Published private(set) var groups: [KIFFClient.Group] = []
@@ -2930,7 +2932,11 @@ final class AppModel: ObservableObject {
         // The last raise went through, and the balance it changed hasn't been read since:
         // another tap would raise it again for a balance the screen no longer shows.
         guard !balanceStale else { return Self.readBalanceFirst }
-        guard let from = balance?.balance.raise?.fromCents else { return Self.readBalanceFirst }
+        guard let from = balance?.balance.raise?.fromCents else { return Self.noRaise }
+        // One raise at a time, from the tap: a fast second tap asks for no second Face ID.
+        guard !raising else { return "" }
+        raising = true
+        defer { raising = false }
         let gen = accountGeneration
         do { _ = try await signer.sign(Data("tafs.raise-limit.v1|\(tenant)|\(from)".utf8), reason: "Raise the spend limit") } catch { return "" }
         guard gen == accountGeneration else { return "" }
@@ -2963,6 +2969,7 @@ final class AppModel: ObservableObject {
     }
 
     static let readBalanceFirst = "The limit was raised. Read the balance again before raising it once more."
+    static let noRaise = "The limit can't be raised from here right now."
     static let limitChanged = "The limit changed meanwhile. Here it is now: raise it again if it's still needed."
     static let limitCeiling = "The limit is as high as it can be raised from the app. Contact KIFF to raise it further."
 

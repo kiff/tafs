@@ -388,6 +388,31 @@ final class PurchasesTests: XCTestCase {
         XCTAssertFalse(model.balanceStale)
     }
 
+    /// One raise at a time, from the tap: a fast double tap asks for one Face ID and sends one
+    /// PUT. With no raise offered, nothing is signed or sent, and nothing says it was raised.
+    func testADoubleTapRaisesOnceAndNoOfferRaisesNothing() async throws {
+        let log = StoreLog()
+        let (model, _, signer) = await signedIn(log)
+        StubProtocol.responses["PUT /v1/me/usage/limit"] = (200, #"{"limit_cents":13000}"#)
+        StubProtocol.responses["GET /v1/usage/balance"] = (200, Self.raised)
+        let signed = signer.signed.count
+        async let first = model.raiseLimit()
+        async let second = model.raiseLimit()
+        let answers = await [first, second]
+        XCTAssertEqual(answers.filter { $0 == nil }.count, 1, "one raise went through")
+        XCTAssertEqual(answers.filter { $0 == "" }.count, 1, "the second tap started nothing, and says nothing")
+        XCTAssertEqual(signer.signed.count, signed + 1, "one Face ID")
+        XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "PUT" && $0.url?.path == "/v1/me/usage/limit" }.count, 1)
+        XCTAssertFalse(model.raising, "over once it's done")
+
+        StubProtocol.responses["GET /v1/usage/balance"] = (200, #"{"balance":{"state":"ok","words":"Company · 4 seats · 20% of the spend limit used","raise":null}}"#)
+        await model.readBalance()
+        let none = await model.raiseLimit()
+        XCTAssertEqual(none, AppModel.noRaise)
+        XCTAssertNotEqual(none, AppModel.readBalanceFirst, "nothing was raised")
+        XCTAssertEqual(signer.signed.count, signed + 1, "no Face ID")
+    }
+
     /// A raise that went through, whose balance then couldn't be read, isn't offered again:
     /// another tap sends no PUT until the balance is read, and reading it signs nothing.
     func testAfterARaiseWhoseReadFailedNoSecondRaiseIsSentUntilItsRead() async throws {
