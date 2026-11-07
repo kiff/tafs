@@ -197,8 +197,8 @@ their order. `GET /v1/usage/credits` is the period:
   "runs": 61,
   "words": "This period: 1,240 credits used · ends on 1 Dec",
   "tafs": [
-    { "taf": "refunds-7k2m", "credits": 820, "runs": 41, "words": "Refunds · 820 credits · 41 runs" },
-    { "taf": "chargebacks-q81z", "credits": 374, "runs": 18, "words": "Chargebacks · 374 credits · 18 runs" }
+    { "taf": "taf-3f9a1c0b7d2e4a6f8b91", "credits": 820, "runs": 41, "words": "Refunds · 820 credits · 41 runs" },
+    { "taf": "taf-0b7c2e9d4a1f6e3b8c50", "credits": 374, "runs": 18, "words": "Chargebacks · 374 credits · 18 runs" }
   ],
   "coach": { "credits": 46, "runs": 2, "words": "Coach, past its fair use · 46 credits · 2 runs" },
   "not_counted": {
@@ -221,7 +221,7 @@ taf's runs, newest first:
 ```json
 {
   "period": { "start": "2026-11-01T00:00:00Z", "end": "2026-12-01T00:00:00Z", "current": true },
-  "taf": "refunds-7k2m",
+  "taf": "taf-3f9a1c0b7d2e4a6f8b91",
   "credits": 820,
   "runs": 41,
   "words": "Refunds · 820 credits · 41 runs this period",
@@ -237,8 +237,10 @@ taf's runs, newest first:
 }
 ```
 
-Where a run came from is said as the request view says it: "Its schedule", "From its chat",
-"By email", "Run now".
+`taf` is the taf's id, as `GET /v1/tafs` gives it (`taf-` and 20 hex digits, which is its id on
+kiff/agents too), never the name of its agent in KIFF. `run` is the run's id on kiff/agents, the
+one its request opens by. Where a run came from is said as the request view says it: "Its
+schedule", "From its chat", "By email", "Run now".
 
 **In the apps:** a **Credits** panel in Plan & usage, above the tasks: the period's `words`, each
 taf's row, Coach's row when there is one, then `not_counted` and `note`. A taf's row opens its runs
