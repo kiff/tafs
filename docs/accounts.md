@@ -423,9 +423,11 @@ above. The app shows the words. Builds from before this show `words` as for any 
   - **When KIFF doesn't answer,** the start fails, as with any KIFF outage. The scheduler tries a
     firing again, up to 3 times within the hour, and a check's items wait for the next firing that
     runs. A chat answers 502.
-- **tafs cloud reads the balance** with the person's session, and writes the words. With no plan,
-  its MCP server for Coach (`POST /v1/mcp`) lists none of Coach's tools and refuses their calls with
-  `no_plan`. Coach can only talk, whatever the model asks.
+- **tafs cloud reads the balance** with the person's session, and writes the words. It sends no AI
+  bound with a chat any more.
+- **Coach with no plan holds no tools in effect:** each of its calls goes through KIFF's gateway, and
+  KIFF refuses every call of an account with no plan (`plan_not_started`), reads included, before it
+  reaches a tool. Coach can only talk, whatever the model asks.
 - **On the deploy:**
   - an account with no plan today (on a trial, or with none) has no plan, so its tafs wait;
   - our own test accounts get an internal agreement first;
