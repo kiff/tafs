@@ -24,6 +24,24 @@ object ConnectionWords {
   fun cancelTitle(g: Grant): String = "Cancel the sign-in to ${g.vendor}?"
   fun cancelBody(g: Grant): String = "Nothing is connected yet. Connect ${g.vendor} again from Coach or Connect apps when you're ready."
 
+  /** A sign-in that never came back, cancelled: its confirmation's buttons. */
+  const val CANCEL_IT = "Cancel the sign-in"
+  const val KEEP_WAITING = "Keep waiting"
+
+  // Connect apps by taf (the owner's ask): the connections of tafs removed since, under their own heading, cleared at once.
+  const val FROM_REMOVED = "From removed tafs"
+  const val CLEAR_REMOVED = "Clear these connections"
+  fun clearTitle(n: Int): String = if (n == 1) "Clear 1 connection from removed tafs?" else "Clear $n connections from removed tafs?"
+  const val CLEAR_BODY = "Each is signed out at its vendor. One another taf's Card uses is kept."
+  const val CLEAR = "Clear"
+
+  /** How clearing went: "Cleared 2. Kept 1: another taf uses it.", and what couldn't be, to try again. */
+  fun cleared(done: Int, kept: Int, left: Int): String = listOfNotNull(
+    "Cleared $done.".takeIf { done > 0 },
+    "Kept $kept: another taf uses ${if (kept == 1) "it" else "them"}.".takeIf { kept > 0 },
+    "$left couldn't be cleared. Try again.".takeIf { left > 0 },
+  ).joinToString(" ")
+
   const val REPLACE_KEY = "Replace the key"
   const val SIGN_IN_AGAIN = "Sign in again"
 

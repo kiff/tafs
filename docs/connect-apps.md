@@ -114,13 +114,23 @@ connect some apps that aren't on the list, and tells you when one isn't availabl
 ## Disconnecting
 
 A connected app (“Connected ✓”) opens its connections: each planque grant the account has for that app, live (not
-`disconnected` or `failed`), with the taf it was set up for (“Set up for Refunds”), or “Its taf was removed”, and
-**Disconnect** for whoever manages the account's Cards. Disconnect asks first, naming the one taf it ends (“Disconnect
+`disconnected` or `failed`), **one section per taf**, its name as the heading. The tafs with a connection that needs you
+come first (a sign-in waiting, signed out, or a last call that failed), then the rest by name. A row shows the vendor's
+account when planque gives one, else the app's name, then planque's status words and “Also on Chargebacks's Card” when
+another taf's Card uses it. Whoever manages the account's Cards has **Sign in again** and **Disconnect** on a row, or
+**Cancel** on a sign-in that never came back (“Cancel the sign-in to Stripe?”, “Keep waiting”). Disconnect asks first, naming the one taf it ends (“Disconnect
 Stripe from Refunds?”, with Cancel), names any other taf whose Card draws on its tools, which stops too (“Chargebacks
 stops too.”), and says other connections to the app stay; Face ID or the fingerprint then asks the same words. It calls planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes that
 connection's tools from KIFF, and revokes its sign-in at the app only when no other live connection uses it (a second
 taf that reused it, or the same provider account); the last connection on a sign-in revokes it. The list is read again
 after.
+
+**From removed tafs** comes last: the connections of tafs removed since, with no Sign in again and no Disconnect each.
+One **Clear these connections** asks first (“Clear 3 connections from removed tafs?”, “Each is signed out at its vendor.
+One another taf's Card uses is kept.”), then one Face ID or fingerprint, and the device key signs each disconnect, as
+removing a taf does. One another taf's live Card uses is kept, and the line under them says how it went: “Cleared 2.
+Kept 1: another taf uses it.”, or how many couldn't be cleared, to try again. On Android, `byTaf` and
+`AppModel.clearRemovedConnections`; the same on iPhone and iPad.
 
 Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own
 confirmation, after its Cards are revoked and before tafs cloud removes the rest. Its result says the connections are

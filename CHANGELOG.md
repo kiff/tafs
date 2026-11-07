@@ -5,6 +5,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Connect apps lists an app's connections by taf (Android; iPhone follows in its own pull request).** One section per taf, those needing you first, then by name, each row the vendor's account or the app's name. The connections of tafs removed since come last, under "From removed tafs", with one Clear these connections: one confirmation, one fingerprint, and a connection another taf's Card uses is kept. A sign-in that never came back reads Cancel there too, as on a taf's page.
+
 - **Credits in Plan & usage (iOS), read only.** Above the tasks, which stay as they are, Plan & usage shows the credits the tafs used this period or the last: the period's line, each taf, Coach past its fair use, and what wasn't counted and why, all in tafs cloud's words (`GET /v1/usage/credits`, docs/accounts.md › Credits). A taf opens its runs, and a run opens its request, as on Android. Nothing is charged in credits yet. A tafs cloud without the read shows no panel, so there's no deploy order, and one that can't read KIFF says so in its words.
 - **Credits in Plan & usage, read-only (Android).** Above the tasks, which stay as they are, a Credits panel shows tafs cloud's `GET /v1/usage/credits` in its words: the period, each taf's credits and runs, Coach past its fair use, what wasn't counted, and the note, with Last period and This period. A taf's row opens its runs, 50 at a time, each opening its request. A tafs cloud from before credits answers 404 and no panel shows, so there's no deploy order. iOS follows.
 
