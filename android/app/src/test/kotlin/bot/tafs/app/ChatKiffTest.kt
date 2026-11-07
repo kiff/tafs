@@ -416,6 +416,56 @@ class ChatKiffTest {
     assertNull(again.state.value.chatUnsent["refunds-1"])
   }
 
+  @Test fun deleteTakesANotSentRowForGoodAcrossARestartSendingNothing() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    val m = model()
+    m.loadChat("refunds-1")
+    val writes = transport.requests.count { it.method != "GET" }
+    m.deleteUnsent("refunds-1", m.state.value.chatUnsent["refunds-1"]!!.single().message)
+    assertEquals("nothing sent", writes, transport.requests.count { it.method != "GET" })
+    assertNull(m.state.value.chatUnsent["refunds-1"])
+    m.loadChat("refunds-1")
+    assertNull("remembered: tafs cloud still lists it, and it doesn't come back", m.state.value.chatUnsent["refunds-1"])
+    val restarted = model()
+    restarted.loadChat("refunds-1")
+    assertNull(restarted.state.value.chatUnsent["refunds-1"])
+  }
+
+  @Test fun deleteTakesAMessageThatWasntSentOffTheThread() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages", 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("refund this one", "refunds-1"))
+    val writes = transport.requests.count { it.method != "GET" }
+    m.deleteUnsent("refunds-1", m.state.value.chatUnsent["refunds-1"]!!.single().message)
+    assertNull(m.state.value.chatUnsent["refunds-1"])
+    assertEquals("nothing sent", writes, transport.requests.count { it.method != "GET" })
+  }
+
+  @Test fun aRetryThatDidntSendLeavesTheNotSentRowOwedSoARestartBringsItBack() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    transport.answer("POST /v1/tafs/taf_1/messages", 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.resendUnsent("refunds-1", m.state.value.chatUnsent["refunds-1"]!!.single().message))
+    // Still Not sent, once, with the not_sent's key carried on.
+    val kept = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("one more", kept.message.text)
+    assertNotNull(kept.notSentKey)
+    m.loadChat("refunds-1")
+    assertEquals("not added twice", 1, m.state.value.chatUnsent["refunds-1"]!!.size)
+    // And still owed after a restart.
+    val restarted = model()
+    restarted.loadChat("refunds-1")
+    assertEquals("one more", restarted.state.value.chatUnsent["refunds-1"]!!.single().message.text)
+  }
+
   @Test fun retrySendsANotSentRowOnceAndASecondRetryFindsNothing() = runTest {
     readsOf(); sent()
     transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more", "and this")))

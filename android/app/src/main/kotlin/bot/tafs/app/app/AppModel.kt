@@ -4082,10 +4082,32 @@ class AppModel(
       _state.update { it.copy(chatErrors = it.chatErrors + (tafId to NOT_ON_CLOUD)) }
       return false
     }
-    val unsent = takeUnsent(tafId, message) ?: return false
+    // Remembered only once it went: tried and not sent, it's still owed. Meanwhile it's held in memory, so the thread read the send
+    // makes, while tafs cloud still lists it, doesn't bring it back.
+    val unsent = takeUnsent(tafId, message, remember = false) ?: return false
+    unsent.notSentKey?.let { (settledNotSent() as MutableSet<String>).add(it) }
     // With its own files, never the tray's.
-    return if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
+    val sent = if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
     else deliverChat(message.text, tafId)
+    unsent.notSentKey?.let { key -> if (sent) rememberNotSent(listOf(key)) else (settledNotSent() as MutableSet<String>).remove(key) }
+    if (!sent) keepUnsent(tafId, unsent)
+    return sent
+  }
+
+  /**
+   * A Retry that didn't send: the Not sent row its failure kept carries [unsent]'s `not_sent` key on, as iOS's does, so a restart still
+   * brings it back. With no row kept (refused before it was tried), [unsent] is back as it was.
+   */
+  private fun keepUnsent(tafId: String, unsent: Unsent) = _state.update { s ->
+    val kept = s.chatUnsent[tafId].orEmpty()
+    val again = kept.indexOfLast { it.message.text == unsent.message.text && it.notSentKey == null }
+    val next = if (again >= 0) kept.toMutableList().also { it[again] = it[again].copy(notSentKey = unsent.notSentKey) } else kept + unsent
+    s.copy(chatUnsent = s.chatUnsent + (tafId to next))
+  }
+
+  /** Deletes a message that wasn't sent, for good: it leaves the thread, and one of tafs cloud's `not_sent` never comes back. */
+  fun deleteUnsent(tafId: String, message: ChatMessage) {
+    takeUnsent(tafId, message)
   }
 
   /** Takes a message that wasn't sent out of the thread, to change it in the box: its words, or null when it's gone already. */
@@ -4096,7 +4118,7 @@ class AppModel(
     return message.text
   }
 
-  private fun takeUnsent(tafId: String, message: ChatMessage): Unsent? {
+  private fun takeUnsent(tafId: String, message: ChatMessage, remember: Boolean = true): Unsent? {
     var taken: Unsent? = null
     _state.update { s ->
       val kept = s.chatUnsent[tafId].orEmpty()
@@ -4104,8 +4126,8 @@ class AppModel(
       val left = kept.filterNot { it.message == message }
       s.copy(chatUnsent = if (left.isEmpty()) s.chatUnsent - tafId else s.chatUnsent + (tafId to left))
     }
-    // One of tafs cloud's `not_sent`, taken by Retry or Edit: remembered now, so it never comes back.
-    taken?.notSentKey?.let { rememberNotSent(listOf(it)) }
+    // One of tafs cloud's `not_sent`, taken by Edit or Delete: remembered now, so it never comes back.
+    if (remember) taken?.notSentKey?.let { rememberNotSent(listOf(it)) }
     return taken
   }
 

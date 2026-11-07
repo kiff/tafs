@@ -245,11 +245,12 @@ Without `hold`, nothing changes for an older app:
 - **`409 held_full`:** tafs cloud's `error` shows as it is, and the person's words go back in
   the box to send later. It's not a "Not sent" row.
 - **`not_sent`:** each one becomes its own Not sent row once, where it was written, with "Not
-  sent · " and its `why`, then Edit (the words back in the box) and Retry (sent as a new
-  message). Once Retry or Edit takes it (on iOS, Delete too), the app remembers it by a hash
-  of its run, time and words, never the words, across launches (the latest 500, as iOS), so
-  it never comes back, and a second Retry has nothing to send. Until then a restart shows it
-  again: the rows live in memory, and tafs cloud still lists it.
+  sent · " and its `why`, then Delete (gone for good, nothing sent), Edit (the words back in
+  the box) and Retry (sent as a new message). Once Delete or Edit takes it, or Retry sends
+  it, the app remembers it by a hash of its run, time and words, never the words, across
+  launches (the latest 500, as iOS), so it never comes back, and a second Retry has nothing
+  to send. A Retry that doesn't send leaves it Not sent and still owed. Until then a restart
+  shows it again: the rows live in memory, and tafs cloud still lists it.
 - **An older tafs cloud's `409` with no code:** the message goes as a new one, as before.
 
 iOS drops its own queue the same way, with the same words.

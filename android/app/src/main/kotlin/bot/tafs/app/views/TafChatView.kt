@@ -2,6 +2,7 @@ package bot.tafs.app.views
 
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
+import bot.tafs.app.drive.confirms
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -236,6 +237,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                       canRetry = !state.holdsRetry(tafId, unsent),
                       onRetry = { following = true; actions.retryUnsent(tafId, unsent.message) },
                       onEdit = { actions.editUnsent(tafId, unsent.message)?.let(setDraft) },
+                      onDelete = { actions.deleteUnsent(tafId, unsent.message) },
                     )
                   }
                 }
@@ -640,14 +642,16 @@ private fun NeedsYouPill(text: String, onClick: () -> Unit) {
 }
 
 /**
- * Under an owner's message that wasn't sent: why, then Retry (sends it once) and Edit (back to the box). Retry waits, greyed,
+ * Under an owner's message that wasn't sent: why, then Delete (gone for good), Edit (back to the box) and Retry (sends it once). Retry waits, greyed,
  * while it can't go yet ([AppState.holdsRetry]).
  */
 @Composable
-private fun NotSentLine(why: String, canRetry: Boolean, onRetry: () -> Unit, onEdit: () -> Unit) {
+private fun NotSentLine(why: String, canRetry: Boolean, onRetry: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
   Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
     Text(listOf(ChatWords.NOT_SENT, why).filter { it.isNotBlank() }.joinToString(" · "), style = scaled(13, color = Theme.no), textAlign = TextAlign.End)
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+      // Delete takes the owner's words away for good: Coach never taps it (docs/drive.md).
+      TextButton(onClick = onDelete, modifier = Modifier.confirms()) { Text(ChatWords.DELETE, style = scaled(14, color = Theme.soft)) }
       TextButton(onClick = onEdit) { Text(ChatWords.EDIT, style = scaled(14, color = Theme.soft)) }
       TextButton(onClick = onRetry, enabled = canRetry) { Text(ChatWords.RETRY, style = scaled(14, color = if (canRetry) Theme.ink else Theme.soft)) }
     }
