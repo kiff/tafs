@@ -387,6 +387,112 @@ final class TafsCloud {
         try await send("GET", "/v1/usage/ai")
     }
 
+    /// The credits the account's tafs used in a period, read only (docs/accounts.md): in all,
+    /// by taf, and what wasn't counted and why. Every line is tafs cloud's `words`, shown as
+    /// they are: the app derives nothing but the order.
+    struct Credits: Decodable, Equatable {
+        struct Period: Decodable, Equatable { let start: Date; let end: Date }
+        /// One taf's part of the period. Only tafs that used credits are listed, most first.
+        struct Taf: Decodable, Equatable, Identifiable {
+            let taf: String
+            let credits: Int
+            let runs: Int
+            let words: String
+            var id: String { taf }
+        }
+        struct NotCounted: Decodable, Equatable {
+            struct Line: Decodable, Equatable { let why: String; let runs: Int; let words: String }
+            var runs = 0
+            var words = ""
+            var lines: [Line] = []
+            init(runs: Int = 0, words: String = "", lines: [Line] = []) { self.runs = runs; self.words = words; self.lines = lines }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                runs = (try? c.decodeIfPresent(Int.self, forKey: .runs)) ?? 0
+                words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
+                lines = ((try? c.decodeIfPresent([LenientItem<Line>].self, forKey: .lines)) ?? []).compactMap(\.value)
+            }
+            enum CodingKeys: String, CodingKey { case runs, words, lines }
+        }
+        let period: Period?
+        let credits: Int
+        let words: String
+        var tafs: [Taf] = []
+        var notCounted: NotCounted?
+        var note: String?
+        enum CodingKeys: String, CodingKey { case period, credits, words, tafs, notCounted = "not_counted", note }
+
+        init(period: Period?, credits: Int, words: String, tafs: [Taf] = [], notCounted: NotCounted? = nil, note: String? = nil) {
+            self.period = period; self.credits = credits; self.words = words; self.tafs = tafs; self.notCounted = notCounted; self.note = note
+        }
+        /// A line the app can't read is left out, not the read.
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            period = try? c.decodeIfPresent(Period.self, forKey: .period)
+            credits = try c.decode(Int.self, forKey: .credits)
+            words = try c.decode(String.self, forKey: .words)
+            tafs = ((try? c.decodeIfPresent([LenientItem<Taf>].self, forKey: .tafs)) ?? []).compactMap(\.value)
+            notCounted = try? c.decodeIfPresent(NotCounted.self, forKey: .notCounted)
+            note = (try? c.decodeIfPresent(String.self, forKey: .note)).flatMap { $0?.isEmpty == false ? $0 : nil }
+        }
+    }
+
+    /// One taf's credits in a period, with its runs, newest first; `next` reads further back.
+    struct TafCredits: Decodable, Equatable {
+        struct Run: Decodable, Equatable, Identifiable {
+            let run: String
+            let at: Date
+            let credits: Int
+            let counted: Bool
+            let words: String
+            /// The Record entry the run opens; none for a run that only answered in a chat.
+            var record: String?
+            var id: String { run }
+        }
+        let credits: Int
+        let words: String
+        var runs: [Run] = []
+        var next: String?
+
+        init(credits: Int, words: String, runs: [Run] = [], next: String? = nil) {
+            self.credits = credits; self.words = words; self.runs = runs; self.next = next
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            credits = try c.decode(Int.self, forKey: .credits)
+            words = try c.decode(String.self, forKey: .words)
+            runs = ((try? c.decodeIfPresent([LenientItem<Run>].self, forKey: .runs)) ?? []).compactMap(\.value)
+            next = (try? c.decodeIfPresent(String.self, forKey: .next)).flatMap { $0?.isEmpty == false ? $0 : nil }
+        }
+        enum CodingKeys: String, CodingKey { case credits, words, runs, next }
+    }
+
+    /// Decodes one element of a list, leaving out one it can't read.
+    struct LenientItem<T: Decodable>: Decodable {
+        let value: T?
+        init(from decoder: Decoder) throws { value = try? T(from: decoder) }
+    }
+
+    /// The period's credits; nil from a tafs cloud without the read (404), which shows nothing.
+    func credits(previous: Bool = false) async throws -> Credits? {
+        do {
+            return try await send("GET", "/v1/usage/credits" + (previous ? "?period=previous" : ""))
+        } catch let e as CloudError where e.status == 404 { return nil }
+    }
+
+    /// One taf's credits and runs in the period; nil from a tafs cloud without the read.
+    func credits(taf: String, previous: Bool = false, after: String? = nil) async throws -> TafCredits? {
+        var query: [String] = []
+        if previous { query.append("period=previous") }
+        if let after, let escaped = after.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&=+"))) {
+            query.append("after=\(escaped)")
+        }
+        let id = taf.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? taf
+        do {
+            return try await send("GET", "/v1/usage/credits/tafs/\(id)" + (query.isEmpty ? "" : "?" + query.joined(separator: "&")))
+        } catch let e as CloudError where e.status == 404 { return nil }
+    }
+
     /// The account's tafs, and the removals still to finish.
     func listing() async throws -> (tafs: [CloudTaf], removing: [PendingRemoval]) {
         struct Response: Decodable { let tafs: [CloudTaf]; let removing: [PendingRemoval]? }

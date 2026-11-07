@@ -16,6 +16,8 @@ struct UsageView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                // The credits the tafs used, above the tasks, which stay as they are for now.
+                if read { CreditsPanel() }
                 if read, let u = model.usage {
                     tasksPanel(u)
                     if let notice = Self.notice(u) {

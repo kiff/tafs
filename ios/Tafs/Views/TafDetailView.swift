@@ -410,6 +410,19 @@ struct TafDetailView: View {
             // task behind until Usage was opened (the 755 retest).
             .task(id: model.entries(for: taf.id).count) { await model.refreshUsage() }
         }
+        // Its credits this period, in tafs cloud's words, opening its runs (pricing phase 1).
+        // Nothing until tafs cloud has the read.
+        if model.mode == .kiff, let cloudID = model.cloudTaf(for: taf.id)?.id {
+            let key = AppModel.CreditsKey(taf: cloudID, previous: false)
+            Group {
+                if let mine = model.tafCredits[key] {
+                    PanelLink { TafCreditsView(taf: cloudID, previous: false).environmentObject(model) } label: {
+                        Label(mine.words, systemImage: "circle.hexagongrid").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                    }
+                }
+            }
+            .task(id: model.entries(for: taf.id).count) { await model.readTafCredits(cloudID) }
+        }
         if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
             Button("Revoke") { confirmRevoke = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
