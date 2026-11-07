@@ -60,9 +60,6 @@ struct CreditsPanel: View {
             }
             Text(c.words).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
-            if let note = c.note {
-                Text(note).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            }
         }
         ForEach(c.tafs) { t in
             // A taf's row opens its runs; the row for tafs removed since, and the sample's, don't.
@@ -85,6 +82,11 @@ struct CreditsPanel: View {
                     Text(line.words).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
             }
+        }
+        // The note comes last, as the contract and Android have it.
+        if let note = c.note {
+            Text(note).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4)
         }
     }
 
