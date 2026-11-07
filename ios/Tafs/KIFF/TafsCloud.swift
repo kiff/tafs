@@ -14,6 +14,8 @@ final class TafsCloud {
         /// What tafs cloud says is wrong, written for the owner (a run kiff/agents refused, a
         /// switch a run blocks), when it says it.
         var words: String? = nil
+        /// tafs cloud's code for the refusal, when it gives one ("held_full").
+        var code: String? = nil
         /// tafs cloud's words first, on every path that shows the error (kiff/tafs#397); the
         /// app's own line for the status only without them.
         var errorDescription: String? { words ?? message }
@@ -21,9 +23,10 @@ final class TafsCloud {
 
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
-        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String? }
+        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
-        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [], words: body?.words)
+        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [], words: body?.words,
+                          code: body?.code)
     }
 
     /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
@@ -693,15 +696,30 @@ final class TafsCloud {
             let text: String
             let at: Date
         }
+        /// What a stopped run never read, with why, in the words the app shows as they are.
+        struct NotSent: Decodable, Equatable {
+            let text: String
+            let at: Date
+            let why: String
+            var message: Message { Message(text: text, at: at) }
+        }
         let run: String
         let status: String
         let untaken: [Message]
+        /// What waits in this chat to go once the taf is done (docs/chat.md, `hold`).
+        var held: Message?
+        /// What a stopped run never read, and what was written for it by the stop.
+        var notSent: [NotSent] = []
 
-        init(run: String, status: String, untaken: [Message]) {
-            self.run = run; self.status = status; self.untaken = untaken
+        init(run: String, status: String, untaken: [Message], held: Message? = nil, notSent: [NotSent] = []) {
+            self.run = run; self.status = status; self.untaken = untaken; self.held = held; self.notSent = notSent
         }
 
-        enum CodingKeys: String, CodingKey { case run, status, untaken }
+        enum CodingKeys: String, CodingKey { case run, status, untaken, held, notSent = "not_sent" }
+        private struct LenientNotSent: Decodable {
+            let notSent: NotSent?
+            init(from decoder: Decoder) throws { notSent = try? NotSent(from: decoder) }
+        }
         /// A message the app can't read (its time) is left out, not the others.
         private struct LenientMessage: Decodable {
             let message: Message?
@@ -712,6 +730,8 @@ final class TafsCloud {
             run = try c.decode(String.self, forKey: .run)
             status = try c.decode(String.self, forKey: .status)
             untaken = try c.decode([LenientMessage].self, forKey: .untaken).compactMap(\.message)
+            held = try? c.decodeIfPresent(Message.self, forKey: .held)
+            notSent = (try? c.decodeIfPresent([LenientNotSent].self, forKey: .notSent))?.compactMap(\.notSent) ?? []
         }
 
         /// The run is over: what it didn't read, it never will.
@@ -744,13 +764,27 @@ final class TafsCloud {
                       capped: r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card))
     }
 
-    /// Writes to the run at work (kiff/tafs#64): it reads the message at its next step.
-    /// A run that has ended throws 409, and the message goes as a new one. Returns the
-    /// run's status: a paused run reads it when it carries on.
-    func steer(_ id: String, run: String, text: String) async throws -> String {
-        struct Response: Decodable { let run: String; let status: String }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/steer", body: ["run": run, "text": text])
-        return r.status
+    /// What tafs cloud did with a message written to the run at work.
+    enum Steered: Equatable {
+        /// The run took it: it reads it at its next step (a paused run, when it carries on).
+        case taken(status: String)
+        /// The run didn't take it, and tafs cloud kept it (docs/chat.md, `hold`): `sent`, the
+        /// chat's run was over and it went at once as the person's next message; `held`, what
+        /// waits in that chat now, to go once the taf is done. Both can come at once.
+        case kept(sent: SentRun?, held: Steering.Message?)
+    }
+
+    struct SentRun: Decodable, Equatable { let run: String; let session: String }
+
+    /// Writes to the run at work (kiff/tafs#64), once, with `hold`: what the run doesn't
+    /// take, tafs cloud holds and sends once the taf is done, so the app never resends it.
+    /// More than tafs cloud holds throws 409 `held_full`, with words to show as they are.
+    func steer(_ id: String, run: String, text: String) async throws -> Steered {
+        struct Body: Encodable { let run: String; let text: String; let hold = true }
+        struct Response: Decodable { let status: String?; let sent: SentRun?; let held: Steering.Message? }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/steer", body: Body(run: run, text: text))
+        if let status = r.status { return .taken(status: status) }
+        return .kept(sent: r.sent, held: r.held)
     }
 
     /// The owner just answered one of the taf's held calls in KIFF (kiff/tafs#206): the
@@ -1361,7 +1395,12 @@ final class TafsCloud {
     /// Setup's thread from tafs cloud's answer: its messages, its cards, and the drives that ended in it
     /// (`items` of type `drive`, docs/drive.md). Anything the app can't read is left out, never the thread.
     static func setupThread(decoding data: Data) throws -> SetupThread {
-        struct Working: Decodable { let session: String }
+        struct Working: Decodable { let session: String; let run: String? }
+        /// Steering the app can't read is left out, never the thread with it.
+        struct LenientSteering: Decodable {
+            let steering: Steering?
+            init(from decoder: Decoder) throws { steering = try? Steering(from: decoder) }
+        }
         /// One the app can't read is left out, never the thread with it.
         struct LenientLine: Decodable {
             let line: CoachLine?
@@ -1378,13 +1417,13 @@ final class TafsCloud {
         }
         struct Response: Decodable {
             let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working?; let coachLines: [LenientLine]?
-            let items: [LenientDrive]?
-            enum CodingKeys: String, CodingKey { case messages, components, working, items, coachLines = "coach_lines" }
+            let items: [LenientDrive]?; let steering: LenientSteering?
+            enum CodingKeys: String, CodingKey { case messages, components, working, items, steering, coachLines = "coach_lines" }
         }
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
         return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
                            working: r.working?.session, coachLines: (r.coachLines ?? []).compactMap(\.line),
-                           drives: (r.items ?? []).compactMap(\.drive))
+                           drives: (r.items ?? []).compactMap(\.drive), workingRun: r.working?.run, steering: r.steering?.steering)
     }
 
     /// How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until

@@ -688,7 +688,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1042,7 +1042,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -3587,7 +3587,6 @@ final class AppModel: ObservableObject {
             chatErrors[tafID] = "The thread couldn't be loaded: \(error.localizedDescription)"
             return
         }
-        await sendQueuedChatIfIdle(tafID)
     }
 
     /// Sends the owner's message to the taf. It shows at once; on KIFF the thread is then
@@ -3857,7 +3856,10 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
         var askCoach: [TafsCloud.AskCoachCard] = []
-        var queued: String?
+        /// What waits in this chat to go once the taf is done: tafs cloud holds it
+        /// (docs/chat.md, `hold`), and sends it as the person's next message. The app keeps no
+        /// queue of its own.
+        var queued: String? { steering?.held?.text }
         var ended: RunEnd?
         /// What the failed run did before it stopped (kiff/agents#249), said with Retry.
         var wentThrough: [TafsCloud.DoneCall] = []
@@ -3869,8 +3871,6 @@ final class AppModel: ObservableObject {
         var steering: TafsCloud.Steering?
         /// The unread messages of runs that are over, once dealt with here.
         var settled: Set<String> = []
-        /// The run whose stream ended answered or failed: what it didn't read goes next.
-        var sendNext: String?
         /// Where each held call was made in the chat (kiff/tafs#206): the item it came after,
         /// by its held call's key (`heldKey`). Its card, and what became of it, stay there.
         var anchors: [String: String] = [:]
@@ -3900,8 +3900,8 @@ final class AppModel: ObservableObject {
         return working != nil || s.awaiting != nil || s.live != nil
     }
 
-    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false) {
-        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy))
+    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil) {
+        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle))
     }
 
     /// Why a message wasn't sent when the owner wrote too many too fast: the runtime's limit
@@ -4011,16 +4011,14 @@ final class AppModel: ObservableObject {
             chatStates[tafID]?.wentThrough = didBefore
         }
         if ended == "CANCELLED" { chatStates[tafID]?.ended = .stopped }
-        // A run that answered or failed never reads what it didn't take: it goes next.
-        // One the owner stopped keeps it, not sent, for them to decide.
-        if let run = chatStates[tafID]?.live?.run, ended == "COMPLETED" || ended == "ERROR" { chatStates[tafID]?.sendNext = run }
+        // What the run didn't read, and what waited for it, is tafs cloud's to send now
+        // (docs/chat.md, `hold`): reading the thread sends it, and shows what was stopped.
         // The recorded answer first, then the live one goes: no gap between them. Each held
         // call keeps its place: after what the taf wrote before it (kiff/tafs#206).
         await loadChat(tafID)
         guard gen == accountGeneration else { return }
         if let live = chatStates[tafID]?.live { anchorHeld(live, tafID: tafID) }
         chatStates[tafID]?.live = nil
-        await sendQueuedChatIfIdle(tafID)
     }
 
     /// What a taf is doing, in the owner's words: a connected tool by the title its
@@ -4049,9 +4047,11 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The composer's Send: now, or once the taf is done when it's at work. A second
-    /// message while one waits joins it. True once the message is taken: sent, queued,
-    /// or kept in the thread as not sent. False leaves it with the composer.
+    /// The composer's Send: now, or, while the taf is at work, to its run, once, with
+    /// `hold` (docs/chat.md): what the run doesn't take, tafs cloud holds and sends once the
+    /// taf is done; a second message joins what waits. True once the message is taken:
+    /// sent, written to the run, held, or kept in the thread as not sent. False leaves it with
+    /// the composer: nothing to send, no run to write to yet, or more than tafs cloud holds.
     @discardableResult
     func submitChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -4060,37 +4060,48 @@ final class AppModel: ObservableObject {
         if !files.isEmpty { return await deliverChat(text, to: tafID, files: files) == .sent }
         guard !text.isEmpty else { return false }
         if mode == .kiff, chatThinking(tafID) || chatSending.contains(tafID) {
-            // To the run at work, which reads it at its next step (kiff/agents#102). With
-            // something queued already, this waits behind it, in order.
+            // To the run at work, which reads it at its next step (kiff/agents#102). The
+            // message that starts it is still on its way: no run yet, so it stays in the composer.
             let s = chatState(tafID)
-            if s.queued == nil, let run = s.live?.run ?? s.workingRun, let c = cloudTaf(for: tafID) {
-                do {
-                    let status = try await cloud.steer(c.id, run: run, text: text)
+            guard let run = s.live?.run ?? s.workingRun, let c = cloudTaf(for: tafID) else { return false }
+            do {
+                switch try await cloud.steer(c.id, run: run, text: text) {
+                case .taken(let status):
                     // Shown at once, as the run now holds it; the next reload says the same.
-                    let held = chatState(tafID).steering.flatMap { $0.run == run ? $0.untaken : nil } ?? []
+                    let current = chatState(tafID).steering.flatMap { $0.run == run ? $0 : nil }
                     chatStates[tafID, default: ChatState()].steering = TafsCloud.Steering(
-                        run: run, status: status, untaken: held + [TafsCloud.Steering.Message(text: text, at: clock())])
-                    clearBusyUnsent(tafID)
-                    return true
-                } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
-                    keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
-                    return true
-                } catch {
-                    // Ended meanwhile (409), or not reached: it waits, and goes once the taf is done.
+                        run: run, status: status, untaken: (current?.untaken ?? []) + [TafsCloud.Steering.Message(text: text, at: clock())],
+                        held: current?.held, notSent: current?.notSent ?? [])
+                case .kept(let sent, let held):
+                    // tafs cloud holds what the run didn't take, for this chat, and sends it once the taf
+                    // is done; shown at once as waiting. Sent already: the new run is in the thread.
+                    let current = chatState(tafID).steering
+                    chatStates[tafID, default: ChatState()].steering = TafsCloud.Steering(
+                        run: current?.run ?? run, status: current?.status ?? "RUNNING", untaken: current?.untaken ?? [],
+                        held: held, notSent: current?.notSent ?? [])
+                    if sent != nil {
+                        chatStates[tafID]?.awaiting = clock()
+                        await loadChat(tafID)
+                    }
                 }
+                clearBusyUnsent(tafID)
+                return true
+            } catch let e as TafsCloud.CloudError where e.code == "held_full" {
+                // More than tafs cloud holds: nothing is cut, and the words stay in the composer,
+                // with tafs cloud's why as it says it.
+                chatErrors[tafID] = e.message
+                return false
+            } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
+                keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
+                return true
+            } catch {
+                // Not reached: it stays in the thread as not sent, with why and Retry. The app
+                // never resends it on its own.
+                keepUnsent(text, tafID, why: error.localizedDescription)
+                return true
             }
-            let joined = chatStates[tafID]?.queued.map { $0 + "\n\n" + text } ?? text
-            guard joined.count <= Self.chatLimit else { return false }
-            chatStates[tafID, default: ChatState()].queued = joined
-            return true
         }
         return await deliverChat(text, to: tafID) != .notTried
-    }
-
-    /// Takes back what waits to be sent, for the composer.
-    func unqueueChat(_ tafID: UUID) -> String? {
-        defer { chatStates[tafID]?.queued = nil }
-        return chatStates[tafID]?.queued
     }
 
     /// Where the unread messages already dealt with are kept across launches, so one the
@@ -4105,38 +4116,30 @@ final class AppModel: ObservableObject {
         chatState(tafID).settled.contains(key) || (remembered?.stringArray(forKey: Self.settledKey) ?? []).contains(key)
     }
 
-    private func rememberSettled(_ keys: [String], _ tafID: UUID) {
-        chatStates[tafID, default: ChatState()].settled.formUnion(keys)
-        guard let remembered else { return }
-        let kept = (remembered.stringArray(forKey: Self.settledKey) ?? []) + keys
+    /// Keeps a steering row's hash across launches: only when Retry, Edit or Delete took it,
+    /// never when it's shown, so a restart before that brings the row back.
+    private func rememberTaken(_ message: UnsentMessage) {
+        guard let key = message.settle, let remembered else { return }
+        let kept = (remembered.stringArray(forKey: Self.settledKey) ?? []).filter { $0 != key } + [key]
         remembered.set(Array(kept.suffix(Self.settledKept)), forKey: Self.settledKey)
     }
 
-    /// What a run that's over never read, as kiff/agents says, dealt with once: after a
-    /// streamed answer or failure it goes as the next message; otherwise (the owner
-    /// stopped it, or no stream said how it ended) it shows as not sent, with Retry.
+    /// What a run never got to, as the thread says, shown once as not sent, with why and
+    /// Retry, which sends it as a new message (docs/chat.md): tafs cloud's `not_sent`, in its
+    /// words; and what a run that's over lists unread, from before the app wrote with `hold`.
+    /// tafs cloud sends the rest itself, so nothing here is sent on its own.
     private func settleSteering(_ tafID: UUID) {
-        guard let s = chatStates[tafID]?.steering, s.over else { return }
+        guard let s = chatStates[tafID]?.steering else { return }
         func key(_ m: TafsCloud.Steering.Message) -> String {
             let digest = SHA256.hash(data: Data("\(s.run)|\(m.at.timeIntervalSince1970)|\(m.text)".utf8))
             return digest.map { String(format: "%02x", $0) }.joined()
         }
-        let fresh = s.untaken.filter { !wasSettled(key($0), tafID) }
+        let unread = s.over ? s.untaken.map { ($0, s.status == "CANCELLED" ? "You stopped it before it read this." : "It wasn't read before the work ended.") } : []
+        let fresh = (s.notSent.map { ($0.message, $0.why) } + unread).filter { !wasSettled(key($0.0), tafID) }
         guard !fresh.isEmpty else { return }
-        rememberSettled(fresh.map(key), tafID)
-        if chatState(tafID).sendNext == s.run, s.status != "CANCELLED" {
-            let texts = [chatState(tafID).queued].compactMap { $0 } + fresh.map(\.text)
-            chatStates[tafID]?.queued = texts.joined(separator: "\n\n")
-        } else {
-            let why = s.status == "CANCELLED" ? "You stopped it before it read this." : "It wasn't read before the work ended."
-            for m in fresh { keepUnsent(m.text, tafID, why: why) }
-        }
-    }
-
-    private func sendQueuedChatIfIdle(_ tafID: UUID) async {
-        guard let queued = chatStates[tafID]?.queued, !chatThinking(tafID), !chatSending.contains(tafID) else { return }
-        chatStates[tafID]?.queued = nil
-        await sendChat(queued, to: tafID)
+        // Shown: dealt with in memory only, until Retry, Edit or Delete takes it.
+        chatStates[tafID, default: ChatState()].settled.formUnion(fresh.map { key($0.0) })
+        for (m, why) in fresh { keepUnsent(m.text, tafID, why: why, settle: key(m)) }
     }
 
     /// Sends a message that didn't go through again. It stays where it was until it's
@@ -4144,15 +4147,22 @@ final class AppModel: ObservableObject {
     func retryChat(_ message: UnsentMessage, to tafID: UUID) async {
         guard !chatSending.contains(tafID), let at = chatStates[tafID]?.unsent.firstIndex(where: { $0.id == message.id }) else { return }
         chatStates[tafID]?.unsent.remove(at: at)
+        let left = chatState(tafID).unsent.count
         // Not taken at all (too long to join the queue): back in its place. A send that
         // fails keeps it again itself.
         if !(await submitChat(message.text, to: tafID)) {
             chatStates[tafID]?.unsent.insert(message, at: min(at, chatState(tafID).unsent.count))
+        } else if chatState(tafID).unsent.count > left, message.settle != nil, let i = chatStates[tafID]?.unsent.indices.last {
+            // Tried and kept as not sent again: still owed, so the new row carries its hash on.
+            chatStates[tafID]?.unsent[i].settle = message.settle
+        } else {
+            rememberTaken(message)
         }
     }
 
     func discardUnsentChat(_ message: UnsentMessage, from tafID: UUID) {
         chatStates[tafID]?.unsent.removeAll { $0.id == message.id }
+        rememberTaken(message)
     }
 
     /// Takes a message that wasn't sent out of the thread, to change it in the composer
@@ -5269,15 +5279,15 @@ final class AppModel: ObservableObject {
         return connected
     }
 
-    /// The account's live connections to a Connect apps entry: by its catalog entry, the grant
-    /// tafs cloud named for it, or the app itself (`AppMatch`), so a sign-in Coach started at the
-    /// vendor's own server is listed under its app too.
+    /// The account's live connections to a Connect apps entry: by the app planque names for
+    /// each (its `entry`, which planque gives every grant, a vendor's own sign-in included), or
+    /// the grant tafs cloud named for it.
     func connections(of app: TafsCloud.ConnectApps.App) -> [PlanqueClient.Grant] {
         Self.connections(of: app, in: grants)
     }
 
     static func connections(of app: TafsCloud.ConnectApps.App, in grants: [PlanqueClient.Grant]) -> [PlanqueClient.Grant] {
-        grants.filter { ($0.entry == app.entry || $0.id == app.grant || AppMatch.isOf($0, app.entry)) && !["disconnected", "failed"].contains($0.status) }
+        grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
     }
 
     /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
@@ -5418,6 +5428,10 @@ final class AppModel: ObservableObject {
         let at: Date
         /// Not sent only because the owner wrote too many too fast.
         var busy = false
+        /// Its hash when it came from the thread's steering (a `not_sent`, or what a run that's
+        /// over didn't read): kept across launches only once Retry, Edit or Delete takes the
+        /// row, so a restart before that shows it again.
+        var settle: String? = nil
     }
     @Published private(set) var setupUnsent: [UnsentMessage] = []
     /// What the owner is typing to Coach, not sent yet (kiff/tafs#245, item 3): kept here, not in the
@@ -5433,7 +5447,9 @@ final class AppModel: ObservableObject {
     @Published var suggestionsBusy = false
     @Published var suggestionsError: String?
     /// What the owner wrote while Setup works: sent once it's done (kiff/tafs#58).
-    @Published private(set) var setupQueued: String?
+    /// What waits in Coach's chat to go once Coach is done: tafs cloud holds it (docs/chat.md,
+    /// `hold`), and sends it as the person's next message. The app keeps no queue of its own.
+    var setupQueued: String? { setupThread.steering?.held?.text }
     /// How Setup's last run ended, when the owner should know: they stopped it, or it
     /// failed part-way, with the message that started it to send again.
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
@@ -5598,7 +5614,6 @@ final class AppModel: ObservableObject {
         setupFresh = true
         setupThread = SetupThread()
         setupSent = []
-        setupQueued = nil
         setupAwaiting = nil
         setupUnsent = []
         setupEnded = nil
@@ -5757,6 +5772,7 @@ final class AppModel: ObservableObject {
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
+            settleSetupSteering()
             // Coach handed the taf over and said its last words: its run is done, whatever the
             // stream still holds open, so Stop goes (kiff/tafs#476). tafs cloud's `working` still
             // says if a run is at work, and a message on its way keeps it.
@@ -5788,7 +5804,6 @@ final class AppModel: ObservableObject {
             guard let d = c.draft, setupDrafts[d]?.confirmed != true, let draft = try? await kiff.draft(id: d), gen == accountGeneration else { continue }
             setupDrafts[d] = draft
         }
-        await sendQueuedIfIdle()
     }
 
     /// Starts connecting tools, once per account, behind one Face ID: planque gets this
@@ -5936,10 +5951,12 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The composer's Send: now, or once Setup is done when it's at work (kiff/tafs#58).
-    /// A second message while one waits joins it. True once the message is taken: sent,
-    /// queued, or kept in the thread as not sent. False leaves it with the composer
-    /// (nothing to send, too long to join the queue, or no Setup).
+    /// The composer's Send: now, or, while Coach is at work, to its run, once, with `hold`
+    /// (docs/chat.md), as a taf's chat and Android do: what the run doesn't take, tafs cloud
+    /// holds and sends once Coach is done; a second message joins what waits. True once the
+    /// message is taken: sent, written to the run, held, or kept in the thread as not sent.
+    /// False leaves it with the composer: nothing to send, no run to write to yet, more than
+    /// tafs cloud holds, or no Setup.
     @discardableResult
     func submitSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -5947,27 +5964,63 @@ final class AppModel: ObservableObject {
         if !files.isEmpty { return await deliverSetup(text, files: files) == .sent }
         guard !text.isEmpty else { return false }
         if setupThinking || setupSending {
-            let joined = setupQueued.map { $0 + "\n\n" + text } ?? text
-            guard joined.count <= Self.chatLimit else { return false }
-            setupQueued = joined
-            return true
+            // The message that starts Coach's run is still on its way: no run yet, so it stays in the composer.
+            guard let s = setupTaf, let run = setupLive?.run ?? setupThread.workingRun else { return false }
+            let conversation = setupConversationGeneration
+            do {
+                switch try await cloud.steer(s.id, run: run, text: text) {
+                case .taken(let status):
+                    guard conversation == setupConversationGeneration else { return true }
+                    // Shown at once, as the run now holds it; the next read says the same.
+                    let current = setupThread.steering.flatMap { $0.run == run ? $0 : nil }
+                    setupThread.steering = TafsCloud.Steering(
+                        run: run, status: status, untaken: (current?.untaken ?? []) + [TafsCloud.Steering.Message(text: text, at: clock())],
+                        held: current?.held, notSent: current?.notSent ?? [])
+                case .kept(let sent, let held):
+                    guard conversation == setupConversationGeneration else { return true }
+                    // tafs cloud holds what the run didn't take, for this chat, and sends it once Coach is done.
+                    let current = setupThread.steering
+                    setupThread.steering = TafsCloud.Steering(
+                        run: current?.run ?? run, status: current?.status ?? "RUNNING", untaken: current?.untaken ?? [],
+                        held: held, notSent: current?.notSent ?? [])
+                    // Sent already: the new run is in the thread.
+                    if sent != nil {
+                        setupAwaiting = clock()
+                        await loadSetupThread()
+                    }
+                }
+                return true
+            } catch let e as TafsCloud.CloudError where e.code == "held_full" {
+                // More than tafs cloud holds: nothing is cut, the words stay in the composer, with tafs cloud's why.
+                setupError = e.message
+                return false
+            } catch {
+                // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.
+                setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
+                return true
+            }
         }
         return await deliverSetup(text) != .notTried
     }
 
-    /// Takes back what waits to be sent, for the composer.
-    func unqueueSetup() -> String? {
-        defer { setupQueued = nil }
-        return setupQueued
+    /// What Coach's run never got to, as its thread says, shown once as not sent, with why and
+    /// Retry, which sends it as a new message (docs/chat.md): tafs cloud's `not_sent`, in its words.
+    /// tafs cloud sends the rest itself, so nothing here is sent on its own.
+    private func settleSetupSteering() {
+        guard let s = setupThread.steering, !s.notSent.isEmpty else { return }
+        func key(_ m: TafsCloud.Steering.NotSent) -> String {
+            let digest = SHA256.hash(data: Data("coach|\(s.run)|\(m.at.timeIntervalSince1970)|\(m.text)".utf8))
+            return digest.map { String(format: "%02x", $0) }.joined()
+        }
+        let fresh = s.notSent.filter { !setupSettled.contains(key($0)) && !(remembered?.stringArray(forKey: Self.settledKey) ?? []).contains(key($0)) }
+        guard !fresh.isEmpty else { return }
+        // Shown: dealt with in memory only, until Retry, Edit or Delete takes it.
+        setupSettled.formUnion(fresh.map(key))
+        for m in fresh { setupUnsent.append(UnsentMessage(text: m.text, why: m.why, at: clock(), settle: key(m))) }
     }
 
-    private func sendQueuedIfIdle() async {
-        guard !setupSending else { return }
-        // A card's answer never waits here: it goes as data on the card's own route (#330).
-        guard !setupThinking, let queued = setupQueued else { return }
-        setupQueued = nil
-        await sendSetup(queued)
-    }
+    /// Coach's `not_sent` messages shown in this launch, by hash.
+    private var setupSettled: Set<String> = []
 
     /// Sends a message that didn't go through again; an answer's card goes quiet again.
     /// It stays where it was until it's sent or queued: a send that fails puts it back
@@ -5978,6 +6031,7 @@ final class AppModel: ObservableObject {
         // The card was answered since: sending this too would answer it twice.
         if let answer, setupThread.answer(to: answer.id) != nil {
             setupUnsent.remove(at: at)
+            rememberTaken(message)
             return
         }
         setupUnsent.remove(at: at)
@@ -5987,9 +6041,13 @@ final class AppModel: ObservableObject {
             // Not taken at all (too long to join the queue, or no Setup): back in its place.
             if let answer { answered.remove(cardRef(answer.id)) }
             setupUnsent.insert(message, at: min(at, setupUnsent.count))
-        } else if setupUnsent.count > left, let answer {
-            // Tried and kept again as not sent: its card can be answered again.
-            answered.remove(cardRef(answer.id))
+        } else if setupUnsent.count > left {
+            // Tried and kept again as not sent: its card can be answered again, and the new row
+            // is still owed, so it carries its hash on.
+            if let answer { answered.remove(cardRef(answer.id)) }
+            if message.settle != nil { setupUnsent[setupUnsent.count - 1].settle = message.settle }
+        } else {
+            rememberTaken(message)
         }
     }
 
@@ -5997,6 +6055,7 @@ final class AppModel: ObservableObject {
     func discardUnsent(_ message: UnsentMessage) {
         setupUnsent.removeAll { $0.id == message.id }
         if let answer = SetupThread.Answer(message.text) { answered.remove(cardRef(answer.id)) }
+        rememberTaken(message)
     }
 
     /// Takes a message that didn't go through out of Setup's thread, to change it in the
@@ -6165,8 +6224,9 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                 switch e {
-                case .session(let session, _, _, let message):
+                case .session(let session, _, let run, let message):
                     setupLive?.session = session
+                    if let run { setupLive?.run = run }
                     settleSetupChat(session)
                     if let sent, let message { markSetupSent(sent, serverID: message) }
                 case .text(let t):
@@ -6215,7 +6275,6 @@ final class AppModel: ObservableObject {
         await loadSetupThread()
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLive = nil
-        await sendQueuedIfIdle()
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
@@ -6869,44 +6928,4 @@ extension AppModel {
     /// This device can't approve now, so an approval's button is disabled. Sample mode signs
     /// nothing for real, so nothing is blocked there.
     var approvalBlocked: Bool { mode == .kiff && !approvalReadiness.isReady }
-}
-
-/// Which catalog app a connection is to, when planque doesn't name its catalog entry.
-enum AppMatch {
-    /// A name as tafs cloud's recipes fold it: lower case, no leading "_", no spaces, dots,
-    /// dashes or underscores.
-    static func fold(_ name: String) -> String {
-        String(name.lowercased().drop(while: { $0 == "_" }).filter { !" \t\n._-".contains($0) })
-    }
-
-    /// The app's slug, folded: after `connector:<provider>:`, or before `@` in a reviewed entry.
-    static func slug(_ entry: String) -> String? {
-        let raw: String?
-        if entry.hasPrefix("connector:") {
-            let parts = entry.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
-            raw = parts.count == 3 ? String(parts[2]) : nil
-        } else {
-            raw = entry.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init)
-        }
-        guard let folded = raw.map(fold), !folded.isEmpty else { return nil }
-        return folded
-    }
-
-    /// The host of a server planque names, with or without its scheme, path or port.
-    static func host(_ server: String) -> String {
-        var s = Substring(server)
-        if let r = s.range(of: "://") { s = s[r.upperBound...] }
-        if let slash = s.firstIndex(of: "/") { s = s[..<slash] }
-        if let colon = s.firstIndex(of: ":") { s = s[..<colon] }
-        return s.lowercased()
-    }
-
-    /// A managed provider's connection is the app its toolkit names. Any other is the app one
-    /// of its server's host labels names whole ("mcp.stripe.com" is Stripe, "notstripe.com"
-    /// isn't), never a provider's host, which serves every one of its apps.
-    static func isOf(_ g: PlanqueClient.Grant, _ entry: String) -> Bool {
-        guard let slug = slug(entry) else { return false }
-        if let connector = g.request.connector { return connector.toolkit.map(fold) == slug }
-        return host(g.request.server).split(separator: ".").contains { fold(String($0)) == slug }
-    }
 }

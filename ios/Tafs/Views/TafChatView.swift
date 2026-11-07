@@ -173,7 +173,8 @@ struct TafChatView: View {
                         }
                         if !thinking { ended(taf) }
                         if let queued = state.queued {
-                            QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
+                            // tafs cloud holds it, and sends it once the taf is done (docs/chat.md).
+                            QueuedBubble(text: queued, who: taf?.name ?? "your taf")
                                 .id("queued")
                                 .pinnedTop(pinned == "queued")
                         }

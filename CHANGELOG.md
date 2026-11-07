@@ -5,6 +5,13 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **What's written while a taf or Coach works goes to its run once, and tafs cloud holds what it doesn't take (iOS, as Android does below).** iOS sends `hold: true` on `steer` (docs/chat.md) in a taf's chat and, new on iOS, in Coach's, which used to wait in the app.
+  - The run reads it at its next step, or tafs cloud holds it for that chat. It shows dimmed with "Waits until it's done, then goes as your next message", as on Android, and goes as the person's next message once the taf is done.
+  - More than tafs cloud holds (`held_full`) leaves the words in the composer, with tafs cloud's why as it says it. A message that didn't reach tafs cloud stays as not sent, with Retry.
+  - The app's own queue is gone: it never sends what a run didn't read. What a stopped run never read shows once as not sent, with tafs cloud's why and Retry, which sends it as a new message. It's remembered as handled only when Retry, Edit or Delete takes it, so a restart before that shows it again.
+
+- **Connect apps lists a connection under the app planque names for it (both apps).** planque now gives every grant its app (`entry`), a vendor's own sign-in included (kiff/planque#115 and #116's reviewed list of vendors' own servers). The apps match by it, or by the grant tafs cloud named for a row, and no longer work an app out from a connection's toolkit or server: a connection planque leaves unnamed, because its app is unclear, lists under none. On Android, an app's connections now scroll when there are more than fit: the rest were cut off below the screen.
+
 - **The AI disclosure comes first, in the message's language, and "Built with tafs." is gone (tafs cloud; needs kiff/agents#363 deployed first).**
   - **Each taf's definition** carries its disclosure line in Spanish, French, German, Portuguese and Italian too (`disclose.lines`), naming who it writes for, and no `credit`. kiff/agents puts the line first in each text part of an outside message, in the message's language, said once. No message carries "Built with tafs.", on WhatsApp, SMS or email (the owner's call, 7 Nov).
   - **A taf is asked** to start each outside message with its line, word for word, in the language it writes in, and is given each one.

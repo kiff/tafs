@@ -242,7 +242,23 @@ struct SetupChatView: View {
                         ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true, steady: true).id("live")
                     }
                     if !thinking { ended }
-                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued").pinnedTop(pinned == "queued") }
+                    // Written to Coach's run while it goes, not read yet, as kiff/agents says (docs/chat.md).
+                    if let steering = model.setupThread.steering, !steering.over {
+                        ForEach(Array(steering.untaken.enumerated()), id: \.offset) { i, m in
+                            VStack(alignment: .trailing, spacing: 4) {
+                                ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
+                                    .opacity(0.8)
+                                Text("Coach reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .accessibilityElement(children: .combine)
+                            .id("steer|\(i)")
+                            .pinnedTop("steer|\(i)" == pinned)
+                        }
+                    }
+                    // tafs cloud holds it, and sends it once Coach is done (docs/chat.md).
+                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer").id("queued").pinnedTop(pinned == "queued") }
                     Color.clear.frame(height: 0).threadFoot()
                     // Room under a pinned message, so a short one reaches the top at once (kiff/tafs#243):
                     // the screen less the turn it starts (the 845 test), so the answer grows into it
@@ -891,20 +907,24 @@ struct UnsentBubble: View {
 
 /// What the owner wrote while the chat's agent works: sent once it's done, or not.
 struct QueuedBubble: View {
+    /// What waits, held by tafs cloud (docs/chat.md, `hold`): the same words on both apps.
+    static let heldWords = "Waits until it's done, then goes as your next message"
     let text: String
     /// Who it waits for: "this answer" in the setup chat, or the taf's name.
     let who: String
-    let unqueue: () -> Void
+    /// Takes it back, while the app holds it; nil once tafs cloud does, which says
+    /// `heldWords` under it instead.
+    var unqueue: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
             ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .owner, text: text, session: "queued"), taf: nil)
                 .opacity(0.6)
-            Text("Sends when \(who) is done").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            Text(unqueue == nil ? Self.heldWords : "Sends when \(who) is done").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
-            Button("Don't send", role: .destructive, action: unqueue)
+            if let unqueue { Button("Don't send", role: .destructive, action: unqueue) }
         }
         .accessibilityElement(children: .combine)
     }

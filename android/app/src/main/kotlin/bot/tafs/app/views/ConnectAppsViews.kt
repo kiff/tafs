@@ -83,38 +83,11 @@ object ConnectAppsWords {
 }
 
 /**
- * The account's live connections to [app]: by its catalog entry, the grant tafs cloud named for it, or the app itself
- * ([AppMatch.isOf]), so a sign-in Coach started at the vendor's own server is listed under its app too.
+ * The account's live connections to [app]: by the app planque names for each (its `entry`, which planque gives every grant,
+ * a vendor's own sign-in included), or the grant tafs cloud named for it.
  */
 fun connectionsOf(state: AppState, app: ConnectApps.App): List<bot.tafs.app.kiff.Grant> =
-  state.grants.filter { (it.entry == app.entry || it.id == app.grant || AppMatch.isOf(it, app)) && it.status !in setOf("disconnected", "failed") }
-
-/** Which catalog app a connection is to, when planque doesn't name its catalog entry. */
-object AppMatch {
-  /** A name as tafs cloud's recipes fold it: lower case, no leading "_", no spaces, dots, dashes or underscores. */
-  fun fold(name: String): String = name.lowercase().trimStart('_').replace(Regex("""[\s._-]+"""), "")
-
-  /** The app's slug, folded: after `connector:<provider>:`, or before `@` in a reviewed entry ("notion@1"). */
-  fun slug(app: ConnectApps.App): String? {
-    val e = app.entry
-    val raw = if (e.startsWith("connector:")) e.split(':', limit = 3).getOrNull(2) else e.substringBefore('@')
-    return raw?.let(::fold)?.takeIf { it.isNotEmpty() }
-  }
-
-  /** The host of a server planque names, with or without its scheme, path or port. */
-  fun host(server: String): String = server.substringAfter("://").substringBefore('/').substringBefore(':').lowercase()
-
-  /**
-   * A managed provider's connection is the app its toolkit names. Any other is the app one of its server's host labels names
-   * whole ("mcp.stripe.com" is Stripe, "notstripe.com" isn't), never a provider's host, which serves every one of its apps.
-   */
-  fun isOf(g: bot.tafs.app.kiff.Grant, app: ConnectApps.App): Boolean {
-    val slug = slug(app) ?: return false
-    val connector = g.request.connector
-    if (connector != null) return connector.toolkit?.let(::fold) == slug
-    return host(g.request.server).split('.').any { fold(it) == slug }
-  }
-}
+  state.grants.filter { (it.entry == app.entry || it.id == app.grant) && it.status !in setOf("disconnected", "failed") }
 
 /**
  * Connect apps (A1): tafs cloud's catalog, first as it orders it, then KIFF's own apps for Google, Microsoft and Slack. Each
@@ -194,7 +167,7 @@ fun ConnectAppsSheet(
         containerColor = Theme.background,
         title = { Text(ConnectAppsWords.yourConnections(app.title), style = scaled(20, FontWeight.Bold, Theme.ink)) },
         text = {
-          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+          Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
             connections.forEach { g ->
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -142,6 +142,11 @@ struct SetupThread: Equatable {
     var coachLines: [TafsCloud.CoachLine] = []
     /// The drives that ended in the thread (docs/drive.md), each at its end.
     var drives: [TafsCloud.DriveRecap] = []
+    /// The run Coach is at work in, as tafs cloud says: what a message written meanwhile goes to.
+    var workingRun: String?
+    /// What was written to Coach's latest run, as tafs cloud says (docs/chat.md): what it
+    /// hasn't read, what tafs cloud holds for once it's done, and what a stopped run never read.
+    var steering: TafsCloud.Steering?
 
     /// The plan, shown pinned above the thread rather than in it.
     var plan: ShownComponent? { components.last { $0.component.type == .steps } }
