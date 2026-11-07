@@ -30,6 +30,7 @@ import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan
 import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_SAID, END_WORDS, putResult, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { replayHeld, type Unanswered, UNANSWERED_WORDS, unansweredOf } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -3304,6 +3305,17 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
     titlesOf(event, me, taf, deps),
   ]);
+  // What went unanswered while the tafs waited for credits, on its door's or event's stop for 7 days (doors/hold.ts).
+  const unanswered = deps.doors ? await unansweredOf({ doors: deps.doors, now }, me.tenantID, taf.id).catch(() => []) : [];
+  const count = (f: (u: Unanswered) => boolean) => unanswered.filter(f).length;
+  const shownDoors = doors.map((d) => {
+    const n = count((u) => u.kind === "door" && u.door === d.id);
+    return n ? { ...d, unanswered: UNANSWERED_WORDS.dial(n, "message") } : d;
+  });
+  const unansweredEvents = [...new Set(unanswered.filter((u) => u.kind === "app_event").map((u) => `${u.grant}\u0000${u.event}`))].map((k) => {
+    const [grant = "", event = ""] = k.split("\u0000");
+    return { grant, event, line: UNANSWERED_WORDS.dial(count((u) => u.kind === "app_event" && u.grant === grant && u.event === event), "event") };
+  });
   const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
     .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
   // The newest dial change made after the live version and not yet live: it waits for the owner.
@@ -3325,8 +3337,8 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   return knobOf({
     name: taf.name,
     does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: tafPurpose(taf, job) },
-    unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools, addDoor: manages,
-    ...(taf.appEvents ? { appEvents: taf.appEvents } : {}),
+    unscheduled: taf.unscheduled === true, schedule, doors: shownDoors, places: placesOf(taf), busy: schedule?.busy, followUps, tools, addDoor: manages,
+    ...(taf.appEvents ? { appEvents: taf.appEvents } : {}), ...(unansweredEvents.length ? { unansweredEvents } : {}),
     ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
     ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
     today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
@@ -6000,6 +6012,24 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
 export async function sweepReplies(deps: Deps): Promise<Array<{ ref: string; waiting: boolean }>> {
   if (!deps.doors) return [];
   return sweepDoorReplies(doorContext(deps));
+}
+
+/**
+ * The door messages and app events kept while the account's tafs waited for credits (doors/hold.ts):
+ * each account's, oldest first across its tafs, started once kiff/agents takes runs again, and each
+ * one past 48 hours said unanswered. The store can't list items, so it goes by account and taf.
+ */
+export async function sweepHeld(deps: Deps): Promise<Array<{ tenant: string; started: number; unanswered: number; waiting: boolean }>> {
+  if (!deps.doors) return [];
+  const out: Array<{ tenant: string; started: number; unanswered: number; waiting: boolean }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const r = await replayHeld(doorContext(deps), tenant).catch((err) => {
+      console.warn(`held: ${tenant}: ${err instanceof Error ? err.message : "error"}`);
+      return undefined;
+    });
+    if (r && (r.started || r.unanswered || r.waiting)) out.push({ tenant, ...r });
+  }
+  return out;
 }
 
 /**

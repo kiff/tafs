@@ -11,6 +11,7 @@ import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
 import { eventLog, logEvent } from "../events.js";
 import { disclosureLineFor } from "../../jobs.js";
+import { anyHeld, hold, replayHeld, waitsForCredits } from "./hold.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
 export interface DoorsConfig {
@@ -176,7 +177,7 @@ export function parseDoorMessage(text: string): { app: string; from: string; sub
 
 /* ------------------------------------------------------------------ arrivals */
 
-export type Outcome = "unknown" | "closed" | "stale" | "seen" | "resting" | "empty" | "run" | "knock";
+export type Outcome = "unknown" | "closed" | "stale" | "seen" | "resting" | "empty" | "run" | "knock" | "held";
 
 /**
  * A message that came through a door. In order: its door (none, retired or
@@ -222,7 +223,24 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
       await addKnock(ctx, tenant, taf, door, app, a);
       return "knock";
     }
-    await startDoorRun(ctx, cfg, tenant, taf, door, app, a, () => { started = true; }, own);
+    // While the account's tafs wait for credits, a key's message is kept, never answered by the door
+    // itself, and runs once they go on, oldest first: one that comes while others wait goes behind them
+    // (hold.ts, docs/accounts.md).
+    if (await anyHeld(ctx, tenant, taf.id)) {
+      await hold(ctx, tenant, taf, { kind: "door", door: door.id, arrival: a });
+      // Kept: from here, a failure never makes the provider send it again.
+      started = true;
+      await replayHeld(ctx, tenant, taf.id).catch((err) => console.error("held not replayed:", err instanceof Error ? err.message : "error"));
+      return "held";
+    }
+    try {
+      await startDoorRun(ctx, cfg, tenant, taf, door, app, a, () => { started = true; }, own);
+    } catch (err) {
+      if (started || !waitsForCredits(err)) throw err;
+      await hold(ctx, tenant, taf, { kind: "door", door: door.id, arrival: a });
+      started = true;
+      return "held";
+    }
     return "run";
   } catch (err) {
     if (!started) await store.remove(seen).catch(() => undefined);
@@ -230,7 +248,7 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
   }
 }
 
-async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, taf: Taf, door: Door, app: DoorApp, a: Arrival, started: () => void, owner?: string): Promise<void> {
+export async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, taf: Taf, door: Door, app: DoorApp, a: Arrival, started: () => void, owner?: string): Promise<void> {
   const { store } = ctx.doors;
   const { text, cut: wasCut } = cut(a.text || "(no text)");
   const notes: string[] = [];
@@ -253,7 +271,7 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   };
   await store.put(doorKeys.reply(tenant, ref), reply, addDays(ctx.now, DOOR.replyDays));
   await update<{ refs: string[] }>(store, doorKeys.pending(tenant, taf.id),
-    (read) => ({ refs: [ref, ...(read?.refs ?? [])].slice(0, 50) }), addDays(ctx.now, DOOR.replyDays));
+    (read) => ({ refs: [ref, ...(read?.refs ?? []).filter((r) => r !== ref)].slice(0, 50) }), addDays(ctx.now, DOOR.replyDays));
   // The sender asks: their sessions are theirs in kiff/agents, never a member's or another sender's.
   // The owner's own proven email is theirs: it goes on in their live chat, as the app's chat does,
   // so it shows there as their message, and an open chat reads it at the next change.
@@ -266,7 +284,8 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
     } catch (err) {
       // The thread's chat is gone or busy: a new chat takes the message.
       // The owner's live chat busy: a new chat of theirs takes it, as the app's New conversation would.
-      if (!((owner || prior?.session) && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429)) throw err;
+      // A refusal for credits isn't the chat's: a new chat is refused the same.
+      if (!((owner || prior?.session) && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429) || waitsForCredits(err)) throw err;
       run = await ctx.agents.startRun(tenant, taf.id, input, { requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     }
   } catch (err) {

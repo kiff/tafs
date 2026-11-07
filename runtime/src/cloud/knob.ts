@@ -104,7 +104,11 @@ export interface Knob {
 }
 
 /** A door as the doors list gives it. */
-export interface KnobDoor { id: string; label: string; open: boolean; words: { state: string; tap: string }; resting?: boolean; knocks?: number }
+export interface KnobDoor {
+  id: string; label: string; open: boolean; words: { state: string; tap: string }; resting?: boolean; knocks?: number;
+  /** Its messages that went unanswered while the tafs waited for credits, in the last 7 days, in words (doors/hold.ts). */
+  unanswered?: string;
+}
 
 export interface KnobInput {
   name: string;
@@ -131,6 +135,8 @@ export interface KnobInput {
   setting?: KnobSetting;
   /** The app events the taf wakes on, as applied, with planque's subscription once approved. */
   appEvents?: Trigger[];
+  /** By connection and event: those that went unanswered while the tafs waited for credits, in the last 7 days, in words. */
+  unansweredEvents?: Array<{ grant: string; event: string; line: string }>;
   version?: number;
   zone: string;
   now: Date;
@@ -174,7 +180,7 @@ const PLACE: Record<ResultPlace, { label: string; words: string }> = {
 export function knobOf(k: KnobInput): Knob {
   const wakes: RingItem[] = [];
   for (const d of k.doors) {
-    wakes.push({ id: `door_${d.id}`, kind: "door", door: d.id, label: d.label, words: d.words.state, on: d.open,
+    wakes.push({ id: `door_${d.id}`, kind: "door", door: d.id, label: d.label, words: d.unanswered ? `${d.words.state} · ${d.unanswered}` : d.words.state, on: d.open,
       state: d.open ? "Open" : "Closed", tap: d.words.tap, ok: "door",
       look: d.knocks ? "knock" : d.resting && d.open ? "resting" : d.open ? "open" : "closed" });
   }
@@ -198,7 +204,9 @@ export function knobOf(k: KnobInput): Knob {
     const subscription = k.appEvents?.find((a) => sameAppEvent(a, t))?.subscription;
     const approval = { state: subscription ? "approved" as const : "needed" as const, grant: t.grant ?? "", event: t.event ?? "", config: t.config ?? {},
       ...(subscription ? { subscription } : {}) };
-    wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", ...(t.grant ? { grant: t.grant } : {}), label: name.split(" · ")[0] || name, words: triggerWords(t),
+    const unanswered = k.unansweredEvents?.find((u) => u.grant === t.grant && u.event === t.event)?.line;
+    wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", ...(t.grant ? { grant: t.grant } : {}), label: name.split(" · ")[0] || name,
+      words: unanswered ? `${triggerWords(t)} · ${unanswered}` : triggerWords(t),
       on: !!subscription, state: subscription ? "On" : "Needs your approval", approval, ...(subscription ? {} : { ok: "approve" as const, tap: "Approve to start listening" }), trigger: t });
   }
   for (const f of k.followUps ?? []) {
