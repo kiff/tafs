@@ -6183,7 +6183,8 @@ class AppModel(
       if (server?.status == 409 && server.refused("limit_changed")) {
         // Someone else raised it, or the screen was from before: read it again, and the raise is offered from the new limit.
         readBalanceNow(generation)
-        _state.update { it.copy(raiseError = server.words ?: bot.tafs.app.model.UsageWords.LIMIT_CHANGED) }
+        // The app's own words, as iPhone's: KIFF's say to read it again, which the app has just done.
+        _state.update { it.copy(raiseError = bot.tafs.app.model.UsageWords.LIMIT_CHANGED) }
       } else if (server?.status == 409 && server.refused("limit_ceiling")) {
         // KIFF's words say to contact it; the app's, the same as iPhone's, where it sends none.
         _state.update { it.copy(raiseError = server.words ?: bot.tafs.app.model.UsageWords.LIMIT_CEILING) }

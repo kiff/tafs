@@ -7,15 +7,15 @@ import androidx.compose.ui.test.performClick
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.TafsTheme
+import bot.tafs.app.kiff.Balance
 import bot.tafs.app.kiff.KiffClient
-import bot.tafs.app.kiff.Usage
 import bot.tafs.app.model.UsageWords
 import bot.tafs.app.views.SettingsSheet
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
-/** Settings opens with the Plan card: the plan in one line, and a tap opens Plan & usage. */
+/** Settings opens with the Plan card: the plan in tafs cloud's one line (`plan_line`), and a tap opens Plan & usage. */
 class PlanCardTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
@@ -23,10 +23,9 @@ class PlanCardTest {
 
   private var opened = 0
 
-  private val ended = KiffClient.json.decodeFromString<Usage>(
-    """{"plan":"trial","period":{"start":"2026-11-01T00:00:00Z","end":"2026-12-01T00:00:00Z"},"can_add_tasks":true,"billing":{"source":""},
-    "tasks":{"counted":0,"included":0,"left":0,"packs":0},"trial":{"ends_at":"2026-11-01T21:56:00Z","days_left":0,"tasks_left":0},
-    "store":{"app_account_token":"acct_1","google_solo_product":"solo_monthly","packs":[]}}""",
+  private val noPlan = KiffClient.json.decodeFromString<Balance>(
+    """{"balance":{"state":"waiting","why":"no_plan","meter_pct":null,"words":"No plan","warning":"Choose a plan to start your tafs."},
+       "plan_line":"No plan · choose one to start","plan_tone":"waiting","home_line":"Choose a plan to start your tafs."}""",
   )
 
   private fun show(state: AppState) = rule.setShown {
@@ -39,22 +38,22 @@ class PlanCardTest {
   }
 
   @Test fun thePlanCardSaysThePlanAndOpensPlanAndUsage() {
-    show(AppState(mode = Mode.kiff, ready = true, usage = ended))
-    rule.onNodeWithText("Trial ended · Start Solo").performScrollTo().assertIsDisplayed().performClick()
+    show(AppState(mode = Mode.kiff, ready = true, balance = noPlan))
+    rule.onNodeWithText("No plan · choose one to start").performScrollTo().assertIsDisplayed().performClick()
     rule.waitForIdle()
     assertEquals(1, opened)
   }
 
   @Test fun theSampleShowsNoPlanCardButStillOpensPlanAndUsage() {
-    show(AppState(mode = Mode.sample, ready = true, usage = ended))
-    assertEquals("no Plan card in the sample", 0, rule.onAllNodes(androidx.compose.ui.test.hasText("Trial ended", substring = true)).fetchSemanticsNodes().size)
+    show(AppState(mode = Mode.sample, ready = true, balance = noPlan))
+    assertEquals("no Plan card in the sample", 0, rule.onAllNodes(androidx.compose.ui.test.hasText("No plan", substring = true)).fetchSemanticsNodes().size)
     assertEquals(0, rule.onAllNodes(androidx.compose.ui.test.hasText("PLAN")).fetchSemanticsNodes().size)
     rule.onNodeWithText(UsageWords.TITLE).performScrollTo().assertIsDisplayed().performClick()
     rule.waitForIdle()
     assertEquals(1, opened)
   }
 
-  @Test fun beforeKiffsUsageIsReadTheCardStillOpensPlanAndUsage() {
+  @Test fun beforeTheBalanceIsReadTheCardStillOpensPlanAndUsage() {
     show(AppState(mode = Mode.kiff, ready = true))
     rule.onNodeWithText(UsageWords.TITLE).performScrollTo().assertIsDisplayed().performClick()
     rule.waitForIdle()

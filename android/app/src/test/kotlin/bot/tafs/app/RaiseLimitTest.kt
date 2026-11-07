@@ -140,12 +140,12 @@ class RaiseLimitTest {
     assertFalse(m.state.value.raising)
   }
 
-  @Test fun kiffsWordsForAChangedLimitAreShownAsTheyAre() = runTest {
+  @Test fun aChangedLimitSaysItWasReadAgainNotToReadItAgain() = runTest {
     val m = model(waiting)
     transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_changed","message":"The spend limit changed meanwhile. Read it again.","limit_cents":13000}""")
     transport.answer("GET /v1/usage/balance", 200, raised)
     assertFalse(m.raiseLimit())
-    assertEquals("The spend limit changed meanwhile. Read it again.", m.state.value.raiseError)
+    assertEquals("The limit changed meanwhile. Here it is now: raise it again if it's still needed.", m.state.value.raiseError)
     assertEquals("read again, and offered from the new limit", 13000L, m.state.value.balance!!.balance.raise!!.fromCents)
   }
 
