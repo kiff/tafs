@@ -415,9 +415,6 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
-  /** Clearing removed tafs' connections is on its way, and how it went, under them in Connect apps. */
-  val clearingRemoved: Boolean = false,
-  val clearNote: String? = null,
   /** A drive card being approved, by its key: Approve waits for the fingerprint and tafs cloud. */
   val driveStarting: String? = null,
   /** The drive that just ended, for the "What I did" card in Coach's chat, until the person closes it. */
@@ -3866,56 +3863,6 @@ class AppModel(
     }
     refreshConnections()
     return Disconnected(grants.size - left, left, kept)
-  }
-
-  /**
-   * Clears the connections of tafs removed since, from Connect apps (the owner's ask): one confirmation, one fingerprint, then the
-   * device key signs each disconnect, as removing a taf does. One another taf's live Card uses is kept, and the line says so.
-   */
-  suspend fun clearRemovedConnections(grantIds: List<String>): Boolean {
-    val tenant = kiffTenant
-    val grants = _state.value.grants.filter { it.id in grantIds }
-    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || grants.isEmpty() || !_state.value.planqueReady) return false
-    if (_state.value.clearingRemoved) return false
-    val generation = accountGeneration
-    _state.update { it.copy(clearingRemoved = true, clearNote = null) }
-    try {
-      try {
-        signer.sign("tafs.disconnect.v1|$tenant|${grants.joinToString(",") { it.id }}".toByteArray(), bot.tafs.app.model.ConnectionWords.clearTitle(grants.size))
-      } catch (e: SignerException) {
-        if (generation == accountGeneration) _state.update { it.copy(clearNote = notSigned(e, "Not done: it wasn't confirmed.")) }
-        return false
-      }
-      if (generation != accountGeneration) return false
-      val kept = grants.filter { _state.value.tafsUsing(it, except = it.request.agent).isNotEmpty() }
-      val ending = grants - kept.toSet()
-      var left = 0
-      if (ending.isNotEmpty()) {
-        planque.tenant = tenant
-        planque.deviceLoader = { kiff.thisDeviceId() }
-        val signer = signer
-        planque.signer = { signer.signConfirmed(it) }
-        try {
-          for (g in ending) {
-            if (generation != accountGeneration) return false
-            try {
-              planque.disconnect(g.id)
-            } catch (e: CancellationException) {
-              throw e
-            } catch (_: Exception) {
-              left += 1
-            }
-          }
-        } finally {
-          planque.signer = null
-        }
-      }
-      refreshConnections()
-      if (generation == accountGeneration) _state.update { it.copy(clearNote = bot.tafs.app.model.ConnectionWords.cleared(ending.size - left, kept.size, left)) }
-      return left == 0
-    } finally {
-      if (generation == accountGeneration) _state.update { it.copy(clearingRemoved = false) }
-    }
   }
 
   /** What removing a taf did to its connections: disconnected, couldn't be, and kept for another taf (in words). */

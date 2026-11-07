@@ -125,12 +125,10 @@ connection's tools from KIFF, and revokes its sign-in at the app only when no ot
 taf that reused it, or the same provider account); the last connection on a sign-in revokes it. The list is read again
 after.
 
-**From removed tafs** comes last: the connections of tafs removed since, with no Sign in again and no Disconnect each.
-One **Clear these connections** asks first (“Clear 3 connections from removed tafs?”, “Each is signed out at its vendor.
-One another taf's Card uses is kept.”), then one Face ID or fingerprint, and the device key signs each disconnect, as
-removing a taf does. One another taf's live Card uses is kept, and the line under them says how it went: “Cleared 2.
-Kept 1: another taf uses it.”, or how many couldn't be cleared, to try again. On Android, `byTaf` and
-`AppModel.clearRemovedConnections`; the same on iPhone and iPad.
+**Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing
+that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that
+isn't a taf, so nothing there says it was removed (`byTaf`, the same on iPhone and iPad). Clearing removed tafs'
+connections at once waits for tafs cloud to mark a grant whose taf it actually removed.
 
 Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own
 confirmation, after its Cards are revoked and before tafs cloud removes the rest. Its result says the connections are
