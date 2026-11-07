@@ -114,8 +114,17 @@ connect some apps that aren't on the list, and tells you when one isn't availabl
 ## Disconnecting
 
 A connected app (“Connected ✓”) opens its connections: each planque grant the account has for that app, live (not
-`disconnected` or `failed`), with the taf it was set up for (“Set up for Refunds”), or “Its taf was removed”, and
-**Disconnect** for whoever manages the account's Cards. Disconnect asks first, naming the one taf it ends (“Disconnect
+`disconnected` or `failed`), grouped by the taf it was set up for, under that taf's name. Tafs with a connection
+needing attention come first (waiting on its sign-in, signed out, or a failed last call), then the rest by name. Each
+connection reads as the vendor's account when planque gives one, else the app's name, with planque's status words, and
+**Disconnect** for whoever manages the account's Cards, or **Cancel** while its sign-in waits (“Cancel the sign-in to
+Stripe?”, with Keep waiting).
+
+The connections of tafs since removed come last, under **From removed tafs**, with no Sign in again and no Disconnect
+of their own. One action, **Clear these connections**, asks first (“Clear 3 connections from removed tafs?”), then
+Face ID once disconnects each one no live taf uses. One another taf's Card draws on is kept, and the result says so
+(“Kept 1: another taf uses it.”). On iPhone and iPad, `AppConnectionsView` with `AppModel.connectionGroups` and
+`clearRemovedConnections`. Disconnect asks first, naming the one taf it ends (“Disconnect
 Stripe from Refunds?”, with Cancel), names any other taf whose Card draws on its tools, which stops too (“Chargebacks
 stops too.”), and says other connections to the app stay; Face ID or the fingerprint then asks the same words. It calls planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes that
 connection's tools from KIFF, and revokes its sign-in at the app only when no other live connection uses it (a second

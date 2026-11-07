@@ -5395,11 +5395,73 @@ final class AppModel: ObservableObject {
         grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
     }
 
-    /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
-    /// who uses it.
-    func setUpFor(_ grant: PlanqueClient.Grant) -> String {
-        guard let name = tafOf(grant) else { return "Its taf was removed" }
-        return "Set up for \(name)"
+    /// An app's connections for one taf, under its name (the owner's Connect apps ask): the
+    /// heading, and its connections in planque's order.
+    struct ConnectionGroup: Identifiable, Equatable {
+        /// The KIFF agent that asked for them.
+        let id: String
+        let taf: String
+        var grants: [PlanqueClient.Grant]
+    }
+
+    /// An app's connections grouped by the taf each was set up for. Tafs with one needing
+    /// attention (waiting on its sign-in, signed out, or a failed last call) come first, then
+    /// the rest by name. The connections of tafs since removed come apart, to show last.
+    func connectionGroups(of app: TafsCloud.ConnectApps.App) -> (tafs: [ConnectionGroup], removed: [PlanqueClient.Grant]) {
+        Self.connectionGroups(connections(of: app), taf: { self.tafOf($0) }, attention: { $0.waitingSignIn || $0.needsReconnect || self.lastFailure($0) != nil })
+    }
+
+    static func connectionGroups(_ grants: [PlanqueClient.Grant], taf: (PlanqueClient.Grant) -> String?,
+                                 attention: (PlanqueClient.Grant) -> Bool) -> (tafs: [ConnectionGroup], removed: [PlanqueClient.Grant]) {
+        var groups: [ConnectionGroup] = []
+        var removed: [PlanqueClient.Grant] = []
+        for g in grants {
+            guard let name = taf(g) else { removed.append(g); continue }
+            if let i = groups.firstIndex(where: { $0.id == g.request.agent }) {
+                groups[i].grants.append(g)
+            } else {
+                groups.append(ConnectionGroup(id: g.request.agent, taf: name, grants: [g]))
+            }
+        }
+        let needs = Set(groups.filter { $0.grants.contains(where: attention) }.map(\.id))
+        groups.sort { a, b in
+            let (x, y) = (needs.contains(a.id), needs.contains(b.id))
+            if x != y { return x }
+            let order = a.taf.localizedCaseInsensitiveCompare(b.taf)
+            return order == .orderedSame ? a.id < b.id : order == .orderedAscending
+        }
+        return (groups, removed)
+    }
+
+    /// Clears an app's connections from removed tafs, under one Face ID the person asked for:
+    /// each one no live taf uses is disconnected; one another taf's Card draws on is kept, and
+    /// said. Nil when all went; else what to say, empty when Face ID was closed.
+    func clearRemovedConnections(of app: TafsCloud.ConnectApps.App) async -> String? {
+        let removed = connectionGroups(of: app).removed
+        guard !removed.isEmpty else { return nil }
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return "Sign in with KIFF again: this sign-in can't sign for the \(ThisDevice.kind)." }
+        let clear = removed.filter { alsoStops($0).isEmpty }
+        let kept = removed.count - clear.count
+        guard !clear.isEmpty else { return ConnectionGroupWords.kept(kept) }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.disconnect-removed.v1|\(tenant)|\(clear.map(\.id).sorted().joined(separator: ","))".utf8),
+                                      reason: ConnectionGroupWords.clearTitle(clear.count))
+        } catch { return "" }
+        guard gen == accountGeneration else { return "" }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        var left = 0
+        for g in clear {
+            guard gen == accountGeneration else { return "" }
+            do { _ = try await planque.disconnect(grantID: g.id) } catch { left += 1 }
+        }
+        await refreshConnections()
+        guard gen == accountGeneration else { return "" }
+        let words = [left > 0 ? ConnectionGroupWords.notCleared(left) : nil, kept > 0 ? ConnectionGroupWords.kept(kept) : nil].compactMap { $0 }
+        return words.isEmpty ? nil : words.joined(separator: " ")
     }
 
     /// The taf a connection was set up for, by name; nil once that taf was removed.
