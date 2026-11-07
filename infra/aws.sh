@@ -178,9 +178,7 @@ aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-acce
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$AGENTS_FN_ARN\",
      \"Condition\": {\"Bool\": {\"lambda:InvokedViaFunctionUrl\": \"true\"}}},
     {\"Effect\": \"Allow\", \"Action\": [\"secretsmanager:CreateSecret\", \"secretsmanager:PutSecretValue\", \"secretsmanager:DeleteSecret\", \"secretsmanager:DescribeSecret\"],
-     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]},
-    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\",
-     \"Resource\": [\"$AGENTS_SECRETS:agents/*/kiff/taf-*\"]}$DOORS_READ$FCM_READ
+     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ$FCM_READ
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)

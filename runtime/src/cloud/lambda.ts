@@ -56,15 +56,6 @@ async function putSecret(name: string, value: string, description: string): Prom
 
 const keys: Keys = {
   put: (tenant, tafID, key) => putSecret(`${KEYS_PREFIX}${tenant}/kiff/${tafID}`, key, "A taf's KIFF agent key, for kiff/agents"),
-  // Read only when the taf is removed, to archive its KIFF agent with it (infra/aws.sh scopes it to these keys).
-  async get(tenant, tafID) {
-    try {
-      return (await secrets.send(new GetSecretValueCommand({ SecretId: `${KEYS_PREFIX}${tenant}/kiff/${tafID}` }))).SecretString;
-    } catch (err) {
-      if (err instanceof ResourceNotFoundException) return undefined;
-      throw err;
-    }
-  },
   async remove(tenant, tafID) {
     try {
       // For good, at once: a removed taf's key must not outlive it.
