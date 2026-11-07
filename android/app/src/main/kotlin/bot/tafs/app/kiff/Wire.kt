@@ -236,7 +236,7 @@ data class SteerWords(val text: String = "", val at: String = "", val why: Strin
 
 /** The thread's `steering`, as the app shows it: what waits for the taf to be done, and what a stopped run never read. */
 @Serializable
-data class WireSteering(val held: SteerWords? = null, @SerialName("not_sent") val notSent: List<SteerWords> = emptyList())
+data class WireSteering(val run: String? = null, val held: SteerWords? = null, @SerialName("not_sent") val notSent: List<SteerWords> = emptyList())
 
 // MARK: Alerts
 

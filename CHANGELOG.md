@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **What a stopped run never read shows once, as on iOS (Android).** Each of tafs cloud's `not_sent` messages becomes its own Not sent row once, with tafs cloud's why, Edit and Retry. Once Retry or Edit takes it, it's remembered by a hash, never its words, across launches, so it never comes back, and a second Retry finds nothing to send. Until then a restart shows it again. Before, Android drew it from each read of the thread until a newer run.
 - **A message written while the taf works is sent once, and tafs cloud holds it (Android).** The app sends `hold: true` on a steer and never resends on a refusal. What waits shows as the person's own words, dimmed, with "Waits until it's done, then goes as your next message". What a stopped run never read shows as Not sent with tafs cloud's why, Edit and Retry. `409 held_full` shows tafs cloud's words and puts the text back in the box. An older tafs cloud's plain 409 still sends the message as a new one, so there's no deploy order. iOS follows in the next app batch.
 - **tafs cloud holds a message written while the taf works, when its run doesn't take it (tafs cloud; apps opt in with `hold`).**
   - **The refusal:** a steer refused because the run had ended, or held as many messages as it takes, was a 409, and each app kept its own queue: iOS held the message, while Android sent it at once.
