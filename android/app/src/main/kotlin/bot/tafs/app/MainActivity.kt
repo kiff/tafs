@@ -495,6 +495,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       stopChat = model::stopChat,
       retryUnsent = model::retryUnsent,
       editUnsent = model::editUnsent,
+      deleteUnsent = model::deleteUnsent,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
       loadReport = model::loadReport,
