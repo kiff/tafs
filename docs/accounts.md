@@ -5,9 +5,9 @@ are, on which account, with which rights. People, groups, usage and billing are 
 the app shows what KIFF says, and each change is the person's own act, behind Face ID.
 
 Code: in the app, `SignInView` (`SettingsView`, `AccountView`), `PeopleViews`,
-`ShareViews` (`ShareTafSheet`, `OverviewView`), `UsageView`, `TasksViews`,
+`ShareViews` (`ShareTafSheet`, `OverviewView`), `UsageView`, `PlanViews`,
 `DeleteAccountView`, `Services/Purchases.swift`, and the Signing in, People, Usage,
-Tasks and plans and Deleting the account sections of `AppModel`; `KIFFClient`. In tafs
+Plan & usage and Deleting the account sections of `AppModel`; `KIFFClient`. In tafs
 cloud, `person`, `needTaf`, `managesTaf`, `deleteAccount`, `usageBalance`, `usageCredits` and
 `tafCredits` in `handler.ts`, and `runtime/src/cloud/credits.ts`.
 
