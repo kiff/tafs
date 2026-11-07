@@ -45,8 +45,8 @@ final class ConnectionSheetTests: XCTestCase {
 
     /// An app's connections grouped by taf (the owner's Connect apps ask): a taf with one
     /// needing attention first, the rest by name, each taf's connections together in planque's
-    /// order; those of tafs since removed apart, to show last.
-    func testAnAppsConnectionsAreGroupedByTafRemovedOnesLast() throws {
+    /// order; those with no taf the app can name apart, to show last as "Other connections".
+    func testAnAppsConnectionsAreGroupedByTafOthersLast() throws {
         let req = { (agent: String) in #"{"server":"https://mcp.stripe.com","agent":"\#(agent)","tools":[]}"# }
         let grants = [
             try g("g1", req("save-1")),
@@ -61,58 +61,18 @@ final class ConnectionSheetTests: XCTestCase {
         let split = AppModel.connectionGroups(grants, taf: { names[$0.request.agent] }, attention: { $0.waitingSignIn || $0.needsReconnect })
         XCTAssertEqual(split.tafs.map(\.taf), ["Refunds", "chargebacks", "Save Cancels"], "the one needing attention first, then by name, in any case")
         XCTAssertEqual(split.tafs.map { $0.grants.map(\.id) }, [["g3", "g7"], ["g4"], ["g1", "g5"]], "a taf's two connections together")
-        XCTAssertEqual(split.removed.map(\.id), ["g2", "g6"], "removed tafs' connections, a waiting one too, apart")
+        XCTAssertEqual(split.others.map(\.id), ["g2", "g6"], "those with no taf it can name, a waiting one too, apart")
 
         let none = AppModel.connectionGroups(grants, taf: { names[$0.request.agent] }, attention: { _ in false })
         XCTAssertEqual(none.tafs.map(\.taf), ["chargebacks", "Refunds", "Save Cancels"], "by name alone when none needs attention")
         XCTAssertTrue(AppModel.connectionGroups([], taf: { _ in nil }, attention: { _ in false }).tafs.isEmpty)
     }
 
-    /// Clear never acts on a list that wasn't read: every taf would look removed, and one Face
-    /// ID could disconnect live tafs' connections. Not before a read that worked this session,
-    /// and not when the fresh read inside the clear fails; nothing is signed or sent either way.
-    func testClearWaitsForATafReadThatWorked() async throws {
-        StubProtocol.responses = [:]
-        StubProtocol.sent = []
-        let config = URLSessionConfiguration.ephemeral
-        config.protocolClasses = [StubProtocol.self]
-        let session = URLSession(configuration: config)
-        let signer = RecordingSigner()
-        let model = AppModel(signer: signer,
-                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
-                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
-        StubProtocol.responses["GET /v1/home"] = (500, #"{"error":"down"}"#)
-        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
-        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
-        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme"}"#)
-        await model.useSession("kiff_dev_x", tenant: "t1")
-        let stripe = try app("connector:composio:stripe")
-        XCTAssertTrue(model.listLoaded, "loaded, though the read failed")
-        XCTAssertEqual(model.listReads, 0, "but never read")
-        let unread = await model.clearRemovedConnections(of: stripe)
-        XCTAssertEqual(unread, ConnectionGroupWords.unread)
-
-        // Read once; then the fresh read inside the clear fails: nothing either.
-        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
-        await model.refresh()
-        XCTAssertEqual(model.listReads, 1)
-        StubProtocol.responses["GET /v1/home"] = (500, #"{"error":"down"}"#)
-        let stale = await model.clearRemovedConnections(of: stripe)
-        XCTAssertEqual(stale, ConnectionGroupWords.unread)
-
-        XCTAssertTrue(signer.signed.isEmpty, "no Face ID")
-        XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "DELETE" }, "nothing disconnected")
-        await model.signOut()
-        XCTAssertEqual(model.listReads, 0, "a new session reads again")
-    }
-
-    /// The words of the grouping, the same on Android.
-    func testTheGroupingsWords() {
-        XCTAssertEqual(ConnectionGroupWords.removed, "From removed tafs")
-        XCTAssertEqual(ConnectionGroupWords.clear, "Clear these connections")
-        XCTAssertEqual(ConnectionGroupWords.clearTitle(1), "Clear 1 connection from removed tafs?")
-        XCTAssertEqual(ConnectionGroupWords.clearTitle(3), "Clear 3 connections from removed tafs?")
-        XCTAssertEqual(ConnectionGroupWords.kept(1), "Kept 1: another taf uses it.")
+    /// The last group's name, the same on Android: never "removed", which the app can't tell
+    /// from a taf it doesn't see.
+    func testTheLastGroupClaimsNothing() {
+        XCTAssertEqual(ConnectionGroupWords.others, "Other connections")
+        XCTAssertFalse(ConnectionGroupWords.others.lowercased().contains("removed"))
     }
 
     /// A managed provider's connected grant isn't signed in again in place: planque refuses it.

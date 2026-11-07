@@ -322,10 +322,6 @@ final class AppModel: ObservableObject {
     private var holderIDs: [String: UUID] = [:]
     /// Whether the tafs shown are this account's: remembered, or read from KIFF (#91).
     @Published private(set) var listLoaded = false
-    /// How many times this session's taf list was read from tafs cloud: `listLoaded` is set
-    /// after a failed read too, and a remembered list may be stale. What acts on "this taf is
-    /// gone" waits for a read that worked.
-    @Published private(set) var listReads = 0
     /// Signed in to KIFF and its tafs not shown yet: the first launch after a sign-in.
     var loadingList: Bool { mode == .kiff && !listLoaded }
     /// KIFF couldn't be read and no list was shown yet: "Couldn't load", never "No tafs yet".
@@ -694,7 +690,7 @@ final class AppModel: ObservableObject {
         cloud.token = token
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
-        listLoaded = false; listUnread = false; listReads = 0
+        listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
         doorsOffered = []
@@ -1048,7 +1044,7 @@ final class AppModel: ObservableObject {
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
-        listLoaded = false; listUnread = false; listReads = 0
+        listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
         doorsOffered = []
@@ -1493,7 +1489,6 @@ final class AppModel: ObservableObject {
                 offerTimeZone(account)
             }
             show(list, exceptions)
-            listReads += 1
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
             if let done {
@@ -5411,17 +5406,18 @@ final class AppModel: ObservableObject {
 
     /// An app's connections grouped by the taf each was set up for. Tafs with one needing
     /// attention (waiting on its sign-in, signed out, or a failed last call) come first, then
-    /// the rest by name. The connections of tafs since removed come apart, to show last.
-    func connectionGroups(of app: TafsCloud.ConnectApps.App) -> (tafs: [ConnectionGroup], removed: [PlanqueClient.Grant]) {
+    /// the rest by name. Those with no taf this app can name come apart, to show last: the app
+    /// can't tell a removed taf from one it doesn't see, so it never says which.
+    func connectionGroups(of app: TafsCloud.ConnectApps.App) -> (tafs: [ConnectionGroup], others: [PlanqueClient.Grant]) {
         Self.connectionGroups(connections(of: app), taf: { self.tafOf($0) }, attention: { $0.waitingSignIn || $0.needsReconnect || self.lastFailure($0) != nil })
     }
 
     static func connectionGroups(_ grants: [PlanqueClient.Grant], taf: (PlanqueClient.Grant) -> String?,
-                                 attention: (PlanqueClient.Grant) -> Bool) -> (tafs: [ConnectionGroup], removed: [PlanqueClient.Grant]) {
+                                 attention: (PlanqueClient.Grant) -> Bool) -> (tafs: [ConnectionGroup], others: [PlanqueClient.Grant]) {
         var groups: [ConnectionGroup] = []
-        var removed: [PlanqueClient.Grant] = []
+        var others: [PlanqueClient.Grant] = []
         for g in grants {
-            guard let name = taf(g) else { removed.append(g); continue }
+            guard let name = taf(g) else { others.append(g); continue }
             if let i = groups.firstIndex(where: { $0.id == g.request.agent }) {
                 groups[i].grants.append(g)
             } else {
@@ -5435,46 +5431,7 @@ final class AppModel: ObservableObject {
             let order = a.taf.localizedCaseInsensitiveCompare(b.taf)
             return order == .orderedSame ? a.id < b.id : order == .orderedAscending
         }
-        return (groups, removed)
-    }
-
-    /// Clears an app's connections from removed tafs, under one Face ID the person asked for:
-    /// each one no live taf uses is disconnected; one another taf's Card draws on is kept, and
-    /// said. Nil when all went; else what to say, empty when Face ID was closed.
-    func clearRemovedConnections(of app: TafsCloud.ConnectApps.App) async -> String? {
-        // A taf that only looks removed, because the list wasn't read, must never lose its
-        // connections: only after a read that worked, and then on a fresh one, read here.
-        guard mode == .kiff, listReads > 0 else { return ConnectionGroupWords.unread }
-        let gen = accountGeneration
-        let reads = listReads
-        await refresh()
-        await refreshConnections()
-        guard gen == accountGeneration else { return "" }
-        guard listReads > reads else { return ConnectionGroupWords.unread }
-        let removed = connectionGroups(of: app).removed
-        guard !removed.isEmpty else { return nil }
-        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return "Sign in with KIFF again: this sign-in can't sign for the \(ThisDevice.kind)." }
-        let clear = removed.filter { alsoStops($0).isEmpty }
-        let kept = removed.count - clear.count
-        guard !clear.isEmpty else { return ConnectionGroupWords.kept(kept) }
-        do {
-            _ = try await signer.sign(Data("tafs.disconnect-removed.v1|\(tenant)|\(clear.map(\.id).sorted().joined(separator: ","))".utf8),
-                                      reason: ConnectionGroupWords.clearTitle(clear.count))
-        } catch { return "" }
-        guard gen == accountGeneration else { return "" }
-        let signer = self.signer
-        planque.tenant = tenant
-        planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
-        var left = 0
-        for g in clear {
-            guard gen == accountGeneration else { return "" }
-            do { _ = try await planque.disconnect(grantID: g.id) } catch { left += 1 }
-        }
-        await refreshConnections()
-        guard gen == accountGeneration else { return "" }
-        let words = [left > 0 ? ConnectionGroupWords.notCleared(left) : nil, kept > 0 ? ConnectionGroupWords.kept(kept) : nil].compactMap { $0 }
-        return words.isEmpty ? nil : words.joined(separator: " ")
+        return (groups, others)
     }
 
     /// The taf a connection was set up for, by name; nil once that taf was removed.

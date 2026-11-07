@@ -154,21 +154,16 @@ enum DisconnectWords {
 
 /// The words of an app's connections grouped by taf, the same on both apps.
 enum ConnectionGroupWords {
-    static let removed = "From removed tafs"
-    static let clear = "Clear these connections"
-    static func clearTitle(_ n: Int) -> String { n == 1 ? "Clear 1 connection from removed tafs?" : "Clear \(n) connections from removed tafs?" }
-    static let clearBody = "Each one is disconnected, and its sign-in ended, unless another taf's Card uses it. Connecting again asks you to approve and sign in again."
-    static func kept(_ n: Int) -> String { n == 1 ? "Kept 1: another taf uses it." : "Kept \(n): other tafs use them." }
-    /// Clear waits for the tafs to be read: one only looking removed keeps its connections.
-    static let unread = "Your tafs couldn't be read just now, so nothing was cleared. Try again in a moment."
-    static func notCleared(_ n: Int) -> String { n == 1 ? "1 couldn't be cleared. Try again." : "\(n) couldn't be cleared. Try again." }
+    /// The last group: connections with no taf this app can name. Never "removed": the app
+    /// can't tell a removed taf from one it doesn't see.
+    static let others = "Other connections"
 }
 
 /// A connected app's connections, grouped by the taf each was set up for (the owner's ask): a
-/// section per taf, those needing attention first, then the rest by name; and the connections
-/// of tafs since removed last, with one action that clears them. Each live one shows any other
-/// taf whose Card covers it, how to fix it, and Disconnect (Cancel while its sign-in waits),
-/// which removes its tools from KIFF and signs tafs out of the app (Face ID first).
+/// section per taf, those needing attention first, then the rest by name; and last, "Other
+/// connections", those with no taf this app can name. Each shows any other taf whose Card
+/// covers it, how to fix it, and Disconnect (Cancel while its sign-in waits), which removes its
+/// tools from KIFF and signs tafs out of the app (Face ID first).
 struct AppConnectionsView: View {
     @EnvironmentObject private var model: AppModel
     let app: TafsCloud.ConnectApps.App
@@ -179,9 +174,6 @@ struct AppConnectionsView: View {
     @State private var cancelling: PlanqueClient.Grant?
     /// The key-based connection taking a new key (gap 13), on the key sheet.
     @State private var replacing: PlanqueClient.Grant?
-    /// Clear these connections waits for the owner's yes.
-    @State private var clearing = false
-    @State private var clearWords: String?
 
     var body: some View {
         let groups = model.connectionGroups(of: app)
@@ -193,27 +185,11 @@ struct AppConnectionsView: View {
                     Text(group.taf)
                 }
             }
-            if !groups.removed.isEmpty {
+            if !groups.others.isEmpty {
                 Section {
-                    ForEach(groups.removed) { g in
-                        VStack(alignment: .leading, spacing: 2) {
-                            lines(g)
-                        }
-                        .frame(minHeight: 44)
-                    }
-                    // Only after the tafs were read this session: before that, every taf looks removed.
-                    if model.canManageCards, model.listReads > 0 {
-                        Button(busy == ConnectionGroupWords.removed ? "Clearing…" : ConnectionGroupWords.clear, role: .destructive) { clearing = true }
-                            .buttonStyle(.borderless)
-                            .confirming()
-                            .disabled(busy != nil)
-                            .accessibilityIdentifier("connect.clear-removed")
-                    }
-                    if let clearWords {
-                        Text(clearWords).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                    }
+                    ForEach(groups.others) { g in row(g) }
                 } header: {
-                    Text(ConnectionGroupWords.removed)
+                    Text(ConnectionGroupWords.others)
                 }
             }
             if model.canManageCards {
@@ -245,15 +221,9 @@ struct AppConnectionsView: View {
         } message: { g in
             Text(ConnectionFixWords.cancelBody(g.vendor))
         }
-        .confirmationDialog(ConnectionGroupWords.clearTitle(groups.removed.count), isPresented: $clearing, titleVisibility: .visible) {
-            Button(ConnectionGroupWords.clear, role: .destructive) { clear() }
-            Button("Cancel", role: .cancel) { clearing = false }
-        } message: {
-            Text(ConnectionGroupWords.clearBody)
-        }
     }
 
-    /// A live connection: its lines, how to fix it, and Disconnect, or Cancel while its sign-in waits.
+    /// A connection: its lines, how to fix it, and Disconnect, or Cancel while its sign-in waits.
     private func row(_ g: PlanqueClient.Grant) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
@@ -319,17 +289,6 @@ struct AppConnectionsView: View {
         }
     }
 
-    private func clear() {
-        clearing = false
-        clearWords = nil
-        busy = ConnectionGroupWords.removed
-        Task {
-            let words = await model.clearRemovedConnections(of: app)
-            clearWords = words?.isEmpty == true ? nil : words
-            await model.loadConnectApps()
-            busy = nil
-        }
-    }
 }
 
 /// A connection's approval over the list: what it may do, KIFF's words for it, then Face ID.
