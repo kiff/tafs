@@ -21,8 +21,14 @@ sealed class KiffError(message: String) : Exception(message) {
   data object Expired : KiffError("The sign-in code expired. Start again.")
   data object Unauthorized : KiffError("Signed out of KIFF. Sign in again.")
 
-  /** [reason] is KIFF's machine-readable why, when it gives one ("card_revised"). */
-  class Server(val status: Int, message: String, val reason: String? = null) : KiffError(message)
+  /**
+   * [reason] is KIFF's machine-readable why, when it gives one ("card_revised"); [code] its `code` where a route names one
+   * there instead, and [words] KIFF's own words for a person, where it sends them.
+   */
+  class Server(val status: Int, message: String, val reason: String? = null, val code: String? = null, val words: String? = null) : KiffError(message) {
+    /** Whether KIFF refused with [why], whichever field the route puts it in. */
+    fun refused(why: String): Boolean = reason == why || code == why || message == why
+  }
 
   /**
    * KIFF takes this act only signed by the session's approval key, and this phone doesn't hold it
@@ -552,14 +558,8 @@ class KiffClient(
 
   // MARK: Usage and halting
 
-  /** The account's usage this billing period. */
+  /** KIFF's usage read: the plan, its period, the store, who bills it, and requests. */
   suspend fun usage(): Usage = call("GET", "/v1/me/usage")
-
-  /** The period's counted tasks, newest first, a page at a time; with [agent], that taf's only. */
-  suspend fun countedTasks(cursor: String? = null, agent: String? = null): CountedTasks {
-    val query = listOfNotNull(agent?.let { "agent=${escaped(it)}" }, cursor?.let { "cursor=${escaped(it)}" })
-    return call("GET", "/v1/me/usage/tasks" + if (query.isEmpty()) "" else "?" + query.joinToString("&"))
-  }
 
   /**
    * Resumes a halted agent in KIFF, or with none the whole account. KIFF takes it only signed by this phone,
@@ -581,13 +581,18 @@ class KiffClient(
     return ProfileWords.checked(profile, answer)
   }
 
-  /** Lets the tafs go on past the AI use bound, signed: KIFF raises it by one more base, and refuses (403) without `billing.manage`. */
-  suspend fun goOnAI() {
-    sendJson("PUT", AI_USE, JsonObject(mapOf("go_on" to JsonPrimitive(true))))
+  /**
+   * Raises the spend limit by one step from [fromCents], the limit the balance read gave, signed: the tafs go on at once. KIFF
+   * refuses (403) without `billing.manage`, a replayed signature, and a limit that changed meanwhile (409 `limit_changed`), so one
+   * tap adds one step; and past its ceiling (409 `limit_ceiling`).
+   */
+  suspend fun raiseLimit(fromCents: Long) {
+    sendJson("PUT", USAGE_LIMIT, JsonObject(mapOf("raise" to JsonPrimitive(true), "from_cents" to JsonPrimitive(fromCents))))
   }
 
-  /** Asks the account's admins for a pack, with a reason. */
-  suspend fun askForPack(pack: String, reason: String): PackRequest = call("POST", "/v1/me/pack-requests", mapOf("pack" to pack, "reason" to reason))
+  /** Asks the account's admins for a pack, with a reason; with no [pack], for a raise of the spend limit. */
+  suspend fun askForPack(pack: String?, reason: String): PackRequest =
+    call("POST", "/v1/me/pack-requests", if (pack == null) mapOf("kind" to PackRequest.RAISE, "reason" to reason) else mapOf("pack" to pack, "reason" to reason))
 
   /** Takes back this person's request. */
   suspend fun withdrawRequest(id: String): PackRequest = call("POST", "/v1/me/pack-requests/${escaped(id)}/withdraw", mapOf())
@@ -702,7 +707,7 @@ class KiffClient(
         throw KiffError.ApprovalKeyRequired
       }
       if (status == 409 && path == "/v1/me/device/approval-key") throw KiffError.ApprovalKeyExists(fields["fingerprint"])
-      throw KiffError.Server(status, fields["error"] ?: "KIFF answered $status", fields["reason"])
+      throw KiffError.Server(status, fields["error"] ?: "KIFF answered $status", fields["reason"], fields["code"], fields["words"])
     }
     return response.body
   }
@@ -732,15 +737,15 @@ class KiffClient(
     /**
      * The calls KIFF takes from a phone's session only with its signature: the draft that starts a
      * taf, the alert target that tells tafs cloud when a call is held, the connector key planque
-     * keeps, the account's time zone, and deleting the account (kiff/tafs#185).
+     * keeps, the account's time zone, deleting the account (kiff/tafs#185), and raising the spend limit.
      */
-    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", AI_USE)
+    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT)
 
     /** KIFF's "Did this happen?": each answer is a POST under it, signed by the approval key. */
     const val DID_THIS_HAPPEN = "/v1/me/did-this-happen"
 
-    /** KIFF's AI use bound: Go on is a PUT here, signed by the device key (KIFF's phone-signed routes, not the approval key's). */
-    const val AI_USE = "/v1/me/usage/ai"
+    /** KIFF's spend limit: Raise is a PUT here, signed by the device key (KIFF's phone-signed routes, not the approval key's). */
+    const val USAGE_LIMIT = "/v1/me/usage/limit"
 
     /**
      * Whether KIFF takes [path] from a phone only with its signature: the paths above, confirming a

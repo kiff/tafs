@@ -66,3 +66,48 @@ data class TafCredits(
   val items: List<CreditsRun> = emptyList(),
   val next: String? = null,
 )
+
+/** What the balance offers this person: raising the spend limit, in tafs cloud's words for its button, from the limit now. */
+@Serializable
+data class BalanceRaise(val words: String, @SerialName("from_cents") val fromCents: Long? = null)
+
+/**
+ * The balance now (docs/accounts.md#the-balance-read): `state` ok, warning or waiting, and while waiting `why` (credits_used_up,
+ * limit_reached, no_plan); a bar at `meterPct` where something bounds it; and every line in tafs cloud's words.
+ */
+@Serializable
+data class BalanceNow(
+  val state: String = OK,
+  val why: String? = null,
+  @SerialName("meter_pct") val meterPct: Int? = null,
+  val words: String,
+  val detail: String? = null,
+  val warning: String? = null,
+  val raise: BalanceRaise? = null,
+  /** What the store may offer this person: Solo, packs, or neither. */
+  val buy: kotlinx.serialization.json.JsonElement? = null,
+) {
+  val waiting: Boolean get() = state == WAITING
+
+  /** Whether `buy` offers [what] (`solo` or `packs`): true, or an offer named under it. */
+  fun offers(what: String): Boolean {
+    val offer = (buy as? kotlinx.serialization.json.JsonObject)?.get(what) ?: return false
+    if (offer is kotlinx.serialization.json.JsonNull) return false
+    return (offer as? kotlinx.serialization.json.JsonPrimitive)?.let { it.isString || it.content == "true" } ?: true
+  }
+
+  companion object {
+    const val OK = "ok"
+    const val WARNING = "warning"
+    const val WAITING = "waiting"
+  }
+}
+
+/** `GET /v1/usage/balance`: the balance, Settings' Plan card line in its tone, and Home's line when the plan needs the person. */
+@Serializable
+data class Balance(
+  val balance: BalanceNow,
+  @SerialName("plan_line") val planLine: String,
+  @SerialName("plan_tone") val planTone: String = BalanceNow.OK,
+  @SerialName("home_line") val homeLine: String? = null,
+)

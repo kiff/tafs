@@ -326,8 +326,8 @@ class TafsCloud(
   suspend fun continueHeld(id: String, exception: String): String =
     KiffClient.json.decodeFromString<Steered>(String(send("POST", "/v1/tafs/${escaped(id)}/holds/${escaped(exception)}/continue"))).status
 
-  /** AI use this period. */
-  suspend fun aiUse(): AIUse = get("/v1/usage/ai")
+  /** The balance now, in tafs cloud's words; null from a tafs cloud from before the balance (404). */
+  suspend fun balance(): Balance? = orNone { get<Balance>("/v1/usage/balance") }
 
   /** The period's credits, or the period before with [previous]; null from a tafs cloud from before credits (404). */
   suspend fun credits(previous: Boolean = false): Credits? = orNone {

@@ -1,10 +1,8 @@
 package bot.tafs.app.model
 
-import bot.tafs.app.kiff.CountedTask
 import bot.tafs.app.kiff.Halt
 import bot.tafs.app.kiff.PackRequest
 import bot.tafs.app.kiff.Usage
-import bot.tafs.app.kiff.UsagePack
 import java.time.Instant
 
 /** What the Halt screen says, in the words iOS's has. */
@@ -40,8 +38,15 @@ object UsageWords {
   /** The account's screen: its plan, and what the period used. */
   const val TITLE = "Plan & usage"
 
-  /** Whose the account's numbers are: every taf's together. */
-  const val ALL_TAFS = "All tafs"
+  /** The balance's panel and buying's: their labels. The balance's lines are tafs cloud's (`GET /v1/usage/balance`). */
+  const val BALANCE = "Balance"
+  const val BUY = "Add credits"
+
+  /** Under a pack of credits on sale: its credits never expire. */
+  const val PACKS_KEEP = "Never expires"
+
+  /** After a raise that went through, while the balance couldn't be read since: never a second raise. */
+  const val RAISED_UNREAD = "Your tafs can go on. This period's credits couldn't be read since."
 
   /** The Credits panel, and its switch between this period and the one before; the rest of it is tafs cloud's words. */
   const val CREDITS = "Credits"
@@ -64,42 +69,6 @@ object UsageWords {
     return if (of > 0) "$counted of $of ${if (of == 1) one else unit}" else "$counted ${if (counted == 1) one else unit}"
   }
 
-  /** Under held packs while no plan runs (KIFF's `can_add_packs` false). */
-  const val PACKS_WAIT_FOR_SOLO = "Counts once Solo starts."
-
-  /** "Tasks last 12 months", "Tasks last 1 month": how long a pack's tasks last. */
-  fun packLasts(months: Int): String = "Tasks last $months ${if (months == 1) "month" else "months"}"
-
-  /** "65 tasks left", with what the period has beside it; null where tasks have no limit. */
-  fun leftLine(u: Usage): String? {
-    val left = u.tasks.left ?: return null
-    val line = if (left == 1) "1 task left" else "$left tasks left"
-    val packs = u.tasks.packs ?: return line
-    return if (packs > 0) "$line · ${u.tasks.included} included, $packs from packs" else line
-  }
-
-  /** The plan's name as the owner bought it; null for one that isn't sold (our own accounts' "internal"). */
-  fun planName(plan: String): String? = when (plan) {
-    "trial" -> "Trial"
-    "solo" -> "Solo"
-    "team" -> "Team"
-    "company" -> "Company"
-    else -> null
-  }
-
-  /** "All tafs · Trial": whose the count is, and the plan where it has a name to show. */
-  fun whose(u: Usage): String = planName(u.plan)?.let { "$ALL_TAFS · $it" } ?: ALL_TAFS
-
-  /** "This period ends 22 Nov 2026." */
-  fun periodEnds(end: Instant): String = "This period ends ${shownDate(end)}."
-
-  /** What agents that aren't tafs did through KIFF; null when they did nothing, so an empty line never asks what 0 means. */
-  fun othersLine(u: Usage): String? = if (u.actions.counted > 0) count(u.actions.counted, u.actions.included, "actions") else null
-
-  /** Whether Solo is offered: to someone who may add tasks, on an account with no plan billed (the trial, or one that ended). */
-  fun offersSolo(u: Usage): Boolean =
-    u.canAddTasks == true && u.store?.googleSoloProduct != null && u.billing?.source.isNullOrEmpty() && u.plan == "trial"
-
   /** Solo's terms, every one, as Google Play's price says them: "$9.99 a month. Renews every month until cancelled…". */
   fun soloTerms(price: String, period: String?, freeTrial: String?): String {
     val every = period ?: "month"
@@ -116,146 +85,46 @@ object UsageWords {
     else -> null
   }
 
-  /** "60 of 70 left, until 22 Oct 2027". */
-  fun packLeft(p: UsagePack): String = "${p.tasksLeft} of ${p.tasks} left" + (p.expiresAt?.let { ", until ${shownDate(it)}" } ?: "")
+  // MARK: Asking an admin, in the words docs/accounts.md gives both apps
 
-  /** What the account should know now: tasks used up, an ended trial, or what is left of it. Null when there is nothing to say. */
-  /** A trial whose end has passed, Solo lapsed included: KIFF gives it no tasks (`left: 0`), and nothing was used up. */
-  fun trialEnded(u: Usage, now: Instant = Instant.now()): Boolean = u.plan == "trial" && u.trial?.endsAt?.let { it <= now } == true
-
-  /** No period runs: a trial that hasn't started or has ended. No period line and no meter then. */
-  fun noPeriod(u: Usage, now: Instant = Instant.now()): Boolean = u.plan == "trial" && (u.trial?.endsAt == null || trialEnded(u, now))
-
-  /** Under an ended trial's notice, where Solo is offered. */
-  const val START_SOLO = "Start Solo to keep your tafs running."
-
-  fun notice(u: Usage, now: Instant = Instant.now()): String? {
-    // Before used-up: an ended trial has left 0 by design, though nothing was used.
-    if (trialEnded(u, now)) return "Your trial has ended."
-    if (u.plan == "trial" && u.trial != null && u.trial.endsAt == null) return "Your trial hasn't started."
-    if (u.tasks.usedUp) {
-      return if (u.plan == "trial") "Your trial's tasks are used. Your tafs are paused until tasks are added."
-      else "This period's tasks are used. Your tafs are paused until tasks are added or the next period starts."
-    }
-    val trial = u.trial ?: return null
-    if (trial.endsAt == null) return "Your trial hasn't started."
-    if (trial.daysLeft <= 0) return "Your trial has ended."
-    val days = if (trial.daysLeft == 1) "1 day" else "${trial.daysLeft} days"
-    val left = u.tasks.left ?: trial.tasksLeft
-    return "Your trial: $days and ${if (left == 1) "1 task" else "$left tasks"} left."
-  }
-
-  // MARK: The plan, where it shows outside Plan & usage
-
-  /** How the plan line reads: calm, wanting the owner (a trial ended or not started), or out of tasks. */
-  enum class PlanTone { Calm, Attention, Out }
-
-  /** Who bills the plan, short, for the plan line; null when no one does or a contract does. */
-  private fun billedBy(u: Usage): String? = when (u.billing?.source) {
-    "google" -> "Google Play"
-    "apple" -> "Apple"
-    "stripe" -> "KIFF"
-    else -> null
-  }
-
-  /**
-   * "12 of 20 tasks left until 1 Dec 2026" on a plan someone bills, or "472 tasks this period" where there's no limit. "Until",
-   * not "renews": the app can't tell a cancelled Solo from one that renews, and the period's end is true of both.
-   */
-  private fun tasksLine(u: Usage): String {
-    val left = u.tasks.left ?: return "${tasks(u.tasks.counted)} this period"
-    val line = if (u.tasks.total > 0) "$left of ${tasks(u.tasks.total)} left" else "${tasks(left)} left"
-    return if (billedBy(u) != null) "$line until ${shownDate(u.period.end)}" else line
-  }
-
-  /**
-   * The plan in one line, for Settings' Plan card: "Trial · 5 days and 18 tasks left", "Trial ended · Start Solo",
-   * "Solo · 12 of 20 tasks left · Google Play".
-   */
-  fun planLine(u: Usage, now: Instant = Instant.now()): String {
-    if (u.plan == "trial") {
-      if (trialEnded(u, now)) return if (offersSolo(u)) "Trial ended · Start Solo" else "Trial ended"
-      val trial = u.trial
-      if (trial?.endsAt == null) return "Trial · not started"
-      val days = if (trial.daysLeft == 1) "1 day" else "${trial.daysLeft} days"
-      val left = u.tasks.left ?: trial.tasksLeft
-      return "Trial · $days and ${tasks(left)} left"
-    }
-    // Our own accounts' plan isn't sold, so planName has none for it; the card still names it.
-    val name = planName(u.plan) ?: if (u.plan == "internal") "Internal" else "Your plan"
-    return listOfNotNull(name, tasksLine(u), billedBy(u)).joinToString(" · ")
-  }
-
-  fun planTone(u: Usage, now: Instant = Instant.now()): PlanTone = when {
-    u.plan == "trial" && (trialEnded(u, now) || u.trial?.endsAt == null) -> PlanTone.Attention
-    u.tasks.usedUp -> PlanTone.Out
-    else -> PlanTone.Calm
-  }
-
-  /**
-   * Home's line about the plan, only when something needs the owner: a trial ended or ending within 2 days, and tasks used up
-   * or down to a tenth of the period's. Null otherwise: Home stays about the tafs. A trial not started says so on the card only.
-   */
-  fun homeLine(u: Usage, now: Instant = Instant.now()): String? {
-    if (u.plan == "trial") {
-      if (trialEnded(u, now)) return if (offersSolo(u)) "Your trial has ended. $START_SOLO" else "Your trial has ended."
-      val trial = u.trial ?: return null
-      if (trial.endsAt == null) return null
-      if (u.tasks.usedUp) return notice(u, now)
-      if (trial.daysLeft <= 2) return if (trial.daysLeft <= 1) "Your trial ends within a day." else "Your trial ends in 2 days."
-    }
-    if (u.tasks.usedUp) return notice(u, now)
-    val left = u.tasks.left ?: return null
-    val total = u.tasks.total
-    return if (total > 0 && left * 10 <= total) "${tasks(left)} left this period." else null
-  }
-
-  /** A counted task's tool as the Record names it: KIFF's title, else its name in words. */
-  fun toolName(t: CountedTask): String = t.toolTitle?.takeIf { it.isNotEmpty() } ?: toolWords(t.tool)
-
-  /** A tool's name in words, when KIFF gives no title: "refund_order" reads "Refund order". */
-  fun toolWords(tool: String): String =
-    tool.replace('_', ' ').replace('-', ' ').let { it.take(1).uppercase() + it.drop(1) }
-
-  /** AI use's explanation: what the share means, and where the tafs ask next. */
-  fun aiExplain(asksAtPct: Int?): String {
-    val at = asksAtPct ?: 100
-    val next = if (at <= 100) "At 100%, your tafs ask you before going on." else "You said go on; your tafs ask you again at $at%."
-    return "Chats with your tafs and Setup are included. 100% is this month's fair use. $next It's never billed."
-  }
-
-  /** After a go-on that went through, while AI use couldn't be read since: never a second Go on. */
-  const val WENT_ON_UNREAD = "Your tafs went on. This month's AI use couldn't be read since."
-
-  const val AI_ASKING = "This month's AI use is high: your tafs ask before going on."
-
-  // MARK: Asking an admin for tasks, as iOS's Usage says it
-
-  /** A pack's line, "Rayo · 70 tasks", from what's on sale; its id, capitalised, when it isn't. */
+  /** A pack's line from what's on sale, "Pack · 500 credits"; its id, capitalised, when it isn't. */
   fun packLine(id: String, u: Usage?): String =
     u?.store?.packs?.firstOrNull { it.id == id }?.line?.takeIf { it.isNotEmpty() } ?: id.replaceFirstChar { it.uppercase() }
 
-  /** The member's own request still waiting. */
-  fun waiting(u: Usage): PackRequest? = if (u.canAddTasks == true) null else u.requests?.firstOrNull { it.status == "open" }
+  /** What's asked of an admin on this plan: a raise of the spend limit on Company (KIFF's `team`), a pack on Solo; nothing on others. */
+  fun asks(u: Usage): String? = when (u.plan) {
+    "team" -> PackRequest.RAISE
+    "solo" -> if (u.store?.packs.isNullOrEmpty()) null else PackRequest.PACK
+    else -> null
+  }
 
-  /** The member's latest answered request, said plainly. */
-  fun lastAnswer(u: Usage): String? {
-    if (u.canAddTasks == true) return null
+  /** The person's own request still waiting, for someone who doesn't manage billing. */
+  fun waiting(u: Usage, managesBilling: Boolean): PackRequest? = if (managesBilling) null else u.requests?.firstOrNull { it.status == "open" }
+
+  /** "You asked an admin to raise the spend limit.", or for a pack. */
+  fun asked(r: PackRequest): String = if (r.isRaise) "You asked an admin to raise the spend limit." else "You asked an admin for a pack."
+
+  /** The person's latest answered request, said plainly. */
+  fun lastAnswer(u: Usage, managesBilling: Boolean): String? {
+    if (managesBilling) return null
     val r = u.requests?.firstOrNull() ?: return null
-    val pack = packLine(r.pack, u)
     return when (r.status) {
-      "approved" -> "An admin added $pack."
-      "declined" -> r.note?.takeIf { it.isNotEmpty() }?.let { "An admin declined $pack: $it" } ?: "An admin declined $pack."
-      "expired" -> "Your request for $pack ended with the period."
+      "approved" -> if (r.isRaise) "An admin raised the spend limit." else "An admin added a pack."
+      "declined" -> r.note?.takeIf { it.isNotEmpty() }?.let { "An admin declined: $it" } ?: "An admin declined."
+      "expired" -> "Your request ended with the period."
       else -> null
     }
   }
 
-  /** Open requests, for someone who may add tasks. */
-  fun openRequests(u: Usage): List<PackRequest> = if (u.canAddTasks != true) emptyList() else u.requests.orEmpty().filter { it.status == "open" }
+  /** Open requests, for someone who manages billing. */
+  fun openRequests(u: Usage, managesBilling: Boolean): List<PackRequest> = if (!managesBilling) emptyList() else u.requests.orEmpty().filter { it.status == "open" }
 
-  /** Asking or answering is offered only where tasks have a limit and there's a store. */
-  fun asksForTasks(u: Usage): Boolean = u.tasks.left != null && u.store != null
+  /** An open request, as an admin reads it. */
+  fun requestLine(r: PackRequest, u: Usage): String =
+    if (r.isRaise) "Someone asks to raise the spend limit." else "Someone asks for ${packLine(r.pack.orEmpty(), u)}."
 
-  const val ASK_LINE = "Your account's admins get your request. When one adds the pack, your tafs go on."
+  /** Under Ask an admin: what happens next. */
+  fun askLine(kind: String): String =
+    if (kind == PackRequest.RAISE) "Your account's admins get your request. When one raises the spend limit, your tafs go on."
+    else "Your account's admins get your request. When one adds the pack, your tafs go on."
 }

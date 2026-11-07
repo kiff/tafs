@@ -72,10 +72,35 @@ DataStore), with no symbol table or debug sections, so there are no native symbo
 bundle. `ndk.debugSymbolLevel` stays set, so any native code added later sends its symbols. Play's
 "no debug symbols" notice is about those two libraries, and it can't be cleared from this build.
 
-**Buying through Google Play** is on (`res/values/flags.xml`'s `play_billing`). Usage offers Solo
-and the task packs, at Play's prices, only once KIFF's usage names their Play products and the
-account's token, and only to someone who may add tasks. KIFF records each purchase before Play
-is told it's done, and Restore purchases sends again what wasn't.
+**Plan & usage** (`UsageViews`) opens on tafs cloud's balance (`GET /v1/usage/balance`,
+[accounts.md](accounts.md)), every line in its words: the balance and its second line, a bar at
+`meter_pct`, the warning, and **Raise the limit** where `raise` is set (`BalancePanel`). Then buying,
+who bills the plan, asking an admin, and the Credits panel. Settings' Plan card shows `plan_line` in
+`plan_tone`'s colour, and Home shows `home_line` when it's set (`planColor`); both are read with each
+refresh (`AppModel.refreshPlan`). A 404 from a tafs cloud from before the balance shows none, and a
+failed read shows tafs cloud's `words` above what was read before.
+- **Raise the limit** (`AppModel.raiseLimit`) asks once, then the device key signs KIFF's
+  `PUT /v1/me/usage/limit` with `{"raise": true, "from_cents"}` (`KiffClient.raiseLimit`, a
+  setup-signed path). The button stays busy until the balance is read again; a read that fails
+  says "Your tafs can go on. This period's credits couldn't be read since." with **Read it again**,
+  which signs nothing, and no raise until it's read. A `limit_changed` refusal reads the balance
+  again and offers the raise from the new limit.
+- **A chat or Run now refused for credits** (409 `credits_used_up`, `limit_reached` or `no_plan`)
+  shows tafs cloud's words as they are (`AppModel.creditsRefusal`). A chat's message stays Not sent,
+  with Retry for once the tafs go on.
+- **Asking an admin** (`TaskRequests`): on Company for a raise (`kind: "raise"`), on Solo for a pack.
+  Someone who manages billing (`billing.manage`) sees the open requests: a raise is answered by Raise
+  the limit, a pack by buying it, and either can be declined, signed. The request's lines are the
+  ones the doc gives both apps (`UsageWords.asked`, `lastAnswer`).
+- **A taf's Usage row,** on its Card tab, opens its own credits this period: its runs, each opening
+  its request (`CreditsRunsSheet`).
+- **The sample** shows a balance and credits (`SampleCredits`), the same as iPhone's.
+
+**Buying through Google Play** is on (`res/values/flags.xml`'s `play_billing`). Plan & usage offers
+Solo and packs of credits, which never expire, at Play's prices, where the balance's `buy` offers
+them to this person, and only once KIFF's usage names their Play products and the account's token.
+KIFF records each purchase before Play is told it's done, and Restore purchases sends again what
+wasn't.
 - **Play's offers are read again** each time Usage shows, after every purchase and restore, and
   just before Play's sheet opens (`Purchases.load`, `PlayBillingStore.purchase`), never kept
   from an earlier read. Solo's free trial is offered only while Play lists it for the Google
@@ -83,10 +108,6 @@ is told it's done, and Restore purchases sends again what wasn't.
   "€10.99 a month". When Play can't be reached for that read (no network, its service down), the
   purchase says "Couldn't reach Google Play. Try again.", never that Play doesn't sell it
   (`PlayBillingStore.unreachable`).
-- **Packs need a running plan:** the packs, and approving a member's request for one, are offered
-  only while KIFF's usage says `can_add_packs` (from an older KIFF, `can_add_tasks`). Before a trial
-  starts or after it ends, Solo alone is offered, and packs already held say "Counts once Solo
-  starts." (`Usage.packsOffered`).
 - **How a purchase or restore went** shows under what was tapped (Start Solo, the pack, Restore
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.

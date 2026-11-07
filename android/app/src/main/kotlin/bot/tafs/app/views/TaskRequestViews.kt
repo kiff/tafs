@@ -2,7 +2,6 @@ package bot.tafs.app.views
 
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
-import bot.tafs.app.kiff.packsOffered
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -40,29 +38,29 @@ import bot.tafs.app.model.UsageWords
 import kotlinx.coroutines.launch
 
 /**
- * Tasks asked for, on Usage (as iOS's): a member asks an admin, sees their request waiting with Withdraw, and reads the
- * answer; an admin sees the open requests, approves one by buying its pack, or declines it with a note.
+ * Asking an admin, on Plan & usage (docs/accounts.md#the-balance, as iOS's): on Company for a raise of the spend limit, on Solo for
+ * a pack. Someone who doesn't manage billing asks, sees their request waiting with Withdraw, and reads the answer. Someone who does
+ * sees the open requests: a raise is answered by Raise the limit above, a pack by buying it, and either can be declined with a note.
  */
 @Composable
-fun TaskRequests(usage: Usage, state: AppState, actions: AccountActions) {
+fun TaskRequests(usage: Usage, kind: String, state: AppState, actions: AccountActions) {
   val scope = rememberCoroutineScope()
   var asking by remember { mutableStateOf(false) }
   var declining by remember { mutableStateOf<PackRequest?>(null) }
-  val usedUp = (usage.tasks.left ?: 1) <= 0
+  val waiting = state.balance?.balance?.waiting == true
 
-  if (usage.canAddTasks == true) {
-    val open = UsageWords.openRequests(usage)
+  if (state.managesBilling) {
+    val open = UsageWords.openRequests(usage, managesBilling = true)
     if (open.isNotEmpty()) Panel(stroke = Theme.amber.copy(alpha = 0.5f)) {
       Eyebrow("Requests", color = Theme.amber)
       open.forEach { r ->
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          Text("A member asks for ${UsageWords.packLine(r.pack, usage)}.", style = scaled(15, color = Theme.ink))
+          Text(UsageWords.requestLine(r, usage), style = scaled(15, color = Theme.ink))
           if (r.reason.isNotEmpty()) Text(r.reason, style = scaled(14, color = Theme.soft))
           Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Approving is buying the pack, through Google Play: only where this phone offers buying, and while a plan runs
-            // (a pack bought before Solo would add nothing).
-            val product = usage.store?.packs?.firstOrNull { it.id == r.pack }?.googleProduct
-            if (state.offersPurchases && usage.packsOffered && product != null) {
+            // A pack is approved by buying it through Google Play, where this phone offers packs; a raise, by Raise the limit.
+            val product = r.pack?.let { id -> usage.store?.packs?.firstOrNull { it.id == id }?.googleProduct }
+            if (!r.isRaise && state.offersPurchases && state.balance?.balance?.offers("packs") == true && product != null) {
               PrimaryButton("Approve", { scope.launch { actions.approveRequest(product, r.id) } }, Modifier.weight(1f).confirms(), enabled = state.buying == null)
             }
             OutlineButton("Decline", { declining = r }, Modifier.weight(1f))
@@ -72,29 +70,30 @@ fun TaskRequests(usage: Usage, state: AppState, actions: AccountActions) {
       state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.no)) }
     }
   } else {
-    val mine = UsageWords.waiting(usage)
+    val mine = UsageWords.waiting(usage, managesBilling = false)
     if (mine != null) {
       Panel {
         Eyebrow("Waiting")
-        Text("You asked for ${UsageWords.packLine(mine.pack, usage)}. An admin answers.", style = scaled(15, color = Theme.ink))
+        Text("${UsageWords.asked(mine)} An admin answers.", style = scaled(15, color = Theme.ink))
         OutlineButton("Withdraw", { scope.launch { actions.withdrawRequest(mine.id) } })
         state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.no)) }
       }
     } else {
-      UsageWords.lastAnswer(usage)?.let { Panel { Text(it, style = scaled(14, color = Theme.soft)) } }
-      if (usedUp) PrimaryButton("Ask an admin", { asking = true }) else OutlineButton("Ask an admin", { asking = true })
+      UsageWords.lastAnswer(usage, managesBilling = false)?.let { Panel { Text(it, style = scaled(14, color = Theme.soft)) } }
+      if (waiting) PrimaryButton("Ask an admin", { asking = true }) else OutlineButton("Ask an admin", { asking = true })
     }
   }
 
-  if (asking) AskAdminSheet(usage, state, actions) { asking = false }
+  if (asking) AskAdminSheet(usage, kind, state, actions) { asking = false }
   declining?.let { r -> DeclineRequestSheet(r, usage, state, actions) { declining = null } }
 }
 
-/** Asking the account's admins for a pack, with a reason. */
+/** Asking the account's admins, with a reason: for a raise, or for the pack chosen. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AskAdminSheet(usage: Usage, state: AppState, actions: AccountActions, onClose: () -> Unit) {
+private fun AskAdminSheet(usage: Usage, kind: String, state: AppState, actions: AccountActions, onClose: () -> Unit) {
   val scope = rememberCoroutineScope()
+  val forPack = kind == PackRequest.PACK
   var pack by remember { mutableStateOf<String?>(null) }
   var reason by remember { mutableStateOf("") }
   var sending by remember { mutableStateOf(false) }
@@ -104,8 +103,8 @@ private fun AskAdminSheet(usage: Usage, state: AppState, actions: AccountActions
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       SheetTitle("Ask an admin", onClose)
-      Text(UsageWords.ASK_LINE, style = scaled(15, color = Theme.soft))
-      Panel {
+      Text(UsageWords.askLine(kind), style = scaled(15, color = Theme.soft))
+      if (forPack) Panel {
         Eyebrow("Which pack")
         usage.store?.packs.orEmpty().forEach { p ->
           Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { pack = p.id }, verticalAlignment = Alignment.CenterVertically) {
@@ -116,23 +115,23 @@ private fun AskAdminSheet(usage: Usage, state: AppState, actions: AccountActions
       }
       Panel {
         Eyebrow("Why (optional)")
-        Field(reason, { reason = it.take(500) }, "What the tasks are for")
+        Field(reason, { reason = it.take(500) }, "What the tafs need it for")
       }
       state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.no)) }
       PrimaryButton(if (sending) "Asking…" else "Ask", {
-        val id = pack ?: return@PrimaryButton
+        if (forPack && pack == null) return@PrimaryButton
         sending = true
         scope.launch {
-          val asked = actions.askForPack(id, reason)
+          val asked = actions.askForPack(if (forPack) pack else null, reason)
           sending = false
           if (asked) onClose()
         }
-      }, enabled = pack != null && !sending)
+      }, enabled = (!forPack || pack != null) && !sending)
     }
   }
 }
 
-/** Declining a member's request, with a note they'll read. */
+/** Declining a request, with a note the person who asked will read. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DeclineRequestSheet(request: PackRequest, usage: Usage, state: AppState, actions: AccountActions, onClose: () -> Unit) {
@@ -142,7 +141,7 @@ private fun DeclineRequestSheet(request: PackRequest, usage: Usage, state: AppSt
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
       SheetTitle("Decline", onClose)
-      Text("Decline the request for ${UsageWords.packLine(request.pack, usage)}?", style = scaled(16, FontWeight.SemiBold, Theme.ink))
+      Text(UsageWords.requestLine(request, usage), style = scaled(16, FontWeight.SemiBold, Theme.ink))
       Panel {
         Eyebrow("Note (optional)")
         Field(note, { note = it.take(500) }, "Why, for them")

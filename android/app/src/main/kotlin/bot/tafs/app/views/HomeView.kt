@@ -119,8 +119,8 @@ fun HomeView(
           state.unreachable?.let { UnreachableLine(it, state.retryingRefresh) }
           // The phone can't approve until a new sign-in: one calm line, said at launch rather than after a tap.
           if (state.mode == Mode.kiff && state.approvalKeyLost) ApprovalKeyLine(Modifier.padding(top = 4.dp))
-          // The plan, only when it needs the owner: a trial ended or ending, tasks nearly gone. Home stays about the tafs.
-          if (state.mode == Mode.kiff) state.usage?.let { u -> UsageWords.homeLine(u)?.let { PlanLine(it, UsageWords.planTone(u), onUsage) } }
+          // The plan, only when it needs the person (tafs cloud's `home_line`). Home stays about the tafs.
+          if (state.mode == Mode.kiff) state.balance?.let { b -> b.homeLine?.let { PlanLine(it, b.planTone, onUsage) } }
         }
       }
       if (sample) {
@@ -190,8 +190,8 @@ private const val STATUS_PAGE = "https://status.kiff.dev"
 
 /** The plan's line on Home, in its tone, opening Plan & usage. */
 @Composable
-fun PlanLine(words: String, tone: UsageWords.PlanTone, onUsage: () -> Unit) {
-  val color = if (tone == UsageWords.PlanTone.Out) Theme.no else Theme.amberText
+fun PlanLine(words: String, tone: String, onUsage: () -> Unit) {
+  val color = planColor(tone, calm = Theme.amberText)
   Row(
     Modifier.fillMaxWidth().clickable(onClick = onUsage).padding(vertical = 6.dp).semantics { contentDescription = "$words Opens Plan & usage." },
     horizontalArrangement = Arrangement.spacedBy(6.dp),

@@ -5,8 +5,9 @@ import java.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// The account's usage this period, as KIFF sends it and the phone reads it: what the Usage screens show, and what can be
-// bought through Google Play (the store), and members' requests for tasks.
+// KIFF's usage read, for what the app reads of it beside tafs cloud's balance (docs/accounts.md#in-the-apps): the plan and its
+// period, what can be bought through Google Play (the store), who bills the plan, and requests to the admins. Its other fields
+// stay in KIFF's shape, inert, and the app ignores them.
 
 @Serializable
 data class UsagePeriod(
@@ -14,75 +15,13 @@ data class UsagePeriod(
   @Serializable(with = InstantAsString::class) val end: Instant,
 )
 
-/** What wasn't counted, by why. A reason KIFF doesn't name counted nothing. */
-@Serializable
-data class UsageFree(
-  val refused: Int = 0,
-  @SerialName("held_refused") val heldRefused: Int = 0,
-  val halted: Int = 0,
-  val failed: Int = 0,
-  val invalid: Int = 0,
-  val retry: Int = 0,
-  val read: Int = 0,
-  val trial: Int = 0,
-  /** Coach's and Setup's calls: KIFF named them `setup_read`, and `setup` once it frees every call made with a setup key. */
-  @SerialName("setup_read") val setupRead: Int = 0,
-  val setup: Int = 0,
-) {
-  /** Each reason with a count, as the owner reads it, in the order they matter. */
-  val lines: List<Pair<String, Int>>
-    get() = listOf(
-      "Refused by KIFF" to refused,
-      "Held, then refused" to heldRefused,
-      "Halted" to halted,
-      "Failed at the tool" to failed,
-      "Not valid" to invalid,
-      "Retries" to retry,
-      "Reads" to read,
-      "Trials of a new version" to trial,
-      "Coach and Setup" to (setupRead + setup),
-    ).filter { it.second > 0 }
-}
-
-/** One taf's part of the period: what it counted, and what it didn't and why. */
-@Serializable
-data class UsageAgent(val agent: String, val counted: Int = 0, val free: UsageFree? = null)
-
-@Serializable
-data class UsageMeter(
-  val counted: Int = 0,
-  val included: Int = 0,
-  /** The tafs meter only: the pack tasks the period has. */
-  val packs: Int? = null,
-  /** The tasks left; null where there is no limit. */
-  val left: Int? = null,
-  @SerialName("by_agent") val byAgent: List<UsageAgent>? = null,
-  val free: UsageFree? = null,
-) {
-  /** The tasks the period has: what the plan includes and the pack tasks. */
-  val total: Int get() = included + (packs ?: 0)
-
-  /** No tasks left: the tafs stop until tasks are added. */
-  val usedUp: Boolean get() = left == 0
-}
-
-@Serializable
-data class UsageTrial(
-  /** Null until the trial starts: it starts at checkout on the web. */
-  @SerialName("ends_at") @Serializable(with = InstantAsString::class) val endsAt: Instant? = null,
-  @SerialName("days_left") val daysLeft: Int = 0,
-  @SerialName("tasks_left") val tasksLeft: Int = 0,
-  @SerialName("actions_left") val actionsLeft: Int = 0,
-)
-
-/** A pack of tasks for sale: "Rayo · 70 tasks", how long its tasks last, and its product in each store. */
+/** A pack of credits for sale, which never expire: its line as KIFF writes it, its credits, and its product in each store. */
 @Serializable
 data class StorePack(
   val id: String,
   val name: String,
   val line: String = "",
-  val tasks: Int = 0,
-  val months: Int = 0,
+  val credits: Int = 0,
   @SerialName("apple_product") val appleProduct: String? = null,
   /** Google Play's product; absent until KIFF records Play purchases, and then nothing is offered on Android. */
   @SerialName("google_product") val googleProduct: String? = null,
@@ -107,65 +46,16 @@ data class UsageStore(
 @Serializable
 data class UsageBilling(val source: String = "")
 
-/** One of the account's packs with tasks left. */
-@Serializable
-data class UsagePack(
-  val id: String,
-  val name: String,
-  val tasks: Int = 0,
-  @SerialName("tasks_left") val tasksLeft: Int = 0,
-  @SerialName("expires_at") @Serializable(with = InstantAsString::class) val expiresAt: Instant? = null,
-)
-
-/** The account's usage this billing period: the tafs meter and the KIFF meter, the trial, and who bills the plan. */
+/** KIFF's usage read: the plan (`solo`, `team` for Company, `company` for an agreement, `internal`), its period, and the rest. */
 @Serializable
 data class Usage(
   val plan: String = "",
-  val period: UsagePeriod,
-  val tasks: UsageMeter = UsageMeter(),
-  val actions: UsageMeter = UsageMeter(),
-  val trial: UsageTrial? = null,
+  val period: UsagePeriod? = null,
   val billing: UsageBilling? = null,
-  @SerialName("pack_list") val packList: List<UsagePack>? = null,
-  /** Whether this person may add tasks (an admin), and what can be bought. */
-  @SerialName("can_add_tasks") val canAddTasks: Boolean? = null,
-  /** Whether packs can be bought now: only while a plan runs (Solo, or a trial still going). Absent from an older KIFF: [canAddTasks]. */
-  @SerialName("can_add_packs") val canAddPacks: Boolean? = null,
   val store: UsageStore? = null,
-  /** Requests for tasks: a member's own, newest first; for someone who may add tasks, the members' too. */
+  /** Requests to the admins: this person's own, newest first; for someone who manages billing, everyone's. */
   val requests: List<PackRequest>? = null,
 )
-
-/** One counted task: the Record behind it, which taf, which tool, and when. */
-@Serializable
-data class CountedTask(
-  val record: String,
-  val agent: String,
-  val tool: String = "",
-  /** The tool as the Record names it: "Refund an order". */
-  @SerialName("tool_title") val toolTitle: String? = null,
-  @Serializable(with = InstantAsString::class) val at: Instant,
-)
-
-@Serializable
-data class CountedTasks(val items: List<CountedTask> = emptyList(), val next: String? = null)
-
-/** AI use from chats and Setup this period: included, never billed; past fair use the tafs ask before going on. */
-@Serializable
-data class AIUse(
-  @SerialName("used_pct") val usedPct: Int? = null,
-  @SerialName("asks_at_pct") val asksAtPct: Int? = null,
-  val paused: Boolean = false,
-  /** This person may let the tafs go on (`billing.manage`); KIFF checks the role again on Go on. */
-  @SerialName("can_go_on") val canGoOn: Boolean = false,
-  /** When the AI use starts again by itself: the period's end. Null when KIFF gives none. */
-  @SerialName("starts_again") @Serializable(with = InstantAsString::class) val startsAgain: java.time.Instant? = null,
-  /** All of it in tafs cloud's words, shown as they are; null from a tafs cloud before it wrote them. */
-  val words: String? = null,
-) {
-  /** Go on shows only while the tafs wait and only to who may. */
-  val offersGoOn: Boolean get() = paused && canGoOn
-}
 
 /** A halt of one taf or of the whole account, as tafs cloud reads it from kiff/agents, KIFF and planque. */
 @Serializable
@@ -202,19 +92,31 @@ internal data class HaltResponse(val halt: Halt)
 @Serializable
 data class AccountDeletion(val done: Boolean = false, val failed: String? = null)
 
-/** A member's request for a pack of tasks, which an admin approves by buying it, or declines with a note. */
+/**
+ * A request to the account's admins (docs/accounts.md#the-balance): for a raise of the spend limit on Company, which a raise
+ * answers, or for a pack on Solo, which an admin approves by buying it. Either can be declined with a note.
+ */
 @Serializable
 data class PackRequest(
   val id: String,
   @SerialName("asked_by") val askedBy: String,
-  val pack: String,
+  /** `raise` or `pack`; a request from before kinds is for a pack. */
+  val kind: String = PACK,
+  /** The pack asked for; none on a raise. */
+  val pack: String? = null,
   val reason: String = "",
   /** open, approved, declined, withdrawn or expired. */
   val status: String,
   @SerialName("created_at") @Serializable(with = InstantAsString::class) val createdAt: Instant,
   @SerialName("expires_at") @Serializable(with = InstantAsString::class) val expiresAt: Instant,
   val note: String? = null,
-)
+) {
+  val isRaise: Boolean get() = kind == RAISE
 
-/** Packs are offered only while a plan runs: KIFF's `can_add_packs`, else, from an older KIFF, `can_add_tasks`. */
-val Usage.packsOffered: Boolean get() = canAddPacks ?: (canAddTasks == true)
+  companion object {
+    const val RAISE = "raise"
+    const val PACK = "pack"
+  }
+}
+
+

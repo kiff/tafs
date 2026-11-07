@@ -38,7 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.PurchaseNote
-import bot.tafs.app.kiff.packsOffered
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -48,16 +47,15 @@ import bot.tafs.app.design.Meter
 import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
-import bot.tafs.app.kiff.CountedTask
+import bot.tafs.app.kiff.BalanceNow
 import bot.tafs.app.kiff.Usage
 import bot.tafs.app.model.UsageWords
 import bot.tafs.app.model.shortTime
 
 /**
- * The account's usage this period, from Settings: the tasks the period has and what is left, who bills the plan,
- * what the tafs did that counted, and what wasn't counted and why. Titled as the account's, with each number
- * saying whose it is, so it reads at a glance with no text explaining it. Adding tasks through Google Play shows only where it's
- * offered (AppState.offersPurchases).
+ * Plan & usage, from Settings (docs/accounts.md#in-the-apps): the balance in tafs cloud's words, with Raise the limit where it's
+ * offered; Solo or packs through Google Play where the balance offers them (AppState.offersPurchases); who bills the plan; then
+ * the credits the runs used.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,114 +65,79 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
   LaunchedEffect(Unit) { actions.refreshUsage(); read = true }
 
   UsageFrame(UsageWords.TITLE, onClose) {
-    val usage = state.usage
-    val why = state.usageError
-    // Credits above the tasks, read-only until they replace them; tafs cloud's, so shown whether or not KIFF's tasks were read.
-    if (read) CreditsPanel(state, actions)
-    if (read && usage != null) {
-      TasksPanel(usage)
-      UsageWords.notice(usage)?.let { notice ->
-        Panel {
-          Text(notice, style = scaled(15, color = Theme.ink))
-          // An ended trial: Solo keeps the tafs running, said only where Solo is offered.
-          if (UsageWords.trialEnded(usage) && state.offersPurchases && UsageWords.offersSolo(usage)) {
-            Text(UsageWords.START_SOLO, style = scaled(14, color = Theme.soft))
-          }
-        }
-      }
-      if (state.mode == Mode.kiff) UsageWords.billingLine(usage)?.let { line ->
-        Panel {
-          Text(line, style = scaled(15, color = Theme.ink))
-          // Billed by Google Play: Play's own page to manage or cancel it. The app never points anywhere else to buy.
-          if (usage.billing?.source == "google") {
-            val uri = LocalUriHandler.current
-            Text("Manage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 6.dp))
-          }
-        }
-      }
-      if (state.offersPurchases) AddTasksPanel(usage, state, actions)
-      // Members ask an admin for tasks; an admin answers their requests (as iOS's Usage).
-      if (state.mode == Mode.kiff && UsageWords.asksForTasks(usage)) TaskRequests(usage, state, actions)
-      usage.packList?.takeIf { it.isNotEmpty() }?.let { packs ->
-        Panel {
-          Eyebrow("Packs")
-          packs.forEach { p -> CountRow(p.name, UsageWords.packLeft(p)) }
-          // Held while no plan runs: they count again once Solo starts.
-          if (usage.canAddPacks == false) Text(UsageWords.PACKS_WAIT_FOR_SOLO, style = scaled(13, color = Theme.soft))
-        }
-      }
-      state.aiUse?.takeIf { it.usedPct != null || it.words != null }?.let { ai -> AIUsePanel(ai, state, actions) }
-      // Every taf is listed by KIFF, most at 0 on a busy account: only those that counted.
-      usage.tasks.byAgent?.filter { it.counted > 0 }?.takeIf { it.isNotEmpty() }?.let { by ->
-        Panel {
-          Eyebrow("By taf")
-          by.forEach { CountRow(state.tafName(it.agent), "${it.counted}") }
-        }
-      }
-      NotCounted(usage.tasks.free?.lines)
-      // Agents that aren't tafs, named as the home list names them; only when they counted something.
-      UsageWords.othersLine(usage)?.let { Panel { CountRow("Other agents with Cards", it) } }
-      if (state.countedTasks.isNotEmpty()) CountedTasks(state.countedTasks, state)
-    } else if (why != null) {
-      Panel { Text(why, style = scaled(14, color = Theme.no)) }
-    } else {
-      Loading(UsageWords.ALL_TAFS)
+    if (!read) {
+      Loading(UsageWords.TITLE)
+      return@UsageFrame
     }
+    BalancePanel(state, actions)
+    val usage = state.usage
+    if (usage != null && state.offersPurchases) BuyPanel(usage, state, actions)
+    if (state.mode == Mode.kiff) usage?.let { UsageWords.billingLine(it) }?.let { line ->
+      Panel {
+        Text(line, style = scaled(15, color = Theme.ink))
+        // Billed by Google Play: Play's own page to manage or cancel it. The app never points anywhere else to buy.
+        if (usage.billing?.source == "google") {
+          val uri = LocalUriHandler.current
+          Text("Manage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 6.dp))
+        }
+      }
+    }
+    // Members ask an admin; an admin answers their requests (as iOS's Usage).
+    if (state.mode == Mode.kiff && usage != null) UsageWords.asks(usage)?.let { kind -> TaskRequests(usage, kind, state, actions) }
+    CreditsPanel(state, actions)
+    // KIFF's usage read failed: buying and requests wait on it, said once. The balance and credits are tafs cloud's.
+    state.usageError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
   }
 }
 
 /**
- * Adding tasks through Google Play, for someone who may: Solo on an account with no plan billed, with every term, and the packs,
- * each at Play's price. Each purchase goes to KIFF before Play is told it's done; Restore sends what wasn't.
- */
-/**
- * AI use this period (docs/accounts.md#ai-use): the share, tafs cloud's words for it as they are, and, while the tafs wait,
- * Go on for the person who may (`can_go_on`). Anyone else reads in the words who can, and when it starts again.
+ * The balance (docs/accounts.md#the-balance-read), every line in tafs cloud's words: the balance and its second line, a bar where
+ * something bounds it, the warning, and Raise the limit for the person it's offered to. After a raise whose read failed, Read it
+ * again in its place, which signs nothing. Nothing from a tafs cloud from before the balance.
  */
 @Composable
-fun AIUsePanel(ai: bot.tafs.app.kiff.AIUse, state: AppState, actions: AccountActions) {
+private fun BalancePanel(state: AppState, actions: AccountActions) {
+  val b = state.balance?.balance
+  val why = state.balanceError
+  if (b == null && why == null) return
   val scope = rememberCoroutineScope()
   Panel {
-    Eyebrow("AI use this month")
-    ai.usedPct?.let { used ->
-      Text("$used%", style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
-      Meter(used.toDouble() / (ai.asksAtPct ?: 100).coerceAtLeast(1), if (ai.paused) Theme.amber else Theme.ok)
+    Eyebrow(UsageWords.BALANCE)
+    b?.let { now ->
+      Text(now.words, style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
+      now.detail?.let { Text(it, style = scaled(14, color = Theme.soft)) }
+      now.meterPct?.let { pct -> Meter(pct.coerceIn(0, 100) / 100.0, if (now.state == BalanceNow.OK) Theme.ok else planColor(now.state, calm = Theme.ok)) }
+      now.warning?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     }
-    // tafs cloud's words where it sends them; the app's own only from one that doesn't yet.
-    if (ai.words != null) {
-      Text(ai.words, style = scaled(15, color = if (ai.paused) Theme.ink else Theme.soft))
-    } else {
-      Text(UsageWords.aiExplain(ai.asksAtPct), style = scaled(13, color = Theme.soft))
-      if (ai.paused) Text(UsageWords.AI_ASKING, style = scaled(15, color = Theme.ink))
-    }
-    if (state.aiUseStale) {
-      // It went through; what's above is from before. Reading signs nothing, and no Go on until it's read.
-      Text(UsageWords.WENT_ON_UNREAD, style = scaled(15, color = Theme.ink))
-      OutlineButton(if (state.readingAIUse) "Reading…" else "Read it again", { scope.launch { actions.readAIUse() } }, Modifier.fillMaxWidth(), enabled = !state.readingAIUse)
-    } else if (ai.offersGoOn) {
-      // Going on lets the tafs spend more, so it waits on the phone being able to approve, as on iOS. KIFF takes it signed by the
-      // device key, once the person confirms.
-      val biometry = LocalBiometry.current
+    why?.let { Text(it, style = scaled(14, color = Theme.no)) }
+    if (state.balanceStale) {
+      // It went through; what's above is from before. Reading signs nothing, and no raise until it's read.
+      Text(UsageWords.RAISED_UNREAD, style = scaled(15, color = Theme.ink))
+      OutlineButton(if (state.readingBalance) "Reading…" else "Read it again", { scope.launch { actions.readBalance() } }, Modifier.fillMaxWidth(), enabled = !state.readingBalance)
+    } else b?.raise?.let { raise ->
+      // Raising lets the tafs spend more, so it waits on the phone being able to approve, as Go on did. KIFF takes it signed by
+      // the device key, once the person confirms.
       ApprovalGate {
-        PrimaryButton(
-          if (state.goingOn) "Going on…" else "Go on with $biometry",
-          { scope.launch { actions.goOnAI() } },
-          enabled = !state.goingOn,
-        )
+        PrimaryButton(if (state.raising) "Raising…" else raise.words, { scope.launch { actions.raiseLimit() } }, enabled = !state.raising)
       }
-      state.goOnError?.let { Text(it, style = scaled(13, color = Theme.no)) }
+      state.raiseError?.let { Text(it, style = scaled(13, color = Theme.no)) }
     }
   }
 }
 
+/**
+ * Buying through Google Play, as the balance offers it to this person (`buy`): Solo, with every term, and packs of credits, which
+ * never expire, each at Play's price. Each purchase goes to KIFF before Play is told it's done; Restore sends what wasn't.
+ */
 @Composable
-private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions) {
+private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
   val store = usage.store ?: return
+  val offer = state.balance?.balance ?: return
   Panel {
-    Eyebrow("Add tasks")
-    if (UsageWords.offersSolo(usage)) {
+    Eyebrow(UsageWords.BUY)
+    if (offer.offers("solo")) {
       store.googleSoloProduct?.let { id ->
         state.storeProducts[id]?.let { solo ->
           Text("Solo", style = scaled(16, FontWeight.SemiBold, Theme.ink))
@@ -188,14 +151,13 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
         }
       }
     }
-    // Packs only while a plan runs (KIFF's can_add_packs); before a trial or after it, Solo alone.
-    if (usage.packsOffered) store.packs.forEach { pack ->
+    if (offer.offers("packs")) store.packs.forEach { pack ->
       val id = pack.googleProduct ?: return@forEach
       val product = state.storeProducts[id] ?: return@forEach
       Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
           Text(pack.line.ifEmpty { pack.name }, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-          Text(UsageWords.packLasts(pack.months), style = scaled(12, color = Theme.dim))
+          Text(UsageWords.PACKS_KEEP, style = scaled(12, color = Theme.dim))
         }
         Text(
           if (state.buying == id) "Buying…" else product.price,
@@ -241,7 +203,7 @@ private fun PurchaseNoteLine(state: AppState, at: String, actions: AccountAction
 private fun CreditsPanel(state: AppState, actions: AccountActions) {
   val credits = state.credits
   val why = state.creditsError
-  if (state.mode != Mode.kiff || (credits == null && why == null)) return
+  if (state.mode == Mode.signedOut || (credits == null && why == null)) return
   val scope = rememberCoroutineScope()
   Panel {
     Eyebrow(UsageWords.CREDITS)
@@ -249,7 +211,7 @@ private fun CreditsPanel(state: AppState, actions: AccountActions) {
       Text(c.words, style = scaled(17, FontWeight.SemiBold, Theme.ink))
       c.tafs.forEach { row ->
         // The row for tafs removed since has no taf, and doesn't open.
-        val taf = row.taf
+        val taf = row.taf?.takeIf { state.mode == Mode.kiff }
         Row(
           Modifier.fillMaxWidth().heightIn(min = 44.dp).then(if (taf != null) Modifier.clickable { scope.launch { actions.openTafCredits(taf) } } else Modifier),
           verticalAlignment = Alignment.CenterVertically,
@@ -305,42 +267,12 @@ fun CreditsRunsSheet(open: bot.tafs.app.kiff.TafCredits, state: AppState, action
   }
 }
 
-/** One taf's usage this period, from a row on its page: what it counted, what it didn't and why, and its counted tasks. */
-@OptIn(ExperimentalMaterial3Api::class)
+/** The row on a taf's page that opens its credits this period: its runs. */
 @Composable
-fun TafUsageSheet(tafId: String, state: AppState, actions: AccountActions, onClose: () -> Unit) {
-  var read by remember { mutableStateOf(false) }
-  LaunchedEffect(tafId) { actions.refreshUsage(); actions.refreshTafUsage(tafId); read = true }
-  val name = state.tafName(tafId)
-
-  UsageFrame(name, onClose) {
-    val mine = state.tafUsage(tafId)
-    val why = state.usageError
-    if (read && mine != null) {
-      Panel {
-        Eyebrow(name)
-        Text(UsageWords.tasks(mine.counted), style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
-        state.usage?.period?.end?.let { Text(UsageWords.periodEnds(it), style = scaled(13, color = Theme.soft)) }
-      }
-      NotCounted(mine.free?.lines)
-      state.tafTasks[tafId]?.takeIf { it.isNotEmpty() }?.let { CountedTasks(it, state) }
-      // The account's count is its own, said with whose it is: this taf's never reads as the account's.
-      state.usage?.tasks?.counted?.let { Panel { CountRow(UsageWords.ALL_TAFS, UsageWords.tasks(it)) } }
-    } else if (why != null) {
-      Panel { Text(why, style = scaled(14, color = Theme.no)) }
-    } else {
-      Loading(name)
-    }
-  }
-}
-
-/** The row on a taf's page that opens its usage, with its count this period. */
-@Composable
-fun UsageRow(count: Int?, onClick: () -> Unit) {
+fun UsageRow(onClick: () -> Unit) {
   Panel(Modifier.clickable(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Text("Usage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.weight(1f))
-      count?.let { Text(UsageWords.tafCount(it), style = scaled(14, color = Theme.soft)) }
       Text("›", style = scaled(20, color = Theme.dim))
     }
   }
@@ -368,57 +300,11 @@ private fun UsageFrame(title: String, onClose: () -> Unit, content: @Composable 
   }
 }
 
-@Composable
-private fun TasksPanel(u: Usage) {
-  Panel {
-    Eyebrow(UsageWords.whose(u))
-    Text(
-      UsageWords.count(u.tasks.counted, if (u.tasks.left == null) 0 else u.tasks.total, "tasks"),
-      style = scaled(26, FontWeight.Bold, Theme.ink, display = true),
-    )
-    // A trial that hasn't started or has ended runs no period: no meter, nothing in red, and no end date (it would be past).
-    val running = !UsageWords.noPeriod(u)
-    if (running && u.tasks.left != null && u.tasks.total > 0) {
-      Meter(u.tasks.counted.toDouble() / u.tasks.total, if (u.tasks.usedUp) Theme.no else Theme.ok)
-    }
-    UsageWords.leftLine(u)?.let { Text(it, style = scaled(15, FontWeight.SemiBold, if (running && u.tasks.usedUp) Theme.no else Theme.ink)) }
-    if (running) Text(UsageWords.periodEnds(u.period.end), style = scaled(13, color = Theme.soft))
-  }
-}
-
-@Composable
-private fun NotCounted(lines: List<Pair<String, Int>>?) {
-  if (lines.isNullOrEmpty()) return
-  Panel {
-    Eyebrow("Not counted")
-    lines.forEach { (label, n) -> CountRow(label, "$n") }
-  }
-}
-
-@Composable
-private fun CountedTasks(tasks: List<CountedTask>, state: AppState) {
-  Panel {
-    Eyebrow("Counted tasks")
-    tasks.forEach { task ->
-      val entry = state.recordEntry(task.record)
-      if (entry != null) {
-        RecordRow(entry, state, showTaf = true)
-      } else {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-          Text(state.tafName(task.agent), style = scaled(14, FontWeight.SemiBold, Theme.ink))
-          Text("${UsageWords.toolName(task)} · ${shortTime(task.at)}", style = scaled(13, color = Theme.dim))
-        }
-      }
-    }
-  }
-}
-
-@Composable
-private fun CountRow(label: String, value: String) {
-  Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-    Text(label, style = scaled(14, color = Theme.ink), modifier = Modifier.weight(1f))
-    Text(value, style = scaled(14, color = Theme.soft), modifier = Modifier.padding(start = 8.dp))
-  }
+/** The plan's colour by tafs cloud's tone: waiting in red, a warning in amber, otherwise [calm]. A tone this app doesn't know is calm. */
+fun planColor(tone: String, calm: androidx.compose.ui.graphics.Color): androidx.compose.ui.graphics.Color = when (tone) {
+  BalanceNow.WAITING -> Theme.no
+  BalanceNow.WARNING -> Theme.amber
+  else -> calm
 }
 
 /** Loading draws the screen at its full width, never a narrow strip. */
