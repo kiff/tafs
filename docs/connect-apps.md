@@ -127,7 +127,8 @@ after.
 
 **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing
 that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that
-isn't a taf, so nothing there says it was removed (`byTaf`, the same on iPhone and iPad). Clearing removed tafs'
+isn't a taf, so nothing there says it was removed (`byTaf` on Android; `AppModel.connectionGroups` and
+`AppConnectionsView` on iPhone and iPad). Clearing removed tafs'
 connections at once waits for tafs cloud to mark a grant whose taf it actually removed.
 
 Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own

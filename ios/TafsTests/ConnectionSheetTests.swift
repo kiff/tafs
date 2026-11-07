@@ -43,6 +43,38 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertEqual(AppModel.connections(of: try app(stripe), in: grants).map(\.id), ["g1", "g2", "g5"])
     }
 
+    /// An app's connections grouped by taf (the owner's Connect apps ask): a taf with one
+    /// needing attention first, the rest by name, each taf's connections together in planque's
+    /// order; those with no taf the app can name apart, to show last as "Other connections".
+    func testAnAppsConnectionsAreGroupedByTafOthersLast() throws {
+        let req = { (agent: String) in #"{"server":"https://mcp.stripe.com","agent":"\#(agent)","tools":[]}"# }
+        let grants = [
+            try g("g1", req("save-1")),
+            try g("g2", req("gone-1")),
+            try g("g3", req("refunds-1")),
+            try g("g4", req("charge-1")),
+            try g("g5", req("save-1")),
+            try g("g6", req("gone-2"), status: "approved"),
+            try g("g7", req("refunds-1"), status: "needs_reconnect"),
+        ]
+        let names = ["save-1": "Save Cancels", "refunds-1": "Refunds", "charge-1": "chargebacks"]
+        let split = AppModel.connectionGroups(grants, taf: { names[$0.request.agent] }, attention: { $0.waitingSignIn || $0.needsReconnect })
+        XCTAssertEqual(split.tafs.map(\.taf), ["Refunds", "chargebacks", "Save Cancels"], "the one needing attention first, then by name, in any case")
+        XCTAssertEqual(split.tafs.map { $0.grants.map(\.id) }, [["g3", "g7"], ["g4"], ["g1", "g5"]], "a taf's two connections together")
+        XCTAssertEqual(split.others.map(\.id), ["g2", "g6"], "those with no taf it can name, a waiting one too, apart")
+
+        let none = AppModel.connectionGroups(grants, taf: { names[$0.request.agent] }, attention: { _ in false })
+        XCTAssertEqual(none.tafs.map(\.taf), ["chargebacks", "Refunds", "Save Cancels"], "by name alone when none needs attention")
+        XCTAssertTrue(AppModel.connectionGroups([], taf: { _ in nil }, attention: { _ in false }).tafs.isEmpty)
+    }
+
+    /// The last group's name, the same on Android: never "removed", which the app can't tell
+    /// from a taf it doesn't see.
+    func testTheLastGroupClaimsNothing() {
+        XCTAssertEqual(ConnectionGroupWords.others, "Other connections")
+        XCTAssertFalse(ConnectionGroupWords.others.lowercased().contains("removed"))
+    }
+
     /// A managed provider's connected grant isn't signed in again in place: planque refuses it.
     func testAProvidersConnectionSaysToDisconnectAndConnectAgain() throws {
         let managed = try g("g9", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#)
