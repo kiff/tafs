@@ -1272,7 +1272,9 @@ final class KIFFClient {
         if !(200..<300).contains(status) { DriveDiagnostics.shared.failed(method: method, path: path, status: status) }
         if status == 401 { throw KIFFError.unauthorized }
         guard (200..<300).contains(status) else {
-            let body = try? JSONDecoder().decode([String: String].self, from: data)
+            // The refusal's string fields: a body with a number in it too (a raise's `limit_cents`)
+            // still gives its `error` and `reason`.
+            let body = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?.compactMapValues { $0 as? String }
             if status == 403, body?["error"] == "approval_key_required" || body?["reason"] == "approval_key_required" {
                 approvalKeyRequired?()
                 throw KIFFError.approvalKeyRequired

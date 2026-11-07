@@ -447,7 +447,8 @@ final class PurchasesTests: XCTestCase {
     func testARaiseFromAChangedLimitReadsTheBalanceAgain() async throws {
         let log = StoreLog()
         let (model, _, _) = await signedIn(log)
-        StubProtocol.responses["PUT /v1/me/usage/limit"] = (409, #"{"error":"limit_changed"}"#)
+        // As KIFF answers it, with the limit now as a number.
+        StubProtocol.responses["PUT /v1/me/usage/limit"] = (409, #"{"error":"limit_changed","message":"The spend limit changed meanwhile. Read it again.","limit_cents":13000}"#)
         StubProtocol.responses["GET /v1/usage/balance"] = (200, Self.raised)
         let before = reads("/v1/usage/balance")
         let answer = await model.raiseLimit()
@@ -456,7 +457,7 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(model.balance?.balance.raise?.fromCents, 13000)
         XCTAssertFalse(model.balanceStale, "nothing was raised")
 
-        StubProtocol.responses["PUT /v1/me/usage/limit"] = (409, #"{"error":"limit_ceiling"}"#)
+        StubProtocol.responses["PUT /v1/me/usage/limit"] = (409, #"{"error":"limit_ceiling","message":"The spend limit can't go higher from the app. Contact KIFF to raise it further.","limit_cents":130000}"#)
         let ceiling = await model.raiseLimit()
         XCTAssertEqual(ceiling, AppModel.limitCeiling)
         let body = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" && $0.url?.path == "/v1/me/usage/limit" }?.httpBody)
