@@ -347,44 +347,104 @@ final class TafsCloud {
         return r.events
     }
 
-    /// The period's AI use, from chats and Setup (kiff/tafs#193): a share of the plan's fair
-    /// use, where the tafs ask next (100%, then 200% after a go on…), and whether they're
-    /// asking now. Nil shares: no bound on this account. Whether this person may go on
-    /// (`can_go_on`, the billing admin), when it starts again by itself, and `words` saying
-    /// all that, shown as they are (kiff/tafs#185).
-    struct AIUse: Decodable, Equatable {
-        let usedPct: Int?
-        let asksAtPct: Int?
-        let paused: Bool
-        var canGoOn = false
-        var startsAgain: String?
-        var words = ""
-        enum CodingKeys: String, CodingKey {
-            case usedPct = "used_pct", asksAtPct = "asks_at_pct", paused, canGoOn = "can_go_on", startsAgain = "starts_again", words
+    /// The account's balance now, in tafs cloud's words (docs/accounts.md › The balance read):
+    /// for Plan & usage, Settings' Plan card and Home. The app draws the words as they are,
+    /// with a bar at `meter_pct`, and offers Raise the limit and buying only where tafs cloud
+    /// says so. Lenient: a field it can't read is left out, never the read.
+    struct Balance: Decodable, Equatable {
+        /// Raise the limit, as offered: its words, and the limit now, which the raise sends back.
+        struct Offer: Decodable, Equatable {
+            let words: String
+            var fromCents: Int? = nil
+            enum CodingKeys: String, CodingKey { case words, fromCents = "from_cents" }
         }
+        /// What the store may sell this person now: Solo, on an account with no plan billed,
+        /// and packs of credits while Solo runs.
+        struct Buy: Decodable, Equatable {
+            var solo = false
+            var packs = false
+            init(solo: Bool = false, packs: Bool = false) { self.solo = solo; self.packs = packs }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                solo = Self.offered(c, .solo)
+                packs = Self.offered(c, .packs)
+            }
+            /// `true`, or anything set that isn't `false` (a list of products), offers it.
+            private static func offered(_ c: KeyedDecodingContainer<CodingKeys>, _ k: CodingKeys) -> Bool {
+                if let b = try? c.decodeIfPresent(Bool.self, forKey: k) { return b }
+                guard c.contains(k), (try? c.decodeNil(forKey: k)) == false else { return false }
+                return true
+            }
+            enum CodingKeys: String, CodingKey { case solo, packs }
+        }
+        struct Line: Decodable, Equatable {
+            /// `ok`, `warning` (from 80%) or `waiting`; a state the app doesn't know reads `ok`.
+            var state = "ok"
+            /// While waiting: `credits_used_up`, `limit_reached` or `no_plan`.
+            var why: String? = nil
+            /// How much is used, 0 to 100, for a bar; nil where nothing bounds it.
+            var meterPct: Int? = nil
+            let words: String
+            var detail: String? = nil
+            var warning: String? = nil
+            /// Set only for someone who may raise the spend limit.
+            var raise: Offer? = nil
+            var buy: Buy? = nil
+            enum CodingKeys: String, CodingKey { case state, why, meterPct = "meter_pct", words, detail, warning, raise, buy }
 
-        init(usedPct: Int?, asksAtPct: Int?, paused: Bool, canGoOn: Bool = false, startsAgain: String? = nil, words: String = "") {
-            self.usedPct = usedPct
-            self.asksAtPct = asksAtPct
-            self.paused = paused
-            self.canGoOn = canGoOn
-            self.startsAgain = startsAgain
-            self.words = words
+            init(state: String = "ok", why: String? = nil, meterPct: Int? = nil, words: String, detail: String? = nil,
+                 warning: String? = nil, raise: Offer? = nil, buy: Buy? = nil) {
+                self.state = state; self.why = why; self.meterPct = meterPct; self.words = words; self.detail = detail
+                self.warning = warning; self.raise = raise; self.buy = buy
+            }
+
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                words = try c.decode(String.self, forKey: .words)
+                state = (try? c.decodeIfPresent(String.self, forKey: .state)) ?? "ok"
+                why = (try? c.decodeIfPresent(String.self, forKey: .why)) ?? nil
+                meterPct = ((try? c.decodeIfPresent(Int.self, forKey: .meterPct)) ?? nil).map { min(max($0, 0), 100) }
+                detail = Self.text(c, .detail)
+                warning = Self.text(c, .warning)
+                raise = (try? c.decodeIfPresent(Offer.self, forKey: .raise)) ?? nil
+                buy = (try? c.decodeIfPresent(Buy.self, forKey: .buy)) ?? nil
+            }
+
+            private static func text(_ c: KeyedDecodingContainer<CodingKeys>, _ k: CodingKeys) -> String? {
+                guard let t = (try? c.decodeIfPresent(String.self, forKey: k)) ?? nil, !t.isEmpty else { return nil }
+                return t
+            }
+
+            /// Waiting: no new run starts until the balance changes.
+            var waiting: Bool { state == "waiting" }
+        }
+        let balance: Line
+        /// Settings' Plan card, in `planTone`'s colour.
+        var planLine: String? = nil
+        /// `ok`, `warning` or `waiting`.
+        var planTone = "ok"
+        /// Home's one line about the plan; nil when the plan doesn't need the person.
+        var homeLine: String? = nil
+        enum CodingKeys: String, CodingKey { case balance, planLine = "plan_line", planTone = "plan_tone", homeLine = "home_line" }
+
+        init(balance: Line, planLine: String? = nil, planTone: String = "ok", homeLine: String? = nil) {
+            self.balance = balance; self.planLine = planLine; self.planTone = planTone; self.homeLine = homeLine
         }
 
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
-            usedPct = try c.decodeIfPresent(Int.self, forKey: .usedPct)
-            asksAtPct = try c.decodeIfPresent(Int.self, forKey: .asksAtPct)
-            paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? false
-            canGoOn = (try? c.decodeIfPresent(Bool.self, forKey: .canGoOn)) ?? false
-            startsAgain = try? c.decodeIfPresent(String.self, forKey: .startsAgain)
-            words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
+            balance = try c.decode(Line.self, forKey: .balance)
+            planLine = ((try? c.decodeIfPresent(String.self, forKey: .planLine)) ?? nil).flatMap { $0.isEmpty ? nil : $0 }
+            planTone = ((try? c.decodeIfPresent(String.self, forKey: .planTone)) ?? nil) ?? "ok"
+            homeLine = ((try? c.decodeIfPresent(String.self, forKey: .homeLine)) ?? nil).flatMap { $0.isEmpty ? nil : $0 }
         }
     }
 
-    func aiUse() async throws -> AIUse {
-        try await send("GET", "/v1/usage/ai")
+    /// The balance now; nil from a tafs cloud from before it (404), which shows none.
+    func balance() async throws -> Balance? {
+        do {
+            return try await send("GET", "/v1/usage/balance")
+        } catch let e as CloudError where e.status == 404 { return nil }
     }
 
     /// The credits the account's tafs used in a period, read only (docs/accounts.md): in all,

@@ -326,14 +326,15 @@ extension View {
     }
 }
 
-/// Home's line about the plan, only when it needs the owner (`UsageView.homeLine`): a trial
-/// ended or ending, tasks nearly gone. It opens Plan & usage. Home stays about the tafs.
+/// Home's line about the plan, only when it needs the person: tafs cloud's `home_line` (from
+/// 80%, while the tafs wait, and with no plan), in its words. It opens Plan & usage. Home stays
+/// about the tafs.
 struct PlanLine: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        if model.mode == .kiff, let u = model.usage, let words = UsageView.homeLine(u) {
-            let color = UsageView.planTone(u) == .out ? Theme.no : Theme.amberText
+        if model.mode == .kiff, let b = model.balance, let words = b.homeLine {
+            let color = UsageView.color(b.planTone, calm: Theme.amberText)
             Button { model.usageRequested = true } label: {
                 HStack(spacing: 6) {
                     Circle().fill(color).frame(width: 7, height: 7)

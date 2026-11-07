@@ -5,6 +5,14 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Credits are the balance in Plan & usage (iOS).** Plan & usage opens on the balance in tafs cloud's words (`GET /v1/usage/balance`, docs/accounts.md › The balance read): its line, a bar, what comes next and the warning, with **Raise the limit** on Company and **Buy credits** or Solo where tafs cloud offers them. The Credits panel follows. Settings' Plan card and Home's plan line show tafs cloud's `plan_line` and `home_line`.
+  - **Raise the limit** is signed by the device key behind Face ID, as Go on was, with the limit it raises from (`from_cents`). Then the balance is read again; if that read fails, only Read it again is offered. A limit that changed meanwhile is read again, and the phone's ceiling says to contact KIFF.
+  - **A chat, Coach or Run now refused for credits** shows tafs cloud's words, with no Retry, and the message stays in the composer.
+  - **Asking an admin** is for a raise on Company and for a pack on Solo, in the request lines both apps share.
+  - **Gone:** the tasks, packs of tasks and counted tasks, a taf's Usage row, AI use and Go on, and the plan's trial and its words. KIFF's usage read is read only for the store, billing and requests.
+  - **Android's parity points:** a failed read shows tafs cloud's words, a run's time is a short time, the last period is read again on each refresh, and the sample shows credits.
+  - **Deploy order:** this build ships after the server side of credits as the balance. A tafs cloud from before shows no balance, and the Credits panel stays.
+
 - **Credits in Plan & usage (iOS), read only.** Above the tasks, which stay as they are, Plan & usage shows the credits the tafs used this period or the last: the period's line, each taf, Coach past its fair use, and what wasn't counted and why, all in tafs cloud's words (`GET /v1/usage/credits`, docs/accounts.md › Credits). A taf opens its runs, and a run opens its request, as on Android. Nothing is charged in credits yet. A tafs cloud without the read shows no panel, so there's no deploy order, and one that can't read KIFF says so in its words.
 - **Credits in Plan & usage, read-only (Android).** Above the tasks, which stay as they are, a Credits panel shows tafs cloud's `GET /v1/usage/credits` in its words: the period, each taf's credits and runs, Coach past its fair use, what wasn't counted, and the note, with Last period and This period. A taf's row opens its runs, 50 at a time, each opening its request. A tafs cloud from before credits answers 404 and no panel shows, so there's no deploy order. iOS follows.
 

@@ -1,110 +1,39 @@
 import SwiftUI
 
-/// The account's usage this period (kiff/tafs#184): its own screen, opened from Settings. The
-/// tasks the period has (what the plan includes, and packs) and what's left, who bills the
-/// plan, adding tasks or asking an admin for them, what the tafs did that counted, and what
-/// wasn't counted and why. Titled as the account's, with each number saying whose it is, so
-/// it reads at a glance with no text explaining it (kiff/tafs#245, item 2).
+/// Plan & usage (docs/accounts.md › Credits and plans): its own screen, opened from Settings'
+/// Plan card and Home's plan line. The balance first, in tafs cloud's words, with Raise the
+/// limit and buying where tafs cloud offers them; then the credits the tafs used (the Credits
+/// panel); then members' requests, asking an admin, and who bills the plan. The app adds
+/// nothing to tafs cloud's words but their order.
 struct UsageView: View {
     @EnvironmentObject private var model: AppModel
     /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
     @State private var read = false
-    @State private var addingTasks = false
+    @State private var buyingCredits = false
     @State private var asking = false
     @State private var declining: KIFFClient.PackRequest?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // The credits the tafs used, above the tasks, which stay as they are for now.
-                if read { CreditsPanel() }
-                if read, let u = model.usage {
-                    tasksPanel(u)
-                    if let notice = Self.notice(u) {
-                        Panel {
-                            Text(notice).scaledFont(15).foregroundColor(Theme.ink)
-                                .fixedSize(horizontal: false, vertical: true)
-                            // An ended trial: Solo keeps the tafs running, said only where Solo is offered.
-                            if Self.trialEnded(u), Self.offersSolo(u) {
-                                Text(Self.startSolo).scaledFont(14).foregroundColor(Theme.soft)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
+                if read {
+                    BalancePanel(buyCredits: { buyingCredits = true })
+                    CreditsPanel()
+                    if model.mode == .kiff {
+                        if let u = model.usage {
+                            askPanel(u)
+                            requestsPanel(u)
+                            billingPanel(u)
+                        } else if let why = model.usageError {
+                            Panel { Text(why).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true) }
                         }
                     }
-                    if model.mode == .kiff {
-                        tasksActions(u)
-                        requestsPanel(u)
-                        billingPanel(u)
-                    }
-                    if let message = model.tasksMessage {
+                    if let message = model.planMessage {
                         Panel { Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                     }
-                    if let packs = u.packList, !packs.isEmpty {
-                        Panel {
-                            Eyebrow(text: "Packs")
-                            ForEach(packs) { p in
-                                HStack {
-                                    Text(p.name).scaledFont(14).foregroundColor(Theme.ink)
-                                    Spacer()
-                                    Text(Self.packLeft(p)).scaledFont(14).foregroundColor(Theme.soft)
-                                }
-                            }
-                            // Held while no plan runs: they count again once Solo starts.
-                            if u.canAddPacks == false {
-                                Text(Self.packsWaitForSolo).scaledFont(13).foregroundColor(Theme.soft)
-                            }
-                        }
-                    }
-                    if let ai = model.aiUse, let used = ai.usedPct {
-                        NavigationLink(destination: AIUseView().environmentObject(model)) {
-                            Panel {
-                                HStack {
-                                    Text("AI use").scaledFont(15).foregroundColor(Theme.ink)
-                                    Spacer()
-                                    Text(ai.paused ? "Asking you" : "\(used)%").scaledFont(15)
-                                        .foregroundColor(ai.paused ? Theme.amber : Theme.soft)
-                                    Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
-                                }
-                            }
-                        }
-                        .buttonStyle(.drivablePlain)
-                    }
-                    // Every taf is listed by KIFF, most at 0 on a busy account: only those that counted.
-                    if let by = u.tasks.byAgent?.filter({ $0.counted > 0 }), !by.isEmpty {
-                        Panel {
-                            Eyebrow(text: "By taf")
-                            ForEach(by, id: \.agent) { a in
-                                CountRow(label: model.tafName(forAgent: a.agent), value: "\(a.counted)")
-                            }
-                        }
-                    }
-                    if let free = u.tasks.free, !free.lines.isEmpty {
-                        Panel {
-                            Eyebrow(text: "Not counted")
-                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, value: "\(line.1)") }
-                        }
-                    }
-                    // Agents that aren't tafs, named as the home list names them; only when they
-                    // counted something (kiff/tafs#245, item 2).
-                    if let others = Self.othersLine(u) {
-                        Panel {
-                            CountRow(label: "Other agents with Cards", value: others)
-                        }
-                    }
-                    if !model.countedTasks.isEmpty {
-                        Panel {
-                            Eyebrow(text: "Counted tasks")
-                            ForEach(model.countedTasks) { CountedTaskRow(task: $0) }
-                        }
-                    }
-                } else if let why = model.usageError {
-                    Panel { Text(why).scaledFont(14).foregroundColor(Theme.no) }
                 } else {
                     // Loading draws the screen at its full width, never a narrow strip (kiff/tafs#245, item 2).
-                    Panel {
-                        Eyebrow(text: Self.allTafs)
-                        ProgressView().frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    Panel { ProgressView().frame(maxWidth: .infinity, alignment: .leading) }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -116,63 +45,19 @@ struct UsageView: View {
         .inlineTitle()
         .task { await model.refreshUsage(); read = true }
         .refreshable { await model.refreshUsage() }
-        .sheet(isPresented: $addingTasks) { AddTasksView().environmentObject(model) }
-        .sheet(isPresented: $asking) { AskAdminView().environmentObject(model) }
+        .sheet(isPresented: $buyingCredits) { BuyCreditsView().environmentObject(model) }
+        .sheet(isPresented: $asking) { AskAdminView(raise: Self.asksForRaise(model.balance, model.usage)).environmentObject(model) }
         .sheet(item: $declining) { DeclineRequestView(request: $0).environmentObject(model) }
     }
 
-    private func tasksPanel(_ u: KIFFClient.Usage) -> some View {
-        Panel {
-            Eyebrow(text: Self.whose(u))
-            Text(Self.count(u.tasks.counted, of: u.tasks.left == nil ? 0 : u.tasks.total, "tasks")).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-            // A trial that hasn't started or has ended runs no period: no meter, nothing in
-            // red, and no end date (it would be past).
-            let running = !Self.noPeriod(u)
-            if running, u.tasks.left != nil, u.tasks.total > 0 {
-                Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.total),
-                      color: u.tasks.usedUp ? Theme.no : Theme.ok)
-            }
-            if let left = Self.leftLine(u) {
-                Text(left).scaledFont(15, weight: .semibold).foregroundColor(running && u.tasks.usedUp ? Theme.no : Theme.ink)
-            }
-            if running {
-                Text(Self.periodEnds(u.period.end)).scaledFont(13).foregroundColor(Theme.soft)
-            }
-        }
-    }
-
-    /// Adding tasks, for someone who may; asking an admin, or waiting on the answer, for a
-    /// member. Only where tasks have a limit. Packs only while a plan runs (KIFF's
-    /// `can_add_packs`): an ended trial is offered Solo.
-    @ViewBuilder private func tasksActions(_ u: KIFFClient.Usage) -> some View {
-        if u.tasks.left != nil, u.store != nil {
-            if u.canAddTasks == true {
-                if !u.packsOffered {
-                    EmptyView()
-                } else if u.tasks.usedUp {
-                    Button("Add tasks") { addingTasks = true }.buttonStyle(PrimaryButtonStyle())
-                } else {
-                    Button("Add tasks") { addingTasks = true }.buttonStyle(OutlineButtonStyle())
-                }
-                if Self.offersSolo(u) {
-                    NavigationLink(destination: SoloView().environmentObject(model)) {
-                        Panel {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Solo").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                                    Text("Tafs and KIFF for one person, every month.").scaledFont(13).foregroundColor(Theme.dim)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
-                            }
-                        }
-                    }
-                    .buttonStyle(.drivablePlain)
-                }
-            } else if let mine = Self.waiting(u) {
+    /// For a member who doesn't manage billing, while the balance needs someone: their request
+    /// waiting, with Withdraw; else the last answer, and Ask an admin.
+    @ViewBuilder private func askPanel(_ u: KIFFClient.Usage) -> some View {
+        if !u.managesBilling {
+            if let mine = Self.waiting(u) {
                 Panel {
                     Eyebrow(text: "Waiting")
-                    Text("You asked for \(Self.packLine(mine.pack, in: u)). An admin answers.").scaledFont(15).foregroundColor(Theme.ink)
+                    Text(Self.askedLine(mine, in: u)).scaledFont(15).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Button("Withdraw") { Task { await model.withdrawRequest(mine) } }.buttonStyle(OutlineButtonStyle())
                 }
@@ -180,17 +65,19 @@ struct UsageView: View {
                 if let answer = Self.lastAnswer(u) {
                     Panel { Text(answer).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                 }
-                if u.tasks.usedUp {
-                    Button("Ask an admin") { asking = true }.buttonStyle(PrimaryButtonStyle())
-                } else {
-                    Button("Ask an admin") { asking = true }.buttonStyle(OutlineButtonStyle())
+                if Self.asksForRaise(model.balance, u) != nil, let b = model.balance?.balance {
+                    if b.waiting {
+                        Button(Self.askAdmin) { asking = true }.buttonStyle(PrimaryButtonStyle())
+                    } else {
+                        Button(Self.askAdmin) { asking = true }.buttonStyle(OutlineButtonStyle())
+                    }
                 }
             }
         }
     }
 
-    /// Members' requests waiting for an answer, for someone who may add tasks: approving buys
-    /// the pack.
+    /// Members' requests waiting for an answer, for someone who manages billing: a raise is
+    /// answered by raising the limit, a pack by buying it for that request.
     @ViewBuilder private func requestsPanel(_ u: KIFFClient.Usage) -> some View {
         let open = Self.openRequests(u)
         if !open.isEmpty {
@@ -198,21 +85,27 @@ struct UsageView: View {
                 Eyebrow(text: "Requests", color: Theme.amber)
                 ForEach(open) { r in
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("A member asks for \(Self.packLine(r.pack, in: u)).").scaledFont(15).foregroundColor(Theme.ink)
+                        Text(Self.requestLine(r, in: u)).scaledFont(15).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         if !r.reason.isEmpty {
                             Text(r.reason).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         }
                         HStack(spacing: 10) {
-                            // Approving buys the pack: only while packs are on sale.
-                            if u.packsOffered {
-                                Button("Approve") {
-                                    guard let pack = u.store?.packs.first(where: { $0.id == r.pack }) else { return }
-                                    Task { await model.buyPack(pack, answering: r) }
+                            if r.kind == "raise" {
+                                // Raising answers every open request for one: only where tafs cloud offers it.
+                                if model.balance?.balance.raise != nil, !model.balanceStale {
+                                    ApprovalGate {
+                                        Button(Self.raiseLimit) { Task { await model.answerRaise() } }
+                                            .buttonStyle(PrimaryButtonStyle())
+                                    }
                                 }
-                                .buttonStyle(PrimaryButtonStyle())
-                                .confirming()
-                                .disabled(model.purchases.buying != nil)
+                            } else if model.balance?.balance.buy?.packs == true,
+                                      let pack = u.store?.packs.first(where: { $0.id == r.pack }) {
+                                // Approving buys the pack: only while packs are on sale.
+                                Button("Approve") { Task { await model.buyPack(pack, answering: r) } }
+                                    .buttonStyle(PrimaryButtonStyle())
+                                    .confirming()
+                                    .disabled(model.purchases.buying != nil)
                             }
                             Button("Decline") { declining = r }.buttonStyle(OutlineButtonStyle())
                         }
@@ -222,9 +115,9 @@ struct UsageView: View {
         }
     }
 
-    /// Who bills the plan, in one line; Apple's with Manage. After a move from Solo to Team,
-    /// while Solo still renews with Apple, a line says so with Apple's own page to cancel it:
-    /// the app never points anywhere else to buy.
+    /// Who bills the plan, in one line; Apple's with Manage. After a move from Solo to
+    /// Company, while Solo still renews with Apple, a line says so with Apple's own page to
+    /// cancel it: the app never points anywhere else to buy.
     @ViewBuilder private func billingPanel(_ u: KIFFClient.Usage) -> some View {
         if let line = Self.billingLine(u) {
             Panel {
@@ -251,11 +144,25 @@ struct UsageView: View {
         }
     }
 
-    /// "The Solo bought in the App Store renews on 3 November…" after a move to Team; nil otherwise.
-    /// It doesn't say "your": the person reading may not be the one who bought it.
+    /// The account's screen: its plan, and what the period used.
+    static let title = "Plan & usage"
+    static let askAdmin = "Ask an admin"
+    static let raiseLimit = "Raise the limit"
+
+    /// The colour of tafs cloud's tone: `waiting` in red, `warning` in amber, else calm.
+    static func color(_ tone: String, calm: Color = Theme.ink) -> Color {
+        switch tone {
+        case "waiting": return Theme.no
+        case "warning": return Theme.amberText
+        default: return calm
+        }
+    }
+
+    /// "The Solo bought in the App Store renews on 3 November…" after a move to Company; nil
+    /// otherwise. It doesn't say "your": the person reading may not be the one who bought it.
     static func soloStillRenews(_ u: KIFFClient.Usage) -> String? {
         guard u.billing?.source == "stripe", let until = u.billing?.appleSoloUntil else { return nil }
-        return "Team is billed by KIFF now. The Solo bought in the App Store renews on \(until.shown(date: .long, time: .omitted)) unless it's cancelled, from the Apple account that bought it."
+        return "Company is billed by KIFF now. The Solo bought in the App Store renews on \(until.shown(date: .long, time: .omitted)) unless it's cancelled, from the Apple account that bought it."
     }
 
     /// One line on who bills the plan; nil when no plan is billed.
@@ -271,398 +178,166 @@ struct UsageView: View {
 
     static func managedByApple(_ u: KIFFClient.Usage) -> Bool { u.billing?.source == "apple" }
 
-    /// Whether the app offers Solo: to someone who may add tasks, on an account with no plan
-    /// billed (the trial, or one that ended). Never to one billed by KIFF or an agreement.
-    static func offersSolo(_ u: KIFFClient.Usage) -> Bool {
-        guard u.canAddTasks == true, u.store != nil else { return false }
-        return (u.billing?.source ?? "").isEmpty && u.plan == "trial"
+    /// What a member asks an admin for while the balance needs someone, as docs/accounts.md
+    /// has it: a raise on Company (the limit reached, or a plan KIFF bills), a pack on Solo
+    /// (the credits used up, or a plan a store bills). Nil while the balance is fine, and where
+    /// no one can be asked (an agreement, no plan). `true` is a raise.
+    static func asksForRaise(_ b: TafsCloud.Balance?, _ u: KIFFClient.Usage?) -> Bool? {
+        guard let line = b?.balance, line.state != "ok" else { return nil }
+        switch line.why {
+        case "limit_reached": return true
+        case "credits_used_up": return false
+        case "no_plan": return nil
+        default:
+            switch u?.billing?.source {
+            case "stripe": return true
+            case "apple", "google": return false
+            default: return nil
+            }
+        }
     }
 
     /// The member's own request still waiting.
     static func waiting(_ u: KIFFClient.Usage) -> KIFFClient.PackRequest? {
-        guard u.canAddTasks != true else { return nil }
+        guard !u.managesBilling else { return nil }
         return u.requests?.first { $0.status == "open" }
     }
 
-    /// The member's latest answered request, said plainly.
+    /// The member's request while it waits, in the lines both apps share (docs/accounts.md ›
+    /// In the apps).
+    static func askedLine(_ r: KIFFClient.PackRequest, in u: KIFFClient.Usage) -> String {
+        r.kind == "raise" ? "You asked an admin to raise the spend limit." : "You asked an admin for a pack."
+    }
+
+    /// The member's latest answered request, in the lines both apps share.
     static func lastAnswer(_ u: KIFFClient.Usage) -> String? {
-        guard u.canAddTasks != true, let r = u.requests?.first else { return nil }
-        let pack = packLine(r.pack, in: u)
+        guard !u.managesBilling, let r = u.requests?.first else { return nil }
         switch r.status {
-        case "approved": return "An admin added \(pack)."
+        case "approved": return r.kind == "raise" ? "An admin raised the spend limit." : "An admin added a pack."
         case "declined":
-            if let note = r.note, !note.isEmpty { return "An admin declined \(pack): \(note)" }
-            return "An admin declined \(pack)."
-        case "expired": return "Your request for \(pack) ended with the period."
+            if let note = r.note, !note.isEmpty { return "An admin declined: \(note)" }
+            return "An admin declined."
+        case "expired": return "Your request ended with the period."
         default: return nil
         }
     }
 
-    /// Open requests, for someone who may add tasks.
+    /// An open request, for someone who manages billing: "A member asks to raise the spend
+    /// limit.", "A member asks for Rayo."
+    static func requestLine(_ r: KIFFClient.PackRequest, in u: KIFFClient.Usage?) -> String {
+        r.kind == "raise" ? "A member asks to raise the spend limit." : "A member asks for \(packLine(r.pack, in: u))."
+    }
+
+    /// Open requests, for someone who manages billing.
     static func openRequests(_ u: KIFFClient.Usage) -> [KIFFClient.PackRequest] {
-        guard u.canAddTasks == true else { return [] }
+        guard u.managesBilling else { return [] }
         return (u.requests ?? []).filter { $0.status == "open" }
     }
 
-    /// A pack's line, "Rayo · 70 tasks", from what's on sale.
-    static func packLine(_ id: String, in u: KIFFClient.Usage?) -> String {
-        u?.store?.packs.first { $0.id == id }?.line ?? id.capitalized
-    }
-
-    /// "60 of 70 left, until 22 Oct 2027".
-    static func packLeft(_ p: KIFFClient.Usage.HeldPack) -> String {
-        "\(p.tasksLeft) of \(p.tasks) left, until \(p.expiresAt.shown(date: .abbreviated, time: .omitted))"
-    }
-
-    /// "65 tasks left"; nil where tasks have no limit.
-    static func leftLine(_ u: KIFFClient.Usage) -> String? {
-        guard let left = u.tasks.left else { return nil }
-        let line = left == 1 ? "1 task left" : "\(left) tasks left"
-        guard let packs = u.tasks.packs, packs > 0 else { return line }
-        return "\(line) · \(u.tasks.included) included, \(packs) from packs"
-    }
-
-    /// A taf's counted tasks this period, for its page's Usage row.
-    static func tafCount(_ n: Int) -> String {
-        "\(tasks(n)) this period"
-    }
-
-    /// "1 task", "8 tasks".
-    static func tasks(_ n: Int) -> String {
-        n == 1 ? "1 task" : "\(n) tasks"
-    }
-
-    /// The account's screen: its plan, and what the period used. Apart from a taf's own
-    /// (kiff/tafs#245, item 2).
-    static let title = "Plan & usage"
-
-    /// Under held packs while no plan runs (KIFF's `can_add_packs` false).
-    static let packsWaitForSolo = "Counts once Solo starts."
-
-    /// Under an ended trial's notice, where Solo is offered.
-    static let startSolo = "Start Solo to keep your tafs running."
-
-    /// Whose the account's numbers are: every taf's together.
-    static let allTafs = "All tafs"
-
-    /// "All tafs · Trial": whose the count is, and the plan where it has a name to show.
-    static func whose(_ u: KIFFClient.Usage) -> String {
-        planName(u.plan).map { "\(allTafs) · \($0)" } ?? allTafs
-    }
-
-    /// "This period ends 22 Nov 2026."
-    static func periodEnds(_ end: Date) -> String {
-        "This period ends \(end.shown(date: .abbreviated, time: .omitted))."
-    }
-
-    /// What agents that aren't tafs did through KIFF ("3 actions", "3 of 500 actions"); nil
-    /// when they did nothing, so an empty line never asks the owner what 0 means.
-    static func othersLine(_ u: KIFFClient.Usage) -> String? {
-        u.actions.counted > 0 ? count(u.actions.counted, of: u.actions.included, "actions") : nil
-    }
-
-    /// A counted task's tool as the Record names it: KIFF's title, else its name in words.
-    static func toolName(_ t: KIFFClient.CountedTask) -> String {
-        if let title = t.toolTitle, !title.isEmpty { return title }
-        return toolWords(t.tool)
-    }
-
-    /// A tool's name in words, when KIFF gives no title: "refund_order" reads "Refund order".
-    static func toolWords(_ tool: String) -> String {
-        let words = tool.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: "-", with: " ")
-        return words.prefix(1).uppercased() + words.dropFirst()
-    }
-
-    /// "14 of 25 tasks", or "472 tasks" where there's no limit (KIFF's `included: 0`, on our
-    /// own accounts and Company), in the singular where the number it follows is 1: "1 task",
-    /// "0 of 1 task". `unit` is the plural; its singular drops the final "s".
-    static func count(_ counted: Int, of included: Int, _ unit: String) -> String {
-        let one = unit.hasSuffix("s") ? String(unit.dropLast()) : unit
-        return included > 0
-            ? "\(counted) of \(included) \(included == 1 ? one : unit)"
-            : "\(counted) \(counted == 1 ? one : unit)"
-    }
-
-    /// The plan's name as the owner bought it; nil for one that isn't sold (our own
-    /// accounts' "internal"), which has no name to show (kiff/tafs#245, item 2).
-    static func planName(_ plan: String) -> String? {
-        switch plan {
-        case "trial": return "Trial"
-        case "solo": return "Solo"
-        case "team": return "Team"
-        case "company": return "Company"
-        default: return nil
-        }
-    }
-
-    /// A trial whose end has passed, Solo lapsed included: KIFF gives it no tasks (`left: 0`),
-    /// and nothing was used up.
-    static func trialEnded(_ u: KIFFClient.Usage, now: Date = Date()) -> Bool {
-        guard u.plan == "trial", let end = u.trial?.endsAt else { return false }
-        return end <= now
-    }
-
-    /// No period runs: a trial that hasn't started or has ended. No period line and no meter then.
-    static func noPeriod(_ u: KIFFClient.Usage, now: Date = Date()) -> Bool {
-        u.plan == "trial" && (u.trial?.endsAt == nil || trialEnded(u, now: now))
-    }
-
-    /// What the account should know now: an ended trial, tasks used up, or what's left of the
-    /// trial. Nil when there's nothing to say.
-    static func notice(_ u: KIFFClient.Usage, now: Date = Date()) -> String? {
-        // Before used-up: an ended trial has left 0 by design, though nothing was used.
-        if trialEnded(u, now: now) { return "Your trial has ended." }
-        if u.plan == "trial", let trial = u.trial, trial.endsAt == nil { return "Your trial hasn't started." }
-        if u.tasks.usedUp {
-            return u.plan == "trial"
-                ? "Your trial's tasks are used. Your tafs are paused until tasks are added."
-                : "This period's tasks are used. Your tafs are paused until tasks are added or the next period starts."
-        }
-        guard let trial = u.trial else { return nil }
-        guard trial.endsAt != nil else { return "Your trial hasn't started." }
-        if trial.daysLeft <= 0 { return "Your trial has ended." }
-        let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
-        let left = u.tasks.left ?? trial.tasksLeft
-        return "Your trial: \(days) and \(tasks(left)) left."
-    }
-
-    // MARK: The plan, where it shows outside Plan & usage
-
-    /// How the plan line reads: calm, wanting the owner (a trial ended or not started), or out of tasks.
-    enum PlanTone { case calm, attention, out }
-
-    /// Who bills the plan, short, for the plan line; nil when no one does or a contract does.
-    private static func billedBy(_ u: KIFFClient.Usage) -> String? {
-        switch u.billing?.source {
-        case "apple": return "Apple"
-        case "google": return "Google Play"
-        case "stripe": return "KIFF"
-        default: return nil
-        }
-    }
-
-    /// "12 of 20 tasks left until 1 Dec 2026" on a plan someone bills, or "472 tasks this
-    /// period" where there's no limit. "Until", not "renews": the app can't tell a cancelled
-    /// Solo from one that renews, and the period's end is true of both.
-    private static func tasksLine(_ u: KIFFClient.Usage) -> String {
-        guard let left = u.tasks.left else { return "\(tasks(u.tasks.counted)) this period" }
-        let line = u.tasks.total > 0 ? "\(left) of \(tasks(u.tasks.total)) left" : "\(tasks(left)) left"
-        return billedBy(u) == nil ? line : "\(line) until \(u.period.end.shown(date: .abbreviated, time: .omitted))"
-    }
-
-    /// The plan in one line, for Settings' Plan card: "Trial · 5 days and 18 tasks left",
-    /// "Trial ended · Start Solo", "Solo · 12 of 20 tasks left until 1 Dec 2026 · Apple".
-    static func planLine(_ u: KIFFClient.Usage, now: Date = Date()) -> String {
-        if u.plan == "trial" {
-            if trialEnded(u, now: now) { return offersSolo(u) ? "Trial ended · Start Solo" : "Trial ended" }
-            guard let trial = u.trial, trial.endsAt != nil else { return "Trial · not started" }
-            let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
-            return "Trial · \(days) and \(tasks(u.tasks.left ?? trial.tasksLeft)) left"
-        }
-        // Our own accounts' plan isn't sold, so planName has none for it; the card still names it.
-        let name = planName(u.plan) ?? (u.plan == "internal" ? "Internal" : "Your plan")
-        return [name, tasksLine(u), billedBy(u)].compactMap { $0 }.joined(separator: " · ")
-    }
-
-    static func planTone(_ u: KIFFClient.Usage, now: Date = Date()) -> PlanTone {
-        if u.plan == "trial", trialEnded(u, now: now) || u.trial?.endsAt == nil { return .attention }
-        return u.tasks.usedUp ? .out : .calm
-    }
-
-    /// Home's line about the plan, only when something needs the owner: a trial ended or
-    /// ending within 2 days, and tasks used up or down to a tenth of the period's. Nil
-    /// otherwise: Home stays about the tafs. A trial not started says so on the card only.
-    static func homeLine(_ u: KIFFClient.Usage, now: Date = Date()) -> String? {
-        if u.plan == "trial" {
-            if trialEnded(u, now: now) { return offersSolo(u) ? "Your trial has ended. \(startSolo)" : "Your trial has ended." }
-            guard let trial = u.trial, trial.endsAt != nil else { return nil }
-            if u.tasks.usedUp { return notice(u, now: now) }
-            if trial.daysLeft <= 2 { return trial.daysLeft <= 1 ? "Your trial ends within a day." : "Your trial ends in 2 days." }
-        }
-        if u.tasks.usedUp { return notice(u, now: now) }
-        guard let left = u.tasks.left, u.tasks.total > 0, left * 10 <= u.tasks.total else { return nil }
-        return "\(tasks(left)) left this period."
+    /// A pack's line, as KIFF sells it; "a pack" when it isn't on sale.
+    static func packLine(_ id: String?, in u: KIFFClient.Usage?) -> String {
+        guard let id else { return "a pack of credits" }
+        return u?.store?.packs.first { $0.id == id }?.line ?? id.capitalized
     }
 }
 
-/// One counted task: the Record's own line for that call when the app holds it, opening its
-/// receipt; otherwise the taf and the tool as the Record names it (kiff/tafs#184).
-struct CountedTaskRow: View {
+/// The balance at the top of Plan & usage (docs/accounts.md › In the apps): tafs cloud's
+/// `words` and `detail`, a bar at `meter_pct`, the `warning`, then Raise the limit where
+/// `raise` is set, and Solo or packs where `buy` says. Nothing from a tafs cloud without the
+/// read; its words when it couldn't be read.
+struct BalancePanel: View {
     @EnvironmentObject private var model: AppModel
-    let task: KIFFClient.CountedTask
+    let buyCredits: () -> Void
+    @State private var raising = false
+    @State private var reading = false
+    @State private var why: String?
 
     var body: some View {
-        if let entry = model.recordEntry(forCall: task.record) {
-            RecordRow(entry: entry, showTaf: true)
-        } else {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.tafName(forAgent: task.agent)).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
-                Text("\(UsageView.toolName(task)) · \(task.at.formatted(.relative(presentation: .named)))")
-                    .scaledFont(13).foregroundColor(Theme.dim)
+        if let b = model.balance {
+            let line = b.balance
+            Panel(stroke: line.waiting ? Theme.no.opacity(0.5) : line.state == "warning" ? Theme.amber.opacity(0.5) : Theme.line) {
+                // A refresh that failed keeps what was read and says why, as the Credits panel does.
+                if let failed = model.balanceError {
+                    Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                }
+                Text(line.words).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let pct = line.meterPct {
+                    Meter(fraction: Double(pct) / 100, color: UsageView.color(line.state, calm: Theme.ok))
+                        .accessibilityHidden(true)
+                }
+                if let detail = line.detail {
+                    Text(detail).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                }
+                if let warning = line.warning {
+                    Text(warning).scaledFont(14, weight: .semibold).foregroundColor(UsageView.color(line.state, calm: Theme.ink))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-        }
-    }
-}
-
-/// One taf's usage this period (kiff/tafs#184): its own screen, from a row on its page. What it
-/// counted, what it didn't and why, and its counted tasks; the account's Usage is one tap away.
-/// Titled with the taf's name, and the row to the account's carries all tafs' count, so its
-/// own count never reads as the account's (kiff/tafs#245, item 2).
-struct TafUsageView: View {
-    @EnvironmentObject private var model: AppModel
-    let tafID: UUID
-    /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
-    @State private var read = false
-
-    private var name: String { model.taf(tafID)?.name ?? "This taf" }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if read, let mine = model.tafUsage(for: tafID) {
-                    Panel {
-                        Eyebrow(text: name)
-                        Text(UsageView.tasks(mine.counted)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                        if let end = model.usage?.period.end {
-                            Text(UsageView.periodEnds(end)).scaledFont(13).foregroundColor(Theme.soft)
-                        }
+            if model.balanceStale {
+                // The raise went through and the balance couldn't be read since: only a read is offered.
+                Panel {
+                    Text(Self.readSince).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    Button(reading ? "Reading…" : Self.readAgain) {
+                        reading = true
+                        Task { await model.readBalance(); reading = false }
                     }
-                    if let free = mine.free, !free.lines.isEmpty {
-                        Panel {
-                            Eyebrow(text: "Not counted")
-                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, value: "\(line.1)") }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(reading)
+                    .accessibilityIdentifier("balance-read-again")
+                }
+            } else if let raise = line.raise, model.mode == .kiff {
+                ApprovalGate {
+                    Button {
+                        raising = true
+                        why = nil
+                        Task {
+                            let answer = await model.raiseLimit()
+                            why = answer?.isEmpty == true ? nil : answer
+                            raising = false
                         }
+                    } label: {
+                        Label(raising ? "Raising…" : raise.words, systemImage: Biometry.symbol)
                     }
-                    if let tasks = model.tafTasks[tafID], !tasks.isEmpty {
-                        Panel {
-                            Eyebrow(text: "Counted tasks")
-                            ForEach(tasks) { CountedTaskRow(task: $0) }
-                        }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(raising)
+                    .accessibilityIdentifier("raise-limit")
+                }
+            }
+            if let why {
+                Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+            }
+            if model.mode == .kiff, let buy = line.buy {
+                if buy.packs, !(model.usage?.store?.packs.isEmpty ?? true) {
+                    if line.waiting {
+                        Button(Self.buyCredits) { buyCredits() }.buttonStyle(PrimaryButtonStyle())
+                    } else {
+                        Button(Self.buyCredits) { buyCredits() }.buttonStyle(OutlineButtonStyle())
                     }
-                    NavigationLink(destination: UsageView().environmentObject(model)) {
+                }
+                if buy.solo, model.usage?.store != nil {
+                    NavigationLink(destination: SoloView().environmentObject(model)) {
                         Panel {
                             HStack {
-                                Text(UsageView.allTafs).scaledFont(15).foregroundColor(Theme.ink)
-                                Spacer()
-                                if let all = model.usage?.tasks.counted {
-                                    Text(UsageView.tasks(all)).scaledFont(15).foregroundColor(Theme.soft)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Solo").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                    Text(SoloView.line).scaledFont(13).foregroundColor(Theme.dim)
                                 }
+                                Spacer()
                                 Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
                             }
                         }
                     }
                     .buttonStyle(.drivablePlain)
-                } else if let why = model.usageError {
-                    Panel { Text(why).scaledFont(14).foregroundColor(Theme.no) }
-                } else {
-                    Panel {
-                        Eyebrow(text: name)
-                        ProgressView().frame(maxWidth: .infinity, alignment: .leading)
-                    }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-        }
-        .screenBackground()
-        .navigationTitle(name)
-        .inlineTitle()
-        .task { await model.refreshUsage(); await model.refreshTafUsage(tafID); read = true }
-        .refreshable { await model.refreshUsage(); await model.refreshTafUsage(tafID) }
-    }
-}
-
-private struct CountRow: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(label).scaledFont(14).foregroundColor(Theme.ink)
-            Spacer()
-            Text(value).scaledFont(14).foregroundColor(Theme.soft)
+        } else if let failed = model.balanceError {
+            Panel { Text(failed).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true) }
         }
     }
-}
 
-/// AI use from chats and Setup this period (kiff/tafs#193): its own screen. It's included,
-/// and never billed: past the plan's fair use the tafs ask before going on. While they wait,
-/// the billing admin can let them go on, behind Face ID (kiff/tafs#185); anyone else reads who
-/// can, in tafs cloud's words.
-struct AIUseView: View {
-    @EnvironmentObject private var model: AppModel
-    @State private var goingOn = false
-    @State private var reading = false
-    @State private var why: String?
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if let ai = model.aiUse, let used = ai.usedPct {
-                    Panel {
-                        Eyebrow(text: "AI use this month")
-                        Text("\(used)%").scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                        Meter(fraction: Double(used) / Double(max(ai.asksAtPct ?? 100, 1)), color: ai.paused ? Theme.amber : Theme.ok)
-                        Text(ai.words.isEmpty ? Self.explain(ai) : ai.words).scaledFont(13).foregroundColor(Theme.soft)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if ai.paused && ai.words.isEmpty {
-                        Panel {
-                            Text(Self.asking).scaledFont(15).foregroundColor(Theme.ink)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    if model.aiUseStale {
-                        Panel {
-                            Text("Your tafs went on. This month's AI use couldn't be read since.").scaledFont(15).foregroundColor(Theme.ink)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Button(reading ? "Reading…" : "Read it again") {
-                                reading = true
-                                Task { await model.readAIUse(); reading = false }
-                            }
-                            .buttonStyle(OutlineButtonStyle())
-                            .disabled(reading)
-                            .accessibilityIdentifier("ai-read-again")
-                        }
-                    } else if ai.paused && ai.canGoOn {
-                        ApprovalGate {
-                            Button {
-                                goingOn = true
-                                why = nil
-                                Task {
-                                    let answer = await model.goOnAI()
-                                    why = answer?.isEmpty == true ? nil : answer
-                                    goingOn = false
-                                }
-                            } label: {
-                                Label(goingOn ? "Going on…" : "Go on", systemImage: Biometry.symbol)
-                            }
-                            .buttonStyle(PrimaryButtonStyle())
-                            .disabled(goingOn)
-                            .accessibilityIdentifier("ai-go-on")
-                        }
-                    }
-                    if let why {
-                        Text(why).scaledFont(13).foregroundColor(Theme.no)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-        }
-        .screenBackground()
-        .navigationTitle("AI use")
-        .inlineTitle()
-    }
-
-    static let asking = "This month's AI use is high: your tafs ask before going on."
-
-    /// What the share means, and where the tafs ask next.
-    static func explain(_ ai: TafsCloud.AIUse) -> String {
-        let at = ai.asksAtPct ?? 100
-        let next = at <= 100 ? "At 100%, your tafs ask you before going on." : "You said go on; your tafs ask you again at \(at)%."
-        return "Chats with your tafs and Setup are included. 100% is this month's fair use. \(next) It's never billed."
-    }
+    static let buyCredits = "Buy credits"
+    static let readAgain = "Read it again"
+    /// After a raise whose read failed (docs/accounts.md › In the apps).
+    static let readSince = "Your tafs can go on. This period's credits couldn't be read since."
 }

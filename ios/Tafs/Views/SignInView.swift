@@ -132,7 +132,7 @@ struct SettingsView: View {
                         NavigationLink(ConnectAppsView.title) { ConnectAppsView() }
                     }
                     Section("Plan") {
-                        NavigationLink { UsageView() } label: { PlanRow(usage: model.usage) }.accessibilityIdentifier("plan-card")
+                        NavigationLink { UsageView() } label: { PlanRow(balance: model.balance) }.accessibilityIdentifier("plan-card")
                     }
                 }
                 // What a new Coach conversation offers, as tafs cloud keeps it: its words say what the
@@ -214,15 +214,15 @@ struct SettingsView: View {
     }
 }
 
-/// Settings' Plan card: the plan in one line, in its tone, and Plan & usage under it; just the
-/// title until KIFF's usage is read.
+/// Settings' Plan card: tafs cloud's `plan_line`, in `plan_tone`'s colour, and Plan & usage
+/// under it; just the title until the balance is read, or from a tafs cloud without it.
 struct PlanRow: View {
-    let usage: KIFFClient.Usage?
+    let balance: TafsCloud.Balance?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            if let usage {
-                Text(UsageView.planLine(usage)).scaledFont(16, weight: .semibold).foregroundColor(Self.color(UsageView.planTone(usage)))
+            if let balance, let line = balance.planLine {
+                Text(line).scaledFont(16, weight: .semibold).foregroundColor(UsageView.color(balance.planTone))
                     .fixedSize(horizontal: false, vertical: true)
                 Text(UsageView.title).scaledFont(13).foregroundColor(Theme.amberText)
             } else {
@@ -230,14 +230,6 @@ struct PlanRow: View {
             }
         }
         .padding(.vertical, 2)
-    }
-
-    static func color(_ tone: UsageView.PlanTone) -> Color {
-        switch tone {
-        case .attention: return Theme.amberText
-        case .out: return Theme.no
-        case .calm: return Theme.ink
-        }
     }
 }
 
