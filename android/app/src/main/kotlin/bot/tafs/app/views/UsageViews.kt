@@ -96,7 +96,7 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
  * again in its place, which signs nothing. Nothing from a tafs cloud from before the balance.
  */
 @Composable
-private fun BalancePanel(state: AppState, actions: AccountActions) {
+internal fun BalancePanel(state: AppState, actions: AccountActions) {
   val b = state.balance?.balance
   val why = state.balanceError
   if (b == null && why == null) return
