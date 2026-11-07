@@ -167,7 +167,7 @@ fun ConnectAppsSheet(
         containerColor = Theme.background,
         title = { Text(ConnectAppsWords.yourConnections(app.title), style = scaled(20, FontWeight.Bold, Theme.ink)) },
         text = {
-          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+          Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
             connections.forEach { g ->
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
