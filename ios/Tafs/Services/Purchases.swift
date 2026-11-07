@@ -184,7 +184,7 @@ final class Purchases: ObservableObject {
     }
 
     /// What the person reads when KIFF refused a test purchase.
-    static let testPurchase = "Test purchases don't add tasks to this account."
+    static let testPurchase = "Test purchases don't add credits to this account."
     /// What the person reads when the purchase is another tafs account's.
     static let anotherAccount = "This purchase belongs to another tafs account on this Apple ID, so nothing was added here."
     /// What the person reads when KIFF can't add what they paid for.

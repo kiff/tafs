@@ -58,14 +58,14 @@ final class KIFFClient {
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
     /// starts a taf, the alert target that tells tafs cloud when a call is held, the connector
     /// key planque keeps, the account's time zone, deleting the account (kiff/tafs#185), and
-    /// the owner's go on past AI fair use (kiff/tafs#193).
+    /// raising the spend limit (docs/accounts.md › The balance).
     static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete",
-                                                      "/v1/me/usage/ai"]
+                                                      "/v1/me/usage/limit"]
 
     /// Whether KIFF takes `path` from a phone only with its signature: the paths above,
     /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`),
     /// resuming a halt (`/v1/agents/{id}/resume`, `/v1/resume`), and declining a request for
-    /// more tasks (`/v1/me/pack-requests/{id}/decline`).
+    /// a raise or a pack (`/v1/me/pack-requests/{id}/decline`).
     static func signsSetup(_ path: String) -> Bool {
         if signedSetupPaths.contains(path) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
@@ -435,154 +435,101 @@ final class KIFFClient {
         try await send("GET", "/v1/me")
     }
 
-    /// The account's usage this billing period: the tafs meter and the KIFF meter, the tasks
-    /// the period has (what the plan includes and the account's packs), what wasn't counted
-    /// and why, who bills the plan, the packs on sale, members' requests for more tasks, and
-    /// the trial.
+    /// KIFF's usage read, as the apps still read it once credits are the balance (pricing phase
+    /// 2): what the store sells, who bills the plan, and members' requests. The balance and its
+    /// words are tafs cloud's (`TafsCloud.Balance`). Lenient: the tasks parts a KIFF from before
+    /// still sends are left unread, and a part that can't be read is left out, never the read.
     struct Usage: Decodable, Equatable {
-        struct Period: Decodable, Equatable { let start: Date; let end: Date }
-        /// What wasn't counted, by why ("never counted").
-        struct Free: Decodable, Equatable {
-            var refused = 0, heldRefused = 0, halted = 0, failed = 0, invalid = 0, retry = 0, read = 0, trial = 0, setupRead = 0
-            enum CodingKeys: String, CodingKey {
-                case refused, heldRefused = "held_refused", halted, failed, invalid, retry, read, trial, setupRead = "setup_read", setup
-            }
-            init() {}
-            /// A reason KIFF doesn't name counted nothing.
-            init(from decoder: Decoder) throws {
-                let c = try decoder.container(keyedBy: CodingKeys.self)
-                func n(_ k: CodingKeys) throws -> Int { try c.decodeIfPresent(Int.self, forKey: k) ?? 0 }
-                refused = try n(.refused); heldRefused = try n(.heldRefused); halted = try n(.halted); failed = try n(.failed)
-                invalid = try n(.invalid); retry = try n(.retry); read = try n(.read); trial = try n(.trial)
-                // Coach's and Setup's calls: KIFF names them `setup` once it frees every call made
-                // with a setup_reader key (#206 Part 2), and `setup_read` before that.
-                setupRead = try n(.setupRead) + n(.setup)
-            }
-            /// Each reason with a count, as the owner reads it, in the order they matter.
-            var lines: [(String, Int)] {
-                [("Refused by KIFF", refused), ("Held, then refused", heldRefused), ("Halted", halted), ("Failed at the tool", failed),
-                 ("Not valid", invalid), ("Retries", retry), ("Reads", read), ("Trials of a new version", trial), ("Coach and Setup", setupRead)]
-                    .filter { $0.1 > 0 }
-            }
-        }
-        /// One taf's part of the period: what it counted, and what it didn't and why.
-        struct AgentCount: Decodable, Equatable {
-            let agent: String
-            let counted: Int
-            var free: Free? = nil
-        }
-        struct Meter: Decodable, Equatable {
-            let counted: Int
-            let included: Int
-            /// The tafs meter only: the pack tasks the period has (used in it, and left on
-            /// packs still valid), and the tasks left. `left` is nil where there's no limit.
-            var packs: Int? = nil
-            var left: Int? = nil
-            var byAgent: [AgentCount]? = nil
-            var free: Free? = nil
-            enum CodingKeys: String, CodingKey { case counted, included, packs, left, byAgent = "by_agent", free }
-
-            /// The tasks the period has: what the plan includes and the pack tasks.
-            var total: Int { included + (packs ?? 0) }
-            /// No tasks left: the tafs stop until a pack adds some.
-            var usedUp: Bool { left == 0 }
-        }
-        struct Trial: Decodable, Equatable {
-            /// Nil until the trial starts: it starts at checkout on the web.
-            let endsAt: Date?
-            let daysLeft: Int
-            let tasksLeft: Int
-            let actionsLeft: Int
-            enum CodingKeys: String, CodingKey { case endsAt = "ends_at", daysLeft = "days_left", tasksLeft = "tasks_left", actionsLeft = "actions_left" }
-        }
-        /// AI fair use's part of the read (kiff/tafs#193): how many times the owner said go on
-        /// this period. The use itself is tafs cloud's.
-        struct AI: Decodable, Equatable {
-            var goOns = 0
-            enum CodingKeys: String, CodingKey { case goOns = "go_ons" }
-        }
-        /// Who bills the plan: "apple", "stripe" (KIFF), "contract", or "" when none does; and
-        /// where it's managed, for a plan Apple bills.
+        /// Who bills the plan: "apple", "google", "stripe" (KIFF), "contract", or "" when none
+        /// does; and where it's managed, for a plan Apple bills.
         struct Billing: Decodable, Equatable {
             var source: String = ""
             var manageURL: URL? = nil
-            /// The account moved from Solo in the App Store to Team, which KIFF bills now,
+            /// The account moved from Solo in the App Store to Company, which KIFF bills now,
             /// and Solo still renews with Apple on this date unless it's cancelled there.
             var appleSoloUntil: Date? = nil
             enum CodingKeys: String, CodingKey { case source, manageURL = "manage_url", appleSoloUntil = "apple_solo_until" }
         }
-        /// One of the account's packs with tasks left.
-        struct HeldPack: Decodable, Equatable, Identifiable {
-            let id: String
-            let name: String
-            let tasks: Int
-            let tasksLeft: Int
-            let expiresAt: Date
-            enum CodingKeys: String, CodingKey { case id, name, tasks, tasksLeft = "tasks_left", expiresAt = "expires_at" }
-        }
-        /// What the app sells: the account's token for purchases, Solo, and the packs. The
-        /// prices are the App Store's.
+        /// What the app sells: the account's token for purchases, Solo, and the packs of
+        /// credits. The prices are the App Store's.
         struct Store: Decodable, Equatable {
             struct Pack: Decodable, Equatable, Identifiable {
                 let id: String
                 let name: String
-                /// "Rayo · 70 tasks".
+                /// KIFF's line for it, shown as it is.
                 let line: String
-                let tasks: Int
-                /// How long its tasks last.
-                let months: Int
+                /// The pack's credits, from a KIFF that says.
+                var credits: Int? = nil
                 let appleProduct: String
-                enum CodingKeys: String, CodingKey { case id, name, line, tasks, months, appleProduct = "apple_product" }
+                enum CodingKeys: String, CodingKey { case id, name, line, credits, appleProduct = "apple_product" }
             }
             var appAccountToken: UUID? = nil
             let soloProduct: String
-            let packs: [Pack]
+            var packs: [Pack] = []
             enum CodingKeys: String, CodingKey { case appAccountToken = "app_account_token", soloProduct = "solo_product", packs }
+
+            init(appAccountToken: UUID? = nil, soloProduct: String, packs: [Pack] = []) {
+                self.appAccountToken = appAccountToken; self.soloProduct = soloProduct; self.packs = packs
+            }
+
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                appAccountToken = (try? c.decodeIfPresent(UUID.self, forKey: .appAccountToken)) ?? nil
+                soloProduct = try c.decode(String.self, forKey: .soloProduct)
+                packs = ((try? c.decodeIfPresent([LenientItem<Pack>].self, forKey: .packs)) ?? nil)?.compactMap(\.value) ?? []
+            }
+
+            /// Every product the App Store is asked for.
+            var products: [String] { [soloProduct] + packs.map(\.appleProduct) }
         }
-        let plan: String
-        let period: Period
-        var tasks: Meter
-        let actions: Meter
-        var trial: Trial?
-        /// The people the plan pays for (admins and editors); 0 where there's no limit.
-        var seats: Int? = nil
-        var ai: AI? = nil
+        /// KIFF's plan: "solo", "team" (Company), "company" (an agreement), "internal", or none.
+        var plan: String? = nil
         var billing: Billing? = nil
-        var packList: [HeldPack]? = nil
-        /// Whether this person may add tasks: someone who can't asks an admin.
+        /// Whether this person manages the account's billing: someone who doesn't asks an admin.
         var canAddTasks: Bool? = nil
-        /// Whether packs are offered now: only while a plan runs, so an ended trial holds what
-        /// it has until Solo starts. Nil from a KIFF that doesn't say, which offers them to
-        /// whoever may add tasks.
-        var canAddPacks: Bool? = nil
         var store: Store? = nil
-        /// Members' requests for more tasks: every open one for someone who may add tasks,
-        /// this person's own otherwise.
+        /// Members' requests for a raise or a pack: every open one for someone who manages
+        /// billing, this person's own otherwise.
         var requests: [PackRequest]? = nil
 
-        enum CodingKeys: String, CodingKey {
-            case plan, period, tasks, actions, trial, seats, ai, billing, packList = "pack_list", canAddTasks = "can_add_tasks", canAddPacks = "can_add_packs", store, requests
+        enum CodingKeys: String, CodingKey { case plan, billing, canAddTasks = "can_add_tasks", store, requests }
+
+        init(plan: String? = nil, billing: Billing? = nil, canAddTasks: Bool? = nil, store: Store? = nil, requests: [PackRequest]? = nil) {
+            self.plan = plan; self.billing = billing; self.canAddTasks = canAddTasks; self.store = store; self.requests = requests
         }
 
-        /// Packs are on sale to this person now.
-        var packsOffered: Bool { canAddPacks ?? (canAddTasks == true) }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            plan = (try? c.decodeIfPresent(String.self, forKey: .plan)) ?? nil
+            billing = (try? c.decodeIfPresent(Billing.self, forKey: .billing)) ?? nil
+            canAddTasks = (try? c.decodeIfPresent(Bool.self, forKey: .canAddTasks)) ?? nil
+            store = (try? c.decodeIfPresent(Store.self, forKey: .store)) ?? nil
+            requests = ((try? c.decodeIfPresent([LenientItem<PackRequest>].self, forKey: .requests)) ?? nil)?.compactMap(\.value)
+        }
+
+        /// This person manages billing: they buy and raise, and answer members' requests.
+        var managesBilling: Bool { canAddTasks == true }
     }
 
-    /// A member's request that an admin add a pack.
+    /// A member's request to the account's admins: a raise of the spend limit (`kind: "raise"`)
+    /// or a pack of credits (`kind: "pack"`, naming the pack).
     struct PackRequest: Decodable, Equatable, Identifiable {
         let id: String
         let askedBy: String
-        let pack: String
+        /// "raise" or "pack"; a request from a KIFF that doesn't say is for a pack.
+        var kind: String = "pack"
+        var pack: String? = nil
         var reason: String = ""
         /// open, approved, declined, withdrawn or expired.
         let status: String
         let createdAt: Date
         let expiresAt: Date
         var note: String? = nil
-        enum CodingKeys: String, CodingKey { case id, askedBy = "asked_by", pack, reason, status, createdAt = "created_at", expiresAt = "expires_at", note }
+        enum CodingKeys: String, CodingKey { case id, askedBy = "asked_by", kind, pack, reason, status, createdAt = "created_at", expiresAt = "expires_at", note }
 
-        init(id: String, askedBy: String, pack: String, reason: String = "", status: String, createdAt: Date, expiresAt: Date, note: String? = nil) {
-            self.id = id; self.askedBy = askedBy; self.pack = pack; self.reason = reason; self.status = status
+        init(id: String, askedBy: String, kind: String = "pack", pack: String? = nil, reason: String = "", status: String, createdAt: Date, expiresAt: Date,
+             note: String? = nil) {
+            self.id = id; self.askedBy = askedBy; self.kind = kind; self.pack = pack; self.reason = reason; self.status = status
             self.createdAt = createdAt; self.expiresAt = expiresAt; self.note = note
         }
 
@@ -590,7 +537,8 @@ final class KIFFClient {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             id = try c.decode(String.self, forKey: .id)
             askedBy = try c.decode(String.self, forKey: .askedBy)
-            pack = try c.decode(String.self, forKey: .pack)
+            kind = ((try? c.decodeIfPresent(String.self, forKey: .kind)) ?? nil) ?? "pack"
+            pack = (try? c.decodeIfPresent(String.self, forKey: .pack)) ?? nil
             reason = try c.decodeIfPresent(String.self, forKey: .reason) ?? ""
             status = try c.decode(String.self, forKey: .status)
             createdAt = try c.decode(Date.self, forKey: .createdAt)
@@ -608,9 +556,12 @@ final class KIFFClient {
         let _: Empty = try await send("POST", "/v1/me/billing/apple/transactions", body: body)
     }
 
-    /// Asks the account's admins for a pack, with a reason.
-    func askForPack(_ pack: String, reason: String) async throws -> PackRequest {
-        try await send("POST", "/v1/me/pack-requests", body: ["pack": pack, "reason": reason])
+    /// Asks the account's admins, with a reason: for a raise (`{"kind": "raise", "reason"}`,
+    /// no pack), or for a pack as before (`{"pack", "reason"}`, where no `kind` means a pack).
+    func askAdmin(raise: Bool, pack: String?, reason: String) async throws -> PackRequest {
+        var body = ["reason": reason]
+        if raise { body["kind"] = "raise" } else if let pack { body["pack"] = pack }
+        return try await send("POST", "/v1/me/pack-requests", body: body)
     }
 
     /// Takes back this person's request.
@@ -618,12 +569,17 @@ final class KIFFClient {
         try await send("POST", "/v1/me/pack-requests/\(escaped(id))/withdraw", body: [String: String]())
     }
 
-    /// One more go-on past the AI fair-use bound this period (kiff/tafs#185): the billing
-    /// admin's act, a signed call from a phone. A replayed signature is refused, so one tap is
-    /// one go-on.
-    func goOnAI() async throws {
-        struct GoOn: Encodable { let go_on = true }
-        let _: Empty = try await send("PUT", "/v1/me/usage/ai", body: GoOn())
+    /// Raises the spend limit one step from `fromCents`, the limit the balance read gave
+    /// (docs/accounts.md › The balance): the act of someone who manages billing, a signed call
+    /// from a phone. The signature covers the body, so it names the limit it raises from: a
+    /// replayed one is refused, and so is a raise from a limit that changed meanwhile (409
+    /// `limit_changed`). The answer's new limit isn't read: the balance is read again after.
+    func raiseLimit(from fromCents: Int) async throws {
+        struct Raise: Encodable {
+            let raise = true
+            let from_cents: Int
+        }
+        let _: Empty = try await send("PUT", "/v1/me/usage/limit", body: Raise(from_cents: fromCents))
     }
 
     /// Declines a member's request, with a note: a signed call from a phone.
@@ -631,29 +587,8 @@ final class KIFFClient {
         try await send("POST", "/v1/me/pack-requests/\(escaped(id))/decline", body: ["note": note])
     }
 
-    /// One counted task: the Record behind it, which taf, which tool, and when.
-    struct CountedTask: Decodable, Equatable, Identifiable {
-        let record: String
-        let agent: String
-        let tool: String
-        /// The tool as the Record names it: "Refund an order".
-        var toolTitle: String? = nil
-        let at: Date
-        var id: String { record }
-        enum CodingKeys: String, CodingKey { case record, agent, tool, toolTitle = "tool_title", at }
-    }
-
     func usage() async throws -> Usage {
         try await send("GET", "/v1/me/usage")
-    }
-
-    /// The period's counted tasks, newest first, a page at a time; with `agent`, that taf's
-    /// only.
-    func countedTasks(cursor: String? = nil, agent: String? = nil) async throws -> (tasks: [CountedTask], next: String?) {
-        struct Page: Decodable { let items: [CountedTask]; var next: String? }
-        let query = [agent.map { "agent=\(escaped($0))" }, cursor.map { "cursor=\(escaped($0))" }].compactMap { $0 }
-        let page: Page = try await send("GET", "/v1/me/usage/tasks" + (query.isEmpty ? "" : "?" + query.joined(separator: "&")))
-        return (page.items, page.next)
     }
 
     /// Sets the account's time zone (an IANA name): a signed setup call from a phone, which
@@ -1337,7 +1272,9 @@ final class KIFFClient {
         if !(200..<300).contains(status) { DriveDiagnostics.shared.failed(method: method, path: path, status: status) }
         if status == 401 { throw KIFFError.unauthorized }
         guard (200..<300).contains(status) else {
-            let body = try? JSONDecoder().decode([String: String].self, from: data)
+            // The refusal's string fields: a body with a number in it too (a raise's `limit_cents`)
+            // still gives its `error` and `reason`.
+            let body = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?.compactMapValues { $0 as? String }
             if status == 403, body?["error"] == "approval_key_required" || body?["reason"] == "approval_key_required" {
                 approvalKeyRequired?()
                 throw KIFFError.approvalKeyRequired

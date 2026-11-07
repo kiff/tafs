@@ -1,8 +1,8 @@
 import XCTest
 @testable import Tafs
 
-/// The credits the tafs used (pricing phase 1, docs/accounts.md): read only from tafs cloud,
-/// in its words, in Plan & usage and on a taf's page. The same read as Android's.
+/// The credits the tafs used (docs/accounts.md › Credits): read only from tafs cloud, in its
+/// words, in Plan & usage. The same read as Android's.
 @MainActor
 final class CreditsTests: XCTestCase {
     private func stubbedSession() -> URLSession {
@@ -28,7 +28,6 @@ final class CreditsTests: XCTestCase {
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
         StubProtocol.responses["GET /v1/me/usage"] = (200, PurchasesTests.read)
-        StubProtocol.responses["GET /v1/me/usage/tasks"] = (200, #"{"items":[],"next":null}"#)
         await model.useSession("kiff_dev_x")
         let rae = model.tafs.first { $0.name == "Rae" }
         return (model, try! XCTUnwrap(rae?.id))
@@ -48,7 +47,7 @@ final class CreditsTests: XCTestCase {
      "note":"Credits will replace tasks. Nothing is charged in credits yet."}
     """#
 
-    /// Plan & usage reads the period's credits beside the tasks, in tafs cloud's words, in its
+    /// Plan & usage reads the period's credits below the balance, in tafs cloud's words, in its
     /// order; a line the app can't read is left out, not the read.
     func testThePeriodsCreditsAreReadInTafsCloudsWords() async throws {
         let (model, _) = await kiffModel()
@@ -65,7 +64,7 @@ final class CreditsTests: XCTestCase {
         XCTAssertEqual(c.notCounted?.words, "Not counted: 12 runs")
         XCTAssertEqual(c.notCounted?.lines.map(\.words), ["Coach, within its fair use · 7 runs", "Something new · 2 runs"], "a reason the app doesn't know shows by its words")
         XCTAssertEqual(c.note, "Credits will replace tasks. Nothing is charged in credits yet.")
-        XCTAssertNotNil(model.usage, "the tasks are read as before")
+        XCTAssertNotNil(model.usage, "KIFF's read, for the store and the requests, as before")
 
         // The period before is read when it's asked for.
         StubProtocol.responses["GET /v1/usage/credits?period=previous"] = (200,
@@ -77,9 +76,9 @@ final class CreditsTests: XCTestCase {
         XCTAssertNil(model.previousCredits?.coach, "Coach within its fair use has no row")
     }
 
-    /// A tafs cloud without the read (404) shows nothing, and Plan & usage reads as before: no
-    /// deploy order. A read that fails later keeps what was read.
-    func testNoCreditsReadShowsNothingAndTheTasksStay() async throws {
+    /// A tafs cloud without the read (404) shows nothing, and the rest of Plan & usage reads as
+    /// before: no deploy order. A read that fails later keeps what was read.
+    func testNoCreditsReadShowsNothingAndTheRestStays() async throws {
         let (model, _) = await kiffModel()
         await model.refreshUsage()
         XCTAssertNil(model.credits)
@@ -164,7 +163,7 @@ final class CreditsTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         await model.startSample()
         await model.refreshUsage()
-        XCTAssertEqual(model.credits?.words, "This period: 1,240 credits used")
+        XCTAssertEqual(model.credits?.words, "This period: 1,240 credits used · ends on 30 Nov")
         await model.readPreviousCredits()
         XCTAssertEqual(model.previousCredits?.words, "Last period: 2,310 credits used · 1 Oct to 31 Oct")
     }

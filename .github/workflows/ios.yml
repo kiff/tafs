@@ -275,10 +275,10 @@ jobs:
           shoot 9-account -screenshots YES -tab account
           shoot 9b-alerts -screenshots YES -tab account -screen alerts
           # Each product's purchase screen, for its review screenshot in App Store Connect:
-          # Solo, and the add-tasks screen with one pack at a time.
+          # Solo, and the Add credits screen with one pack at a time.
           shoot iap-solo -screenshots YES -screen solo
           for pack in pico vonk rayo forte maxi; do
-            shoot "iap-pack-$pack" -screenshots YES -screen add-tasks -pack "$pack"
+            shoot "iap-pack-$pack" -screenshots YES -screen buy-credits -pack "$pack"
           done
           # The largest text size (kiff/tafs#210): text wraps, nothing cut off or overlapped.
           xcrun simctl ui "$DEVICE_ID" content_size accessibility-extra-extra-extra-large

@@ -4,7 +4,7 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Binding var tab: Tab
     @State private var showingNew = false
-    @State private var showingAddTasks = false
+    @State private var showingBuyCredits = false
     @State private var showingSolo = false
     @State private var showingExport = false
     @State private var openingFirst = false
@@ -164,7 +164,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         // The purchase screens, for their screenshots (Screenshots.screen).
-        .sheet(isPresented: $showingAddTasks) { AddTasksView().environmentObject(model) }
+        .sheet(isPresented: $showingBuyCredits) { BuyCreditsView().environmentObject(model) }
         .sheet(isPresented: $showingSolo) { NavStack { SoloView() }.environmentObject(model) }
         // Export my chats, for its UI test: the sample has no KIFF account to open.
         .sheet(isPresented: $showingExport) {
@@ -181,7 +181,7 @@ struct HomeView: View {
             switch Screenshots.screen {
             case "taf", "chat", "card", "setup", "starts", "results": openingFirst = true
             case "new": showingNew = true
-            case "add-tasks": showingAddTasks = true
+            case "buy-credits": showingBuyCredits = true
             case "solo": showingSolo = true
             case "export": showingExport = true
             default: break
