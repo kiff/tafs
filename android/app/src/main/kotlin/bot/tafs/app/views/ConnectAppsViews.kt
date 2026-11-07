@@ -42,6 +42,8 @@ import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.ConnectApps
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -57,10 +59,13 @@ object ConnectAppsWords {
   const val NONE = "No app by that name. Coach can connect one that isn't listed."
   const val MORE = "Show more apps"
   const val DISCONNECT = "Disconnect"
-  const val TAF_REMOVED = "Its taf was removed"
 
-  /** Which taf a connection was set up for, by who asked for it; the phone doesn't decide who uses it. */
-  fun setUpFor(state: AppState, grant: bot.tafs.app.kiff.Grant): String = tafOf(state, grant)?.let { "Set up for $it" } ?: TAF_REMOVED
+  /** A connection's row, under its taf's heading: the vendor account planque gives, else the app's name. */
+  fun rowTitle(app: String, grant: bot.tafs.app.kiff.Grant): String = grant.account?.takeIf { it.isNotBlank() } ?: app
+
+  /** A connection that needs the person: a sign-in waiting, signed out, or a last call that failed. Its taf comes first. */
+  fun needsAttention(state: AppState, grant: bot.tafs.app.kiff.Grant): Boolean =
+    grant.waitingSignIn || grant.needsReconnect || bot.tafs.app.model.ConnectionWords.lastFailure(grant, state.record) != null
 
   /** The other tafs whose live Card has a rule on one of its tools, as a warning above Disconnect; null when none. */
   fun alsoOnCards(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
@@ -88,6 +93,22 @@ object ConnectAppsWords {
  */
 fun connectionsOf(state: AppState, app: ConnectApps.App): List<bot.tafs.app.kiff.Grant> =
   state.grants.filter { (it.entry == app.entry || it.id == app.grant) && it.status !in setOf("disconnected", "failed") }
+
+/** An app's connections by taf: one section per taf, its name as the heading, with its connections in the order planque lists them. */
+data class TafConnections(val taf: String, val grants: List<bot.tafs.app.kiff.Grant>)
+
+/**
+ * [connections] in the order the sheet shows them: the tafs with one that needs the person first, then the rest by name, and those
+ * whose taf the app can't name apart, for the section shown last. Only the order is the app's; every word on a row is planque's or
+ * KIFF's. A taf missing from this person's list isn't proof it was removed (one they don't see, an agent that isn't a taf), so
+ * nothing here says so, and nothing acts on them all at once.
+ */
+fun byTaf(state: AppState, connections: List<bot.tafs.app.kiff.Grant>): Pair<List<TafConnections>, List<bot.tafs.app.kiff.Grant>> {
+  val (live, others) = connections.partition { ConnectAppsWords.tafOf(state, it) != null }
+  val sections = live.groupBy { ConnectAppsWords.tafOf(state, it)!! }.map { (taf, grants) -> TafConnections(taf, grants) }
+    .sortedWith(compareBy<TafConnections> { s -> if (s.grants.any { ConnectAppsWords.needsAttention(state, it) }) 0 else 1 }.thenBy { it.taf.lowercase() })
+  return sections to others
+}
 
 /**
  * Connect apps (A1): tafs cloud's catalog, first as it orders it, then KIFF's own apps for Google, Microsoft and Slack. Each
@@ -120,6 +141,7 @@ fun ConnectAppsSheet(
   // A connected app's connections, each with the taf it serves (or none, once its taf was removed) and Disconnect.
   var managing by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
   var confirmingDisconnect by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
+  var confirmingCancel by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
     { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
@@ -161,7 +183,7 @@ fun ConnectAppsSheet(
       )
     }
     managing?.let { app ->
-      val connections = connectionsOf(state, app)
+      val (sections, others) = byTaf(state, connectionsOf(state, app))
       DriveAlert(
         onDismissRequest = { managing = null },
         containerColor = Theme.background,
@@ -169,12 +191,17 @@ fun ConnectAppsSheet(
         text = {
           Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
-            connections.forEach { g ->
+            // Each taf's name over its connections, so no row repeats it; then those whose taf the app can't name, under words that
+            // claim nothing about it. The same row for both, and nothing that acts on several at once.
+            val groups = sections.map { it.taf to it.grants } + listOfNotNull(others.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.OTHER_CONNECTIONS to it })
+            groups.forEach { (heading, grants) ->
+            Text(heading, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
+            grants.forEach { g ->
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(1f)) {
-                  Text(ConnectAppsWords.setUpFor(state, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
-                  ConnectAppsWords.alsoOnCards(state, g)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+                  Text(ConnectAppsWords.rowTitle(app.title, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
                   g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+                  ConnectAppsWords.alsoOnCards(state, g)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
                   // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
                   bot.tafs.app.model.ConnectionWords.lastFailure(g, state.record)?.let { Text(it, style = scaled(13, color = Theme.no)) }
                   val fix = if (g.takesKey) onReplaceKey else onSignInAgain
@@ -189,12 +216,14 @@ fun ConnectAppsSheet(
                   }
                   state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
                 }
+                // A sign-in that never came back is cancelled, not disconnected: nothing was connected.
                 if (onDisconnect != null) Text(
-                  ConnectAppsWords.DISCONNECT,
+                  if (g.waitingSignIn) bot.tafs.app.model.ConnectionWords.CANCEL_SIGN_IN else ConnectAppsWords.DISCONNECT,
                   style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { confirmingDisconnect = g }.padding(top = 10.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (g.waitingSignIn) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
+            }
             }
           }
         },
@@ -216,6 +245,19 @@ fun ConnectAppsSheet(
           androidx.compose.material3.TextButton({ confirmingDisconnect = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(ConnectAppsWords.DISCONNECT, color = Theme.no) }
         },
         dismissButton = { androidx.compose.material3.TextButton({ confirmingDisconnect = null }) { Text("Cancel", color = Theme.soft) } },
+      )
+    }
+    // Cancelling a sign-in that never came back: its own words, as on the taf's page.
+    confirmingCancel?.let { g ->
+      DriveAlert(
+        onDismissRequest = { confirmingCancel = null },
+        containerColor = Theme.panel,
+        title = { Text(bot.tafs.app.model.ConnectionWords.cancelTitle(g)) },
+        text = { Text(bot.tafs.app.model.ConnectionWords.cancelBody(g)) },
+        confirmButton = {
+          androidx.compose.material3.TextButton({ confirmingCancel = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(bot.tafs.app.model.ConnectionWords.CANCEL_IT, color = Theme.no) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton({ confirmingCancel = null }) { Text(bot.tafs.app.model.ConnectionWords.KEEP_WAITING, color = Theme.soft) } },
       )
     }
     // Which taf: asked over the list, wherever Connect was tapped, before anything starts.

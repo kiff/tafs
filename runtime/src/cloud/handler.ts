@@ -1,11 +1,11 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
-import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
-import { CreditsError, type CreditsView, creditsView, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE } from "./credits.js";
+import { type AIView, view as aiView } from "./aiuse.js";
+import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsView, readBalance, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, type Change, CONNECTION_SIGNED_OUT, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -612,6 +612,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 3) return usageCredits(event, await person(event, deps), deps);
+  if (parts[1] === "usage" && parts.length === 3 && parts[2] === "balance" && method === "GET") return usageBalance(event, await person(event, deps), deps);
   if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 5 && parts[3] === "tafs") {
     return tafCredits(event, await person(event, deps), parts[4] ?? "", deps);
   }
@@ -952,9 +953,9 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   let handedOn = true;
   let early = false;
-  // A member's request for more tasks, and a vendor signing a connection out, are the phones' alone: no
-  // run waits on them.
-  if (str(parsed.outcome) === PACK_REQUESTED || str(parsed.outcome) === CONNECTION_SIGNED_OUT) {
+  // A member's request for a pack or a raise, a vendor signing a connection out, and a credits warning
+  // are the phones' alone: no run waits on them.
+  if (str(parsed.outcome) === PACK_REQUESTED || str(parsed.outcome) === CONNECTION_SIGNED_OUT || str(parsed.outcome) === CREDITS_WARNING) {
     return receiveAlert(signature, raw, {
       push: deps.push,
       apns: deps.apns,
@@ -4462,34 +4463,37 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
 }
 
 function agentsFailure(err: unknown): unknown {
-  // kiff/agents' typed code goes on, so an app says why (`ai_fair_use`, `halted`, `switching`), never a bare 409.
+  // kiff/agents' typed code goes on, so an app says why (`credits_used_up`, `halted`, `switching`), never a bare 409.
   if (!(err instanceof AgentsError)) return err;
-  const code = err.status < 500 ? err.code ?? (refusedForAI(err) ? "ai_fair_use" : undefined) : undefined;
+  const code = err.status < 500 ? err.code : undefined;
   const words = code ? REFUSAL_WORDS[code] : undefined;
   return new HTTPError(err.status >= 500 ? 502 : err.status, err.message, code ? { code, ...(words ? { words } : {}) } : undefined);
 }
 
+/** The codes of a run refused for credits: the account's tafs wait. */
+const CREDITS_CODES = ["credits_used_up", "limit_reached", "no_plan"];
+
 /**
- * A refusal's extra fields, with an AI fair use refusal's words saying when the AI use starts again:
- * read from KIFF's plan with the person's session. A read that fails keeps the words without the day.
+ * A refusal's extra fields, with a credits refusal's words for this person: what lets the tafs go
+ * on, and when the period starts again, read from KIFF's balance with the person's session. A read
+ * that fails keeps the plain words.
  */
 async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): Promise<Record<string, unknown> | undefined> {
-  if (err.extra?.code !== "ai_fair_use") return err.extra;
-  let zone = "UTC";
-  let plan;
-  let canGoOn = false;
+  const code = err.extra?.code;
+  if (typeof code !== "string" || !CREDITS_CODES.includes(code)) return err.extra;
   try {
-    const me = await person(event, deps);
-    zone = me.timeZone ?? "UTC";
-    canGoOn = me.capabilities.includes("billing.manage");
-    plan = await planOf(bearer(event), deps.fetch, deps.kiffBase);
-  } catch { /* the words without the day */ }
-  return { ...err.extra, words: refusedWords(plan, zone, canGoOn) };
+    const b = await readBalance(bearer(event), deps.fetch, deps.kiffBase);
+    return { ...err.extra, words: waitingWords({ ...b, why: code }) };
+  } catch {
+    return err.extra;
+  }
 }
 
 /** What a refusal means, in the words the apps show as they are: tafs cloud's, never an app's own. */
 const REFUSAL_WORDS: Record<string, string> = {
-  ai_fair_use: refusedWords(undefined),
+  credits_used_up: "Your tafs are waiting: this period's credits are used.",
+  limit_reached: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it.",
+  no_plan: "Choose a plan to start your tafs.",
   halted: "This taf is halted: nothing of it runs until you resume it from Halt.",
   switching: "This taf is switching versions: it runs again once the switch is done or cancelled.",
   run_changed: "This chat changed meanwhile. Read it again and send your message once more.",
@@ -5257,23 +5261,29 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
-/** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */
-async function aiBound(event: HTTPEvent, deps: Deps): Promise<AIBound | undefined> {
-  return aiFor(await planOf(bearer(event), deps.fetch, deps.kiffBase));
+/**
+ * A chat's AI bound: none any more. KIFF's balance is asked as each run starts (kiff/agents), so a
+ * run starts with no bound and nothing is read for one; the plumbing goes with the old reads.
+ */
+async function aiBound(_event: HTTPEvent, _deps: Deps): Promise<AIBound | undefined> {
+  return undefined;
 }
 
 /**
- * GET /v1/usage/ai (kiff/tafs#193): the period's AI use as a share of half the
- * plan's price, where the tafs ask next (100%, then 200% after one go on…), and
- * whether they're asking now. The owner's go on is KIFF's signed route, as
- * raising the ceiling is. No bound (the internal plan, or no plan from KIFF): nulls.
+ * GET /v1/usage/ai: kept for apps from before credits, inert (docs/accounts.md, "In the apps"):
+ * nothing used, never waiting, no Go on. It goes once the apps with credits as the balance are
+ * out on both stores.
  */
-async function aiUsage(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<AIView> {
-  const plan = await planOf(bearer(event), deps.fetch, deps.kiffBase);
-  // Going on is the billing admin's (KIFF's PUT /v1/me/usage/ai checks it again).
-  const canGoOn = me.capabilities.includes("billing.manage"), zone = me.timeZone ?? "UTC";
-  if (!plan || base(plan) <= 0) return aiView(plan, 0, canGoOn, zone);
-  return aiView(plan, await agentsCall(() => deps.agents.aiSpent(me.tenantID, periodName(plan.start))), canGoOn, zone);
+async function aiUsage(_event: HTTPEvent, me: KIFFIdentity, _deps: Deps): Promise<AIView> {
+  return aiView(undefined, 0, false, me.timeZone ?? "UTC");
+}
+
+/**
+ * GET /v1/usage/balance: the balance now, from KIFF with the person's session, in tafs cloud's words
+ * (docs/accounts.md, "The balance read"): for Plan & usage, Settings' Plan card and Home.
+ */
+async function usageBalance(event: HTTPEvent, _me: KIFFIdentity, deps: Deps): Promise<BalanceView> {
+  return balanceView(await creditsRead(() => readBalance(bearer(event), deps.fetch, deps.kiffBase)));
 }
 
 /**
@@ -6029,6 +6039,15 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       return [] as Schedule[];
     });
     for (const s of schedules) {
+      // A follow-up that came due while the tafs waited for credits didn't run, and won't try
+      // again: said once, as one that couldn't start is. Not a failure, so failing stays as it was.
+      if (s.kind === "once" && s.follow_up && s.waited && !s.enabled && now.getTime() - Date.parse(s.waited.due) < FAILING_KEPT_MS) {
+        const taf = await deps.tafs.get(tenant, s.agent).catch(() => undefined);
+        if (taf && !taf.removing && await store.once(`${tenant}#schedule-waited#${s.id}#${s.waited.due}`, new Date(now.getTime() + FAILING_KEPT_MS))) {
+          await tellPhones(deps, tenant, waitedNotification(taf, s));
+          told.push({ tenant, schedule: s.id });
+        }
+      }
       const f = s.failing;
       if (!f) continue;
       const age = now.getTime() - Date.parse(f.since);
@@ -6065,6 +6084,17 @@ export const FAILING_WORDS = {
 function failingWords(s: Schedule, firings: number): string {
   if (s.kind === "once") return s.follow_up ? FAILING_WORDS.followUp : FAILING_WORDS.once;
   return firings > 1 ? FAILING_WORDS.many(firings) : FAILING_WORDS.one;
+}
+
+/** What a follow-up that waited for credits says: it didn't run, why, and where to look. */
+export const WAITED_WORDS = "A follow-up it set for itself didn't run: your tafs were waiting for credits. It won't try again. Open it to see more.";
+
+function waitedNotification(taf: Taf, s: Schedule): Notification {
+  return {
+    kind: "alert",
+    payload: { aps: { alert: { title: taf.name, body: WAITED_WORDS }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    collapseID: `waited-${s.id}`.slice(0, 64),
+  };
 }
 
 function failingNotification(taf: Taf, s: Schedule, firings: number): Notification {

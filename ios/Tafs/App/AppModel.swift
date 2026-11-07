@@ -5454,14 +5454,47 @@ final class AppModel: ObservableObject {
         grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
     }
 
-    /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
-    /// who uses it.
-    func setUpFor(_ grant: PlanqueClient.Grant) -> String {
-        guard let name = tafOf(grant) else { return "Its taf was removed" }
-        return "Set up for \(name)"
+    /// An app's connections for one taf, under its name (the owner's Connect apps ask): the
+    /// heading, and its connections in planque's order.
+    struct ConnectionGroup: Identifiable, Equatable {
+        /// The KIFF agent that asked for them.
+        let id: String
+        let taf: String
+        var grants: [PlanqueClient.Grant]
     }
 
-    /// The taf a connection was set up for, by name; nil once that taf was removed.
+    /// An app's connections grouped by the taf each was set up for. Tafs with one needing
+    /// attention (waiting on its sign-in, signed out, or a failed last call) come first, then
+    /// the rest by name. Those with no taf this app can name come apart, to show last: the app
+    /// can't tell a removed taf from one it doesn't see, so it never says which.
+    func connectionGroups(of app: TafsCloud.ConnectApps.App) -> (tafs: [ConnectionGroup], others: [PlanqueClient.Grant]) {
+        Self.connectionGroups(connections(of: app), taf: { self.tafOf($0) }, attention: { $0.waitingSignIn || $0.needsReconnect || self.lastFailure($0) != nil })
+    }
+
+    static func connectionGroups(_ grants: [PlanqueClient.Grant], taf: (PlanqueClient.Grant) -> String?,
+                                 attention: (PlanqueClient.Grant) -> Bool) -> (tafs: [ConnectionGroup], others: [PlanqueClient.Grant]) {
+        var groups: [ConnectionGroup] = []
+        var others: [PlanqueClient.Grant] = []
+        for g in grants {
+            guard let name = taf(g) else { others.append(g); continue }
+            if let i = groups.firstIndex(where: { $0.id == g.request.agent }) {
+                groups[i].grants.append(g)
+            } else {
+                groups.append(ConnectionGroup(id: g.request.agent, taf: name, grants: [g]))
+            }
+        }
+        let needs = Set(groups.filter { $0.grants.contains(where: attention) }.map(\.id))
+        groups.sort { a, b in
+            let (x, y) = (needs.contains(a.id), needs.contains(b.id))
+            if x != y { return x }
+            let order = a.taf.localizedCaseInsensitiveCompare(b.taf)
+            return order == .orderedSame ? a.id < b.id : order == .orderedAscending
+        }
+        return (groups, others)
+    }
+
+    /// The taf a connection was set up for, by name; nil when this app can't name it: removed,
+    /// one this person doesn't see, or an agent that isn't a taf. Never proof it was removed.
     func tafOf(_ grant: PlanqueClient.Grant) -> String? {
         guard let t = holderIDs[grant.request.agent].flatMap({ taf($0) }), t.state != .revoked else { return nil }
         return t.name

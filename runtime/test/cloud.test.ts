@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, FAILING_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -2374,6 +2374,25 @@ describe("a schedule whose runs keep failing to start", () => {
     w.agents.schedules.set(`t_acme|once-old`, { ...followUp, id: "once-old", failing: { since: monthAgo, firings: 1 } });
     expect(await sweepFailingSchedules(deps)).toEqual([]);
     expect(w.pushed).toHaveLength(2);
+  });
+
+  it("says a follow-up that came due while the tafs waited for credits, once, and never as failing", async () => {
+    const { w, deps } = await setUp();
+    const FU = "fu-waited";
+    w.agents.schedules.set(`t_acme|${FU}`, { tenant: "t_acme", id: FU, agent: RAE, cron: "", input: "Ask again about order 1043.", enabled: false,
+      kind: "once" as const, at: SINCE, follow_up: true, waited: { due: SINCE, why: "credits_used_up" } });
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: FU }]);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", collapseID: `waited-${FU}`, payload: {
+      aps: { alert: { title: "Rae", body: WAITED_WORDS }, "interruption-level": "time-sensitive" }, open: "taf", taf_id: RAE,
+    } } });
+    expect(WAITED_WORDS).toBe("A follow-up it set for itself didn't run: your tafs were waiting for credits. It won't try again. Open it to see more.");
+    // Said once.
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    // A recurring schedule that waited says nothing: its next firing that runs takes what waited.
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, waited: { due: SINCE, why: "limit_reached" } });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(1);
   });
 
   it("says nothing for a recurring schedule its owner turned off: it won't try again, as the words say", async () => {
