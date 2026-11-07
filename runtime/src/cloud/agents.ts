@@ -95,12 +95,11 @@ export interface AgentDefinition {
   id?: string;
   instructions: string;
   /**
-   * A line saying an AI agent wrote it, put by kiff/agents in each call of `in`'s tools, in the
-   * first of their free-text fields the call carries, whatever the model wrote (kiff/agents#352).
+   * A line saying an AI agent wrote it, put by kiff/agents at the top of each call of `in`'s tools,
+   * in the first of their free-text fields the call carries, whatever the model wrote (kiff/agents#352),
+   * and in the message's language when `lines` has it (kiff/agents#363).
    */
-  disclose?: { line: string; in: Array<{ tool: string; fields: string[] }> };
-  /** The credit after the disclosure ("Built with tafs."), in the calls it names, joined on its line when the text ends with after (kiff/agents' Definition.Credit). */
-  credit?: { line: string; after?: string; in: Array<{ tool: string; fields: string[] }> };
+  disclose?: { line: string; lines?: Record<string, string>; in: Array<{ tool: string; fields: string[] }> };
   model: string;
   price: Price;
   max_tokens: number;
@@ -477,6 +476,11 @@ export interface Schedule {
   check?: { tool: string; arguments: Record<string, unknown>; items: string; cursor: string };
   /** A one-off follow-up the taf set itself (its id starts "fu-"): once, within seven days, at most three waiting. */
   follow_up?: boolean;
+  /**
+   * Its firings in a row whose runs failed before doing any work (kiff/agents#363): since the first's due
+   * time, how many, and the last one's run. kiff/agents keeps it, and ends it once a run works.
+   */
+  failing?: { since: string; firings: number; run?: string };
 }
 
 /** The ids kiff/agents takes: 1 to 128 letters, digits, '-', '_' or '.', never "." or "..". */
@@ -854,8 +858,9 @@ export class Agents {
   }
 
   /** The agent's schedules, its follow-ups among them. */
-  async listSchedules(tenant: string, agent: string): Promise<Schedule[]> {
-    return (await this.call<{ schedules: Schedule[] }>("GET", tenant, ["schedules"], undefined, { agent_id: agent })).schedules;
+  /** The account's schedules: one taf's, or every one when no agent is named. */
+  async listSchedules(tenant: string, agent?: string): Promise<Schedule[]> {
+    return (await this.call<{ schedules: Schedule[] }>("GET", tenant, ["schedules"], undefined, agent ? { agent_id: agent } : undefined)).schedules;
   }
 
   deleteSchedule(tenant: string, id: string): Promise<void> {

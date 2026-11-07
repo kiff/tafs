@@ -5,6 +5,17 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **The AI disclosure comes first, in the message's language, and "Built with tafs." is gone (tafs cloud; needs kiff/agents#363 deployed first).**
+  - **Each taf's definition** carries its disclosure line in Spanish, French, German, Portuguese and Italian too (`disclose.lines`), naming who it writes for, and no `credit`. kiff/agents puts the line first in each text part of an outside message, in the message's language, said once. No message carries "Built with tafs.", on WhatsApp, SMS or email (the owner's call, 7 Nov).
+  - **A taf is asked** to start each outside message with its line, word for word, in the language it writes in, and is given each one.
+  - **A door's reply** starts with the taf's line, naming who it writes for, in the reply's language. Nothing is added after it.
+  - **Coach's skill** is `draft-the-card@5` (on top of the company mailbox's `@4`): the line goes first, in the message's language, with nothing added. A live Coach moves to it on the Upgrade.
+  - **Within 300 bytes in every language:** kiff/agents refuses a definition with a longer line. A new name the taf writes for is now at most 261 bytes (it was 272), so its line fits in German, the longest. A name stored before, or a company's name from KIFF, up to 272 bytes still works: a language whose line doesn't fit is left out, and English heads the taf's messages in it.
+  - **Deploy order:** kiff/agents refuses a definition with a field it doesn't know, so `disclose.lines` needs kiff/agents#363 live first. Until the Upgrade re-saves a taf, its definition keeps its old `credit`, which kiff/agents#363 accepts and never sends.
+- **A taf whose scheduled runs keep failing to start says so, once (tafs cloud).** kiff/agents now gives the items of a run that failed before any turn back to the next run, and keeps a schedule's `failing`. The sweep tells the phones that answer holds, Time Sensitive, opening the taf:
+  - **a recurring schedule:** once for each run of failures, after two firings in a row or one six hours old with none working since. Not for one its owner turned off.
+  - **a follow-up the taf set, or a one-time run:** at once, since its work won't run again by itself ("A follow-up it set for itself didn't run, and won't try again. Open it to see why."). Not while it's still on (its owner moved it during the run), and never said again a month on.
+  - **Nothing for a halted taf or account,** which doesn't try again until it's resumed. It's said once it is.
 - **Customer mail from the company's own mailbox (`draft-the-card@4`).** A taf that writes to customers sends, by default, through a mail connection the company already has, so mail comes from its address and replies land where its staff work. Coach suggests a dedicated mailbox (`support@`), never a person's own inbox, and asks only for what the taf does: the send tool alone when it only sends. A connection the account has comes first only when it is that dedicated mailbox: one that is a person's own inbox is never reused for customer mail. An inbox of the taf's own stays an option. The skill loads once the Upgrade names it.
 - **The reference check** in CI also fails on a comment that names who decided rather than what was decided, and the two left in the tree now state the decision alone.
 

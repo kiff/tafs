@@ -40,7 +40,9 @@ deployment offers a door; WhatsApp is offered only once it's set up.
 - The door itself only ever writes to the key who wrote, in the same thread. Writing
   to anyone else is the taf's own action, through KIFF, under its Card, like any
   other tool call.
-- Every reply says it comes from an AI assistant.
+- Every reply starts with the taf's disclosure line, naming who it writes for ("Written by an AI agent
+  for Acme."), in the reply's language when it's Spanish, French, German, Portuguese or Italian, English
+  otherwise. Nothing is added after it.
 - Only the people who manage the taf see its **Doors** tab, its door conversations, the knocks waiting
   for an answer, and who wrote in Activity, strangers' text included. Someone who only
   uses the taf sees their own chats, and Activity without the sender. A knock's alert
