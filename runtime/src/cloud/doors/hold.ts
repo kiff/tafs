@@ -30,6 +30,12 @@ export const HOLD = {
   perTaf: 200,
   /** The most items one replay starts, so a webhook that replays stays short; the sweep takes the rest. */
   perReplay: 20,
+  /**
+   * Starts an item may fail for anything but credits (kiff/agents refusing it, 4xx) before it's said
+   * unanswered, so one bad item doesn't hold its taf's later ones for two days. A server error
+   * (5xx, or none) isn't counted: kiff/agents down for a while loses nothing.
+   */
+  tries: 3,
 } as const;
 
 /** kiff/agents' codes for a run refused because the account's tafs wait for credits. */
@@ -49,7 +55,7 @@ export interface HeldEvent { kind: "app_event"; event: string; grant: string; na
 export type Held = (HeldDoor | HeldEvent) & { id: string; taf: string; at: string };
 
 /** What a taf's list keeps of each: enough to order it without reading it, and an event's key, so a delivery repeated is kept once. */
-interface Waiting { id: string; at: string; key?: string }
+interface Waiting { id: string; at: string; key?: string; tries?: number }
 
 /** A held item that went unanswered, for the dial: which door, or which app's event. */
 export interface Unanswered { id: string; kind: "door" | "app_event"; door?: string; grant?: string; event?: string; at: string }
@@ -101,7 +107,11 @@ export async function hold(ctx: DoorsContext, tenant: string, taf: Taf, item: He
     await ctx.doors.store.remove(doorKeys.heldItem(tenant, held.id));
   } else if (!kept) {
     await ctx.doors.store.remove(doorKeys.heldItem(tenant, held.id));
-    await unanswered(ctx, tenant, taf, held);
+    await markUnanswered(ctx, tenant, taf, held);
+    // A busy door past the most it keeps: its answerers are told once an hour, not once a message.
+    if (await ctx.doors.store.create(doorKeys.heldFull(tenant, taf.id), 1, new Date(ctx.now.getTime() + hours(1)))) {
+      await tellUnanswered(ctx, tenant, taf, [held]);
+    }
   }
   return kept;
 }
@@ -112,8 +122,9 @@ async function take(ctx: DoorsContext, tenant: string, taf: string, id: string):
   await change<{ items: Waiting[] }>(ctx, doorKeys.held(tenant, taf), (read) => {
     const items = read?.items ?? [];
     took = items.some((i) => i.id === id);
-    const rest = items.filter((i) => i.id !== id);
-    return rest.length ? { items: rest } : undefined;
+    // An emptied list is kept (empty), never deleted: a delete isn't a compare-and-swap, so two
+    // sweeps taking the last item at once would both take it, and say it twice.
+    return { items: items.filter((i) => i.id !== id) };
   }, new Date(ctx.now.getTime() + hours(HOLD.hours + 24)));
   return took;
 }
@@ -134,6 +145,16 @@ export async function replayHeld(ctx: DoorsContext, tenant: string, only?: strin
   queue.sort((a, b) => a.at.localeCompare(b.at) || (a.taf.id === b.taf.id ? a.i - b.i : a.taf.id.localeCompare(b.taf.id)));
   const out = { started: 0, unanswered: 0, waiting: false };
   const stuck = new Set<string>();
+  // What this pass said unanswered, by taf: each taf's answerers are told once for all of it.
+  const told = new Map<string, { taf: Taf; items: Held[] }>();
+  const said = async (taf: Taf, held: Held) => {
+    out.unanswered++;
+    if (taf.removing) return;
+    await markUnanswered(ctx, tenant, taf, held);
+    const t = told.get(taf.id) ?? { taf, items: [] };
+    t.items.push(held);
+    told.set(taf.id, t);
+  };
   for (const w of queue) {
     const held = (await ctx.doors.store.get(doorKeys.heldItem(tenant, w.id))) as Held | undefined;
     if (!held) {
@@ -143,8 +164,7 @@ export async function replayHeld(ctx: DoorsContext, tenant: string, only?: strin
     if (ctx.now.getTime() - Date.parse(held.at) >= hours(HOLD.hours)) {
       if (await take(ctx, tenant, w.taf.id, w.id)) {
         await ctx.doors.store.remove(doorKeys.heldItem(tenant, w.id));
-        if (!w.taf.removing) await unanswered(ctx, tenant, w.taf, held);
-        out.unanswered++;
+        await said(w.taf, held);
       }
       continue;
     }
@@ -159,10 +179,27 @@ export async function replayHeld(ctx: DoorsContext, tenant: string, only?: strin
         continue;
       }
       console.error("held item not started:", err instanceof Error ? err.message : "error");
+      const refused = err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429;
+      if (refused && (await tried(ctx, tenant, w.taf.id, w.id)) >= HOLD.tries && await take(ctx, tenant, w.taf.id, w.id)) {
+        await ctx.doors.store.remove(doorKeys.heldItem(tenant, w.id));
+        await said(w.taf, held);
+        continue;
+      }
       stuck.add(w.taf.id);
     }
   }
+  for (const t of told.values()) await tellUnanswered(ctx, tenant, t.taf, t.items);
   return out;
+}
+
+/** Counts one refused start of an item; its tries so far. */
+async function tried(ctx: DoorsContext, tenant: string, taf: string, id: string): Promise<number> {
+  let n = 0;
+  await change<{ items: Waiting[] }>(ctx, doorKeys.held(tenant, taf), (read) => {
+    if (!read) return undefined;
+    return { items: read.items.map((i) => (i.id === id ? { ...i, tries: (n = (i.tries ?? 0) + 1) } : i)) };
+  }, new Date(ctx.now.getTime() + hours(HOLD.hours + 24)));
+  return n;
 }
 
 /** Starts a held item's run, as its door or wake would have; false when they no longer allow it. */
@@ -190,12 +227,18 @@ async function start(ctx: DoorsContext, tenant: string, taf: Taf, held: Held): P
 export const UNANSWERED_WORDS = {
   /** Added to a door's stop, or an app event's, on the dial, for 7 days. */
   dial: (n: number, what: "message" | "event") => `${n} ${what}${n === 1 ? "" : "s"} went unanswered while your tafs waited for credits`,
-  door: (who: string, door: string) => `A message by ${door} from ${who} went unanswered: your tafs waited for credits for 48 hours.`,
-  event: (name: string) => `An event from ${name} went unanswered: your tafs waited for credits for 48 hours.`,
+  door: (who: string, door: string) => `A message by ${door} from ${who} went unanswered: your tafs waited for credits.`,
+  event: (name: string) => `An event from ${name} went unanswered: your tafs waited for credits.`,
+  /** Several at once, in one push. */
+  many: (messages: number, events: number) => {
+    const part = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
+    const what = [messages ? part(messages, "message") : "", events ? part(events, "event") : ""].filter(Boolean).join(" and ");
+    return `${what} went unanswered: your tafs waited for credits.`;
+  },
 } as const;
 
-/** Says once that a held item went unanswered: on the dial for 7 days, and to the phones that answer the taf's holds. */
-async function unanswered(ctx: DoorsContext, tenant: string, taf: Taf, held: Held): Promise<void> {
+/** Keeps that a held item went unanswered, for its stop on the dial, 7 days. */
+async function markUnanswered(ctx: DoorsContext, tenant: string, taf: Taf, held: Held): Promise<void> {
   const until = new Date(ctx.now.getTime() + hours(24 * HOLD.unansweredDays));
   const line: Unanswered = held.kind === "door"
     ? { id: held.id, kind: "door", door: held.door, at: ctx.now.toISOString() }
@@ -204,18 +247,29 @@ async function unanswered(ctx: DoorsContext, tenant: string, taf: Taf, held: Hel
     const items = (read?.items ?? []).filter((i) => ctx.now.getTime() - Date.parse(i.at) < hours(24 * HOLD.unansweredDays));
     return { items: [line, ...items].slice(0, 500) };
   }, until).catch((err) => console.error("unanswered not kept:", err instanceof Error ? err.message : "error"));
+}
+
+/**
+ * Tells the phones that answer the taf's holds what just went unanswered: one push for the taf,
+ * naming the one, or counting several, so a busy door is one push, not hundreds. Collapsed by taf.
+ */
+async function tellUnanswered(ctx: DoorsContext, tenant: string, taf: Taf, items: Held[]): Promise<void> {
+  if (!items.length) return;
   let body: string;
-  if (held.kind === "door") {
-    const door = (await doorsOf(ctx.doors.store, tenant, taf.id).catch(() => [])).find((d) => d.id === held.door);
+  const one = items.length === 1 ? items[0]! : undefined;
+  if (one?.kind === "door") {
+    const door = (await doorsOf(ctx.doors.store, tenant, taf.id).catch(() => [])).find((d) => d.id === one.door);
     const label = (APPS.find((x) => x.id === door?.app)?.label ?? "a door").toLowerCase();
-    body = UNANSWERED_WORDS.door(held.arrival.name ?? held.arrival.from, label);
+    body = UNANSWERED_WORDS.door(one.arrival.name ?? one.arrival.from, label);
+  } else if (one?.kind === "app_event") {
+    body = UNANSWERED_WORDS.event(one.name);
   } else {
-    body = UNANSWERED_WORDS.event(held.name);
+    body = UNANSWERED_WORDS.many(items.filter((i) => i.kind === "door").length, items.filter((i) => i.kind === "app_event").length);
   }
   await tellAnswerers(ctx, tenant, {
     kind: "alert",
     payload: { aps: { alert: { title: taf.name, body }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
-    collapseID: `unanswered-${held.id}`.slice(0, 64),
+    collapseID: `unanswered-${taf.id}`.slice(0, 64),
   });
 }
 

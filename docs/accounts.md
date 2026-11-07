@@ -255,9 +255,13 @@ and `openCreditsRun` in `AppModel`); on iPhone and iPad, `CreditsViews.swift`
   - **Unanswered after 48 hours:** its door's stop on the taf's dial (`GET /v1/tafs/{id}/knob`),
     or its event's, adds "· 1 message went unanswered while your tafs waited for credits"
     ("2 messages", "1 event"…) for 7 days, in tafs cloud's words, so no app change. The people who
-    answer the taf's holds are told once, by push, titled with the taf's name: "A message by email
-    from Ben went unanswered: your tafs waited for credits for 48 hours.", or "An event from
-    HubSpot · new deal went unanswered: …". It opens the taf.
+    answer the taf's holds are told once, by push, titled with the taf's name and collapsed by taf:
+    "A message by email from Ben went unanswered: your tafs waited for credits.", "An event from
+    HubSpot · new deal went unanswered: …", or, for several at once, "1 message and 2 events went
+    unanswered: …". It opens the taf.
+  - **Also unanswered:** one kiff/agents refuses 3 times for anything but credits (a 4xx), so it
+    doesn't hold its taf's later ones for two days; a server error isn't counted. And one past the
+    200 a taf keeps: told once an hour for the taf, not once a message.
 - **Coach within its fair use doesn't wait** while a plan runs. Past it, Coach waits as the tafs do.
 
 **Warnings,** each once a period, by push to the people who manage billing (`billing.manage`) and

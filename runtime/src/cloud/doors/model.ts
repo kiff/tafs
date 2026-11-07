@@ -219,6 +219,8 @@ export const doorKeys = {
   held: (tenant: string, taf: string) => `${tenant}#door-held#${taf}`,
   /** One held item: the message or event itself, kept apart, as one can be 40,000 characters. */
   heldItem: (tenant: string, id: string) => `${tenant}#door-held-item#${id}`,
+  /** Set for an hour once a taf past the most it keeps told its answerers, so a busy door is one push an hour. */
+  heldFull: (tenant: string, taf: string) => `${tenant}#door-held-full#${taf}`,
   /** A taf's held items that went unanswered in the last 7 days, for its dial. */
   unanswered: (tenant: string, taf: string) => `${tenant}#door-unanswered#${taf}`,
 };
