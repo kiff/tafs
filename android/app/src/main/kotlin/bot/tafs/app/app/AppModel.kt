@@ -4251,16 +4251,19 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (current() && e is CloudError && e.code == HELD_FULL) {
-        // As much waits as one message can be: tafs cloud's words, as they are, and the owner's go back in the box to send later.
+      val waitsForCredits = creditsRefusal(e)
+      if (current() && (waitsForCredits != null || e is CloudError && e.code == HELD_FULL)) {
+        // As much waits as one message can be, or the tafs wait on credits: tafs cloud's words, as they are, and the owner's go
+        // back in the box to send later. No Not sent row: Retry would change nothing until then (docs/accounts.md#in-the-apps).
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
-            chatErrors = s.chatErrors + (tafId to (e.message ?: "")),
+            chatErrors = s.chatErrors + (tafId to (waitsForCredits ?: e.message ?: "")),
           )
         }
+        if (waitsForCredits != null) putBackFiles(files, tafId)
         return false
       }
       if (current()) {
@@ -4570,7 +4573,7 @@ class AppModel(
    * halted), else the app's for the status.
    */
   private fun sendFailure(e: Exception, name: String): String =
-    creditsRefusal(e) ?: if (e is CloudError && e.status == 429 && e.words == null) "That's a lot of messages in a few minutes. Give $name a moment, then try again."
+    if (e is CloudError && e.status == 429 && e.words == null) "That's a lot of messages in a few minutes. Give $name a moment, then try again."
     else "The message wasn't sent. ${ErrorWords.of(e)}"
 
   /**
@@ -6162,7 +6165,7 @@ class AppModel(
     // Busy until the balance is read after KIFF took it: never a second tap against the limit from before.
     var sent = false
     try {
-      signer.sign("tafs.raise-limit.v1|$tenant".toByteArray(), "Raise the spend limit")
+      signer.sign("tafs.raise-limit.v1|$tenant|$from".toByteArray(), "Raise the spend limit")
       if (generation != accountGeneration) return false
       kiff.tenant = tenant
       val signer = signer
@@ -6180,7 +6183,10 @@ class AppModel(
       if (server?.status == 409 && server.refused("limit_changed")) {
         // Someone else raised it, or the screen was from before: read it again, and the raise is offered from the new limit.
         readBalanceNow(generation)
-        _state.update { it.copy(raiseError = ErrorWords.CHANGED) }
+        _state.update { it.copy(raiseError = bot.tafs.app.model.UsageWords.LIMIT_CHANGED) }
+      } else if (server?.status == 409 && server.refused("limit_ceiling")) {
+        // KIFF's words say to contact it; the app's, the same as iPhone's, where it sends none.
+        _state.update { it.copy(raiseError = server.words ?: bot.tafs.app.model.UsageWords.LIMIT_CEILING) }
       } else {
         _state.update { it.copy(raiseError = server?.words ?: "The limit wasn't raised. ${ErrorWords.of(e)}") }
       }

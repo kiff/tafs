@@ -106,7 +106,7 @@ internal fun BalancePanel(state: AppState, actions: AccountActions) {
     b?.let { now ->
       Text(now.words, style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
       now.detail?.let { Text(it, style = scaled(14, color = Theme.soft)) }
-      now.meterPct?.let { pct -> Meter(pct.coerceIn(0, 100) / 100.0, if (now.state == BalanceNow.OK) Theme.ok else planColor(now.state, calm = Theme.ok)) }
+      now.meterPct?.let { pct -> Meter(pct.coerceIn(0, 100) / 100.0, when (now.state) { BalanceNow.WAITING -> Theme.no; BalanceNow.WARNING -> Theme.amber; else -> Theme.ok }) }
       now.warning?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     }
     why?.let { Text(it, style = scaled(14, color = Theme.no)) }
@@ -300,10 +300,10 @@ private fun UsageFrame(title: String, onClose: () -> Unit, content: @Composable 
   }
 }
 
-/** The plan's colour by tafs cloud's tone: waiting in red, a warning in amber, otherwise [calm]. A tone this app doesn't know is calm. */
+/** The plan line's colour by tafs cloud's tone: waiting in red, a warning in amber text, otherwise [calm]. A tone this app doesn't know is calm. */
 fun planColor(tone: String, calm: androidx.compose.ui.graphics.Color): androidx.compose.ui.graphics.Color = when (tone) {
   BalanceNow.WAITING -> Theme.no
-  BalanceNow.WARNING -> Theme.amber
+  BalanceNow.WARNING -> Theme.amberText
   else -> calm
 }
 

@@ -58,9 +58,16 @@ fun TaskRequests(usage: Usage, kind: String, state: AppState, actions: AccountAc
           Text(UsageWords.requestLine(r, usage), style = scaled(15, color = Theme.ink))
           if (r.reason.isNotEmpty()) Text(r.reason, style = scaled(14, color = Theme.soft))
           Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // A pack is approved by buying it through Google Play, where this phone offers packs; a raise, by Raise the limit.
+            // A raise is answered by raising the limit, which answers every open request for one; a pack by buying it through
+            // Google Play, where this phone offers packs.
             val product = r.pack?.let { id -> usage.store?.packs?.firstOrNull { it.id == id }?.googleProduct }
-            if (!r.isRaise && state.offersPurchases && state.balance?.balance?.offers("packs") == true && product != null) {
+            if (r.isRaise && state.balance?.balance?.raise != null && !state.balanceStale) {
+              androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
+                ApprovalGate {
+                  PrimaryButton(if (state.raising) "Raising…" else UsageWords.RAISE_LIMIT, { scope.launch { actions.raiseLimit() } }, enabled = !state.raising)
+                }
+              }
+            } else if (!r.isRaise && state.offersPurchases && state.balance?.balance?.offers("packs") == true && product != null) {
               PrimaryButton("Approve", { scope.launch { actions.approveRequest(product, r.id) } }, Modifier.weight(1f).confirms(), enabled = state.buying == null)
             }
             OutlineButton("Decline", { declining = r }, Modifier.weight(1f))

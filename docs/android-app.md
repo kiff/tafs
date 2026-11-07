@@ -84,10 +84,12 @@ failed read shows tafs cloud's `words` above what was read before.
   setup-signed path). The button stays busy until the balance is read again; a read that fails
   says "Your tafs can go on. This period's credits couldn't be read since." with **Read it again**,
   which signs nothing, and no raise until it's read. A `limit_changed` refusal reads the balance
-  again and offers the raise from the new limit.
+  again and offers the raise from the new limit, and says so; `limit_ceiling` shows KIFF's words, or
+  that KIFF raises it further. An admin's open request for a raise has Raise the limit on it too.
 - **A chat or Run now refused for credits** (409 `credits_used_up`, `limit_reached` or `no_plan`)
-  shows tafs cloud's words as they are (`AppModel.creditsRefusal`). A chat's message stays Not sent,
-  with Retry for once the tafs go on.
+  shows tafs cloud's words as they are (`AppModel.creditsRefusal`). A chat's words go back in the box,
+  with no Not sent row and no Retry, as with `held_full`: sending again changes nothing until the tafs
+  go on, and the words say how.
 - **Asking an admin** (`TaskRequests`): on Company for a raise (`kind: "raise"`), on Solo for a pack.
   Someone who manages billing (`billing.manage`) sees the open requests: a raise is answered by Raise
   the limit, a pack by buying it, and either can be declined, signed. The request's lines are the

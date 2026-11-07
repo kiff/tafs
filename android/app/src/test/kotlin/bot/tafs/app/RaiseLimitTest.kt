@@ -134,7 +134,7 @@ class RaiseLimitTest {
     transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_changed"}""")
     transport.answer("GET /v1/usage/balance", 200, raised)
     assertFalse(m.raiseLimit())
-    assertEquals("It changed in the meantime. What's shown now is how it is.", m.state.value.raiseError)
+    assertEquals("The limit changed meanwhile. Here it is now: raise it again if it's still needed.", m.state.value.raiseError)
     assertEquals(13000L, m.state.value.balance!!.balance.raise!!.fromCents)
     assertFalse(m.state.value.balanceStale)
     assertFalse(m.state.value.raising)
@@ -145,6 +145,13 @@ class RaiseLimitTest {
     transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_ceiling","words":"The limit can't go higher from the phone. Contact KIFF to raise it further."}""")
     assertFalse(m.raiseLimit())
     assertEquals("The limit can't go higher from the phone. Contact KIFF to raise it further.", m.state.value.raiseError)
+  }
+
+  @Test fun pastTheCeilingWithNoWordsFromKiffTheAppsOwnSayToContactKiff() = runTest {
+    val m = model(waiting)
+    transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_ceiling"}""")
+    assertFalse(m.raiseLimit())
+    assertEquals("The limit is as high as it can be raised from the app. Contact KIFF to raise it further.", m.state.value.raiseError)
   }
 
   @Test fun someoneWhoMayNotRaiseSendsNothingAndReadsWhoCan() = runTest {

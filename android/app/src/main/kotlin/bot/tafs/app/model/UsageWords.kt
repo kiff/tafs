@@ -45,6 +45,13 @@ object UsageWords {
   /** Under a pack of credits on sale: its credits never expire. */
   const val PACKS_KEEP = "Never expires"
 
+  /** A raise from a limit that changed meanwhile (KIFF's `limit_changed`), and one past what the phone can raise (`limit_ceiling`), as iPhone says them. */
+  /** On an open request for a raise, for who manages billing. */
+  const val RAISE_LIMIT = "Raise the limit"
+
+  const val LIMIT_CHANGED = "The limit changed meanwhile. Here it is now: raise it again if it's still needed."
+  const val LIMIT_CEILING = "The limit is as high as it can be raised from the app. Contact KIFF to raise it further."
+
   /** After a raise that went through, while the balance couldn't be read since: never a second raise. */
   const val RAISED_UNREAD = "Your tafs can go on. This period's credits couldn't be read since."
 
