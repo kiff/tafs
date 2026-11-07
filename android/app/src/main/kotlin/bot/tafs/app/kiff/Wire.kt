@@ -69,6 +69,8 @@ data class HomeCardView(
   val calls: HomeTotal<Int>? = null,
   /** How this is counted: each covered tool's lines in KIFF's words, as the owner approved them; none when KIFF has none. */
   val counted: List<CountedTool>? = null,
+  /** Its totals for each item apart, in tafs cloud's words ("1 call in any 7 days for each invoice id"); none without any. */
+  @SerialName("each_item") val eachItem: List<String>? = null,
 )
 
 /** One tool's "How this is counted": its title, and KIFF's lines for its profile, shown as they are. */
@@ -205,6 +207,8 @@ data class WireThread(
   @SerialName("coach_lines") val coachLines: List<JsonElement>? = null,
   /** The thread in tafs cloud's order: the app reads only its drives' ends from it (kiff/tafs#568), each apart. */
   val items: List<JsonElement>? = null,
+  /** What tafs cloud holds of the person's words (docs/chat.md): read apart, so one the app can't read leaves the thread as it is. */
+  val steering: JsonElement? = null,
 )
 
 /** What tafs cloud says of a message it took: the chat it went into. */
@@ -215,9 +219,24 @@ data class Sent(val session: String, @SerialName("new_session") val newSession: 
 @Serializable
 data class SentMessage(val id: String)
 
-/** The run's status after a message written to it. */
+/**
+ * What came of a message written to a run at work: the run's [status] when it took it; with `hold` (docs/chat.md), [sent] when tafs
+ * cloud sent it at once as the person's next message, and [held] for what waits in that chat to go once the taf is done.
+ */
 @Serializable
-data class Steered(val run: String? = null, val status: String)
+data class Steered(val run: String? = null, val status: String = "", val sent: SteerSent? = null, val held: SteerWords? = null)
+
+/** The run a held message went as, and its chat. */
+@Serializable
+data class SteerSent(val run: String = "", val session: String = "")
+
+/** A person's words tafs cloud holds or didn't send, with when, and why for one not sent (its words, shown as they are). */
+@Serializable
+data class SteerWords(val text: String = "", val at: String = "", val why: String? = null)
+
+/** The thread's `steering`, as the app shows it: what waits for the taf to be done, and what a stopped run never read. */
+@Serializable
+data class WireSteering(val run: String? = null, val held: SteerWords? = null, @SerialName("not_sent") val notSent: List<SteerWords> = emptyList())
 
 // MARK: Alerts
 
@@ -249,6 +268,9 @@ data class Breach(
   val used: Long? = null,
   val draw: Long? = null,
   val window: String? = null,
+  /** For a total for each item apart: the argument it counts by, and the item this call was on ("invoice_id", "in_42"). */
+  val per: String? = null,
+  val value: String? = null,
 )
 
 /** A parameter's declared unit and decimal places ("EUR", 2). */

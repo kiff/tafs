@@ -90,11 +90,21 @@ data class Money(val minor: Long, val currency: String? = null, val scale: Int =
   }
 }
 
+/**
+ * A total's window in the owner's words: [label] ends a limit ("€300 a day"), [current] names its use so far ("€40 used
+ * today"). The sample's own three, and KIFF's windows by KIFF's names, in the words tafs cloud sends with them, so a
+ * rolling or lifetime total never reads as a day (docs/tafs.md).
+ */
 @Serializable
 enum class Window(val label: String, val current: String) {
   day("a day", "today"),
   week("a week", "this week"),
   month("a month", "this month"),
+  calendar_day("a day", "today"),
+  rolling_24h("in any 24 hours", "in the last 24 hours"),
+  rolling_1h("in any hour", "in the last hour"),
+  rolling_7d("in any 7 days", "in the last 7 days"),
+  lifetime("in total", "so far"),
 }
 
 /** What happens to an action the Card does not allow. */
@@ -217,6 +227,8 @@ data class TafCard(
   val calls: CardTotal<Int>? = null,
   /** How this is counted, per tool, in KIFF's words; empty when KIFF has none. */
   val counted: List<bot.tafs.app.kiff.CountedTool> = emptyList(),
+  /** Its totals for each item apart, as tafs cloud says them: each item has its own count, so none shows a used or left. */
+  val eachItem: List<String> = emptyList(),
 ) {
   /** The pill on the face: the environment it's scoped to ("TEST"); nothing for a Card that acts for real. */
   val environmentLabel: String? get() = if (live || environment.isEmpty()) null else environment.uppercase()
@@ -555,6 +567,8 @@ data class RecordEntry(
   val amountUnit: String? = null,
   /** KIFF's key for the call (the gateway's "tc-…"), what the taf's call_ref names it by. */
   val entityId: String? = null,
+  /** The tool as KIFF names it ("list_inboxes_k3f9"): which connection it went through. */
+  val action: String? = null,
   /**
    * What it acted on, as KIFF signs it: "sha256:<hex>" of the value, and the name of the argument it came
    * from ("payment"). Its value is tafs' own, shown only when it matches KIFF's hash.

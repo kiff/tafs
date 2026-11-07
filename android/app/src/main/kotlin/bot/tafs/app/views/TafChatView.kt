@@ -2,6 +2,7 @@ package bot.tafs.app.views
 
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
+import bot.tafs.app.drive.confirms
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -78,8 +79,10 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.brandBackground
 import bot.tafs.app.design.scaled
 import bot.tafs.app.app.AppModel
+import androidx.compose.material3.TextButton
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatEnd
+import bot.tafs.app.model.ChatWords
 import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.LiveAnswer
@@ -217,18 +220,32 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                 )
               }
               when (item) {
-                is ChatItem.Message -> MessageRow(
-                  item.message,
-                  tafId = tafId,
-                  files = actions.files,
-                  onEdit = { text -> setDraft(text) },
-                  onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
-                  // An answer of Coach's or the taf's, reported by tafs cloud's id for it; none in the sample.
-                  onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
-                )
+                is ChatItem.Message -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                  MessageRow(
+                    item.message,
+                    tafId = tafId,
+                    files = actions.files,
+                    onEdit = { text -> setDraft(text) },
+                    onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
+                    // An answer of Coach's or the taf's, reported by tafs cloud's id for it; none in the sample.
+                    onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
+                  )
+                  // Not sent: why, and Retry or Edit, under the words as written (kiff/tafs#476).
+                  state.chatUnsent[tafId]?.firstOrNull { it.message == item.message }?.let { unsent ->
+                    NotSentLine(
+                      unsent.why,
+                      canRetry = !state.holdsRetry(tafId, unsent),
+                      onRetry = { following = true; actions.retryUnsent(tafId, unsent.message) },
+                      onEdit = { actions.editUnsent(tafId, unsent.message)?.let(setDraft) },
+                      onDelete = { actions.deleteUnsent(tafId, unsent.message) },
+                    )
+                  }
+                }
                 is ChatItem.Held -> HeldCallCard(item.call, state, actions.answer)
                 is ChatItem.Outcome -> OutcomeLine(Chat.outcomeText(item.entry), outcomeTone(item.entry.kind), outcomeMark(item.entry.kind))
-                is ChatItem.Card -> CoachCard(item.shown, state, actions.coach)
+                is ChatItem.Card -> if (item.shown.component.type == bot.tafs.app.app.ASK_COACH && tafId != COACH_CHAT) {
+                  AskCoachCard(item.shown.component.text.orEmpty(), if (state.manages(tafId) && state.mayUseCoach) ({ words -> actions.askCoachAbout(tafId, words) }) else null)
+                } else CoachCard(item.shown, state, actions.coach)
                 is ChatItem.Drive -> DriveRecapCard(item.recap)
               }
             }
@@ -245,6 +262,8 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
             if (live != null) LiveWork(live) else TypingDots()
           }
         }
+        // What tafs cloud holds of the owner's in this chat (docs/chat.md): it goes by itself once the taf is done.
+        state.chatSteering[tafId]?.held?.let { held -> item(key = "held") { SteeredWords(held.text, ChatWords.HELD) } }
         // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
         if (!thinking) state.chatEnded[tafId]?.let { end ->
           item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId, false) { } }) }
@@ -619,5 +638,48 @@ private fun NeedsYouPill(text: String, onClick: () -> Unit) {
   ) {
     Box(Modifier.size(8.dp).clip(CircleShape).background(Theme.amber))
     Text(text, style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+  }
+}
+
+/**
+ * Under an owner's message that wasn't sent: why, then Delete (gone for good), Edit (back to the box) and Retry (sends it once). Retry waits, greyed,
+ * while it can't go yet ([AppState.holdsRetry]).
+ */
+@Composable
+private fun NotSentLine(why: String, canRetry: Boolean, onRetry: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+  Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Text(listOf(ChatWords.NOT_SENT, why).filter { it.isNotBlank() }.joinToString(" · "), style = scaled(13, color = Theme.no), textAlign = TextAlign.End)
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+      // Delete takes the owner's words away for good: Coach never taps it (docs/drive.md).
+      TextButton(onClick = onDelete, modifier = Modifier.confirms()) { Text(ChatWords.DELETE, style = scaled(14, color = Theme.soft)) }
+      TextButton(onClick = onEdit) { Text(ChatWords.EDIT, style = scaled(14, color = Theme.soft)) }
+      TextButton(onClick = onRetry, enabled = canRetry) { Text(ChatWords.RETRY, style = scaled(14, color = if (canRetry) Theme.ink else Theme.soft)) }
+    }
+  }
+}
+
+/** The owner's words tafs cloud holds, as their own message, dimmed, with [line] under them. */
+@Composable
+private fun SteeredWords(text: String, line: String?) {
+  Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(
+      text,
+      style = scaled(15, color = Color.White),
+      modifier = Modifier.alpha(0.7f).clip(RoundedCornerShape(18.dp)).brandBackground().padding(horizontal = 10.dp, vertical = 8.dp),
+    )
+    line?.let { Text(it, style = scaled(13, color = Theme.soft), textAlign = TextAlign.End) }
+  }
+}
+
+/**
+ * A taf's card handing a setting to Coach (kiff/tafs#476, gap 15): the owner's request in the taf's words, and Ask Coach, which opens
+ * Coach on this taf with them in the box to send, as written or changed. Nothing is sent. Someone who can't change the taf reads it alone.
+ */
+@Composable
+private fun AskCoachCard(text: String, ask: ((String) -> Unit)?) {
+  if (text.isBlank()) return
+  bot.tafs.app.design.Panel {
+    Text(text, style = scaled(15, color = Theme.ink))
+    ask?.let { bot.tafs.app.design.OutlineButton(bot.tafs.app.model.ChatWords.ASK_COACH, { it(text) }, Modifier.fillMaxWidth()) }
   }
 }

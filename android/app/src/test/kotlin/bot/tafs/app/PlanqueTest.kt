@@ -343,6 +343,63 @@ class PlanqueTest {
     assertEquals(expected["words_sha256"], signed["words_sha256"])
   }
 
+  /**
+   * Sign in again on a connected grant with a profile, from Connect apps (Android 36's phone round): nothing had read KIFF's words,
+   * so approving refused before the fingerprint. Sign in again reads them first, as the approval card does, and signs them in.
+   */
+  @Test fun signInAgainReadsTheProfilesWordsBeforeItApproves() = runTest {
+    reads()
+    val connected = """{"id":"g1","status":"connected","text":"Connect Stripe: refund a payment.","digest":"${digestOf(profiledRequest)}","request":$profiledRequest}"""
+    transport.answer(grants, 200, """{"grants":[$connected]}""")
+    transport.answer(words, 200, resource("stripe-refunds.expected"))
+    transport.answer(approve, 200, """{"status":"connected","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refreshConnections()
+    assertNull("nothing has read KIFF's words yet", m.state.value.profileWordsFor(m.state.value.grants.single()))
+    m.reconnect(m.state.value.grants.single())
+    assertEquals(1, transport.requestsTo(words).size)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject
+    val expected = KiffClient.json.parseToJsonElement(resource("stripe-refunds.expected")).jsonObject
+    assertEquals(expected["words_sha256"], body.getValue("kiff_profile").jsonObject["words_sha256"])
+    assertEquals(1, transport.requestsTo(confirm).size)
+    assertNull(m.state.value.coachNotes["g1"])
+  }
+
+  /** KIFF's words can't be read: Sign in again says why, and nothing is approved. */
+  @Test fun signInAgainWhoseWordsCantBeReadApprovesNothing() = runTest {
+    reads()
+    val connected = """{"id":"g1","status":"connected","text":"Connect Stripe: refund a payment.","digest":"${digestOf(profiledRequest)}","request":$profiledRequest}"""
+    transport.answer(grants, 200, """{"grants":[$connected]}""")
+    transport.answer(words, 503, """{"error":"unavailable"}""")
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refreshConnections()
+    m.reconnect(m.state.value.grants.single())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals(m.state.value.profileWordsErrors["g1"], m.state.value.coachNotes["g1"])
+    assertTrue(m.state.value.coachNotes["g1"]!!.startsWith("KIFF's words for this connection couldn't be read."))
+  }
+
+  /** A managed provider's connection isn't signed in again in place (planque's 409): it says how, and asks nothing. */
+  @Test fun aProvidersConnectionSaysToDisconnectAndConnectAgainInsteadOfSigningIn() = runTest {
+    reads()
+    val managedRequest = """{"server":"mcp.composio.dev","agent":"refunds-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[{"tool":"list_charges","read_only":true}]}"""
+    val managed = """{"id":"g9","status":"connected","vendor":"Stripe","text":"Connect Stripe.","digest":"${digestOf(managedRequest)}","request":$managedRequest}"""
+    transport.answer(grants, 200, """{"grants":[$managed]}""")
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g9&confirm=c0de"))
+    m.refreshConnections()
+    val g = m.state.value.grants.single()
+    assertTrue(g.signsInThroughProvider)
+    m.reconnect(g)
+    assertTrue(transport.requestsTo("POST /v1/accounts/t_01/grants/g9/approve").isEmpty())
+    assertEquals(
+      "Stripe signs in through its connection provider. To sign in again, disconnect it and connect it again.",
+      m.state.value.coachNotes["g9"],
+    )
+    // Signed out by the provider, it signs in again as any connection does: only a connected one is refused in place.
+    assertFalse(g.copy(status = "needs_reconnect").signsInThroughProvider)
+  }
+
   @Test fun aProfileChangedUnderTheSameConnectionIsReadAgainAndOnlyItsWordsAreApproved() = runTest {
     reads()
     // Tools added to a connection change its profile under the same grant id (planque merges the addition into it).

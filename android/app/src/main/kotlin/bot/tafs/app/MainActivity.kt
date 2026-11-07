@@ -491,8 +491,11 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       sendChat = { text, tafId, withFiles, onNotSent -> model.sendChat(text, tafId, withFiles, onNotSent) },
       issuer = model.issuer,
       doors = doorActions,
-      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId, siteSignIn = model::openSiteSignIn),
+      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId, replaceKey = model::openReplaceKey, siteSignIn = model::openSiteSignIn),
       stopChat = model::stopChat,
+      retryUnsent = model::retryUnsent,
+      editUnsent = model::editUnsent,
+      deleteUnsent = model::deleteUnsent,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
       loadReport = model::loadReport,
@@ -734,7 +737,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         state, load = model::loadConnectApps, loadMore = model::loadMoreConnectApps,
         onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
         onAskCoach = { showingConnectApps = false; coachOpen = true },
-        onClose = { showingConnectApps = false },
+        onClose = { showingConnectApps = false; model.closeListApproval() },
         // The taf it's signed in for, by its grant: that taf's Coach chooses its actions.
         onChooseActions = { app ->
           showingConnectApps = false
@@ -742,20 +745,24 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         },
         // One connection disconnected (the fingerprint asked first), then the list read again with the account's connections.
         onDisconnect = if (state.canManageCards) ({ id -> scope.launch { if (model.disconnect(id)) model.loadConnectApps(null) } }) else null,
+        // Gap 13: a new key on the key sheet over the list, or a sign-in again, each behind the fingerprint.
+        onReplaceKey = if (state.canManageCards) model::openReplaceKey else null,
+        onSignInAgain = if (state.canManageCards) model::startReconnect else null,
         onConnectedNow = { grant -> model.dismissConnectedNow(); showingConnectApps = false; model.improveInCoach(grant.request.agent) },
         dismissConnectedNow = model::dismissConnectedNow,
       )
-      // Its approval, over the list: KIFF's words, the signature, then the vendor's page.
-      state.listApproval?.let { grantId ->
-        bot.tafs.app.views.ConnectApprovalSheet(
-          state, state.grants.firstOrNull { it.id == grantId },
-          loadWords = model::loadProfileWords,
-          onApprove = { grant -> model.startListApproval(grant.id, grant.digest) },
-          onClose = model::closeListApproval,
-          needsKey = state.listApprovalNeedsKey,
-          onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
-        )
-      }
+    }
+    // Its approval, over Connect apps' list, or a new key over a taf's own connection (gap 13): KIFF's words, the signature,
+    // then the vendor's page or planque's one read with the key.
+    state.listApproval?.let { grantId ->
+      bot.tafs.app.views.ConnectApprovalSheet(
+        state, state.grants.firstOrNull { it.id == grantId },
+        loadWords = model::loadProfileWords,
+        onApprove = { grant -> model.startListApproval(grant.id, grant.digest) },
+        onClose = model::closeListApproval,
+        needsKey = state.listApprovalNeedsKey,
+        onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
+      )
     }
     // A browser connection's live sign-in view, as planque serves it.
     state.siteSignIn?.let { view -> bot.tafs.app.views.SiteSignInScreen(view, onClose = model::closeSiteSignIn) }

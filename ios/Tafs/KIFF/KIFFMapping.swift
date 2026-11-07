@@ -133,7 +133,8 @@ enum KIFFMapping {
                                                                                           unitWords: t.unitWords) } },
                     calls: c.calls.map { CardTotal(limit: $0.limit, used: $0.used, window: window($0.window, $0.windowWords),
                                                    extra: $0.extraRoom, base: $0.baseLimit, roomEnds: $0.roomWindowEnd, pending: $0.pendingText) },
-                    counted: c.counted?.map { CardCounted(tool: $0.tool, title: $0.title, lines: $0.lines) })
+                    counted: c.counted?.map { CardCounted(tool: $0.tool, title: $0.title, lines: $0.lines) },
+                    eachItem: c.eachItem?.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
         }
         taf.doors = h.doors
         taf.avatarRim = h.avatarRim
@@ -175,6 +176,7 @@ enum KIFFMapping {
             entry.amount = c.amount
             entry.readOnly = c.readOnly
             entry.entityID = c.entityID
+            entry.action = c.actionName
             entry.onHash = c.onHash
             entry.onArg = c.onArg
             entry.answer = c.answer
@@ -314,7 +316,10 @@ enum KIFFMapping {
         if limit == 0 { return "Each call asks you first" }
         let nth = ordinal((b.used ?? limit) + (b.draw ?? 1))
         guard let raw = b.window else { return "Over its limit of \(limit) calls: this would be the \(nth)" }
-        return "\(limit) \(limit == 1 ? "call" : "calls") \(Window(raw).label): this would be the \(nth)"
+        // A total for each item apart says so, and which item: "… for each invoice id: this would be the 2nd for in_42".
+        let each = b.per.flatMap { $0.isEmpty ? nil : " for each " + $0.lowercased().replacingOccurrences(of: "_", with: " ") } ?? ""
+        let item = each.isEmpty ? "" : b.value.flatMap { $0.isEmpty ? nil : " for \($0)" } ?? ""
+        return "\(limit) \(limit == 1 ? "call" : "calls") \(Window(raw).label)\(each): this would be the \(nth)\(item)"
     }
 
     /// 1st, 2nd, 3rd, 11th, 21st.

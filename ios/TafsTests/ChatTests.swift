@@ -137,6 +137,37 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(model.awaitingReply(id), "the taf hasn't answered yet")
     }
 
+    /// A taf hands a setting to Coach with an `ask_coach` card (kiff/tafs#476, gap 15): it's in
+    /// its chat at its time, and no other card of its thread is; Ask Coach opens Coach on the
+    /// taf with its words in the box, nothing sent.
+    func testATafsAskCoachCardIsInItsChatAndAskCoachWritesItsWordsIn() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-11-06T08:00:00Z","from":"owner","kind":"message","text":"send from billing","session":"s1"},
+                     {"at":"2026-11-06T08:00:05Z","from":"taf","kind":"message","text":"That's Coach's to change.","session":"s1"}],
+         "components":[{"at":"2026-11-06T08:00:06Z","session":"s1","run":"r1","component":{"type":"ask_coach","id":"ask_1","text":"Send them from billing@acme.test"}},
+                       {"at":"2026-11-06T08:00:07Z","session":"s1","run":"r1","component":{"type":"notice","id":"n_1","text":"A notice"}},
+                       {"at":"2026-11-06T08:00:08Z","session":"s1","run":"r1","component":{"type":"ask_coach","id":"ask_2","text":" "}},
+                       {"at":"nope","component":{"type":"ask_coach","id":"ask_3","text":"Unreadable"}}]}
+        """)
+        await model.loadChat(id)
+        let items = model.chatItems(id)
+        XCTAssertEqual(items.map(\.id).filter { $0.hasPrefix("a|") }, ["a|ask_1"], "the ask_coach card with words, and no other")
+        XCTAssertEqual(items.last?.id, "a|ask_1", "after the taf's words")
+        XCTAssertEqual(model.chats[id]?.count, 2, "a card the app can't read leaves the thread as it is")
+
+        guard case .askCoach(let card) = try XCTUnwrap(items.last) else { return XCTFail("an ask_coach card") }
+        // Someone who doesn't manage the taf gets nothing: the card reads alone.
+        model.askCoachAbout(id, words: card.text)
+        XCTAssertFalse(model.coachOpen)
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]},"setup":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        await model.refreshPeople()
+        model.askCoachAbout(id, words: card.text)
+        XCTAssertEqual(model.setupDraft, "Send them from billing@acme.test")
+        XCTAssertTrue(model.coachOpen)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 0, "nothing is sent")
+    }
+
     /// A door's run shows in an open chat without reopening it (kiff/tafs#423, item 3): tafs
     /// cloud's `taf` push re-reads the chat that's been read. One never opened isn't read.
     func testATafPushReadsTheOpenChatAgain() async throws {
@@ -173,6 +204,42 @@ final class ChatTests: XCTestCase {
         await model.retryChat(unsent, to: id)
         XCTAssertTrue(model.chatState(id).unsent.isEmpty)
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
+    }
+
+    /// A message that isn't sent for any reason stays where it was written, marked not sent
+    /// with why, through a reload (kiff/tafs#476). Retry sends it once, a second tap finds
+    /// nothing; Edit gives its words back for the composer and takes it out of the thread.
+    func testAMessageThatIsntSentStaysThroughAReloadWithRetryAndEdit() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.loadChat(id)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (500, #"{"error":"boom"}"#)
+        let first = await model.sendChat("hello", to: id)
+        let second = await model.sendChat("and this", to: id)
+        XCTAssertFalse(first || second)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["hello", "and this"])
+        XCTAssertFalse(model.chatState(id).unsent[0].why.isEmpty, "it says why")
+        XCTAssertNil(model.chatErrors[id], "said on the message, not under the thread")
+
+        // A reload keeps them where they were written.
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["hello", "and this"])
+
+        // Retry, tapped twice: sent once, and it leaves "Not sent".
+        let hello = model.chatState(id).unsent[0]
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.sent = []
+        async let a: Void = model.retryChat(hello, to: id)
+        async let b: Void = model.retryChat(hello, to: id)
+        _ = await (a, b)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["and this"])
+
+        // Edit: its words, for the composer, and it's gone from the thread; a second Edit has nothing.
+        let other = model.chatState(id).unsent[0]
+        XCTAssertEqual(model.editUnsentChat(other, from: id), "and this")
+        XCTAssertNil(model.editUnsentChat(other, from: id))
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty)
     }
 
     /// A run kiff/agents refused says why in tafs cloud's words, on every path (kiff/tafs#396,

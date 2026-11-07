@@ -7,6 +7,7 @@ import bot.tafs.app.kiff.phoneAlerts
 import bot.tafs.app.kiff.timeZones
 
 import bot.tafs.app.model.ErrorWords
+import bot.tafs.app.model.Unsent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -130,6 +131,8 @@ private const val TRIAL_SUFFIX = "#trial"
 
 /** Coach's chat id: the account's Setup, drawn as a taf in the chat screen. */
 const val COACH_CHAT = "#coach"
+/** A taf's card that hands a setting to Coach: its words, and a button that opens Coach on the taf with them written in. */
+const val ASK_COACH = "ask_coach"
 
 /** The KIFF agent Coach acts as. */
 const val COACH_AGENT = "setup"
@@ -253,8 +256,15 @@ data class AppState(
   /** The answer each taf is writing now, as its run streams; and how its chat's latest run ended, when the chat says so. */
   val chatLive: Map<String, LiveAnswer> = emptyMap(),
   val chatEnded: Map<String, ChatEnd> = emptyMap(),
+  /**
+   * What tafs cloud holds of the owner's in each chat (docs/chat.md, the thread's `steering`): what waits for the taf to be done, and
+   * what a stopped run never read. tafs cloud's to keep and send; the app only shows it.
+   */
+  val chatSteering: Map<String, bot.tafs.app.kiff.WireSteering> = emptyMap(),
   /** What the owner sent that tafs cloud's thread doesn't have yet, by taf: kept on screen until it does. */
   val chatSent: Map<String, List<ChatMessage>> = emptyMap(),
+  /** The owner's messages that weren't sent, in each chat, kept as written until Retry or Edit (kiff/tafs#476). */
+  val chatUnsent: Map<String, List<Unsent>> = emptyMap(),
   /** Each halt as last read, by the taf's id, "" for the whole account. */
   val halts: Map<String, Halt> = emptyMap(),
   /** Why the last Halt or Resume didn't go through, shown on the Halt screen itself, where it was asked. */
@@ -321,6 +331,8 @@ data class AppState(
   val coachComponents: List<ShownComponent> = emptyList(),
   /** Each drive's end in Coach's chat, at its time, as tafs cloud keeps it (kiff/tafs#568). */
   val coachDrives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
+  /** A taf's own cards in its chat, by taf: its `ask_coach` cards alone, the settings it hands to Coach (kiff/tafs#476, gap 15). */
+  val tafCards: Map<String, List<ShownComponent>> = emptyMap(),
   /** The Coach conversation shown (kiff/tafs#73): one the owner reopened or started here, or null for the latest ones together. */
   val coachChat: String? = null,
   /** The owner asked for a new conversation: the next message starts one. */
@@ -499,7 +511,8 @@ data class AppState(
    * A taf's connections: the grants made for its KIFF agent that are connected, or whose sign-in planque holds while Coach chooses
    * the tools, so the owner can see and end them.
    */
-  fun connections(tafId: String): List<Grant> = grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn || it.needsReconnect) }
+  fun connections(tafId: String): List<Grant> =
+    grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn || it.needsReconnect || it.waitingSignIn) }
 
   /**
    * The taf's connection its vendor signed out, if one is: the taf can't use those tools until the owner signs in again, so it
@@ -685,6 +698,13 @@ data class AppState(
     files(tafId).any { it.state == PendingFile.State.Uploading } || (thinking(tafId) && files(tafId).any { it.ref != null })
 
   /**
+   * Whether Retry on a message that wasn't sent waits: while another message is on its way, and, for one with files, while the
+   * taf (or Coach) is at work, as Send waits for files. It stays Not sent meanwhile, words and files.
+   */
+  fun holdsRetry(tafId: String, unsent: Unsent): Boolean =
+    tafId in chatSending || (unsent.files.isNotEmpty() && thinking(tafId))
+
+  /**
    * A taf's chat as one timeline: its messages, the calls held for the owner where they were
    * held, and what became of earlier held calls (approved, refused) since the thread's first
    * message, each as one line.
@@ -703,7 +723,8 @@ data class AppState(
     profileDigest(grant)?.let { digest -> profileWords[grant.id]?.takeIf { it.profileSha256 == digest } }
 
   private fun chatItemsAsRead(tafId: String): List<ChatItem> {
-    val messages = chats[tafId] ?: emptyList()
+    // A message that wasn't sent stays where it was written, until Retry or Edit.
+    val messages = (chats[tafId] ?: emptyList()) + chatUnsent[tafId].orEmpty().map { it.message }
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
       // An older thread's answers, sent as text before cards were answered as data, read as what the owner chose.
@@ -712,6 +733,8 @@ data class AppState(
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }
     items += heldCalls(tafId).map { ChatItem.Held(it) }
+    // The settings it handed to Coach, each at its time (kiff/tafs#476, gap 15).
+    items += tafCards[tafId].orEmpty().map { ChatItem.Card(it, it.firstAt) }
     messages.firstOrNull()?.at?.let { first ->
       // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
       items += entries(tafId).filter {
@@ -1520,8 +1543,8 @@ class AppModel(
     _state.update { s ->
       s.copy(
         coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
-        chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
-        chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT,
+        chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
+        chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT, chatSteering = s.chatSteering - COACH_CHAT,
         chatErrors = s.chatErrors - COACH_CHAT,
       )
     }
@@ -1574,7 +1597,7 @@ class AppModel(
     _state.update { s ->
       s.copy(
         coachChat = session, coachFresh = false, coachImproving = null, coachContext = null,
-        chatSent = s.chatSent - COACH_CHAT, chatEnded = s.chatEnded - COACH_CHAT, chatErrors = s.chatErrors - COACH_CHAT,
+        chatSent = s.chatSent - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT, chatEnded = s.chatEnded - COACH_CHAT, chatErrors = s.chatErrors - COACH_CHAT,
       )
     }
     readThread(COACH_CHAT)
@@ -1965,6 +1988,23 @@ class AppModel(
   private fun handingOver(run: String): Boolean =
     _state.value.coachComponents.any { it.run == run && it.component.type == "result" && it.answer == null }
 
+  /** The keys of the `not_sent` messages Retry or Edit took (their hashes, never their words), kept across launches. */
+  private var notSentTaken: MutableSet<String>? = null
+
+  private fun settledNotSent(): Set<String> =
+    notSentTaken ?: (secrets.load(NOT_SENT_TAKEN)?.split('\n')?.filter { it.isNotBlank() }.orEmpty().toMutableSet()).also { notSentTaken = it }
+
+  private fun rememberNotSent(keys: List<String>) {
+    val shown = (settledNotSent() as MutableSet<String>).apply { addAll(keys) }
+    // The latest ones only: an older run is no longer a chat's latest, so its `not_sent` doesn't come back.
+    secrets.save(shown.toList().takeLast(NOT_SENT_KEPT).joinToString("\n"), NOT_SENT_TAKEN)
+  }
+
+  /** One `not_sent` message, by its run, time and words, hashed. */
+  private fun notSentKey(run: String?, words: bot.tafs.app.kiff.SteerWords): String =
+    java.security.MessageDigest.getInstance("SHA-256").digest("${run.orEmpty()}|${words.at}|${words.text}".toByteArray())
+      .joinToString("") { "%02x".format(it) }
+
   /** Reads a taf's thread from tafs cloud and shows it; what the owner sent that it doesn't have yet stays, dimmed. */
   /**
    * [alongside] changes the state in the same update that brings the thread: the live answer leaving as its words land in the thread,
@@ -1997,6 +2037,9 @@ class AppModel(
     }
     if (!current() || _state.value.mode != Mode.kiff) return
     val now = clock()
+    // What a stopped run never read (docs/chat.md): each becomes its own Not sent row once, in tafs cloud's words. It's remembered when
+    // Retry or Edit takes it, never before, so a restart brings it back until then, and a second Retry finds nothing, as on iOS.
+    val notSent = thread.steering?.let { st -> st.notSent.map { it to notSentKey(st.run, it) } }.orEmpty().filter { (_, key) -> key !in settledNotSent() }
     _state.update { read ->
       val s = alongside?.invoke(read) ?: read
       // What the owner sent stays on screen until the thread has it (kiff/tafs#138, 48).
@@ -2006,14 +2049,29 @@ class AppModel(
       val since = s.chatAwaiting[tafId]
       val answered = since != null && thread.messages.any { it.from == ChatMessage.From.taf && it.at >= since }
       val settled = since != null && (thread.working != null || answered || java.time.Duration.between(since, now) > java.time.Duration.ofSeconds(120))
+      // Coach handed the taf over and said its last words: its run is done, whatever the stream still holds open. Stop goes
+      // (kiff/tafs#476); tafs cloud's `working` still says if a run is at work.
+      val handedOver = tafId == COACH_CHAT && thread.working == null && waiting.isEmpty() && tafId !in s.chatSending &&
+        CoachWords.handedOver(thread.messages, thread.components, s.chatLive[tafId]?.session)
       s.copy(
+        chatLive = if (handedOver) s.chatLive - tafId else s.chatLive,
         chats = s.chats + (tafId to messages),
         chatSent = if (waiting.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to waiting),
         chatErrors = s.chatErrors - tafId,
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
-        chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
+        chatAwaiting = if (settled || handedOver) s.chatAwaiting - tafId else s.chatAwaiting,
+        chatSteering = thread.steering?.takeIf { it.held != null }?.let { s.chatSteering + (tafId to it) } ?: (s.chatSteering - tafId),
+        chatUnsent = s.chatUnsent[tafId].orEmpty().let { kept ->
+          // One already on screen isn't added again.
+          val fresh = notSent.filter { (_, key) -> kept.none { it.notSentKey == key } }
+          if (fresh.isEmpty()) s.chatUnsent else s.chatUnsent + (tafId to kept + fresh.map { (words, key) ->
+            val at = runCatching { java.time.Instant.parse(words.at) }.getOrNull() ?: now
+            Unsent(ChatMessage(at, ChatMessage.From.owner, words.text, Unsent.SESSION), words.why.orEmpty(), notSentKey = key)
+          })
+        },
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
+        tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
         // A taken card is the thread's once it holds its answer.
         cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { it.ref }.toSet() else s.cardsTaken,
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
@@ -2077,7 +2135,12 @@ class AppModel(
    * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
    */
   suspend fun reconnect(grant: Grant) {
-    val result = connect(grant.id, grant.id, grant.digest)
+    // A provider's connection is disconnected and connected again instead: planque would refuse, so nothing is asked.
+    if (grant.signsInThroughProvider) return note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant))
+    // KIFF's words for its profile, which the approval signs: read now, as the approval card reads them, wherever this starts.
+    loadProfileWords(grant.id)
+    _state.value.profileWordsErrors[grant.id]?.let { return note(grant.id, it) }
+    val result = connect(grant.id, grant.id, grant.digest, again = true)
     if (result is Connected.Failed) note(grant.id, result.why)
   }
 
@@ -3192,6 +3255,14 @@ class AppModel(
 
   fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
 
+  /**
+   * Replace a key-based connection's key (gap 13): the key sheet over Connect apps, for this grant. planque checks the signed
+   * key as for a first one; a grant it won't take a key for now says why there.
+   */
+  fun openReplaceKey(grant: bot.tafs.app.kiff.Grant) {
+    if (grant.takesKey) _state.update { it.copy(listApproval = grant.id, listApprovalNeedsKey = true) }
+  }
+
   /** Give the key on the sheet over Connect apps, run by the model as an approval is; then the list again. */
   fun startGiveKey(grantId: String, shownDigest: String, key: String) {
     scope.launch {
@@ -3287,7 +3358,11 @@ class AppModel(
       }
   }
 
-  suspend fun connect(cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null): Connected {
+  suspend fun connect(
+    cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null,
+    /** Sign in again (gap 13): a connected grant goes through its vendor's sign-in again, kept apart until this phone confirms it. */
+    again: Boolean = false,
+  ): Connected {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
       return Connected.Failed("Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.")
@@ -3317,7 +3392,7 @@ class AppModel(
       } catch (e: Exception) {
         return Connected.Failed("Couldn't read what to approve. ${ErrorWords.of(e)}", "couldn't read what to approve: ${e.message}")
       }
-      if (grant.connected) {
+      if (grant.connected && !again) {
         // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a draft. One confirmation confirms them.
         // Done only after a signature made here: a connection already connected with no Cards left to confirm signs nothing, so it
         // isn't approved. Coach hears that, and asks for what it needs as a new grant.
@@ -3346,7 +3421,8 @@ class AppModel(
         return Connected.Done(grant)
       }
       // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
-      if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect")) {
+      // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until this phone confirms the new one.
+      if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect") && !(again && grant.connected)) {
         return Connected.Failed("This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."))
       }
       if (!grant.digestMatches) return Connected.Failed(PlanqueError.DigestMismatch.message!!)
@@ -3981,7 +4057,78 @@ class AppModel(
    * didn't go, so the screen can keep them.
    */
   fun sendChat(text: String, tafId: String, withFiles: Boolean = false, onNotSent: (String) -> Unit) {
-    viewModelScope.launch { if (!deliverChat(text, tafId, withFiles)) onNotSent(text) }
+    viewModelScope.launch {
+      // One that was tried and refused stays in the thread, marked not sent: it never comes back to the box as well.
+      if (!deliverChat(text, tafId, withFiles) && _state.value.chatUnsent[tafId].orEmpty().none { it.message.text == text.trim() }) onNotSent(text)
+    }
+  }
+
+  /**
+   * Sends a message that wasn't sent, once: it leaves the thread's "Not sent" as it goes, so a second tap finds nothing to
+   * send. Refused again, it's back, with the new reason.
+   */
+  fun retryUnsent(tafId: String, message: ChatMessage) {
+    viewModelScope.launch { resendUnsent(tafId, message) }
+  }
+
+  /** [retryUnsent], waited for: whether it went. A second tap finds nothing left to send; refused again, deliverChat keeps it. */
+  suspend fun resendUnsent(tafId: String, message: ChatMessage): Boolean {
+    val s = _state.value
+    val kept = s.chatUnsent[tafId]?.firstOrNull { it.message == message } ?: return false
+    // Nothing is tried while it can't go: it stays Not sent, words and files, for a later Retry. Checked before it leaves
+    // the thread, since a send refused before it starts keeps nothing.
+    if (s.holdsRetry(tafId, kept)) return false
+    if (s.mode == Mode.kiff && s.taf(tafId)?.cloudId == null) {
+      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to NOT_ON_CLOUD)) }
+      return false
+    }
+    // Remembered only once it went: tried and not sent, it's still owed. Meanwhile it's held in memory, so the thread read the send
+    // makes, while tafs cloud still lists it, doesn't bring it back.
+    val unsent = takeUnsent(tafId, message, remember = false) ?: return false
+    unsent.notSentKey?.let { (settledNotSent() as MutableSet<String>).add(it) }
+    // With its own files, never the tray's.
+    val sent = if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
+    else deliverChat(message.text, tafId)
+    unsent.notSentKey?.let { key -> if (sent) rememberNotSent(listOf(key)) else (settledNotSent() as MutableSet<String>).remove(key) }
+    if (!sent) keepUnsent(tafId, unsent)
+    return sent
+  }
+
+  /**
+   * A Retry that didn't send: the Not sent row its failure kept carries [unsent]'s `not_sent` key on, as iOS's does, so a restart still
+   * brings it back. With no row kept (refused before it was tried), [unsent] is back as it was.
+   */
+  private fun keepUnsent(tafId: String, unsent: Unsent) = _state.update { s ->
+    val kept = s.chatUnsent[tafId].orEmpty()
+    val again = kept.indexOfLast { it.message.text == unsent.message.text && it.notSentKey == null }
+    val next = if (again >= 0) kept.toMutableList().also { it[again] = it[again].copy(notSentKey = unsent.notSentKey) } else kept + unsent
+    s.copy(chatUnsent = s.chatUnsent + (tafId to next))
+  }
+
+  /** Deletes a message that wasn't sent, for good: it leaves the thread, and one of tafs cloud's `not_sent` never comes back. */
+  fun deleteUnsent(tafId: String, message: ChatMessage) {
+    takeUnsent(tafId, message)
+  }
+
+  /** Takes a message that wasn't sent out of the thread, to change it in the box: its words, or null when it's gone already. */
+  fun editUnsent(tafId: String, message: ChatMessage): String? {
+    val unsent = takeUnsent(tafId, message) ?: return null
+    // Its files go back in the tray, with its words in the box.
+    putBackFiles(unsent.files, tafId)
+    return message.text
+  }
+
+  private fun takeUnsent(tafId: String, message: ChatMessage, remember: Boolean = true): Unsent? {
+    var taken: Unsent? = null
+    _state.update { s ->
+      val kept = s.chatUnsent[tafId].orEmpty()
+      taken = kept.firstOrNull { it.message == message }
+      val left = kept.filterNot { it.message == message }
+      s.copy(chatUnsent = if (left.isEmpty()) s.chatUnsent - tafId else s.chatUnsent + (tafId to left))
+    }
+    // One of tafs cloud's `not_sent`, taken by Edit or Delete: remembered now, so it never comes back.
+    if (remember) taken?.notSentKey?.let { rememberNotSent(listOf(it)) }
+    return taken
   }
 
   /**
@@ -4021,17 +4168,18 @@ class AppModel(
    * step, or, when none is at work (or it just ended), as a new message that starts one. It shows at once, dimmed,
    * until the thread has it; then the thread is read and followed as the taf answers.
    */
-  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false): Boolean {
+  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false, again: List<PendingFile> = emptyList()): Boolean {
     val taf = _state.value.taf(tafId)
     val cloudId = taf?.cloudId
     if (cloudId == null) {
-      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "This taf isn't running on tafs cloud, so it can't be messaged.")) }
+      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to NOT_ON_CLOUD)) }
       return false
     }
     if (tafId in _state.value.chatSending) return false
     // Files go with a message of their own, never into a run at work, and never while one is still going up.
     if (withFiles && _state.value.holdsSend(tafId)) return false
-    val files = if (withFiles) takeFiles(tafId) else emptyList()
+    // A message sent again (Retry) goes with its own files; a new one takes the tray's.
+    val files = again.ifEmpty { if (withFiles) takeFiles(tafId) else emptyList() }
     val refs = files.mapNotNull { it.ref }
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     val generation = accountGeneration
@@ -4062,11 +4210,23 @@ class AppModel(
           var steered = false
           if (run != null && refs.isEmpty()) {
             try {
-              cloud.steer(cloudId, run, words)
+              val steer = cloud.steer(cloudId, run, words)
               steered = true
+              // Sent once (docs/chat.md): what the run didn't take is tafs cloud's, held in this chat until the taf is done, or sent
+              // at once as the next message. The thread shows which, a held one as what waits, so its pending copy goes now.
+              if (steer.sent != null || steer.held != null || steer.status.isEmpty()) {
+                if (current() && coach) steer.sent?.let { settleCoachChat(it.session) }
+                _state.update { s ->
+                  val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
+                  s.copy(
+                    chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
+                    chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
+                  )
+                }
+              }
             } catch (e: CloudError) {
-              // A run that has ended throws 409, and the message goes as a new one.
-              if (e.status != 409) throw e
+              // An older tafs cloud, which holds nothing: a run that has ended throws 409 with no code, and the message goes as a new one.
+              if (e.status != 409 || e.code != null) throw e
             }
           }
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
@@ -4082,17 +4242,32 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (current()) {
+      if (current() && e is CloudError && e.code == HELD_FULL) {
+        // As much waits as one message can be: tafs cloud's words, as they are, and the owner's go back in the box to send later.
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
-            chatErrors = s.chatErrors + (tafId to sendFailure(e, taf.name)),
+            chatErrors = s.chatErrors + (tafId to (e.message ?: "")),
           )
         }
-        // Its files didn't go: back in the tray for the next try.
-        putBackFiles(files, tafId)
+        return false
+      }
+      if (current()) {
+        _state.update { s ->
+          val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
+          // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files)
+          s.copy(
+            chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
+            chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
+            chatUnsent = if (words.isBlank()) s.chatUnsent else s.chatUnsent + (tafId to (s.chatUnsent[tafId].orEmpty() + unsent)),
+            chatErrors = if (words.isBlank()) s.chatErrors + (tafId to sendFailure(e, taf.name)) else s.chatErrors,
+          )
+        }
+        // Its files didn't go. With its words kept as not sent, they stay with it for Retry; files alone go back in the tray.
+        if (words.isBlank()) putBackFiles(files, tafId)
       }
       return false
     } finally {
@@ -4543,9 +4718,18 @@ class AppModel(
    * not when the owner didn't confirm, and then the call still waits.
    *
    * [confirmed]: the owner confirmed this step already (installing the version Coach asked for), so the answer is signed
-   * without asking again. [installed]: the version Coach's held call names is live already.
+   * without asking again. [installed]: the version Coach's held call names is live already. [approvedWithCard]: KIFF approved
+   * the call with the Card's confirm, under its one fingerprint, so nothing is signed or sent. [presigned]: the answer was signed
+   * before the version went live, under the install's one fingerprint.
    */
-  suspend fun answer(call: HeldCall, answer: Answer, confirmed: Boolean = false, installed: Boolean = false): Boolean {
+  suspend fun answer(
+    call: HeldCall,
+    answer: Answer,
+    confirmed: Boolean = false,
+    installed: Boolean = false,
+    approvedWithCard: Boolean = false,
+    presigned: SignedAnswer? = null,
+  ): Boolean {
     val before = _state.value
     if (before.held.none { it.id == call.id }) return false
     // Approving Coach's install is installing it (kiff/tafs#206): the switch and its Card come first, then this answer, so
@@ -4555,6 +4739,13 @@ class AppModel(
       return false
     }
     val kiffId = call.kiffId
+    if (approvedWithCard && kiffId != null) {
+      // KIFF holds the answer already: the Record says so, and the paused run goes on.
+      applyAnswer(call, answer, null)
+      goOn(call.tafId, kiffId)
+      refresh()
+      return true
+    }
     // A call KIFF holds is answered here only when KIFF checks this phone's signature on it (kiff/tafs#138).
     if (kiffId != null && !before.canAnswer(call)) {
       fail(
@@ -4576,37 +4767,15 @@ class AppModel(
       return false
     }
     val generation = accountGeneration
-    val reason = "Answer ${call.proposed.summary}"
-    var signed: KiffClient.AnswerSignature? = null
-    val signature = try {
-      val tenant = kiffTenant
-      val version = call.accountingVersion
-      if (kiffId != null && tenant != null && version != null) {
-        // KIFF's message: this hold, this answer, the hold's version, and the time, taken once the owner confirmed.
-        val step = (answer as? Answer.NextStep)?.step
-        var signedAt = ""
-        val message = {
-          signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
-          KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
-        }
-        // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
-        // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
-        // approval key doesn't approve with the screen lock: it says to add a fingerprint. Refusing is the signing key's.
-        val approving = answer is Answer.ApproveOnce || answer is Answer.ExtraRoom
-        if (approving && !sessionHasApprovalKey && signer.approvalPublicKeyDER.isNotEmpty()) registerApprovalKey()
-        when {
-          approving && (sessionHasApprovalKey || signer.approvalPublicKeyDER.isEmpty()) -> signer.signApproval(reason, message)
-          confirmed -> signer.signConfirmed(message())
-          else -> signer.sign(reason, message)
-        }.also { signed = KiffClient.AnswerSignature(signedAt, it) }
-      } else {
-        signer.sign(Messages.answer(call.id, answer), reason)
-      }
+    val answered = try {
+      presigned ?: signAnswer(call, answer, "Answer ${call.proposed.summary}", confirmed)
     } catch (e: SignerException) {
       // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept).
       fail("${notSigned(e, "Not sent: it wasn't confirmed.")} ${bot.tafs.app.model.ApprovalWords.KEPT}")
       return false
     }
+    val signature = answered.value
+    val signed = answered.kiff
     // The session ended, or another began, while the prompt was up: nothing of this answer goes to the new one.
     if (generation != accountGeneration) return false
 
@@ -4641,6 +4810,50 @@ class AppModel(
     return true
   }
 
+  /** An answer to a held call, signed: [value] for the Record, and [kiff] what KIFF checks, for a call KIFF holds. */
+  class SignedAnswer(val value: String, val kiff: KiffClient.AnswerSignature?)
+
+  /**
+   * Signs [answer] to [call], behind the prompt with [reason]'s words: KIFF's message for a call KIFF holds, else the sample's.
+   * Throws [SignerException] when the owner didn't confirm.
+   */
+  private suspend fun signAnswer(call: HeldCall, answer: Answer, reason: String, confirmed: Boolean): SignedAnswer {
+    val kiffId = call.kiffId
+    val tenant = kiffTenant
+    val version = call.accountingVersion
+    if (kiffId == null || tenant == null || version == null) return SignedAnswer(signer.sign(Messages.answer(call.id, answer), reason), null)
+    // KIFF's message: this hold, this answer, the hold's version, and the time, taken once the owner confirmed.
+    val step = (answer as? Answer.NextStep)?.step
+    var signedAt = ""
+    val message = {
+      signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
+      KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
+    }
+    // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
+    // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
+    // approval key doesn't approve with the screen lock: it says to add a fingerprint. Refusing is the signing key's.
+    val approving = answer is Answer.ApproveOnce || answer is Answer.ExtraRoom
+    if (approving && !sessionHasApprovalKey && signer.approvalPublicKeyDER.isNotEmpty()) registerApprovalKey()
+    val value = when {
+      approving && (sessionHasApprovalKey || signer.approvalPublicKeyDER.isEmpty()) -> signer.signApproval(reason, message)
+      confirmed -> signer.signConfirmed(message())
+      else -> signer.sign(reason, message)
+    }
+    return SignedAnswer(value, KiffClient.AnswerSignature(signedAt, value))
+  }
+
+  /**
+   * Coach's held call as a draft's confirm names it, so KIFF approves it under the confirm's fingerprint; null where this phone
+   * can't answer it (no signing key in KIFF, no approval key, a call KIFF doesn't hold).
+   */
+  private fun holdAnswered(call: HeldCall): KiffClient.HoldAnswered? {
+    val id = call.kiffId ?: return null
+    val version = call.accountingVersion ?: return null
+    val s = _state.value
+    if (!s.canAnswer(call) || s.approvalKeyLost) return null
+    return KiffClient.HoldAnswered(id, version)
+  }
+
   /**
    * The run paused on the answered call goes on with the answer (kiff/tafs#102): the chat shows the taf working
    * and then its reply, as after a message. It is asked to go on now, not when KIFF's alert reaches it
@@ -4663,7 +4876,7 @@ class AppModel(
     }
   }
 
-  private fun applyAnswer(call: HeldCall, answer: Answer, signature: String) {
+  private fun applyAnswer(call: HeldCall, answer: Answer, signature: String?) {
     resolve(call)
     val taf = _state.value.taf(call.tafId)
     val summary = call.proposed.summary
@@ -4791,7 +5004,10 @@ class AppModel(
    * version that brings a Card with nothing shown signs nothing.
    *
    * [approving]: the held version_install of Coach's this install answers (kiff/tafs#206): approved once the version is
-   * live, signed under the same confirmation. What's in the way of the switch is stopped first.
+   * live, under the same one fingerprint. With a Card, the Card's confirm names it, and KIFF approves it with the Card; a
+   * KIFF that doesn't, or a call it didn't take, is answered as before, with a fingerprint of its own. Without a Card, the
+   * answer is signed before the version goes live and sent after, so its fingerprint is the confirmation. What's in the
+   * way of the switch is stopped first.
    */
   suspend fun useVersion(version: Version, tafId: String, shownDraft: String? = null, approving: HeldCall? = null): Boolean {
     val s = _state.value
@@ -4801,15 +5017,22 @@ class AppModel(
     if (s.mode != Mode.kiff || tenant == null || taf == null || cloudId == null) return false
     if (version.live || tafId in s.switchingVersion) return false
     _state.update { it.copy(switchingVersion = it.switchingVersion + (tafId to version.n), changedVersionCards = it.changedVersionCards - tafId) }
+    val held = approving?.let { HeldInstall(it) }
     try {
-      if (!install(version, tafId, taf.name, cloudId, tenant, shownDraft, stopBlocking = approving != null)) return false
+      if (!install(version, tafId, taf.name, cloudId, tenant, shownDraft, stopBlocking = approving != null, held = held)) return false
     } finally {
       kiff.setupSigner = null
       _state.update { it.copy(switchingVersion = it.switchingVersion - tafId) }
     }
     // Live: now Coach's held call is approved, with the confirmation just given.
-    if (approving != null) answer(approving, Answer.ApproveOnce, confirmed = true)
+    if (held != null) answer(held.call, Answer.ApproveOnce, confirmed = true, approvedWithCard = held.approvedWithCard, presigned = held.signed)
     return true
+  }
+
+  /** Coach's held install as [install] goes: approved by KIFF with the Card's confirm, or its answer signed before going live. */
+  private class HeldInstall(val call: HeldCall) {
+    var approvedWithCard = false
+    var signed: SignedAnswer? = null
   }
 
   /** Coach's held install, ready for the owner: the taf, the version, and whether it brings a Card to read before the confirmation. */
@@ -4843,7 +5066,16 @@ class AppModel(
     return CoachInstall(call, taf.id, version, hasCard = sw.draft != null)
   }
 
-  private suspend fun install(version: Version, tafId: String, name: String, cloudId: String, tenant: String, shownDraft: String?, stopBlocking: Boolean = false): Boolean {
+  private suspend fun install(
+    version: Version,
+    tafId: String,
+    name: String,
+    cloudId: String,
+    tenant: String,
+    shownDraft: String?,
+    stopBlocking: Boolean = false,
+    held: HeldInstall? = null,
+  ): Boolean {
     val generation = accountGeneration
     versionError(tafId, null)
     kiff.tenant = tenant
@@ -4888,12 +5120,18 @@ class AppModel(
     }
     // A claimed draft is later than confirmed, its Cards issued all the same.
     if (draft != null && !draft.confirmed && draft.status != "claimed") {
+      // Coach's held install goes with the Card's confirm, so the one fingerprint approves both, and the prompt says so.
+      val hold = held?.let { holdAnswered(it.call) }
       try {
-        confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Use version ${version.n} of $name, with its Card")
+        confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Use version ${version.n} of $name, with its Card${if (hold != null) ", as Coach asked" else ""}")
         if (generation != accountGeneration) return false
         val signer = signer
         kiff.setupSigner = { signer.signConfirmed(it) }
-        kiff.confirmDraft(draft.id, draft.version)
+        if (hold == null) {
+          kiff.confirmDraft(draft.id, draft.version)
+        } else {
+          held.approvedWithCard = kiff.confirmDraft(draft.id, draft.version, hold).approvedHold(hold.id)
+        }
       } catch (e: SignerException) {
         // The owner backed out before the Card changed: the taf runs again as it was.
         if (generation == accountGeneration) {
@@ -4916,6 +5154,18 @@ class AppModel(
       }
       // Within the step the owner just confirmed: Coach's tools, if this phone hasn't given them yet.
       if (_state.value.coachTools?.toGive == true) giveCoachTools()
+    } else if (held != null && holdAnswered(held.call) != null) {
+      // Coach's install with no Card: approving Coach's held call is the confirmation, signed now, before the version goes
+      // live, and sent once it is. One fingerprint, and nothing goes live unless the owner gave it.
+      try {
+        held.signed = signAnswer(held.call, Answer.ApproveOnce, "Use version ${version.n} of $name, as Coach asked", confirmed = false)
+      } catch (e: SignerException) {
+        if (generation == accountGeneration) {
+          cancelSwitch(tafId)
+          notSigned(e, "").takeIf { it.isNotEmpty() }?.let { versionError(tafId, it) }
+        }
+        return false
+      }
     } else {
       try {
         signer.sign("tafs.version.v1|$tenant|$cloudId|${version.n}".toByteArray(), "Use version ${version.n} of $name")
@@ -5130,6 +5380,7 @@ class AppModel(
           openTrials = it.openTrials - tafId,
           chats = it.chats - chat,
           chatSent = it.chatSent - chat,
+          chatUnsent = it.chatUnsent - chat,
           chatErrors = it.chatErrors - chat,
           chatWorking = it.chatWorking - chat,
           chatAwaiting = it.chatAwaiting - chat,
@@ -6055,6 +6306,16 @@ class AppModel(
   }
 
   companion object {
+    /** Where the keys of the `not_sent` messages Retry or Edit took are kept, and how many: iOS keeps the same 500. */
+    const val NOT_SENT_TAKEN = "tafs.chat.not-sent-taken"
+    const val NOT_SENT_KEPT = 500
+
+    /** tafs cloud's refusal of a message when as much as one message can be already waits for the taf (docs/chat.md). */
+    const val HELD_FULL = "held_full"
+
+    /** Why a message can't go to a taf that tafs cloud doesn't run. */
+    const val NOT_ON_CLOUD = "This taf isn't running on tafs cloud, so it can't be messaged."
+
     /**
      * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and the
      * digest the person was shown for the connect step; the card's draft and the version the person was shown for the Cards

@@ -113,6 +113,7 @@ private struct ConnectedAppSheet: View {
     let activity: (String) -> Void
     @State private var disconnect = false
     @State private var busy = false
+    @State private var replacing: PlanqueClient.Grant?
     var body: some View {
         NavStack {
             List {
@@ -120,6 +121,23 @@ private struct ConnectedAppSheet: View {
                     Text(app.status_words).foregroundColor(app.reconnect ? Theme.amberText : Theme.soft)
                     if app.reconnect, model.manages(tafID) {
                         Button("Sign in again") { Task { await model.reconnectApp(app.id); await model.loadTafSetup(tafID) } }
+                    }
+                    // Gap 13, where an owner whose taf fails looks first: its last failed call, and
+                    // how to fix the connection.
+                    if let g = model.grants.first(where: { $0.id == app.id }) {
+                        if let failed = model.lastFailure(g) { Text(failed).scaledFont(13).foregroundColor(Theme.no) }
+                        if !app.reconnect, model.manages(tafID), g.connected || g.needsReconnect {
+                            if g.signsInThroughProvider {
+                                Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
+                            } else {
+                                Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
+                                    if g.takesKey { replacing = g } else { Task { await model.reconnect(g); await model.loadTafSetup(tafID) } }
+                                }
+                                .disabled(model.connecting != nil)
+                                .accessibilityIdentifier("taf.fix." + g.id)
+                                .confirming()
+                            }
+                        }
                     }
                     if let error = model.reconnectErrors[app.id] { Text(error).foregroundColor(Theme.no) }
                 }
@@ -150,6 +168,9 @@ private struct ConnectedAppSheet: View {
             }
             .navigationTitle(app.name).screenBackground()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .sheet(item: $replacing) { g in
+                ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
+            }
             .confirmationDialog("Disconnect \(app.name)?", isPresented: $disconnect, titleVisibility: .visible) {
                 Button("Disconnect", role: .destructive) {
                     busy = true
@@ -221,20 +242,60 @@ private struct SourceActivityRow: View {
         return result
     }
     var body: some View {
-        Button { receipt = true } label: {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                    Text(entry.detail).scaledFont(13).foregroundColor(Theme.soft)
+        VStack(alignment: .leading, spacing: 6) {
+            Button { receipt = true } label: {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(entry.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                        Text(entry.detail).scaledFont(13).foregroundColor(Theme.soft)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing) {
+                        Text(entry.time).scaledFont(12).foregroundColor(Theme.dim)
+                        if let amount = entry.amount_text { Text(amount).scaledFont(13, weight: .semibold).foregroundColor(Theme.ink) }
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5).contentShape(Rectangle())
+            }.buttonStyle(.drivablePlain).accessibilityHint("Shows the receipt")
+            if let next = entry.next { NextStepRow(tafID: tafID, entry: entry, next: next) }
+        }
+        .sheet(isPresented: $receipt) { if let evidence { ReceiptView(entry: evidence).environmentObject(model) } }
+    }
+}
+
+/// A not-done call's next step, as tafs cloud says it (kiff/tafs#476, gap 10): Connect it again
+/// (signing in again where its vendor signed it out, else Connect apps), Ask Coach (Coach on
+/// this taf, its first message written in, nothing sent), or a line. Only someone who manages
+/// the taf gets a button; anyone else, and a kind this app doesn't know, reads the words alone.
+private struct NextStepRow: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+    let entry: TafsCloud.ActivityEntry
+    let next: TafsCloud.NextStep
+    @State private var connect = false
+    @State private var busy = false
+    var body: some View {
+        let action = model.nextStep(next, tafID: tafID, fallback: "\(entry.title): \(entry.detail)")
+        let may: Bool = {
+            guard model.mode == .kiff, model.manages(tafID) else { return false }
+            if case .askCoach = action { return model.mayUseCoach }
+            return action != .line
+        }()
+        if may {
+            Button(next.words) {
+                switch action {
+                case .signInAgain(let grant):
+                    busy = true
+                    Task { await model.reconnect(grant); busy = false }
+                case .askCoach(let words): model.askCoachAbout(tafID, words: words)
+                case .connectApps: connect = true
+                case .line: break
                 }
-                Spacer()
-                VStack(alignment: .trailing) {
-                    Text(entry.time).scaledFont(12).foregroundColor(Theme.dim)
-                    if let amount = entry.amount_text { Text(amount).scaledFont(13, weight: .semibold).foregroundColor(Theme.ink) }
-                }
-            }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5).contentShape(Rectangle())
-        }.buttonStyle(.drivablePlain).accessibilityHint("Shows the receipt")
-            .sheet(isPresented: $receipt) { if let evidence { ReceiptView(entry: evidence).environmentObject(model) } }
+            }
+            .buttonStyle(OutlineButtonStyle()).disabled(busy)
+            .sheet(isPresented: $connect) { NavStack { ConnectAppsView().environmentObject(model) } }
+        } else {
+            Text(next.words).scaledFont(13).foregroundColor(Theme.soft)
+        }
     }
 }
 

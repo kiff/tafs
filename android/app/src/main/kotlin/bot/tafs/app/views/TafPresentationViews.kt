@@ -1,6 +1,7 @@
 package bot.tafs.app.views
 
 import bot.tafs.app.drive.confirms
+import bot.tafs.app.model.ConnectionWords
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.verticalScroll
@@ -122,6 +123,17 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
           if (action.words.isNotBlank()) Text(action.words, style = scaled(13, color = Theme.soft))
         }
         if (app.reconnect && state.manages(taf.id)) TextButton({ actions.connections.reconnectId(app.id) }, enabled = state.connecting == null) { Text("Sign in again", color = Theme.amberText) }
+        // Gap 13, where an owner whose taf fails looks first: its last failed call, and how to fix the connection.
+        state.grants.firstOrNull { it.id == app.id }?.let { grant ->
+          ConnectionWords.lastFailure(grant, state.record)?.let { Text(it, style = scaled(13, color = Theme.no)) }
+          if (!app.reconnect && state.manages(taf.id) && (grant.connected || grant.needsReconnect)) {
+            if (grant.signsInThroughProvider) Text(ConnectionWords.throughProvider(grant), style = scaled(13, color = Theme.soft))
+            else TextButton(
+              { if (grant.takesKey) actions.connections.replaceKey(grant) else actions.connections.reconnect(grant) },
+              enabled = state.connecting == null, modifier = Modifier.confirms(),
+            ) { Text(if (grant.takesKey) ConnectionWords.REPLACE_KEY else ConnectionWords.SIGN_IN_AGAIN, color = Theme.amberText) }
+          }
+        }
         state.coachNotes[app.id]?.let { Text(it, color = Theme.no) }
         Eyebrow("What it may do")
         app.actions.forEach { action ->
@@ -155,7 +167,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
 }
 
 @Composable
-internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, selection: String, clearSelection: () -> Unit, modifier: Modifier = Modifier) {
+internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, selection: String, clearSelection: () -> Unit, modifier: Modifier = Modifier, onConnectApps: () -> Unit = {}) {
   var filter by rememberSaveable(taf.id, selection) { mutableStateOf("all") }
   val key = "${taf.id}:$filter:$selection"; val cache = state.activityPages[key]
   val list = rememberLazyListState(); val scope = rememberCoroutineScope()
@@ -186,7 +198,7 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     }
     cache?.pages?.forEachIndexed { page, value -> value.groups.forEach { group ->
       if (group.title.isNotBlank()) item(key = "heading-$page-${group.id}") { Eyebrow(group.title) }
-      items(group.entries, key = { it.id }) { entry -> SourceActivityRow(entry, taf, state) }
+      items(group.entries, key = { it.id }) { entry -> SourceActivityRow(entry, taf, state, actions, onConnectApps) }
     } }
     cache?.error?.let { error -> item { Text(error, color = Theme.no); TextButton({ scope.launch { actions.loadActivity(taf.id, filter, false, selection) } }) { Text("Try again", color = Theme.amberText) } } }
     if (cache == null || cache.loading) item { CircularProgressIndicator(Modifier.size(24.dp), color = Theme.amber) }
@@ -197,7 +209,7 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
 
 /** The adapter copies signed evidence; it does not derive a decision or a display sentence. */
 @Composable
-private fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppState) {
+private fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppState, actions: TafActions, onConnectApps: () -> Unit) {
   var open by remember { mutableStateOf(false) }
   val kind = runCatching { RecordEntry.Kind.valueOf(if (source.kind == "not_done") "notDone" else source.kind) }.getOrDefault(RecordEntry.Kind.unknown)
   val call = source.call
@@ -209,6 +221,7 @@ private fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppStat
     Text(source.detail, style = scaled(13, color = Theme.soft))
     source.amountText?.let { Text(it, style = scaled(14, FontWeight.Medium, Theme.ink)) }
     if (call.receipt?.status == "signed") Text("KIFF receipt", style = scaled(12, color = Theme.ok))
+    source.next?.let { NextStepRow(it, source, taf, state, actions, onConnectApps) }
   }
   if (open) ReceiptSheet(entry, state) { open = false }
 }
@@ -269,3 +282,35 @@ internal fun MemorySummaryPanel(taf: Taf, state: AppState, actions: TafActions) 
 
 /** A workflow step in an app's sheet: "2 · List your disputes", with its words below only when tafs cloud sends any. */
 internal fun workflowLine(step: WorkflowStep): String = "${step.number} · ${step.label}" + if (step.words.isEmpty()) "" else "\n${step.words}"
+
+/**
+ * A not-done call's next step, as tafs cloud says it (kiff/tafs#476, gap 10): Connect it again (signing in again where its vendor
+ * signed it out, else Connect apps), Ask Coach (Coach on this taf, its first message written in, nothing sent), or a line. Only
+ * someone who manages the taf gets a button; anyone else, and a kind this app doesn't know, reads the words alone.
+ */
+@Composable
+private fun NextStepRow(next: bot.tafs.app.kiff.NextStep, source: TafActivityEntry, taf: Taf, state: AppState, actions: TafActions, onConnectApps: () -> Unit) {
+  val action = bot.tafs.app.model.NextStepWords.action(next, taf.id, state.grants, "${source.title}: ${source.detail}")
+  val may = state.manages(taf.id) && when (action) {
+    is bot.tafs.app.model.NextStepWords.Action.AskCoach -> state.mayUseCoach
+    is bot.tafs.app.model.NextStepWords.Action.SignInAgain -> !state.approvalKeyLost
+    else -> true
+  }
+  if (action == bot.tafs.app.model.NextStepWords.Action.Line || !may) {
+    Text(next.words, style = scaled(13, color = Theme.soft))
+    return
+  }
+  val busy = action is bot.tafs.app.model.NextStepWords.Action.SignInAgain && state.connecting != null
+  bot.tafs.app.design.OutlineButton(
+    if (action is bot.tafs.app.model.NextStepWords.Action.SignInAgain && state.connecting == action.grant.id) state.connectStep ?: next.words else next.words,
+    {
+      when (action) {
+        is bot.tafs.app.model.NextStepWords.Action.SignInAgain -> actions.connections.reconnect(action.grant)
+        is bot.tafs.app.model.NextStepWords.Action.AskCoach -> actions.askCoachAbout(taf.id, action.words)
+        else -> onConnectApps()
+      }
+    },
+    Modifier.fillMaxWidth(),
+    enabled = !busy,
+  )
+}

@@ -320,9 +320,13 @@ final class KIFFClient {
             var used: Int64? = nil
             var draw: Int64? = nil
             var window: String? = nil
+            /// For a total for each item apart: the argument it counts by, and the item this
+            /// call was on ("invoice_id", "in_42").
+            var per: String? = nil
+            var value: String? = nil
 
             enum CodingKeys: String, CodingKey {
-                case outcome, reason, limit, quantity, unit, scale, used, draw, window
+                case outcome, reason, limit, quantity, unit, scale, used, draw, window, per, value
                 case unitUnavailable = "unit_unavailable", unitAmbiguous = "unit_ambiguous"
             }
         }

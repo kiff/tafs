@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -90,6 +91,25 @@ class ChatKiffTest {
     val request = transport.requestsTo(conversation).single()
     assertEquals("https://cloud.tafs.kiff.dev/v1/tafs/taf_1/conversation", request.url)
     assertEquals("Bearer at_1", request.headers["Authorization"])
+  }
+
+  /** A taf hands a setting to Coach with an `ask_coach` card (kiff/tafs#476, gap 15): it's in its chat at its time, and no other card is. */
+  @Test fun aTafsAskCoachCardIsInItsChatAndNoOtherCardIs() = runTest {
+    readsOf()
+    val card = { type: String, id: String, at: String -> """{"at":"$at","session":"s1","run":"r1","component":{"type":"$type","id":"$id","text":"Send them from billing@acme.test"}}""" }
+    transport.answer(conversation, 200,
+      """{"messages":[${owner("send from billing", "2026-10-28T08:00:00Z")},${taf("That's Coach's to change.", "2026-10-28T08:00:05Z")}],
+          "components":[${card("ask_coach", "ask_1", "2026-10-28T08:00:06Z")},${card("notice", "n_1", "2026-10-28T08:00:07Z")}]}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    val items = m.state.value.chatItems("refunds-1")
+    assertEquals(listOf("send from billing", "That's Coach's to change."), items.filterIsInstance<ChatItem.Message>().map { it.message.text })
+    val cards = items.filterIsInstance<ChatItem.Card>()
+    assertEquals(listOf("ask_1"), cards.map { it.shown.component.id })
+    assertEquals("Send them from billing@acme.test", cards.single().shown.component.text)
+    assertTrue("after the taf's words", items.indexOf(cards.single()) > items.indexOfFirst { it is ChatItem.Message && it.message.from == ChatMessage.From.taf })
+    // Coach's own chat keeps its cards apart: none of a taf's.
+    assertTrue(m.state.value.coachComponents.isEmpty())
   }
 
   @Test fun aRunsKickoffAndWhatATafDidAreKept() = runTest {
@@ -287,10 +307,179 @@ class ChatKiffTest {
     val body = KiffClientJson.parse(transport.requestsTo("POST /v1/tafs/taf_1/steer").single().body!!)
     assertEquals("run_1", body.getValue("run").jsonPrimitive.content)
     assertEquals("also check #2", body.getValue("text").jsonPrimitive.content)
+    // tafs cloud holds what the run doesn't take (docs/chat.md): the app sends it once.
+    assertEquals("true", body.getValue("hold").jsonPrimitive.content)
     assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
   }
 
+  // MARK: What the run doesn't take, held by tafs cloud (docs/chat.md)
+
+  private val steer = "POST /v1/tafs/taf_1/steer"
+  private val held = """{"text":"one more","at":"2026-10-28T09:00:05Z"}"""
+  private fun steering(json: String) = ""","steering":$json"""
+
+  @Test fun aMessageTheRunDidntTakeWaitsAtTafsCloudShownAsWaitingNeverResentNorShownAsSent() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
+    transport.answer(steer, 202, """{"held":$held}""")
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working + steering("""{"run":"run_1","status":"RUNNING","untaken":[],"held":$held}""")))
+    val m = model()
+    m.loadChat("refunds-1")
+    assertTrue(m.deliverChat("one more", "refunds-1"))
+    assertEquals(1, transport.requestsTo(steer).size)
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages/stream").isEmpty())
+    assertEquals("one more", m.state.value.chatSteering["refunds-1"]?.held?.text)
+    assertTrue("shown as what waits, not as sent", m.messages().none { it.text == "one more" })
+    assertTrue(m.state.value.chatSent["refunds-1"].isNullOrEmpty())
+  }
+
+  @Test fun aMessageTafsCloudSentAtOnceAsTheNextMessageIsTheThreadsNotSentAgain() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
+    transport.answer(steer, 202, """{"sent":{"run":"run_2","session":"s1"}}""")
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), owner("one more", "2026-10-28T09:00:05Z"), working = ""","working":{"session":"s1","run":"run_2"}"""))
+    val m = model()
+    m.loadChat("refunds-1")
+    assertTrue(m.deliverChat("one more", "refunds-1"))
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages/stream").isEmpty())
+    assertEquals("once, as the thread has it", 1, m.messages().count { it.text == "one more" })
+    assertNull(m.state.value.chatSteering["refunds-1"])
+  }
+
+  @Test fun asMuchWaitingAsOneMessageCanBeSaysTafsCloudsWordsAndGivesTheWordsBackForLater() = runTest {
+    readsOf()
+    val full = "Up to 10 messages, 2,000 characters in all, can wait for the taf. Send this once it's done."
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
+    transport.answer(steer, 409, """{"error":"$full","code":"held_full","held":$held}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("and this", "refunds-1"))
+    assertEquals(full, m.state.value.chatErrors["refunds-1"])
+    // Not a "Not sent" row: the words go back to the box (sendChat's onNotSent), and nothing goes as a new message.
+    assertNull(m.state.value.chatUnsent["refunds-1"])
+    assertTrue(m.messages().none { it.text == "and this" })
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages/stream").isEmpty())
+  }
+
+  private val why = "You stopped it before it read this."
+  private fun stopped(vararg texts: String) = steering(
+    """{"run":"run_1","status":"CANCELLED","untaken":[],"not_sent":[${texts.joinToString(",") { """{"text":"$it","at":"2026-10-28T09:00:05Z","why":"$why"}""" }}]}""",
+  )
+
+  @Test fun whatAStoppedRunNeverReadBecomesItsOwnNotSentRowOnceInTafsCloudsWords() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    val m = model()
+    m.loadChat("refunds-1")
+    m.loadChat("refunds-1")
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("one more", unsent.message.text)
+    assertEquals(why, unsent.why)
+    assertEquals("in the thread as written, once", 1, m.state.value.chatItems("refunds-1").count { (it as? ChatItem.Message)?.message?.text == "one more" })
+    assertNull("nothing held: no waiting row", m.state.value.chatSteering["refunds-1"])
+  }
+
+  @Test fun editTakesANotSentRowForGoodEvenWhileTafsCloudStillListsIt() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    val m = model()
+    m.loadChat("refunds-1")
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("one more", m.editUnsent("refunds-1", unsent.message))
+    m.loadChat("refunds-1")
+    assertNull("remembered: it doesn't come back", m.state.value.chatUnsent["refunds-1"])
+    // Nor after a new launch: the keys are kept, never the words.
+    val again = model()
+    again.loadChat("refunds-1")
+    assertNull(again.state.value.chatUnsent["refunds-1"])
+    assertFalse("one more" in secrets.load(AppModel.NOT_SENT_TAKEN).orEmpty())
+  }
+
+  @Test fun aNotSentRowNotYetTakenComesBackAfterARestartAndOneRetryTookDoesnt() = runTest {
+    readsOf(); sent()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    val m = model()
+    m.loadChat("refunds-1")
+    assertEquals("one more", m.state.value.chatUnsent["refunds-1"]!!.single().message.text)
+    // A restart before Retry or Edit: the same store, the same thread. The owner's words are back.
+    val restarted = model()
+    restarted.loadChat("refunds-1")
+    val unsent = restarted.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("one more", unsent.message.text)
+    // Retry takes it, then another restart: it doesn't come back.
+    assertTrue(restarted.resendUnsent("refunds-1", unsent.message))
+    val again = model()
+    again.loadChat("refunds-1")
+    assertNull(again.state.value.chatUnsent["refunds-1"])
+  }
+
+  @Test fun deleteTakesANotSentRowForGoodAcrossARestartSendingNothing() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    val m = model()
+    m.loadChat("refunds-1")
+    val writes = transport.requests.count { it.method != "GET" }
+    m.deleteUnsent("refunds-1", m.state.value.chatUnsent["refunds-1"]!!.single().message)
+    assertEquals("nothing sent", writes, transport.requests.count { it.method != "GET" })
+    assertNull(m.state.value.chatUnsent["refunds-1"])
+    m.loadChat("refunds-1")
+    assertNull("remembered: tafs cloud still lists it, and it doesn't come back", m.state.value.chatUnsent["refunds-1"])
+    val restarted = model()
+    restarted.loadChat("refunds-1")
+    assertNull(restarted.state.value.chatUnsent["refunds-1"])
+  }
+
+  @Test fun deleteTakesAMessageThatWasntSentOffTheThread() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages", 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("refund this one", "refunds-1"))
+    val writes = transport.requests.count { it.method != "GET" }
+    m.deleteUnsent("refunds-1", m.state.value.chatUnsent["refunds-1"]!!.single().message)
+    assertNull(m.state.value.chatUnsent["refunds-1"])
+    assertEquals("nothing sent", writes, transport.requests.count { it.method != "GET" })
+  }
+
+  @Test fun aRetryThatDidntSendLeavesTheNotSentRowOwedSoARestartBringsItBack() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more")))
+    transport.answer("POST /v1/tafs/taf_1/messages", 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 503, """{"error":"unavailable"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.resendUnsent("refunds-1", m.state.value.chatUnsent["refunds-1"]!!.single().message))
+    // Still Not sent, once, with the not_sent's key carried on.
+    val kept = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("one more", kept.message.text)
+    assertNotNull(kept.notSentKey)
+    m.loadChat("refunds-1")
+    assertEquals("not added twice", 1, m.state.value.chatUnsent["refunds-1"]!!.size)
+    // And still owed after a restart.
+    val restarted = model()
+    restarted.loadChat("refunds-1")
+    assertEquals("one more", restarted.state.value.chatUnsent["refunds-1"]!!.single().message.text)
+  }
+
+  @Test fun retrySendsANotSentRowOnceAndASecondRetryFindsNothing() = runTest {
+    readsOf(); sent()
+    transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = stopped("one more", "and this")))
+    val m = model()
+    m.loadChat("refunds-1")
+    val first = m.state.value.chatUnsent["refunds-1"]!!.first()
+    assertTrue(m.resendUnsent("refunds-1", first.message))
+    assertFalse(m.resendUnsent("refunds-1", first.message))
+    m.loadChat("refunds-1")
+    assertEquals(listOf("and this"), m.state.value.chatUnsent["refunds-1"]!!.map { it.message.text })
+  }
+
   @Test fun aRunThatEndedMeanwhileTakesTheMessageAsANewOne() = runTest {
+    // An older tafs cloud holds nothing: 409 with no code, and the message goes as a new one.
     readsOf(); sent()
     transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z"), working = working))
     transport.answer("POST /v1/tafs/taf_1/steer", 409, """{"error":"run_over"}""")
@@ -321,7 +510,7 @@ class ChatKiffTest {
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
     // Never "It changed in the meantime": tafs cloud's words for why.
-    assertEquals("The message wasn't sent. $spent", m.state.value.chatErrors["refunds-1"])
+    assertEquals("The message wasn't sent. $spent", m.state.value.chatUnsent["refunds-1"]!!.single().why)
   }
 
   @Test fun aRunKiffAgentsRefusedSaysWhyInTafsCloudsWordsOnThePlainRoute() = runTest {
@@ -332,20 +521,48 @@ class ChatKiffTest {
     val m = model()
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
-    assertEquals("The message wasn't sent. Refunds is halted. Resume it from Halt to go on.", m.state.value.chatErrors["refunds-1"])
+    assertEquals("The message wasn't sent. Refunds is halted. Resume it from Halt to go on.", m.state.value.chatUnsent["refunds-1"]!!.single().why)
   }
 
-  @Test fun aMessageThatDoesNotGoIsTakenOffTheScreenAndSaysWhy() = runTest {
+  /** A message that doesn't go stays in the thread as written, marked not sent with why (kiff/tafs#476): nothing is lost. */
+  @Test fun aMessageThatDoesNotGoStaysMarkedNotSentAndSaysWhy() = runTest {
     readsOf()
     transport.answer(conversation, 200, thread())
     transport.answer("POST /v1/tafs/taf_1/messages", 500, """{"error":"boom"}""")
     val m = model()
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
-    assertTrue(m.messages().isEmpty())
     assertTrue(m.state.value.chatSent.isEmpty())
-    assertEquals("The message wasn't sent. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.chatErrors["refunds-1"])
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("hello", unsent.message.text)
+    assertEquals(bot.tafs.app.model.Unsent.SESSION, unsent.message.session)
+    assertEquals("The message wasn't sent. It isn't working on our side right now. Nothing to do on your side; try again later.", unsent.why)
+    assertNull("said under the message, not above the box", m.state.value.chatErrors["refunds-1"])
+    // The thread shows it where it was written, and a reload keeps it.
+    assertTrue(m.state.value.chatItems("refunds-1").any { it is bot.tafs.app.model.ChatItem.Message && it.message == unsent.message })
+    m.loadChat("refunds-1")
+    assertEquals(listOf(unsent), m.state.value.chatUnsent["refunds-1"])
     assertFalse(m.state.value.thinking("refunds-1"))
+  }
+
+  /** Retry sends a message that wasn't sent once, and it leaves "Not sent"; Edit gives its words back and takes it away. */
+  @Test fun retrySendsANotSentMessageOnceAndEditGivesItsWordsBack() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages", 500, """{"error":"boom"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("hello", "refunds-1"))
+    assertFalse(m.deliverChat("and this", "refunds-1"))
+    val (first, second) = m.state.value.chatUnsent["refunds-1"]!!.map { it.message }
+    transport.answer("POST /v1/tafs/taf_1/messages", 200, """{"session":"s1","run":"r1","message":{"id":"m_9"}}""")
+    assertTrue(m.resendUnsent("refunds-1", first))
+    assertFalse(m.resendUnsent("refunds-1", first)) // a second tap finds nothing left to send
+    assertEquals(3, transport.requestsTo("POST /v1/tafs/taf_1/messages").size) // two refused, then one
+    assertEquals(listOf(second), m.state.value.chatUnsent["refunds-1"]!!.map { it.message })
+    assertEquals("and this", m.editUnsent("refunds-1", second))
+    assertNull(m.editUnsent("refunds-1", second))
+    assertNull(m.state.value.chatUnsent["refunds-1"])
   }
 
   @Test fun writingTooManyMessagesTooFastIsSaidKindly() = runTest {
@@ -355,7 +572,7 @@ class ChatKiffTest {
     val m = model()
     m.loadChat("refunds-1")
     assertFalse(m.deliverChat("hello", "refunds-1"))
-    assertEquals("That's a lot of messages in a few minutes. Give Refunds a moment, then try again.", m.state.value.chatErrors["refunds-1"])
+    assertEquals("That's a lot of messages in a few minutes. Give Refunds a moment, then try again.", m.state.value.chatUnsent["refunds-1"]!!.single().why)
   }
 
   @Test fun anEmptyOrTooLongMessageIsNotSent() = runTest {

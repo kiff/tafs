@@ -21,7 +21,14 @@ import java.net.URLEncoder
   val words: String, val history: String = "", @SerialName("action_title") val actionTitle: String, @SerialName("coach_text") val coachText: String,
   @SerialName("dismiss_title") val dismissTitle: String, @SerialName("can_approve_once") val canApproveOnce: Boolean = false)
 @Serializable data class TafActivityEntry(val id: String, val at: String, val kind: String, val title: String, val detail: String,
-  val time: String, @SerialName("amount_text") val amountText: String? = null, val call: ActivityCall)
+  val time: String, @SerialName("amount_text") val amountText: String? = null, val call: ActivityCall,
+  /** What the owner can do about a call that wasn't done, as tafs cloud says it (kiff/tafs#476, gap 10). */
+  val next: NextStep? = null)
+/**
+ * The owner's next step for a call that wasn't done: [kind] is `reconnect` (the connection whose tools include [tool]), `ask_coach`
+ * (Coach on the taf, [message] written in) or `try_later`; [words] are its button's, or its line's for a kind the app doesn't know.
+ */
+@Serializable data class NextStep(val kind: String, val words: String, val tool: String = "", val taf: String? = null, val message: String? = null)
 @Serializable data class TafActivityGroup(val id: String, val title: String, val entries: List<TafActivityEntry> = emptyList())
 @Serializable data class TafActivityPage(val entries: List<TafActivityEntry> = emptyList(), val groups: List<TafActivityGroup> = emptyList(),
   val filters: List<ActivityChoice> = emptyList(), val filter: String = "all", val revision: String = "", @SerialName("next_cursor") val nextCursor: String? = null,

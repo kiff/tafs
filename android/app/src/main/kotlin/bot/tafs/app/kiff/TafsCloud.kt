@@ -17,7 +17,14 @@ import kotlinx.serialization.json.put
 
 /** tafs cloud's refusal: its words. */
 /** [words]: tafs cloud's own words for what's in the way, where it sends them (a switch a run blocks). */
-class CloudError(val status: Int, message: String, val blocking: List<BlockingRun> = emptyList(), val words: String? = null) : Exception(message)
+class CloudError(
+  val status: Int,
+  message: String,
+  val blocking: List<BlockingRun> = emptyList(),
+  val words: String? = null,
+  /** tafs cloud's `code` for the refusal, where it names one ("held_full"). */
+  val code: String? = null,
+) : Exception(message)
 
 /**
  * tafs cloud: the calls that start, follow, chat with and remove tafs, which run on kiff/agents; the
@@ -51,6 +58,8 @@ class TafsCloud(
     val coachLines: List<CoachLine> = emptyList(),
     /** Each drive's end in Coach's chat, at its time (kiff/tafs#568). */
     val drives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
+    /** What tafs cloud holds of the person's, for the thread's latest chat: what waits, and what a stopped run never read. */
+    val steering: WireSteering? = null,
   )
 
   /** The account's Setup (Coach), or null before it is started. */
@@ -130,6 +139,7 @@ class TafsCloud(
         runCatching { KiffClient.json.decodeFromJsonElement(bot.tafs.app.drive.DriveRecap.serializer(), o.getValue("drive")) }.getOrNull()
           ?.takeIf { runCatching { java.time.Instant.parse(it.at) }.isSuccess }
       },
+      steering = wire.steering?.let { runCatching { KiffClient.json.decodeFromJsonElement(WireSteering.serializer(), it) }.getOrNull() },
     )
   }
 
@@ -298,8 +308,15 @@ class TafsCloud(
     return KiffClient.json.decodeFromString<Reported>(String(sendJson("POST", "/v1/tafs/${escaped(id)}/messages/${escaped(message)}/report", body))).report
   }
 
-  suspend fun steer(id: String, run: String, text: String): String =
-    post<Steered>("/v1/tafs/${escaped(id)}/steer", mapOf("run" to run, "text" to text)).status
+  /**
+   * Writes to the run at work, read at its next step (docs/chat.md). With `hold`, what the run doesn't take is tafs cloud's to keep,
+   * in its chat, and to send once the taf is done: 202 with [Steered.sent] when it went at once as the next message, [Steered.held]
+   * for what waits, both, or neither when another read already dealt with it. 409 `held_full` when too much waits already. An older
+   * tafs cloud answers 409 with no code when the run took nothing, and the message goes as a new one.
+   */
+  suspend fun steer(id: String, run: String, text: String): Steered = KiffClient.json.decodeFromString(
+    String(sendJson("POST", "/v1/tafs/${escaped(id)}/steer", kotlinx.serialization.json.JsonObject(mapOf("run" to JsonPrimitive(run), "text" to JsonPrimitive(text), "hold" to JsonPrimitive(true))))),
+  )
 
   /**
    * The owner just answered one of the taf's held calls in KIFF (kiff/tafs#206): the run that paused on it goes
@@ -688,7 +705,10 @@ class TafsCloud(
     if (response.status !in 200..299) {
       // Kept for Coach's diagnostics by the route's template and status only (docs/drive.md).
       bot.tafs.app.drive.DriveDiagnostics.failed(method, path, response.status)
-      throw CloudError(response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}", blockingRuns(response.body), field(response.body, "words"))
+      throw CloudError(
+        response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}", blockingRuns(response.body), field(response.body, "words"),
+        field(response.body, "code"),
+      )
     }
     return response.body
   }

@@ -126,10 +126,10 @@ class MappingTest {
   }
 
   /** A hold over a count of calls, as KIFF keeps it: the machine's reason, and KIFF's own words when [reasonText] is sent. */
-  private fun countHold(limit: Long, used: Long, window: String? = "calendar_day", reasonText: String? = null) = exceptions(
+  private fun countHold(limit: Long, used: Long, window: String? = "calendar_day", reasonText: String? = null, per: String = "") = exceptions(
     """{"exceptions":[{"id":"ce_5","subject":"setup-acme","action":"taf_results","created_at":"2026-10-30T22:50:00Z",
        ${reasonText?.let { "\"reason_text\":\"$it\"," } ?: ""}"can_approve_once":false,
-       "breaches":[{"outcome":"limit_reached","quantity":"count","limit":$limit,"used":$used,"draw":1,${window?.let { "\"window\":\"$it\"," } ?: ""}
+       "breaches":[{"outcome":"limit_reached","quantity":"count","limit":$limit,"used":$used,"draw":1,${window?.let { "\"window\":\"$it\"," } ?: ""}$per
          "reason":"count limit $limit per calendar_day reached: $used used, this action draws 1"}]}]}""",
   )[0]
 
@@ -140,8 +140,14 @@ class MappingTest {
     assertEquals("12 calls in any 24 hours: this would be the 13th", KiffMapping.held(countHold(12, 12, "rolling_24h")).reason)
     assertEquals("3 calls in total: this would be the 4th", KiffMapping.held(countHold(3, 3, "lifetime")).reason)
     // A window KIFF adds later shows as sent, never as a day; none at all says the limit alone.
-    assertEquals("5 calls rolling_7d: this would be the 6th", KiffMapping.held(countHold(5, 5, "rolling_7d")).reason)
+    assertEquals("5 calls in any 7 days: this would be the 6th", KiffMapping.held(countHold(5, 5, "rolling_7d")).reason)
+    assertEquals("5 calls calendar_week: this would be the 6th", KiffMapping.held(countHold(5, 5, "calendar_week")).reason)
     assertEquals("Over its limit of 10 calls: this would be the 11th", KiffMapping.held(countHold(10, 10, null)).reason)
+    // A total for each item apart says which: the argument it counts by, and this call's item.
+    assertEquals("1 call in any 7 days for each invoice id: this would be the 2nd for in_42",
+      KiffMapping.held(countHold(1, 1, "rolling_7d", per = "\"per\":\"invoice_id\",\"value\":\"in_42\",")).reason)
+    assertEquals("1 call in any 7 days for each invoice id: this would be the 2nd",
+      KiffMapping.held(countHold(1, 1, "rolling_7d", per = "\"per\":\"invoice_id\",")).reason)
     // KIFF's own words come first.
     assertEquals("Each call asks you first, in KIFF's words", KiffMapping.held(countHold(0, 0, reasonText = "Each call asks you first, in KIFF's words")).reason)
   }
@@ -209,7 +215,10 @@ class MappingTest {
            "calls":{"limit":50,"used":3,"window":"week","pending_text":"2 of them are from calls the tool refused, in test."}},
           {"id":"card_u","title":"Refunds (reads)","environment":"","live":true,"active":true,"rules":[],
            "total":{"limit":{"minor":30000},"used":null,"window":"day","unit_words":"Its currency comes from create_refund, which isn't connected.",
-             "unit_missing":{"tools":["create_refund"],"connected":false}}}]}},
+             "unit_missing":{"tools":["create_refund"],"connected":false}}},
+          {"id":"card_r","title":"Reminders","environment":"","live":true,"active":true,"rules":[],
+           "calls":{"limit":20,"used":3,"window":"rolling_7d"},
+           "each_item":["1 call in any 7 days for each invoice id",""]}]}},
       {"id":"taf_2","name":"Access","kiff_agent":"access-1","status":"paused","color":3,"state":"paused","waiting":0,"card":{"ids":["c2","c3"],"active":true,"tools":[],"rules":[],"used":{},"usage_unknown":[]}},
       {"id":"taf_3","name":"Deploys","kiff_agent":"deploys-1","color":4,"state":"waiting","waiting":2,"card":{"ids":["c4"],"active":true,"tools":[],"rules":[]}},
       {"id":"taf_4","name":"Billing","kiff_agent":"billing-1","color":5,"state":"halted","card":{"ids":["c5"],"active":true}},
@@ -275,7 +284,7 @@ class MappingTest {
 
   @Test fun eachKiffCardIsKeptOnItsOwnWithItsTotalOrItsCount() {
     val cards = named("Refunds").kiffCards!!
-    assertEquals(listOf("card_1", "card_t", "card_u"), cards.map { it.id })
+    assertEquals(listOf("card_1", "card_t", "card_u", "card_r"), cards.map { it.id })
     assertEquals(eur(100000), cards[0].total!!.limit)
     assertEquals(eur(20000), cards[0].total!!.used)
     assertEquals("${eur(80000).formatted}", cards[0].hero!!.figure)
@@ -284,6 +293,18 @@ class MappingTest {
     assertEquals(50, cards[1].calls!!.limit)
     assertEquals(3, cards[1].calls!!.used)
     assertEquals(Window.week, cards[1].calls!!.window)
+  }
+
+  /** KIFF's windows read in their own words, never as a day; a total for each item apart is its own line (kiff/tafs#476). */
+  @Test fun aCardsWeekAndItsTotalsForEachItemReadAsTafsCloudSaysThem() {
+    val card = named("Refunds").kiffCards!!.first { it.id == "card_r" }
+    assertEquals(Window.rolling_7d, card.calls!!.window)
+    assertEquals("in any 7 days", card.calls!!.window.label)
+    assertEquals("in the last 7 days", card.calls!!.window.current)
+    assertEquals(listOf("1 call in any 7 days for each invoice id"), card.eachItem)
+    assertTrue(named("Refunds").kiffCards!!.first().eachItem.isEmpty())
+    assertEquals("in any hour", KiffMapping.window("rolling_1h").label)
+    assertEquals("in total", KiffMapping.window("lifetime").label)
   }
 
   @Test fun howThisIsCountedIsKiffsLinesPerToolAsApproved() {

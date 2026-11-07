@@ -343,6 +343,12 @@ struct TafDetailView: View {
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
+        // Its totals for each item apart ("1 call in any 7 days for each invoice id"), as tafs cloud says them.
+        ForEach(shown?.eachItem ?? [], id: \.self) { line in
+            Text(line).scaledFont(14).foregroundColor(Theme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
         // How KIFF counts each of its tools, as the owner approved it: its own screen.
         if let shown, let counted = shown.counted, !counted.isEmpty {
             PanelLink { CountedView(card: shown.title, counted: counted) } label: {
@@ -476,6 +482,8 @@ struct ConnectionsPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     @State private var confirming: PlanqueClient.Grant?
+    /// A sign-in that never came back, whose Cancel waits for the owner's yes.
+    @State private var cancelling: PlanqueClient.Grant?
 
     var body: some View {
         let connections = model.connections(for: tafID)
@@ -507,6 +515,10 @@ struct ConnectionsPanel: View {
                                         .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
+                            } else if grant.waitingSignIn {
+                                // Approved, and the sign-in never came back: cancelled, not disconnected.
+                                Text(ConnectionFixWords.waiting(grant.vendor))
+                                    .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                             } else {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
                                 Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
@@ -530,7 +542,9 @@ struct ConnectionsPanel: View {
                             }
                         }
                         Spacer(minLength: 0)
-                        Button("Disconnect") { confirming = grant }
+                        Button(grant.waitingSignIn ? ConnectionFixWords.cancel : "Disconnect") {
+                            if grant.waitingSignIn { cancelling = grant } else { confirming = grant }
+                        }
                             .confirming()
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.no)
@@ -559,6 +573,16 @@ struct ConnectionsPanel: View {
                 }
             } message: {
                 if let g = confirming { Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g))) }
+            }
+            .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0.vendor) } ?? "",
+                                isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
+                                titleVisibility: .visible) {
+                Button("Cancel the sign-in", role: .destructive) {
+                    if let id = cancelling?.id { Task { _ = await model.disconnect(grantID: id) } }
+                }
+                Button("Keep waiting", role: .cancel) { cancelling = nil }
+            } message: {
+                if let g = cancelling { Text(ConnectionFixWords.cancelBody(g.vendor)) }
             }
         }
     }

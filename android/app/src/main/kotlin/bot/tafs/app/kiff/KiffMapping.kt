@@ -183,6 +183,7 @@ object KiffMapping {
           },
           calls = c.calls?.let { CardTotal(it.limit, it.used, window(it.window), it.extraRoom, it.baseLimit, it.roomWindowEnd, it.pendingText) },
           counted = c.counted.orEmpty().filter { it.lines.isNotEmpty() },
+          eachItem = c.eachItem.orEmpty().filter { it.isNotBlank() },
         )
       },
       used = h.card.used.mapNotNull { (action, a) -> amount(a)?.let { action to it } }.toMap(),
@@ -231,7 +232,7 @@ object KiffMapping {
         id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
-        entityId = c.entityId, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
+        entityId = c.entityId, action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
         madeAt = c.madeAt, reason = c.reason,
         refusedByTool = if (refusedByTool) true else null,
         refusedBy = if (byConnection) "The connection" else if (refusedByTool) vendors[c.actionName] else null,
@@ -362,7 +363,10 @@ object KiffMapping {
     if (limit == 0L) return "Each call asks you first"
     val nth = ordinal((b.used ?: limit) + (b.draw ?: 1))
     val window = b.window ?: return "Over its limit of $limit calls: this would be the $nth"
-    return "$limit ${if (limit == 1L) "call" else "calls"} ${windowWords(window)}: this would be the $nth"
+    // A total for each item apart says so, and which item: "1 call in any 7 days for each invoice id: this would be the 2nd for in_42".
+    val each = b.per?.takeIf { it.isNotBlank() }?.let { " for each " + it.lowercase().replace('_', ' ') }.orEmpty()
+    val item = if (each.isNotEmpty()) b.value?.takeIf { it.isNotBlank() }?.let { " for $it" }.orEmpty() else ""
+    return "$limit ${if (limit == 1L) "call" else "calls"} ${windowWords(window)}$each: this would be the $nth$item"
   }
 
   /** A KIFF window in the words a Card's totals use (docs/tafs.md); one KIFF adds later shows as it is sent, never as a day. */
@@ -370,6 +374,7 @@ object KiffMapping {
     "calendar_day" -> "a day"
     "rolling_24h" -> "in any 24 hours"
     "rolling_1h" -> "in any hour"
+    "rolling_7d" -> "in any 7 days"
     "lifetime" -> "in total"
     else -> window
   }

@@ -73,9 +73,9 @@ struct Money: Hashable, Comparable, Codable {
     }
 }
 
-/// A Card's spending window: KIFF's own name for it (calendar_day, rolling_24h, rolling_1h or
+/// A Card's spending window: KIFF's own name for it (calendar_day, rolling_24h, rolling_1h, rolling_7d or
 /// lifetime) and its words. tafs cloud sends the words with it; for what the app reads from
-/// KIFF itself, KIFF's four are known here, exactly. A window it doesn't know reads as it was
+/// KIFF itself, KIFF's five are known here, exactly. A window it doesn't know reads as it was
 /// sent, never as a day (a lifetime or hourly total read as daily before).
 struct Window: Hashable, Codable, Sendable {
     let raw: String
@@ -89,6 +89,7 @@ struct Window: Hashable, Codable, Sendable {
     private static let known: [String: (each: String, now: String)] = [
         "calendar_day": ("a day", "today"),
         "rolling_24h": ("in any 24 hours", "in the last 24 hours"),
+        "rolling_7d": ("in any 7 days", "in the last 7 days"),
         "rolling_1h": ("in any hour", "in the last hour"),
         "lifetime": ("in total", "so far"),
     ]
@@ -233,6 +234,9 @@ struct TafCard: Identifiable, Hashable, Codable {
     /// How this is counted (Card › How this is counted): for each tool it covers with a
     /// profile the owner approved, KIFF's words for it, as approved. Nil or empty: none.
     var counted: [CardCounted]?
+    /// Its totals for each item apart, as tafs cloud says them ("1 call in any 7 days for each
+    /// invoice id"): each item has its own count, so none shows a used or left. Nil: none.
+    var eachItem: [String]? = nil
 
     /// What of its totals' use is from calls the tool refused, in KIFF's words: they count
     /// until KIFF can confirm nothing moved (kiff-cloud's limit lines).
@@ -508,6 +512,8 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var amount: KIFFClient.ActivityCall.Amount?
     var readOnly: Bool?
     var entityID: String?
+    /// The tool as KIFF names it ("list_inboxes_k3f9"): which connection it went through.
+    var action: String? = nil
     var onHash: String?
     var onArg: String?
     var onValue: String?

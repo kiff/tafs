@@ -86,6 +86,11 @@ class TafActions(
   val connections: ConnectionActions,
   /** Stops what the taf is doing in its chat. */
   val stopChat: suspend (String) -> Unit = {},
+  /** A message that wasn't sent: Retry sends it once; Edit gives its words back for the box, or null when it went already. */
+  val retryUnsent: (String, ChatMessage) -> Unit = { _, _ -> },
+  val editUnsent: (String, ChatMessage) -> String? = { _, _ -> null },
+  /** Deletes a message that wasn't sent, for good. */
+  val deleteUnsent: (String, ChatMessage) -> Unit = { _, _ -> },
   /** Photos and files on a message (docs/attachments.md). */
   val files: FileActions = FileActions(),
   /** Runs it now, outside its schedule (tafs cloud). */
@@ -190,7 +195,7 @@ fun TafDetailView(
       // The thread scrolls on its own, with the field under it.
       TafChatView(taf.id, state, actions, Modifier.weight(1f))
     } else if (section == Section.Activity && state.mode == Mode.kiff && taf.cloudId != null) {
-      TafActivityList(taf, state, actions, activitySelection, { activitySelection = "" }, Modifier.weight(1f))
+      TafActivityList(taf, state, actions, activitySelection, { activitySelection = "" }, Modifier.weight(1f), onConnectApps = onConnectApps)
     } else {
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -332,6 +337,8 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
   }
   // All of the front Card's limits: the face shows the main one.
   CardLines(shown?.rules ?: emptyList())
+  // Its totals for each item apart ("1 call in any 7 days for each invoice id"), as tafs cloud says them.
+  shown?.eachItem?.forEach { Text(it, style = scaled(14, color = Theme.ink), modifier = Modifier.fillMaxWidth()) }
   // How this is counted: KIFF's lines for each tool's profile, as approved, under its limits.
   shown?.counted?.takeIf { it.isNotEmpty() }?.let { HowCounted(it) }
   // How much of its totals is from calls the tool refused, in KIFF's words: for a live, active Card only.

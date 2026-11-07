@@ -60,11 +60,14 @@ class RecipesTest {
     val m = model()
     m.refresh()
     m.loadCoach()
-    val before = transport.requests.size
+    // What was sent: a write. A read refresh() or loadCoach() began in the model's own background may still land after this,
+    // off the test's clock, so reads aren't counted.
+    fun sent() = transport.requests.filterNot { it.method == "GET" }
+    val before = sent()
     // CoachStarts' fill is the chat's draft setter.
     m.setDraft(COACH_CHAT, m.state.value.recipes!!.recipes.first().say)
     assertEquals("Chase my overdue invoices: remind once a week, at most 3 times.", m.state.value.drafts[COACH_CHAT])
-    assertEquals("nothing was sent", before, transport.requests.size)
+    assertEquals("nothing was sent", before, sent())
   }
 
   @Test fun recipesNotReadLeaveCoachUsable() = runTest {

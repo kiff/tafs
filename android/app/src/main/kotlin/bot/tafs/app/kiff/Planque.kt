@@ -52,6 +52,8 @@ data class GrantRequest(
   val server: String = "",
   val agent: String = "",
   val tools: List<GrantTool> = emptyList(),
+  /** `api_key` for a vendor reached with a key the owner gives; none for one signed in to. */
+  val kind: String? = null,
   /**
    * The connection's `kiff.profile.v1` (KIFF's profile contract), when planque sends one: inside the request, so the grant's digest the phone
    * checks covers it. The phone asks KIFF for its words and signs both digests on approval.
@@ -150,6 +152,21 @@ data class Grant(
 
   /** Its vendor signed it out: the owner signs in again, and it's connected only once planque says so. */
   val needsReconnect: Boolean get() = status == "needs_reconnect"
+
+  /**
+   * Approved, and waiting on a sign-in at the vendor that hasn't come back: the owner may cancel it, which ends the grant, and
+   * connect again (planque's disconnect takes a grant in any state).
+   */
+  val waitingSignIn: Boolean get() = status == "approved" && signedIn != true && !connectedNow
+
+  /**
+   * A managed provider's connection, connected: planque can't sign it in again in place (it can't tell which account a new
+   * sign-in at the provider is), so it's disconnected and connected again instead.
+   */
+  val signsInThroughProvider: Boolean get() = request.connector != null && connected && !takesKey
+
+  /** Reached with a key the owner gives (planque's `api_key`), not a sign-in: it's fixed by a new key. */
+  val takesKey: Boolean get() = request.kind == "api_key"
 
   /** Signed in and planque listed the vendor's tools for Setup to choose from; nothing is in KIFF yet. */
   val listed: Boolean get() = status == "listed"

@@ -22,7 +22,8 @@ final class CardsTests: XCTestCase {
                "calls":null,
                "counted":[{"tool":"refund","title":"Refund a payment","lines":["Refund a payment: moves money in Stripe.","Refund a payment: counted by its amount."]}]},
               {"id":"test","title":"Refund a payment","environment":"test","live":false,"active":true,"expires":null,
-               "rules":[],"total":null,"calls":{"limit":200,"used":null,"window":"day"}}]}}],
+               "rules":[],"total":null,"calls":{"limit":200,"used":null,"window":"day"},
+               "each_item":["1 call in any 7 days for each invoice id"," "]}]}}],
          "others":[],"removing":[]}
         """#
         let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(json.utf8))
@@ -39,6 +40,9 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(cards[0].counted, [CardCounted(tool: "refund", title: "Refund a payment",
                                                       lines: ["Refund a payment: moves money in Stripe.", "Refund a payment: counted by its amount."])])
         XCTAssertNil(cards[1].counted)
+        // Its totals for each item apart: tafs cloud's lines, a blank one left out; none on the live Card.
+        XCTAssertEqual(cards[1].eachItem, ["1 call in any 7 days for each invoice id"])
+        XCTAssertNil(cards[0].eachItem)
     }
 
     func testTheBigFigureIsWhatIsLeft() {
@@ -144,13 +148,13 @@ final class CardsTests: XCTestCase {
         XCTAssertNil(taf.shownCards[0].calls?.used, "KIFF couldn't read it: unknown, not zero")
     }
 
-    /// KIFF's four windows read exactly, tafs cloud's words win, and a window the app doesn't
+    /// KIFF's five windows read exactly, tafs cloud's words win, and a window the app doesn't
     /// know reads as sent: a lifetime or hourly total never reads as a day's again.
     func testEachOfKIFFsWindowsHasItsOwnWords() throws {
-        XCTAssertEqual([Window("calendar_day"), Window("rolling_24h"), Window("rolling_1h"), Window("lifetime")].map(\.label),
-                       ["a day", "in any 24 hours", "in any hour", "in total"])
-        XCTAssertEqual([Window("calendar_day"), Window("rolling_24h"), Window("rolling_1h"), Window("lifetime")].map(\.current),
-                       ["today", "in the last 24 hours", "in the last hour", "so far"])
+        XCTAssertEqual([Window("calendar_day"), Window("rolling_24h"), Window("rolling_7d"), Window("rolling_1h"), Window("lifetime")].map(\.label),
+                       ["a day", "in any 24 hours", "in any 7 days", "in any hour", "in total"])
+        XCTAssertEqual([Window("calendar_day"), Window("rolling_24h"), Window("rolling_7d"), Window("rolling_1h"), Window("lifetime")].map(\.current),
+                       ["today", "in the last 24 hours", "in the last 7 days", "in the last hour", "so far"])
         XCTAssertEqual(Window("calendar_week").label, "calendar_week")
         XCTAssertEqual(Window("rolling_1h", each: "each hour", now: "this hour").label, "each hour")
         XCTAssertEqual(Window("lifetime").sumLabel, "in total")

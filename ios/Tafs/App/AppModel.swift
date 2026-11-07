@@ -3577,6 +3577,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID, default: ChatState()].working = thread.working
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
+            chatStates[tafID]?.askCoach = thread.askCoach
             // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
             // run at work, or one that answered since, is past it.
             chatStates[tafID]?.capped = thread.working == nil ? thread.capped?.stop : nil
@@ -3854,6 +3855,8 @@ final class AppModel: ObservableObject {
         var awaiting: Date?
         var live: LiveAnswer?
         var unsent: [UnsentMessage] = []
+        /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
+        var askCoach: [TafsCloud.AskCoachCard] = []
         var queued: String?
         var ended: RunEnd?
         /// What the failed run did before it stopped (kiff/agents#249), said with Retry.
@@ -4152,6 +4155,14 @@ final class AppModel: ObservableObject {
         chatStates[tafID]?.unsent.removeAll { $0.id == message.id }
     }
 
+    /// Takes a message that wasn't sent out of the thread, to change it in the composer
+    /// (kiff/tafs#476): its words, or nil when it's gone already (sent, or taken).
+    func editUnsentChat(_ message: UnsentMessage, from tafID: UUID) -> String? {
+        guard chatStates[tafID]?.unsent.contains(where: { $0.id == message.id }) == true else { return nil }
+        discardUnsentChat(message, from: tafID)
+        return message.text
+    }
+
     /// The stops at a cap of the run's own: it ends with no words for it.
     nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap"]
 
@@ -4225,6 +4236,8 @@ final class AppModel: ObservableObject {
         /// Someone wrote through a door (docs/doors.md), at its time among the messages: the
         /// owner answers it there.
         case knock(TafsCloud.Knock)
+        /// A setting the taf hands to Coach (kiff/tafs#476, gap 15), at its time.
+        case askCoach(TafsCloud.AskCoachCard)
         var id: String {
             switch self {
             case .message(let m): return "m|" + m.id
@@ -4234,6 +4247,7 @@ final class AppModel: ObservableObject {
             case .outcome(let e): return "k|" + e.id.uuidString
             case .streaming(let id, _): return id
             case .knock(let k): return "d|" + k.id
+            case .askCoach(let c): return "a|" + c.id
             }
         }
         var at: Date {
@@ -4246,6 +4260,7 @@ final class AppModel: ObservableObject {
             case .outcome(let e): return e.answer?.at ?? e.madeAt ?? e.at
             case .streaming(_, let m): return m.at
             case .knock(let k): return k.at
+            case .askCoach(let c): return c.at
             }
         }
     }
@@ -4267,6 +4282,8 @@ final class AppModel: ObservableObject {
         var items = messages.map(ChatItem.message) + held.map(ChatItem.held)
         // A door's knocks sit at their own times, so a reply newer than a knock comes after it.
         if mode == .kiff, !doorsOffered.isEmpty { items += (chatKnocks[tafID] ?? []).map(ChatItem.knock) }
+        // The settings it handed to Coach, each at its time (kiff/tafs#476, gap 15).
+        if mode == .kiff { items += (chatStates[tafID]?.askCoach ?? []).map(ChatItem.askCoach) }
         if let first = messages.first?.at {
             // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
             items += entries(for: tafID).filter {
@@ -4929,7 +4946,22 @@ final class AppModel: ObservableObject {
     /// its vendor signed out, so the owner signs in again.
     func connections(for tafID: UUID) -> [PlanqueClient.Grant] {
         guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return [] }
-        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect) }
+        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect || $0.waitingSignIn) }
+    }
+
+    /// A connection's last failed call (gap 13): the newest call through one of its tools that
+    /// wasn't done, its taf's own first, in KIFF's words for it. Nil when none is in the record.
+    func lastFailure(_ g: PlanqueClient.Grant) -> String? {
+        Self.lastFailure(g, record: record, ownTaf: holderIDs[g.request.agent])
+    }
+
+    nonisolated static func lastFailure(_ g: PlanqueClient.Grant, record: [RecordEntry], ownTaf: UUID?) -> String? {
+        let actions = Set(g.tools ?? g.request.tools.filter(\.tafs).map(\.action))
+        guard !actions.isEmpty else { return nil }
+        let failed = record.filter { $0.kind == .notDone && $0.action.map(actions.contains) == true }
+        let own = failed.filter { $0.tafID == ownTaf }
+        guard let last = (own.isEmpty ? failed : own).max(by: { $0.at < $1.at }) else { return nil }
+        return "Last failed: \(last.title) · \(last.detail)"
     }
 
     /// The taf's connection its vendor signed out, if one is: the taf can't use those tools
@@ -4954,7 +4986,20 @@ final class AppModel: ObservableObject {
         lastError = nil
         reconnectErrors[grant.id] = nil
         shownTermsChanged = false
-        let done = await connect(grantID: grant.id, shown: grant.digest)
+        // A provider's connection is disconnected and connected again instead: planque would
+        // refuse, so nothing is asked.
+        if grant.signsInThroughProvider {
+            reconnectErrors[grant.id] = ConnectionFixWords.throughProvider(grant.vendor)
+            return
+        }
+        // KIFF's words for its profile, which the approval signs: read now, as the approval
+        // card reads them, wherever Sign in again starts.
+        await loadProfileWords(for: grant)
+        if let why = profileWordsError[grant.id] {
+            reconnectErrors[grant.id] = why
+            return
+        }
+        let done = await connect(grantID: grant.id, shown: grant.digest, again: true)
         if done?.connected != true {
             reconnectErrors[grant.id] = lastError ?? quietStop ?? "Nothing was signed in. Try again."
             lastError = nil
@@ -5069,7 +5114,9 @@ final class AppModel: ObservableObject {
     /// draft's version: Face ID signs exactly that (kiff/tafs#115). Terms that changed since
     /// are put on screen and not signed, and the owner approves again; nothing shown, nothing
     /// signed.
-    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil) async -> PlanqueClient.Grant? {
+    /// `again`: sign in again (gap 13). A connected grant goes through its vendor's sign-in again,
+    /// kept apart by planque until this phone confirms it.
+    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil, again: Bool = false) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
             return nil
@@ -5104,7 +5151,7 @@ final class AppModel: ObservableObject {
             lastError = "Couldn't read what to approve: \(error.localizedDescription)"
             return nil
         }
-        if grant.connected {
+        if grant.connected, !again {
             // The second approval (kiff/agents#91): the vendor is connected, and the
             // taf's Cards over its tools wait as a draft. One Face ID confirms them.
             // Nothing left to sign: the grant is returned as it is, and noted, so an
@@ -5138,7 +5185,9 @@ final class AppModel: ObservableObject {
             return grant
         }
         // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
-        guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) else {
+        // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until
+        // this phone confirms the new one.
+        guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
             lastError = "This connection is \(grant.status.replacingOccurrences(of: "_", with: " "))\(grant.reason.map { ": \($0)" } ?? ".")"
             return nil
@@ -5220,10 +5269,15 @@ final class AppModel: ObservableObject {
         return connected
     }
 
-    /// The account's live connections to a Connect apps entry: by its catalog entry, or the
-    /// grant tafs cloud named for it.
+    /// The account's live connections to a Connect apps entry: by its catalog entry, the grant
+    /// tafs cloud named for it, or the app itself (`AppMatch`), so a sign-in Coach started at the
+    /// vendor's own server is listed under its app too.
     func connections(of app: TafsCloud.ConnectApps.App) -> [PlanqueClient.Grant] {
-        grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
+        Self.connections(of: app, in: grants)
+    }
+
+    static func connections(of app: TafsCloud.ConnectApps.App, in grants: [PlanqueClient.Grant]) -> [PlanqueClient.Grant] {
+        grants.filter { ($0.entry == app.entry || $0.id == app.grant || AppMatch.isOf($0, app.entry)) && !["disconnected", "failed"].contains($0.status) }
     }
 
     /// Which taf a connection was set up for, by who asked for it; the phone doesn't decide
@@ -5464,6 +5518,21 @@ final class AppModel: ObservableObject {
         setupContextTafID = setupImproving?.id
     }
 
+    /// Coach on a taf, with words in the box for the owner to send (kiff/tafs#476, gaps 10 and
+    /// 15): a not-done call's Ask Coach, or a taf's ask_coach card. Nothing is sent. Only for
+    /// someone who may use Coach and manages the taf.
+    func askCoachAbout(_ tafID: UUID, words: String) {
+        guard mode == .kiff, mayUseCoach, manages(tafID) else { return }
+        improveTaf(tafID)
+        setupDraft = words
+        coachOpen = true
+    }
+
+    /// What a not-done call's next step does on this taf's Activity row (kiff/tafs#476, gap 10).
+    func nextStep(_ next: TafsCloud.NextStep, tafID: UUID, fallback: String) -> NextStepWords.Action {
+        NextStepWords.action(next, agent: cloudTaf(for: tafID)?.kiffAgent, grants: grants, fallback: fallback)
+    }
+
     func discussCardUnit(_ ask: TafsCloud.CardUnitException) {
         guard mode == .kiff, mayUseCoach,
               let taf = tafs.first(where: { cloudTaf(for: $0.id)?.id == ask.taf }), manages(taf.id) else { return }
@@ -5688,6 +5757,13 @@ final class AppModel: ObservableObject {
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
+            // Coach handed the taf over and said its last words: its run is done, whatever the
+            // stream still holds open, so Stop goes (kiff/tafs#476). tafs cloud's `working` still
+            // says if a run is at work, and a message on its way keeps it.
+            if setupLive != nil, thread.working == nil, !setupSending, setupSent.isEmpty, thread.handedOver(session: setupLive?.session) {
+                setupLive = nil
+                setupAwaiting = nil
+            }
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupError = "The conversation couldn't be loaded: \(error.localizedDescription)"
@@ -5921,6 +5997,15 @@ final class AppModel: ObservableObject {
     func discardUnsent(_ message: UnsentMessage) {
         setupUnsent.removeAll { $0.id == message.id }
         if let answer = SetupThread.Answer(message.text) { answered.remove(cardRef(answer.id)) }
+    }
+
+    /// Takes a message that didn't go through out of Setup's thread, to change it in the
+    /// composer (kiff/tafs#476): its words as the owner reads them, or nil when it's gone
+    /// already. An answer's card can be answered again, on the card.
+    func editUnsent(_ message: UnsentMessage) -> String? {
+        guard setupUnsent.contains(where: { $0.id == message.id }) else { return nil }
+        discardUnsent(message)
+        return setupThread.ownerWords(message.text)
     }
 
     /// Retry on a run that failed part-way: its message is sent again.
@@ -6784,4 +6869,44 @@ extension AppModel {
     /// This device can't approve now, so an approval's button is disabled. Sample mode signs
     /// nothing for real, so nothing is blocked there.
     var approvalBlocked: Bool { mode == .kiff && !approvalReadiness.isReady }
+}
+
+/// Which catalog app a connection is to, when planque doesn't name its catalog entry.
+enum AppMatch {
+    /// A name as tafs cloud's recipes fold it: lower case, no leading "_", no spaces, dots,
+    /// dashes or underscores.
+    static func fold(_ name: String) -> String {
+        String(name.lowercased().drop(while: { $0 == "_" }).filter { !" \t\n._-".contains($0) })
+    }
+
+    /// The app's slug, folded: after `connector:<provider>:`, or before `@` in a reviewed entry.
+    static func slug(_ entry: String) -> String? {
+        let raw: String?
+        if entry.hasPrefix("connector:") {
+            let parts = entry.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+            raw = parts.count == 3 ? String(parts[2]) : nil
+        } else {
+            raw = entry.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init)
+        }
+        guard let folded = raw.map(fold), !folded.isEmpty else { return nil }
+        return folded
+    }
+
+    /// The host of a server planque names, with or without its scheme, path or port.
+    static func host(_ server: String) -> String {
+        var s = Substring(server)
+        if let r = s.range(of: "://") { s = s[r.upperBound...] }
+        if let slash = s.firstIndex(of: "/") { s = s[..<slash] }
+        if let colon = s.firstIndex(of: ":") { s = s[..<colon] }
+        return s.lowercased()
+    }
+
+    /// A managed provider's connection is the app its toolkit names. Any other is the app one
+    /// of its server's host labels names whole ("mcp.stripe.com" is Stripe, "notstripe.com"
+    /// isn't), never a provider's host, which serves every one of its apps.
+    static func isOf(_ g: PlanqueClient.Grant, _ entry: String) -> Bool {
+        guard let slug = slug(entry) else { return false }
+        if let connector = g.request.connector { return connector.toolkit.map(fold) == slug }
+        return host(g.request.server).split(separator: ".").contains { fold(String($0)) == slug }
+    }
 }

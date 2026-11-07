@@ -7,11 +7,36 @@ object ConnectionWords {
   /** Under a Card total whose currency waits on a tool that isn't connected (KIFF's `unit_words`), for whoever manages the taf. */
   const val RECONNECT_IN_COACH = "Reconnect it in Coach."
 
+  /**
+   * A connection's last failed call (gap 13): the newest call through one of its tools that wasn't done, its taf's own first,
+   * in KIFF's words for it. Null when none is in the record.
+   */
+  fun lastFailure(g: Grant, record: List<bot.tafs.app.model.RecordEntry>): String? {
+    val actions = (g.tools ?: g.request.tools.filter { it.tafs }.map { it.action }).toSet()
+    if (actions.isEmpty()) return null
+    val failed = record.filter { it.kind == RecordEntry.Kind.notDone && it.action in actions }
+    val last = (failed.filter { it.tafId == g.request.agent }.ifEmpty { failed }).maxByOrNull { it.at } ?: return null
+    return "Last failed: ${last.title} · ${last.detail}"
+  }
+
+  /** Ends a grant whose sign-in never came back (it's never connected); the owner connects it again afterwards. */
+  const val CANCEL_SIGN_IN = "Cancel"
+  fun cancelTitle(g: Grant): String = "Cancel the sign-in to ${g.vendor}?"
+  fun cancelBody(g: Grant): String = "Nothing is connected yet. Connect ${g.vendor} again from Coach or Connect apps when you're ready."
+
+  const val REPLACE_KEY = "Replace the key"
+  const val SIGN_IN_AGAIN = "Sign in again"
+
+  /** In place of Sign in again on a provider's connection ([Grant.signsInThroughProvider]), as planque says it. */
+  fun throughProvider(g: Grant): String =
+    "${g.vendor} signs in through its connection provider. To sign in again, disconnect it and connect it again."
+
   /** Where a connection stands. */
   fun status(g: Grant): String = when {
     g.connected -> "Connected"
     g.needsReconnect -> signedOut(g)
     g.holdsSignIn -> "Signed in · Coach is choosing its tools"
+    g.waitingSignIn -> "Waiting for the sign-in at ${g.vendor}"
     else -> g.status.replace('_', ' ').replaceFirstChar { it.uppercase() }
   }
 

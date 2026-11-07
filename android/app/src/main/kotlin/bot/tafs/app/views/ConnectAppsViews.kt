@@ -82,9 +82,39 @@ object ConnectAppsWords {
     state.tafs.firstOrNull { it.id == grant.request.agent && it.state != bot.tafs.app.model.TafState.revoked }?.name
 }
 
-/** The account's live connections to [app]: by its catalog entry, or the grant tafs cloud named for it. */
+/**
+ * The account's live connections to [app]: by its catalog entry, the grant tafs cloud named for it, or the app itself
+ * ([AppMatch.isOf]), so a sign-in Coach started at the vendor's own server is listed under its app too.
+ */
 fun connectionsOf(state: AppState, app: ConnectApps.App): List<bot.tafs.app.kiff.Grant> =
-  state.grants.filter { (it.entry == app.entry || it.id == app.grant) && it.status !in setOf("disconnected", "failed") }
+  state.grants.filter { (it.entry == app.entry || it.id == app.grant || AppMatch.isOf(it, app)) && it.status !in setOf("disconnected", "failed") }
+
+/** Which catalog app a connection is to, when planque doesn't name its catalog entry. */
+object AppMatch {
+  /** A name as tafs cloud's recipes fold it: lower case, no leading "_", no spaces, dots, dashes or underscores. */
+  fun fold(name: String): String = name.lowercase().trimStart('_').replace(Regex("""[\s._-]+"""), "")
+
+  /** The app's slug, folded: after `connector:<provider>:`, or before `@` in a reviewed entry ("notion@1"). */
+  fun slug(app: ConnectApps.App): String? {
+    val e = app.entry
+    val raw = if (e.startsWith("connector:")) e.split(':', limit = 3).getOrNull(2) else e.substringBefore('@')
+    return raw?.let(::fold)?.takeIf { it.isNotEmpty() }
+  }
+
+  /** The host of a server planque names, with or without its scheme, path or port. */
+  fun host(server: String): String = server.substringAfter("://").substringBefore('/').substringBefore(':').lowercase()
+
+  /**
+   * A managed provider's connection is the app its toolkit names. Any other is the app one of its server's host labels names
+   * whole ("mcp.stripe.com" is Stripe, "notstripe.com" isn't), never a provider's host, which serves every one of its apps.
+   */
+  fun isOf(g: bot.tafs.app.kiff.Grant, app: ConnectApps.App): Boolean {
+    val slug = slug(app) ?: return false
+    val connector = g.request.connector
+    if (connector != null) return connector.toolkit?.let(::fold) == slug
+    return host(g.request.server).split('.').any { fold(it) == slug }
+  }
+}
 
 /**
  * Connect apps (A1): tafs cloud's catalog, first as it orders it, then KIFF's own apps for Google, Microsoft and Slack. Each
@@ -104,6 +134,9 @@ fun ConnectAppsSheet(
   onChooseActions: (ConnectApps.App) -> Unit = { onAskCoach() },
   /** Disconnects one of a connected app's connections (signed, with the owner's fingerprint); null for someone who can't. */
   onDisconnect: ((String) -> Unit)? = null,
+  /** Gives a key-based connection a new key, or signs a sign-in one in again (gap 13); null for someone who can't. */
+  onReplaceKey: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
+  onSignInAgain: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
   /** The connection that just came back signed in, and leaving that note. */
   onConnectedNow: (bot.tafs.app.kiff.Grant) -> Unit = {},
   dismissConnectedNow: () -> Unit = {},
@@ -169,6 +202,19 @@ fun ConnectAppsSheet(
                   Text(ConnectAppsWords.setUpFor(state, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
                   ConnectAppsWords.alsoOnCards(state, g)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
                   g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+                  // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
+                  bot.tafs.app.model.ConnectionWords.lastFailure(g, state.record)?.let { Text(it, style = scaled(13, color = Theme.no)) }
+                  val fix = if (g.takesKey) onReplaceKey else onSignInAgain
+                  // A provider's connection isn't signed in again in place: say how, before any fingerprint.
+                  if (fix != null && g.signsInThroughProvider) Text(bot.tafs.app.model.ConnectionWords.throughProvider(g), style = scaled(13, color = Theme.soft))
+                  else fix?.let { act ->
+                    Text(
+                      if (g.takesKey) bot.tafs.app.model.ConnectionWords.REPLACE_KEY else bot.tafs.app.model.ConnectionWords.SIGN_IN_AGAIN,
+                      style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+                      modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { act(g) }.padding(top = 10.dp),
+                    )
+                  }
+                  state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
                 }
                 if (onDisconnect != null) Text(
                   ConnectAppsWords.DISCONNECT,
