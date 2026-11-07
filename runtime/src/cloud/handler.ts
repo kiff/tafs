@@ -5290,7 +5290,7 @@ async function usageCredits(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Pro
   ]);
   const tafs = records.filter((t) => t.job !== SETUP_JOB)
     .map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, opens: !t.removing && listable(access, t.kiffAgent) }));
-  return creditsView(k, tafs, me.timeZone ?? "UTC");
+  return creditsView(k, tafs);
 }
 
 /**

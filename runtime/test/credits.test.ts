@@ -29,21 +29,28 @@ const tafs = [
 
 describe("the period's credits, in words", () => {
   it("says what the period used and when it ends, or the last one's dates", () => {
-    expect(periodWords({ period: NOV, current: true, credits: 1240 }, "UTC")).toBe("This period: 1,240 credits used · ends on 30 Nov");
-    expect(periodWords({ period: NOV, current: true, credits: 0 }, "UTC")).toBe("This period: no credits used yet · ends on 30 Nov");
-    expect(periodWords({ period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" }, current: false, credits: 1 }, "UTC"))
+    expect(periodWords({ period: NOV, current: true, credits: 1240 })).toBe("This period: 1,240 credits used · ends on 30 Nov");
+    expect(periodWords({ period: NOV, current: true, credits: 0 })).toBe("This period: no credits used yet · ends on 30 Nov");
+    expect(periodWords({ period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" }, current: false, credits: 1 }))
       .toBe("Last period: 1 credit used · 1 Oct to 31 Oct");
-    expect(periodWords({ period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" }, current: false, credits: 0 }, "UTC"))
+    expect(periodWords({ period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" }, current: false, credits: 0 }))
       .toBe("Last period: no credits used · 1 Oct to 31 Oct");
-    // In the account's zone: November in Madrid ends on 30 Nov, though it ends at 23:00 UTC.
-    expect(periodWords({ period: { start: "2026-10-31T23:00:00Z", end: "2026-11-30T23:00:00Z" }, current: true, credits: 5 }, "Europe/Madrid"))
-      .toBe("This period: 5 credits used · ends on 30 Nov");
-    expect(periodWords({ period: { start: "2026-10-31T23:00:00Z", end: "2026-11-30T23:00:00Z" }, current: true, credits: 5 }, "UTC"))
-      .toBe("This period: 5 credits used · ends on 30 Nov");
+  });
+
+  it("names its days as KIFF bounds the period (UTC), whatever the account's zone", async () => {
+    // In Paris, the instant before 1 Dec 00:00 UTC is already 1 Dec: the day before the end's date is 30 Nov.
+    const r = await get(world(kiff({ credits: kiffCredits({ credits: 0, by_agent: [] }), me: { ...ME, time_zone: "Europe/Paris" } })), "/v1/usage/credits");
+    expect(r.body.words).toBe("This period: no credits used yet · ends on 30 Nov");
+    const west = await get(world(kiff({ credits: kiffCredits({ current: false, credits: 0, by_agent: [], period: { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" } }),
+      me: { ...ME, time_zone: "America/New_York" } })), "/v1/usage/credits", "period=previous");
+    expect(west.body.words).toBe("Last period: no credits used · 1 Oct to 31 Oct");
+    // A period Stripe bounds mid-day ends the day before its end's date.
+    expect(periodWords({ period: { start: "2026-10-20T09:12:00Z", end: "2026-11-20T09:12:00Z" }, current: true, credits: 3 }))
+      .toBe("This period: 3 credits used · ends on 19 Nov");
   });
 
   it("names each taf that used credits, most first, Coach past its fair use, and what wasn't counted", () => {
-    expect(creditsView(kiffCredits(), tafs, "UTC")).toEqual({
+    expect(creditsView(kiffCredits(), tafs)).toEqual({
       period: { ...NOV, current: true },
       credits: 1240, runs: 61,
       words: "This period: 1,240 credits used · ends on 30 Nov",
@@ -70,20 +77,20 @@ describe("the period's credits, in words", () => {
       { agent: "agt-hidden", runtime_agent: HIDDEN, credits: 30, runs: 2 },
       { agent: "agt-gone", runtime_agent: "taf-0000aaaa0000aaaa0000", credits: 5, runs: 1 },
     ] });
-    expect(creditsView(k, tafs, "UTC").tafs).toEqual([
+    expect(creditsView(k, tafs).tafs).toEqual([
       { taf: REFUNDS, credits: 10, runs: 1, words: "Refunds · 10 credits · 1 run" },
       { taf: null, credits: 35, runs: 3, words: "Other tafs · 35 credits · 3 runs" },
     ]);
     // Only removed ones: said so.
     const gone = kiffCredits({ by_agent: [{ agent: "agt-gone", runtime_agent: "taf-0000aaaa0000aaaa0000", credits: 5, runs: 1 }] });
-    expect(creditsView(gone, tafs, "UTC").tafs).toEqual([{ taf: null, credits: 5, runs: 1, words: "Removed tafs · 5 credits · 1 run" }]);
+    expect(creditsView(gone, tafs).tafs).toEqual([{ taf: null, credits: 5, runs: 1, words: "Removed tafs · 5 credits · 1 run" }]);
     // A taf named by its KIFF agent alone is still found.
     const byAgent = kiffCredits({ by_agent: [{ agent: "agt-refunds", runtime_agent: "", credits: 2, runs: 1 }] });
-    expect(creditsView(byAgent, tafs, "UTC").tafs[0]).toMatchObject({ taf: REFUNDS });
+    expect(creditsView(byAgent, tafs).tafs[0]).toMatchObject({ taf: REFUNDS });
   });
 
   it("says nothing went uncounted, and no Coach row, when that's so", () => {
-    const v = creditsView(kiffCredits({ setup: { credits: 0, runs: 0 }, free: { setup: 0, trial: 0, failed: 0 } }), tafs, "UTC");
+    const v = creditsView(kiffCredits({ setup: { credits: 0, runs: 0 }, free: { setup: 0, trial: 0, failed: 0 } }), tafs);
     expect(v.coach).toBeNull();
     expect(v.not_counted).toEqual({ runs: 0, words: "Not counted: none", lines: [] });
   });
@@ -137,13 +144,13 @@ describe("a run, in words", () => {
 });
 
 /** KIFF as the routes read it: who the token is, what they may use, and the credits reads. */
-function kiff(opts: { credits?: object; status?: number; accessStatus?: number; runs?: object; asked?: string[] } = {}) {
+function kiff(opts: { credits?: object; status?: number; accessStatus?: number; runs?: object; asked?: string[]; me?: object } = {}) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     if (token !== "ana") return new Response("{}", { status: 401 });
     const u = new URL(url);
     opts.asked?.push(u.pathname + u.search);
-    if (u.pathname === "/v1/me") return new Response(JSON.stringify(ME), { status: 200 });
+    if (u.pathname === "/v1/me") return new Response(JSON.stringify(opts.me ?? ME), { status: 200 });
     if (u.pathname === "/v1/me/access") {
       if (opts.accessStatus) return new Response("{}", { status: opts.accessStatus });
       return new Response(JSON.stringify({ agents: { "agt-refunds": { use: true }, "agt-chargebacks": { oversee: true } } }), { status: 200 });

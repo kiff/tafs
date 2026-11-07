@@ -93,24 +93,23 @@ const number = (n: number) => new Intl.NumberFormat("en-GB").format(n);
 const credits = (n: number) => `${number(n)} ${n === 1 ? "credit" : "credits"}`;
 const runs = (n: number) => `${number(n)} ${n === 1 ? "run" : "runs"}`;
 
-/** A day in the account's zone: "1 Dec". */
-function day(at: Date, zone: string): string {
-  try {
-    return new Intl.DateTimeFormat("en-GB", { timeZone: zone, day: "numeric", month: "short" }).format(at);
-  } catch {
-    return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(at);
-  }
+/** A date of KIFF's period, as KIFF bounds it (UTC): "1 Dec". */
+function day(at: Date): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(at);
 }
 
 /**
- * The period's line, with its last day, never its exclusive end: "This period: 1,240 credits used ·
- * ends on 30 Nov", or the last one's first and last days.
+ * The period's line, with its first and last days as KIFF bounds the period (UTC): the start's
+ * date, and the day before the end's date, never the instant before the end in the account's
+ * zone, which east of UTC is already the next day. "This period: 1,240 credits used · ends on
+ * 30 Nov", or "Last period: 980 credits used · 1 Oct to 31 Oct".
  */
-export function periodWords(k: Pick<KIFFCredits, "period" | "current" | "credits">, zone: string): string {
-  const start = new Date(k.period.start), last = new Date(new Date(k.period.end).getTime() - 1);
+export function periodWords(k: Pick<KIFFCredits, "period" | "current" | "credits">): string {
+  const start = new Date(k.period.start), end = new Date(k.period.end);
+  const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - 1));
   const used = k.credits > 0 ? `${credits(k.credits)} used` : k.current ? "no credits used yet" : "no credits used";
-  if (k.current) return `This period: ${used} · ends on ${day(last, zone)}`;
-  return `Last period: ${used} · ${day(start, zone)} to ${day(last, zone)}`;
+  if (k.current) return `This period: ${used} · ends on ${day(last)}`;
+  return `Last period: ${used} · ${day(start)} to ${day(last)}`;
 }
 
 /** Why runs weren't counted, in words, in the order they're shown. */
@@ -147,7 +146,7 @@ export interface CreditsView {
  * rest (tafs removed since, and those the person doesn't use or oversee) on one row that doesn't
  * open; Coach's row past its fair use; and what wasn't counted, and why.
  */
-export function creditsView(k: KIFFCredits, tafs: CreditsTaf[], zone: string): CreditsView {
+export function creditsView(k: KIFFCredits, tafs: CreditsTaf[]): CreditsView {
   const rows: CreditsView["tafs"] = [];
   let rest = { credits: 0, runs: 0, unseen: false };
   for (const a of k.by_agent) {
@@ -168,7 +167,7 @@ export function creditsView(k: KIFFCredits, tafs: CreditsTaf[], zone: string): C
   const free = lines.reduce((n, l) => n + l.runs, 0);
   return {
     period: { start: k.period.start, end: k.period.end, current: k.current },
-    credits: k.credits, runs: k.runs, words: periodWords(k, zone), tafs: rows, coach,
+    credits: k.credits, runs: k.runs, words: periodWords(k), tafs: rows, coach,
     not_counted: { runs: free, words: free > 0 ? `Not counted: ${runs(free)}` : "Not counted: none", lines },
     note: NOTE,
   };
