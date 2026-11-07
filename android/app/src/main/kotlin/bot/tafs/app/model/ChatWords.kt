@@ -5,6 +5,7 @@ object ChatWords {
   const val NOT_SENT = "Not sent"
   const val RETRY = "Retry"
   const val EDIT = "Edit"
+  const val DELETE = "Delete"
   /** Under what tafs cloud holds of the owner's (docs/chat.md): it goes by itself once the taf is done. */
   const val HELD = "Waits until it's done, then goes as your next message"
 
