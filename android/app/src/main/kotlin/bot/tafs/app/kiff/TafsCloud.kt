@@ -329,6 +329,19 @@ class TafsCloud(
   /** AI use this period. */
   suspend fun aiUse(): AIUse = get("/v1/usage/ai")
 
+  /** The period's credits, or the period before with [previous]; null from a tafs cloud from before credits (404). */
+  suspend fun credits(previous: Boolean = false): Credits? = orNone {
+    get<Credits>("/v1/usage/credits" + if (previous) "?period=previous" else "")
+  }
+
+  /** One taf's runs and their credits, a page at a time from [after]; null from a tafs cloud from before credits (404). */
+  suspend fun tafCredits(id: String, previous: Boolean = false, after: String? = null): TafCredits? = orNone {
+    val query = listOfNotNull("period=previous".takeIf { previous }, after?.let { "after=${escaped(it)}" })
+    get<TafCredits>("/v1/usage/credits/tafs/${escaped(id)}" + if (query.isEmpty()) "" else query.joinToString("&", prefix = "?"))
+  }
+
+  private inline fun <T> orNone(read: () -> T): T? = try { read() } catch (e: CloudError) { if (e.status == 404) null else throw e }
+
   // MARK: Halt
 
   private fun haltPath(id: String?): String = id?.let { "/v1/tafs/${escaped(it)}/halt" } ?: "/v1/halt"

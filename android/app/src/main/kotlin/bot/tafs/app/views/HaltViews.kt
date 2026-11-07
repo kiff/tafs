@@ -64,6 +64,11 @@ class AccountActions(
   val goOnAI: suspend () -> Boolean = { false },
   /** Reads AI use again, signing nothing. */
   val readAIUse: suspend () -> Unit = {},
+  /** Credits (docs/accounts.md#credits): this period's or the one before's; a taf's runs by tafs cloud's id, and more of them; a run's request. */
+  val showCreditsPeriod: suspend (Boolean) -> Unit = {},
+  val openTafCredits: suspend (String) -> Unit = {},
+  val moreTafCredits: suspend () -> Unit = {},
+  val openCreditsRun: suspend (String, String) -> Unit = { _, _ -> },
 )
 
 /** How often a halt is read again while it is halting, and for how long: every 2 seconds, up to 2 minutes. */

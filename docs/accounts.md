@@ -139,6 +139,16 @@ both are current. iOS has the same words and thresholds (`UsageView.planLine`, `
 
 Each taf's own part is a row on its Card tab (`TafUsageView`).
 
+**Credits**, read-only, sit above the tasks in Plan & usage, from tafs cloud's
+`GET /v1/usage/credits` and, for one taf's runs, `GET /v1/usage/credits/tafs/{id}`. Every line
+is tafs cloud's words as it sends them; the app orders nothing itself. On Android, `CreditsPanel`
+shows the period, each taf's row, Coach's row past its fair use, what wasn't counted and the note,
+with **Last period** and **This period** to switch. A taf's row opens `CreditsRunsSheet`: its
+runs, newest first, 50 at a time with **More runs**, each opening its request while `opens` is
+true (`readCredits`, `openTafCredits`, `moreTafCredits` and `openCreditsRun` in `AppModel`). A
+404 from a tafs cloud from before credits shows no panel, and a 503 shows tafs cloud's `words`.
+iOS follows in its own pull request.
+
 **Buying in the app** (`Purchases`), through the App Store only:
 
 - **Solo**, a monthly subscription, offered only to someone who may add tasks on an
