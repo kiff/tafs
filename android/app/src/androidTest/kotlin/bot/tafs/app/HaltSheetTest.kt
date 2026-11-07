@@ -30,7 +30,7 @@ class HaltSheetTest {
     val actions = AccountActions(
       // As AppModel does: the screen reads halted before the halt has returned.
       halt = { halt = Halt(state = Halt.HALTED, runtime = true, kiff = true, planque = true); finish.await() },
-      refreshHalt = {}, resumeHalt = { false }, refreshUsage = {}, refreshTafUsage = {},
+      refreshHalt = {}, resumeHalt = { false }, refreshUsage = {},
     )
     rule.setShown {
       TafsTheme {

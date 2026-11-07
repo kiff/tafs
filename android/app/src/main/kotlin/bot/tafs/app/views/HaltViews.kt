@@ -50,20 +50,19 @@ class AccountActions(
   val refreshHalt: suspend (String?) -> Unit,
   val resumeHalt: suspend (String?) -> Boolean,
   val refreshUsage: suspend () -> Unit,
-  val refreshTafUsage: suspend (String) -> Unit,
   /** Buys Solo or a pack through Google Play, by its Play product; and brings back purchases not finished yet. */
   val buy: suspend (String) -> Unit = {},
   val restorePurchases: suspend () -> Unit = {},
   /** A member asks an admin for a pack, with a reason; and takes their request back. */
-  val askForPack: suspend (String, String) -> Boolean = { _, _ -> false },
+  val askForPack: suspend (String?, String) -> Boolean = { _, _ -> false },
   val withdrawRequest: suspend (String) -> Unit = {},
   /** An admin approves a request by buying its pack (its Play product, the request), or declines it with a note. */
   val approveRequest: suspend (String, String) -> Unit = { _, _ -> },
   val declineRequest: suspend (String, String) -> Boolean = { _, _ -> false },
-  /** Lets the tafs go on past this period's AI use, signed (the billing admin only). */
-  val goOnAI: suspend () -> Boolean = { false },
-  /** Reads AI use again, signing nothing. */
-  val readAIUse: suspend () -> Unit = {},
+  /** Raises the spend limit one step, signed (who manages billing only). */
+  val raiseLimit: suspend () -> Boolean = { false },
+  /** Reads the balance again, signing nothing. */
+  val readBalance: suspend () -> Unit = {},
   /** Credits (docs/accounts.md#credits): this period's or the one before's; a taf's runs by tafs cloud's id, and more of them; a run's request. */
   val showCreditsPeriod: suspend (Boolean) -> Unit = {},
   val openTafCredits: suspend (String) -> Unit = {},

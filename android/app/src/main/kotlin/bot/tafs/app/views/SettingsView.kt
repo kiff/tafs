@@ -254,21 +254,16 @@ private fun Section(title: String, content: @Composable ColumnScope.() -> Unit) 
   }
 }
 
-/** The plan's line, in its tone, and Plan & usage under it; just the title until KIFF's usage is read. */
+/** The plan's line as tafs cloud words it (`plan_line`), in its tone, and Plan & usage under it; just the title until it's read. */
 @Composable
 private fun PlanRow(state: AppState, onUsage: () -> Unit) {
-  val usage = state.usage
+  val balance = state.balance
   Column(
     Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(onClick = onUsage).padding(horizontal = 12.dp, vertical = 10.dp),
     verticalArrangement = Arrangement.spacedBy(2.dp),
   ) {
-    if (usage != null) {
-      val color = when (UsageWords.planTone(usage)) {
-        UsageWords.PlanTone.Attention -> Theme.amberText
-        UsageWords.PlanTone.Out -> Theme.no
-        UsageWords.PlanTone.Calm -> Theme.ink
-      }
-      Text(UsageWords.planLine(usage), style = scaled(16, FontWeight.SemiBold, color))
+    if (balance != null) {
+      Text(balance.planLine, style = scaled(16, FontWeight.SemiBold, planColor(balance.planTone, calm = Theme.ink)))
       Text(UsageWords.TITLE, style = scaled(13, color = Theme.amberText))
     } else {
       Text(UsageWords.TITLE, style = scaled(16, color = Theme.ink))

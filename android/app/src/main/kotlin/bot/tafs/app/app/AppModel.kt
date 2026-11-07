@@ -44,7 +44,6 @@ import bot.tafs.app.model.TafTemplates
 import bot.tafs.app.model.newId
 import bot.tafs.app.model.threeMonthsOn
 import bot.tafs.app.kiff.Account
-import bot.tafs.app.kiff.AIUse
 import bot.tafs.app.kiff.AlertTarget
 import bot.tafs.app.kiff.Grant
 import bot.tafs.app.kiff.CloudSetup
@@ -74,10 +73,8 @@ import bot.tafs.app.model.shownDate
 import bot.tafs.app.kiff.Switching
 import bot.tafs.app.kiff.Version
 import bot.tafs.app.model.VersionWords
-import bot.tafs.app.kiff.CountedTask
 import bot.tafs.app.kiff.Halt
 import bot.tafs.app.kiff.Usage
-import bot.tafs.app.kiff.UsageAgent
 import bot.tafs.app.model.SentMessages
 import kotlinx.coroutines.CoroutineScope
 import bot.tafs.app.kiff.ActivityCall
@@ -269,24 +266,26 @@ data class AppState(
   val halts: Map<String, Halt> = emptyMap(),
   /** Why the last Halt or Resume didn't go through, shown on the Halt screen itself, where it was asked. */
   val haltError: String? = null,
-  /** The account's usage this period, once read; and why it couldn't be. */
+  /** KIFF's usage read, for what it still says beside the balance: the store, who bills the plan, and requests. And why it couldn't be read. */
   val usage: Usage? = null,
   val usageError: String? = null,
-  /** The period's counted tasks, newest first; and each taf's own, once its page read them. */
-  val countedTasks: List<CountedTask> = emptyList(),
-  val tafTasks: Map<String, List<CountedTask>> = emptyMap(),
-  val aiUse: AIUse? = null,
-  /** Go on is on its way: one fingerprint, then KIFF. */
-  val goingOn: Boolean = false,
-  /** Why Go on didn't go through, under its button. */
-  val goOnError: String? = null,
   /**
-   * A go-on went through but AI use couldn't be read since: what's shown is from before it, so no Go on is offered (a second
-   * would raise the bound again), only Read it again, which signs nothing.
+   * The balance now (docs/accounts.md#the-balance-read), in tafs cloud's words: Plan & usage, Settings' Plan card and Home's line.
+   * Null until read, and from a tafs cloud from before the balance. And why it couldn't be read, in tafs cloud's words where it sends some.
    */
-  val aiUseStale: Boolean = false,
+  val balance: bot.tafs.app.kiff.Balance? = null,
+  val balanceError: String? = null,
+  /** Raise the limit is on its way: one fingerprint, then KIFF. */
+  val raising: Boolean = false,
+  /** Why Raise the limit didn't go through, under its button. */
+  val raiseError: String? = null,
+  /**
+   * A raise went through but the balance couldn't be read since: what's shown is from before it, so no raise is offered (a
+   * second would raise the limit again), only Read it again, which signs nothing.
+   */
+  val balanceStale: Boolean = false,
   /** Read it again is on its way. */
-  val readingAIUse: Boolean = false,
+  val readingBalance: Boolean = false,
   /**
    * The credits the runs used (docs/accounts.md#credits), read with Plan & usage: null until read, and from a tafs cloud from
    * before credits. [creditsPrevious] shows the period before. And why they couldn't be read, in tafs cloud's words where it sends some.
@@ -552,10 +551,6 @@ data class AppState(
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)
 
-  /** The taf's part of the period, from KIFF's by-agent counts; null until usage is read. A taf KIFF doesn't list counted nothing. */
-  fun tafUsage(tafId: String): UsageAgent? =
-    usage?.let { u -> u.tasks.byAgent?.firstOrNull { it.agent == tafId } ?: UsageAgent(tafId) }
-
   /** A taf by the KIFF agent it acts as; the agent's id when the app doesn't know it. */
   fun tafName(agent: String): String = taf(agent)?.name ?: agent
 
@@ -572,12 +567,15 @@ data class AppState(
   val canManageCards: Boolean get() = allows(kiffAccount?.capabilities, "cards.manage")
 
   /**
-   * Whether buying is offered here: Play Billing in this build, someone who may add tasks, and KIFF naming Play's products and
-   * the account's token. Until KIFF records Play purchases it names none, so nothing is offered.
+   * Whether buying is offered here: Play Billing in this build, the balance offering Solo or packs to this person (`buy`), and KIFF
+   * naming Play's products and the account's token. Until KIFF records Play purchases it names none, so nothing is offered.
    */
   val offersPurchases: Boolean
-    get() = playBilling && mode == Mode.kiff && usage?.canAddTasks == true &&
-      usage.store?.appAccountToken != null && usage.store.googleProducts.isNotEmpty()
+    get() = playBilling && mode == Mode.kiff && balance?.balance?.let { it.offers("solo") || it.offers("packs") } == true &&
+      usage?.store?.appAccountToken != null && usage.store.googleProducts.isNotEmpty()
+
+  /** Whether this person manages billing (KIFF's billing.manage): raises the limit, buys, and answers requests; others ask. */
+  val managesBilling: Boolean get() = allows(kiffAccount?.capabilities, "billing.manage")
 
   /** Whether this person may make and change groups (KIFF's members.manage). */
   val canManagePeople: Boolean get() = kiffAccount?.capabilities?.contains("members.manage") ?: false
@@ -1061,7 +1059,7 @@ class AppModel(
       show(read)
       // planque's grants too, after the list: a taf whose connection its vendor signed out waits on the owner there.
       refreshConnections()
-      // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
+      // The plan, for Settings' Plan card and Home's line: tafs cloud's balance, quietly.
       refreshPlan(generation)
       // Did this happen?: the money calls KIFF can't prove, for whoever answers held calls, read quietly.
       if (_state.value.mayAnswerHolds) attempt { kiff.didThisHappen() }?.let { calls ->
@@ -1690,7 +1688,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("The run didn't start. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) fail(creditsRefusal(e) ?: "The run didn't start. ${ErrorWords.of(e)}")
       return null
     } finally {
       _state.update { it.copy(runsInFlight = it.runsInFlight - tafId) }
@@ -4253,16 +4251,19 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (current() && e is CloudError && e.code == HELD_FULL) {
-        // As much waits as one message can be: tafs cloud's words, as they are, and the owner's go back in the box to send later.
+      val waitsForCredits = creditsRefusal(e)
+      if (current() && (waitsForCredits != null || e is CloudError && e.code == HELD_FULL)) {
+        // As much waits as one message can be, or the tafs wait on credits: tafs cloud's words, as they are, and the owner's go
+        // back in the box to send later. No Not sent row: Retry would change nothing until then (docs/accounts.md#in-the-apps).
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
-            chatErrors = s.chatErrors + (tafId to (e.message ?: "")),
+            chatErrors = s.chatErrors + (tafId to (waitsForCredits ?: e.message ?: "")),
           )
         }
+        if (waitsForCredits != null) putBackFiles(files, tafId)
         return false
       }
       if (current()) {
@@ -4568,12 +4569,19 @@ class AppModel(
   }
 
   /**
-   * Why a message wasn't sent, in words: tafs cloud's own where it says why (a run kiff/agents refused: the AI use spent, the taf
+   * Why a message wasn't sent, in words: tafs cloud's own where it says why (a run kiff/agents refused: the credits used, the taf
    * halted), else the app's for the status.
    */
   private fun sendFailure(e: Exception, name: String): String =
     if (e is CloudError && e.status == 429 && e.words == null) "That's a lot of messages in a few minutes. Give $name a moment, then try again."
     else "The message wasn't sent. ${ErrorWords.of(e)}"
+
+  /**
+   * A run refused because the tafs wait on credits (docs/accounts.md#the-balance-read): 409 with `credits_used_up`, `limit_reached`
+   * or `no_plan`, and tafs cloud's words, which say what lets them go on. Shown as they are; null for any other refusal.
+   */
+  private fun creditsRefusal(e: Exception): String? =
+    (e as? CloudError)?.takeIf { it.status == 409 && it.code in CREDITS_WAIT }?.words
 
   private fun nextStamp(tafId: String): Instant = Chat.stamp(_state.value.chats[tafId]?.maxOfOrNull { it.at }, clock())
 
@@ -6025,7 +6033,7 @@ class AppModel(
   // MARK: Asking an admin for tasks
 
   /** Asks the account's admins for a pack. False, saying why, when KIFF didn't take it. */
-  suspend fun askForPack(pack: String, reason: String): Boolean {
+  suspend fun askForPack(pack: String?, reason: String): Boolean {
     _state.update { it.copy(tasksMessage = null) }
     if (_state.value.mode != Mode.kiff) return false
     return try {
@@ -6139,98 +6147,123 @@ class AppModel(
   }
 
   /**
-   * Go on (kiff/tafs#185): lets the tafs go on past this period's AI use bound, from Settings › AI use, for the person who may
-   * (`can_go_on`). KIFF's `PUT /v1/me/usage/ai`, signed by the device key once the person confirms, as KIFF takes it (a
-   * phone-signed route, not the approval key's); KIFF refuses a replayed signature, so one tap is one go-on. Then AI use is
-   * read again: tafs cloud says where the tafs ask next.
+   * Raise the limit (docs/accounts.md#the-balance): one step more on the spend limit, for the person the balance offers it to
+   * (`raise`). KIFF's `PUT /v1/me/usage/limit`, signed by the device key once the person confirms, as KIFF takes it (a phone-signed
+   * route, not the approval key's); KIFF refuses a replayed signature, so one tap is one step. Then the balance is read again.
    */
-  suspend fun goOnAI(): Boolean {
-    if (_state.value.mode != Mode.kiff || _state.value.goingOn || _state.value.aiUseStale || _state.value.aiUse?.offersGoOn != true) return false
+  suspend fun raiseLimit(): Boolean {
+    if (_state.value.mode != Mode.kiff || _state.value.raising || _state.value.balanceStale) return false
+    // The raise names the limit it raises from: none read, none offered.
+    val from = _state.value.balance?.balance?.raise?.fromCents ?: return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(goOnError = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
+      _state.update { it.copy(raiseError = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
       return false
     }
     val generation = accountGeneration
-    _state.update { it.copy(goingOn = true, goOnError = null) }
-    // Busy until AI use is read after KIFF took it: never a second tap against the use from before.
+    _state.update { it.copy(raising = true, raiseError = null) }
+    // Busy until the balance is read after KIFF took it: never a second tap against the limit from before.
     var sent = false
     try {
-      signer.sign("tafs.ai-go-on.v1|$tenant".toByteArray(), "Let your tafs go on past this month's AI use")
+      signer.sign("tafs.raise-limit.v1|$tenant|$from".toByteArray(), "Raise the spend limit")
       if (generation != accountGeneration) return false
       kiff.tenant = tenant
       val signer = signer
       kiff.setupSigner = { signer.signConfirmed(it) }
-      kiff.goOnAI()
+      kiff.raiseLimit(from)
       sent = true
     } catch (e: SignerException) {
-      if (generation == accountGeneration) _state.update { it.copy(goOnError = notSigned(e, "Not done: it wasn't confirmed.")) }
+      if (generation == accountGeneration) _state.update { it.copy(raiseError = notSigned(e, "Not done: it wasn't confirmed.")) }
       return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(goOnError = "Your tafs didn't go on. ${ErrorWords.of(e)}") }
+      if (generation != accountGeneration) return false
+      val server = e as? KiffError.Server
+      if (server?.status == 409 && server.refused("limit_changed")) {
+        // Someone else raised it, or the screen was from before: read it again, and the raise is offered from the new limit.
+        readBalanceNow(generation)
+        _state.update { it.copy(raiseError = bot.tafs.app.model.UsageWords.LIMIT_CHANGED) }
+      } else if (server?.status == 409 && server.refused("limit_ceiling")) {
+        // KIFF's words say to contact it; the app's, the same as iPhone's, where it sends none.
+        _state.update { it.copy(raiseError = server.words ?: bot.tafs.app.model.UsageWords.LIMIT_CEILING) }
+      } else {
+        _state.update { it.copy(raiseError = server?.words ?: "The limit wasn't raised. ${ErrorWords.of(e)}") }
+      }
       return false
     } finally {
       kiff.setupSigner = null
-      if (!sent && generation == accountGeneration) _state.update { it.copy(goingOn = false) }
+      if (!sent && generation == accountGeneration) _state.update { it.copy(raising = false) }
     }
     if (generation != accountGeneration) return false
-    // KIFF has it: read again, so the panel says where the tafs ask next. A read that fails marks what's shown stale.
-    val ai = try {
-      attempt { cloud.aiUse() }
+    // KIFF has it: read again, so the balance says the new limit. A read that fails marks what's shown stale.
+    val read = try {
+      attempt { cloud.balance() }
     } finally {
-      if (generation == accountGeneration) _state.update { it.copy(goingOn = false) }
+      if (generation == accountGeneration) _state.update { it.copy(raising = false) }
     }
-    if (generation == accountGeneration) _state.update { if (ai != null) it.copy(aiUse = ai, aiUseStale = false) else it.copy(aiUseStale = true) }
+    if (generation == accountGeneration) _state.update { if (read != null) it.copy(balance = read, balanceStale = false, balanceError = null) else it.copy(balanceStale = true) }
     return true
   }
 
-  /** Read it again, after a go-on whose read failed: reads AI use and nothing else. Signs nothing. */
-  suspend fun readAIUse() {
-    if (_state.value.mode != Mode.kiff || _state.value.readingAIUse) return
+  /** Read it again, after a raise whose read failed: reads the balance and nothing else. Signs nothing. */
+  suspend fun readBalance() {
+    if (_state.value.mode != Mode.kiff || _state.value.readingBalance) return
     val generation = accountGeneration
-    _state.update { it.copy(readingAIUse = true) }
-    val ai = try { attempt { cloud.aiUse() } } finally { if (generation == accountGeneration) _state.update { it.copy(readingAIUse = false) } }
-    if (generation == accountGeneration && ai != null) _state.update { it.copy(aiUse = ai, aiUseStale = false) }
+    _state.update { it.copy(readingBalance = true) }
+    val read = try { attempt { cloud.balance() } } finally { if (generation == accountGeneration) _state.update { it.copy(readingBalance = false) } }
+    if (generation == accountGeneration && read != null) _state.update { it.copy(balance = read, balanceStale = false, balanceError = null) }
   }
 
   suspend fun refreshUsage() {
     when (_state.value.mode) {
-      Mode.signedOut -> _state.update { it.copy(usage = null, countedTasks = emptyList(), aiUse = null, credits = null, creditsError = null, tafCredits = null) }
-      Mode.sample -> {
-        val now = clock()
-        _state.update { it.copy(usage = sampleUsage(now), countedTasks = emptyList(), usageError = null, aiUse = AIUse(30, 100, false)) }
+      Mode.signedOut -> _state.update {
+        it.copy(usage = null, balance = null, balanceError = null, balanceStale = false, credits = null, creditsError = null, tafCredits = null)
       }
+      // The sample is the demo: a balance and credits, as tafs cloud words them.
+      Mode.sample -> _state.update { it.copy(usage = null, usageError = null, balance = bot.tafs.app.model.SampleCredits.balance, credits = bot.tafs.app.model.SampleCredits.credits(it.creditsPrevious)) }
       Mode.kiff -> {
         val generation = accountGeneration
+        // The balance first: what Plan & usage opens on.
+        readBalanceNow(generation)
+        // KIFF's usage read, for the store, who bills the plan and requests; the balance doesn't wait on it.
         try {
           val read = kiff.usage()
-          val page = attempt { kiff.countedTasks() }
-          // AI use is tafs cloud's; the rest of the screen doesn't wait on it.
-          val ai = attempt { cloud.aiUse() }
           if (generation != accountGeneration) return
-          // A use that couldn't be read keeps the stale mark, so Go on stays off until one is read.
-          _state.update {
-            val stale = it.aiUseStale && ai == null
-            it.copy(usage = read, countedTasks = page?.items.orEmpty(), usageError = null, aiUse = ai ?: if (stale) it.aiUse else null, aiUseStale = stale)
-          }
+          _state.update { it.copy(usage = read, usageError = null) }
           loadStore()
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
           if (generation == accountGeneration) _state.update { it.copy(usageError = "Usage couldn't be read. ${ErrorWords.of(e)}") }
         }
-        // Credits are tafs cloud's, beside KIFF's tasks: read whether or not the tasks were.
         readCredits(_state.value.creditsPrevious)
       }
     }
   }
 
+  /**
+   * The balance as a refresh reads it: a 404 (a tafs cloud from before it) shows none, and a failure keeps what was read and says
+   * why, in tafs cloud's words where it sends some. After a raise whose read failed, a read that works clears the stale mark.
+   */
+  private suspend fun readBalanceNow(generation: Int) {
+    try {
+      val read = cloud.balance()
+      if (generation == accountGeneration) _state.update { it.copy(balance = read, balanceError = null, balanceStale = if (read != null) false else it.balanceStale) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(balanceError = (e as? CloudError)?.words ?: "The balance couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
   /** Shows this period's credits, or the period before's with [previous]. */
   suspend fun showCreditsPeriod(previous: Boolean) {
-    if (_state.value.mode != Mode.kiff) return
-    readCredits(previous)
+    when (_state.value.mode) {
+      Mode.sample -> _state.update { it.copy(credits = bot.tafs.app.model.SampleCredits.credits(previous), creditsPrevious = previous) }
+      Mode.kiff -> readCredits(previous)
+      Mode.signedOut -> {}
+    }
   }
 
   private suspend fun readCredits(previous: Boolean) {
@@ -6249,7 +6282,10 @@ class AppModel(
     }
   }
 
-  /** Opens one taf's runs in the period shown, from its Credits row ([taf] is tafs cloud's id for it). */
+  /**
+   * Opens one taf's runs in the period shown, from its Credits row or its page's Usage row ([taf] is tafs cloud's id for it). With
+   * no sheet open yet, a read that fails says why in the "Not done" alert; one from before credits (404) opens nothing.
+   */
   suspend fun openTafCredits(taf: String) {
     if (_state.value.mode != Mode.kiff) return
     val generation = accountGeneration
@@ -6260,7 +6296,9 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(tafCreditsError = (e as? CloudError)?.words ?: "Its runs couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation != accountGeneration) return
+      val words = (e as? CloudError)?.words ?: "Its runs couldn't be read. ${ErrorWords.of(e)}"
+      if (_state.value.tafCredits == null) fail(words) else _state.update { it.copy(tafCreditsError = words) }
     }
   }
 
@@ -6299,32 +6337,8 @@ class AppModel(
     openRequest(tafId, run)
   }
 
-  /** The plan as KIFF says it, with no counted tasks or AI use (Plan & usage reads those): a failure leaves what was read. */
-  private suspend fun refreshPlan(generation: Int) {
-    val read = attempt { kiff.usage() } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(usage = read) }
-  }
-
-  /** Reads the period's usage if it isn't yet, and the taf's own counted tasks. */
-  suspend fun refreshTafUsage(tafId: String) {
-    if (_state.value.usage == null) refreshUsage()
-    if (_state.value.mode != Mode.kiff) return
-    val generation = accountGeneration
-    val page = attempt { kiff.countedTasks(agent = tafId) } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(tafTasks = it.tafTasks + (tafId to page.items)) }
-  }
-
-  /** The sample's month: a trial two days in. */
-  private fun sampleUsage(now: Instant): Usage = Usage(
-    plan = "trial",
-    period = bot.tafs.app.kiff.UsagePeriod(now.minus(Duration.ofDays(2)), now.plus(Duration.ofDays(5))),
-    tasks = bot.tafs.app.kiff.UsageMeter(
-      counted = 14, included = 25, packs = 0, left = 11, byAgent = emptyList(),
-      free = bot.tafs.app.kiff.UsageFree(refused = 3, failed = 1, read = 42, trial = 2),
-    ),
-    actions = bot.tafs.app.kiff.UsageMeter(counted = 0, included = 500),
-    trial = bot.tafs.app.kiff.UsageTrial(endsAt = now.plus(Duration.ofDays(5)), daysLeft = 5, tasksLeft = 11, actionsLeft = 500),
-  )
+  /** The plan, for Settings' Plan card and Home's line: tafs cloud's balance, as each refresh reads it. */
+  private suspend fun refreshPlan(generation: Int) = readBalanceNow(generation)
 
   private fun fail(words: String) = _state.update { it.copy(lastError = words) }
 
@@ -6391,6 +6405,8 @@ class AppModel(
   }
 
   companion object {
+    /** tafs cloud's codes for a run that waits on credits. */
+    val CREDITS_WAIT = setOf("credits_used_up", "limit_reached", "no_plan")
     /** Where the keys of the `not_sent` messages Retry or Edit took are kept, and how many: iOS keeps the same 500. */
     const val NOT_SENT_TAKEN = "tafs.chat.not-sent-taken"
     const val NOT_SENT_KEPT = 500

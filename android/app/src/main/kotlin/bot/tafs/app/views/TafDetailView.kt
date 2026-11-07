@@ -217,7 +217,7 @@ fun TafDetailView(
               VersionsRow({ onVersions(taf.id) }, title = version?.title ?: "Changes to how it runs", summary = version?.summary)
             }
             if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
-            if (state.mode == Mode.sample || state.canHalt(taf.id)) UsageRow(state.tafUsage(taf.id)?.counted) { onUsage(taf.id) }
+            if (state.canHalt(taf.id)) UsageRow { onUsage(taf.id) }
           }
           Section.Setup -> {
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
