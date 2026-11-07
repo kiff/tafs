@@ -78,7 +78,6 @@ import bot.tafs.app.views.PeopleGroupsSheet
 import bot.tafs.app.views.DoorActions
 import bot.tafs.app.views.HaltSheet
 import bot.tafs.app.views.HomeView
-import bot.tafs.app.views.TafUsageSheet
 import bot.tafs.app.views.TrialScreen
 import bot.tafs.app.views.VersionActions
 import bot.tafs.app.views.VersionsSheet
@@ -371,7 +370,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var haltOpen by rememberSaveable { mutableStateOf(false) }
   var haltTaf by rememberSaveable { mutableStateOf<String?>(null) }
   var usageOpen by rememberSaveable { mutableStateOf(false) }
-  var usageTaf by rememberSaveable { mutableStateOf<String?>(null) }
   var versionsTaf by rememberSaveable { mutableStateOf<String?>(null) }
   val versionActions = remember(model) {
     VersionActions(
@@ -395,15 +393,14 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       refreshHalt = model::refreshHalt,
       resumeHalt = model::resumeHalt,
       refreshUsage = model::refreshUsage,
-      refreshTafUsage = model::refreshTafUsage,
       buy = { model.buy(it) },
       restorePurchases = model::restorePurchases,
       askForPack = model::askForPack,
       withdrawRequest = model::withdrawRequest,
       approveRequest = { product, request -> model.buy(product, request) },
       declineRequest = model::declineRequest,
-      goOnAI = model::goOnAI,
-      readAIUse = model::readAIUse,
+      raiseLimit = model::raiseLimit,
+      readBalance = model::readBalance,
       showCreditsPeriod = model::showCreditsPeriod,
       openTafCredits = model::openTafCredits,
       moreTafCredits = model::moreTafCredits,
@@ -467,7 +464,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   LaunchedEffect(whose) {
     if (whose == shownAccount) return@LaunchedEffect
     shownAccount = whose
-    openTaf = null; trialTaf = null; versionsTaf = null; haltTaf = null; usageTaf = null; overviewOpen = false; calendarOpen = false; coachOpen = false
+    openTaf = null; trialTaf = null; versionsTaf = null; haltTaf = null; overviewOpen = false; calendarOpen = false; coachOpen = false
   }
   // Coach drives the app (docs/drive.md): its chat minimizes into the Coach button while it drives, and opens again at the end
   // with what it did. Each screen the person would see is Coach's `screen_shown`.
@@ -539,7 +536,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     val cloudId = AlertPayload.tafOf(open)
     when {
       open == AlertPayload.NEEDS_YOU -> { tab = Tab.NeedsYou; showingSettings = false }
-      open == AlertPayload.USAGE -> { usageTaf = null; usageOpen = true }
+      open == AlertPayload.USAGE -> usageOpen = true
       cloudId != null -> {
         // The list may not be read yet: the taf opens once it's there, and an alert for a taf no longer listed opens the list.
         val taf = state.tafs.firstOrNull { it.cloudId == cloudId }
@@ -608,14 +605,15 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onHaltAll = { haltTaf = null; haltOpen = true },
               // A halted taf's chip: the account's Halt when the account is halted (that's what resumes it), else the taf's.
               onHalted = { id -> haltTaf = if (!state.haltOf(null).running) null else id; haltOpen = true },
-              onUsage = { usageTaf = null; usageOpen = true },
+              onUsage = { usageOpen = true },
             )
           }
           val detail: @Composable (String) -> Unit = { id ->
             detailState.SaveableStateProvider(id) { TafDetailView(
               id, state, actions, onBack = { openTaf = null },
               onHalt = { haltTaf = it; haltOpen = true },
-              onUsage = { usageTaf = it; usageOpen = true },
+              // A taf's Usage row opens its own credits this period: its runs, over its page.
+              onUsage = { id -> state.taf(id)?.cloudId?.let { cloudId -> scope.launch { model.openTafCredits(cloudId) } } },
               onVersions = { versionsTaf = it },
               people = people,
               onConnectApps = { showingConnectApps = true },
@@ -708,7 +706,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onSignIn = { showingSettings = false; onSignIn() },
         onSignOut = { model.signOutAtKiff() },
         onSignInAgain = { model.signOutAtKiff() },
-        onUsage = { usageTaf = null; usageOpen = true },
+        onUsage = { usageOpen = true },
         onTurnOnAlerts = { scope.launch { model.turnOnAlerts() } },
         onAlertSound = model::setAlertSound,
         onToggleAlerts = { on -> scope.launch { if (on) { model.turnOnAlerts(); model.loadPhoneAlerts() } else model.turnOffAlerts() } },
@@ -790,13 +788,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     versionsTaf?.let { taf ->
       VersionsSheet(taf, state, versionActions, onOpenTrial = { versionsTaf = null; trialTaf = taf; tab = Tab.Tafs; openTaf = taf }, onClose = { versionsTaf = null })
     }
-    if (usageOpen) {
-      val taf = usageTaf
-      if (taf == null) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
-      else TafUsageSheet(taf, state, account, onClose = { usageOpen = false })
-      // A taf's runs, over Plan & usage, from its Credits row.
-      if (taf == null) state.tafCredits?.let { CreditsRunsSheet(it, state, account, onClose = model::closeTafCredits) }
-    }
+    if (usageOpen) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
+    // A taf's runs: over Plan & usage from its Credits row, or over its page from its Usage row.
+    state.tafCredits?.let { CreditsRunsSheet(it, state, account, onClose = model::closeTafCredits) }
     if (!keyboardUp && !wide) {
       HorizontalDivider(color = Theme.line)
       TabBar(tab, state, onTab = { tab = it }, onAccount = openAccount, onCoach = openCoach)

@@ -169,7 +169,8 @@ class PurchasesTest {
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
     transport.answer("GET /v1/me/usage", 200, usage(google, canAdd))
-    transport.answer("GET /v1/me/usage/tasks", 200, """{"items":[]}""")
+    // The balance says what the store may offer this person: Solo and packs, or nothing to someone who doesn't manage billing.
+    transport.answer("GET /v1/usage/balance", 200, """{"balance":{"state":"ok","words":"No plan","buy":${if (canAdd) """{"solo":true,"packs":true}""" else "null"}},"plan_line":"No plan"}""")
     transport.answer("POST /v1/me/billing/google/purchases", records, if (records == 200) "{}" else """{"error":"could not record the purchase"}""")
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
@@ -195,7 +196,7 @@ class PurchasesTest {
     assertFalse(model(playBilling = true, google = false).state.value.offersPurchases)
   }
 
-  @Test fun nothingIsOfferedToSomeoneWhoCantAddTasks() = runTest {
+  @Test fun nothingIsOfferedWhereTheBalanceOffersNothing() = runTest {
     assertFalse(model(playBilling = true, canAdd = false).state.value.offersPurchases)
   }
 
@@ -251,10 +252,11 @@ class PurchasesTest {
     assertEquals(listOf("tok_left"), play.finished)
   }
 
-  @Test fun soloIsOfferedOnlyOnTheTrialWithNoPlanBilled() = runTest {
+  @Test fun soloAndPacksAreOfferedAsTheBalanceSays() = runTest {
     val m = model(playBilling = true)
-    val u = m.state.value.usage!!
-    assertTrue(UsageWords.offersSolo(u))
-    assertFalse(UsageWords.offersSolo(u.copy(plan = "solo", billing = bot.tafs.app.kiff.UsageBilling("google"))))
+    val offer = m.state.value.balance!!.balance
+    assertTrue(offer.offers("solo"))
+    assertTrue(offer.offers("packs"))
+    assertTrue(m.state.value.offersPurchases)
   }
 }

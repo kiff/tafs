@@ -76,15 +76,15 @@ class CreditsTest {
     assertEquals("Credits will replace tasks. Nothing is charged in credits yet.", c.note)
     assertFalse(m.state.value.creditsPrevious)
     assertNull(m.state.value.creditsError)
-    // The tasks are read as before, beside it.
-    assertEquals(19, m.state.value.usage!!.tasks.left)
+    // KIFF's usage read is read as before, beside it.
+    assertEquals("solo", m.state.value.usage!!.plan)
   }
 
   @Test fun aTafsCloudFromBeforeCreditsShowsNoPanel() = runTest {
     val m = model(404 to """{"error":"not found"}""")
     assertNull(m.state.value.credits)
     assertNull("a 404 isn't a failure", m.state.value.creditsError)
-    assertEquals(19, m.state.value.usage!!.tasks.left)
+    assertEquals("solo", m.state.value.usage!!.plan)
   }
 
   @Test fun whenKiffCantBeReadTafsCloudsWordsAreShown() = runTest {

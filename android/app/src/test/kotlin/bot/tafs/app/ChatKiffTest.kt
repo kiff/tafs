@@ -364,6 +364,24 @@ class ChatKiffTest {
     assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages/stream").isEmpty())
   }
 
+  @Test fun aMessageRefusedForCreditsShowsTafsCloudsWordsAndGoesBackToTheBoxWithNoRetry() = runTest {
+    val waits = "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it."
+    for (code in listOf("credits_used_up", "limit_reached", "no_plan")) {
+      readsOf()
+      transport.answer(conversation, 200, thread(owner("go", "2026-10-28T08:00:00Z")))
+      val refusal = """{"error":"waiting","code":"$code","words":"$waits"}"""
+      transport.answer("POST /v1/tafs/taf_1/messages/stream", 409, refusal)
+      transport.answer("POST /v1/tafs/taf_1/messages", 409, refusal)
+      val m = model()
+      m.loadChat("refunds-1")
+      assertFalse(m.deliverChat("refund order 4402", "refunds-1"))
+      assertEquals(code, waits, m.state.value.chatErrors["refunds-1"])
+      // Not a "Not sent" row, so no Retry: sending again changes nothing until the tafs go on, and the words say how.
+      assertNull(code, m.state.value.chatUnsent["refunds-1"])
+      assertTrue(code, m.messages().none { it.text == "refund order 4402" })
+    }
+  }
+
   private val why = "You stopped it before it read this."
   private fun stopped(vararg texts: String) = steering(
     """{"run":"run_1","status":"CANCELLED","untaken":[],"not_sent":[${texts.joinToString(",") { """{"text":"$it","at":"2026-10-28T09:00:05Z","why":"$why"}""" }}]}""",
