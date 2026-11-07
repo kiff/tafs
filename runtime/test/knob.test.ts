@@ -83,6 +83,10 @@ describe("the dial", () => {
     const ok = knobOf({ ...base, setting: { wakes: [ev], busy: "skip", results: ["app"] }, appEvents: [{ ...ev, subscription: "sub_1" }] });
     expect(ok.wakes.find((w) => w.kind === "app_event")).toMatchObject({ on: true, approval: { state: "approved", subscription: "sub_1" } });
     expect(ok.wakes.find((w) => w.kind === "app_event")!.ok).toBeUndefined();
+    // One that went unanswered while the tafs waited for credits says so on its stop, in tafs cloud's words.
+    const missed = knobOf({ ...base, setting: { wakes: [ev], busy: "skip", results: ["app"] }, appEvents: [{ ...ev, subscription: "sub_1" }],
+      unansweredEvents: [{ grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", line: "2 events went unanswered while your tafs waited for credits" }] });
+    expect(missed.wakes.find((w) => w.kind === "app_event")!.words).toBe("Wakes on HubSpot · new deal · 2 events went unanswered while your tafs waited for credits");
     // Other filters are another subscription: still to approve.
     const other = knobOf({ ...base, setting: { wakes: [{ ...ev, config: { pipeline: "2" } }], busy: "skip", results: ["app"] }, appEvents: [{ ...ev, subscription: "sub_1" }] });
     expect(other.wakes.find((w) => w.kind === "app_event")!.approval!.state).toBe("needed");

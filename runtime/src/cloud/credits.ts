@@ -257,7 +257,7 @@ export function tafCreditsView(k: KIFFCredits, page: KIFFRuns, taf: CreditsTaf, 
   };
 }
 
-/** Euro cents as the apps show them: "€50", or "€12.34". */
+/** Euro cents as the apps show them: "€12", or "€12.34". */
 function euros(cents: number): string {
   const whole = cents % 100 === 0;
   return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 })

@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **A door's message or an app's event waits while the tafs wait for credits (tafs cloud).** Refused for credits, it's kept for 48 hours, with nothing sent in the business's name, and runs once the tafs go on, oldest first across the account's tafs; one that comes meanwhile waits behind them. One still waiting after 48 hours doesn't run, nor one refused 3 times for anything else: its door's or event's stop on the taf's dial says it went unanswered for 7 days, and the people who answer the taf's holds are told once, in one push per taf. No app change (docs/accounts.md › Credits and plans).
 - **Credits are the balance in Plan & usage (iOS).** Plan & usage opens on the balance in tafs cloud's words (`GET /v1/usage/balance`, docs/accounts.md › The balance read): its line, a bar, what comes next and the warning, with **Raise the limit** on Company and **Add credits** or Solo where tafs cloud offers them. The Credits panel follows. Settings' Plan card and Home's plan line show tafs cloud's `plan_line` and `home_line`.
   - **Raise the limit** is signed by the device key behind Face ID, as Go on was, with the limit it raises from (`from_cents`). Then the balance is read again; if that read fails, only Read it again is offered. A limit that changed meanwhile is read again, and the phone's ceiling says to contact KIFF.
   - **A chat, Coach or Run now refused for credits** shows tafs cloud's words, with no Retry, and the message stays in the composer.
