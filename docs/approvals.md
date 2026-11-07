@@ -375,7 +375,8 @@ phones that answer holds, once for each run of failures, opening the taf:
   why." Not for one its owner turned off.
 - **a follow-up the taf set, or a one-time run:** at once, since it's off after its firing and its work
   won't run again by itself. "A follow-up it set for itself didn't run, and won't try again. Open it to
-  see why." Never said again a month on.
+  see why." Not while it's still on (its owner moved it during the run), and never said again a month on.
+- **nothing for a halted taf or account,** which tries nothing until it's resumed; it's said once it is.
 
 **Sound**, in Settings under **Notifications & haptics** (`NotificationSettingsView`), is
 on by default and set for each device. Off, the phone says so when it registers

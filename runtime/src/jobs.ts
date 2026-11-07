@@ -45,8 +45,32 @@ export const DISCLOSURE_LINE = "Written by an AI agent.";
  */
 export function disclosureLine(job: Pick<Job, "writesFor">): string {
   const who = job.writesFor?.replace(/\s+/g, " ").trim();
-  return who ? `Written by an AI agent for ${who}.` : DISCLOSURE_LINE;
+  return who ? lineFor(who) : DISCLOSURE_LINE;
 }
+
+/** The disclosure line naming who the messages come from. */
+const lineFor = (who: string) => `Written by an AI agent for ${who}.`;
+
+/** The most bytes a disclosure line may have: kiff/agents refuses a definition with a longer one (agent.MaxDisclosureLine). */
+export const DISCLOSURE_MAX_BYTES = 300;
+
+/** The line in other languages, by ISO 639-1 code, naming who the messages come from. */
+const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
+  es: (who) => `Escrito por un agente de IA para ${who}.`,
+  fr: (who) => `Rédigé par un agent d'IA pour ${who}.`,
+  de: (who) => `Von einem KI-Agenten für ${who} geschrieben.`,
+  pt: (who) => `Escrito por um agente de IA para ${who}.`,
+  it: (who) => `Scritto da un agente di IA per ${who}.`,
+};
+
+/** The line in other languages, naming no one. */
+const LINES_NAMING_NO_ONE: Readonly<Record<string, string>> = {
+  es: "Escrito por un agente de IA.",
+  fr: "Rédigé par un agent d'IA.",
+  de: "Von einem KI-Agenten geschrieben.",
+  pt: "Escrito por um agente de IA.",
+  it: "Scritto da un agente di IA.",
+};
 
 /**
  * The disclosure line in other languages, by ISO 639-1 code: kiff/agents puts the one in the language a
@@ -56,21 +80,11 @@ export function disclosureLine(job: Pick<Job, "writesFor">): string {
  */
 export function disclosureLines(job: Pick<Job, "writesFor">): Record<string, string> {
   const who = job.writesFor?.replace(/\s+/g, " ").trim();
-  return who
-    ? {
-      es: `Escrito por un agente de IA para ${who}.`,
-      fr: `Rédigé par un agent d'IA pour ${who}.`,
-      de: `Von einem KI-Agenten für ${who} geschrieben.`,
-      pt: `Escrito por um agente de IA para ${who}.`,
-      it: `Scritto da un agente di IA per ${who}.`,
-    }
-    : {
-      es: "Escrito por un agente de IA.",
-      fr: "Rédigé par un agent d'IA.",
-      de: "Von einem KI-Agenten geschrieben.",
-      pt: "Escrito por um agente de IA.",
-      it: "Scritto da un agente di IA.",
-    };
+  if (!who) return { ...LINES_NAMING_NO_ONE };
+  // A language whose line wouldn't fit in what kiff/agents takes is left out, and English heads the taf's
+  // messages in it: a name stored before new names were capped at WRITES_FOR_MAX_BYTES (qa-kiff on #587).
+  return Object.fromEntries(Object.entries(LINES_FOR).map(([lang, line]) => [lang, line(who)] as const)
+    .filter(([, line]) => Buffer.byteLength(line) <= DISCLOSURE_MAX_BYTES));
 }
 
 /** The disclosure line for a text: in its language when disclosureLines has it, disclosureLine otherwise. */
@@ -355,11 +369,14 @@ export function discloseOf(v: unknown): Job["disclose"] {
 }
 
 /**
- * The most a name the taf writes for may be: one line of 100 characters, and 272 bytes, so its disclosure
- * line ("Written by an AI agent for " + name + ".") stays within the 300 bytes kiff/agents takes (qa-kiff on #574).
+ * The most a new name the taf writes for may be: one line of 100 characters, and as many bytes as leave its
+ * disclosure line room in every language within the 300 bytes kiff/agents takes (qa-kiff on #574 and #587):
+ * 261, the German line ("Von einem KI-Agenten für … geschrieben.") being the longest. A name stored before,
+ * or a company's name from KIFF, up to the English line's 272, still works: a language whose line doesn't fit
+ * is left out (disclosureLines).
  */
 export const WRITES_FOR_MAX = 100;
-export const WRITES_FOR_MAX_BYTES = 300 - Buffer.byteLength("Written by an AI agent for .");
+export const WRITES_FOR_MAX_BYTES = DISCLOSURE_MAX_BYTES - Math.max(...[lineFor, ...Object.values(LINES_FOR)].map((line) => Buffer.byteLength(line(""))));
 
 /** A result's writes_for, checked: a name on one line, or undefined for none. Throws, in words for Coach. */
 export function writesForOf(v: unknown): string | undefined {
@@ -385,5 +402,5 @@ export function writesForIn(line: string | undefined): string | undefined {
 
 export function systemPrompt(job: Job): string {
   const lines = Object.entries(disclosureLines(job)).map(([lang, line]) => `${lang} "${line}"`).join(", ");
-  return `${SHARED_INSTRUCTIONS}\n\nYour job: ${job.name}.\n\nYour disclosure line: "${disclosureLine(job)}"\nIn other languages: ${lines}\n\n${job.instructions}`;
+  return `${SHARED_INSTRUCTIONS}\n\nYour job: ${job.name}.\n\nYour disclosure line: "${disclosureLine(job)}"${lines ? `\nIn other languages: ${lines}` : ""}\n\n${job.instructions}`;
 }

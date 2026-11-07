@@ -463,7 +463,9 @@ answer as `writes_for`. kiff/agents then starts each outside message with "Writt
 in each text part the message carries (an email's text and its html), said once, in the message's
 language when it's Spanish, French, German, Portuguese or Italian (the definition's `disclose.lines`),
 English otherwise. No message carries "Built with tafs." any more, on WhatsApp, SMS or email (the
-owner's call, 7 Nov), and tafs sends no `credit`. With no name from Coach, a taf on a company account
+owner's call, 7 Nov), and tafs sends no `credit`. A line has at most the 300 bytes kiff/agents takes, so a
+new `writes_for` is at most 261 bytes, which fits in every language; a name stored before, up to 272, has
+any language whose line doesn't fit left out, and English heads its messages there. With no name from Coach, a taf on a company account
 writes for the company's name as KIFF gives it (never a personal account's, which can be an email), and
 the Upgrade gives that name to a taf from before that names no one. A version built before gap 18 says
 "for the company": installing it, or switching back to it, names no one. Evidence or a filing (Chargebacks'

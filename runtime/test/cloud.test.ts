@@ -2382,6 +2382,38 @@ describe("a schedule whose runs keep failing to start", () => {
     expect(await sweepFailingSchedules(deps)).toEqual([]);
     expect(w.pushed).toHaveLength(0);
   });
+
+  it("says nothing for a halted taf, nor in a halted account, and says it once it's resumed", async () => {
+    const { w, deps } = await setUp({ since: SINCE, firings: 3 });
+    w.account.acksAtOnce = true;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
+    const before = w.pushed.length; // the halt's own notification
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(before);
+    // Its halt known only with a failure: nothing now, and the next sweep asks again.
+    const halted = w.agents.api.halted;
+    w.agents.api.halted = async () => { throw new Error("kiff/agents is down"); };
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    w.agents.api.halted = halted;
+    // Resumed: said, once.
+    w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: RAE }]);
+    // The whole account halted: nothing for any taf in it.
+    const FU = "fu-ask-again";
+    w.agents.schedules.set(`t_acme|${FU}`, { tenant: "t_acme", id: FU, agent: RAE, cron: "", input: "Ask again.", enabled: false,
+      kind: "once", at: SINCE, follow_up: true, failing: { since: SINCE, firings: 1 } });
+    expect((await call(w, "POST", "/v1/halt", { token: "ana" })).status).toBe(200);
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+  });
+
+  it("says nothing for a one-time schedule its owner moved during the run: it runs at its new time", async () => {
+    const { w, deps } = await setUp();
+    w.agents.schedules.set(`t_acme|once-moved`, { tenant: "t_acme", id: "once-moved", agent: RAE, cron: "", input: "Send the report.", enabled: true,
+      kind: "once", at: new Date(AT.getTime() + 2 * 3600_000).toISOString(), failing: { since: SINCE, firings: 1 } });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(0);
+  });
 });
 
 describe("halting", () => {
@@ -2854,14 +2886,14 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // qa-kiff on #574: the name fits kiff/agents' 300-byte line in any script, on one line, unpadded.
   it("refuses a writes_for that doesn't fit the disclosure line", async () => {
-    for (const bad of ["株".repeat(91), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
+    for (const bad of ["株".repeat(88), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
       const { w, note, answer } = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: bad } });
       w.agents.access.set("u_ana", { cards_manage: true });
       await note();
       expect(JSON.stringify(answer()), bad).toContain("writes_for is who the taf's messages come from");
     }
-    // 90 of a 3-byte script fits: 270 bytes, and the line is 298.
-    const fits = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(90) } });
+    // 87 of a 3-byte script fits: 261 bytes, so the line fits in every language, German's at 300 (qa-kiff on #587).
+    const fits = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(87) } });
     fits.w.agents.access.set("u_ana", { cards_manage: true });
     await fits.note();
     expect(fits.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });

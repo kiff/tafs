@@ -222,8 +222,14 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     // The AI disclosure at the top of the job's outbound calls, by the runtime, never left to the model,
     // naming who they come from (gap 18), in the message's language when it's one of disclosureLines'.
     // No credit line: no message carries "Built with tafs." any more (the owner's call, 7 Nov).
-    ...(job.disclose?.length ? { disclose: { line: disclosureLine(job), lines: disclosureLines(job), in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
+    ...(job.disclose?.length ? { disclose: { line: disclosureLine(job), ...linesOf(job), in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
     // Its one card: a setting's request for Coach, with Coach's button (kiff/tafs#476, gap 15).
     show: true, show_types: ["ask_coach"],
   };
+}
+
+/** The disclosure's lines in other languages, left out when none fits (a long name stored before the cap). */
+function linesOf(job: Pick<Job, "writesFor">): { lines?: Record<string, string> } {
+  const lines = disclosureLines(job);
+  return Object.keys(lines).length ? { lines } : {};
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { DISCLOSURE_LINE, disclosureLine, disclosureLineFor, disclosureLines, JOBS, jobById, languageOf, OLD_DISCLOSURE_LINE, ownJob, systemPrompt, writesForIn } from "../src/jobs.js";
+import { DISCLOSURE_LINE, DISCLOSURE_MAX_BYTES, disclosureLine, disclosureLineFor, disclosureLines, JOBS, jobById, languageOf, OLD_DISCLOSURE_LINE, ownJob, systemPrompt, WRITES_FOR_MAX_BYTES, writesForIn, writesForOf } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 
 describe("the disclosure line, in the message's language (kiff/agents#363)", () => {
@@ -31,6 +31,34 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
     expect(disclosureLineFor(acme, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe("Escrito por un agente de IA para Acme.");
     // An html part's tags aren't its words, even English ones in an attribute.
     expect(languageOf('<span title="the order is for you and your thanks">Hola, gracias.</span>')).toBe("es");
+  });
+
+  it("leaves out a language whose line wouldn't fit in what kiff/agents takes, and caps a new name so every line fits", () => {
+    expect(DISCLOSURE_MAX_BYTES).toBe(300);
+    expect(WRITES_FOR_MAX_BYTES).toBe(261); // German's line carries the most: 39 bytes besides the name
+    const bytes = (s: string) => Buffer.byteLength(s);
+    // A new name at the cap (66 characters, 261 bytes): its line fits in every language, German's to the byte.
+    const atCap = "😀".repeat(65) + "a";
+    expect(bytes(atCap)).toBe(261);
+    expect(writesForOf(atCap)).toBe(atCap);
+    expect(() => writesForOf(atCap + "a")).toThrow("writes_for");
+    const all = disclosureLines({ writesFor: atCap });
+    expect(Object.keys(all).sort()).toEqual(["de", "es", "fr", "it", "pt"]);
+    expect(bytes(all.de!)).toBe(300);
+    for (const l of [disclosureLine({ writesFor: atCap }), ...Object.values(all)]) expect(bytes(l)).toBeLessThanOrEqual(300);
+    // A name stored before the cap, or a company's name from KIFF, up to 272 bytes: English fits to the byte and
+    // heads its messages in every language, none other fitting.
+    const stored = "😀".repeat(68);
+    expect(bytes(disclosureLine({ writesFor: stored }))).toBe(300);
+    expect(disclosureLines({ writesFor: stored })).toEqual({});
+    expect(disclosureLineFor({ writesFor: stored }, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe(disclosureLine({ writesFor: stored }));
+    expect(systemPrompt({ ...jobById("refunds"), writesFor: stored })).not.toContain("In other languages");
+    // In between (266 bytes): the languages whose line fits stay, German doesn't.
+    const between = "😀".repeat(66) + "aa";
+    const some = disclosureLines({ writesFor: between });
+    expect(Object.keys(some).sort()).toEqual(["es", "fr", "it", "pt"]);
+    expect(bytes(some.es!)).toBe(300);
+    expect(disclosureLineFor({ writesFor: between }, "Ihre Erstattung von 42,00 EUR für die Bestellung 1043 ist erledigt. Danke!")).toBe(disclosureLine({ writesFor: between }));
   });
 
   it("asks the taf to start with its line, in the language it writes in, and gives it each one", () => {

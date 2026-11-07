@@ -5960,8 +5960,10 @@ export async function sweepDeliveries(deps: Deps): Promise<Array<{ run: string; 
  *
  * A once schedule (a follow-up the taf set, or a one-time run) is said as soon as it failed: it's off
  * after its firing, so its work doesn't run again (docs/schedules.md in kiff/agents), and nobody else will
- * do it unless told. Said only while its once-key is kept, never again a month on. A recurring schedule its
- * owner turned off isn't said: it won't try again, as the words would promise.
+ * do it unless told. Said only once it's off (one its owner moved during the run is on, for its new time),
+ * and only while its once-key is kept, never again a month on. Nothing is said for a recurring schedule its
+ * owner turned off, nor for a halted taf or account: neither tries again, as the words would promise
+ * (qa-kiff on #587). An account whose schedules can't be read is logged, and read again on the next sweep.
  */
 export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant: string; schedule: string }>> {
   const store = deps.coach;
@@ -5969,15 +5971,20 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
   const now = deps.now?.() ?? new Date();
   const told: Array<{ tenant: string; schedule: string }> = [];
   for (const tenant of await deps.tafs.tenants()) {
-    const schedules = await deps.agents.listSchedules(tenant).catch(() => [] as Schedule[]);
+    const schedules = await deps.agents.listSchedules(tenant).catch((err) => {
+      console.warn(`failing schedules: ${tenant}: ${(err as Error).message}`);
+      return [] as Schedule[];
+    });
     for (const s of schedules) {
       const f = s.failing;
       if (!f) continue;
       const age = now.getTime() - Date.parse(f.since);
       const once = s.kind === "once";
-      if (once ? !(age < FAILING_KEPT_MS) : !s.enabled || !(f.firings >= 2 || age >= FAILING_ALONE_MS)) continue;
+      if (once ? s.enabled || !(age < FAILING_KEPT_MS) : !s.enabled || !(f.firings >= 2 || age >= FAILING_ALONE_MS)) continue;
       const taf = await deps.tafs.get(tenant, s.agent).catch(() => undefined);
       if (!taf || taf.removing) continue;
+      // Halted, or not known not to be: nothing is said now, and the next sweep asks again.
+      if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
       if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
       await tellPhones(deps, tenant, failingNotification(taf, s, f.firings));
       told.push({ tenant, schedule: s.id });
