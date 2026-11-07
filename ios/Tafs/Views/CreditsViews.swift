@@ -53,14 +53,18 @@ struct CreditsPanel: View {
             }
         }
         ForEach(c.tafs) { t in
-            // A taf this app knows by its tafs cloud id opens its runs; the sample's don't.
-            if model.mode == .kiff {
-                PanelLink { TafCreditsView(taf: t.taf, previous: previous).environmentObject(model) } label: {
+            // A taf's row opens its runs; the row for tafs removed since, and the sample's, don't.
+            if model.mode == .kiff, let taf = t.taf {
+                PanelLink { TafCreditsView(taf: taf, previous: previous).environmentObject(model) } label: {
                     Text(t.words).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 }
             } else {
                 Panel { Text(t.words).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true) }
             }
+        }
+        // Coach past its fair use: its own row, which doesn't open.
+        if let coach = c.coach {
+            Panel { Text(coach.words).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true) }
         }
         if let not = c.notCounted, !not.words.isEmpty || !not.lines.isEmpty {
             Panel {
@@ -79,7 +83,7 @@ struct CreditsPanel: View {
 }
 
 /// One taf's credits in a period, with its runs, newest first: each in tafs cloud's words, and
-/// opening its Record entry where it has one (a chat that only answered has none).
+/// opening the run's request, what it did step by step, while tafs cloud says it can (`opens`).
 struct TafCreditsView: View {
     @EnvironmentObject private var model: AppModel
     let taf: String
@@ -97,9 +101,9 @@ struct TafCreditsView: View {
                         Text(mine.words).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    if !mine.runs.isEmpty {
+                    if !mine.items.isEmpty {
                         Panel {
-                            ForEach(mine.runs) { CreditsRunRow(run: $0) }
+                            ForEach(mine.items) { CreditsRunRow(taf: taf, run: $0) }
                             if mine.next != nil {
                                 Button(Self.more) { Task { await model.readTafCredits(taf, previous: previous, more: true) } }
                                     .buttonStyle(OutlineButtonStyle())
@@ -127,14 +131,21 @@ struct TafCreditsView: View {
     static let unread = "These runs couldn't be read. Pull to try again."
 }
 
-/// One run: tafs cloud's words and when; it opens its Record entry's receipt when it has one.
+/// One run: tafs cloud's words and when; it opens the run's request while `opens` says so.
 struct CreditsRunRow: View {
     @EnvironmentObject private var model: AppModel
+    let taf: String
     let run: TafsCloud.TafCredits.Run
 
     var body: some View {
-        if let record = run.record, let entry = model.recordEntry(forCall: record) {
-            RecordLinkRow(entry: entry) { line }
+        if run.opens, let tafID = model.tafID(cloud: taf) {
+            NavigationLink { KnobRequestDetail(tafID: tafID, run: run.run).environmentObject(model) } label: {
+                HStack(spacing: 8) {
+                    line
+                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
+                }
+            }
+            .buttonStyle(.drivablePlain)
         } else {
             line.accessibilityElement(children: .combine)
         }
@@ -148,25 +159,5 @@ struct CreditsRunRow: View {
             Text(run.at.formatted(.relative(presentation: .named))).scaledFont(13).foregroundColor(Theme.dim)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-/// A row that opens a Record entry's receipt.
-private struct RecordLinkRow<Label: View>: View {
-    @EnvironmentObject private var model: AppModel
-    let entry: RecordEntry
-    @ViewBuilder var label: () -> Label
-    @State private var showing = false
-
-    var body: some View {
-        Button { showing = true } label: {
-            HStack(spacing: 8) {
-                label()
-                Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
-            }
-        }
-        .buttonStyle(.drivablePlain)
-        .sheet(isPresented: $showing) { ReceiptView(entry: entry).environmentObject(model) }
-        .accessibilityHint("Shows the receipt")
     }
 }

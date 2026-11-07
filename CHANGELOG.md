@@ -5,6 +5,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Credits in Plan & usage (iOS), read only.** Above the tasks, which stay as they are, Plan & usage shows the credits the tafs used this period or the last: the period's line, each taf, Coach past its fair use, and what wasn't counted and why, all in tafs cloud's words (`GET /v1/usage/credits`, docs/accounts.md › Credits). A taf opens its runs, and a run opens its request. A taf's page shows its line. Nothing is charged in credits yet. A tafs cloud without the read shows no panel, so there's no deploy order.
+
 - **What's written while a taf or Coach works goes to its run once, and tafs cloud holds what it doesn't take (iOS, as Android does below).** iOS sends `hold: true` on `steer` (docs/chat.md) in a taf's chat and, new on iOS, in Coach's, which used to wait in the app.
   - The run reads it at its next step, or tafs cloud holds it for that chat. It shows dimmed with "Waits until it's done, then goes as your next message", as on Android, and goes as the person's next message once the taf is done.
   - More than tafs cloud holds (`held_full`) leaves the words in the composer, with tafs cloud's why as it says it. A message that didn't reach tafs cloud stays as not sent, with Retry.

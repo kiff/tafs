@@ -115,6 +115,13 @@ the app in sample mode.
   the left on a regular width, Coach at its foot. Each tab is built the first time it's
   opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs, Needs you and Record, ⌘,
   Account, ⌘K Coach.
+- **Credits** (`CreditsViews.swift`): a **Credits** panel at the top of Plan & usage
+  (`CreditsPanel`), read only, from `GET /v1/usage/credits` ([accounts.md](accounts.md#credits)):
+  This period · Last period, the period's `words`, each taf's row, Coach's row when there is
+  one, then `not_counted` and `note`, every line as tafs cloud writes it. A taf's row opens its
+  runs (`TafCreditsView`, 50 a page with Earlier runs), and a run opens its request
+  (`KnobRequestDetail`) while `opens` is true. The row for tafs removed since doesn't open. A
+  taf's page shows its own line, which opens the same runs. A 404 shows no panel.
 - **Record** (`RecordView`): chips for "All tafs" and each taf (its colour) above the type
   filter, combined with it. Each entry starts with its taf's dot and name; each day's header
   shows that day's spend (`RecordView.spent`, a sum per currency of the money moved).

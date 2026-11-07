@@ -2715,8 +2715,8 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let read = try? await cloud.credits(taf: taf, previous: previous, after: after), gen == accountGeneration else { return }
         if more, var known = tafCredits[key] {
-            let seen = Set(known.runs.map(\.run))
-            known.runs += read.runs.filter { !seen.contains($0.run) }
+            let seen = Set(known.items.map(\.run))
+            known.items += read.items.filter { !seen.contains($0.run) }
             known.next = read.next
             tafCredits[key] = known
         } else {
@@ -2727,18 +2727,19 @@ final class AppModel: ObservableObject {
     /// The sample's credits: its tafs' words, as tafs cloud writes them.
     static func sampleCredits(now: Date, previous: Bool = false) -> TafsCloud.Credits {
         if previous {
-            return TafsCloud.Credits(period: nil, credits: 2310, words: "Last month: 2,310 credits used",
+            return TafsCloud.Credits(period: nil, credits: 2310, runs: 126, words: "Last period: 2,310 credits used · 1 Oct to 31 Oct",
                                      tafs: [.init(taf: "sample-refunds", credits: 1480, runs: 74, words: "Refunds · 1,480 credits · 74 runs"),
                                             .init(taf: "sample-invoices", credits: 830, runs: 52, words: "Overdue invoices · 830 credits · 52 runs")],
-                                     note: "Coach and setup aren't counted.")
+                                     note: "Credits will replace tasks. Nothing is charged in credits yet.")
         }
-        return TafsCloud.Credits(period: nil, credits: 1240, words: "This month: 1,240 credits used",
+        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: "This period: 1,240 credits used",
                                  tafs: [.init(taf: "sample-refunds", credits: 820, runs: 41, words: "Refunds · 820 credits · 41 runs"),
                                         .init(taf: "sample-invoices", credits: 420, runs: 28, words: "Overdue invoices · 420 credits · 28 runs")],
-                                 notCounted: .init(runs: 4, words: "Not counted: 4 runs",
-                                                   lines: [.init(why: "refused", runs: 3, words: "Refused by KIFF · 3 runs"),
+                                 notCounted: .init(runs: 9, words: "Not counted: 9 runs",
+                                                   lines: [.init(why: "coach", runs: 6, words: "Coach, within its fair use · 6 runs"),
+                                                           .init(why: "trial", runs: 2, words: "Trials of a new version · 2 runs"),
                                                            .init(why: "failed", runs: 1, words: "Failed on our side · 1 run")]),
-                                 note: "Coach and setup aren't counted.")
+                                 note: "Credits will replace tasks. Nothing is charged in credits yet.")
     }
 
     /// The plan as KIFF says it, with no counted tasks or AI use (Plan & usage reads those): a
