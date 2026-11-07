@@ -82,6 +82,7 @@ import bot.tafs.app.views.TafUsageSheet
 import bot.tafs.app.views.TrialScreen
 import bot.tafs.app.views.VersionActions
 import bot.tafs.app.views.VersionsSheet
+import bot.tafs.app.views.CreditsRunsSheet
 import bot.tafs.app.views.UsageSheet
 import bot.tafs.app.views.CoachInstalls
 import bot.tafs.app.views.LocalAnswerPage
@@ -403,6 +404,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       declineRequest = model::declineRequest,
       goOnAI = model::goOnAI,
       readAIUse = model::readAIUse,
+      showCreditsPeriod = model::showCreditsPeriod,
+      openTafCredits = model::openTafCredits,
+      moreTafCredits = model::moreTafCredits,
+      openCreditsRun = model::openCreditsRun,
     )
   }
   val people = remember(model) {
@@ -787,8 +792,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     }
     if (usageOpen) {
       val taf = usageTaf
-      if (taf == null) UsageSheet(state, account, onClose = { usageOpen = false })
+      if (taf == null) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
       else TafUsageSheet(taf, state, account, onClose = { usageOpen = false })
+      // A taf's runs, over Plan & usage, from its Credits row.
+      if (taf == null) state.tafCredits?.let { CreditsRunsSheet(it, state, account, onClose = model::closeTafCredits) }
     }
     if (!keyboardUp && !wide) {
       HorizontalDivider(color = Theme.line)

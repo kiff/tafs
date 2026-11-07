@@ -43,6 +43,12 @@ object UsageWords {
   /** Whose the account's numbers are: every taf's together. */
   const val ALL_TAFS = "All tafs"
 
+  /** The Credits panel, and its switch between this period and the one before; the rest of it is tafs cloud's words. */
+  const val CREDITS = "Credits"
+  const val LAST_PERIOD = "Last period"
+  const val THIS_PERIOD = "This period"
+  const val MORE_RUNS = "More runs"
+
   /** "1 task", "8 tasks". */
   fun tasks(n: Int): String = if (n == 1) "1 task" else "$n tasks"
 
