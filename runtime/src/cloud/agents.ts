@@ -481,6 +481,11 @@ export interface Schedule {
    * time, how many, and the last one's run. kiff/agents keeps it, and ends it once a run works.
    */
   failing?: { since: string; firings: number; run?: string };
+  /**
+   * The last firing that started no run because the account's tafs wait for credits (kiff/agents'
+   * skipped_credits): its due time and KIFF's why. Unset once one of its runs starts.
+   */
+  waited?: { due: string; why: string };
 }
 
 /** The ids kiff/agents takes: 1 to 128 letters, digits, '-', '_' or '.', never "." or "..". */

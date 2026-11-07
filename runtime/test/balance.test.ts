@@ -1,0 +1,178 @@
+import { describe, expect, it } from "vitest";
+import { balanceView, type KIFFBalance, waitingWords } from "../src/cloud/credits.js";
+import { AgentsError } from "../src/cloud/agents.js";
+import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+
+const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
+const NOW = new Date("2026-11-20T12:00:00Z");
+const NOV = { start: "2026-11-01T00:00:00Z", end: "2026-12-01T00:00:00Z" };
+const REFUNDS = "taf-3f9a1c0b7d2e4a6f8b91";
+
+const balance = (over: Partial<KIFFBalance> = {}): KIFFBalance => ({
+  kind: "solo", state: "ok", meter_pct: 40, included: 1000, used: 400, left: 600, packs_left: 0, over: 0,
+  beyond: 0, beyond_cents: 0, limit_cents: 0, seats: 1, period: NOV, can_raise: false, raise_to_cents: 0,
+  can_buy: { solo: false, packs: true }, billed_by: "apple", ...over,
+});
+
+describe("the balance, in words", () => {
+  it("says what Solo has left, its packs and what wasn't charged, and what may be bought", () => {
+    expect(balanceView(balance({ packs_left: 300, left: 900, over: 12 }))).toEqual({
+      balance: { state: "ok", why: null, meter_pct: 40, words: "Solo · 900 credits left this period",
+        detail: "300 credits of it in packs, which never expire · 12 credits used past your balance weren't charged",
+        warning: null, raise: null, buy: { solo: false, packs: true } },
+      plan_line: "Solo · 900 credits left", plan_tone: "ok", home_line: null,
+    });
+  });
+
+  it("warns Solo from 80%, and says what lets the tafs go on once all of it is used", () => {
+    const warn = balanceView(balance({ state: "warning", meter_pct: 83.7, left: 170 }));
+    expect(warn.balance.warning).toBe("83% of this period's credits are used. A pack lets your tafs go on past them.");
+    expect(warn.home_line).toBe("83% of this period's credits are used");
+    const noPacks = balanceView(balance({ state: "warning", meter_pct: 90, can_buy: { solo: false, packs: false } }));
+    expect(noPacks.balance.warning).toBe("90% of this period's credits are used. Then your tafs wait until the period starts again on 1 Dec.");
+    expect(noPacks.balance.buy).toBeNull();
+    const waiting = balanceView(balance({ state: "waiting", why: "credits_used_up", meter_pct: 100, left: 0 }));
+    expect(waiting).toMatchObject({
+      balance: { state: "waiting", why: "credits_used_up", words: "Solo · this period's credits and your packs are used",
+        warning: "Your tafs are waiting: this period's credits and your packs are used. A pack lets them go on, or they go on when the period starts again on 1 Dec." },
+      plan_line: "Solo · waiting: this period's credits are used", plan_tone: "waiting",
+      home_line: "Your tafs are waiting: this period's credits and your packs are used. A pack lets them go on, or they go on when the period starts again on 1 Dec.",
+    });
+  });
+
+  it("shows Company's included credits, then the spend limit, and offers the raise to whoever may make it", () => {
+    const co = (over: Partial<KIFFBalance>) => balance({ kind: "company", seats: 4, included: 2000, limit_cents: 8000, can_buy: { solo: false, packs: false },
+      can_raise: true, raise_to_cents: 12000, billed_by: "stripe", ...over });
+    expect(balanceView(co({ used: 1500, left: 500, meter_pct: 75 }))).toEqual({
+      balance: { state: "ok", why: null, meter_pct: 75, words: "Company · 4 seats · 1,500 of 2,000 credits included used",
+        detail: "Then up to the spend limit, €80, on this period's invoice", warning: null,
+        raise: { words: "Raise the spend limit to €120", from_cents: 8000 }, buy: null },
+      plan_line: "Company · 4 seats · 1,500 credits used", plan_tone: "ok", home_line: null,
+    });
+    const beyond = balanceView(co({ state: "warning", used: 2640, left: 0, beyond: 640, beyond_cents: 6450, meter_pct: 80 }));
+    expect(beyond.balance).toMatchObject({ words: "Company · 4 seats · €64.50 of the €80 spend limit used",
+      detail: "The plan's included credits are used. Beyond them, credits go on this period's invoice.",
+      warning: "80% of the spend limit is used. At the limit, your tafs wait until an admin raises it." });
+    expect(beyond.home_line).toBe("80% of the spend limit is used");
+    // Waiting: the raise for whoever may make it; past the ceiling, KIFF; an admin, for anyone else.
+    expect(balanceView(co({ state: "waiting", why: "limit_reached", beyond: 800, beyond_cents: 8000, meter_pct: 100 })).balance.warning)
+      .toBe("Your tafs are waiting: the spend limit is reached. Raise it to let them go on, or they go on when the period starts again on 1 Dec.");
+    const ceiling = balanceView(co({ state: "waiting", why: "limit_reached", raise_to_cents: 0 }));
+    expect(ceiling.balance.raise).toBeNull();
+    expect(ceiling.balance.warning).toContain("can't go higher from the app. Contact KIFF to raise it further");
+    expect(balanceView(co({ state: "waiting", why: "limit_reached", can_raise: false, raise_to_cents: 0 })).balance)
+      .toMatchObject({ raise: null, warning: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it." });
+  });
+
+  it("shows an agreement or internal with no bar, and no plan as waiting with Solo to start", () => {
+    expect(balanceView(balance({ kind: "unbounded", meter_pct: null, left: null, used: 1240, billed_by: "contract", can_buy: { solo: false, packs: false } })))
+      .toMatchObject({ balance: { meter_pct: null, words: "Your company's agreement · 1,240 credits used this period", warning: null, buy: null },
+        plan_line: "Your company's agreement · 1,240 credits used", home_line: null });
+    expect(balanceView(balance({ kind: "unbounded", meter_pct: null, used: 0, billed_by: "" })).balance.words).toBe("No limit · no credits used yet this period");
+    expect(balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false } }))).toEqual({
+      balance: { state: "waiting", why: "no_plan", meter_pct: null, words: "No plan", detail: null, warning: "Choose a plan to start your tafs.",
+        raise: null, buy: { solo: true, packs: false } },
+      plan_line: "No plan · choose one to start", plan_tone: "waiting", home_line: "Choose a plan to start your tafs.",
+    });
+  });
+
+  it("words a refusal by its code, for this reader", () => {
+    expect(waitingWords({ ...balance(), why: "no_plan" })).toBe("Choose a plan to start your tafs.");
+    expect(waitingWords({ ...balance({ can_buy: { solo: false, packs: false } }), why: "credits_used_up" }))
+      .toBe("Your tafs are waiting: this period's credits and your packs are used. They go on when the period starts again on 1 Dec.");
+  });
+});
+
+/** KIFF as the routes read it: who the token is, and the credits read with its balance. */
+function kiff(opts: { balance?: KIFFBalance | null; status?: number; asked?: string[] } = {}) {
+  return (async (url: string, init?: RequestInit) => {
+    const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
+    if (token !== "ana") return new Response("{}", { status: 401 });
+    const u = new URL(url);
+    opts.asked?.push(u.pathname + u.search);
+    if (u.pathname === "/v1/me") return new Response(JSON.stringify(ME), { status: 200 });
+    if (u.pathname === "/v1/me/access") return new Response(JSON.stringify({ agents: { "agt-refunds": { use: true } } }), { status: 200 });
+    if (u.pathname === "/v1/me/usage/credits") {
+      if (opts.status) return new Response("{}", { status: opts.status });
+      const b = opts.balance === undefined ? balance() : opts.balance;
+      return new Response(JSON.stringify({ period: NOV, current: true, credits: 0, runs: 0, by_agent: [], setup: { credits: 0, runs: 0 }, free: {},
+        ...(b ? { balance: b } : {}) }), { status: 200 });
+    }
+    return new Response("{}", { status: 404 });
+  }) as typeof fetch;
+}
+
+function world(fetcher: typeof fetch) {
+  const agents = fakeAgents(() => NOW);
+  const held = memoryTafs();
+  const taf: Taf = { id: REFUNDS, name: "Refunds", job: "refunds", kiffAgent: "agt-refunds", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
+  held.held.set(`t_acme#${REFUNDS}`, taf);
+  return {
+    agents: agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: held,
+    names: memoryNames(), slots: memorySlots(), claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(),
+    push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
+    apns: { send: async () => "sent" as const },
+    forward: async () => undefined,
+    fetch: fetcher,
+    now: () => NOW,
+    fake: agents,
+  };
+}
+
+function event(path: string, method = "GET", body?: string): HTTPEvent {
+  return { rawPath: path, rawQueryString: "", requestContext: { http: { method } }, headers: { Authorization: "Bearer ana", "content-type": "application/json" },
+    ...(body ? { body } : {}) } as HTTPEvent;
+}
+
+async function call(deps: ReturnType<typeof world>, path: string, method = "GET", body?: string) {
+  const r = await handle(event(path, method, body), deps);
+  return { status: r.statusCode, body: r.body && typeof r.body === "string" && r.body.startsWith("{") ? JSON.parse(r.body) : r.body };
+}
+
+describe("GET /v1/usage/balance", () => {
+  it("answers the balance now, in words, from KIFF's credits read with the person's session", async () => {
+    const asked: string[] = [];
+    const r = await call(world(kiff({ balance: balance({ state: "warning", meter_pct: 85 }), asked })), "/v1/usage/balance");
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ balance: { state: "warning", meter_pct: 85 }, plan_tone: "warning", home_line: "85% of this period's credits are used" });
+    expect(asked).toContain("/v1/me/usage/credits");
+  });
+
+  it("answers 503 with words when KIFF can't be read, or gives no balance", async () => {
+    for (const k of [kiff({ status: 500 }), kiff({ balance: null })]) {
+      const r = await call(world(k), "/v1/usage/balance");
+      expect(r.status).toBe(503);
+      expect(r.body.words).toBe("Credits can't be read right now. Try again in a moment.");
+    }
+  });
+});
+
+describe("GET /v1/usage/ai, kept for apps from before", () => {
+  it("answers no bound, never waiting and no Go on, reading nothing", async () => {
+    const asked: string[] = [];
+    const r = await call(world(kiff({ asked })), "/v1/usage/ai");
+    expect(r.status).toBe(200);
+    expect(r.body.can_go_on).toBe(false);
+    expect(r.body.paused).toBe(false);
+    expect(asked.filter((p) => p.startsWith("/v1/me/usage"))).toEqual([]);
+  });
+});
+
+describe("a chat refused for credits", () => {
+  it("answers 409 with the code and this person's words, and sends no AI bound", async () => {
+    const w = world(kiff({ balance: balance({ kind: "company", state: "waiting", why: "limit_reached", can_raise: false, can_buy: { solo: false, packs: false } }) }));
+    w.fake.fail.set("startRun", new AgentsError(409, "limit_reached: the account's tafs wait for credits", undefined, "limit_reached"));
+    const r = await call(w, `/v1/tafs/${REFUNDS}/messages`, "POST", JSON.stringify({ text: "Refund order 1043" }));
+    expect(r.status).toBe(409);
+    expect(r.body).toMatchObject({ code: "limit_reached", words: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it." });
+  });
+
+  it("keeps the plain words when the balance can't be read", async () => {
+    const w = world(kiff({ status: 500 }));
+    w.fake.fail.set("startRun", new AgentsError(409, "no_plan: the account's tafs wait for credits", undefined, "no_plan"));
+    const r = await call(w, `/v1/tafs/${REFUNDS}/messages`, "POST", JSON.stringify({ text: "hi" }));
+    expect(r.status).toBe(409);
+    expect(r.body).toMatchObject({ code: "no_plan", words: "Choose a plan to start your tafs." });
+  });
+});

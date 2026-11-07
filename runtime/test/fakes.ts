@@ -42,6 +42,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   /** Drafts Setup submitted (kiff/agents#94): draft id → its agent, and where its key was claimed. */
   const setupDrafts = new Map<string, { tenant: string; agent: string; keyRef?: string }>();
   const fail = new Map<string, AgentsError | Error>();
+  /** Accounts whose tafs wait for credits: every run they start is refused with this code, as kiff/agents does on KIFF's word. */
+  const credits = new Map<string, string>();
   /** What a streamed run's agent does, in order: kiff/agents' stream events, or an Error that breaks it. */
   const streamed: Array<{ event: string; data: unknown } | Error> = [];
   /** What a resumed run's stream sends before its end: its recorded events (kiff/tafs#285). */
@@ -350,6 +352,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     async startRun(tenant, agent, input, at = {}, ai, notify) {
       calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}${at.skills?.length ? ` skills=${at.skills.join(",")}` : ""}`);
       failing("startRun");
+      const waiting = credits.get(tenant);
+      if (waiting) throw new AgentsError(409, `${waiting}: the account's tafs wait for credits`, undefined, waiting);
       if (!agents.has(k(tenant, agent))) throw gone();
       // A new session's skills are the definition's, by name and version, as kiff/agents checks them (skill_not_named).
       if (at.skills?.length && !at.session) {
@@ -631,7 +635,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

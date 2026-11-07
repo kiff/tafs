@@ -8,8 +8,8 @@ Code: in the app, `SignInView` (`SettingsView`, `AccountView`), `PeopleViews`,
 `ShareViews` (`ShareTafSheet`, `OverviewView`), `UsageView`, `TasksViews`,
 `DeleteAccountView`, `Services/Purchases.swift`, and the Signing in, People, Usage,
 Tasks and plans and Deleting the account sections of `AppModel`; `KIFFClient`. In tafs
-cloud, `person`, `needTaf`, `managesTaf`, `deleteAccount` and `aiUsage` in `handler.ts`,
-and `runtime/src/cloud/aiuse.ts`.
+cloud, `person`, `needTaf`, `managesTaf`, `deleteAccount`, `usageBalance`, `usageCredits` and
+`tafCredits` in `handler.ts`, and `runtime/src/cloud/credits.ts`.
 
 ## Signing in
 
@@ -106,79 +106,15 @@ all of it.
 needs them, and a line per taf with what it does now, its Card as its page says it, and its
 last result. Who uses the taf shows only to whoever manages it.
 
-## Usage, tasks and plans
+## Credits and plans
 
-**Plan & usage** in Settings (`UsageView`) is the account's period, from KIFF
-(`GET /v1/me/usage`):
-
-- the **tasks** the period has (what the plan includes, and packs) and what's left;
-- who bills the plan: "Billed by Apple", "Billed by KIFF", or "Managed by your
-  company's agreement";
-- adding tasks, or asking an admin for them;
-- the tasks the tafs counted (`GET /v1/me/usage/tasks`), each opening its Record entry;
-- what wasn't counted, and why: refused by KIFF, held then refused, halted, failed at the
-  tool, not valid, retries, reads, trials of a new version, Coach and Setup.
-
-A trial that has ended (its `trial.ends_at` past, a lapsed Solo included) says
-"Your trial has ended.", never that its tasks are used: KIFF gives it no tasks on purpose. Where
-Solo is offered, "Start Solo to keep your tafs running." follows it. A trial that hasn't started
-or has ended runs no period, so Usage shows no period end and no meter (`UsageWords.notice`,
-`trialEnded`, `noPeriod`; iOS `UsageView`). Packs are on sale only while a plan runs
-(`can_add_packs`, falling back to `can_add_tasks`); packs held meanwhile say "Counts once Solo
-starts."
-
-The plan shows outside it too. **Settings** opens with a Plan card, one line from
-the same read (`UsageWords.planLine`): "Trial · 5 days and 18 tasks left", "Trial · not started",
-"Trial ended · Start Solo" (amber), "Solo · 12 of 20 tasks left · Google Play" (red when none are
-left), "Company · 472 tasks this period". It opens the screen, called **Plan & usage**. **Home**
-shows one line about the plan only when it needs the owner (`UsageWords.homeLine`): a trial ended,
-not started or ending within 2 days, tasks used up, or a tenth or less of the period's left.
-Otherwise Home stays about the tafs. The plan is read with each refresh (`refreshPlan`), so
-both are current. iOS has the same words and thresholds (`UsageView.planLine`, `homeLine`,
-`planTone`, `PlanRow`, `PlanLine`; `refreshPlan`).
-
-Each taf's own part is a row on its Card tab (`TafUsageView`).
-
-**Credits**, read-only, sit above the tasks in Plan & usage, from tafs cloud's
-`GET /v1/usage/credits` and, for one taf's runs, `GET /v1/usage/credits/tafs/{id}`. Every line
-is tafs cloud's words as it sends them; the app orders nothing itself. On Android, `CreditsPanel`
-shows the period, each taf's row, Coach's row past its fair use, what wasn't counted and the note,
-with **Last period** and **This period** to switch. A taf's row opens `CreditsRunsSheet`: its
-runs, newest first, 50 at a time with **More runs**, each opening its request while `opens` is
-true (`readCredits`, `openTafCredits`, `moreTafCredits` and `openCreditsRun` in `AppModel`). A
-404 from a tafs cloud from before credits shows no panel, and a 503 shows tafs cloud's `words`.
-iOS follows in its own pull request.
-
-**Buying in the app** (`Purchases`), through the App Store only:
-
-- **Solo**, a monthly subscription, offered only to someone who may add tasks on an
-  account with no plan billed (the trial, or one that ended). Its screen shows the
-  App Store's price and every term: the period, that it renews until cancelled, how to
-  cancel, and the Terms and Privacy Policy.
-- **Packs** of tasks (Pico, Vonk, Rayo, Forte, Maxi), each lasting 12 months.
-- Each purchase goes to KIFF for this account (`POST /v1/me/billing/apple/transactions`,
-  Apple's signed transaction) before the App Store is told it's done. One KIFF didn't
-  record before the app closed is sent at the next launch. **Restore** brings back the
-  Apple account's purchases.
-- **Manage** opens Apple's own subscriptions page. The app never links to buying outside
-  the App Store. An account moved from Solo to Team is billed by KIFF; the app says when
-  the Solo bought in the App Store still renews, and offers Cancel Solo through Apple.
-
-**Asking for tasks.** A member who can't add tasks asks an admin for a pack, with a
-reason (`AskAdminView`, `POST /v1/me/pack-requests`). The admins are alerted; one buys
-it, which answers the request, or declines it with a note, behind Face ID. The member can
-take their request back.
-
-On Android the same is on Usage (`TaskRequests`, `UsageWords.waiting`, `lastAnswer`,
-`openRequests`). Decline is signed, behind one confirmation
-(`tafs.decline-request.v1|{tenant}|{request}`). Approve buys the pack through Google
-Play for that request, so it shows only where the app offers buying; until then, an
-admin on Android declines, or approves on an iPhone.
+**Credits are the account's balance.** Each run uses the AI it used, in whole credits, and the
+plan says how many credits the account has. There are no tasks, no AI bound with its Go on, and
+no free trial: an account pays from its first day, and before a plan starts nothing that uses credits
+runs. Plans and billing are KIFF's. tafs cloud writes every line the apps show about them
+(`runtime/src/cloud/credits.ts`), and the apps draw the words as they are.
 
 ### Credits
-
-Credits will replace tasks. Until they do, **Plan & usage** shows them read-only, beside the
-tasks, which stay as they are: nothing is charged in credits yet.
 
 **What a run uses:** the AI it used, in whole credits, rounded up once per run. KIFF works
 them out from what kiff/agents records for the run, so every screen gives the same number. A run
@@ -196,10 +132,10 @@ when it ends. A run that used no AI (refused before it began) isn't listed.
 A call KIFF refused, or one held and then refused, doesn't change its run's credits: the run's
 AI was used.
 
-**The reads** (tafs cloud, `runtime/src/cloud/credits.ts`), every line in tafs cloud's words. The
-period's days are its first and last as KIFF bounds it (UTC): the start's date, and the day before
-the end's date. The apps draw the words as they are and derive nothing from the numbers but
-their order. `GET /v1/usage/credits` is the period:
+**The reads** (tafs cloud), every line in tafs cloud's words. The period's days are its first and
+last as KIFF bounds it (UTC): the start's date, and the day before the end's date. The apps draw
+the words as they are and derive nothing from the numbers but their order. `GET /v1/usage/credits`
+is the period:
 
 ```json
 {
@@ -221,7 +157,7 @@ their order. `GET /v1/usage/credits` is the period:
       { "why": "failed", "runs": 2, "words": "Failed on our side · 2 runs" }
     ]
   },
-  "note": "Credits will replace tasks. Nothing is charged in credits yet."
+  "note": "Each run counts once, when it ends, in whole credits."
 }
 ```
 
@@ -253,57 +189,277 @@ kiff/agents too), never the name of its agent in KIFF. `run` is the run's id on 
 one its request opens by. Where a run came from is said as the request view says it: "Its
 schedule", "From its chat", "By email", "Run now".
 
-**In the apps:** a **Credits** panel in Plan & usage, above the tasks: the period's `words`, each
-taf's row, Coach's row when there is one, then `not_counted` and `note`. The period's numbers are the
-account's, as the tasks are, but a taf the person doesn't use or oversee isn't named: it goes on the one
-row with `taf: null`, "Other tafs" (or "Removed tafs" when that's all it holds), which doesn't open. A
-taf's list holds the person's own runs, and everyone's on a taf they manage. A taf's row opens its runs
-(the second read), and a run's row opens its request while `opens` is true; otherwise it doesn't
-open. A 404 from a tafs cloud from before this shows no panel, so the apps and tafs cloud can ship
-in any order.
+**The Credits panel** in Plan & usage, below the balance: the period's `words`, each taf's row,
+Coach's row when there is one, then `not_counted` and `note`, with **Last period** and **This
+period** to switch. The period's numbers are the account's, but a taf the person doesn't use or
+oversee isn't named: it goes on the one row with `taf: null`, "Other tafs" (or "Removed tafs" when
+that's all it holds), which doesn't open. A taf's list holds the person's own runs, and everyone's
+on a taf they manage. A taf's row opens its runs (the second read), 50 at a time with **More
+runs**, and a run's row opens its request while `opens` is true; otherwise it doesn't open. A 404
+from a tafs cloud from before credits shows no panel, and a 503 shows tafs cloud's `words`. On
+Android, `CreditsPanel` and `CreditsRunsSheet` (`readCredits`, `openTafCredits`, `moreTafCredits`
+and `openCreditsRun` in `AppModel`); on iPhone and iPad, `CreditsViews.swift`
+([ios-app.md](ios-app.md)).
 
-**Settled for this first version:**
-- **Runs are the unit** of a taf's row and its list, since a run is what credits count. Items
-  can come later.
+**Settled since the first version:**
+- **Runs are the unit** of a taf's row and its list, since a run is what credits count.
 - **Every run's row carries its `run`**, a chat's included, and opens its request (what it did,
   step by step, with its Record entries) while kiff/agents keeps it.
 - **`previous` is the only other period.** A list of periods can come with billing.
 
-### AI use
+### The balance
 
-What chats with the tafs and Coach cost the model is bounded per period at half the
-plan's monthly price (`runtime/src/cloud/aiuse.ts`). kiff/agents counts the cost and
-refuses a new chat past the bound; KIFF keeps the plan, its seats, the period, and how
-many times the owner said **go on**, which raises the bound (signed on the phone). AI use
-is never billed: the bound only asks first. `GET /v1/usage/ai` gives the share used and
-where the tafs ask next.
+**The plans,** each KIFF's:
+- **Solo**, one person, billed by Apple or Google: the plan's included credits for the period, then
+  the credits in its packs, which never expire. When both are used, the tafs wait for the next
+  period, or for a pack.
+- **Company**, seats billed by KIFF (KIFF's `team`): each seat's included credits, pooled for the
+  period, then credits beyond them on the period's invoice, up to the account's **spend limit**.
+  At the limit, the tafs wait until someone who manages billing raises it.
+- **An agreement**, a plan arranged with KIFF (KIFF's `company`), and **internal**: no limit.
+- **No plan:** no taf runs. A person can sign in, look around, and ask Coach what tafs do. Coach
+  answers within a small allowance per account, which KIFF pays for, and has none of its tools, so
+  it sets nothing up ([Under the hood](#under-the-hood)).
 
-**Going on** (kiff/tafs#185). While the tafs wait (`paused`), the person who may go on
-(`can_go_on`: the account's billing admin, `billing.manage`) sees **Go on** in Settings › AI use.
-It's KIFF's signed route, `PUT /v1/me/usage/ai` with `{"go_on": true}` (one Face ID or
-fingerprint), and each tap raises the bound by one more base. Anyone else is told that an admin
-of the account can let the tafs go on, and the day the AI use starts again by itself
-(`starts_again`, the period's end), named by role, never by email. A chat refused for AI use
-says the same in its `words`, so its words point to Go on or to whoever can.
+**While the tafs wait:**
+- **No new run starts:** a chat, Run now, a schedule's firing, a follow-up a taf set for itself,
+  an app's event, a door's message, or Coach past its fair use. A chat and Run now answer with
+  words that say why.
+- **A run already going finishes,** and what it uses counts as any run's does. On Company it goes
+  on the invoice past the limit. On Solo it isn't charged past the balance: KIFF records it as free
+  overshoot, so the period's numbers still add up.
+- **For up to a minute** after the balance is used, a run can still start, since kiff/agents keeps
+  KIFF's answer that long ([Under the hood](#under-the-hood)). That and the runs already going are
+  the only ways past the balance.
+- **A schedule's firing starts no run** (`skipped_credits`). What its check found waits for the
+  next firing that runs, as after a run that failed before its first turn. It isn't a failure, so
+  the schedule's `failing` doesn't move, and no "keeps failing" alert is sent.
+- **A follow-up a taf set for itself** that comes due meanwhile doesn't run, and won't try again.
+  Its taf's screen says so, and the people who answer its holds are told, as for a follow-up that
+  couldn't start.
+- **A door's message, or an app's event,** is kept for 48 hours, the door's replay window, and runs
+  when the tafs go on, oldest first. The door sends nothing by itself meanwhile: no words go out in
+  the business's name. One still waiting after 48 hours doesn't run, and the taf's screen says it
+  went unanswered (`runtime/src/cloud/doors/hold.ts`):
+  - **Kept:** a key's message refused for credits (kiff/agents' 409 `credits_used_up`,
+    `limit_reached` or `no_plan`) answers its door's webhook `{"outcome": "held"}`, and an app's
+    event answers 202 `{"outcome": "held"}`. Each is kept on its own, under its taf's list, in the
+    order it came; an event delivered again is kept once. One that comes while any of its taf's
+    wait goes behind them, even once the tafs go on. A refusal for anything else is the
+    provider's to send again, as before.
+  - **Run:** the sweep, and each new arrival, tries the account's kept items oldest first, across
+    its tafs, until kiff/agents refuses for credits again. Each runs as it would have: a message in
+    its sender's chat, answered by its door once the run ends; an event as its wake's run. One
+    whose door closed, whose sender was unpaired, or whose event is no longer approved meanwhile
+    is dropped, unsaid: the owner chose that.
+  - **Unanswered after 48 hours:** its door's stop on the taf's dial (`GET /v1/tafs/{id}/knob`),
+    or its event's, adds "· 1 message went unanswered while your tafs waited for credits"
+    ("2 messages", "1 event"…) for 7 days, in tafs cloud's words, so no app change. The people who
+    answer the taf's holds are told once, by push, titled with the taf's name and collapsed by taf:
+    "A message by email from Ben went unanswered: your tafs waited for credits.", "An event from
+    HubSpot · new deal went unanswered: …", or, for several at once, "1 message and 2 events went
+    unanswered: …". It opens the taf.
+  - **Also unanswered:** one kiff/agents refuses 3 times for anything but credits (a 4xx), so it
+    doesn't hold its taf's later ones for two days; a server error isn't counted. And one past the
+    200 a taf keeps: told once an hour for the taf, not once a message.
+- **Coach within its fair use doesn't wait** while a plan runs. Past it, Coach waits as the tafs do.
 
-On Android, AI use is in Plan & usage (`AIUsePanel`), with tafs cloud's `words` as they are.
-Go on (`AppModel.goOnAI`) asks the person once, then the device key signs KIFF's request:
-KIFF takes this route phone-signed, not from the approval key. Like an approval, it waits on
-the phone being able to approve: while it can't, its state stands in the button's place
-([approvals.md](approvals.md#set-up-approvals-on-this-device)).
-After it, AI use is read again, with the button busy until then. If that read fails
-(`aiUseStale`), the panel says "Your tafs went on. This month's AI use couldn't be read since."
-and offers **Read it again** (`AppModel.readAIUse`), which signs nothing; Go on isn't offered, and
-`goOnAI` sends nothing, until the use has been read. A chat refused for AI use shows its `words`
-and has no button.
+**Warnings,** each once a period, by push to the people who manage billing (`billing.manage`) and
+in Plan & usage: at 80% and at 100%. On Solo that's of the period's included credits and packs, on
+Company of the spend limit.
 
-On iPhone and iPad, AI use is its own screen from Plan & usage (`AIUseView`), with tafs cloud's
-`words` as they are; the app's own lines stay only for a tafs cloud that sends none. Go on
-(`AppModel.goOnAI`) is signed through the session's signed route, behind Face ID, inside an
-`ApprovalGate`, so while the device can't approve its state stands in the button's place. After
-it, AI use is read again, with the button busy until then. If that read fails, the screen says the
-tafs went on and offers **Read it again**, which signs nothing; Go on isn't offered, and
-`goOnAI` sends nothing, until the use has been read.
+**Raising the spend limit** (Company): KIFF's `PUT /v1/me/usage/limit` with
+`{"raise": true, "from_cents": …}`, where `from_cents` is the limit it raises from, as the balance
+read gave it (`raise.from_cents`).
+- **Who:** someone who manages billing. KIFF checks `billing.manage` itself: `raise` in the read
+  is only what the app offers.
+- **Signed** by the phone's device key (`KIFF-Device-Signature`), behind Face ID or a fingerprint,
+  as Go on was. The signature covers the account and the body, so it names the limit it raises
+  from. A replayed signature is refused. So is a raise from a limit that has changed meanwhile
+  (409 `limit_changed`), so two admins at once, or a stale screen, add one step, not two.
+- **One step** each time, KIFF's: the size of the plan's default limit. The limit stays for the
+  periods after, until it's lowered (on kiff.dev, with company billing). From the phone it goes up
+  to 10 steps above the default. Past that, KIFF refuses (409 `limit_ceiling`), and the words say
+  to contact KIFF.
+- It answers the new limit (`{"limit_cents": …}`), and the tafs go on at once. Anyone else is told
+  that an admin of the account can raise it, by role, never by email.
+- **A refused raise** answers `{error, message}`, plus `limit_cents`, the limit now, on a 409:
+  `error` is the code (`limit_changed`, `limit_ceiling`, `no_spend_limit`), and `message` is KIFF's
+  words, which the app shows as they are.
+
+**Asking an admin.** Someone who can't raise the limit or buy a pack asks an admin, with a reason,
+through KIFF's requests, which keep their routes (`/v1/me/pack-requests`):
+- **On Company, for a raise:** `{"kind": "raise", "reason": …}`, with no `pack`.
+- **On Solo, for a pack,** as before: `{"pack": …, "reason": …}`, where a missing `kind` means
+  `pack`. That's someone without `billing.manage`, such as an approver, who takes no seat.
+- **Each request comes back with its `kind`,** and a raise's has no `pack`.
+- **The answers:** the admins are alerted. A raise answers every open request for one, and a pack
+  bought for a request answers it. An admin can decline one with a note, signed, as before. The
+  person who asked can take theirs back.
+
+### The balance read
+
+`GET /v1/usage/balance` (tafs cloud) is the balance now, in tafs cloud's words, for Plan & usage,
+Settings' Plan card and Home. The words carry the account's own figures, such as credits left and
+the spend limit, which the samples here leave out:
+
+```json
+{
+  "balance": {
+    "state": "warning",
+    "why": null,
+    "meter_pct": 80,
+    "words": "Company · 4 seats · 80% of the spend limit used",
+    "detail": "The plan's included credits are used. Beyond them, credits go on this period's invoice.",
+    "warning": "80% of the spend limit is used. At the limit, your tafs wait until an admin raises it.",
+    "raise": { "words": "Raise the spend limit by one step", "from_cents": 12345 },
+    "buy": null
+  },
+  "plan_line": "Company · 4 seats · 80% of the spend limit used",
+  "plan_tone": "warning",
+  "home_line": "80% of the spend limit is used"
+}
+```
+
+- `state` is `ok`, `warning` (from 80%) or `waiting`. While it's `waiting`, `why` is
+  `credits_used_up` (Solo: the period's credits and the packs), `limit_reached` (Company: the spend
+  limit) or `no_plan`. Otherwise it's `null`.
+- `meter_pct` is how much is used, 0 to 100, for a bar. On Solo, it's of the period's included
+  credits and packs. On Company, it's of the included credits until they're used, then of the spend
+  limit. It's `null` where nothing bounds it: an agreement, internal, or no plan.
+- `words` is the balance's line, and `detail` its second line, or `null`. On Solo, `detail` is the
+  packs' credits, which never expire, and any credits a run used past the balance, which aren't
+  charged. On Company, it's what comes after the included credits: up to the spend limit, on this
+  period's invoice.
+- `warning` is `null` below 80%. From 80%, and while waiting, it says what happens next and who can
+  change it.
+- `raise` is `{words, from_cents}` only for someone who may raise the spend limit (Company,
+  `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back.
+- `buy` is `null`, or two booleans, `{solo, packs}`: what the app may offer this person
+  (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
+  while Solo runs. The products and their store ids come from KIFF's usage read (`store`).
+- `plan_line` is Settings' Plan card, such as "Solo · 83% of this period's credits used",
+  "Company · 4 seats · 62% of the included credits used", "Company · waiting: the spend limit is
+  reached", or "No plan · choose one to start". `plan_tone` is `ok`, `warning` or `waiting`, for
+  its colour.
+- `home_line` is Home's one line about the plan, or `null` when the plan doesn't need the person:
+  it's set from 80%, while waiting, and with no plan.
+- It's the same on every refresh, whichever period the Credits panel shows. A 503 with `words` says
+  KIFF can't be read, as the credits reads do. A 404 from a tafs cloud from before this shows no
+  balance, and the Credits panel stays.
+
+**Waiting, in words** (samples):
+- Solo: "Your tafs are waiting: this period's credits and your packs are used. A pack lets them go
+  on, or they go on when the period starts again on 1 Dec."
+- Company, to someone who may raise it: "Your tafs are waiting: the spend limit is reached. Raise it
+  to let them go on, or they go on when the period starts again on 1 Dec."
+- Company, to anyone else: "Your tafs are waiting: the spend limit is reached. An admin of this
+  account can raise it."
+- No plan: "Choose a plan to start your tafs."
+
+**A run that waits:** a chat, or Run now, answers 409, before any stream opens, with
+`{error, code, words}`. `code` is `credits_used_up`, `limit_reached` or `no_plan`, and `words` is as
+above. The app shows the words. Builds from before this show `words` as for any refusal.
+
+### In the apps
+
+- **Plan & usage** opens on the balance: `words`, `detail`, a bar at `meter_pct` (none when it's
+  `null`), the `warning`, then **Raise the limit** where `raise` is set, and Solo or packs where
+  `buy` says. The Credits panel follows.
+- **Raise the limit** asks once, then the device key signs KIFF's request, with `raise.from_cents`,
+  behind Face ID or a fingerprint, as Go on did. While the phone can't approve, its state stands in
+  the button's place ([approvals.md](approvals.md#set-up-approvals-on-this-device)).
+  - After it, the balance is read again, with the button busy until then.
+  - If that read fails, the screen says "Your tafs can go on. This period's credits couldn't be
+    read since." and offers **Read it again**, which signs nothing. No other raise is offered until
+    the balance has been read.
+  - A `limit_changed` refusal reads the balance again too, and offers the raise from the new limit.
+- **Settings' Plan card** shows `plan_line` in `plan_tone`'s colour, and opens Plan & usage.
+  **Home** shows `home_line` when it's set. Both are read with each refresh.
+- **A chat or Run now refused** for credits shows its `words`, with no button.
+- **Asking an admin** stays where it was (`AskAdminView` on iPhone and iPad, `TaskRequests` on
+  Android): for a raise on Company, and for a pack on Solo. An admin answers a request for a raise
+  with the raise, and one for a pack by buying it for that request. Decline stays signed (on
+  Android, `tafs.decline-request.v1|{tenant}|{request}`). The request's lines are the apps' own,
+  the same on both:
+  - "You asked an admin to raise the spend limit." or "You asked an admin for a pack.";
+  - "An admin raised the spend limit." or "An admin added a pack.";
+  - "An admin declined: {note}";
+  - "Your request ended with the period."
+- **KIFF's usage read** (`GET /v1/me/usage`): the apps read only `store`, `billing`, `requests`
+  and `period` from it now.
+  - `store.packs[]` gain `credits`, and requests gain `kind`.
+  - Every other field stays through phase 2, inert, so builds already installed decode it: `tasks`
+    counts nothing and has no limit, the trial's fields say no trial runs, and Go on changes
+    nothing.
+  - tafs cloud's `GET /v1/usage/ai` keeps answering, inert: nothing used, never waiting, and no Go
+    on.
+  - These go in a later cleanup, once phase 2's apps are out on both stores.
+- **Gone from the apps,** outright: the tasks parts (the tasks, packs of tasks, and the tasks the
+  tafs counted), AI use and Go on, and the trial's screens and words. Phase 2's builds ship after
+  the server side, when the tasks count nothing.
+- **The same on both apps:**
+  1. A failed refresh shows tafs cloud's `words`, never silence.
+  2. A run's time is a short time, as Android shows it.
+  3. The last period is read again on each refresh, never kept for good.
+  4. Sample mode shows credits on both apps: it's the demo.
+
+**Buying in the app** (`Purchases`), through the App Store and Google Play only:
+- **Solo**, a monthly subscription, offered where `buy.solo` is set. Its screen shows the store's
+  price and every term: the period, that it renews until cancelled, how to cancel, and the Terms
+  and Privacy Policy.
+- **Packs of credits**, which never expire, offered where `buy.packs` is set.
+- **The products and their store ids** come from KIFF's usage read (`store`), with each pack's
+  `credits`.
+- **Each purchase goes to KIFF** for this account (Apple's signed transaction, or Google's purchase
+  token) before the store is told it's done. KIFF checks it with Apple or Google, and counts each
+  transaction once, so a replayed receipt adds nothing. One KIFF didn't record before the app
+  closed is sent at the next launch. **Restore** brings back the store account's purchases.
+- **Manage** opens the store's own subscriptions page. The app never links to buying outside the
+  store. An account moved from Solo to Company is billed by KIFF. The app says when the Solo bought
+  in a store still renews, and offers to cancel it there.
+
+### Under the hood
+
+- **KIFF keeps the balance:**
+  - each plan's included credits per seat;
+  - the packs in credits, and what each run draws from them;
+  - the period's credits, from each run's row;
+  - Solo's free overshoot;
+  - the spend limit, with its raises.
+
+  Its credits read (`GET /v1/me/usage/credits`) gains the balance's figures, which tafs cloud puts
+  in words. It alerts at the warnings, as it alerts for a held call.
+- **KIFF answers before every run:** `GET /v1/me/credits/allowance`, with the agent's own key (a
+  taf's, or Setup's for Coach). It answers `{"allowed": true}`, or `{"allowed": false, "why": …}`
+  with `credits_used_up`, `limit_reached` or `no_plan`.
+  - Setup's key gets Coach's rules.
+  - On an account with no plan, Setup's runs are allowed within the no-plan allowance, once per
+    account, which KIFF pays for. Past it, the answer is `no_plan`.
+- **kiff/agents asks before every new run,** whatever started it, and refuses one that waits with
+  the reason as its `code` (409).
+  - **It keeps an allowed answer for up to a minute per account,** so a chat doesn't wait on KIFF
+    each time. A refusal isn't kept, so a raise or a pack lets the tafs go on at once.
+  - **A refusal is final for that start:** a firing is `skipped_credits`, and isn't tried again.
+  - **When KIFF doesn't answer,** the start fails, as with any KIFF outage. The scheduler tries a
+    firing again, up to 3 times within the hour, and a check's items wait for the next firing that
+    runs. A chat answers 502.
+- **tafs cloud reads the balance** with the person's session, and writes the words. It sends no AI
+  bound with a chat any more.
+- **Coach with no plan holds no tools in effect:** each of its calls goes through KIFF's gateway, and
+  KIFF refuses every call of an account with no plan (`plan_not_started`), reads included, before it
+  reaches a tool. Coach can only talk, whatever the model asks.
+- **On the deploy:**
+  - an account with no plan today (on a trial, or with none) has no plan, so its tafs wait;
+  - our own test accounts get an internal agreement first;
+  - Solo, Company, agreements and internal keep their plans, counted in credits;
+  - packs of tasks aren't carried over.
+- **Gone:**
+  - kiff/agents' AI bound and its `ai_fair_use` refusal, and the bound tafs cloud sent with each
+    chat;
+  - KIFF's tasks: the refusal of a call past them, and packs of tasks;
+  - the trial;
+  - the old reads above, after their cleanup.
 
 ## The account's time zone
 

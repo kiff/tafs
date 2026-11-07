@@ -140,6 +140,22 @@ class RaiseLimitTest {
     assertFalse(m.state.value.raising)
   }
 
+  @Test fun kiffsWordsForAChangedLimitAreShownAsTheyAre() = runTest {
+    val m = model(waiting)
+    transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_changed","message":"The spend limit changed meanwhile. Read it again.","limit_cents":13000}""")
+    transport.answer("GET /v1/usage/balance", 200, raised)
+    assertFalse(m.raiseLimit())
+    assertEquals("The spend limit changed meanwhile. Read it again.", m.state.value.raiseError)
+    assertEquals("read again, and offered from the new limit", 13000L, m.state.value.balance!!.balance.raise!!.fromCents)
+  }
+
+  @Test fun aCodeThisAppDoesntKnowShowsKiffsWords() = runTest {
+    val m = model(waiting)
+    transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"no_spend_limit","message":"This plan has no spend limit to raise."}""")
+    assertFalse(m.raiseLimit())
+    assertEquals("This plan has no spend limit to raise.", m.state.value.raiseError)
+  }
+
   @Test fun pastTheCeilingKiffsWordsAreShown() = runTest {
     val m = model(waiting)
     transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_ceiling","message":"The limit can't go higher from the phone. Contact KIFF to raise it further.","limit_cents":13000}""")

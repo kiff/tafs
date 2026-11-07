@@ -152,71 +152,48 @@ enum DisconnectWords {
     }
 }
 
-/// A connected app's connections: which taf each was set up for (or that its taf was removed),
-/// any other taf whose Card covers it, and
-/// Disconnect, which removes its tools from KIFF and signs tafs out of the app (Face ID first).
+/// The words of an app's connections grouped by taf, the same on both apps.
+enum ConnectionGroupWords {
+    /// The last group: connections with no taf this app can name. Never "removed": the app
+    /// can't tell a removed taf from one it doesn't see.
+    static let others = "Other connections"
+}
+
+/// A connected app's connections, grouped by the taf each was set up for (the owner's ask): a
+/// section per taf, those needing attention first, then the rest by name; and last, "Other
+/// connections", those with no taf this app can name. Each shows any other taf whose Card
+/// covers it, how to fix it, and Disconnect (Cancel while its sign-in waits), which removes its
+/// tools from KIFF and signs tafs out of the app (Face ID first).
 struct AppConnectionsView: View {
     @EnvironmentObject private var model: AppModel
     let app: TafsCloud.ConnectApps.App
     @State private var busy: String?
     /// The connection whose Disconnect waits for the owner's yes.
     @State private var confirming: PlanqueClient.Grant?
+    /// The connection whose waiting sign-in Cancel would end.
+    @State private var cancelling: PlanqueClient.Grant?
     /// The key-based connection taking a new key (gap 13), on the key sheet.
     @State private var replacing: PlanqueClient.Grant?
 
     var body: some View {
+        let groups = model.connectionGroups(of: app)
         List {
-            Section {
-                ForEach(model.connections(of: app)) { g in
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(model.setUpFor(g))
-                                .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                            if let also = model.alsoOnCards(g) {
-                                Text(also).scaledFont(13).foregroundColor(Theme.soft)
-                            }
-                            if let words = g.statusWords, !words.isEmpty {
-                                Text(words).scaledFont(13).foregroundColor(Theme.dim)
-                            }
-                            // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
-                            if let failed = model.lastFailure(g) {
-                                Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
-                            }
-                            if model.canManageCards, g.signsInThroughProvider {
-                                // A provider's connection isn't signed in again in place: said before any Face ID.
-                                Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            } else if model.canManageCards {
-                                Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
-                                    if g.takesKey { replacing = g } else { Task { await model.reconnect(g) } }
-                                }
-                                .buttonStyle(.borderless)
-                                .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-                                .disabled(model.connecting != nil || busy != nil)
-                                .accessibilityIdentifier("connect.fix." + g.id)
-                                .confirming()
-                            }
-                            if let why = model.reconnectErrors[g.id] {
-                                Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-                        Spacer()
-                        if model.canManageCards {
-                            Button(busy == g.id ? "Disconnecting…" : "Disconnect", role: .destructive) {
-                                confirming = g
-                            }
-                            .buttonStyle(.borderless)
-                            .confirming()
-                            .disabled(busy != nil)
-                            .accessibilityIdentifier("connect.disconnect." + g.id)
-                        }
-                    }
-                    .frame(minHeight: 44)
+            ForEach(groups.tafs) { group in
+                Section {
+                    ForEach(group.grants) { g in row(g) }
+                } header: {
+                    Text(group.taf)
                 }
-            } footer: {
-                if model.canManageCards {
-                    Text(DisconnectWords.footer)
+            }
+            if !groups.others.isEmpty {
+                Section {
+                    ForEach(groups.others) { g in row(g) }
+                } header: {
+                    Text(ConnectionGroupWords.others)
                 }
+            }
+            if model.canManageCards {
+                Section { } footer: { Text(DisconnectWords.footer) }
             }
             if let error = model.lastError, error.hasPrefix("Not disconnected") {
                 Text(error).foregroundColor(Theme.no)
@@ -236,16 +213,82 @@ struct AppConnectionsView: View {
         } message: { g in
             Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g)))
         }
+        .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0.vendor) } ?? "",
+                            isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
+                            titleVisibility: .visible, presenting: cancelling) { g in
+            Button("Cancel the sign-in", role: .destructive) { disconnect(g) }
+            Button("Keep waiting", role: .cancel) { cancelling = nil }
+        } message: { g in
+            Text(ConnectionFixWords.cancelBody(g.vendor))
+        }
+    }
+
+    /// A connection: its lines, how to fix it, and Disconnect, or Cancel while its sign-in waits.
+    private func row(_ g: PlanqueClient.Grant) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                lines(g)
+                if model.canManageCards, g.signsInThroughProvider {
+                    // A provider's connection isn't signed in again in place: said before any Face ID.
+                    Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if model.canManageCards, !g.waitingSignIn {
+                    Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
+                        if g.takesKey { replacing = g } else { Task { await model.reconnect(g) } }
+                    }
+                    .buttonStyle(.borderless)
+                    .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                    .disabled(model.connecting != nil || busy != nil)
+                    .accessibilityIdentifier("connect.fix." + g.id)
+                    .confirming()
+                }
+                if let why = model.reconnectErrors[g.id] {
+                    Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer()
+            if model.canManageCards {
+                Button(busy == g.id ? "Disconnecting…" : g.waitingSignIn ? ConnectionFixWords.cancel : "Disconnect", role: .destructive) {
+                    if g.waitingSignIn { cancelling = g } else { confirming = g }
+                }
+                .buttonStyle(.borderless)
+                .confirming()
+                .disabled(busy != nil)
+                .accessibilityIdentifier("connect.disconnect." + g.id)
+            }
+        }
+        .frame(minHeight: 44)
+    }
+
+    /// What a connection is: the vendor's account when planque gives one, else the app's
+    /// name; planque's words for its status; the other tafs whose Card uses it; its last failure.
+    @ViewBuilder private func lines(_ g: PlanqueClient.Grant) -> some View {
+        Text(g.account.flatMap { $0.isEmpty ? nil : $0 } ?? app.title)
+            .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+        if let also = model.alsoOnCards(g) {
+            Text(also).scaledFont(13).foregroundColor(Theme.soft)
+        }
+        if let words = g.statusWords, !words.isEmpty {
+            Text(words).scaledFont(13).foregroundColor(Theme.dim)
+        } else if g.waitingSignIn {
+            Text(ConnectionFixWords.waiting(g.vendor)).scaledFont(13).foregroundColor(Theme.dim)
+        }
+        // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
+        if let failed = model.lastFailure(g) {
+            Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func disconnect(_ g: PlanqueClient.Grant) {
         confirming = nil
+        cancelling = nil
         busy = g.id
         Task {
             if await model.disconnect(grantID: g.id) { await model.loadConnectApps() }
             busy = nil
         }
     }
+
 }
 
 /// A connection's approval over the list: what it may do, KIFF's words for it, then Face ID.
