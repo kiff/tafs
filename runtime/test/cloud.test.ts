@@ -36,6 +36,8 @@ interface Account {
   restored?: unknown[]; redrafted?: string[];
   /** Each draft's trial, as KIFF keeps it (kiff/tafs#173): trying, or ended with its counts. */
   trials?: Record<string, { status: "trying" | "ended"; ended_by?: string; calls: number; held: number; refused: number }>;
+  /** The agents archived with their own key (agent, key), and what KIFF answers instead when set. */
+  archivedAgents?: Array<{ agent: string; key: string }>; archiveStatus?: number;
   /** KIFF's halts, by agent, "" for the account; `status` makes KIFF answer that instead. */
   halts?: Record<string, { state: string; kiff_ack?: boolean; planque_ack?: boolean; halted_at?: string }>; haltStatus?: number;
   /** Whether a halt KIFF takes is acknowledged by its gateway and planque at once. */
@@ -70,6 +72,16 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       const actor = new URL(url).searchParams.get("actor");
       const calls = (account.calls ?? []).filter((c) => actor === null || c.actor_id === actor);
       return new Response(JSON.stringify({ calls }), { status: 200 });
+    }
+    const archive = /\/v1\/me\/agents\/([^/]+)\/archive$/.exec(url);
+    if (archive && init?.method === "POST") {
+      // An agent's key archives its own agent, once: archiving revokes the key (KIFF's self-archive).
+      if (account.archiveStatus) return new Response(JSON.stringify({ error: "no" }), { status: account.archiveStatus });
+      const agent = decodeURIComponent(archive[1] ?? "");
+      account.archivedAgents ??= [];
+      if (account.archivedAgents.some((a) => a.key === token)) return new Response("{}", { status: 401 });
+      account.archivedAgents.push({ agent, key: token });
+      return new Response(JSON.stringify({ archived: true }), { status: 200 });
     }
     const halt = /\/v1\/(?:agents\/([^/]+)\/)?halt$/.exec(url);
     if (halt) {
@@ -986,13 +998,51 @@ describe("removing a taf", () => {
     await w.archived.add("t_acme", RAE, "sess_x");
     const r = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(r.status).toBe(200);
-    expect(r.body).toEqual({ taf: RAE, name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
+    expect(r.body).toEqual({ taf: RAE, name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "kiff_agent", "key", "name"], failed: [] });
     expect(w.agents.calls).toEqual([`deleteAgent ${RAE}`]);
+    // Its KIFF agent is archived with its own key, before the key goes.
+    expect(w.account.archivedAgents).toEqual([{ agent: "rae", key: "key_Rae" }]);
     expect(w.keys.held.has(`t_acme#${RAE}`)).toBe(false);
     expect(w.names.held.has("t_acme#Rae")).toBe(false);
     expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
     expect(w.removals.held.size).toBe(0);
     expect(w.archived.held.size).toBe(0); // its archived chats are forgotten too
+  });
+
+  it("keeps the key while KIFF can't archive the agent, and a retried remove counts the revoked key as done", async () => {
+    const w = world();
+    // KIFF down: nothing past kiff/agents is removed, and the key stays for the next try.
+    w.account.archiveStatus = 503;
+    const first = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
+    expect(first.body).toMatchObject({ done: false, removed: ["schedule", "history", "memory"], failed: ["kiff_agent"] });
+    expect(w.keys.held.has(`t_acme#${RAE}`)).toBe(true);
+    expect(w.names.held.has("t_acme#Rae")).toBe(true);
+    // KIFF back: archived, then the key deleted.
+    delete w.account.archiveStatus;
+    w.keys.fail.add("remove");
+    const second = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
+    expect(second.body).toMatchObject({ done: false, failed: ["key"] });
+    expect(w.account.archivedAgents).toEqual([{ agent: "rae", key: "key_Rae" }]);
+    // The archive revoked the key, so KIFF now refuses it (401): that's done, and the remove finishes.
+    const third = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
+    expect(third.body).toMatchObject({ done: true, failed: [] });
+    expect(w.account.archivedAgents).toHaveLength(1);
+    expect(w.keys.held.has(`t_acme#${RAE}`)).toBe(false);
+  });
+
+  it("removes a taf whose KIFF agent is already gone (404) or whose key isn't kept", async () => {
+    const w = world();
+    w.account.archiveStatus = 404;
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" })).body).toMatchObject({ done: true, failed: [] });
+    const v = world();
+    v.keys.held.delete(`t_acme#${RAE}`);
+    expect((await call(v, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" })).body).toMatchObject({ done: true, failed: [] });
+    expect(v.account.archivedAgents ?? []).toEqual([]);
+    // A key that can't be read (the read not granted yet) holds no removal: nothing archived, as before.
+    const u = world();
+    u.keys.get = async () => { throw new Error("AccessDeniedException"); };
+    expect((await call(u, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" })).body).toMatchObject({ done: true, failed: [] });
+    expect(u.account.archivedAgents ?? []).toEqual([]);
   });
 
   it("takes the right to manage Cards, and another account's taf answers like a missing one", async () => {

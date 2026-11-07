@@ -3,7 +3,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsView, readBalance, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
+import { activeCards, archiveOwnAgent, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -252,6 +252,8 @@ export interface AccountData {
 export interface Keys {
   /** Keeps a taf's KIFF agent key, replacing one kept before. */
   put(tenant: string, tafID: string, key: string): Promise<void>;
+  /** The taf's KIFF agent key, read only to archive its agent when the taf is removed; undefined when none is kept. */
+  get?(tenant: string, tafID: string): Promise<string | undefined>;
   /** Deletes it for good. Already gone counts as done. */
   remove(tenant: string, tafID: string): Promise<void>;
 }
@@ -1686,6 +1688,20 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps) {
   await deps.removals.add(me.tenantID, { id: taf.id, name: taf.name });
   if (!taf.removing) await deps.tafs.put(me.tenantID, { ...taf, removing: true });
   await step(["schedule", "history", "memory"], () => deps.agents.deleteAgent(me.tenantID, taf.id));
+  // Its KIFF agent is archived with its own key, the key's last act, which revokes the key in
+  // KIFF too; only then is the key deleted here. A failure keeps the key, for the next try.
+  if (failed.length === 0 && taf.kiffAgent && deps.keys.get) {
+    await step(["kiff_agent"], async () => {
+      // A key that can't be read (the read not granted yet: infra/aws.sh) archives nothing, as before
+      // this step, rather than holding every removal until it is.
+      const key = await deps.keys.get!(me.tenantID, taf.id).catch((err) => {
+        console.error(`remove ${taf.id}: its KIFF key couldn't be read: ${(err as Error).message}`);
+        return undefined;
+      });
+      const out = key ? await archiveOwnAgent(key, taf.kiffAgent, deps.fetch, deps.kiffBase) : "no key";
+      if (out !== "archived") console.warn(`remove ${taf.id}: KIFF agent not archived by this try (${out})`);
+    });
+  }
   if (failed.length === 0) await step(["key"], () => deps.keys.remove(me.tenantID, taf.id));
   // Its doors' addresses and numbers stop being its, and their sign-ins go.
   if (failed.length === 0 && deps.doors) await step(["doors"], () => removeTafDoors(doorContext(deps), me.tenantID, taf.id));

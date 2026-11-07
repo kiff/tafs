@@ -704,6 +704,9 @@ export function memoryKeys(): Keys & { held: Map<string, string>; fail: Set<"put
       if (fail.delete("put")) throw new Error("Secrets Manager is down");
       held.set(`${t}#${id}`, key);
     },
+    async get(t, id) {
+      return held.get(`${t}#${id}`);
+    },
     async remove(t, id) {
       if (fail.delete("remove")) throw new Error("Secrets Manager is down");
       held.delete(`${t}#${id}`);

@@ -144,6 +144,24 @@ async function ask<T>(token: string, method: string, path: string, body: unknown
 }
 
 /**
+ * Archives a taf's KIFF agent with the taf's own key, as its key's last act: KIFF lets an agent's
+ * key archive its own agent and nothing else, and archiving revokes the agent's keys. Done when
+ * KIFF archived it; and when KIFF doesn't take the key (401 or 403: an earlier try archived the
+ * agent, which revoked the key, or a KIFF from before takes the route only signed by the phone) or
+ * knows no such agent (404), since trying again can't do better. A server error throws, so the
+ * removal stays to finish and the key is kept for the next try. Returns what KIFF answered.
+ */
+export async function archiveOwnAgent(key: string, agent: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<"archived" | "refused" | "gone"> {
+  const res = await doFetch(`${base}/v1/me/agents/${encodeURIComponent(agent)}/archive`, {
+    method: "POST", headers: { authorization: `Bearer ${key}`, accept: "application/json", "content-type": "application/json" }, body: "{}",
+  });
+  if (res.ok) return "archived";
+  if (res.status === 401 || res.status === 403) return "refused";
+  if (res.status === 404) return "gone";
+  throw new KIFFError(502, `KIFF answered ${res.status} to archiving the agent`);
+}
+
+/**
  * The revision each of these Cards is at now, from its statement (kiff/tafs#107):
  * what a version runs under, recorded when it goes live.
  */
