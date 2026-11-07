@@ -262,6 +262,9 @@ read gave it (`raise.from_cents`).
   to contact KIFF.
 - It answers the new limit (`{"limit_cents": …}`), and the tafs go on at once. Anyone else is told
   that an admin of the account can raise it, by role, never by email.
+- **A refused raise** answers `{error, message}`, plus `limit_cents`, the limit now, on a 409:
+  `error` is the code (`limit_changed`, `limit_ceiling`, `no_spend_limit`), and `message` is KIFF's
+  words, which the app shows as they are.
 
 **Asking an admin.** Someone who can't raise the limit or buy a pack asks an admin, with a reason,
 through KIFF's requests, which keep their routes (`/v1/me/pack-requests`):
