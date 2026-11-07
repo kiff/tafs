@@ -2,19 +2,24 @@
  * How loudly each notification reaches the owner (kiff/tafs#210, part 5),
  * decided here as it is sent, so several tafs don't flood them:
  *
- *   interrupt  a hold waiting for the owner, a halt, and a taf whose scheduled runs
- *              keep failing to start, or whose follow-up didn't run: Time
- *              Sensitive, so it comes through a Focus.
- *   quiet      a task finished or a run that ended, and a request answered: no
- *              sound or banner (passive). The badge and the chat line update.
+ *   interrupt  a hold waiting for the owner, a halt, a taf whose scheduled runs
+ *              keep failing to start, or whose follow-up didn't run, and the tafs
+ *              waiting for credits: Time Sensitive, so it comes through a Focus.
+ *   quiet      a task finished or a run that ended, a request answered, and 80%
+ *              of the period's credits used: no sound or banner (passive). The
+ *              badge and the chat line update.
  *   later      anything not urgent while the owner is away: nothing is pushed.
  *              It waits in Coach's chat, gathered into one "While you were
  *              away" message, for the next time they open tafs.
  */
 export type Level = "interrupt" | "quiet" | "later";
 
-/** What a notification is about. `failing`: a taf whose scheduled runs keep failing before they start. */
-export type Kind = "hold" | "halt" | "failing" | "run_ended" | "tasks_requested" | "request_answered";
+/**
+ * What a notification is about. `failing`: a taf whose scheduled runs keep failing before they start.
+ * `credits_warning`: 80% of what the period has is used; `credits_waiting`: all of it, and the tafs
+ * wait, as halted ones do, until a pack, a raise or the next period.
+ */
+export type Kind = "hold" | "halt" | "failing" | "run_ended" | "tasks_requested" | "request_answered" | "credits_warning" | "credits_waiting";
 
 /**
  * A notification's level. `away`: the owner hasn't used tafs for a while.
@@ -23,8 +28,8 @@ export type Kind = "hold" | "halt" | "failing" | "run_ended" | "tasks_requested"
  */
 export function levelOf(kind: Kind, away: boolean): Level {
   // A taf whose schedule keeps failing to start does no work until something changes, as a halted one.
-  if (kind === "hold" || kind === "halt" || kind === "failing") return "interrupt";
-  if (kind === "tasks_requested" || kind === "request_answered") return "quiet";
+  if (kind === "hold" || kind === "halt" || kind === "failing" || kind === "credits_waiting") return "interrupt";
+  if (kind === "tasks_requested" || kind === "request_answered" || kind === "credits_warning") return "quiet";
   return away ? "later" : "quiet";
 }
 
