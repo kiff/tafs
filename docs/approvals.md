@@ -362,9 +362,20 @@ How loudly each notification reaches the owner is decided in tafs cloud as it's 
 
 | Level | For | How |
 |---|---|---|
-| interrupt | a hold waiting for the owner, a halt | Time Sensitive: comes through a Focus |
+| interrupt | a hold waiting for the owner, a halt, a schedule whose runs keep failing to start | Time Sensitive: comes through a Focus |
 | quiet | a task finished, a run that ended, a request answered | No sound or banner; the badge and the chat line update |
 | later | anything not urgent while the owner is away | Nothing is pushed: it waits in Coach's chat, gathered into one "While you were away" message |
+
+**A schedule whose runs keep failing to start** (`sweepFailingSchedules`, on the sweep). kiff/agents
+keeps a schedule's `failing` when its runs fail before any turn (the model refusing them for want of
+credits, say), and hands the same items to the next run, but it can't reach a phone. tafs cloud tells the
+phones that answer holds, once for each run of failures, opening the taf:
+- **a recurring schedule:** once two firings in a row failed, or one failed six hours ago with none working
+  since. "Its last 2 scheduled runs couldn't start. It tries again at each scheduled time. Open it to see
+  why." Not for one its owner turned off.
+- **a follow-up the taf set, or a one-time run:** at once, since it's off after its firing and its work
+  won't run again by itself. "A follow-up it set for itself didn't run, and won't try again. Open it to
+  see why." Never said again a month on.
 
 **Sound**, in Settings under **Notifications & haptics** (`NotificationSettingsView`), is
 on by default and set for each device. Off, the phone says so when it registers

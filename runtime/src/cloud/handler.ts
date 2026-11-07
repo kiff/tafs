@@ -5951,6 +5951,70 @@ export async function sweepDeliveries(deps: Deps): Promise<Array<{ run: string; 
   return sweepRunDeliveries(ctx);
 }
 
+/**
+ * The sweep's look at each account's schedules: a taf whose scheduled runs keep failing before they do any
+ * work (the model refusing them, say: kiff/agents' `failing`) is said once for each run of failures, to the
+ * phones of the people who answer its holds, as a halt is. kiff/agents keeps the count and gives each run's
+ * items back, but it can't reach a phone. Said once two firings in a row failed, or one failed
+ * FAILING_ALONE ago and none has worked since (a daily schedule's next firing is a day away).
+ *
+ * A once schedule (a follow-up the taf set, or a one-time run) is said as soon as it failed: it's off
+ * after its firing, so its work doesn't run again (docs/schedules.md in kiff/agents), and nobody else will
+ * do it unless told. Said only while its once-key is kept, never again a month on. A recurring schedule its
+ * owner turned off isn't said: it won't try again, as the words would promise.
+ */
+export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant: string; schedule: string }>> {
+  const store = deps.coach;
+  if (!store) return [];
+  const now = deps.now?.() ?? new Date();
+  const told: Array<{ tenant: string; schedule: string }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const schedules = await deps.agents.listSchedules(tenant).catch(() => [] as Schedule[]);
+    for (const s of schedules) {
+      const f = s.failing;
+      if (!f) continue;
+      const age = now.getTime() - Date.parse(f.since);
+      const once = s.kind === "once";
+      if (once ? !(age < FAILING_KEPT_MS) : !s.enabled || !(f.firings >= 2 || age >= FAILING_ALONE_MS)) continue;
+      const taf = await deps.tafs.get(tenant, s.agent).catch(() => undefined);
+      if (!taf || taf.removing) continue;
+      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      await tellPhones(deps, tenant, failingNotification(taf, s, f.firings));
+      told.push({ tenant, schedule: s.id });
+    }
+  }
+  return told;
+}
+
+/** How long one failed firing waits, with none working since, before it's said. */
+const FAILING_ALONE_MS = 6 * 3600_000;
+/** How long a run of failures is remembered as said. */
+const FAILING_KEPT_MS = 30 * 24 * 3600_000;
+
+/**
+ * What the alert says, as every app shows it: how many in a row, that it keeps trying, and where to look. A
+ * once schedule's says its work didn't run and won't by itself: a follow-up the taf set, or a one-time run.
+ */
+export const FAILING_WORDS = {
+  one: "Its scheduled run couldn't start. It tries again at its next time. Open it to see why.",
+  many: (n: number) => `Its last ${n} scheduled runs couldn't start. It tries again at each scheduled time. Open it to see why.`,
+  followUp: "A follow-up it set for itself didn't run, and won't try again. Open it to see why.",
+  once: "Its one-time scheduled run couldn't start, and won't try again. Open it to see why.",
+} as const;
+
+function failingWords(s: Schedule, firings: number): string {
+  if (s.kind === "once") return s.follow_up ? FAILING_WORDS.followUp : FAILING_WORDS.once;
+  return firings > 1 ? FAILING_WORDS.many(firings) : FAILING_WORDS.one;
+}
+
+function failingNotification(taf: Taf, s: Schedule, firings: number): Notification {
+  return {
+    kind: "alert",
+    payload: { aps: { alert: { title: taf.name, body: failingWords(s, firings) }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    collapseID: `failing-${s.id}`.slice(0, 64),
+  };
+}
+
 function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): DeliveryContext {
   if (!deps.coach) throw new HTTPError(404, "not found");
   return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };

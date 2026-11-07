@@ -1,7 +1,46 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { DISCLOSURE_LINE, disclosureLine, JOBS, jobById, OLD_DISCLOSURE_LINE, ownJob, systemPrompt, writesForIn } from "../src/jobs.js";
+import { DISCLOSURE_LINE, disclosureLine, disclosureLineFor, disclosureLines, JOBS, jobById, languageOf, OLD_DISCLOSURE_LINE, ownJob, systemPrompt, writesForIn } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
+
+describe("the disclosure line, in the message's language (kiff/agents#363)", () => {
+  it("names who the messages come from in each language, and tells a text's language as kiff/agents does", () => {
+    const acme = { writesFor: "Acme" };
+    expect(disclosureLines(acme)).toEqual({
+      es: "Escrito por un agente de IA para Acme.",
+      fr: "Rédigé par un agent d'IA pour Acme.",
+      de: "Von einem KI-Agenten für Acme geschrieben.",
+      pt: "Escrito por um agente de IA para Acme.",
+      it: "Scritto da un agente di IA per Acme.",
+    });
+    expect(disclosureLines({}).es).toBe("Escrito por un agente de IA.");
+    for (const [lang, text] of [
+      ["es", "Hecho: te hemos devuelto 42,00 EUR del pedido 1043 a tu tarjeta original. Llegará en 5–10 días."],
+      ["fr", "Votre remboursement de 42,00 EUR pour la commande 1043 a été effectué. Merci !"],
+      ["de", "Ihre Erstattung von 42,00 EUR für die Bestellung 1043 ist erledigt. Danke!"],
+      ["pt", "Seu reembolso de 42,00 EUR do pedido 1043 foi feito. Obrigado!"],
+      ["it", "Il rimborso di 42,00 EUR per l'ordine 1043 è stato fatto. Grazie!"],
+      ["en", "Your refund of 42.00 EUR for order 1043 has been issued. Thanks!"],
+    ] as const) {
+      expect(languageOf(text), text).toBe(lang);
+    }
+    // Too little to tell, as much of two languages, or one it has no line in: the default line.
+    for (const text of ["OK", "Gracias.", "Hola, gracias. Olá, obrigado.", "Teie tagasimakse on tehtud."]) {
+      expect(disclosureLineFor(acme, text), text).toBe("Written by an AI agent for Acme.");
+    }
+    expect(disclosureLineFor(acme, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe("Escrito por un agente de IA para Acme.");
+    // An html part's tags aren't its words, even English ones in an attribute.
+    expect(languageOf('<span title="the order is for you and your thanks">Hola, gracias.</span>')).toBe("es");
+  });
+
+  it("asks the taf to start with its line, in the language it writes in, and gives it each one", () => {
+    const prompt = systemPrompt({ ...jobById("chargebacks"), writesFor: "Acme" });
+    expect(prompt).toContain("it starts with your disclosure line, word for word, in the language");
+    expect(prompt).toContain('Your disclosure line: "Written by an AI agent for Acme."');
+    expect(prompt).toContain('es "Escrito por un agente de IA para Acme."');
+    expect(prompt).not.toContain("ends with your disclosure line");
+  });
+});
 
 describe("jobs", () => {
   it("has the five jobs, each with a valid default schedule", () => {
@@ -14,7 +53,7 @@ describe("jobs", () => {
     expect(own).toEqual({ id: "custom", name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", cron: "",
       instructions: "What this job does: Reminds customers of overdue invoices.\n\nNever change an invoice." });
     const prompt = systemPrompt(own);
-    expect(prompt).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
+    expect(prompt).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\nIn other languages: es \"Escrito por un agente de IA.\", fr \"Rédigé par un agent d'IA.\", de \"Von einem KI-Agenten geschrieben.\", pt \"Escrito por um agente de IA.\", it \"Scritto da un agente di IA.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
     // Who it writes for, once the owner said (gaps 16 and 18): never "for the company".
     expect(systemPrompt({ ...own, writesFor: "Kiff Agents OÜ" })).toContain('Your disclosure line: "Written by an AI agent for Kiff Agents OÜ."');
     expect(prompt).toContain("kiff_pending");
@@ -81,7 +120,7 @@ describe("jobs", () => {
   it("has every taf say an AI agent wrote what it sends outside the company", () => {
     // kiff.dev's Terms state this for tafs (AI Act Article 50); keep it true.
     for (const j of JOBS) {
-      expect(systemPrompt(j)).toContain("says, in one plain sentence, that an AI agent wrote it");
+      expect(systemPrompt(j)).toContain("says first, in one plain sentence, that an AI agent\nwrote it");
       expect(systemPrompt(j)).toContain("Never present yourself as a person.");
     }
   });

@@ -20,8 +20,9 @@ export interface Job {
   instructions: string;
   /**
    * Where the AI disclosure goes in the job's calls that write outside the company: for each
-   * tool, its free-text fields, by dotted path, in order of preference. kiff/agents puts
-   * DISCLOSURE_LINE there in every such call, whatever the model wrote (its `disclose`).
+   * tool, its free-text fields, by dotted path, in order of preference. kiff/agents puts the
+   * disclosure line at the top of every such call, whatever the model wrote (its `disclose`).
+   * `credit: false` is still read, and means nothing now: no call carries a credit line.
    */
   disclose?: ReadonlyArray<{ tool: string; fields: readonly string[]; credit?: false }>;
   /**
@@ -48,10 +49,64 @@ export function disclosureLine(job: Pick<Job, "writesFor">): string {
 }
 
 /**
- * The credit after the disclosure in a message to people (the owner's call on kiff/tafs#476): kiff/agents
- * adds it, never the model, and never in a call whose disclose entry says credit: false (evidence, a filing).
+ * The disclosure line in other languages, by ISO 639-1 code: kiff/agents puts the one in the language a
+ * message is written in at its top (its `disclose.lines`), and the door's reply does the same, so a
+ * Spanish customer reads it in Spanish first. Each names who the messages come from, as disclosureLine does.
+ * No message carries a credit line any more ("Built with tafs."): the owner's call, 7 Nov.
  */
-export const CREDIT_LINE = "Built with tafs.";
+export function disclosureLines(job: Pick<Job, "writesFor">): Record<string, string> {
+  const who = job.writesFor?.replace(/\s+/g, " ").trim();
+  return who
+    ? {
+      es: `Escrito por un agente de IA para ${who}.`,
+      fr: `Rédigé par un agent d'IA pour ${who}.`,
+      de: `Von einem KI-Agenten für ${who} geschrieben.`,
+      pt: `Escrito por um agente de IA para ${who}.`,
+      it: `Scritto da un agente di IA per ${who}.`,
+    }
+    : {
+      es: "Escrito por un agente de IA.",
+      fr: "Rédigé par un agent d'IA.",
+      de: "Von einem KI-Agenten geschrieben.",
+      pt: "Escrito por um agente de IA.",
+      it: "Scritto da un agente di IA.",
+    };
+}
+
+/** The disclosure line for a text: in its language when disclosureLines has it, disclosureLine otherwise. */
+export function disclosureLineFor(job: Pick<Job, "writesFor">, text: string): string {
+  return disclosureLines(job)[languageOf(text)] ?? disclosureLine(job);
+}
+
+/**
+ * Frequent short words of each language a disclosure line comes in: enough to tell which one a message
+ * is written in. The same lists as kiff/agents' (agent/disclose.go), so a door's reply and a taf's own
+ * message pick the same language.
+ */
+const COMMON_WORDS: ReadonlyArray<readonly [string, ReadonlySet<string>]> = ([
+  ["en", "the and is are you your to of for with we our this that it was has have been will be not on at by from thanks thank order please"],
+  ["es", "el la los las del de que y en por para con una un su sus tu tus te le es está están hemos ha han gracias pedido hola usted ya pero muy más"],
+  ["pt", "o os as do da dos das de que e em por para com uma um seu sua você não é está foi obrigado obrigada pedido olá já mas muito mais"],
+  ["fr", "le la les des du de et est pour pas vous nous une un que dans avec sur votre vos merci commande été sont bonjour déjà mais très plus"],
+  ["de", "der die das und ist nicht sie ihr ihre ein eine mit für auf den dem des zu wir danke bestellung wurde bitte hallo schon aber sehr mehr"],
+  ["it", "il lo gli della del di che e è per non una un con sono grazie ordine suo sua tuo tua ciao già ma molto più stato"],
+] as const).map(([lang, words]) => [lang, new Set(words.split(" "))] as const);
+
+/**
+ * The language a text is written in, by ISO 639-1 code, when its common words say so clearly: at least two
+ * of them, and more than any other language's. Empty otherwise: a short or mixed text gets the default line.
+ * An html part's tags aren't its words. As kiff/agents reads it (agent/disclose.go).
+ */
+export function languageOf(text: string): string {
+  const words = text.replace(/<[^<>]*>/g, " ").toLowerCase().split(/[^\p{L}]+/u).filter(Boolean);
+  let best = "", top = 0, second = 0;
+  for (const [lang, set] of COMMON_WORDS) {
+    const n = words.filter((w) => set.has(w)).length;
+    if (n > top) [best, top, second] = [lang, n, top];
+    else if (n > second) second = n;
+  }
+  return top >= 2 && top > second ? best : "";
+}
 
 export const JOBS: readonly Job[] = [
   {
@@ -187,10 +242,9 @@ five ways, and these win:
   that vendor. You can't sign in yourself.
 
 Anything you write to someone outside the company (a customer, a supplier,
-a card network, a bank) says, in one plain sentence, that an AI agent wrote it:
-it ends with your disclosure line, word for word (under your job, below).
-Add nothing after it: KIFF's runtime adds what else belongs there.
-Never present yourself as a person.
+a card network, a bank) says first, in one plain sentence, that an AI agent
+wrote it: it starts with your disclosure line, word for word, in the language
+you write in (under your job, below). Never present yourself as a person.
 
 Your settings are Coach's to change, never yours: connecting an app or giving
 it a new key, your Card and its limits, your tools, your schedule. When the
@@ -330,5 +384,6 @@ export function writesForIn(line: string | undefined): string | undefined {
 }
 
 export function systemPrompt(job: Job): string {
-  return `${SHARED_INSTRUCTIONS}\n\nYour job: ${job.name}.\n\nYour disclosure line: "${disclosureLine(job)}"\n\n${job.instructions}`;
+  const lines = Object.entries(disclosureLines(job)).map(([lang, line]) => `${lang} "${line}"`).join(", ");
+  return `${SHARED_INSTRUCTIONS}\n\nYour job: ${job.name}.\n\nYour disclosure line: "${disclosureLine(job)}"\nIn other languages: ${lines}\n\n${job.instructions}`;
 }

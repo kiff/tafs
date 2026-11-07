@@ -2,8 +2,9 @@
  * How loudly each notification reaches the owner (kiff/tafs#210, part 5),
  * decided here as it is sent, so several tafs don't flood them:
  *
- *   interrupt  a hold waiting for the owner, and a halt: Time Sensitive, so it
- *              comes through a Focus.
+ *   interrupt  a hold waiting for the owner, a halt, and a taf whose scheduled runs
+ *              keep failing to start, or whose follow-up didn't run: Time
+ *              Sensitive, so it comes through a Focus.
  *   quiet      a task finished or a run that ended, and a request answered: no
  *              sound or banner (passive). The badge and the chat line update.
  *   later      anything not urgent while the owner is away: nothing is pushed.
@@ -12,8 +13,8 @@
  */
 export type Level = "interrupt" | "quiet" | "later";
 
-/** What a notification is about. */
-export type Kind = "hold" | "halt" | "run_ended" | "tasks_requested" | "request_answered";
+/** What a notification is about. `failing`: a taf whose scheduled runs keep failing before they start. */
+export type Kind = "hold" | "halt" | "failing" | "run_ended" | "tasks_requested" | "request_answered";
 
 /**
  * A notification's level. `away`: the owner hasn't used tafs for a while.
@@ -21,7 +22,8 @@ export type Kind = "hold" | "halt" | "run_ended" | "tasks_requested" | "request_
  * owner's Coach, so they are never kept for later.
  */
 export function levelOf(kind: Kind, away: boolean): Level {
-  if (kind === "hold" || kind === "halt") return "interrupt";
+  // A taf whose schedule keeps failing to start does no work until something changes, as a halted one.
+  if (kind === "hold" || kind === "halt" || kind === "failing") return "interrupt";
   if (kind === "tasks_requested" || kind === "request_answered") return "quiet";
   return away ? "later" : "quiet";
 }

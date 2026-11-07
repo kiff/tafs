@@ -4,7 +4,7 @@ import { AgentsError, type Run } from "../src/cloud/agents.js";
 import { type Deps, handle, type HTTPEvent, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
-import { localPart, parseDoorMessage } from "../src/cloud/doors/doors.js";
+import { localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
 import { type EmailProvider, emailArrival, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
 import { doorKeys, type DoorSecrets, type DoorStore } from "../src/cloud/doors/model.js";
 import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
@@ -248,7 +248,9 @@ describe("the email door", () => {
     });
     expect(w.outbox[0]!.text).toContain("Refunded the duplicate $180");
     expect(w.outbox[0]!.text).toContain("I didn't open its 2 attachments");
-    expect(w.outbox[0]!.text).toContain("Refunds, an AI assistant in tafs");
+    // First, who is writing: an AI agent, for the company it writes for (none named here), never "in tafs".
+    expect(w.outbox[0]!.text.startsWith("Written by an AI agent.\n\nRefunded the duplicate $180")).toBe(true);
+    expect(w.outbox[0]!.text).not.toContain("in tafs");
 
     // The chat shows the email marked as by email, and its answer as sent back.
     const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
@@ -1377,5 +1379,16 @@ describe("a connected app's event, through planque", () => {
     // A note for a wait with no kept event answers nothing; a kept event answers once.
     expect((await send(w, "POST", "/v1/runs/ended", { body: note })).status).toBe(200);
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
+  });
+});
+
+describe("a door's reply (kiff/agents#363)", () => {
+  it("starts with who is writing, for the company it writes for, in the answer's language", () => {
+    const taf = { id: "taf-aaaa0000000000000000", name: "Refunds", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-15T09:00:00Z", writesFor: "Acme" };
+    const ran = (output: string) => ({ id: "run1", agent: taf.id, session: "s1", trigger: "owner", status: "COMPLETED", output, cost_micro_usd: 0, turns: 1, created: "", updated: "" }) as never;
+    expect(replyText(taf, ran("Hecho: te hemos devuelto 42,00 EUR del pedido 1043."), {}))
+      .toBe("Escrito por un agente de IA para Acme.\n\nHecho: te hemos devuelto 42,00 EUR del pedido 1043.");
+    expect(replyText(taf, ran("Refunded the duplicate on order 4471."), { attachments: 1 }))
+      .toBe("Written by an AI agent for Acme.\n\nRefunded the duplicate on order 4471.\n\nI read only the text of your message; I didn't open its attachment.");
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, type Deps, FAILING_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -8,7 +8,7 @@ import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } f
 import type { Held, Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, ownerWords, recentCalls } from "../src/cloud/improve.js";
-import { DISCLOSURE_LINE, jobById, OLD_DISCLOSURE_LINE } from "../src/jobs.js";
+import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
 
@@ -1204,7 +1204,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
       tools: ["list_invoices_k3f9", "send_message_k3f9"] };
     expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: own })).status).toBe(200);
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ disclose });
-    expect(w.agents.agents.get(`t_acme|${NEW}`)!.disclose).toEqual({ line: DISCLOSURE_LINE, in: disclose });
+    expect(w.agents.agents.get(`t_acme|${NEW}`)!.disclose).toEqual({ line: DISCLOSURE_LINE, lines: disclosureLines({}), in: disclose });
     // As stored, it's the same job every time it's built again (an Upgrade, a new version).
     expect(jobOf(w.tafs.held.get(`t_acme#${NEW}`)!).disclose).toEqual(disclose);
     w.agents.setupDrafts.set("drf_s2", { tenant: "t_acme", agent: "leads-x" });
@@ -1229,7 +1229,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ job: "custom", summary: own.summary, work: { kickoff: own.kickoff, instructions: own.instructions } });
     // Its definition carries the job as drafted, and its schedule asks each run for the kickoff.
     const def = w.agents.agents.get(`t_acme|${NEW}`)!;
-    expect(def.instructions).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice or offer a discount.");
+    expect(def.instructions).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\nIn other languages: es \"Escrito por un agente de IA.\", fr \"Rédigé par un agent d'IA.\", de \"Von einem KI-Agenten geschrieben.\", pt \"Escrito por um agente de IA.\", it \"Scritto da un agente di IA.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice or offer a discount.");
     expect(w.agents.schedules.get(`t_acme|${NEW}`)).toMatchObject({ cron: "0 9 * * 1-5", input: own.kickoff, enabled: true });
     expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} 0 9 * * 1-5 UTC`, `trigger ${NEW}`]);
     // Its job line is what Coach said it does, and its dial's face names it.
@@ -2295,6 +2295,95 @@ describe("trying a version (kiff/tafs#173)", () => {
 });
 
 // A halt, of one taf or of the whole account.
+// kiff/agents#363: a scheduled run that failed before doing anything (the model refusing it, for want of
+// credits) gives its items back, and the schedule's `failing` counts the firings in a row. kiff/agents can't reach
+// a phone: tafs cloud's sweep says it once for each run of failures, to the phones that answer, as a halt.
+describe("a schedule whose runs keep failing to start", () => {
+  const AT = new Date("2026-10-29T10:00:00Z"); // the world's clock
+  const SINCE = new Date(AT.getTime() - 30 * 60_000).toISOString();
+  const setUp = async (failing?: { since: string; firings: number; run?: string }) => {
+    const w = world();
+    w.phones.push({ token: "a".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "" },
+      { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
+    // The world's own schedule for Rae, every quarter hour.
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, cron: "*/15 * * * *", enabled: true, ...(failing ? { failing } : {}) });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    return { w, deps };
+  };
+  const bodyOf = (n: unknown) => (n as { payload: { aps: { alert: { body: string } } } }).payload.aps.alert.body;
+
+  it("is said once, Time Sensitive, to the phones that answer, after two firings in a row", async () => {
+    const { w, deps } = await setUp({ since: SINCE, firings: 2, run: "run_2" });
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: RAE }]);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", payload: {
+      aps: { alert: { title: "Rae", body: FAILING_WORDS.many(2) }, "interruption-level": "time-sensitive", sound: "default" },
+      open: "taf", taf_id: RAE,
+    } } });
+    expect(FAILING_WORDS.many(2)).toBe("Its last 2 scheduled runs couldn't start. It tries again at each scheduled time. Open it to see why.");
+    // The same run of failures, longer now: nothing more is sent.
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 5, run: "run_5" } });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(1);
+    // A run worked, and later a new run of failures began: said again, once.
+    const later = new Date(AT.getTime() + 3600_000).toISOString();
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: later, firings: 2 } });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(w.pushed).toHaveLength(2);
+  });
+
+  it("waits for a second firing, unless a lone failure is six hours old with none working since", async () => {
+    const { w, deps } = await setUp({ since: SINCE, firings: 1 });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    const old = new Date(AT.getTime() - 6 * 3600_000).toISOString();
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: old, firings: 1 } });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.one);
+  });
+
+  it("says nothing for a schedule that works, nor for a taf being removed", async () => {
+    const { w, deps } = await setUp();
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 3 } });
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, removing: true });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(0);
+  });
+
+  it("says a follow-up that didn't run at once, since it won't run again, and never a month on", async () => {
+    const { w, deps } = await setUp();
+    const FU = "fu-ask-again";
+    const followUp = { tenant: "t_acme", id: FU, agent: RAE, cron: "", input: "Ask whether the refund for order 1043 arrived.", enabled: false,
+      kind: "once" as const, at: SINCE, follow_up: true, failing: { since: SINCE, firings: 1, run: "run_fu" } };
+    w.agents.schedules.set(`t_acme|${FU}`, followUp);
+    // One failed firing, thirty minutes ago, off for good: said now, not six hours on.
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: FU }]);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", collapseID: `failing-${FU}`, payload: {
+      aps: { alert: { title: "Rae", body: FAILING_WORDS.followUp }, "interruption-level": "time-sensitive" }, open: "taf", taf_id: RAE,
+    } } });
+    expect(FAILING_WORDS.followUp).toBe("A follow-up it set for itself didn't run, and won't try again. Open it to see why.");
+    // Said once.
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    // A one-time run the owner set says so in its own words.
+    w.agents.schedules.set(`t_acme|once-1`, { ...followUp, id: "once-1", follow_up: false });
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: "once-1" }]);
+    expect(bodyOf(w.pushed[1]!.n)).toBe(FAILING_WORDS.once);
+    // One that failed a month ago, past what the sweep remembers as said, is never said again.
+    const monthAgo = new Date(AT.getTime() - 30 * 24 * 3600_000).toISOString();
+    w.agents.schedules.set(`t_acme|once-old`, { ...followUp, id: "once-old", failing: { since: monthAgo, firings: 1 } });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(2);
+  });
+
+  it("says nothing for a recurring schedule its owner turned off: it won't try again, as the words say", async () => {
+    const { w, deps } = await setUp({ since: SINCE, firings: 3 });
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, enabled: false });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(0);
+  });
+});
+
 describe("halting", () => {
   it("halts a taf in KIFF and kiff/agents in one tap, and reads halted only once all of them hold it", async () => {
     const w = world();
@@ -2704,20 +2793,21 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.agents.access.set("u_ana", { cards_manage: true });
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
-    expect(w.agents.agents.get(`t_acme|${NEW}`)!.disclose).toEqual({ line: DISCLOSURE_LINE, in: disclose });
+    expect(w.agents.agents.get(`t_acme|${NEW}`)!.disclose).toEqual({ line: DISCLOSURE_LINE, lines: disclosureLines({}), in: disclose });
   });
 
-  // Gaps 16 and 18, and the owner's credit: who the messages come from, as the owner answered Coach, names the
-  // disclosure; "Built with tafs." follows it in a message to people, never in a tool whose credit is false.
-  it("names who a taf writes for in its disclosure, and credits tafs after it, where the result says", async () => {
+  // Gaps 16 and 18: who the messages come from, as the owner answered Coach, names the disclosure, in each
+  // language it comes in. No message carries a credit line any more (the owner's call, 7 Nov).
+  it("names who a taf writes for in its disclosure, in each language, and credits no one", async () => {
     const disclose = [{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "file_evidence_k3f9", fields: ["note"], credit: false }];
     const { w, note, answer } = await paused({ ...RESULT, tools: ["send_message_k3f9", "file_evidence_k3f9"], taf: { ...RESULT.taf, disclose, writes_for: "Kiff Agents OÜ" } });
     w.agents.access.set("u_ana", { cards_manage: true });
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
     const def = w.agents.agents.get(`t_acme|${NEW}`)!;
-    expect(def.disclose).toEqual({ line: "Written by an AI agent for Kiff Agents OÜ.", in: [{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "file_evidence_k3f9", fields: ["note"] }] });
-    expect(def.credit).toEqual({ line: "Built with tafs.", after: "Written by an AI agent for Kiff Agents OÜ.", in: [{ tool: "send_message_k3f9", fields: ["text"] }] });
+    expect(def.disclose).toEqual({ line: "Written by an AI agent for Kiff Agents OÜ.", lines: disclosureLines({ writesFor: "Kiff Agents OÜ" }), in: [{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "file_evidence_k3f9", fields: ["note"] }] });
+    expect(def.disclose!.lines!.es).toBe("Escrito por un agente de IA para Kiff Agents OÜ.");
+    expect(def).not.toHaveProperty("credit");
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ writesFor: "Kiff Agents OÜ" });
     // A name on two lines is refused, in words for Coach.
     const two = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose, writes_for: "Kiff\nAgents" } });
@@ -2963,7 +3053,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@3,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@4,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -2972,18 +3062,18 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@3,improve-a-taf@1,name-the-tools@5`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@4,improve-a-taf@1,name-the-tools@5`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is Rae stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,connect-an-app@5,draft-the-card@3,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,connect-an-app@5,draft-the-card@4,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "resume it" } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@3,halting@1,improve-a-taf@1,name-the-tools@5`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@4,halting@1,improve-a-taf@1,name-the-tools@5`);
   });
 
   // kiff/tafs#572's P0: the lock moved to set-up-a-taf@3 with the deploy while every account's live Coach still
@@ -2998,7 +3088,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@3,name-the-tools@5,set-up-a-taf@2,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@4,name-the-tools@5,set-up-a-taf@2,usage-and-plans@1`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });

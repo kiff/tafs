@@ -69,9 +69,9 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   A tool that writes to anyone outside the company (an email, a reply,
   evidence) goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
-  ends each such call with "Written by an AI agent for <writes_for>." and,
-  in a message to people, "Built with tafs.". Evidence or a filing (for a
-  bank, a card network) takes credit: false: the disclosure alone.
+  starts each such call with "Written by an AI agent for <writes_for>.", in
+  the message's language when it's Spanish, French, German, Portuguese or
+  Italian. Nothing else is added to it.
 - A taf that writes to people: ask once, with your other questions, who its
   messages come from, offering the company's name ("Kiff Agents OÜ, or
   another name?"); never the app's default. Put the answer in the result's
