@@ -23,7 +23,7 @@ page is a map of the code; what each feature does is on its own page
 | `KIFF/` | The clients: `KIFFClient` (KIFF's API), `TafsCloud` (+ `TafsCloud+Doors`), `PlanqueClient`; `KIFFMapping` (KIFF's records into the app's), `ReceiptCheck` and `Keccak` (receipts checked on the device), `JCS` (canonical JSON for what's signed), `Keychain`, `SigningTime` |
 | `Model/` | The app's own types: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `CardCheck` (sample mode only), `SentMessages`, `SetupComponent`, `SetupShape`, `QuestionAnswers` |
 | `Services/` | Signing (`ApprovalSigner`, `Biometry`), alerts (`PushDelegate`, `HoldNotification`, `AlertAnswers`, `LockScreen`), `Purchases`, `Attachments`, `Dictation`, `HaltAllIntent`, `VendorSignIn`, `Routes`, `SampleStore`, `TafTemplates`, `ThisDevice` |
-| `Views/` | One file per screen or feature: `HomeSplitView`, `HomeView`, `TafDetailView`, `TafChatView`, `WorkLog`, `SetupChatView`, `CoachMode`, `NeedsYouView`, `RecordView`, `UsageView`, `PeopleViews`, `ShareViews`, `DoorsView`, `TrialViews`, `HaltScreen`… |
+| `Views/` | One file per screen or feature: `HomeSplitView`, `HomeView`, `TafDetailView`, `TafChatView`, `WorkLog`, `SetupChatView`, `CoachMode`, `NeedsYouView`, `RecordView`, `UsageView`, `CreditsViews`, `PlanViews`, `PeopleViews`, `ShareViews`, `DoorsView`, `TrialViews`, `HaltScreen`… |
 | `Design/` | `Theme` (colours, light and dark, the amber accent), `Components`, `MarkdownText`, `Scaled` (Dynamic Type), `Keyboard`, `Compat` (what iOS 16 lacks) |
 
 ## AppModel
@@ -39,7 +39,8 @@ call its methods; they hold only their own view state.
   the next.
 - **Sections**, marked `// MARK:` in the file: Reading, Signing in with KIFF, People,
   Alerts while tafs is closed, The remembered list, Sample mode, Starting a taf, Runs,
-  The owner answers, Stopping, Halt, Usage, Tasks and plans, Deleting the account,
+  The owner answers, Stopping, Halt, Plan & usage, Buying, raising the limit, and asking an
+  admin, Deleting the account,
   Memory, Versions, Trying a version, Chat, Attachments, A taf's chat live, Doors and live
   updates, A taf's work, Connections, Setup, Coach mode.
 - **Errors:** `lastError` is the "Not done" alert, only for something the person did
@@ -99,9 +100,9 @@ the app in sample mode.
 |---|---|
 | `-screenshots YES` | Sample mode with the screenshots' data |
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
-| `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| add-tasks` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
+| `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
-| `-pack <id>` | The add-tasks screen with that pack alone |
+| `-pack <id>` | The Add credits screen with that pack alone |
 | `-narrow YES` | Laid out at Slide Over's width on an iPad |
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
 | `-listSettlesOnReturn YES` | The list opens on its first taf, and its last taf moves to the top each time the app comes back (`ListTapUITests`) |
@@ -115,13 +116,42 @@ the app in sample mode.
   the left on a regular width, Coach at its foot. Each tab is built the first time it's
   opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs, Needs you and Record, ⌘,
   Account, ⌘K Coach.
-- **Credits** (`CreditsViews.swift`): a **Credits** panel at the top of Plan & usage
-  (`CreditsPanel`), read only, from `GET /v1/usage/credits` ([accounts.md](accounts.md#credits)):
-  Last period · This period, the period's `words`, each taf's row, Coach's row when there is
-  one, then `not_counted` and `note`, every line as tafs cloud writes it. A taf's row opens its
-  runs (`TafCreditsView`, 50 a page with More runs), and a run opens its request
-  (`KnobRequestDetail`) while `opens` is true. The row for tafs removed since doesn't open. A
-  404 shows no panel, and a 503 shows tafs cloud's `words`, as on Android.
+- **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
+  credits as the balance ([accounts.md](accounts.md#credits-and-plans)). Every line is tafs
+  cloud's or KIFF's, as written; the app adds nothing but the order:
+  - **The balance** (`BalancePanel`), from `GET /v1/usage/balance`: `words`, a bar at
+    `meter_pct` (none when it's `null`), `detail`, the `warning`, then **Raise the limit** where
+    `raise` is set, **Add credits** (`BuyCreditsView`) where `buy.packs` is, and Solo
+    (`SoloView`) where `buy.solo` is. A 404 shows no balance, and a failed read keeps what was
+    read with tafs cloud's words above it.
+  - **Raise the limit** (`AppModel.raiseLimit`): Face ID, then KIFF's `PUT /v1/me/usage/limit`
+    with `raise.from_cents`, signed by the device key, as Go on was. Then the balance is read
+    again. If that read fails, only **Read it again** is offered, which signs nothing. A
+    `limit_changed` refusal reads the balance again and offers the raise from the new limit;
+    `limit_ceiling` says to contact KIFF. While the phone can't approve, `ApprovalGate` stands
+    in the button's place.
+  - **Credits** (`CreditsViews.swift`): the **Credits** panel (`CreditsPanel`), from
+    `GET /v1/usage/credits` ([accounts.md](accounts.md#credits)): Last period · This period, the
+    period's `words`, each taf's row, Coach's row when there is one, then `not_counted` and
+    `note`. The last period is read again with each refresh once it has been read. A taf's row
+    opens its runs (`TafCreditsView`, 50 a page with More runs), each with its time as a short
+    time in the account's zone, as on Android, and a run opens its request
+    (`KnobRequestDetail`) while `opens` is true. The row for tafs removed since doesn't open. A
+    404 shows no panel, and a 503 shows tafs cloud's `words`.
+  - **Who bills and requests** (`PlanViews.swift`), after the balance and before the credits,
+    as on Android: from KIFF's usage read, which the app reads only for `plan`, `store`,
+    `billing` and `requests`. Someone who manages billing answers a raise with **Raise the
+    limit** and a pack by buying it for that request, or declines either, signed. Anyone else
+    asks an admin (`AskAdminView`): for a raise on Company (KIFF's `team`), for a pack on Solo
+    while packs are on sale, with the request lines both apps share.
+  - **A taf's Usage row** (its Card tab, for those who manage it) opens its credits this period,
+    its runs (`TafCreditsView`), as on Android.
+  - **Settings' Plan card** (`PlanRow`) shows `plan_line` in `plan_tone`'s colour, and
+    **Home** (`PlanLine`) shows `home_line` when it's set. Both are read with each refresh.
+  - **A chat, Coach or Run now refused for credits** (409 `credits_used_up`, `limit_reached` or
+    `no_plan`) shows tafs cloud's `words`, with no Retry, and the message stays in the composer.
+  - **Gone:** the tasks, packs of tasks and counted tasks, AI use and Go on, and the plan's
+    trial.
 - **Record** (`RecordView`): chips for "All tafs" and each taf (its colour) above the type
   filter, combined with it. Each entry starts with its taf's dot and name; each day's header
   shows that day's spend (`RecordView.spent`, a sum per currency of the money moved).

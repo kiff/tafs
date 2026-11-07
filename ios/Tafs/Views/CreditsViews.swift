@@ -173,7 +173,8 @@ struct CreditsRunRow: View {
             Text(run.words).scaledFont(14, weight: run.counted ? .semibold : .regular)
                 .foregroundColor(run.counted ? Theme.ink : Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(run.at.formatted(.relative(presentation: .named))).scaledFont(13).foregroundColor(Theme.dim)
+            // A short time in the account's zone, as Android shows it.
+            Text(run.at.shortTime).scaledFont(13).foregroundColor(Theme.dim)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

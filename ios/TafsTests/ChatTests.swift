@@ -258,6 +258,32 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(bare.localizedDescription, "conflict", "without words, as before")
     }
 
+    /// While the tafs wait for credits (docs/accounts.md › The balance read), a chat and Run now
+    /// answer 409 with a credits code: tafs cloud's words, with no Retry, and the message stays
+    /// in the composer, since sending it again changes nothing until the tafs go on.
+    func testACreditsRefusalShowsItsWordsWithNoRetry() async throws {
+        let (model, id) = await kiffModel()
+        let words = "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it."
+        for code in ["credits_used_up", "limit_reached", "no_plan"] {
+            StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (409, #"{"error":"waiting","code":"\#(code)","words":"\#(words)"}"#)
+            let sent = await model.sendChat("hello", to: id)
+            XCTAssertFalse(sent, "kept in the composer")
+            XCTAssertEqual(model.chatErrors[id], words, code)
+            XCTAssertTrue(model.chatState(id).unsent.isEmpty, "no Not sent row, so no Retry")
+            XCTAssertFalse(model.chats[id]?.contains { $0.session == "pending" } ?? false)
+        }
+
+        StubProtocol.responses["POST /v1/tafs/depl_1/run"] = (409, #"{"error":"waiting","code":"credits_used_up","words":"\#(words)"}"#)
+        let cloudTaf = try XCTUnwrap(model.cloudTaf(for: id))
+        let session = await model.runNow(cloudTaf)
+        XCTAssertNil(session)
+        XCTAssertEqual(model.lastError, words, "the words alone")
+
+        // Another 409 isn't about credits: as before.
+        XCTAssertNil(AppModel.waitsForCredits(TafsCloud.refusal(409, Data(#"{"error":"conflict","code":"held_full"}"#.utf8))))
+        XCTAssertNil(AppModel.waitsForCredits(TafsCloud.refusal(503, Data(#"{"error":"down","code":"no_plan"}"#.utf8))))
+    }
+
     /// The 755 retest: after Not sent for writing too fast, the warning stayed under every
     /// message that went through after it. A message that goes through takes it away.
     func testAWarningForWritingTooFastGoesOnceAMessageGoesThrough() async throws {

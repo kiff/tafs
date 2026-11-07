@@ -206,12 +206,21 @@ final class AppModel: ObservableObject {
     @Published var calendarState: CalendarState?
     @Published private(set) var calendarRead: TafsCloud.CalendarRead?
     @Published private(set) var calendarError: String?
-    /// The account's usage this billing period, once read.
+    /// KIFF's usage read, once read: what the store sells (`store`), who bills the plan, and
+    /// members' requests. The balance and every line about it are tafs cloud's (`balance`).
     @Published private(set) var usage: KIFFClient.Usage?
-    /// The period's counted tasks, newest first: the first page.
-    @Published private(set) var countedTasks: [KIFFClient.CountedTask] = []
-    /// Why usage couldn't be read.
+    /// Why KIFF's usage read failed.
     @Published private(set) var usageError: String?
+    /// The account's balance now, from tafs cloud (pricing phase 2): Plan & usage, Settings'
+    /// Plan card and Home. Nil until read, or from a tafs cloud without the read (404).
+    @Published private(set) var balance: TafsCloud.Balance?
+    /// Why the balance couldn't be read, in tafs cloud's words when it gives them.
+    @Published private(set) var balanceError: String?
+    /// A raise went through but the balance couldn't be read after it: what `balance` says
+    /// is from before, so no other raise is offered until it's read.
+    @Published private(set) var balanceStale = false
+    /// A raise is under way, from the tap until it's over: a second tap starts nothing.
+    @Published private(set) var raising = false
     /// The account's groups, its people and what KIFF says this person may do with each taf,
     /// once read: the app shows what KIFF says and decides nothing itself.
     @Published private(set) var groups: [KIFFClient.Group] = []
@@ -219,17 +228,10 @@ final class AppModel: ObservableObject {
     @Published private(set) var access: [String: KIFFClient.Access] = [:]
     /// Why they couldn't be read, or a change didn't go through.
     @Published private(set) var peopleError: String?
-    /// Buying Solo and task packs through the App Store.
+    /// Buying Solo and packs of credits through the App Store.
     let purchases: Purchases
-    /// What happened to the last purchase, request or answer, when there's something to say.
-    @Published private(set) var tasksMessage: String?
-    /// Each taf's counted tasks this period, newest first: the first page.
-    @Published private(set) var tafTasks: [UUID: [KIFFClient.CountedTask]] = [:]
-    /// The period's AI use from chats and Setup (kiff/tafs#193), from tafs cloud; nil until read.
-    @Published private(set) var aiUse: TafsCloud.AIUse?
-    /// A go-on went through but the AI use couldn't be read after it: what `aiUse` says is
-    /// from before, so Go on isn't offered again until it's read (kiff/tafs#433).
-    @Published private(set) var aiUseStale = false
+    /// What happened to the last purchase, request, raise or answer, when there's something to say.
+    @Published private(set) var planMessage: String?
     /// The credits the tafs used, read only from tafs cloud (pricing phase 1): this period and
     /// the one before, each nil until read or where tafs cloud has no such read.
     @Published private(set) var credits: TafsCloud.Credits?
@@ -702,7 +704,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
+        usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
@@ -1056,7 +1058,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
+        usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
@@ -1515,7 +1517,7 @@ final class AppModel: ObservableObject {
             // dial, Versions and Halt, so it's read with the list, not only from People.
             await refreshAccess(gen: gen)
             await refreshConnections()
-            // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
+            // The balance, for Settings' Plan card and Home's line: tafs cloud's read alone, quietly.
             await refreshPlan(gen: gen)
         } catch KIFFClient.KIFFError.unauthorized {
             forgetSession()
@@ -2136,7 +2138,10 @@ final class AppModel: ObservableObject {
     func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {
         guard runsInFlight.insert(cloudTaf.id).inserted else { return nil }
         defer { runsInFlight.remove(cloudTaf.id) }
-        do { return try await cloud.runNow(cloudTaf.id) } catch {
+        do { return try await cloud.runNow(cloudTaf.id) } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
+            lastError = Self.waitsForCredits(e)
+            return nil
+        } catch {
             lastError = "The run didn't start: \(error.localizedDescription)"
             return nil
         }
@@ -2661,43 +2666,46 @@ final class AppModel: ObservableObject {
         }
     }
 
-    // MARK: Usage (kiff/tafs#184)
+    // MARK: Plan & usage (pricing phase 2, docs/accounts.md › Credits and plans)
 
-    /// Reads the period's usage: from KIFF signed in, a made-up month in the sample.
+    /// Reads Plan & usage: the balance and this period's credits from tafs cloud, KIFF's usage
+    /// read for the store and the requests, and the period before's credits again once it has
+    /// been read. Each read stands alone: one that fails keeps what was read, and says why.
     func refreshUsage() async {
         switch mode {
         case .signedOut:
-            usage = nil; countedTasks = []; aiUse = nil; aiUseStale = false; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
+            usage = nil; balance = nil; balanceStale = false; credits = nil; previousCredits = nil; tafCredits = [:]
+            creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]; balanceError = nil
         case .sample:
-            usage = Self.sampleUsage(now: clock()); countedTasks = []; usageError = nil
-            aiUse = .init(usedPct: 30, asksAtPct: 100, paused: false)
+            usage = Self.sampleUsage(); usageError = nil
+            balance = Self.sampleBalance; balanceError = nil
             credits = Self.sampleCredits(now: clock())
+            if previousCredits != nil { previousCredits = Self.sampleCredits(now: clock(), previous: true) }
         case .kiff:
             let gen = accountGeneration
-            // Credits are tafs cloud's: read alongside, and the tasks screen doesn't wait on them.
+            let againPrevious = previousCredits != nil || previousCreditsError != nil
+            async let balanceRead = balanceResult()
             async let creditsRead = creditsResult(previous: false)
-            do {
-                let read = try await kiff.usage()
-                let page = try? await kiff.countedTasks()
-                // AI use is tafs cloud's; the rest of the screen doesn't wait on it.
-                let ai = try? await cloud.aiUse()
-                let c = await creditsRead
-                guard gen == accountGeneration else { return }
-                applyCredits(c)
-                usage = read; countedTasks = page?.tasks ?? []; usageError = nil
-                // A read that failed keeps what was known, and says it's stale after a go-on.
-                if let ai { aiUse = ai; aiUseStale = false } else if !aiUseStale { aiUse = nil }
-                if let store = read.store { await purchases.load([store.soloProduct] + store.packs.map(\.appleProduct)) }
-            } catch {
-                let c = await creditsRead
-                guard gen == accountGeneration else { return }
-                applyCredits(c)
-                usageError = "Usage couldn't be read: \(error.localizedDescription)"
+            async let previousRead = previousResult(if: againPrevious)
+            let usageRead: Result<KIFFClient.Usage, Error>
+            do { usageRead = .success(try await kiff.usage()) } catch { usageRead = .failure(error) }
+            let (b, c, p) = await (balanceRead, creditsRead, previousRead)
+            guard gen == accountGeneration else { return }
+            applyBalance(b)
+            applyCredits(c)
+            if let p { applyPreviousCredits(p) }
+            switch usageRead {
+            case .success(let read):
+                usage = read; usageError = nil
+                if let store = read.store { await purchases.load(store.products) }
+            case .failure(let error):
+                usageError = "The plan couldn't be read from KIFF: \(error.localizedDescription)"
             }
         }
     }
 
-    /// Reads the period before's credits, the first time they're asked for.
+    /// Reads the period before's credits: when it's first asked for, and again on each refresh
+    /// once it has been (never kept for good).
     func readPreviousCredits() async {
         switch mode {
         case .signedOut: previousCredits = nil
@@ -2706,11 +2714,21 @@ final class AppModel: ObservableObject {
             let gen = accountGeneration
             let read = await creditsResult(previous: true)
             guard gen == accountGeneration else { return }
-            switch read {
-            case .success(let c): previousCredits = c; previousCreditsError = nil
-            case .failure(let e): previousCreditsError = Self.creditsWords(e)
-            }
+            applyPreviousCredits(read)
         }
+    }
+
+    private func applyPreviousCredits(_ read: Result<TafsCloud.Credits?, Error>) {
+        switch read {
+        case .success(let c): previousCredits = c; previousCreditsError = nil
+        case .failure(let e): previousCreditsError = Self.creditsWords(e)
+        }
+    }
+
+    /// The period before's read, only when `read`: once it has been read, never kept for good.
+    private func previousResult(if read: Bool) async -> Result<TafsCloud.Credits?, Error>? {
+        guard read else { return nil }
+        return await creditsResult(previous: true)
     }
 
     /// A credits read, kept with its failure: nil for a tafs cloud without it (404).
@@ -2771,26 +2789,69 @@ final class AppModel: ObservableObject {
             return TafsCloud.Credits(period: nil, credits: 2310, runs: 126, words: "Last period: 2,310 credits used · 1 Oct to 31 Oct",
                                      tafs: [.init(taf: "sample-refunds", credits: 1480, runs: 74, words: "Refunds · 1,480 credits · 74 runs"),
                                             .init(taf: "sample-invoices", credits: 830, runs: 52, words: "Overdue invoices · 830 credits · 52 runs")],
-                                     note: "Credits will replace tasks. Nothing is charged in credits yet.")
+                                     note: Self.sampleCreditsNote)
         }
-        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: "This period: 1,240 credits used",
+        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: "This period: 1,240 credits used · ends on 30 Nov",
                                  tafs: [.init(taf: "sample-refunds", credits: 820, runs: 41, words: "Refunds · 820 credits · 41 runs"),
                                         .init(taf: "sample-invoices", credits: 420, runs: 28, words: "Overdue invoices · 420 credits · 28 runs")],
                                  notCounted: .init(runs: 9, words: "Not counted: 9 runs",
                                                    lines: [.init(why: "coach", runs: 6, words: "Coach, within its fair use · 6 runs"),
                                                            .init(why: "trial", runs: 2, words: "Trials of a new version · 2 runs"),
                                                            .init(why: "failed", runs: 1, words: "Failed on our side · 1 run")]),
-                                 note: "Credits will replace tasks. Nothing is charged in credits yet.")
+                                 note: Self.sampleCreditsNote)
     }
 
-    /// The plan as KIFF says it, with no counted tasks or AI use (Plan & usage reads those): a
-    /// failure leaves what was read.
+    static let sampleCreditsNote = "Each run counts once, when it ends, in whole credits."
+
+    /// The sample's balance, as tafs cloud words it, the same as Android's: Solo, about half the
+    /// period's credits left.
+    static let sampleBalance = TafsCloud.Balance(
+        balance: .init(state: "ok", meterPct: 48, words: "Solo · 260 of 500 credits left this period",
+                       detail: "Then 900 in packs, which never expire"),
+        planLine: "Solo · 260 credits left", planTone: "ok", homeLine: nil)
+
+    /// A balance read, kept with its failure: nil for a tafs cloud without it (404).
+    private func balanceResult() async -> Result<TafsCloud.Balance?, Error> {
+        do { return .success(try await cloud.balance()) } catch { return .failure(error) }
+    }
+
+    /// A read that works is the balance now, and a raise's stale state is over. One that fails
+    /// keeps what was read, and says why in tafs cloud's words.
+    private func applyBalance(_ read: Result<TafsCloud.Balance?, Error>) {
+        switch read {
+        case .success(let b): balance = b; balanceError = nil; balanceStale = false
+        case .failure(let e): balanceError = Self.creditsWords(e, what: "The balance")
+        }
+    }
+
+    /// The balance alone, for Settings' Plan card and Home's line, with each refresh: quietly,
+    /// a failure keeps what was read.
     private func refreshPlan(gen: Int) async {
-        guard let read = try? await kiff.usage(), gen == accountGeneration else { return }
-        usage = read
+        let read = await balanceResult()
+        guard gen == accountGeneration else { return }
+        applyBalance(read)
     }
 
-    // MARK: Tasks and plans
+    /// The balance read again, signing nothing: after a raise whose read failed.
+    func readBalance() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        let read = await balanceResult()
+        guard gen == accountGeneration else { return }
+        applyBalance(read)
+    }
+
+    /// The codes a chat, Coach or Run now is refused with while the tafs wait for credits.
+    static let creditsCodes: Set<String> = ["credits_used_up", "limit_reached", "no_plan"]
+
+    /// tafs cloud's words for a refusal because the tafs wait for credits (409 with a credits
+    /// code); nil for any other error.
+    static func waitsForCredits(_ e: TafsCloud.CloudError) -> String? {
+        guard e.status == 409, let code = e.code, creditsCodes.contains(code) else { return nil }
+        return e.words ?? e.message
+    }
+
+    // MARK: Buying, raising the limit, and asking an admin
 
     /// Buys Solo through the App Store, for this account.
     func subscribeSolo() async {
@@ -2798,117 +2859,139 @@ final class AppModel: ObservableObject {
         await buy(store.soloProduct, request: nil)
     }
 
-    /// Buys a pack through the App Store; with a member's request, it answers it.
+    /// Buys a pack of credits through the App Store; with a member's request, it answers it.
     func buyPack(_ pack: KIFFClient.Usage.Store.Pack, answering request: KIFFClient.PackRequest? = nil) async {
         await buy(pack.appleProduct, request: request)
     }
 
     private func buy(_ product: String, request: KIFFClient.PackRequest?) async {
-        tasksMessage = nil
+        planMessage = nil
         guard mode == .kiff, let token = usage?.store?.appAccountToken else {
-            tasksMessage = "Only the account's admin adds tasks."
+            planMessage = "Only someone who manages the account's billing buys credits."
             return
         }
         switch await purchases.buy(product, accountToken: token, requestID: request?.id) {
-        case .done: tasksMessage = nil
+        case .done: planMessage = nil
         case .cancelled: break
-        case .pending: tasksMessage = "The purchase is waiting for approval. Your tasks are added once it's done."
-        case .notRecorded: tasksMessage = "Bought. KIFF hasn't added it yet: tafs tries again when it opens."
-        case .notAdded(let why), .needsSupport(let why): tasksMessage = why
-        case .failed(let why): tasksMessage = "The purchase didn't go through: \(why)"
+        case .pending: planMessage = "The purchase is waiting for approval. Your credits are added once it's done."
+        case .notRecorded: planMessage = "Bought. KIFF hasn't added it yet: tafs tries again when it opens."
+        case .notAdded(let why), .needsSupport(let why): planMessage = why
+        case .failed(let why): planMessage = "The purchase didn't go through: \(why)"
         }
+        await refreshUsage()
     }
 
     /// Brings back this Apple account's purchases, and sends each to KIFF.
     func restorePurchases() async {
-        tasksMessage = nil
+        planMessage = nil
         guard mode == .kiff else { return }
         switch await purchases.restore() {
-        case .done: tasksMessage = "Purchases restored."
-        case .notRecorded: tasksMessage = "Restored. KIFF hasn't added everything yet: tafs tries again when it opens."
-        case .notAdded(let why), .needsSupport(let why): tasksMessage = why
-        case .failed(let why): tasksMessage = "Purchases couldn't be restored: \(why)"
+        case .done: planMessage = "Purchases restored."
+        case .notRecorded: planMessage = "Restored. KIFF hasn't added everything yet: tafs tries again when it opens."
+        case .notAdded(let why), .needsSupport(let why): planMessage = why
+        case .failed(let why): planMessage = "Purchases couldn't be restored: \(why)"
         default: break
         }
         await refreshUsage()
     }
 
-    /// Asks the account's admins for a pack.
-    func askForPack(_ pack: KIFFClient.Usage.Store.Pack, reason: String) async -> Bool {
-        tasksMessage = nil
+    /// Asks the account's admins, with a reason: for a raise of the spend limit, or for a pack.
+    func askAdmin(raise: Bool, pack: KIFFClient.Usage.Store.Pack? = nil, reason: String) async -> Bool {
+        planMessage = nil
         guard mode == .kiff else { return false }
         do {
-            _ = try await kiff.askForPack(pack.id, reason: reason.trimmingCharacters(in: .whitespacesAndNewlines))
+            _ = try await kiff.askAdmin(raise: raise, pack: raise ? nil : pack?.id,
+                                        reason: reason.trimmingCharacters(in: .whitespacesAndNewlines))
             await refreshUsage()
             return true
         } catch {
-            tasksMessage = "The request didn't go: \(error.localizedDescription)"
+            planMessage = "The request didn't go: \(error.localizedDescription)"
             return false
         }
     }
 
     /// Takes back this person's request.
     func withdrawRequest(_ request: KIFFClient.PackRequest) async {
-        tasksMessage = nil
+        planMessage = nil
         guard mode == .kiff else { return }
         do {
             _ = try await kiff.withdrawRequest(request.id)
         } catch {
-            tasksMessage = "The request wasn't withdrawn: \(error.localizedDescription)"
+            planMessage = "The request wasn't withdrawn: \(error.localizedDescription)"
         }
         await refreshUsage()
     }
 
-    /// Lets the tafs go on past this period's AI fair use (kiff/tafs#185), behind Face ID:
-    /// the billing admin's act, which KIFF takes only signed by this phone. Then reads the AI
-    /// use again, so the screen says where they ask next. Nil once it went on; else why not,
-    /// empty when the prompt was closed.
-    func goOnAI() async -> String? {
-        guard mode == .kiff, let tenant = kiffTenant else { return "Sign in with KIFF to let your tafs go on." }
+    /// Raises the spend limit one step (Company), behind Face ID: the act of someone who
+    /// manages billing, which KIFF takes only signed by this phone, and a replayed signature is
+    /// refused, so one tap is one step. Then the balance is read again, so the screen says what
+    /// it is now. Nil once raised; else why not, empty when the prompt was closed.
+    func raiseLimit() async -> String? {
+        guard mode == .kiff, let tenant = kiffTenant else { return "Sign in with KIFF to raise the limit." }
         guard sessionHasKey else { return "Sign in with KIFF again: this sign-in can't sign for the \(ThisDevice.kind)." }
-        // The last go-on went through, and the use it changed hasn't been read since: another
-        // tap would raise the bound again for a use the screen no longer shows.
-        guard !aiUseStale else { return Self.readAIUseFirst }
+        // The last raise went through, and the balance it changed hasn't been read since:
+        // another tap would raise it again for a balance the screen no longer shows.
+        guard !balanceStale else { return Self.readBalanceFirst }
+        guard let from = balance?.balance.raise?.fromCents else { return Self.noRaise }
+        // One raise at a time, from the tap: a fast second tap asks for no second Face ID.
+        guard !raising else { return "" }
+        raising = true
+        defer { raising = false }
         let gen = accountGeneration
-        let at = aiUse?.asksAtPct ?? 100
-        do { _ = try await signer.sign(Data("tafs.ai-go-on.v1|\(tenant)|\(at)".utf8), reason: "Let your tafs go on") } catch { return "" }
+        do { _ = try await signer.sign(Data("tafs.raise-limit.v1|\(tenant)|\(from)".utf8), reason: "Raise the spend limit") } catch { return "" }
         guard gen == accountGeneration else { return "" }
         let signer = self.signer
         kiff.tenant = tenant
         kiff.setupSigner = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil }
         do {
-            try await kiff.goOnAI()
+            try await kiff.raiseLimit(from: from)
+        } catch let e as KIFFClient.KIFFError where Self.kiffCode(e) == "limit_changed" {
+            // Someone raised it meanwhile, or this screen was stale: read the balance again, which
+            // offers the raise from the limit it is now.
+            guard gen == accountGeneration else { return "" }
+            await readBalance()
+            return Self.limitChanged
+        } catch let e as KIFFClient.KIFFError where Self.kiffCode(e) == "limit_ceiling" {
+            guard gen == accountGeneration else { return "" }
+            return Self.limitCeiling
         } catch {
             guard gen == accountGeneration else { return "" }
-            return "Your tafs couldn't go on: \(error.localizedDescription)"
+            return "The limit wasn't raised: \(error.localizedDescription)"
         }
         // A switch while the PUT was out: its answer is the old account's, and changes nothing here.
         guard gen == accountGeneration else { return "" }
-        // It went through. Until the use is read again, the screen says so and offers only a read.
-        aiUseStale = true
-        await readAIUse()
+        // It went through. Until the balance is read again, the screen says so and offers only a read.
+        balanceStale = true
+        await readBalance()
+        await refreshUsage()
         return nil
     }
 
-    static let readAIUseFirst = "Your tafs went on. Read this month's AI use again before going on once more."
+    static let readBalanceFirst = "The limit was raised. Read the balance again before raising it once more."
+    static let noRaise = "The limit can't be raised from here right now."
+    static let limitChanged = "The limit changed meanwhile. Here it is now: raise it again if it's still needed."
+    static let limitCeiling = "The limit is as high as it can be raised from the app. Contact KIFF to raise it further."
 
-    /// Reads the AI use again, without signing anything: after a go-on whose read failed.
-    func readAIUse() async {
-        guard mode == .kiff else { return }
-        let gen = accountGeneration
-        let ai = try? await cloud.aiUse()
-        guard gen == accountGeneration, let ai else { return }
-        aiUse = ai
-        aiUseStale = false
+    /// KIFF's code for a 409 refusal of a raise (`limit_changed`, `limit_ceiling`), as its
+    /// `reason` or its `error`.
+    static func kiffCode(_ e: KIFFClient.KIFFError) -> String? {
+        guard case .server(409, let message, let reason) = e else { return nil }
+        return reason ?? message
+    }
+
+    /// A member's request for a raise, answered by raising the limit: why not, if it wasn't.
+    func answerRaise() async {
+        planMessage = nil
+        if let why = await raiseLimit(), !why.isEmpty { planMessage = why }
     }
 
     /// Declines a member's request, with a note: the admin's answer, behind Face ID.
     func declineRequest(_ request: KIFFClient.PackRequest, note: String) async -> Bool {
-        tasksMessage = nil
+        planMessage = nil
         guard mode == .kiff, let tenant = kiffTenant else { return false }
         guard sessionHasKey else {
-            tasksMessage = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            planMessage = "Sign in with KIFF again: this sign-in can't sign for the phone."
             return false
         }
         let gen = accountGeneration
@@ -2922,7 +3005,7 @@ final class AppModel: ObservableObject {
             _ = try await kiff.declineRequest(request.id, note: note.trimmingCharacters(in: .whitespacesAndNewlines))
         } catch {
             guard gen == accountGeneration else { return false }
-            tasksMessage = "The request wasn't declined: \(error.localizedDescription)"
+            planMessage = "The request wasn't declined: \(error.localizedDescription)"
             await refreshUsage()
             return false
         }
@@ -2935,50 +3018,15 @@ final class AppModel: ObservableObject {
         holderIDs.first(where: { $0.value == tafID })?.key
     }
 
-    /// The taf's part of the period, from KIFF's `by_agent`; nil until usage
-    /// is read. A taf KIFF doesn't list counted nothing.
-    func tafUsage(for tafID: UUID) -> KIFFClient.Usage.AgentCount? {
-        guard let u = usage else { return nil }
-        guard let agent = kiffAgent(for: tafID) else { return .init(agent: "", counted: 0) }
-        return u.tasks.byAgent?.first { $0.agent == agent } ?? .init(agent: agent, counted: 0)
-    }
-
-    /// The taf's counted tasks this period, from KIFF's `by_agent`; nil until usage is read.
-    func countedTasks(for tafID: UUID) -> Int? {
-        tafUsage(for: tafID)?.counted
-    }
-
-    /// Reads the period's usage if it isn't yet, and the taf's own counted tasks.
-    func refreshTafUsage(_ tafID: UUID) async {
-        if usage == nil { await refreshUsage() }
-        guard mode == .kiff, let agent = kiffAgent(for: tafID) else { return }
-        let gen = accountGeneration
-        guard let page = try? await kiff.countedTasks(agent: agent), gen == accountGeneration else { return }
-        tafTasks[tafID] = page.tasks
-    }
-
-    /// The Record entry of a counted task, by KIFF's call key (the usage read's `record`).
+    /// The Record entry of a call, by KIFF's call key.
     func recordEntry(forCall key: String) -> RecordEntry? {
         record.first { $0.entityID == key }
     }
 
-    /// The taf acting as a KIFF agent, by its name; the agent's id when tafs doesn't know it.
-    func tafName(forAgent agent: String) -> String {
-        cloudTafs[agent]?.name ?? holderIDs[agent].flatMap { taf($0)?.name } ?? agent
-    }
-
-    /// The sample's month: a trial two days in.
-    static func sampleUsage(now: Date) -> KIFFClient.Usage {
-        var free = KIFFClient.Usage.Free()
-        free.refused = 3; free.failed = 1; free.read = 42; free.trial = 2
-        return KIFFClient.Usage(
-            plan: "trial",
-            period: .init(start: now.addingTimeInterval(-2 * 86_400), end: now.addingTimeInterval(5 * 86_400)),
-            tasks: .init(counted: 14, included: 25, packs: 0, left: 11, byAgent: [], free: free),
-            actions: .init(counted: 0, included: 500),
-            trial: .init(endsAt: now.addingTimeInterval(5 * 86_400), daysLeft: 5, tasksLeft: 11, actionsLeft: 500),
-            // The purchase screens' screenshots, as an admin sees them.
-            canAddTasks: Screenshots.purchases ? true : nil, store: Screenshots.purchases ? Screenshots.store : nil)
+    /// The sample's KIFF read: no store, nothing billed, no requests; the purchase screens'
+    /// screenshots get the store, as an admin sees it.
+    static func sampleUsage() -> KIFFClient.Usage {
+        KIFFClient.Usage(canAddTasks: Screenshots.purchases ? true : nil, store: Screenshots.purchases ? Screenshots.store : nil)
     }
 
     func refreshHalt(_ tafID: UUID?) async {
@@ -3805,6 +3853,14 @@ final class AppModel: ObservableObject {
             }
             keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
             return .kept
+        } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
+            // The tafs wait for credits: tafs cloud's words, and the message stays in the
+            // composer, with no Retry, since sending again changes nothing until they go on.
+            guard current() else { return .notTried }
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            chatSent[tafID]?.removeAll { $0.id == pending.id }
+            chatErrors[tafID] = Self.waitsForCredits(e)
+            return .notTried
         } catch {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0.id == pending.id }
@@ -4195,6 +4251,9 @@ final class AppModel: ObservableObject {
                 // More than tafs cloud holds: nothing is cut, and the words stay in the composer,
                 // with tafs cloud's why as it says it.
                 chatErrors[tafID] = e.message
+                return false
+            } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
+                chatErrors[tafID] = Self.waitsForCredits(e)
                 return false
             } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
                 keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
@@ -6042,6 +6101,13 @@ final class AppModel: ObservableObject {
             setupAwaiting = clock()
             await loadSetupThread()
             return .sent
+        } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
+            // Coach past its fair use waits as the tafs do: its words, the message kept to send later.
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
+            setupSent.removeAll { $0.id == mine.id }
+            setupThread.messages.removeAll { $0.id == mine.id }
+            setupError = Self.waitsForCredits(e)
+            return .notTried
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
             setupSent.removeAll { $0.id == mine.id }
@@ -6098,6 +6164,9 @@ final class AppModel: ObservableObject {
             } catch let e as TafsCloud.CloudError where e.code == "held_full" {
                 // More than tafs cloud holds: nothing is cut, the words stay in the composer, with tafs cloud's why.
                 setupError = e.message
+                return false
+            } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
+                setupError = Self.waitsForCredits(e)
                 return false
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.
@@ -6979,9 +7048,9 @@ enum Screenshots {
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
     /// purchase screens' screenshots.
-    static let packs: [(id: String, name: String, tasks: Int, price: String)] = [
-        ("pico", "Pico", 12, "€4.99"), ("vonk", "Vonk", 30, "€9.99"), ("rayo", "Rayo", 70, "€19.99"),
-        ("forte", "Forte", 200, "€49.99"), ("maxi", "Maxi", 450, "€99.99"),
+    static let packs: [(id: String, name: String, price: String)] = [
+        ("pico", "Pico", "€4.99"), ("vonk", "Vonk", "€9.99"), ("rayo", "Rayo", "€19.99"),
+        ("forte", "Forte", "€49.99"), ("maxi", "Maxi", "€99.99"),
     ]
     /// `-screen card`: the Refunds taf's Cards as KIFF would list them (kiff/tafs#211), a live
     /// one with its total, a read-only one with its calls, and a test one.
@@ -7001,17 +7070,17 @@ enum Screenshots {
     }
 
     /// Whether this run's screenshot is a purchase screen.
-    static var purchases: Bool { enabled && (screen == "solo" || screen == "add-tasks") }
+    static var purchases: Bool { enabled && (screen == "solo" || screen == "buy-credits") }
     static let soloProduct = "bot.tafs.solo.monthly"
     static var store: KIFFClient.Usage.Store {
         let shown = packs.filter { pack == nil || $0.id == pack }
         return .init(appAccountToken: UUID(), soloProduct: soloProduct, packs: shown.map {
-            .init(id: $0.id, name: $0.name, line: "\($0.name) · \($0.tasks) tasks", tasks: $0.tasks, months: 12, appleProduct: "bot.tafs.pack.\($0.id)")
+            .init(id: $0.id, name: $0.name, line: "\($0.name) · a pack of credits", appleProduct: "bot.tafs.pack.\($0.id)")
         })
     }
     static var products: [StoreProduct] {
         packs.map { StoreProduct(id: "bot.tafs.pack.\($0.id)", displayName: $0.name, displayPrice: $0.price) } +
-            [StoreProduct(id: soloProduct, displayName: "Solo", displayPrice: "€10.99", subscription: .init(period: "month", freeTrial: "1 week"))]
+            [StoreProduct(id: soloProduct, displayName: "Solo", displayPrice: "€10.99", subscription: .init(period: "month"))]
     }
     static var tab: Tab {
         switch UserDefaults.standard.string(forKey: "tab") {

@@ -397,18 +397,12 @@ struct TafDetailView: View {
                 }
             }
         }
-        // Its usage is the account's Usage, opened from a row with this taf's count (kiff/tafs#184).
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
-            PanelLink { TafUsageView(tafID: taf.id).environmentObject(model) } label: {
+        // Its Usage row opens its credits this period, its runs, as on Android.
+        if model.mode == .kiff, model.manages(taf.id), let cloud = model.cloudTaf(for: taf.id) {
+            PanelLink { TafCreditsView(taf: cloud.id, previous: false).environmentObject(model) } label: {
                 Label("Usage", systemImage: "chart.bar").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 Spacer()
-                if let n = model.countedTasks(for: taf.id) {
-                    Text(UsageView.tafCount(n)).scaledFont(14).foregroundColor(Theme.soft)
-                }
             }
-            // Read again whenever its record grows, not only the first time: its count was a
-            // task behind until Usage was opened (the 755 retest).
-            .task(id: model.entries(for: taf.id).count) { await model.refreshUsage() }
         }
         if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
             Button("Revoke") { confirmRevoke = true }
