@@ -439,6 +439,49 @@ describe("KIFF's alerts", () => {
     expect(apns.sent).toHaveLength(1);
   });
 
+  it("words a member's request for a raise, and its answer, apart from one for a pack", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const slots = memorySlots();
+    const raise = JSON.stringify({
+      schema_version: "1", type: "kiff.pack_request", tenant_id: "t_acme", action: "tafs.pack_request", entity_id: "pr_2",
+      entity_type: "pack_request", outcome: "pack_requested", reasons: ["", "open"], decided_at: "2026-10-15T09:00:00Z", event_id: "evt_raise",
+      request: { id: "pr_2", kind: "raise", status: "open", asked_by: "u_bo" },
+    });
+    expect((await alert(raise, push, { apns, slots })).body).toEqual({ sent: 1 });
+    expect(apns.sent[0]!.n.payload.aps.alert).toEqual({ title: "A raise asked for", body: "Someone on your account asks you to raise the spend limit. Open Plan & usage to answer." });
+    const raised = JSON.stringify({
+      schema_version: "1", type: "kiff.pack_request", tenant_id: "t_acme", action: "tafs.pack_request", entity_id: "pr_2",
+      entity_type: "pack_request", outcome: "pack_request_answered", reasons: ["", "approved"], decided_at: "2026-10-15T09:05:00Z", event_id: "evt_raised",
+      request: { id: "pr_2", kind: "raise", status: "approved", asked_by: "u_bo" },
+    });
+    expect((await alert(raised, push, { apns, slots })).body).toEqual({ sent: 1 });
+    expect(apns.sent[1]).toMatchObject({ token: TOKEN_B, n: { payload: { aps: { alert: { title: "Your request for a raise", body: "Your admin raised the spend limit." } } } } });
+  });
+
+  it("tells only the people who manage billing of a credits warning, once each a period, loud when the tafs wait", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const forward = fakeForward();
+    const slots = memorySlots();
+    const warning = (reasons: string[], event: string) => JSON.stringify({
+      schema_version: "1", type: "kiff.credits", tenant_id: "t_acme", action: "tafs.credits", entity_id: "2026-11-01T00:00:00Z",
+      entity_type: "credits", outcome: "credits_warning", reasons, decided_at: "2026-11-20T09:00:00Z", event_id: event,
+    });
+    expect((await alert(warning(["80"], "evt_c80"), push, { apns, forward, slots })).body).toEqual({ sent: 1 });
+    expect(apns.sent[0]).toMatchObject({ token: TOKEN_A, n: { kind: "alert", payload: { aps: { alert: { title: "Credits",
+      body: "Your tafs have used 80% of what this period has. Open Plan & usage to see more." }, "interruption-level": "passive" }, open: "usage" },
+      collapseID: "credits-80-2026-11-01T00:00:00Z" } });
+    expect(forward.tries).toBe(0);
+    expect((await alert(warning(["80"], "evt_c80"), push, { apns, forward, slots })).body).toEqual({ duplicate: true });
+    expect((await alert(warning(["100", "limit_reached"], "evt_c100"), push, { apns, forward, slots })).body).toEqual({ sent: 1 });
+    expect(apns.sent[1]!.n.payload.aps).toMatchObject({ alert: { title: "Your tafs are waiting", body: "Your tafs are waiting: the spend limit is reached. Open Plan & usage to raise it." },
+      "interruption-level": "time-sensitive" });
+    expect((await alert(warning(["100", "credits_used_up"], "evt_c100b"), push, { apns, forward, slots })).body).toEqual({ sent: 1 });
+    expect(apns.sent[2]!.n.payload.aps.alert.body).toBe("Your tafs are waiting: this period's credits are used. Open Plan & usage to see what lets them go on.");
+    expect((await alert(warning(["50"], "evt_c50"), push, { apns, forward, slots })).status).toBe(400);
+  });
+
   it("tells the people who answer when a vendor signs a taf's connection out, once, and opens that taf", async () => {
     const push = account();
     const apns = fakeAPNs();
@@ -483,7 +526,7 @@ describe("KIFF's alerts", () => {
     expect((await alert(answer("evt_no", { status: "declined", note: "  Next\nmonth " }), push, { apns })).body).toEqual({ sent: 1 });
     expect(apns.sent[1]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined: Next month" } } } });
     expect((await alert(answer("evt_bare", { status: "declined" }), push, { apns })).body).toEqual({ sent: 1 });
-    expect(apns.sent[2]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined your request for more tasks." } } } });
+    expect(apns.sent[2]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined your request." } } } });
     expect((await alert(answer("evt_gone", { status: "withdrawn" }), push, { apns })).body).toEqual({ ignored: "pack_request_answered: withdrawn" });
     expect(apns.sent).toHaveLength(3);
     // An answer that doesn't say who asked tells nobody.

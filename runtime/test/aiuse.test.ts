@@ -100,87 +100,27 @@ async function call(w: World, method: string, path: string, body?: unknown) {
   return { status: r.statusCode, body: JSON.parse(r.body) };
 }
 
-describe("chats under AI fair use", () => {
-  it("sends kiff/agents the period and the bound with each chat", async () => {
-    const w = world(usage("team", 2, 1));
-    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "How many refunds today?" });
-    expect(r.status).toBe(200);
-    expect(w.agents.aiSent).toEqual([{ period: PERIOD, bound_micro_usd: 2 * 2 * HALF }]);
-  });
-
-  it("refuses a chat past the bound, and doesn't retry it in a new chat", async () => {
-    const w = world(usage("solo", 1));
-    const first = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "Hello" });
-    expect(first.status).toBe(200);
-    w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    w.agents.calls.length = 0;
-    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "And now?" });
-    expect(r.status).toBe(409);
-    expect(r.body.error).toMatch(/^ai_fair_use/);
-    expect(r.body).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("it starts again on 20 Nov") });
-    // Ana may not go on (no billing.manage): the words say an admin can.
-    expect(r.body.words).toContain("An admin of this account can let them go on from Settings › AI use");
-    // The live chat was refused; no new chat was tried for it.
-    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([`startRun ${RAE} live`]);
-  });
-
-  it("refuses a streamed chat past the bound with 409, and doesn't retry it in a new chat", async () => {
-    const w = world(usage("trial", 1));
-    const first = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "Hello" });
-    w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    w.agents.calls.length = 0;
-    const r = await handleStream(event("POST", `/v1/tafs/${RAE}/messages/stream`, { text: "And now?" }), w.deps);
-    expect(r.statusCode).toBe(409);
-    let body = "";
-    for await (const s of r.body) body += s;
-    expect(JSON.parse(body).error).toMatch(/^ai_fair_use/);
-    // Said by its code and in tafs cloud's words, so no app shows a bare 409.
-    expect(JSON.parse(body)).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("it starts again on 20 Nov") });
-    expect(w.agents.calls.filter((c) => c.startsWith("streamRun"))).toEqual([`streamRun ${RAE} live`]);
-  });
-
-  it("lets the owner go on after a go on, up to the next bound", async () => {
-    const w = world(usage("solo", 1, 1));
-    w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "Go on" })).status).toBe(200);
-  });
-
-  it("counts with no bound on the internal plan", async () => {
-    const w = world(usage("internal", 0));
-    w.agents.spent.set(`t_acme ${PERIOD}`, 100 * HALF);
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "Hi" })).status).toBe(200);
-    expect(w.agents.aiSent).toEqual([{ period: PERIOD, bound_micro_usd: 0 }]);
-  });
-
-  it("neither counts nor bounds a chat when KIFF gives no plan", async () => {
-    const w = world(undefined);
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "Hi" })).status).toBe(200);
-    expect(w.agents.aiSent).toEqual([undefined]);
+describe("a chat, since credits are the balance", () => {
+  it("sends kiff/agents no AI bound, and reads no plan for one, whatever the plan", async () => {
+    for (const u of [usage("team", 2, 1), usage("solo", 1), usage("internal", 0), undefined]) {
+      const w = world(u);
+      w.agents.spent.set(`t_acme ${PERIOD}`, 100 * HALF);
+      expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "How many refunds today?" })).status).toBe(200);
+      expect(w.agents.aiSent).toEqual([undefined]);
+    }
   });
 });
 
-describe("GET /v1/usage/ai", () => {
-  it("says the billing admin may go on, and no one else", async () => {
-    const w = world(usage("solo", 1));
+describe("GET /v1/usage/ai, kept for apps from before credits", () => {
+  it("answers no bound, never waiting and no Go on, asking neither KIFF nor kiff/agents", async () => {
+    const asked: string[] = [];
+    const w = world(usage("solo", 1), [...ME.capabilities, "billing.manage"]);
+    const read = w.deps.fetch;
+    w.deps.fetch = (async (url: string, init?: RequestInit) => { asked.push(new URL(url).pathname); return read(url, init); }) as typeof fetch;
     w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toMatchObject({ paused: true, can_go_on: false, starts_again: "2026-11-20T09:12:00Z" });
-    const admin = world(usage("solo", 1), [...ME.capabilities, "billing.manage"]);
-    admin.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    expect((await call(admin, "GET", "/v1/usage/ai")).body).toMatchObject({ paused: true, can_go_on: true, words: expect.stringContaining("Go on, and they ask again at 200%") });
-  });
-
-  it("answers the share used, where the tafs ask, and whether they're asking", async () => {
-    const w = world(usage("solo", 1));
-    w.agents.spent.set(`t_acme ${PERIOD}`, Math.round(HALF * 0.42));
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toMatchObject({ used_pct: 42, asks_at_pct: 100, paused: false, words: expect.stringContaining("42%") });
-    w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toMatchObject({ used_pct: 100, asks_at_pct: 100, paused: true });
-  });
-
-  it("answers nulls with no bound, without asking kiff/agents", async () => {
-    const w = world(usage("internal", 0));
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toEqual({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false,
-      starts_again: "2026-11-20T09:12:00Z", words: "Your plan sets no AI limit for your tafs." });
+    const r = await call(w, "GET", "/v1/usage/ai");
+    expect(r.body).toMatchObject({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false });
+    expect(asked.filter((p) => p.startsWith("/v1/me/usage"))).toEqual([]);
     expect(w.agents.calls).toEqual([]);
   });
 });

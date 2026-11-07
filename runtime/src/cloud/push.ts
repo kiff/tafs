@@ -140,6 +140,8 @@ export const PACK_REQUESTED = "pack_requested";
 export const PACK_REQUEST_ANSWERED = "pack_request_answered";
 /** A vendor ended the sign-in planque held for a taf's connection: the owner signs in again. */
 export const CONNECTION_SIGNED_OUT = "connection_signed_out";
+/** The account's tafs used 80% of what the period has, or all of it and wait: once each a period. */
+export const CREDITS_WARNING = "credits_warning";
 
 /**
  * Checks `KIFF-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>`
@@ -170,7 +172,9 @@ interface AlertBody {
   entity_id?: unknown;
   hold?: { id?: unknown; expires_at?: unknown } | null;
   /** On a pack request's alerts: the request, who asked (their sign-in subject) and an admin's note. */
-  request?: { id?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
+  request?: { id?: unknown; kind?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
+  /** On a credits warning: the share ("80" or "100") and, at 100, why the tafs wait. */
+  reasons?: unknown;
   /** On a signed-out connection's alert: its grant, the taf's agent and the vendor's name for people. */
   connection?: { grant?: unknown; agent?: unknown; vendor?: unknown } | null;
   /**
@@ -219,11 +223,19 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   if (!signedByKIFF(signature, raw, secrets, deps.now)) throw new PushError(401, "not signed by KIFF");
 
   const outcome = typeof body.outcome === "string" ? body.outcome : "";
-  if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED && outcome !== PACK_REQUEST_ANSWERED && outcome !== CONNECTION_SIGNED_OUT) return { ignored: outcome };
+  if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED && outcome !== PACK_REQUEST_ANSWERED && outcome !== CONNECTION_SIGNED_OUT &&
+    outcome !== CREDITS_WARNING) return { ignored: outcome };
   const eventID = typeof body.event_id === "string" ? body.event_id : "";
   let n: Notification;
   let to: (d: Device) => boolean;
-  if (outcome === CONNECTION_SIGNED_OUT) {
+  if (outcome === CREDITS_WARNING) {
+    const reasons = Array.isArray(body.reasons) ? body.reasons.filter((r: unknown): r is string => typeof r === "string") : [];
+    const warning = creditsNotification(reasons[0], reasons[1], typeof body.entity_id === "string" ? body.entity_id : "");
+    if (!eventID || !warning) throw new PushError(400, "a credits warning names its event, its share and its period");
+    n = warning;
+    // The people who manage billing: a pack, or a raise, is theirs.
+    to = (d) => d.addsTasks === true;
+  } else if (outcome === CONNECTION_SIGNED_OUT) {
     const c = body.connection;
     const grant = typeof c?.grant === "string" ? c.grant : "";
     const agent = typeof c?.agent === "string" ? c.agent : "";
@@ -239,7 +251,7 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
     const requestID = typeof r?.id === "string" ? r.id : "";
     const askedBy = typeof r?.asked_by === "string" ? r.asked_by : "";
     if (!eventID || !requestID || !askedBy) throw new PushError(400, "an answer names its event, its request and who asked");
-    const answer = answerNotification(requestID, r?.status, r?.pack, r?.note);
+    const answer = answerNotification(requestID, r?.status, r?.pack, r?.note, r?.kind);
     if (!answer) return { ignored: `${outcome}: ${String(r?.status)}` };
     n = answer;
     // Only the member who asked hears the answer.
@@ -247,7 +259,7 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   } else if (outcome === PACK_REQUESTED) {
     const requestID = typeof body.entity_id === "string" ? body.entity_id : "";
     if (!eventID || !requestID) throw new PushError(400, "an alert names its event and its request");
-    n = requestNotification(requestID);
+    n = requestNotification(requestID, body.request?.kind);
     // Only phones of people who may add tasks: they answer it.
     to = (d) => d.addsTasks === true;
   } else {
@@ -336,12 +348,15 @@ function signedOutNotification(taf: { id: string; name: string }, vendor: string
   };
 }
 
-function requestNotification(requestID: string): Notification {
+function requestNotification(requestID: string, kind?: unknown): Notification {
+  const alert = kind === "raise"
+    ? { title: "A raise asked for", body: "Someone on your account asks you to raise the spend limit. Open Plan & usage to answer." }
+    : { title: "A pack asked for", body: "Someone on your account asks you for a pack. Open Plan & usage to answer." };
   return {
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: "More tasks asked for", body: "Someone on your account asks you to add tasks. Open Usage to answer." },
+        alert,
         "thread-id": "tasks",
         ...apsFor(levelOf("tasks_requested", false)),
       },
@@ -352,6 +367,31 @@ function requestNotification(requestID: string): Notification {
   };
 }
 
+/**
+ * A credits warning, to the people who manage billing: at 80% of what the period has, and when all
+ * of it is used and the tafs wait (KIFF's why: the period's credits, or the spend limit). It opens
+ * Plan & usage. Once a period each: its period names it.
+ */
+function creditsNotification(pct: string | undefined, why: string | undefined, period: string): Notification | undefined {
+  if (!period || (pct !== "80" && pct !== "100")) return undefined;
+  const waiting = pct === "100";
+  const body = !waiting ? "Your tafs have used 80% of what this period has. Open Plan & usage to see more."
+    : why === "limit_reached" ? "Your tafs are waiting: the spend limit is reached. Open Plan & usage to raise it."
+    : "Your tafs are waiting: this period's credits are used. Open Plan & usage to see what lets them go on.";
+  return {
+    kind: "alert",
+    payload: {
+      aps: {
+        alert: { title: waiting ? "Your tafs are waiting" : "Credits", body },
+        "thread-id": "credits",
+        ...apsFor(levelOf(waiting ? "credits_waiting" : "credits_warning", false)),
+      },
+      open: "usage",
+    },
+    collapseID: `credits-${pct}-${period}`.slice(0, 64),
+  };
+}
+
 /** Most of an admin's note a push shows. */
 export const MAX_NOTE = 180;
 
@@ -359,21 +399,21 @@ export const MAX_NOTE = 180;
  * The member's answer to their request: "Your admin added Rayo" or "Your admin declined:
  * <note>". A withdrawn or expired request tells nobody (undefined).
  */
-function answerNotification(requestID: string, status: unknown, pack: unknown, note: unknown): Notification | undefined {
-  const name = typeof pack === "string" && pack ? capitalize(pack) : "tasks";
+function answerNotification(requestID: string, status: unknown, pack: unknown, note: unknown, kind?: unknown): Notification | undefined {
+  const raise = kind === "raise";
   let body: string;
   if (status === "approved") {
-    body = `Your admin added ${name}.`;
+    body = raise ? "Your admin raised the spend limit." : `Your admin added ${typeof pack === "string" && pack ? capitalize(pack) : "a pack"}.`;
   } else if (status === "declined") {
     const why = typeof note === "string" ? note.replace(/\s+/g, " ").trim() : "";
-    body = why ? `Your admin declined: ${why.length > MAX_NOTE ? why.slice(0, MAX_NOTE - 1) + "…" : why}` : "Your admin declined your request for more tasks.";
+    body = why ? `Your admin declined: ${why.length > MAX_NOTE ? why.slice(0, MAX_NOTE - 1) + "…" : why}` : "Your admin declined your request.";
   } else {
     return undefined;
   }
   return {
     kind: "alert",
     payload: {
-      aps: { alert: { title: "Your request for tasks", body }, "thread-id": "tasks", ...apsFor(levelOf("request_answered", false)) },
+      aps: { alert: { title: raise ? "Your request for a raise" : "Your request for a pack", body }, "thread-id": "tasks", ...apsFor(levelOf("request_answered", false)) },
       open: "usage",
       request_id: requestID,
     },
