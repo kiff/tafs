@@ -329,7 +329,7 @@ struct BalancePanel: View {
         }
     }
 
-    static let buyCredits = "Buy credits"
+    static let buyCredits = "Add credits"
     static let readAgain = "Read it again"
     /// After a raise whose read failed (docs/accounts.md › In the apps).
     static let readSince = "Your tafs can go on. This period's credits couldn't be read since."

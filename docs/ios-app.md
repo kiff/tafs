@@ -102,7 +102,7 @@ the app in sample mode.
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
-| `-pack <id>` | The Buy credits screen with that pack alone |
+| `-pack <id>` | The Add credits screen with that pack alone |
 | `-narrow YES` | Laid out at Slide Over's width on an iPad |
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
 | `-listSettlesOnReturn YES` | The list opens on its first taf, and its last taf moves to the top each time the app comes back (`ListTapUITests`) |
@@ -121,7 +121,7 @@ the app in sample mode.
   cloud's or KIFF's, as written; the app adds nothing but the order:
   - **The balance** (`BalancePanel`), from `GET /v1/usage/balance`: `words`, a bar at
     `meter_pct` (none when it's `null`), `detail`, the `warning`, then **Raise the limit** where
-    `raise` is set, **Buy credits** (`BuyCreditsView`) where `buy.packs` is, and Solo
+    `raise` is set, **Add credits** (`BuyCreditsView`) where `buy.packs` is, and Solo
     (`SoloView`) where `buy.solo` is. A 404 shows no balance, and a failed read keeps what was
     read with tafs cloud's words above it.
   - **Raise the limit** (`AppModel.raiseLimit`): Face ID, then KIFF's `PUT /v1/me/usage/limit`

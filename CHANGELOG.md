@@ -5,7 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
-- **Credits are the balance in Plan & usage (iOS).** Plan & usage opens on the balance in tafs cloud's words (`GET /v1/usage/balance`, docs/accounts.md › The balance read): its line, a bar, what comes next and the warning, with **Raise the limit** on Company and **Buy credits** or Solo where tafs cloud offers them. The Credits panel follows. Settings' Plan card and Home's plan line show tafs cloud's `plan_line` and `home_line`.
+- **Credits are the balance in Plan & usage (iOS).** Plan & usage opens on the balance in tafs cloud's words (`GET /v1/usage/balance`, docs/accounts.md › The balance read): its line, a bar, what comes next and the warning, with **Raise the limit** on Company and **Add credits** or Solo where tafs cloud offers them. The Credits panel follows. Settings' Plan card and Home's plan line show tafs cloud's `plan_line` and `home_line`.
   - **Raise the limit** is signed by the device key behind Face ID, as Go on was, with the limit it raises from (`from_cents`). Then the balance is read again; if that read fails, only Read it again is offered. A limit that changed meanwhile is read again, and the phone's ceiling says to contact KIFF.
   - **A chat, Coach or Run now refused for credits** shows tafs cloud's words, with no Retry, and the message stays in the composer.
   - **Asking an admin** is for a raise on Company and for a pack on Solo, in the request lines both apps share.

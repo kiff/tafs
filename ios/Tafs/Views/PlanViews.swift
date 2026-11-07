@@ -10,7 +10,7 @@ struct BuyCreditsView: View {
         BuyCreditsContent(purchases: model.purchases, done: { dismiss() }).environmentObject(model)
     }
 
-    static let title = "Buy credits"
+    static let title = "Add credits"
     static let explain = "A pack adds credits once, and they never expire. Each period's included credits are used first, then the packs'."
 }
 
