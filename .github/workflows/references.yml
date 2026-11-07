@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: No private references
         run: |
-          pattern='kiff-cloud''#|kiff/kiff''-cloud'
+          pattern='kiff-cloud''#|kiff/kiff''-cloud|[Tt]he ''PM\b'
           if git grep -nE "$pattern" -- .; then
             echo "::error::a private reference is in the tree: name the gap or describe it instead"; exit 1
           fi

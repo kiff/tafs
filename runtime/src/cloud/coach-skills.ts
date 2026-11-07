@@ -46,7 +46,7 @@ const SETUP = ["set-up-a-taf", "connect-an-app", "name-the-tools", "draft-the-ca
 const ENTRY_SKILLS: Record<CoachEntry, string[]> = {
   // Setting up a taf connects an app, names its tools and drafts its Card; those tools (planque's, KIFF's)
   // go through KIFF's gateway and never reach tafs cloud, so their skills come with the start, and so does
-  // what the owner asks on the way (usage and plans) (qa-kiff, the PM's call of 16:23).
+  // what the owner asks on the way (usage and plans).
   free: SETUP,
   recipe: SETUP,
   door: SETUP,
