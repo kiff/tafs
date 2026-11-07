@@ -266,20 +266,6 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         if (!thinking) state.chatEnded[tafId]?.let { end ->
           item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId, false) { } }) }
         }
-        // What a stopped run never read, with tafs cloud's why: Retry sends it as a new message, Edit puts it in the box.
-        state.chatSteering[tafId]?.notSent.orEmpty().forEachIndexed { i, words ->
-          item(key = "not-sent-$i-${words.at}") {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-              SteeredWords(words.text, null)
-              NotSentLine(
-                words.why.orEmpty(),
-                canRetry = tafId !in state.chatSending,
-                onRetry = { following = true; actions.sendChat(words.text, tafId, false) { } },
-                onEdit = { setDraft(words.text) },
-              )
-            }
-          }
-        }
       }
 
       // The held call waiting for the owner, when it's out of view; and the way back down.
@@ -668,7 +654,7 @@ private fun NotSentLine(why: String, canRetry: Boolean, onRetry: () -> Unit, onE
   }
 }
 
-/** The owner's words tafs cloud holds or didn't send, as their own message, dimmed, with [line] under them. */
+/** The owner's words tafs cloud holds, as their own message, dimmed, with [line] under them. */
 @Composable
 private fun SteeredWords(text: String, line: String?) {
   Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {

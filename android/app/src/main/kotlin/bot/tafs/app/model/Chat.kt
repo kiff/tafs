@@ -142,6 +142,8 @@ data class Unsent(
   val why: String,
   /** The files it went with, uploaded already: Retry sends them again, and Edit puts them back in the tray. */
   val files: List<PendingFile> = emptyList(),
+  /** For one of tafs cloud's `not_sent` (docs/chat.md): its key, remembered once Retry or Edit takes it, so it never comes back. */
+  val notSentKey: String? = null,
 ) {
   companion object {
     /** The session an unsent message carries, so the thread shows it as one. */
