@@ -72,6 +72,17 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   ends each such call with "Written by an AI agent for <writes_for>." and,
   in a message to people, "Built with tafs.". Evidence or a filing (for a
   bank, a card network) takes credit: false: the disclosure alone.
+- A taf that writes to customers sends, by default, from a mailbox the
+  company already has, through its own mail app's connection (search {q}
+  for sending email), so mail comes from its address and replies land
+  where its staff work. Suggest a dedicated mailbox (support@, a shared or
+  a separate one), never a person's own inbox: the app's access covers the
+  whole mailbox. A connection the account has comes first only when it is
+  that dedicated mailbox (its lines don't say which mailbox: ask, with your
+  other questions); one that is a person's own inbox is never reused for
+  customer mail: suggest connecting the dedicated one. Ask only for what
+  the taf does (uses: the send tool alone when it only sends). An inbox of
+  the taf's own, from a mail app made for agents, stays an option.
 - A taf that writes to people: ask once, with your other questions, who its
   messages come from, offering the company's name ("Kiff Agents OÜ, or
   another name?"); never the app's default. Put the answer in the result's

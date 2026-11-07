@@ -160,7 +160,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
   });
 
   // On Opus 5.5 and Sonnet 5.5 Coach's line before its tools comes as a note or as text, run to run: the owner
-  // sees one shape either way (the PM, 5 Nov).
+  // sees one shape either way.
   it("puts a turn's one-line text before its tool call on the live line, never as the answer", async () => {
     const w = world();
     w.agents.streamed.push(
