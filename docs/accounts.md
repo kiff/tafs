@@ -196,8 +196,9 @@ when it ends. A run that used no AI (refused before it began) isn't listed.
 A call KIFF refused, or one held and then refused, doesn't change its run's credits: the run's
 AI was used.
 
-**The reads** (tafs cloud, `runtime/src/cloud/credits.ts`), in the account's zone, every line in
-tafs cloud's words. The apps draw the words as they are and derive nothing from the numbers but
+**The reads** (tafs cloud, `runtime/src/cloud/credits.ts`), every line in tafs cloud's words. The
+period's days are its first and last as KIFF bounds it (UTC): the start's date, and the day before
+the end's date. The apps draw the words as they are and derive nothing from the numbers but
 their order. `GET /v1/usage/credits` is the period:
 
 ```json
