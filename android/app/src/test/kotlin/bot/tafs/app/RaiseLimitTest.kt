@@ -142,7 +142,7 @@ class RaiseLimitTest {
 
   @Test fun pastTheCeilingKiffsWordsAreShown() = runTest {
     val m = model(waiting)
-    transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_ceiling","words":"The limit can't go higher from the phone. Contact KIFF to raise it further."}""")
+    transport.answer("PUT /v1/me/usage/limit", 409, """{"error":"limit_ceiling","message":"The limit can't go higher from the phone. Contact KIFF to raise it further.","limit_cents":13000}""")
     assertFalse(m.raiseLimit())
     assertEquals("The limit can't go higher from the phone. Contact KIFF to raise it further.", m.state.value.raiseError)
   }

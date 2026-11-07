@@ -23,7 +23,7 @@ sealed class KiffError(message: String) : Exception(message) {
 
   /**
    * [reason] is KIFF's machine-readable why, when it gives one ("card_revised"); [code] its `code` where a route names one
-   * there instead, and [words] KIFF's own words for a person, where it sends them.
+   * there instead, and [words] KIFF's own words for a person, where it sends them (its `words`, or a refusal's `message`).
    */
   class Server(val status: Int, message: String, val reason: String? = null, val code: String? = null, val words: String? = null) : KiffError(message) {
     /** Whether KIFF refused with [why], whichever field the route puts it in. */
@@ -707,7 +707,7 @@ class KiffClient(
         throw KiffError.ApprovalKeyRequired
       }
       if (status == 409 && path == "/v1/me/device/approval-key") throw KiffError.ApprovalKeyExists(fields["fingerprint"])
-      throw KiffError.Server(status, fields["error"] ?: "KIFF answered $status", fields["reason"], fields["code"], fields["words"])
+      throw KiffError.Server(status, fields["error"] ?: "KIFF answered $status", fields["reason"], fields["code"], fields["words"] ?: fields["message"])
     }
     return response.body
   }
