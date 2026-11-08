@@ -76,20 +76,30 @@ class Purchases(private val store: PlayStore) {
 
   val updates: Flow<StorePurchase> get() = store.updates
 
+  /** Whether Play has been asked yet, and why its last answer failed: null once it answered. */
+  private val _loaded = MutableStateFlow(false)
+  val loaded: StateFlow<Boolean> = _loaded
+  private val _loadFailed = MutableStateFlow<String?>(null)
+  val loadFailed: StateFlow<String?> = _loadFailed
+
   /** Reads the products' names and prices from Play. */
   suspend fun load(ids: List<String>) {
     if (ids.isEmpty()) return
     // Read again each time, never kept from an earlier read: what Play offers changes with the Google account and its history
-    // (a trial used, the Play Store switched to another account). Unreadable: what was read before stays.
+    // (a trial used, the Play Store switched to another account). Unreadable: what was read before stays, and why is kept.
     val read = try {
       store.products(ids)
     } catch (e: CancellationException) {
       throw e
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+      _loadFailed.value = e.message ?: PLAY_CANT_SELL
+      _loaded.value = true
       return
     }
     // A product Play doesn't list now isn't offered.
     _products.update { it - ids.toSet() + read.associateBy { p -> p.id } }
+    _loadFailed.value = null
+    _loaded.value = true
   }
 
   /** Buys a product for the account, answering a member's request when there is one. */
@@ -165,6 +175,15 @@ class Purchases(private val store: PlayStore) {
     const val TEST_PURCHASE = "Test purchases don't add tasks to this account."
     /** Play couldn't be read just now: no network, or its service down. Not "doesn't sell this". */
     const val PLAY_UNREACHABLE = "Couldn't reach Google Play. Try again."
+    /** Play answered, but sells none of it to this app on this phone (Play billing off here, or nothing listed for this account). */
+    const val PLAY_CANT_SELL = "Google Play can't sell on this phone, so nothing can be bought here."
+
+    /**
+     * The line the Buy panel says when Play lists nothing it offers: null while Play hasn't been asked, or once it lists one.
+     * Why Play's read failed when it did, else that Play can't sell here.
+     */
+    fun buyNote(offered: List<String>, listed: Set<String>, loaded: Boolean, failed: String?): String? =
+      if (!loaded || offered.isEmpty() || offered.any { it in listed }) null else failed ?: PLAY_CANT_SELL
     const val ANOTHER_ACCOUNT = "This purchase belongs to another tafs account on this Google account, so nothing was added here."
     const val CONTACT_SUPPORT = "KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out."
     /** Play's own page for this Google account's subscriptions. */

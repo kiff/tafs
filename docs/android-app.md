@@ -110,6 +110,12 @@ wasn't.
   "€10.99 a month". When Play can't be reached for that read (no network, its service down), the
   purchase says "Couldn't reach Google Play. Try again.", never that Play doesn't sell it
   (`PlayBillingStore.unreachable`).
+- **When Play lists none of what's offered,** the panel says why above Restore purchases, rather
+  than standing empty (`Purchases.buyNote`): "Couldn't reach Google Play. Try again." when Play
+  couldn't be read, else "Google Play can't sell on this phone, so nothing can be bought here."
+  That's Play billing off for this app on this phone (`BILLING_UNAVAILABLE`, such as a build Play
+  didn't install), or nothing listed for this Google account. Nothing is said before Play is asked,
+  or once it lists one of them.
 - **How a purchase or restore went** shows under what was tapped (Start Solo, the pack, Restore
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.

@@ -462,6 +462,9 @@ data class AppState(
   val playBilling: Boolean = false,
   /** Play's names and prices for what KIFF sells; the product being bought; and what happened to the last purchase, request or answer. */
   val storeProducts: Map<String, StoreProduct> = emptyMap(),
+  /** Whether Play has been asked for them yet, and why its last answer failed (Purchases.buyNote says it). */
+  val storeLoaded: Boolean = false,
+  val storeFailed: String? = null,
   val buying: String? = null,
   val tasksMessage: String? = null,
   /** How the latest purchase or restore went, said under what was tapped (Start Solo, a pack, Restore purchases). */
@@ -6027,7 +6030,7 @@ class AppModel(
     val store = _state.value.usage?.store ?: return
     if (!_state.value.offersPurchases) return
     purchases.load(store.googleProducts)
-    _state.update { it.copy(storeProducts = purchases.products.value) }
+    _state.update { it.copy(storeProducts = purchases.products.value, storeLoaded = purchases.loaded.value, storeFailed = purchases.loadFailed.value) }
   }
 
   // MARK: Asking an admin for tasks

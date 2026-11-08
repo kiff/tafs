@@ -68,7 +68,7 @@ class PlayBillingStore(context: Context) : PlayStore {
       })
     }
     if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-      throw IllegalStateException(if (unreachable(result.responseCode)) Purchases.PLAY_UNREACHABLE else result.debugMessage.ifEmpty { "Google Play isn't available on this phone." })
+      throw IllegalStateException(failure(result))
     }
   }
 
@@ -166,7 +166,15 @@ class PlayBillingStore(context: Context) : PlayStore {
   }
 
   private fun unreachableOr(r: BillingResult): String =
-    if (unreachable(r.responseCode)) Purchases.PLAY_UNREACHABLE else r.debugMessage.ifEmpty { Purchases.PLAY_UNREACHABLE }
+    if (r.responseCode == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) Purchases.PLAY_CANT_SELL
+    else if (unreachable(r.responseCode)) Purchases.PLAY_UNREACHABLE else r.debugMessage.ifEmpty { Purchases.PLAY_UNREACHABLE }
+
+  /** Why Play couldn't be set up: unreachable now, not selling here (billing off for this app on this phone), or Play's own words. */
+  private fun failure(r: BillingResult): String = when {
+    unreachable(r.responseCode) -> Purchases.PLAY_UNREACHABLE
+    r.responseCode == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> Purchases.PLAY_CANT_SELL
+    else -> r.debugMessage.ifEmpty { Purchases.PLAY_CANT_SELL }
+  }
 
   companion object {
     /** Play's codes for not being reached now (no network, its service down, timed out or gone): worth trying again, unlike not selling. Billing 9 says a timeout as SERVICE_UNAVAILABLE. */

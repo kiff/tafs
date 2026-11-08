@@ -167,6 +167,14 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
       }
       PurchaseNoteLine(state, id, actions)
     }
+    // Play lists none of what's offered: said, rather than an empty panel (Play billing off for this app on this phone, or unreachable).
+    val offered = buildList {
+      if (offer.offers("solo")) store.googleSoloProduct?.let { add(it) }
+      if (offer.offers("packs")) store.packs.forEach { p -> p.googleProduct?.let { add(it) } }
+    }
+    bot.tafs.app.billing.Purchases.buyNote(offered, state.storeProducts.keys, state.storeLoaded, state.storeFailed)?.let {
+      Text(it, style = scaled(13, color = Theme.soft))
+    }
     Text(
       if (state.buying == PurchaseNote.RESTORE) "Restoring…" else "Restore purchases",
       style = scaled(14, FontWeight.SemiBold, Theme.amberText),
