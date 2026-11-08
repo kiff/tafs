@@ -37,7 +37,7 @@ tafs is an app for iPhone, iPad and Android, with **They taf. You kiff.** as its
   gives the Card its room back ([Did this happen?](docs/approvals.md#did-this-happen)).
 - **Trial versions.** Coach drafts a taf's next version, which runs beside the live one under
   a trial Card of its own before it's made live ([trying a version](docs/coach.md#trying-a-version)).
-- **Doors.** An email address, a Slack channel or a WhatsApp number a taf takes work from
+- **Doors.** An email address, a WhatsApp number, a Slack channel or a Telegram bot a taf takes work from
   ([doors](docs/doors.md)).
 - **A memory you can read.** A taf's notes shape how it works, never what its Card allows,
   and each one can be read and forgotten ([memory](docs/tafs.md#memory)).
@@ -98,7 +98,7 @@ when it is answered, chats, notes and schedules, in the EU. tafs cloud calls it;
 the phone never does.
 
 - **A taf** is one agent definition (`runtime/src/cloud/tafdef.ts`):
-  `claude-opus-5-5`, its job's instructions, how its notes work, what the
+  `claude-sonnet-5-5`, its job's instructions, how its notes work, what the
   owner said when starting it, two sections of KIFF's skill, a cost cap per run from its
   budget, and keep rules (a tool's call and what it returns stay only until the
   run ends, the rest 30 days). For each call through KIFF, the run also keeps
