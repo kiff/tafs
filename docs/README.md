@@ -28,6 +28,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [android-app.md](android-app.md) | The Android app's code: building and testing it, its packages, signing, releases |
 | [data.md](data.md) | Where every piece of data lives, for how long, and who deletes it |
 | [kiff-decides.md](kiff-decides.md) | How KIFF decides every taf action, with the first held calls on a phone |
+| [screenshots.md](screenshots.md) | The apps' screenshots, iPhone, iPad and Android, light and dark, and where each set comes from |
 | [needs-from-kiff.md](needs-from-kiff.md) | What tafs needs from KIFF, and where each need stands |
 | [maintaining.md](maintaining.md) | Repository controls, merging and releasing |
 
