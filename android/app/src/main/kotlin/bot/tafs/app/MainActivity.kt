@@ -94,7 +94,6 @@ import bot.tafs.app.views.CalendarView
 import bot.tafs.app.views.OverviewView
 import bot.tafs.app.views.LocalCoachInstalls
 import bot.tafs.app.views.NeedsYouView
-import bot.tafs.app.views.NewTafFlow
 import bot.tafs.app.views.OnboardingView
 import bot.tafs.app.views.RecordView
 import bot.tafs.app.views.SettingsSheet
@@ -360,7 +359,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
   // The taf open on the Tafs tab: the screens inside a tab keep its bar, as a navigation stack does.
   var openTaf by rememberSaveable { mutableStateOf<String?>(null) }
-  var showingNew by rememberSaveable { mutableStateOf(false) }
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
@@ -600,7 +598,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               // The sample plays its next round; signed in, KIFF is read again.
               onPlayNext = { if (state.mode == Mode.sample) model.playNextDemoActions() else model.refresh() },
               onOpenTaf = { coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; openTaf = it },
-              onNewTaf = { showingNew = true },
               onCalendar = if (state.mode == Mode.kiff && state.tafs.isNotEmpty() && !wide) ({ coachOpen = false; trialTaf = null; calendarOpen = true }) else null,
               onHaltAll = { haltTaf = null; haltOpen = true },
               // A halted taf's chip: the account's Halt when the account is halted (that's what resumes it), else the taf's.
@@ -685,20 +682,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) })
         Tab.Record -> RecordView(state)
       }
-    }
-    if (showingNew) {
-      NewTafFlow(
-        draftFrom = model::draft,
-        issuer = model.issuer,
-        colorIndex = state.tafs.size,
-        onIssue = { draft ->
-          model.start(draft)?.also { taf ->
-            openTaf = taf.id
-            tab = Tab.Tafs
-          }
-        },
-        onClose = { showingNew = false },
-      )
     }
     if (showingSettings) {
       SettingsSheet(

@@ -59,7 +59,6 @@ import bot.tafs.app.design.Meter
 import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.StateChip
 import bot.tafs.app.design.TafAvatar
-import bot.tafs.app.design.brandBackground
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.model.HeldCall
@@ -74,7 +73,6 @@ fun HomeView(
   onNeedsYou: () -> Unit,
   onPlayNext: suspend () -> Unit,
   onOpenTaf: (String) -> Unit,
-  onNewTaf: () -> Unit,
   /** Opens the calendar of the tafs' scheduled work (kiff/tafs#534); null when there's none to open (the sample, or no tafs). */
   onCalendar: (() -> Unit)? = null,
   onHaltAll: () -> Unit,
@@ -114,7 +112,7 @@ fun HomeView(
     ) {
       item {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-          Header(state.accountLabel, showNew = sample, onNewTaf, onCalendar)
+          Header(state.accountLabel, onCalendar)
           // KIFF can't be reached just now: said quietly, under the account's name.
           state.unreachable?.let { UnreachableLine(it, state.retryingRefresh) }
           // The phone can't approve until a new sign-in: one calm line, said at launch rather than after a tap.
@@ -137,7 +135,7 @@ fun HomeView(
         item { OutlineButton("Play the next sample actions", { pullScope.launch { onPlayNext() } }, Modifier.fillMaxWidth(), color = Theme.soft) }
         item {
           Text(
-            "Sample data. The Card is checked on this phone; signed in with KIFF, KIFF decides.",
+            HomeWords.SAMPLE_FOOT,
             style = scaled(12, color = Theme.dim),
           )
         }
@@ -214,9 +212,9 @@ fun UnreachableLine(words: String, retrying: Boolean) {
   }
 }
 
-/** The bar above the list: the mascot and the account it is in, and, in the sample, a new taf. Account and Coach are in the tab bar. */
+/** The bar above the list: the mascot and the account it is in. Account and Coach are in the tab bar; a new taf starts in Coach. */
 @Composable
-private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit, onCalendar: (() -> Unit)? = null) {
+private fun Header(accountLabel: String?, onCalendar: (() -> Unit)? = null) {
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
       Mascot(34.dp)
@@ -230,15 +228,6 @@ private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
-      }
-    }
-    // A new taf starts in Coach mode once signed in; the sample starts from its form.
-    if (showNew) {
-      Box(
-        Modifier.size(36.dp).clip(CircleShape).brandBackground().clickable(onClick = onNewTaf).semantics { contentDescription = "Start a new taf" },
-        contentAlignment = Alignment.Center,
-      ) {
-        Icon(painterResource(R.drawable.ic_plus), contentDescription = null, tint = Theme.onBrand, modifier = Modifier.size(18.dp))
       }
     }
   }

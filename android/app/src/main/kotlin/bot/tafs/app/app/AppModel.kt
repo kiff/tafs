@@ -1463,25 +1463,8 @@ class AppModel(
     }
   }
 
-  fun draft(job: String): TafDraft = TafTemplates.draft(job)
-
-  /** The owner's name on a Card they issue, and the colour the next taf takes. */
+  /** The owner's name on a Card they issue. A new taf starts in Coach, signed in; the sample's tafs are its own. */
   val issuer: String get() = ownerName
-  val nextColorIndex: Int get() = _state.value.tafs.size
-
-  /**
-   * Issues the Card, after the owner confirms it on the phone, and starts the taf; null when they
-   * didn't. The sample starts from its form; signed in, a new taf starts in Coach mode.
-   */
-  suspend fun start(draft: TafDraft): Taf? {
-    try {
-      signer.sign(Messages.issue("card-${newId()}"), "Issue ${draft.name}'s Card")
-    } catch (_: SignerException) {
-      fail("The Card was not issued: it wasn't confirmed.")
-      return null
-    }
-    return create(draft)
-  }
 
   private fun create(draft: TafDraft): Taf {
     val s = _state.value

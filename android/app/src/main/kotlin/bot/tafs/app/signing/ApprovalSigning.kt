@@ -74,9 +74,6 @@ interface ApprovalSigning {
 object Messages {
   /** An answer in the sample, where the phone checks the Card itself. */
   fun answer(heldId: String, answer: Answer): ByteArray = "tafs.answer.v1|$heldId|${answer.wireName}".toByteArray()
-
-  /** Issuing a Card is signed as an approval of it. */
-  fun issue(cardId: String): ByteArray = "tafs.answer.v1|$cardId|${Answer.ApproveOnce.wireName}".toByteArray()
 }
 
 /** The keys a signer holds, hardware-backed on a phone. */

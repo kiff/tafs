@@ -238,8 +238,10 @@ Account opens Settings and Coach opens Coach; the three between are tabs, and Ne
 its count. Coach is a filled button (ink, with the ground's colour as its label), shown only to
 someone KIFF lets use Coach, so the bar has four places otherwise. In landscape and on tablets
 the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
-`MainActivity`). Home's header keeps the account's name, and in the sample a new taf; Settings
-and Coach are no longer there. Coach from a taf's page is that taf's conversation: the one
+`MainActivity`). Home's header keeps the account's name; Settings and Coach are no longer there.
+A new taf starts in Coach, signed in. The sample has no form for one: under its list it says
+"Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf
+starts in Coach." (`HomeWords.SAMPLE_FOOT`). Coach from a taf's page is that taf's conversation: the one
 already open about it, else a new one about it; from anywhere else, the conversation open as
 it was (`AppModel.openCoachOn`). Leaving a conversation stops following it on this phone (work it
 accepted goes on at tafs cloud), and a read of it that lands later doesn't replace the one shown.

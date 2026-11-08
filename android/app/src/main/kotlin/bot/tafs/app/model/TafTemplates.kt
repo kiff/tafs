@@ -1,13 +1,12 @@
 package bot.tafs.app.model
 
 /**
- * A job tafs knows how to draft: its tools, its Card, and the actions the sample plays through.
+ * One of the sample's jobs: its tools, its Card, and the actions the sample plays through.
  * Five jobs, each consequential and painful today. Not a catalogue.
  */
 data class TafTemplate(
   val key: String,
   val name: String,
-  val keywords: List<String>,
   val job: String,
   val tools: List<String>,
   val rules: List<CardRule>,
@@ -20,17 +19,9 @@ object TafTemplates {
 
   fun template(key: String?): TafTemplate? = all.firstOrNull { it.key == key }
 
-  fun draft(job: String): TafDraft {
-    val words = job.lowercase()
-    val match = all.firstOrNull { t -> t.keywords.any { words.contains(it) } }
-      ?: return TafDraft("New taf", job, emptyList(), emptyList(), null)
-    return TafDraft(match.name, job, match.tools, match.rules, match.key)
-  }
-
   /** Support: settle refund and credit requests within policy. */
   val refunds = TafTemplate(
     key = "refunds", name = "Refunds",
-    keywords = listOf("refund", "credit", "return", "goodwill"),
     job = "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
     tools = listOf("Payments", "Store", "Email"),
     rules = listOf(
@@ -49,7 +40,6 @@ object TafTemplates {
   /** Accounts payable: match, approve and pay routine vendor bills. */
   val billPay = TafTemplate(
     key = "billpay", name = "Bill pay",
-    keywords = listOf("bill", "vendor", "payable", "pay invoice", "supplier"),
     job = "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
     tools = listOf("Accounting", "Email"),
     rules = listOf(
@@ -68,7 +58,6 @@ object TafTemplates {
   /** IT: joiners, movers and leavers across identity, workspace and code. */
   val access = TafTemplate(
     key = "access", name = "Access",
-    keywords = listOf("access", "onboard", "offboard", "leaver", "joiner", "provision", "okta"),
     job = "Give new joiners their apps and remove leavers the day they go. Roles from the approved list only. Deactivate, never delete.",
     tools = listOf("Sign-in", "Code"),
     rules = listOf(
@@ -89,7 +78,6 @@ object TafTemplates {
   /** Engineering: ship fixes and roll back, never destroy. */
   val deploys = TafTemplate(
     key = "deploys", name = "Deploys",
-    keywords = listOf("deploy", "production", "release", "migration", "rollback"),
     job = "Ship merged fixes to production when CI is green, and roll back when errors spike. Never drop or delete production data.",
     tools = listOf("Code", "Hosting", "Network"),
     rules = listOf(
@@ -108,7 +96,6 @@ object TafTemplates {
   /** Payments: answer disputes with evidence before the deadline. */
   val chargebacks = TafTemplate(
     key = "chargebacks", name = "Chargebacks",
-    keywords = listOf("chargeback", "dispute"),
     job = "Answer card disputes with the order's evidence before the deadline. Accept small ones that can't be won. Share nothing beyond the template.",
     tools = listOf("Payments"),
     rules = listOf(
