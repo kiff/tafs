@@ -156,6 +156,12 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
       return { ...base, state: "waiting", line: w.work_waiting_answer };
     }
     case "COMPLETED":
+      // A run cut off at its turn or cost cap ended without finishing: it stopped, and says why (never "Done").
+      if (r.stop === "turn_cap") return { ...base, state: "stopped", line: w.work_capped_turns(at(r.updated)) };
+      if (r.stop === "cost_cap") return { ...base, state: "stopped", line: w.work_capped_cost(at(r.updated)) };
+      // Done only when it answered (or a run from before stops were kept): any other stop, one tafs doesn't know
+      // included (out of room mid-answer, a refused turn), reads as stopped, never as success.
+      if (r.stop && r.stop !== "answered") return { ...base, state: "stopped", line: w.work_stopped_at(at(r.updated)) };
       return { ...base, state: "done", line: w.work_done_at(at(r.updated)) };
     case "CANCELLED":
       return { ...base, state: "stopped", line: w.work_stopped };
@@ -194,6 +200,8 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   if (unscheduled) return { status: "idle", line: w.work_from_chat, needs_you: 0 };
   if (next) return { status: "idle", line: w.work_next_run(whenIn(next, zone, now, lang)), needs_you: 0 };
   const last = runs.find((r) => r.status === "COMPLETED");
+  // The last one cut off at a cap says so, as its request does.
+  if (last && last.stop && last.stop !== "answered") return { status: "idle", line: requestOf(last, zone, now, [], undefined, [], lang).line, needs_you: 0 };
   return { status: "idle", line: last ? w.work_last_done(whenIn(last.updated, zone, now, lang)) : w.work_nothing_yet, needs_you: 0 };
 }
 
