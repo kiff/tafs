@@ -152,6 +152,21 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(w.told()).toBeUndefined();
   });
 
+  // Gap 14: the grant's tools that send outside the company, as its profile says, are noted for its taf's agent
+  // as the owner signs, so Coach's result can be checked against them; a card read again notes nothing.
+  it("notes the tools a connection's profile says send outside the company, as the owner signs", async () => {
+    const s = services();
+    const sends = { v: "kiff.profile.v1", operations: [{ tool: "send_email", kind: "write", effect: "sends", resource: { noun: "email", outside: true } }, { tool: "list", kind: "read" }] };
+    s.grants = [grant({}, { profile: sends })];
+    const w = await world(s);
+    const digest = sha256(grant({}, { profile: sends }).request);
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: "old" })).body).toEqual({ outcome: "read_again", note: WORDS.outOfDate });
+    expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toBeUndefined();
+    const words = { profile_sha256: sha256(sends), words_sha256: "1".repeat(64) };
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: digest, words })).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toMatchObject({ grants: { g_1: ["send_email"] } });
+  });
+
   it("a card whose terms changed since it was shown is read again, and Coach hears nothing", async () => {
     const s = services();
     const w = await world(s);
@@ -230,6 +245,19 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "cards", message: "tafs.cards.v1|t_acme|drf_1|v3", reason: "Give refunds-x its Card", kiff: { draft: "drf_1", version: "v3" } } });
     expect(r.body.ask).not.toHaveProperty("planque");
     expect(w.told()).toBeUndefined();
+  });
+
+  // Gap 14: the Card's approval notes the grant's sending tools again, as its profile says now, so a connection
+  // that changed since it was connected counts as it is when the taf's Card is approved.
+  it("notes the connection's sending tools again as its Card is approved, as its profile says now", async () => {
+    const s = services();
+    const sends = { v: "kiff.profile.v1", operations: [{ tool: "reply", kind: "write", effect: "sends", resource: { noun: "ticket", outside: true } }] };
+    s.grants = [grant({ status: "connected" }, { profile: sends })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    await w.coach.put("t_acme#sends-outside#refunds-x", { grants: { g_1: [], g_other: ["post"] }, at: "x" }, new Date("2027-01-01"));
+    expect((await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
+    expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toMatchObject({ grants: { g_1: ["reply"], g_other: ["post"] } });
   });
 
   it("an app set up on demand asks for every change: a draft that lets one of its writes run outright isn't signed (kiff/planque#87)", async () => {

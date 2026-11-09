@@ -485,6 +485,19 @@ it, Coach sets the inbox's sender name, and offers sending from the company's ow
 takes one, showing the DNS records for the owner to add and checking them before it says the domain
 works (gap 20, `draft-the-card@3` and on).
 
+**Which tools carry the disclosure isn't left to Coach** (gap 14, `runtime/src/cloud/sends-outside.ts`). A
+connection's profile (KIFF's `kiff.profile.v1`, inside the grant's signed request) says what each write does:
+an operation that `sends`, with `resource.outside`, sends to people who may be outside the company. A reviewed
+catalog entry's profile is the reviewed one, and one Coach drafted counts too when it says so, since that can
+only add a disclosure. tafs cloud reads grants only on the phone's Approve, so each Approve of a connection, or
+of its Card, notes its sending tools for the taf's KIFF agent, replacing that connection's earlier note. Coach's
+result is then checked against the note: a new taf, or an Improve, whose taf has a noted tool that neither its
+`disclose` nor the taf's existing disclosure names is refused, naming each tool ("disclose doesn't name
+send_email, which sends to people outside the company …"), and Coach sends it again with the tool named. A note
+that can't be read refuses with words Coach can retry on, never lets the result through. A taf whose
+connections were approved before this has no note until its next Approve, and is checked as before. A managed
+provider's tool counts only once its profile says it sends outside.
+
 A taf hands setting changes to Coach (gap 15): a connection or its key, its Card, tools or schedule.
 It says so in one line and shows an `ask_coach` card with the owner's request; the apps' Ask Coach
 button opens Coach on that taf with it written in. A taf's definition shows that card alone

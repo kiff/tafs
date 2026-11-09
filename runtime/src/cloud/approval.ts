@@ -1,3 +1,4 @@
+import { noteSendingOutside } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
  * phone says the person tapped Approve; tafs cloud reads planque's grant and
@@ -236,6 +237,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     const key = draft.confirmKey ?? "critical";
     const pending: Pending = { step: "cards", grant: grant.id, vendor, draft: ask.draft, version: draft.version, made: ctx.now.toISOString(), key };
     await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+    await noteSending(grant, ctx);
     return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: `Give ${draft.agent || "the taf"} its Card`, key, kiff: { draft: ask.draft, version: draft.version } } };
   }
   // Signed in already, its tools listed and waiting for their own approval: an earlier approval
@@ -261,6 +263,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   // Connecting an app is routine (kiff/tafs#494): a tap inside an approval window.
   const pending: Pending = { step: "connect", grant: grant.id, vendor, made: ctx.now.toISOString(), key: "window" };
   await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+  await noteSending(grant, ctx);
   return {
     outcome: "sign",
     ask: {
@@ -268,6 +271,16 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
       planque: { grant: grant.id, body: { digest: grant.digest, ...(kiffProfile ? { kiff_profile: kiffProfile } : {}) } },
     },
   };
+}
+
+/**
+ * The grant's tools that send outside the company, as its profile says, noted for its taf's agent as the owner is
+ * about to sign (gap 14): Coach's result is checked against them. Read as the phone, so only here, and each Approve
+ * of the grant replaces its entry, so a later connection's sending tool counts.
+ */
+async function noteSending(grant: ApprovalGrant, ctx: DecideContext): Promise<void> {
+  if (typeof grant.request.agent !== "string" || !grant.request.agent) return;
+  await noteSendingOutside(ctx.store, ctx.tenant, grant.request.agent, grant.id, grant.request.profile, ctx.now);
 }
 
 /** What the phone reports came of the call it made with the signature. */

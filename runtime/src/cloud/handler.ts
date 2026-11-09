@@ -14,6 +14,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
+import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
@@ -6230,11 +6231,16 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
   // A disclosure the improvement names is added to the taf's before its version is built: for a tool it
   // adds, or for a taf from before disclosures. Never one taken away (agentgabo on kiff/agents#354).
+  let more: Job["disclose"];
   if (want.disclose !== undefined) {
-    let more: Job["disclose"];
     try { more = discloseOf(want.disclose); } catch (err) { return { failed: (err as Error).message }; }
     const unknown = (more ?? []).filter((d) => !(want.tools ?? []).includes(d.tool)).map((d) => d.tool);
     if (unknown.length) return { failed: `disclose names ${unknown.join(", ")}, which isn't among the taf's tools: name each as the result's tools do` };
+  }
+  // A tool its connections say sends outside the company is disclosed, by the taf already or by this improvement (gap 14).
+  const undisclosed = await sendingCheck(tenant, taf.kiffAgent, want.tools, [...(taf.disclose ?? []), ...(more ?? [])], deps);
+  if (undisclosed) return { failed: undisclosed };
+  if (want.disclose !== undefined) {
     if (more?.length) {
       const cur = (await deps.tafs.get(tenant, taf.id)) ?? taf;
       await deps.tafs.put(tenant, { ...cur, disclose: withDisclose(cur.disclose, more) });
@@ -6260,6 +6266,19 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
 }
 
 /**
+ * Gap 14: why a result is refused when a tool the taf's connections say sends outside the company isn't in
+ * `disclose` (sends-outside.ts), or undefined. A note that can't be read refuses with words Coach can retry on,
+ * never lets the result through. No store, or no agent: nothing to check against.
+ */
+async function sendingCheck(tenant: string, agent: string | undefined, tools: string[] | undefined, disclose: ReadonlyArray<{ tool?: unknown }>, deps: Deps): Promise<string | undefined> {
+  if (!deps.coach || !agent) return undefined;
+  let noted: string[];
+  try { noted = await notedSendingOutside(deps.coach, tenant, agent); } catch { return NOTE_UNREAD; }
+  const named = disclose.map((d) => (typeof d?.tool === "string" ? d.tool.trim() : "")).filter(Boolean);
+  return undisclosedSending(noted, Array.isArray(tools) ? tools.filter((t) => typeof t === "string") : undefined, named);
+}
+
+/**
  * What a result names for a new taf: its agent and draft, its name, and its job as Coach drafted it
  * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` or `unscheduled`. A `job` naming
  * one of the five starter jobs is refused (makeTaf), and Coach is told why.
@@ -6270,6 +6289,9 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
   const made = tafs.find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
   if (made) return { taf_id: made.id };
+  // A tool its connections say sends outside the company is named in disclose (gap 14), whatever Coach remembered.
+  const undisclosed = await sendingCheck(tenant, taf.agent, taf.tools, Array.isArray(taf.disclose) ? taf.disclose : [], deps);
+  if (undisclosed) return { failed: undisclosed };
   let access: { requester: Requester; cards_manage?: boolean };
   try {
     access = await deps.agents.requesterAccess(tenant, coach, r.id);
