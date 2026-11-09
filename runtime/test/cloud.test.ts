@@ -2451,6 +2451,19 @@ describe("a schedule whose runs keep failing to start", () => {
     w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: later, firings: 3, run: "run_9", outcome: "failed_unfinished" } });
     expect(await sweepFailingSchedules(deps)).toHaveLength(1);
     expect(bodyOf(w.pushed[1]!.n)).toBe("Its last 3 scheduled runs didn't finish. What the latest was working on won't be tried again. Open it to see what it did.");
+    // The same run of failures, still ending on one: nothing more is sent.
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    // A run of failures said as one that couldn't start, which then drops work: said once more, in these words.
+    {
+      const { w: w3, deps: d3 } = await setUp({ since: SINCE, firings: 2, outcome: "failed_unworked" });
+      expect(await sweepFailingSchedules(d3)).toHaveLength(1);
+      expect(bodyOf(w3.pushed[0]!.n)).toBe(FAILING_WORDS.many(2));
+      w3.agents.schedules.set(`t_acme|${RAE}`, { ...w3.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 3, outcome: "failed_unfinished" } });
+      expect(await sweepFailingSchedules(d3)).toHaveLength(1);
+      expect(bodyOf(w3.pushed[1]!.n)).toBe(FAILING_WORDS.unfinishedMany(3));
+      expect(await sweepFailingSchedules(d3)).toEqual([]);
+      expect(w3.pushed).toHaveLength(2);
+    }
     // One that couldn't start, or a check that couldn't read, still waits for a second firing, and says so.
     for (const outcome of ["failed_unworked", "failed_check"]) {
       const { w: w2, deps: d2 } = await setUp({ since: SINCE, firings: 1, outcome });

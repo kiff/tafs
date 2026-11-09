@@ -5,7 +5,7 @@ The Play Store listing, in English (the source) and the seven other languages ta
 language's listing from its section. The App Store listing will follow the same text once Apple's
 business account is in place.
 
-**qa-build reviews each language before it's added in the Console,** as
+**Each language is reviewed against the glossary before it's added in the Console,** as
 [languages.md](languages.md) says. No language waits for a native speaker: fixes go forward after
 release.
 

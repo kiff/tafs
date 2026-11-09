@@ -374,7 +374,8 @@ phones that answer holds, once for each run of failures, opening the taf:
   since. "Its last 2 scheduled runs couldn't start. It tries again at each scheduled time. Open it to see
   why." Not for one its owner turned off.
 - **a run that stopped partway with its work dropped** (kiff/agents' `failing.outcome` is
-  `failed_unfinished`): at once, since the next run that works ends the run of failures. An app check's
+  `failed_unfinished`): at once, since the next run that works ends the run of failures, and even when
+  that run of failures was already said as one that couldn't start. An app check's
   run failed or was cut short after it may have changed something, or three runs in a row didn't finish
   the same items, so kiff/agents doesn't hand them to another run. "Its scheduled run stopped partway.
   What it was working on won't be tried again. Open it to see what it did."

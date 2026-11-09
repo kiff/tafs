@@ -6180,7 +6180,9 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       if (!taf || taf.removing) continue;
       // Halted, or not known not to be: nothing is said now, and the next sweep asks again.
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
-      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      // Once for each run of failures, and once more when that run comes to drop work: an owner told its
+      // runs couldn't start still hears that what one was working on won't be tried again.
+      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${dropped ? "#unfinished" : ""}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
       await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f, lang));
       told.push({ tenant, schedule: s.id });
     }
