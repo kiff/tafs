@@ -6,6 +6,7 @@ import { doorView, offered } from "../src/cloud/doors/doors.js";
 import { APPS } from "../src/cloud/doors/apps.js";
 import { eventsOf } from "../src/cloud/calendar.js";
 import { trialView, withLine, type Taf } from "../src/cloud/handler.js";
+import { coachConnect, TOOLS } from "../src/cloud/coach.js";
 import { en } from "../src/cloud/words/en.js";
 import { requestOf, summaryOf, timeIn } from "../src/cloud/work.js";
 import type { Run } from "../src/cloud/agents.js";
@@ -171,5 +172,14 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     // A card's steps line.
     expect(withLine({ type: "steps", steps: [{ label: "Connect Stripe", status: "done" }, { label: "Draft its Card", status: "active" }] }, "fr")).toMatchObject({ line: "Étape 2 sur 2 · Draft its Card" });
     expect(withLine({ type: "steps", steps: [{ label: "A", status: "done" }] }, "it")).toMatchObject({ line: "Fatto · 1 di 1" });
+  });
+
+  it("lists Coach's tools in the language when the phone connects them, the signed body the same in every language", () => {
+    const two = TOOLS.filter((t) => t.name === "tafs_state" || t.name === "taf_dial");
+    const de = coachConnect(two, "https://tafs.test/v1/mcp", ["taf_dial"], "de");
+    const en = coachConnect(two, "https://tafs.test/v1/mcp", ["taf_dial"]);
+    expect(de.body).toEqual(en.body);
+    expect(de.lines).toEqual(["Deine tafs, ihre Versionen und ihre Läufe sehen", "Eine Änderung an einem taf entwerfen · ersetzt die frühere Verbindung"]);
+    expect(en.lines).toEqual(["See your tafs, their versions and their runs", "Draft a change to a taf · replaces the earlier connection"]);
   });
 });

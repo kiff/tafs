@@ -370,6 +370,20 @@ export const en = {
   steps_done: (n: number) => `Done · ${n} of ${n}`,
   steps_at: (i: number, n: number, label: string) => `Step ${i} of ${n}${label ? ` · ${label}` : ""}`,
   cal_folded: (words: string, n: number, first: string, last: string) => `${words}: ${n} times from ${first} to ${last}`,
+  // Coach's own tools, as the phone lists them when it connects them (coach.ts coachConnect).
+  ct_tafs_state: "See your tafs, their versions and their runs",
+  ct_taf_run: "Read one of a taf's runs",
+  ct_taf_check: "Check what's wrong with a taf",
+  ct_taf_task: "Give a taf a task or a message",
+  ct_run_stop: "Stop a taf's run",
+  ct_taf_pause: "Pause or resume a taf's schedule",
+  ct_taf_results: "Set where a taf's results go",
+  ct_taf_dial: "Draft a change to a taf",
+  ct_version_try: "Try a version of a taf, sending nothing",
+  ct_version_install: "Install a version of a taf",
+  ct_app_look: "See the app on your phone while it drives",
+  ct_app_act: "Tap, type and scroll in the app on your phone while it drives",
+  ct_replaces: "replaces the earlier connection",
 };
 
 export type Words = typeof en;
