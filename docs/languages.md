@@ -94,6 +94,10 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | Add credits | Credits hinzufügen | Ajouter des crédits | Añadir créditos | Aggiungi crediti | Adicionar créditos | Credits toevoegen | Dodaj kredyty |
 | Raise the limit | Limit erhöhen | Relever le plafond | Subir el límite | Aumenta il limite | Aumentar o limite | Limiet verhogen | Podnieś limit |
 | Ask an admin | Admin fragen | Demander à un administrateur | Pedir a un administrador | Chiedi a un amministratore | Pedir a um administrador | Een beheerder vragen | Poproś administratora |
+| admin (a role on the account) | Admin | administrateur | administrador | amministratore | administrador | beheerder | administrator |
+| editor (a role on the account) | Bearbeiter | éditeur | editor | editor | editor | bewerker | edytor |
+| approver (a role on the account) | Genehmiger | approbateur | aprobador | approvatore | aprovador | goedkeurder | zatwierdzający |
+| viewer (a role on the account) | Betrachter | lecteur | lector | visualizzatore | leitor | kijker | przeglądający |
 | version | Version | version | versión | versione | versão | versie | wersja |
 | Make it live | Live schalten | Mettre en service | Activar | Rendi attiva | Pôr em produção | Live zetten | Uruchom na żywo |
 | Try it | Ausprobieren | Essayer | Probar | Prova | Experimentar | Uitproberen | Wypróbuj |
