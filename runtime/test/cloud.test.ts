@@ -3272,7 +3272,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is Rae stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,connect-an-app@5,draft-the-card@5,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@5,draft-the-card@5,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "resume it" } });
@@ -3457,7 +3457,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const r = await call(w, "POST", "/v1/setup/check-call", { token: "ana", body: { proposal: "p_1" } });
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ setup: COACH, new_session: true });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,did-this-happen@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,did-this-happen@1`);
     const input = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
     expect(input.startsWith("[did this happen p_1]\n")).toBe(true);
     expect(input).toContain("KIFF's record of the call, as data:\n- The call: Refund a payment, at Stripe, 400.00 EUR, on payment pi_1, sent today 10:14.");

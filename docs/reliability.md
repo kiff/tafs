@@ -190,6 +190,13 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
   many of its requests need the owner. The list needs no read per taf.
 - **On the taf's page:** `GET /v1/tafs/{id}/work` gives the counts per state, the next run, and
   the recent requests, newest first, each with its `line` and its deliveries.
+- **A run is done only when it answered.** kiff/agents ends a run that hit its turn cap or its
+  cost cap as COMPLETED, with its `stop` (`turn_cap`, `cost_cap`): it was cut off, so its state is
+  `stopped`, and its line says which limit stopped it ("Stopped at 14:20: it reached its limit
+  of turns for one run"), on the request page too. Any other stop that isn't `answered`, one
+  tafs doesn't know included, reads "Stopped at 14:20", never "Done". Where the list's line
+  for the taf shows its last run (a taf with no next run and a schedule), it says the same; a
+  taf with a next run shows that, and one that works from its chat says so, as before.
 - **A firing its schedule skipped** is in `skipped` on the same view: up to 5 from the last 7
   days, newest first, each `{due, why: missed | busy, words}` ("Skipped the 09:00 run: the last
   one was still working"). The schedule skips a firing that comes more than an hour late, or one

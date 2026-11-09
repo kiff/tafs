@@ -94,6 +94,10 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | Add credits | Credits hinzufügen | Ajouter des crédits | Añadir créditos | Aggiungi crediti | Adicionar créditos | Credits toevoegen | Dodaj kredyty |
 | Raise the limit | Limit erhöhen | Relever le plafond | Subir el límite | Aumenta il limite | Aumentar o limite | Limiet verhogen | Podnieś limit |
 | Ask an admin | Admin fragen | Demander à un administrateur | Pedir a un administrador | Chiedi a un amministratore | Pedir a um administrador | Een beheerder vragen | Poproś administratora |
+| admin (a role on the account) | Admin | administrateur | administrador | amministratore | administrador | beheerder | administrator |
+| editor (a role on the account) | Bearbeiter | éditeur | editor | editor | editor | bewerker | edytor |
+| approver (a role on the account) | Genehmiger | approbateur | aprobador | approvatore | aprovador | goedkeurder | zatwierdzający |
+| viewer (a role on the account) | Betrachter | lecteur | lector | visualizzatore | leitor | kijker | przeglądający |
 | version | Version | version | versión | versione | versão | versie | wersja |
 | Make it live | Live schalten | Mettre en service | Activar | Rendi attiva | Pôr em produção | Live zetten | Uruchom na żywo |
 | Try it | Ausprobieren | Essayer | Probar | Prova | Experimentar | Uitproberen | Wypróbuj |
@@ -147,5 +151,11 @@ that tell a message's language, in tafs and kiff/agents together.
   version's note, and the titles kept in the account's event log, are written once when they happen
   and stay as written. What tafs cloud keeps of a language: each phone's, with the phone, and the
   account's, from Coach chats, for a quarter.
+- **Held to this glossary:** a test reads the Terms table above, as it is, and fails when a catalog line whose
+  English has a term doesn't have that language's word for it (`runtime/test/words.test.ts`). A label (a
+  capitalized term) matches as written, a noun in any case, the longest term first; the other grammatical
+  forms a word takes are listed in the test, one by one. `docs/glossary.sha256` is the digest of the table's
+  rows: KIFF keeps a copy of the glossary and checks it against the digest, so a change here fails there until
+  its copy follows. Change the table and the digest together.
 - **KIFF:** one catalog per language (`internal/words`), the same test.
 - **Android:** `strings.xml` with a `values-xx` set per language; **iPhone and iPad:** a String Catalog.
