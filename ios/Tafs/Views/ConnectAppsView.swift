@@ -163,7 +163,7 @@ enum ConnectionGroupWords {
     // heading, cleared at once.
     static let fromRemoved = "From removed tafs"
     static let clearRemoved = "Clear these connections"
-    static func clearTitle(_ n: Int) -> String { n == 1 ? "Clear 1 connection from removed tafs?" : "Clear \(n) connections from removed tafs?" }
+    static func clearTitle(_ n: Int) -> String { Words.Connect.ClearRemoved.title(count: n) }
     static let clearBody = "Each is signed out at its vendor. One another taf's Card uses is kept."
     static let clear = "Clear"
 
