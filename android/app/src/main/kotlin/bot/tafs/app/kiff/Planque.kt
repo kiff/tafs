@@ -127,6 +127,8 @@ data class Grant(
   @SerialName("vendor") val vendorName: String? = null,
   /** The catalog entry it was connected from, such as `connector:composio:slackbot`. */
   val entry: String? = null,
+  /** The name of the taf it was made for, as planque keeps it: what a removed taf's connection is still called. */
+  @SerialName("agent_name") val agentName: String? = null,
   /** The connection's provider, as planque names it; a bot door lists the connections whose provider it names. */
   val provider: String? = null,
   /** The bot a bot connection's token is, once given, as planque shows it: its @username names it. */

@@ -43,6 +43,7 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.ConnectApps
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -97,17 +98,22 @@ fun connectionsOf(state: AppState, app: ConnectApps.App): List<bot.tafs.app.kiff
 /** An app's connections by taf: one section per taf, its name as the heading, with its connections in the order planque lists them. */
 data class TafConnections(val taf: String, val grants: List<bot.tafs.app.kiff.Grant>)
 
+/** An app's connections as the sheet shows them: [sections] by taf, then [removed] tafs', then [others]. */
+data class ByTaf(val sections: List<TafConnections>, val removed: List<bot.tafs.app.kiff.Grant>, val others: List<bot.tafs.app.kiff.Grant>)
+
 /**
- * [connections] in the order the sheet shows them: the tafs with one that needs the person first, then the rest by name, and those
- * whose taf the app can't name apart, for the section shown last. Only the order is the app's; every word on a row is planque's or
- * KIFF's. A taf missing from this person's list isn't proof it was removed (one they don't see, an agent that isn't a taf), so
- * nothing here says so, and nothing acts on them all at once.
+ * [connections] in the order the sheet shows them: the tafs with one that needs the person first, then the rest by name; then the
+ * removed tafs', only those whose agent tafs cloud names as removed (`removed_tafs`); then the rest, whose taf the app can't name.
+ * A taf missing from this person's list isn't proof it was removed (one they don't see, an agent that isn't a taf), so only the
+ * server's word puts a connection under removed. Only the order is the app's; every word on a row is planque's or KIFF's.
  */
-fun byTaf(state: AppState, connections: List<bot.tafs.app.kiff.Grant>): Pair<List<TafConnections>, List<bot.tafs.app.kiff.Grant>> {
-  val (live, others) = connections.partition { ConnectAppsWords.tafOf(state, it) != null }
+fun byTaf(state: AppState, connections: List<bot.tafs.app.kiff.Grant>): ByTaf {
+  val (live, rest) = connections.partition { ConnectAppsWords.tafOf(state, it) != null }
+  val removedAgents = state.connectApps?.removedTafs.orEmpty().map { it.agent }.toSet()
+  val (removed, others) = rest.partition { it.request.agent in removedAgents }
   val sections = live.groupBy { ConnectAppsWords.tafOf(state, it)!! }.map { (taf, grants) -> TafConnections(taf, grants) }
     .sortedWith(compareBy<TafConnections> { s -> if (s.grants.any { ConnectAppsWords.needsAttention(state, it) }) 0 else 1 }.thenBy { it.taf.lowercase() })
-  return sections to others
+  return ByTaf(sections, removed, others)
 }
 
 /**
@@ -128,6 +134,8 @@ fun ConnectAppsSheet(
   onChooseActions: (ConnectApps.App) -> Unit = { onAskCoach() },
   /** Disconnects one of a connected app's connections (signed, with the owner's fingerprint); null for someone who can't. */
   onDisconnect: ((String) -> Unit)? = null,
+  /** Clears the connections of tafs removed since, at once (one fingerprint); null for someone who can't. */
+  onClearRemoved: ((List<String>) -> Unit)? = null,
   /** Gives a key-based connection a new key, or signs a sign-in one in again (gap 13); null for someone who can't. */
   onReplaceKey: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
   onSignInAgain: ((bot.tafs.app.kiff.Grant) -> Unit)? = null,
@@ -142,6 +150,7 @@ fun ConnectAppsSheet(
   var managing by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
   var confirmingDisconnect by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
   var confirmingCancel by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
+  var confirmingClear by androidx.compose.runtime.remember { mutableStateOf<List<String>?>(null) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
     { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
@@ -183,7 +192,7 @@ fun ConnectAppsSheet(
       )
     }
     managing?.let { app ->
-      val (sections, others) = byTaf(state, connectionsOf(state, app))
+      val (sections, removed, others) = byTaf(state, connectionsOf(state, app))
       DriveAlert(
         onDismissRequest = { managing = null },
         containerColor = Theme.background,
@@ -192,7 +201,7 @@ fun ConnectAppsSheet(
           Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
             // Each taf's name over its connections, so no row repeats it; then those whose taf the app can't name, under words that
-            // claim nothing about it. The same row for both, and nothing that acts on several at once.
+            // claim nothing about it, with the same row.
             val groups = sections.map { it.taf to it.grants } + listOfNotNull(others.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.OTHER_CONNECTIONS to it })
             groups.forEach { (heading, grants) ->
             Text(heading, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
@@ -225,6 +234,29 @@ fun ConnectAppsSheet(
               }
             }
             }
+            // Removed tafs' connections, as tafs cloud names them: no sign-in again and no Disconnect each, one action that clears them.
+            if (removed.isNotEmpty()) {
+              // What tafs cloud says of each: listed with the tafs whose Cards still use it, or not listed (its reads failed, or no
+              // signed read), and then nothing is cleared.
+              val listed = state.connectApps?.removedTafs.orEmpty().flatMap { it.grants.orEmpty() }.associateBy { it.grant }
+              val clearable = removed.filter { listed[it.id]?.usedBy?.isEmpty() == true }.map { it.id }
+              Text(bot.tafs.app.model.ConnectionWords.FROM_REMOVED, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
+              removed.forEach { g ->
+                Column {
+                  Text(ConnectAppsWords.rowTitle(app.title, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
+                  // The removed taf it was made for, by the name planque keeps.
+                  g.agentName?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+                  g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+                  listed[g.id]?.usedBy?.let { users -> bot.tafs.app.model.ConnectionWords.usedBy(users.map { it.name }) }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+                }
+              }
+              if (onClearRemoved != null && clearable.isNotEmpty()) Text(
+                if (state.clearingRemoved) "Clearing…" else bot.tafs.app.model.ConnectionWords.CLEAR_REMOVED,
+                style = scaled(15, FontWeight.SemiBold, if (state.clearingRemoved) Theme.dim else Theme.no),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = !state.clearingRemoved) { confirmingClear = clearable }.padding(top = 10.dp),
+              )
+            }
+            state.clearNote?.let { Text(it, style = scaled(13, color = Theme.ink), modifier = Modifier.semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite }) }
           }
         },
         confirmButton = {},
@@ -258,6 +290,19 @@ fun ConnectAppsSheet(
           androidx.compose.material3.TextButton({ confirmingCancel = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(bot.tafs.app.model.ConnectionWords.CANCEL_IT, color = Theme.no) }
         },
         dismissButton = { androidx.compose.material3.TextButton({ confirmingCancel = null }) { Text(bot.tafs.app.model.ConnectionWords.KEEP_WAITING, color = Theme.soft) } },
+      )
+    }
+    // Clearing removed tafs' connections asks first, then one fingerprint for all of them.
+    confirmingClear?.let { ids ->
+      DriveAlert(
+        onDismissRequest = { confirmingClear = null },
+        containerColor = Theme.panel,
+        title = { Text(bot.tafs.app.model.ConnectionWords.clearTitle(ids.size)) },
+        text = { Text(bot.tafs.app.model.ConnectionWords.CLEAR_BODY) },
+        confirmButton = {
+          androidx.compose.material3.TextButton({ confirmingClear = null; onClearRemoved?.invoke(ids) }, modifier = Modifier.confirms()) { Text(bot.tafs.app.model.ConnectionWords.CLEAR, color = Theme.no) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton({ confirmingClear = null }) { Text("Cancel", color = Theme.soft) } },
       )
     }
     // Which taf: asked over the list, wherever Connect was tapped, before anything starts.

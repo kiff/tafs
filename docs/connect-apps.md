@@ -128,8 +128,18 @@ after.
 **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing
 that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that
 isn't a taf, so nothing there says it was removed (`byTaf` on Android; `AppModel.connectionGroups` and
-`AppConnectionsView` on iPhone and iPad). Clearing removed tafs'
-connections at once waits for tafs cloud to mark a grant whose taf it actually removed.
+`AppConnectionsView` on iPhone and iPad).
+
+**From removed tafs** (Android; iPhone follows) comes between the tafs and Other connections: the connections whose
+`request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (planque's
+`agent_name`). The phone sends its signed grants read with the read (`Planque-Device-Signature`, as Setup does), so
+tafs cloud lists each removed taf's live connections with `used_by`, the live tafs whose Card in force still uses one.
+A row says so (“Kept: Chargebacks's Card uses it”). **Clear these connections** shows only when at least one listed
+connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2 connections from removed tafs?”),
+then one fingerprint, and the device key signs each disconnect, as above. The line under them says how it went
+(“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). Without tafs cloud's list (no `grants`: no signed read, or
+its reads of planque or KIFF's Cards failed) the section shows with no Clear. Which to keep is tafs cloud's word, never
+the phone's (`AppModel.clearRemovedConnections`, `byTaf`).
 
 Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own
 confirmation, after its Cards are revoked and before tafs cloud removes the rest. Its result says the connections are

@@ -29,10 +29,42 @@ object ConnectionWords {
   const val KEEP_WAITING = "Keep waiting"
 
   /**
-   * Connect apps by taf (the owner's ask): the connections whose taf the app can't name, last. That may be a removed taf's, a
-   * taf this person doesn't see, or an agent that isn't a taf, so the words claim none of them.
+   * Connect apps by taf (the owner's ask): the connections whose taf the app can't name and tafs cloud doesn't name as removed, last.
+   * That may be a taf this person doesn't see, an agent that isn't a taf, or a taf removed before tafs cloud named them, so the words
+   * claim none of them.
    */
   const val OTHER_CONNECTIONS = "Other connections"
+
+  // The connections of tafs tafs cloud names as removed (`removed_tafs`), under their own heading, cleared at once.
+  const val FROM_REMOVED = "From removed tafs"
+  const val CLEAR_REMOVED = "Clear these connections"
+  fun clearTitle(n: Int): String = if (n == 1) "Clear 1 connection from removed tafs?" else "Clear $n connections from removed tafs?"
+  const val CLEAR_BODY = "Each is signed out at its vendor. One another taf's Card uses is kept."
+  const val CLEAR = "Clear"
+
+  /**
+   * How clearing went: "Cleared 2. Kept 1 for Chargebacks, whose Card uses it.", and what couldn't be, to try again. [kept]
+   * connections were kept for [keptFor], the tafs whose Cards use them, by tafs cloud's names.
+   */
+  fun cleared(done: Int, kept: Int, keptFor: List<String>, left: Int): String {
+    val names = keptFor.filter { it.isNotBlank() }.distinct()
+    return listOfNotNull(
+      "Cleared $done.".takeIf { done > 0 },
+      keptLine(kept, names).takeIf { kept > 0 },
+      "$left couldn't be cleared. Try again.".takeIf { left > 0 },
+    ).joinToString(" ")
+  }
+
+  /** A connection a live taf's Card still uses, as tafs cloud says (`used_by`): kept, and for whom. */
+  fun keptLine(kept: Int, names: List<String>): String {
+    val who = when (names.size) { 0 -> "another taf"; 1 -> names[0]; else -> names.dropLast(1).joinToString(", ") + " and " + names.last() }
+    return "Kept $kept for $who, whose Card${if (names.size > 1) "s use" else " uses"} ${if (kept == 1) "it" else "them"}."
+  }
+
+  /** Under a removed taf's connection that Clear keeps: the tafs whose Cards still use it. */
+  fun usedBy(names: List<String>): String? = names.filter { it.isNotBlank() }.distinct().takeIf { it.isNotEmpty() }?.let { n ->
+    "Kept: " + (if (n.size == 1) n[0] else n.dropLast(1).joinToString(", ") + " and " + n.last()) + (if (n.size == 1) "'s Card uses it" else "'s Cards use it")
+  }
 
   const val REPLACE_KEY = "Replace the key"
   const val SIGN_IN_AGAIN = "Sign in again"

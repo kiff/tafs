@@ -529,14 +529,18 @@ class TafsCloud(
   /** Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval. */
   suspend fun startConnect(entry: String, taf: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", mapOf("taf" to taf))
 
-  /** Connect apps: the catalog, filtered by [q] when given. */
-  suspend fun connectApps(q: String? = null, provider: String? = null, cursor: String? = null): ConnectApps {
+  /**
+   * Connect apps: the catalog, filtered by [q] when given. With [proof], this phone's signed grants read, tafs cloud also lists each
+   * removed taf's connections with the live tafs whose Cards still use them (`removed_tafs[].grants`).
+   */
+  suspend fun connectApps(q: String? = null, provider: String? = null, cursor: String? = null, proof: String? = null): ConnectApps {
     val query = listOfNotNull(
       q?.takeIf { it.isNotBlank() }?.let { "q=" + escaped(it) },
       provider?.let { "provider=" + escaped(it) },
       cursor?.let { "cursor=" + escaped(it) },
     )
-    return get("/v1/connect/apps" + if (query.isEmpty()) "" else "?" + query.joinToString("&"))
+    val path = "/v1/connect/apps" + if (query.isEmpty()) "" else "?" + query.joinToString("&")
+    return KiffClient.json.decodeFromString(String(send("GET", path, extra = proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())))
   }
 
   /**
