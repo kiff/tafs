@@ -53,7 +53,7 @@ HOW IT WORKS
 • Coach: say the job in your own words. Coach connects your tools, drafts the taf and its Card, and you confirm.
 • Needs you: when a taf wants to go past its Card, the call is held. Approve it once or refuse it, with your fingerprint or face unlock.
 • Chat: ask a taf what it did, or tell it what to do differently, and watch its work as it goes.
-• Record: everything your tafs did, newest first, each with its receipt.
+• Record: everything your tafs did, newest first, with a receipt for each action that went through.
 • Doors: let customers or colleagues reach a taf by email or chat.
 
 YOUR DATA
@@ -66,7 +66,7 @@ Plans: Solo, with {SOLO_MONTHLY_CREDITS} credits a month, and packs of credits t
 
 **Title:** tafs: KI-Agenten für Firmen
 
-**Short description:** Kritische Arbeit per KI, in deiner Hand: transparent, offener Code, privat.
+**Short description:** Kritische Arbeit per KI, unter Kontrolle: offener Code, Datenschutz zuerst.
 
 **Full description:**
 
@@ -92,7 +92,7 @@ SO FUNKTIONIERT ES
 • Coach: Beschreib die Aufgabe in deinen eigenen Worten. Coach verbindet deine Tools, entwirft den taf und seine Card, und du bestätigst.
 • Braucht dich: Wenn ein taf über seine Card hinaus will, wird der Aufruf zurückgehalten. Einmal genehmigen oder ablehnen, mit Fingerabdruck oder Gesichtsentsperrung.
 • Chat: Frag einen taf, was er getan hat, oder sag ihm, was er anders machen soll, und verfolge seine Arbeit live.
-• Protokoll: alles, was deine tafs getan haben, das Neueste zuerst, jeweils mit Beleg.
+• Protokoll: alles, was deine tafs getan haben, das Neueste zuerst, mit einem Beleg für jede Aktion, die durchging.
 • Türen: Lass Kunden oder Kollegen einen taf per E-Mail oder Chat erreichen.
 
 DEINE DATEN
@@ -105,7 +105,7 @@ Tarife: Solo mit {SOLO_MONTHLY_CREDITS} Credits im Monat und Credit-Pakete, die 
 
 **Title:** tafs : agents IA entreprises
 
-**Short description:** Travail critique par IA, sous votre contrôle : transparent, code ouvert, privé.
+**Short description:** Travail critique par IA, sous contrôle : code ouvert, confidentialité d'abord.
 
 **Full description:**
 
@@ -131,7 +131,7 @@ COMMENT ÇA MARCHE
 • Coach : décrivez la tâche avec vos propres mots. Coach connecte vos outils, prépare le taf et sa Card, et vous confirmez.
 • Vous attend : quand un taf veut dépasser sa Card, l'appel est retenu. Approuvez-le une fois ou refusez-le, avec votre empreinte ou le déverrouillage par le visage.
 • Chat : demandez à un taf ce qu'il a fait, ou dites-lui quoi faire autrement, et suivez son travail en direct.
-• Registre : tout ce que vos tafs ont fait, du plus récent au plus ancien, chacun avec son reçu.
+• Registre : tout ce que vos tafs ont fait, du plus récent au plus ancien, avec un reçu pour chaque action passée.
 • Portes : laissez vos clients ou vos collègues joindre un taf par e-mail ou par chat.
 
 VOS DONNÉES
@@ -144,7 +144,7 @@ Forfaits : Solo, avec {SOLO_MONTHLY_CREDITS} crédits par mois, et des packs de 
 
 **Title:** tafs: agentes IA para empresas
 
-**Short description:** Trabajo crítico por IA, bajo tu control: transparente, código abierto, privado.
+**Short description:** Trabajo crítico por IA, bajo tu control: código abierto, privacidad primero.
 
 **Full description:**
 
@@ -170,7 +170,7 @@ CÓMO FUNCIONA
 • Coach: di la tarea con tus palabras. Coach conecta tus herramientas, prepara el taf y su Card, y tú confirmas.
 • Te necesita: cuando un taf quiere ir más allá de su Card, la llamada queda retenida. Apruébala una vez o recházala, con tu huella o el desbloqueo facial.
 • Chat: pregunta a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
-• Registro: todo lo que hicieron tus tafs, lo más reciente primero, cada cosa con su recibo.
+• Registro: todo lo que hicieron tus tafs, lo más reciente primero, con un recibo por cada acción que salió adelante.
 • Puertas: deja que clientes o compañeros contacten con un taf por correo o chat.
 
 TUS DATOS
@@ -183,7 +183,7 @@ Planes: Solo, con {SOLO_MONTHLY_CREDITS} créditos al mes, y paquetes de crédit
 
 **Title:** tafs: agenti IA per aziende
 
-**Short description:** Lavoro critico all'IA, controllato da te: trasparente, codice aperto, privato.
+**Short description:** Lavoro critico all'IA, sotto controllo: codice aperto, privacy al primo posto.
 
 **Full description:**
 
@@ -209,7 +209,7 @@ COME FUNZIONA
 • Coach: descrivi il lavoro con parole tue. Coach collega i tuoi strumenti, prepara il taf e la sua Card, e tu confermi.
 • Ti aspetta: quando un taf vuole andare oltre la sua Card, la chiamata viene trattenuta. Approvala una volta o rifiutala, con l'impronta o lo sblocco con il volto.
 • Chat: chiedi a un taf cosa ha fatto, o digli cosa fare in modo diverso, e segui il suo lavoro mentre procede.
-• Registro: tutto ciò che hanno fatto i tuoi tafs, dal più recente, ciascuno con la sua ricevuta.
+• Registro: tutto ciò che hanno fatto i tuoi tafs, dal più recente, con una ricevuta per ogni azione andata a buon fine.
 • Porte: fai raggiungere un taf da clienti o colleghi via email o chat.
 
 I TUOI DATI
@@ -224,7 +224,7 @@ European Portuguese (`pt-PT`), as [languages.md](languages.md) proposes, address
 
 **Title:** tafs: agentes IA para empresas
 
-**Short description:** Trabalho crítico da IA sob o seu controlo: transparente, código aberto, privado.
+**Short description:** Trabalho crítico por IA, sob controlo: código aberto, privacidade primeiro.
 
 **Full description:**
 
@@ -250,7 +250,7 @@ COMO FUNCIONA
 • Coach: descreva a tarefa por palavras suas. O Coach liga as suas ferramentas, prepara o taf e a sua Card, e você confirma.
 • Precisa de si: quando um taf quer ir além da sua Card, a chamada fica retida. Aprove-a uma vez ou recuse-a, com a sua impressão digital ou o desbloqueio facial.
 • Chat: pergunte a um taf o que fez, ou diga-lhe o que fazer de outra forma, e acompanhe o trabalho enquanto decorre.
-• Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, cada um com o seu recibo.
+• Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, com um recibo por cada ação que avançou.
 • Portas: deixe clientes ou colegas contactarem um taf por e-mail ou chat.
 
 OS SEUS DADOS
@@ -263,7 +263,7 @@ Planos: Solo, com {SOLO_MONTHLY_CREDITS} créditos por mês, e pacotes de crédi
 
 **Title:** tafs: AI-agents voor bedrijven
 
-**Short description:** Kritiek werk door AI, onder jouw controle: transparant, open code, privé.
+**Short description:** Kritiek werk door AI, onder controle: transparant, open code, privacy voorop.
 
 **Full description:**
 
@@ -289,7 +289,7 @@ ZO WERKT HET
 • Coach: zeg de taak in je eigen woorden. Coach koppelt je tools, maakt een opzet van de taf en zijn Card, en jij bevestigt.
 • Wacht op jou: als een taf buiten zijn Card wil gaan, wordt de aanroep vastgehouden. Keur hem eenmalig goed of weiger hem, met je vingerafdruk of gezichtsontgrendeling.
 • Chat: vraag een taf wat hij gedaan heeft, of zeg hem wat hij anders moet doen, en volg zijn werk terwijl het gebeurt.
-• Logboek: alles wat je tafs gedaan hebben, het nieuwste eerst, elk met zijn bewijs.
+• Logboek: alles wat je tafs gedaan hebben, het nieuwste eerst, met een bewijs voor elke actie die doorging.
 • Deuren: laat klanten of collega's een taf bereiken via e-mail of chat.
 
 JE GEGEVENS
@@ -328,7 +328,7 @@ JAK TO DZIAŁA
 • Coach: opisz zadanie własnymi słowami. Coach łączy Twoje narzędzia, przygotowuje tafa i jego Card, a Ty zatwierdzasz.
 • Czeka na Ciebie: gdy taf chce wyjść poza swoją Card, wywołanie trafia do oczekujących. Zatwierdź je raz albo odrzuć, odciskiem palca lub odblokowaniem twarzą.
 • Czat: zapytaj tafa, co zrobił, albo powiedz mu, co ma zrobić inaczej, i śledź jego pracę na bieżąco.
-• Rejestr: wszystko, co zrobiły Twoje tafs, od najnowszych, każde z potwierdzeniem.
+• Rejestr: wszystko, co zrobiły Twoje tafs, od najnowszych, z potwierdzeniem dla każdej akcji, która przeszła.
 • Drzwi: pozwól klientom lub współpracownikom kontaktować się z tafem przez e-mail lub czat.
 
 TWOJE DANE
