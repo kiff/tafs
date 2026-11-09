@@ -3829,6 +3829,7 @@ final class AppModel: ObservableObject {
         }
         chatStates[tafID, default: ChatState()].ended = nil
         chatStates[tafID]?.wentThrough = []
+        chatStates[tafID]?.failedWhy = nil
         chatStates[tafID]?.capped = nil
         do {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
@@ -4036,6 +4037,9 @@ final class AppModel: ObservableObject {
         var ended: RunEnd?
         /// What the failed run did before it stopped (kiff/agents#249), said with Retry.
         var wentThrough: [TafsCloud.DoneCall] = []
+        /// Why the failed run stopped, in tafs cloud's words, when its `end` sends them
+        /// (`ai_unavailable`): said as they are, with Retry.
+        var failedWhy: String?
         /// The run at work, as tafs cloud says, for writing to it.
         var workingRun: String?
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says
@@ -4108,6 +4112,7 @@ final class AppModel: ObservableObject {
                                   sent: String? = nil) async {
         var ended: String?
         var didBefore: [TafsCloud.DoneCall] = []
+        var whyFailed: String?
         do {
             for try await e in events {
                 guard gen == accountGeneration else { return }
@@ -4157,9 +4162,10 @@ final class AppModel: ObservableObject {
                             self.chatStates[tafID]?.heldKeys[exception] = Self.heldKey(call)
                         }
                     }
-                case .end(let status, let stop, let done):
+                case .end(let status, let stop, let done, _, let words):
                     ended = status
                     didBefore = done
+                    whyFailed = words
                     chatStates[tafID]?.live?.activity = nil
                     if Self.capStops.contains(stop) { chatStates[tafID]?.capped = stop }
                 case .component, .broken:
@@ -4182,6 +4188,7 @@ final class AppModel: ObservableObject {
         if ended == "ERROR" {
             chatStates[tafID]?.ended = .failed(retry: text)
             chatStates[tafID]?.wentThrough = didBefore
+            chatStates[tafID]?.failedWhy = whyFailed
         }
         if ended == "CANCELLED" { chatStates[tafID]?.ended = .stopped }
         // What the run didn't read, and what waited for it, is tafs cloud's to send now
@@ -4368,15 +4375,20 @@ final class AppModel: ObservableObject {
         Self.failedWords(taf: taf, done: chatState(tafID).wentThrough.map { c in
             let line = c.invocation.flatMap(recordEntry(forCall:))
             return (toolTitle(c.tool) ?? KIFFMapping.toolWords(c.tool), c.resource, line?.amountText)
-        })
+        }, why: chatState(tafID).failedWhy)
     }
 
-    nonisolated static func failedWords(taf: String, done: [(words: String, resource: String?, amount: String?)]) -> String {
-        guard !done.isEmpty else { return "\(taf) stopped part-way, before it finished." }
+    /// `why`: tafs cloud's words for why it stopped, said as they are; what went through
+    /// still follows, from the run's own record.
+    nonisolated static func failedWords(taf: String, done: [(words: String, resource: String?, amount: String?)], why: String? = nil) -> String {
         let calls = done.map { c in
             let on = c.resource.map { "\(c.words) on \($0)" } ?? c.words
             return c.amount.map { "\(on), \($0)" } ?? on
         }
+        if let why {
+            return done.isEmpty ? why : "\(why.trimmingCharacters(in: .whitespacesAndNewlines)) This went through: \(calls.joined(separator: "; "))."
+        }
+        guard !done.isEmpty else { return "\(taf) stopped part-way, before it finished." }
         let these = calls.count == 1 ? "this went through" : "these went through"
         return "\(taf) stopped part-way, after \(these): \(calls.joined(separator: "; "))."
     }
@@ -6546,7 +6558,7 @@ final class AppModel: ObservableObject {
                     guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                     setupLive?.newPart()
                     setupLiveBefore = Set(setupThread.items.map(\.id))
-                case .end(let status, _, _):
+                case .end(let status, _, _, _, _):
                     ended = status
                 case .held:
                     setupLive?.ended(nil, .held)

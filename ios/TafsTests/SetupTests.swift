@@ -536,6 +536,10 @@ final class SetupTests: XCTestCase {
         // A failed run says what went through before it stopped (kiff/agents#249).
         XCTAssertEqual(e("end", #"{"status":"ERROR","stop":"","done":[{"tool":"create_refund","resource":"ch_1","invocation":"tc-1"},{"tool":"send_email"},{}]}"#),
                        .end(status: "ERROR", stop: "", done: [.init(tool: "create_refund", resource: "ch_1", invocation: "tc-1"), .init(tool: "send_email", resource: nil)]))
+        // A run that failed for a reason tafs cloud names carries its code and words; blank ones are none.
+        XCTAssertEqual(e("end", #"{"status":"ERROR","stop":"error","done":[],"code":"ai_unavailable","words":"Our AI provider isn't serving us right now."}"#),
+                       .end(status: "ERROR", stop: "error", done: [], code: "ai_unavailable", words: "Our AI provider isn't serving us right now."))
+        XCTAssertEqual(e("end", #"{"status":"ERROR","stop":"error","code":" ","words":""}"#), .end(status: "ERROR", stop: "error"))
         XCTAssertEqual(e("error", #"{"error":"x"}"#), .broken)
         XCTAssertNil(e("delta", #"{"kind":"tool_result"}"#))
         XCTAssertEqual(AppModel.activityWords("kiff_draft"), "Preparing the Card…")
