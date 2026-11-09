@@ -482,10 +482,13 @@ export interface Schedule {
   /** A one-off follow-up the taf set itself (its id starts "fu-"): once, within seven days, at most three waiting. */
   follow_up?: boolean;
   /**
-   * Its firings in a row whose runs failed before doing any work (kiff/agents#363): since the first's due
-   * time, how many, and the last one's run. kiff/agents keeps it, and ends it once a run works.
+   * Its firings in a row whose runs failed before doing any work (kiff/agents#363), whose check couldn't
+   * read the app, or whose run stopped partway with what it was handed dropped: since the first's due
+   * time, how many, and the last one's run and outcome (`failed_unworked`, `failed_check`,
+   * `failed_unfinished`; absent from an older kiff/agents). kiff/agents keeps it, and ends it once a run
+   * works.
    */
-  failing?: { since: string; firings: number; run?: string };
+  failing?: { since: string; firings: number; run?: string; outcome?: string };
   /**
    * The last firing that started no run because the account's tafs wait for credits (kiff/agents'
    * skipped_credits): its due time and KIFF's why. Unset once one of its runs starts.

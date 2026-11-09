@@ -136,6 +136,8 @@ export const it: Words = {
   push_ended_done: "Completato. Apri la modalità Coach per leggere com'è andata.",
   failing_one: "La sua esecuzione pianificata non è potuta partire. Riprova al prossimo orario. Aprilo per vedere perché.",
   failing_many: (n) => `Le sue ultime ${n} esecuzioni pianificate non sono potute partire. Riprova a ogni orario pianificato. Aprilo per vedere perché.`,
+  failing_unfinished_one: "La sua esecuzione pianificata si è fermata a metà. Ciò su cui stava lavorando non verrà ritentato. Aprilo per vedere cosa ha fatto.",
+  failing_unfinished_many: (n) => `Le sue ultime ${n} esecuzioni pianificate non sono terminate. Ciò su cui stava lavorando l'ultima non verrà ritentato. Aprilo per vedere cosa ha fatto.`,
   failing_follow_up: "Un promemoria che si era impostato non è stato eseguito e non verrà riprovato. Aprilo per vedere perché.",
   failing_once: "La sua esecuzione pianificata unica non è potuta partire e non verrà riprovata. Aprilo per vedere perché.",
   waited_follow_up: "Un promemoria che si era impostato non è stato eseguito: i tuoi tafs aspettavano crediti. Non verrà riprovato. Aprilo per saperne di più.",

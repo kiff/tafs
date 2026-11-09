@@ -16,8 +16,9 @@ the terms below, so a word on a button is the word in a notification, an email a
 - **The binding texts stay in English:** Terms, Privacy and the DPA, until the owner says otherwise.
 - **Developers' words stay in English:** logs, and an API's `error` field. What a person reads comes in
   `words`, `line`, titles and bodies, and those are translated.
-- **Before a language reaches a store listing,** a native speaker (or the owner) checks its key screens.
-  Until then it ships behind the phone's language, with no listing.
+- **qa-build reviews each language,** every catalog and every listing, against this page's glossary. No
+  language waits for a native speaker: it ships, and fixes go forward after release. The repos are
+  public, so anyone can report a wording.
 
 ## Which language
 

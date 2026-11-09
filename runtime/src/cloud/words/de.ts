@@ -136,6 +136,8 @@ export const de: Words = {
   push_ended_done: "Erledigt. Öffne den Coach-Modus, um zu lesen, wie es lief.",
   failing_one: "Sein geplanter Lauf konnte nicht starten. Er versucht es zum nächsten Termin erneut. Öffne ihn, um zu sehen, warum.",
   failing_many: (n) => `Seine letzten ${n} geplanten Läufe konnten nicht starten. Er versucht es zu jedem geplanten Termin erneut. Öffne ihn, um zu sehen, warum.`,
+  failing_unfinished_one: "Sein geplanter Lauf hat mittendrin aufgehört. Woran er gearbeitet hat, wird nicht erneut versucht. Öffne ihn, um zu sehen, was er getan hat.",
+  failing_unfinished_many: (n) => `Seine letzten ${n} geplanten Läufe wurden nicht fertig. Woran der letzte gearbeitet hat, wird nicht erneut versucht. Öffne ihn, um zu sehen, was er getan hat.`,
   failing_follow_up: "Ein Nachfassen, das er sich selbst gesetzt hat, lief nicht und wird nicht wiederholt. Öffne ihn, um zu sehen, warum.",
   failing_once: "Sein einmaliger geplanter Lauf konnte nicht starten und wird nicht wiederholt. Öffne ihn, um zu sehen, warum.",
   waited_follow_up: "Ein Nachfassen, das er sich selbst gesetzt hat, lief nicht: deine tafs warteten auf Credits. Es wird nicht wiederholt. Öffne ihn für mehr.",
