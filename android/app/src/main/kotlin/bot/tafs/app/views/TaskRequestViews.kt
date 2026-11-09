@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
@@ -52,7 +53,7 @@ fun TaskRequests(usage: Usage, kind: String, state: AppState, actions: AccountAc
   if (state.managesBilling) {
     val open = UsageWords.openRequests(usage, managesBilling = true)
     if (open.isNotEmpty()) Panel(stroke = Theme.amber.copy(alpha = 0.5f)) {
-      Eyebrow("Requests", color = Theme.amber)
+      Eyebrow(Words.Usage.Requests.title, color = Theme.amber)
       open.forEach { r ->
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(UsageWords.requestLine(r, usage), style = scaled(15, color = Theme.ink))
@@ -64,13 +65,13 @@ fun TaskRequests(usage: Usage, kind: String, state: AppState, actions: AccountAc
             if (r.isRaise && state.balance?.balance?.raise != null && !state.balanceStale) {
               androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
                 ApprovalGate {
-                  PrimaryButton(if (state.raising) "Raising…" else UsageWords.RAISE_LIMIT, { scope.launch { actions.raiseLimit() } }, enabled = !state.raising)
+                  PrimaryButton(if (state.raising) Words.Usage.raising else UsageWords.RAISE_LIMIT, { scope.launch { actions.raiseLimit() } }, enabled = !state.raising)
                 }
               }
             } else if (!r.isRaise && state.offersPurchases && state.balance?.balance?.offers("packs") == true && product != null) {
-              PrimaryButton("Approve", { scope.launch { actions.approveRequest(product, r.id) } }, Modifier.weight(1f).confirms(), enabled = state.buying == null)
+              PrimaryButton(Words.Usage.Requests.approve, { scope.launch { actions.approveRequest(product, r.id) } }, Modifier.weight(1f).confirms(), enabled = state.buying == null)
             }
-            OutlineButton("Decline", { declining = r }, Modifier.weight(1f))
+            OutlineButton(Words.Usage.Requests.decline, { declining = r }, Modifier.weight(1f))
           }
         }
       }
@@ -80,14 +81,14 @@ fun TaskRequests(usage: Usage, kind: String, state: AppState, actions: AccountAc
     val mine = UsageWords.waiting(usage, managesBilling = false)
     if (mine != null) {
       Panel {
-        Eyebrow("Waiting")
-        Text("${UsageWords.asked(mine)} An admin answers.", style = scaled(15, color = Theme.ink))
-        OutlineButton("Withdraw", { scope.launch { actions.withdrawRequest(mine.id) } })
+        Eyebrow(Words.Usage.Requests.waiting)
+        Text(UsageWords.asked(mine) + " " + Words.Usage.Requests.adminAnswers, style = scaled(15, color = Theme.ink))
+        OutlineButton(Words.Usage.Requests.withdraw, { scope.launch { actions.withdrawRequest(mine.id) } })
         state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.no)) }
       }
     } else {
       UsageWords.lastAnswer(usage, managesBilling = false)?.let { Panel { Text(it, style = scaled(14, color = Theme.soft)) } }
-      if (waiting) PrimaryButton("Ask an admin", { asking = true }) else OutlineButton("Ask an admin", { asking = true })
+      if (waiting) PrimaryButton(Words.Usage.Requests.askAdmin, { asking = true }) else OutlineButton(Words.Usage.Requests.askAdmin, { asking = true })
     }
   }
 
@@ -109,10 +110,10 @@ private fun AskAdminSheet(usage: Usage, kind: String, state: AppState, actions: 
       Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-      SheetTitle("Ask an admin", onClose)
+      SheetTitle(Words.Usage.Requests.askAdmin, onClose)
       Text(UsageWords.askLine(kind), style = scaled(15, color = Theme.soft))
       if (forPack) Panel {
-        Eyebrow("Which pack")
+        Eyebrow(Words.Usage.Requests.whichPack)
         usage.store?.packs.orEmpty().forEach { p ->
           Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { pack = p.id }, verticalAlignment = Alignment.CenterVertically) {
             Text(p.line.ifEmpty { p.name }, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
@@ -121,11 +122,11 @@ private fun AskAdminSheet(usage: Usage, kind: String, state: AppState, actions: 
         }
       }
       Panel {
-        Eyebrow("Why (optional)")
-        Field(reason, { reason = it.take(500) }, "What the tafs need it for")
+        Eyebrow(Words.Usage.Requests.whyOptional)
+        Field(reason, { reason = it.take(500) }, Words.Usage.Requests.whyHint)
       }
       state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.no)) }
-      PrimaryButton(if (sending) "Asking…" else "Ask", {
+      PrimaryButton(if (sending) Words.Usage.Requests.asking else Words.Usage.Requests.ask, {
         if (forPack && pack == null) return@PrimaryButton
         sending = true
         scope.launch {
@@ -147,14 +148,14 @@ private fun DeclineRequestSheet(request: PackRequest, usage: Usage, state: AppSt
   var sending by remember { mutableStateOf(false) }
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      SheetTitle("Decline", onClose)
+      SheetTitle(Words.Usage.Requests.decline, onClose)
       Text(UsageWords.requestLine(request, usage), style = scaled(16, FontWeight.SemiBold, Theme.ink))
       Panel {
-        Eyebrow("Note (optional)")
-        Field(note, { note = it.take(500) }, "Why, for them")
+        Eyebrow(Words.Usage.Requests.noteOptional)
+        Field(note, { note = it.take(500) }, Words.Usage.Requests.noteHint)
       }
       state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.no)) }
-      OutlineButton(if (sending) "Declining…" else "Decline", {
+      OutlineButton(if (sending) Words.Usage.Requests.declining else Words.Usage.Requests.decline, {
         sending = true
         scope.launch {
           val done = actions.declineRequest(request.id, note)
@@ -170,6 +171,6 @@ private fun DeclineRequestSheet(request: PackRequest, usage: Usage, state: AppSt
 private fun SheetTitle(title: String, onClose: () -> Unit) {
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     Text(title, style = scaled(22, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-    Text("Cancel", style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+    Text(Words.Common.cancel, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
   }
 }

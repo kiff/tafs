@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
@@ -108,14 +109,14 @@ fun VersionsSheet(tafId: String, state: AppState, actions: VersionActions, onOpe
     }
   }
 
-  VersionsFrame("Versions", onClose) {
+  VersionsFrame(Words.Version.title, onClose) {
     Panel {
-      Eyebrow("Versions")
+      Eyebrow(Words.Version.title)
       Text(VersionWords.INTRO, style = scaled(13, color = Theme.soft))
       Text(VersionWords.TRY_FIRST, style = scaled(13, color = Theme.soft))
       if (under != null) SwitchUnderWay(under, state.versions[tafId]?.firstOrNull { it.n == under.n }, switchingNow != null, onFinish = { use(it) }, onCancel = { scope.launch { actions.cancel(tafId) } })
       state.staleVersionCards[tafId]?.let { n ->
-        list?.firstOrNull { it.n == n }?.let { v -> OutlineButton("Draft its Card again", { use(v, redraft = true) }, Modifier.fillMaxWidth()) }
+        list?.firstOrNull { it.n == n }?.let { v -> OutlineButton(Words.Version.redraft, { use(v, redraft = true) }, Modifier.fillMaxWidth()) }
       }
       if (list != null) {
         if (list.size <= 1) Text(VersionWords.FIRST_ONLY, style = scaled(14, color = Theme.soft))
@@ -140,7 +141,7 @@ fun VersionsSheet(tafId: String, state: AppState, actions: VersionActions, onOpe
       state.trialErrors[tafId]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       state.blockedInstalls[tafId]?.let { n ->
         // One step: what is in the way stops (a held call withdrawn, nothing sent), then the install begins.
-        list?.firstOrNull { it.n == n }?.let { v -> OutlineButton("Stop it and install", { use(v, stopBlocking = true) }, Modifier.fillMaxWidth()) }
+        list?.firstOrNull { it.n == n }?.let { v -> OutlineButton(Words.Version.stopAndInstall, { use(v, stopBlocking = true) }, Modifier.fillMaxWidth()) }
       }
     }
   }
@@ -171,8 +172,8 @@ private fun VersionRow(
 ) {
   Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-      Text("Version ${v.n}", style = scaled(15, FontWeight.SemiBold, Theme.ink))
-      if (v.live) Chip("Live now", Theme.ok) else if (trying) Chip("Trying", Theme.amber)
+      Text(Words.Version.number(v.n.toString()), style = scaled(15, FontWeight.SemiBold, Theme.ink))
+      if (v.live) Chip(Words.Version.liveNow, Theme.ok) else if (trying) Chip(Words.Version.trying, Theme.amber)
     }
     v.note?.takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(14, color = Theme.ink)) }
     Text(VersionWords.byline(v), style = scaled(12, color = Theme.dim))
@@ -180,9 +181,9 @@ private fun VersionRow(
     v.trials.orEmpty().forEach { Text(VersionWords.tried(it), style = scaled(12, color = Theme.soft)) }
     if (!v.live) {
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (trying) OutlineButton("Resume the trial", onResume, Modifier.weight(1f).confirms())
-        else OutlineButton("Try it", onTry, Modifier.weight(1f), enabled = canTry)
-        OutlineButton(if (installing) "Installing…" else "Install this version", onInstall, Modifier.weight(1f).confirms(), enabled = canInstall)
+        if (trying) OutlineButton(Words.Version.resumeTrial, onResume, Modifier.weight(1f).confirms())
+        else OutlineButton(Words.Version.tryIt, onTry, Modifier.weight(1f), enabled = canTry)
+        OutlineButton(if (installing) Words.Version.installing else Words.Version.installThis, onInstall, Modifier.weight(1f).confirms(), enabled = canInstall)
       }
     }
   }
@@ -205,24 +206,24 @@ private fun TrialStartSheet(version: Version, tafId: String, state: AppState, ac
     loaded = true
   }
 
-  VersionsFrame("Try it", onClose) {
-    Text("Try version ${version.n}${version.note?.let { ": $it" } ?: ""}", style = scaled(17, FontWeight.SemiBold, Theme.ink))
+  VersionsFrame(Words.Version.tryIt, onClose) {
+    Text(version.note?.let { Words.Version.tryNumberNote(version.n.toString(), it) } ?: Words.Version.tryNumber(version.n.toString()), style = scaled(17, FontWeight.SemiBold, Theme.ink))
     Panel {
-      Eyebrow("While you try it")
+      Eyebrow(Words.Version.whileTrying)
       VersionWords.whileYouTry(version.n).forEach { Text(it, style = scaled(14, color = Theme.ink)) }
     }
     val shown = draft
     if (shown?.cards != null) {
-      Eyebrow("Its Card")
+      Eyebrow(Words.Card.itsCard)
       DraftCardsView(shown)
     } else if (loaded) {
-      Text(state.trialErrors[tafId] ?: "This trial's Card couldn't be read.", style = scaled(13, color = Theme.no))
+      Text(state.trialErrors[tafId] ?: Words.Version.trialCardUnreadable, style = scaled(13, color = Theme.no))
     } else {
       CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = Theme.amber)
     }
     if (shown != null) state.trialErrors[tafId]?.let { Text(it, style = scaled(13, color = Theme.no)) }
     OutlineButton(
-      if (busy) "Starting…" else "Start trying",
+      if (busy) Words.Common.starting else Words.Version.startTrying,
       {
         val read = draft?.version ?: return@OutlineButton
         scope.launch {
@@ -234,7 +235,7 @@ private fun TrialStartSheet(version: Version, tafId: String, state: AppState, ac
       Modifier.fillMaxWidth(),
       enabled = draft?.cards != null && !busy,
     )
-    OutlineButton("Cancel", onClose, Modifier.fillMaxWidth(), color = Theme.soft)
+    OutlineButton(Words.Common.cancel, onClose, Modifier.fillMaxWidth(), color = Theme.soft)
   }
 }
 
@@ -265,12 +266,12 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
         verticalArrangement = Arrangement.spacedBy(6.dp),
       ) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-          Text("Trying version ${trial.n}", style = scaled(15, FontWeight.SemiBold, Theme.ink))
-          Chip("not live", Theme.amber)
+          Text(Words.Version.tryingNumber(trial.n.toString()), style = scaled(15, FontWeight.SemiBold, Theme.ink))
+          Chip(Words.Version.notLive, Theme.amber)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          OutlineButton("Go back", { confirmBack = true }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !busy)
-          OutlineButton(if (busy) "Working…" else "Install", { confirmInstall = true }, Modifier.weight(1f).confirms(), enabled = !busy)
+          OutlineButton(Words.Version.goBack, { confirmBack = true }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !busy)
+          OutlineButton(if (busy) Words.Version.working else Words.Version.install, { confirmInstall = true }, Modifier.weight(1f).confirms(), enabled = !busy)
         }
         state.trialErrors[tafId]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       }
@@ -290,10 +291,10 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
   if (confirmBack && trial != null && taf != null) {
     DriveAlert(
       onDismissRequest = { confirmBack = false },
-      title = { Text("Go back to the live version?") },
-      text = { Text("Version ${trial.n}'s trial Card stops at once, and this chat is deleted. ${taf.name.substringBefore(" · v")} keeps working as it is.") },
-      confirmButton = { TextButton({ confirmBack = false; scope.launch { actions.goBack(tafId) } }, modifier = Modifier.confirms()) { Text("Go back", color = Theme.no) } },
-      dismissButton = { TextButton({ confirmBack = false }) { Text("Cancel", color = Theme.soft) } },
+      title = { Text(Words.Version.goBackTitle) },
+      text = { Text(Words.Version.goBackBody(trial.n.toString(), taf.name.substringBefore(" · v"))) },
+      confirmButton = { TextButton({ confirmBack = false; scope.launch { actions.goBack(tafId) } }, modifier = Modifier.confirms()) { Text(Words.Version.goBack, color = Theme.no) } },
+      dismissButton = { TextButton({ confirmBack = false }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -304,15 +305,15 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
     val ready = readiness == bot.tafs.app.model.ApprovalReadiness.Ready
     DriveAlert(
       onDismissRequest = { confirmInstall = false },
-      title = { Text("Install version ${trial.n}?") },
+      title = { Text(Words.Version.installTitle(trial.n.toString())) },
       text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          Text("Version ${trial.n} becomes the live version, with its Card. This chat is deleted.")
+          Text(Words.Version.installBody(trial.n.toString()))
           if (!ready) ApprovalsUnavailable(readiness)
         }
       },
-      confirmButton = { if (ready) TextButton({ confirmInstall = false; scope.launch { actions.installTrial(tafId) } }, modifier = Modifier.confirms()) { Text("Install with $biometry", color = Theme.amber) } },
-      dismissButton = { TextButton({ confirmInstall = false }) { Text("Cancel", color = Theme.soft) } },
+      confirmButton = { if (ready) TextButton({ confirmInstall = false; scope.launch { actions.installTrial(tafId) } }, modifier = Modifier.confirms()) { Text(Words.Version.installWith(biometry), color = Theme.amber) } },
+      dismissButton = { TextButton({ confirmInstall = false }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -331,11 +332,11 @@ private fun Chip(text: String, color: Color) {
 @Composable
 private fun SwitchUnderWay(sw: Switching, version: Version?, working: Boolean, onFinish: (Version) -> Unit, onCancel: () -> Unit) {
   Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    Text("Installing version ${sw.n}", style = scaled(15, FontWeight.SemiBold, Theme.amberText))
-    Text("Your taf doesn't run until it's installed or you cancel.", style = scaled(13, color = Theme.soft))
+    Text(Words.Version.installingNumber(sw.n.toString()), style = scaled(15, FontWeight.SemiBold, Theme.amberText))
+    Text(Words.Version.doesntRunUntil, style = scaled(13, color = Theme.soft))
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-      if (version != null) OutlineButton(if (working) "Installing…" else "Finish", { onFinish(version) }, Modifier.weight(1f), enabled = !working)
-      OutlineButton("Cancel", onCancel, Modifier.weight(1f), color = Theme.no, enabled = !working)
+      if (version != null) OutlineButton(if (working) Words.Version.installing else Words.Version.finish, { onFinish(version) }, Modifier.weight(1f), enabled = !working)
+      OutlineButton(Words.Common.cancel, onCancel, Modifier.weight(1f), color = Theme.no, enabled = !working)
     }
   }
 }
@@ -375,26 +376,26 @@ fun VersionCardSheet(
   ) {
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("Its Card", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.Card.itsCard, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         // Not now: the switch it began is dropped, and the taf runs as it was.
-        Text("Cancel", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onCancel).padding(top = 8.dp))
+        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onCancel).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
       ) {
-        Text("Version ${version.n}${version.note?.let { ": $it" } ?: ""}", style = scaled(17, FontWeight.SemiBold, Theme.ink))
+        Text(version.note?.let { Words.Version.numberNote(version.n.toString(), it) } ?: Words.Version.number(version.n.toString()), style = scaled(17, FontWeight.SemiBold, Theme.ink))
         val shown = draft
         if (shown?.cards != null) {
           DraftCardsView(shown)
           Text(VersionWords.cardNote(shown.retires?.isNotEmpty() == true), style = scaled(12, color = Theme.soft))
         } else if (loaded) {
-          Text(state.versionErrors[tafId] ?: "This version's Card couldn't be read.", style = scaled(13, color = Theme.no))
+          Text(state.versionErrors[tafId] ?: Words.Version.cardUnreadable, style = scaled(13, color = Theme.no))
         } else {
           CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = Theme.amber)
         }
         val readable = draft?.cards != null
-        ApprovalGate { OutlineButton("Install this version", { onInstall(draft?.version) }, Modifier.fillMaxWidth(), enabled = readable) }
+        ApprovalGate { OutlineButton(Words.Version.installThis, { onInstall(draft?.version) }, Modifier.fillMaxWidth(), enabled = readable) }
       }
     }
   }
@@ -414,9 +415,9 @@ fun DraftCardsView(draft: AgentDraft) {
 @Composable
 private fun Retired(card: DraftRetired) {
   Panel {
-    Eyebrow("Removes a Card")
+    Eyebrow(Words.Version.removesCard)
     card.current?.lines.orEmpty().forEach { Text(it, style = scaled(14, color = Theme.soft).copy(textDecoration = TextDecoration.LineThrough)) }
-    Text("Your taf can't do this any more.", style = scaled(12, color = Theme.dim))
+    Text(Words.Version.cantAnyMore, style = scaled(12, color = Theme.dim))
   }
 }
 
@@ -427,16 +428,16 @@ private fun CardView(card: DraftCard, lines: List<String>) {
     when {
       // Re-issued as it is: its terms once, not a now and after.
       card.isUnchanged -> {
-        Eyebrow("Unchanged")
+        Eyebrow(Words.Version.unchanged)
         lines.forEach { Text(it, style = scaled(14, color = Theme.soft)) }
       }
       card.current != null -> {
-        Eyebrow("Changes a Card")
-        Text("Now", style = scaled(12, FontWeight.SemiBold, Theme.dim))
+        Eyebrow(Words.Version.changesCard)
+        Text(Words.Version.now, style = scaled(12, FontWeight.SemiBold, Theme.dim))
         card.current.lines.forEach { Text(it, style = scaled(14, color = Theme.soft)) }
-        Text("After", style = scaled(12, FontWeight.SemiBold, Theme.dim))
+        Text(Words.Version.after, style = scaled(12, FontWeight.SemiBold, Theme.dim))
       }
-      else -> Eyebrow("A new Card")
+      else -> Eyebrow(Words.Version.newCard)
     }
     if (!card.isUnchanged) lines.forEach { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
   }
@@ -454,7 +455,7 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -466,7 +467,7 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
 
 /** The row on a taf's page that opens its versions. */
 @Composable
-fun VersionsRow(onClick: () -> Unit, title: String = "Changes to how it runs", summary: String? = null) {
+fun VersionsRow(onClick: () -> Unit, title: String = Words.Version.changesRow, summary: String? = null) {
   Panel(Modifier.clickable(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Column(Modifier.weight(1f)) { Text(title, style = scaled(15, FontWeight.SemiBold, Theme.amberText)); summary?.let { Text(it, style = scaled(13, color = Theme.soft)) } }

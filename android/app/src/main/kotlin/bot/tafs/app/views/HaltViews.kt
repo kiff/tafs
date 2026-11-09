@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
@@ -83,7 +84,7 @@ private const val HALT_POLLS = 60
 @Composable
 fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose: () -> Unit) {
   val h = state.haltOf(tafId)
-  val name = tafId?.let { state.taf(it)?.name } ?: "All your tafs"
+  val name = tafId?.let { state.taf(it)?.name } ?: Words.Taf.Halt.allTafs
   // What's under way, a halt or a resume: each button says its own, even once the sheet has turned to the other's button.
   var underway by remember { mutableStateOf<Underway?>(null) }
   val busy = underway != null
@@ -111,8 +112,8 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
     // Its height is fixed: what the halt becomes (running, halting, halted) doesn't resize a sheet already measured.
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(if (tafId == null) "Halt all" else "Halt", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(if (tafId == null) Words.Taf.Halt.titleAll else Words.Taf.Halt.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -125,12 +126,12 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
         }
         if (!h.running) {
           Panel {
-            Eyebrow("Who holds the halt")
-            HoldRow("No run starts", h.runtime)
-            HoldRow("KIFF refuses its calls", h.kiff)
-            HoldRow("The connection sends nothing to your tools", h.planque)
+            Eyebrow(Words.Taf.Halt.whoHolds)
+            HoldRow(Words.Taf.Halt.noRunStarts, h.runtime)
+            HoldRow(Words.Taf.Halt.kiffRefuses, h.kiff)
+            HoldRow(Words.Taf.Halt.connectionSendsNothing, h.planque)
             if (HaltWords.resumesWithAccount(h, tafId)) {
-              Text("Halted with all your tafs. Resume them all to let it run.", style = scaled(13, color = Theme.dim))
+              Text(Words.Taf.Halt.haltedWithAll, style = scaled(13, color = Theme.dim))
             }
           }
         }
@@ -142,7 +143,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
           )
           h.halted -> if (!HaltWords.resumesWithAccount(h, tafId)) ApprovalGate {
             OutlineButton(
-              if (busy) underway!!.words else "Resume with ${LocalBiometry.current}",
+              if (busy) underway!!.words else Words.Taf.Halt.resumeWith(LocalBiometry.current),
               { scope.launch { underway = Underway.Resuming; actions.resumeHalt(tafId); underway = null } },
               Modifier.fillMaxWidth(), enabled = !busy,
             )
@@ -150,7 +151,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
           else -> {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
               CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Theme.dim)
-              Text("Halting… waiting for every part to confirm.", style = scaled(14, color = Theme.dim))
+              Text(Words.Taf.Halt.haltingWait, style = scaled(14, color = Theme.dim))
             }
             // Halt again: a part that didn't take it the first time is asked again.
             OutlineButton(
@@ -168,7 +169,11 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
 }
 
 /** What the Halt screen has under way, in the words its button shows meanwhile. */
-private enum class Underway(val words: String) { Halting("Halting…"), Resuming("Resuming…") }
+private enum class Underway {
+  Halting, Resuming;
+
+  val words: String get() = when (this) { Halting -> Words.Taf.Halt.halting; Resuming -> Words.Taf.Halt.resuming }
+}
 
 /** One part of a halt, and whether it holds it yet. */
 @Composable
@@ -176,7 +181,7 @@ private fun HoldRow(text: String, held: Boolean) {
   Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
     Dot(if (held) Theme.ok else Theme.dim)
     Text(text, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
-    Text(if (held) "Done" else "Waiting", style = scaled(13, color = Theme.dim))
+    Text(if (held) Words.Taf.Halt.partHeld else Words.Taf.Halt.partWaiting, style = scaled(13, color = Theme.dim))
   }
 }
 
@@ -186,7 +191,7 @@ fun HaltRow(tafId: String?, h: Halt, onClick: () -> Unit, modifier: Modifier = M
   Panel(modifier.clickable(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(if (tafId == null) "Halt all" else "Halt", style = scaled(15, FontWeight.SemiBold, Theme.ink))
+        Text(if (tafId == null) Words.Taf.Halt.titleAll else Words.Taf.Halt.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
         Text(HaltWords.rowLine(h), style = scaled(13, color = if (h.running) Theme.dim else Theme.no))
       }
       Text("›", style = scaled(20, color = Theme.dim))

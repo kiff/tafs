@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveMenu
@@ -137,7 +138,7 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
       val done = sent
       if (done != null) {
         Text(if (done.first) ReportWords.THANKS else ReportWords.ALREADY, style = scaled(15, color = Theme.ink))
-        PrimaryButton("Done", onClose)
+        PrimaryButton(Words.Common.done, onClose)
         return@Column
       }
       ReportWords.REASONS.forEach { (value, words) ->
@@ -171,14 +172,14 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
         modifier = Modifier.fillMaxWidth().clip(shape).background(Theme.panel).border(BorderStroke(1.dp, Theme.line), shape),
         decorationBox = { field ->
           Box(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            if (note.isEmpty()) Text("Add a note (optional)", style = scaled(15, color = Theme.dim))
+            if (note.isEmpty()) Text(Words.Report.noteHint, style = scaled(15, color = Theme.dim))
             field()
           }
         },
       )
       error?.let { Text(it, style = scaled(13, color = Theme.no)) }
       PrimaryButton(
-        if (sending) "Sending…" else "Send",
+        if (sending) Words.Common.sending else Words.Common.send,
         {
           val chosen = reason ?: return@PrimaryButton
           sending = true
@@ -198,7 +199,7 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
         },
         enabled = reason != null && !sending,
       )
-      OutlineButton("Cancel", onClose, Modifier.fillMaxWidth(), color = Theme.soft, enabled = !sending)
+      OutlineButton(Words.Common.cancel, onClose, Modifier.fillMaxWidth(), color = Theme.soft, enabled = !sending)
     }
   }
 }

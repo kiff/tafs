@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import android.content.Context
 import android.content.Intent
@@ -93,7 +94,7 @@ fun ApprovalsSetupScreen(readiness: ApprovalReadiness, firstTaf: Boolean = false
     }
     onContinue?.let {
       Text(ApprovalWords.WITHOUT_ALLOWS, style = scaled(13, color = Theme.dim))
-      OutlineButton(if (readiness == ApprovalReadiness.Ready) "Continue" else ApprovalWords.CONTINUE_WITHOUT, it, Modifier.fillMaxWidth(), color = Theme.soft)
+      OutlineButton(if (readiness == ApprovalReadiness.Ready) Words.Common.`continue` else ApprovalWords.CONTINUE_WITHOUT, it, Modifier.fillMaxWidth(), color = Theme.soft)
     }
   }
 }

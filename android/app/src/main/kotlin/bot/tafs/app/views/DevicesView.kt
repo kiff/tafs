@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
@@ -41,10 +42,10 @@ import kotlinx.coroutines.launch
 
 /** "Last used 3 hours ago", or "Not used yet": a device says when it was last used; a session from before devices, when last seen. */
 private fun lastUsed(device: Device): String {
-  val at = (device.lastUsedAt ?: device.lastSeenAt)?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return "Not used yet"
+  val at = (device.lastUsedAt ?: device.lastSeenAt)?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return Words.Settings.Devices.notUsed
   val now = System.currentTimeMillis()
-  if (now - at.toEpochMilli() < DateUtils.MINUTE_IN_MILLIS) return "Last used just now"
-  return "Last used " + DateUtils.getRelativeTimeSpanString(at.toEpochMilli(), now, DateUtils.MINUTE_IN_MILLIS)
+  if (now - at.toEpochMilli() < DateUtils.MINUTE_IN_MILLIS) return Words.Settings.Devices.usedJustNow
+  return Words.Settings.Devices.lastUsed(DateUtils.getRelativeTimeSpanString(at.toEpochMilli(), now, DateUtils.MINUTE_IN_MILLIS).toString())
 }
 
 /** Settings, Devices: the devices signed in as this person on the account, each with when it was last used, and Sign out for any but this one. */
@@ -61,8 +62,8 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("Devices", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Settings.Devices.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -73,19 +74,19 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
           Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(device.name ?: "A device", style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                Text(device.name ?: Words.Settings.Devices.unnamed, style = scaled(15, FontWeight.SemiBold, Theme.ink))
                 Text(lastUsed(device), style = scaled(13, color = Theme.dim))
               }
               if (device.thisDevice) {
-                Text("This device", style = scaled(13, color = Theme.dim))
+                Text(Words.Settings.Devices.thisDevice, style = scaled(13, color = Theme.dim))
               } else {
-                Text("Sign out", style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { removing = device }.padding(top = 8.dp))
+                Text(Words.Settings.Devices.signOut, style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { removing = device }.padding(top = 8.dp))
               }
             }
           }
         }
         Text(
-          "Signing a device out ends its sign-in on this account at once. To sign out this phone, use Sign out in Account.",
+          Words.Settings.Devices.note,
           style = scaled(13, color = Theme.dim),
           modifier = Modifier.padding(horizontal = 4.dp),
         )
@@ -95,11 +96,11 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
   removing?.let { device ->
     DriveAlert(
       onDismissRequest = { removing = null },
-      title = { Text("Sign ${device.name ?: "this device"} out?") },
+      title = { Text(device.name?.let { Words.Settings.Devices.signOutNamed(it) } ?: Words.Settings.Devices.signOutThis) },
       confirmButton = {
-        TextButton(onClick = { removing = null; scope.launch { remove(device) } }, modifier = Modifier.confirms()) { Text("Sign out", color = Theme.no) }
+        TextButton(onClick = { removing = null; scope.launch { remove(device) } }, modifier = Modifier.confirms()) { Text(Words.Settings.Devices.signOut, color = Theme.no) }
       },
-      dismissButton = { TextButton(onClick = { removing = null }) { Text("Cancel") } },
+      dismissButton = { TextButton(onClick = { removing = null }) { Text(Words.Common.cancel) } },
     )
   }
 }

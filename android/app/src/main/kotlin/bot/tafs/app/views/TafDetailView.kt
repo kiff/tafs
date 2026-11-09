@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveAlert
 import bot.tafs.app.model.Chat
@@ -66,7 +67,16 @@ import kotlinx.coroutines.launch
  * Chat first: talking to a taf is the main thing. Each tab has one job: Activity, what it did and what waits for you; Card, only
  * what's on its Card; Setup, how it runs.
  */
-private enum class Section(val title: String) { Chat("Chat"), Activity("Activity"), Card("Card"), Setup("Setup") }
+private enum class Section {
+  Chat, Activity, Card, Setup;
+
+  val title: String get() = when (this) {
+    Chat -> Words.Taf.Section.chat
+    Activity -> Words.Taf.Section.activity
+    Card -> Words.Taf.Section.card
+    Setup -> Words.Taf.Section.setup
+  }
+}
 
 /** What the screen asks of the model: its changes, so the screen holds no state of the app's. */
 class TafActions(
@@ -150,7 +160,7 @@ fun TafDetailView(
   Column(modifier.fillMaxSize().statusBarsPadding()) {
     if (taf == null) {
       if (showBack) BackBar(onBack)
-      Text("This taf is gone.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(16.dp))
+      Text(Words.Taf.gone, style = scaled(15, color = Theme.dim), modifier = Modifier.padding(16.dp))
       return@Column
     }
     val canChat = state.canChat(taf.id)
@@ -214,7 +224,7 @@ fun TafDetailView(
             // Only what this person manages, as KIFF says: a Viewer sees no Halt, refused only once tapped.
             if (state.canHalt(taf.id) && state.manages(taf.id)) {
               val version = state.tafSetups[taf.id]?.versions
-              VersionsRow({ onVersions(taf.id) }, title = version?.title ?: "Changes to how it runs", summary = version?.summary)
+              VersionsRow({ onVersions(taf.id) }, title = version?.title ?: Words.Version.changesRow, summary = version?.summary)
             }
             if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
             if (state.canHalt(taf.id)) UsageRow { onUsage(taf.id) }
@@ -239,36 +249,36 @@ fun TafDetailView(
     if (confirmRevoke) {
       DriveAlert(
         onDismissRequest = { confirmRevoke = false },
-        title = { Text("Revoke ${taf.name}'s Card?") },
-        text = { Text("No new action goes through. Anything already done stays done.") },
+        title = { Text(Words.Taf.revokeTitle(taf.name)) },
+        text = { Text(Words.Taf.revokeBody) },
         confirmButton = {
-          TextButton({ confirmRevoke = false; actions.revoke(taf.id) }, modifier = Modifier.confirms()) { Text("Revoke and stop", color = Theme.no) }
+          TextButton({ confirmRevoke = false; actions.revoke(taf.id) }, modifier = Modifier.confirms()) { Text(Words.Taf.revokeAndStop, color = Theme.no) }
         },
-        dismissButton = { TextButton({ confirmRevoke = false }) { Text("Cancel", color = Theme.soft) } },
+        dismissButton = { TextButton({ confirmRevoke = false }) { Text(Words.Common.cancel, color = Theme.soft) } },
         containerColor = Theme.panel,
       )
     }
     if (confirmRemove) {
       DriveAlert(
         onDismissRequest = { confirmRemove = false },
-        title = { Text("Remove ${taf.name} for good?") },
-        text = { Text("Its Cards are revoked, its schedule stopped, its chats, run reports, memory and key deleted, and its name freed. KIFF's receipts stay.") },
+        title = { Text(Words.Taf.removeTitle(taf.name)) },
+        text = { Text(Words.Taf.removeBody) },
         confirmButton = {
           TextButton({
             confirmRemove = false
             removeScope.launch { actions.remove(taf.id)?.let { removal = it } }
-          }, modifier = Modifier.confirms()) { Text("Remove", color = Theme.no) }
+          }, modifier = Modifier.confirms()) { Text(Words.Taf.remove, color = Theme.no) }
         },
-        dismissButton = { TextButton({ confirmRemove = false }) { Text("Cancel", color = Theme.soft) } },
+        dismissButton = { TextButton({ confirmRemove = false }) { Text(Words.Common.cancel, color = Theme.soft) } },
         containerColor = Theme.panel,
       )
     }
     removal?.let { words ->
       DriveAlert(
         onDismissRequest = { removal = null },
-        title = { Text("Remove ${taf.name}") },
+        title = { Text(Words.Taf.removeNamed(taf.name)) },
         text = { Text(words) },
-        confirmButton = { TextButton({ removal = null }) { Text("OK", color = Theme.amberText) } },
+        confirmButton = { TextButton({ removal = null }) { Text(Words.Common.ok, color = Theme.amberText) } },
         containerColor = Theme.panel,
       )
     }
@@ -283,7 +293,7 @@ internal fun BackBar(onBack: () -> Unit) {
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.amber, modifier = Modifier.size(20.dp))
-    Text("Back", style = scaled(17, color = Theme.amber))
+    Text(Words.Common.back, style = scaled(17, color = Theme.amber))
   }
 }
 
@@ -299,8 +309,8 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
     verticalAlignment = Alignment.CenterVertically,
   ) {
     if (onBack != null) {
-      Box(Modifier.size(44.dp).clickable(onClickLabel = "Back", onClick = onBack), contentAlignment = Alignment.Center) {
-        Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = "Back", tint = Theme.amber, modifier = Modifier.size(20.dp))
+      Box(Modifier.size(44.dp).clickable(onClickLabel = Words.Common.back, onClick = onBack), contentAlignment = Alignment.Center) {
+        Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = Words.Common.back, tint = Theme.amber, modifier = Modifier.size(20.dp))
       }
     }
     TafAvatar(taf, 30.dp)
@@ -356,7 +366,7 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
   }
   // Revoke: in the sample its own; signed in, KIFF's, for whoever manages it. Pausing is in Setup.
   if (taf.state != TafState.revoked && (taf.cloudId == null || manages)) {
-    OutlineButton("Revoke", onRevoke, Modifier.fillMaxWidth().confirms(), color = Theme.no)
+    OutlineButton(Words.Taf.revoke, onRevoke, Modifier.fillMaxWidth().confirms(), color = Theme.no)
   }
 }
 
@@ -367,14 +377,14 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
   // Set on the tap itself, before the request starts, so a second tap can't send one.
   var tapped by remember { mutableStateOf(false) }
   Panel {
-    Eyebrow("Runs")
+    Eyebrow(Words.Taf.runs)
     if (taf.worksFromChat) {
-      Text("It works when you tell it, in its chat: no schedule runs it.", style = scaled(15, color = Theme.ink))
+      Text(Words.Taf.worksFromChat, style = scaled(15, color = Theme.ink))
     } else {
-      Text(if (taf.paused) "Paused" else taf.nextRun?.let { "Next run at ${shortTime(it)}" } ?: "On its schedule", style = scaled(15, color = Theme.ink))
+      Text(if (taf.paused) Words.Taf.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule, style = scaled(15, color = Theme.ink))
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         val busy = inFlight || tapped
-        OutlineButton(if (busy) "Starting a run…" else "Run now", {
+        OutlineButton(if (busy) Words.Taf.startingRun else Words.Taf.runNow, {
           if (!tapped) {
             tapped = true
             scope.launch {
@@ -383,7 +393,7 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
             }
           }
         }, Modifier.weight(1f), enabled = !busy)
-        OutlineButton(if (taf.paused) "Resume" else "Pause", { scope.launch { actions.setPaused(taf.id, !taf.paused) } }, Modifier.weight(1f).confirms())
+        OutlineButton(if (taf.paused) Words.Taf.resume else Words.Taf.pause, { scope.launch { actions.setPaused(taf.id, !taf.paused) } }, Modifier.weight(1f).confirms())
       }
     }
   }
@@ -402,7 +412,7 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
   val error = state.workErrors[taf.id]
   if (work == null && error == null) return
   Panel {
-    Eyebrow("Its work")
+    Eyebrow(Words.Taf.itsWork)
     work?.summary?.line?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     work?.let { Chat.workRows(it) }?.forEach { row ->
       when (row) {
@@ -422,7 +432,7 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
             Text(d.line, style = scaled(12, color = if (d.sendAgain) Theme.amberText else Theme.dim))
             if (d.sendAgain && state.manages(taf.id)) {
               OutlineButton(
-                if (r.id in state.sendingAgain) "Sending again…" else "Send again",
+                if (r.id in state.sendingAgain) Words.Work.sendingAgain else Words.Work.sendAgain,
                 { scope.launch { actions.sendAgain(taf.id, r.id, d.sendPlace) } },
                 Modifier.fillMaxWidth(),
                 enabled = r.id !in state.sendingAgain,
@@ -451,10 +461,10 @@ private fun RunReportPanel(tafId: String, report: RunReport?, actions: TafAction
   LaunchedEffect(tafId) { actions.loadReport(tafId) }
   Panel {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-      Eyebrow("Last run")
+      Eyebrow(Words.Taf.lastRun)
       Spacer(Modifier.weight(1f))
       Text(
-        "Refresh",
+        Words.Taf.refresh,
         style = scaled(13, color = Theme.amberText),
         modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.loadReport(tafId) } }.padding(top = 12.dp),
       )
@@ -463,14 +473,14 @@ private fun RunReportPanel(tafId: String, report: RunReport?, actions: TafAction
       CircularProgressIndicator(Modifier.size(18.dp), color = Theme.amber, strokeWidth = 2.dp)
     } else {
       report.at?.let { at ->
-        val how = if (report.finished) "finished" else if (report.status == "running") "still running" else "no session"
+        val how = if (report.finished) Words.Taf.Report.finished else if (report.status == "running") Words.Taf.Report.stillRunning else Words.Taf.Report.noSession
         Text("${shortTime(at)} · $how", style = scaled(12, color = Theme.dim, mono = true))
       }
       when {
         // A taf writes markdown: shown as the chat shows it, never raw (kiff/tafs#96).
         report.text.isNotEmpty() -> MarkdownText(report.text, size = 14, modifier = Modifier.fillMaxWidth())
-        report.session == null && report.error == null -> Text("No run yet.", style = scaled(14, color = Theme.dim))
-        !report.finished && report.error == null -> Text("Its report shows here when the run ends.", style = scaled(14, color = Theme.dim))
+        report.session == null && report.error == null -> Text(Words.Taf.Report.noRunYet, style = scaled(14, color = Theme.dim))
+        !report.finished && report.error == null -> Text(Words.Taf.Report.whenRunEnds, style = scaled(14, color = Theme.dim))
       }
       report.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
     }
@@ -484,10 +494,10 @@ internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?
   // The note waiting for the owner's yes: forgetting can't be undone (the 755 retest).
   var forgetting by remember { mutableStateOf<MemoryNote?>(null) }
   Panel {
-    Eyebrow("What it remembers")
+    Eyebrow(Words.Taf.Memory.title)
     if (notes != null) {
       if (notes.isEmpty()) {
-        Text("Nothing yet. It writes down what it learns about how you like the job done.", style = scaled(14, color = Theme.soft))
+        Text(Words.Taf.Memory.empty, style = scaled(14, color = Theme.soft))
       }
       notes.forEach { note ->
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
@@ -496,14 +506,14 @@ internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?
             Text("${note.title} · ${shortTime(note.updatedAt)}", style = scaled(12, color = Theme.soft))
           }
           Text(
-            "Forget",
+            Words.Taf.Memory.forget,
             style = scaled(14, FontWeight.SemiBold, Theme.soft),
             modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { forgetting = note },
           )
         }
       }
       Text(
-        "Every run and chat starts with these. They shape how it works, never what its Card allows. Forget removes that one note and its earlier versions; past chats and run reports stay until the taf is removed.",
+        Words.Taf.Memory.explains,
         style = scaled(12, color = Theme.soft),
       )
     } else if (error == null) {
@@ -514,10 +524,10 @@ internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?
   forgetting?.let { note ->
     DriveAlert(
       onDismissRequest = { forgetting = null },
-      title = { Text("Forget this note?") },
-      text = { Text("“${note.content}”\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.") },
-      confirmButton = { TextButton({ forgetting = null; actions.forget(note, tafId) }, Modifier.confirms()) { Text("Forget", color = Theme.no) } },
-      dismissButton = { TextButton({ forgetting = null }) { Text("Cancel", color = Theme.soft) } },
+      title = { Text(Words.Taf.Memory.forgetTitle) },
+      text = { Text(Words.Taf.Memory.forgetBody(note.content)) },
+      confirmButton = { TextButton({ forgetting = null; actions.forget(note, tafId) }, Modifier.confirms()) { Text(Words.Taf.Memory.forget, color = Theme.no) } },
+      dismissButton = { TextButton({ forgetting = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -536,13 +546,13 @@ private fun SideColumn(taf: Taf, state: AppState, actions: TafActions, front: St
   ) {
     val held = state.heldCalls(taf.id)
     if (held.isNotEmpty()) {
-      Eyebrow("Needs you", color = Theme.amber)
+      Eyebrow(Words.NeedsYou.title, color = Theme.amber)
       held.forEach { HeldCallCard(it, state, actions.answer) }
     }
     val cards = taf.shownCards
-    Eyebrow(if (cards.size == 1) "Card" else "Cards")
+    Eyebrow(Words.Card.heading(count = cards.size))
     CardStack(cards, state.issuer(taf), Theme.tafColor(taf.colorIndex), front, onFront, revoked = taf.card.revoked)
-    OutlineButton(if (cards.size == 1) "All of the Card" else "All of the Cards", onAll, Modifier.fillMaxWidth())
+    OutlineButton(Words.Card.allOf(count = cards.size), onAll, Modifier.fillMaxWidth())
   }
 }
 

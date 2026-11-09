@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.confirms
@@ -109,22 +110,22 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
     Text(
       "‹",
       style = scaled(26, color = Theme.amber),
-      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Back", onClick = onBack).padding(start = 10.dp, top = 4.dp),
+      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = Words.Common.back, onClick = onBack).padding(start = 10.dp, top = 4.dp),
     )
-    Text("Coach", style = scaled(18, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
+    Text(Words.Coach.title, style = scaled(18, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
     androidx.compose.material3.IconButton(onClick = onNewChat) {
       androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_new_conversation),
-        contentDescription = "New conversation", tint = Theme.amberText)
+        contentDescription = Words.Coach.newConversation, tint = Theme.amberText)
     }
     Box {
       Text(
         "⋯",
         style = scaled(22, FontWeight.Bold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Coach's conversations") { menu = true }.padding(top = 6.dp, start = 12.dp),
+        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = Words.Coach.conversations) { menu = true }.padding(top = 6.dp, start = 12.dp),
       )
       DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
         androidx.compose.material3.DropdownMenuItem(
-          text = { Text("Previous conversations", style = scaled(15, color = Theme.ink)) },
+          text = { Text(Words.Coach.Chats.previous, style = scaled(15, color = Theme.ink)) },
           onClick = { menu = false; listing = true },
         )
       }
@@ -144,8 +145,8 @@ private fun CoachIntro(state: AppState, start: suspend () -> Unit) {
   val scope = rememberCoroutineScope()
   val biometry = LocalBiometry.current
   Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-    Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
-    Text("${CoachWords.INTRO} Each connection and each Card waits for $biometry.", style = scaled(16, color = Theme.soft))
+    Text(Words.Coach.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
+    Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
     // Starting issues Coach's own Cards, an approval: before the first taf, say so while this phone can't approve yet.
     val readiness = LocalApprovalReadiness.current
@@ -153,8 +154,8 @@ private fun CoachIntro(state: AppState, start: suspend () -> Unit) {
       Text(bot.tafs.app.model.ApprovalWords.FIRST_TAF, style = scaled(15, color = Theme.ink))
       ApprovalsUnavailable(readiness)
     } else {
-      PrimaryButton(if (state.startingCoach) "Starting…" else "Start", { scope.launch { start() } }, enabled = !state.startingCoach)
-      Text("Starting asks for $biometry once.", style = scaled(12, color = Theme.dim))
+      PrimaryButton(if (state.startingCoach) Words.Common.starting else Words.Coach.start, { scope.launch { start() } }, enabled = !state.startingCoach)
+      Text(Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
     }
   }
 }
@@ -169,7 +170,7 @@ fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
   val steps = plan.steps.orEmpty()
   Column(modifier.fillMaxWidth()) {
     Row(
-      Modifier.fillMaxWidth().heightIn(min = 36.dp).clickable(onClickLabel = if (open) "Fold the plan" else "Show the whole plan") { open = !open },
+      Modifier.fillMaxWidth().heightIn(min = 36.dp).clickable(onClickLabel = if (open) Words.Coach.Plan.fold else Words.Coach.Plan.show) { open = !open },
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -280,13 +281,13 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
     return
   }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
-    Eyebrow("Coach asks you to approve", Theme.amberText)
+    Eyebrow(Words.Coach.Approval.title, Theme.amberText)
     // A grant its vendor signed out reads as planque says it ("Signed out by Stripe · sign in again"), not as Coach titled it.
     (grant?.takeIf { it.needsReconnect }?.statusWords ?: c.title)?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     when {
       state.approvalKeyLost -> ApprovalKeyLine()
       !state.planqueReady -> Text(CoachWords.NOT_CONNECTABLE, style = scaled(14, color = Theme.soft))
-      grant == null -> Text("Reading what it asks for…", style = scaled(14, color = Theme.soft))
+      grant == null -> Text(Words.Connect.readingAsks, style = scaled(14, color = Theme.soft))
       else -> {
         // planque's own words for what it will do, never Coach's.
         Text(grant.text, style = scaled(14, color = Theme.ink))
@@ -303,11 +304,11 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           }
         }
         grant.terms?.takeIf { it.isNotEmpty() }?.let { terms ->
-          Text(if (details) "▾ Details" else "▸ Details", style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
+          Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
           if (details) terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) }
         }
         if (grant.connected && draft != null && !draft.confirmed) {
-          Eyebrow("Its Card")
+          Eyebrow(Words.Card.itsCard)
           DraftCardsView(draft)
         }
         if (!grant.digestMatches) {
@@ -319,19 +320,19 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready && !grant.needsReconnect) ApprovalsUnavailable(readiness)
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
-              if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else if (state.windowWords != null) "Approve" else "Approve with $biometry",
+              if (state.connecting == grant.id) state.connectStep ?: Words.Approval.approving else if (grant.needsReconnect) Words.Connect.signInAgain else if (state.windowWords != null) Words.Approval.approve else Words.Approval.approveWith(biometry),
               { actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f).confirms(),
               // With a profile, nothing is approved before KIFF's words for it are read and shown.
               enabled = !busy && (!profiled || words != null),
             )
-            OutlineButton("Decline", { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
+            OutlineButton(Words.Coach.Approval.decline, { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }
           // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
           state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
             Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
-            Text("Cancel", style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
+            Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
           }
         }
       }
@@ -382,8 +383,8 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
   var chatting by remember(c.id) { mutableStateOf(false) }
   if (answered == null && chatting) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-      Text("You're talking these questions through with Coach.", style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f, fill = false))
-      Text("Show them again", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = false }.padding(top = 12.dp))
+      Text(Words.Coach.Questions.talking, style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f, fill = false))
+      Text(Words.Coach.Questions.showAgain, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = false }.padding(top = 12.dp))
     }
     return
   }
@@ -403,15 +404,15 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
           q.options.forEach { option ->
             Choice(option.label, selected = option.value in selection.picked[q.id].orEmpty()) { selection = selection.pick(q, option.value) }
           }
-          Choice("Something else…", selected = q.id in selection.ownOpen) { selection = selection.toggleOwn(q) }
+          Choice(Words.Coach.Questions.somethingElse, selected = q.id in selection.ownOpen) { selection = selection.toggleOwn(q) }
         }
         q.options.firstOrNull { it.value in selection.picked[q.id].orEmpty() }?.description?.let { Text(it, style = scaled(12, color = Theme.soft)) }
         if (q.id in selection.ownOpen) OwnAnswer(selection.own[q.id].orEmpty()) { selection = selection.write(q, it) }
       }
     }
-    PrimaryButton("Send answers", { onAnswer("questions", c.id, selection.message(questions)) }, enabled = selection.complete(questions))
+    PrimaryButton(Words.Coach.Questions.send, { onAnswer("questions", c.id, selection.message(questions)) }, enabled = selection.complete(questions))
     Text(
-      "Chat about this",
+      Words.Coach.Questions.chatAbout,
       style = scaled(15, FontWeight.SemiBold, Theme.amberText),
       modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = true }.padding(top = 12.dp),
     )
@@ -445,7 +446,7 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
     modifier = Modifier.fillMaxWidth().clip(shape).background(Theme.background).border(BorderStroke(1.dp, Theme.line), shape),
     decorationBox = { field ->
       androidx.compose.foundation.layout.Box(Modifier.padding(horizontal = 8.dp, vertical = 8.dp).heightIn(min = 40.dp)) {
-        if (value.isEmpty()) Text("In your words", style = scaled(15, color = Theme.dim))
+        if (value.isEmpty()) Text(Words.Coach.Questions.inYourWords, style = scaled(15, color = Theme.dim))
         field()
       }
     },
@@ -458,39 +459,39 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
  */
 @Composable
 private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
-  val vendor = c.service ?: "the vendor"
+  val signInAt = c.service?.let { Words.Coach.SignIn.at(it) } ?: Words.Coach.SignIn.atVendor
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val again = grant?.needsReconnect == true
   when {
-    answered != null -> Text("Sign in at $vendor · $answered", style = scaled(14, FontWeight.Medium, Theme.dim))
+    answered != null -> Text("$signInAt · $answered", style = scaled(14, FontWeight.Medium, Theme.dim))
     // A sign-in starts with an approval, which this phone can't give until a new sign-in with KIFF.
     state.approvalKeyLost -> Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
-      Text("Sign in at $vendor", style = scaled(15, FontWeight.SemiBold, Theme.ink))
+      Text(signInAt, style = scaled(15, FontWeight.SemiBold, Theme.ink))
       ApprovalKeyLine()
     }
     else -> {
       val busy = state.connecting != null
       val waiting = c.grant != null && state.connecting == c.grant
       Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
-        Eyebrow("Needs you · sign in", Theme.amberText)
-        Text(grant?.takeIf { again }?.statusWords ?: "Sign in at $vendor", style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
+        Eyebrow(Words.Coach.SignIn.eyebrow, Theme.amberText)
+        Text(grant?.takeIf { again }?.statusWords ?: signInAt, style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
         Text(c.note ?: CoachWords.SIGN_IN_NOTE, style = scaled(14, color = Theme.soft))
         PrimaryButton(
           when {
-            waiting -> state.connectStep ?: "Opening the sign-in…"
-            again -> "Sign in again"
-            else -> c.yes ?: "Open ${c.service ?: "the sign-in"}"
+            waiting -> state.connectStep ?: Words.Connect.openingSignIn
+            again -> Words.Connect.signInAgain
+            else -> c.yes ?: c.service?.let { Words.Coach.SignIn.open(it) } ?: Words.Coach.SignIn.openSignIn
           },
           { actions.signInAgain(c) },
           enabled = !busy && c.grant != null,
         )
-        Text("Opens ${c.destination}", style = scaled(12, color = Theme.dim, mono = true))
+        Text(Words.Coach.SignIn.opens(c.destination.toString()), style = scaled(12, color = Theme.dim, mono = true))
         if (waiting) {
           Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
-          Text("Cancel", style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
+          Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
         } else {
           Text(
-            c.no ?: "Not now",
+            c.no ?: Words.Coach.notNow,
             style = scaled(14, color = Theme.dim),
             modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { actions.answer("sign_in", c.id, "not now") },
           )
@@ -515,12 +516,12 @@ private fun HandOverCard(shown: ShownComponent, state: AppState, actions: CoachA
   val listed = state.tafs.firstOrNull { it.id == taf.agent || (id != null && it.cloudId == id) }
   val name = listed?.name ?: taf.name
   Panel(stroke = Theme.ok.copy(alpha = 0.45f)) {
-    Eyebrow("Set up · $name", Theme.ok)
+    Eyebrow(Words.Coach.Result.setUp(name), Theme.ok)
     c.text?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     // Coach's list of the taf's tools names them by id only: the taf's page has its Card in KIFF's words.
     when (val h = CoachWords.handOver(shown.answer, listed != null)) {
       CoachWords.HandOver.SetUp ->
-        if (listed != null) PrimaryButton(if (listed.name != taf.name) "Open $name" else c.yes ?: "See it on $name", { actions.openTaf(listed.id) })
+        if (listed != null) PrimaryButton(if (listed.name != taf.name) Words.Coach.Result.open(name) else c.yes ?: Words.Coach.Result.seeIt(name), { actions.openTaf(listed.id) })
         else Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))
       is CoachWords.HandOver.Failed -> {
         Text(CoachWords.notSetUp(taf.name, h.why), style = scaled(13, color = Theme.no))
@@ -541,18 +542,18 @@ private fun ImprovementCard(shown: ShownComponent, state: AppState, actions: Coa
   val taf = c.taf ?: return
   val improved = state.tafs.firstOrNull { it.cloudId == taf.improves || it.id == taf.improves || it.id == taf.agent }
   Panel(stroke = Theme.ok.copy(alpha = 0.45f)) {
-    Eyebrow("New version · ${improved?.name ?: taf.name}", Theme.ok)
+    Eyebrow(Words.Coach.Result.newVersion(improved?.name ?: taf.name), Theme.ok)
     c.text?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     taf.note?.takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
     when (val made = CoachWords.improvement(shown.answer)) {
       is CoachWords.Improvement.Made ->
-        if (improved != null) PrimaryButton("See version ${made.version}", { actions.openVersions(improved.id) })
-        else Text("Version ${made.version} is made.", style = scaled(13, color = Theme.dim))
+        if (improved != null) PrimaryButton(Words.Coach.Result.seeVersion(made.version.toString()), { actions.openVersions(improved.id) })
+        else Text(Words.Coach.Result.versionMade(made.version.toString()), style = scaled(13, color = Theme.dim))
       is CoachWords.Improvement.Failed -> {
         Text(CoachWords.notImproved(improved?.name ?: taf.name, made.why), style = scaled(13, color = Theme.no))
         Text(CoachWords.COACH_KNOWS, style = scaled(13, color = Theme.dim))
       }
-      CoachWords.Improvement.Preparing -> PrimaryButton("Preparing the new version…", {}, enabled = false)
+      CoachWords.Improvement.Preparing -> PrimaryButton(Words.Coach.Result.preparing, {}, enabled = false)
     }
   }
 }
@@ -616,7 +617,7 @@ private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?,
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           ApprovalGate {
             OutlineButton(
-              if (busy) "Making it live…" else bot.tafs.app.model.KnobWords.confirmWith(LocalBiometry.current),
+              if (busy) Words.Coach.makingLive else bot.tafs.app.model.KnobWords.confirmWith(LocalBiometry.current),
               { scope.launch { if (actions.confirmKnob(taf.id)) actions.answer("knob", c.id, "approved") } },
               Modifier.weight(1f).confirms(),
               enabled = !busy,
@@ -653,12 +654,12 @@ private fun DriveCard(shown: ShownComponent, state: AppState, answered: String?,
     if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready) ApprovalsUnavailable(readiness)
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
       if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready) OutlineButton(
-        if (starting) "Approving…" else "Approve with $biometry",
+        if (starting) Words.Approval.approving else Words.Approval.approveWith(biometry),
         { actions.approveDrive(c) },
         Modifier.weight(1f).confirms(),
         enabled = state.driveStarting == null,
       )
-      OutlineButton("Not now", { actions.answer("drive", c.id, "declined") }, Modifier.weight(1f), color = Theme.soft, enabled = !starting)
+      OutlineButton(Words.Coach.notNow, { actions.answer("drive", c.id, "declined") }, Modifier.weight(1f), color = Theme.soft, enabled = !starting)
     }
     state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
     error?.let { Text(it, style = scaled(13, color = Theme.no)) }

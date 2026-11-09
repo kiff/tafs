@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,7 +59,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
   val connections = state.connections(taf.id)
   if (!state.planqueReady || connections.isEmpty()) return
   Panel {
-    Eyebrow("Connected tools")
+    Eyebrow(Words.Connect.connectedTools)
     connections.forEach { grant ->
       Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(grant.vendor, style = scaled(15, FontWeight.SemiBold, Theme.ink))
@@ -71,7 +72,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
         } else if (grant.needsReconnect) {
           val busy = state.connecting != null
           OutlineButton(
-            if (state.connecting == grant.id) state.connectStep ?: "Opening the sign-in…" else "Sign in again",
+            if (state.connecting == grant.id) state.connectStep ?: Words.Connect.openingSignIn else Words.Connect.signInAgain,
             { actions.reconnect(grant) },
             Modifier.fillMaxWidth(),
             enabled = !busy,
@@ -80,7 +81,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
         }
         // A sign-in that never came back is cancelled, not disconnected: nothing was connected.
         Text(
-          if (grant.waitingSignIn) ConnectionWords.CANCEL_SIGN_IN else "Disconnect",
+          if (grant.waitingSignIn) ConnectionWords.CANCEL_SIGN_IN else Words.Connect.disconnect,
           style = scaled(14, FontWeight.Medium, Theme.no),
           modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (grant.waitingSignIn) cancelling = grant else ending = grant }.padding(top = 8.dp),
         )
@@ -92,8 +93,8 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
       onDismissRequest = { cancelling = null },
       title = { Text(ConnectionWords.cancelTitle(grant)) },
       text = { Text(ConnectionWords.cancelBody(grant)) },
-      confirmButton = { TextButton({ cancelling = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text("Cancel the sign-in", color = Theme.no) } },
-      dismissButton = { TextButton({ cancelling = null }) { Text("Keep waiting", color = Theme.soft) } },
+      confirmButton = { TextButton({ cancelling = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text(Words.Connect.cancelSignInConfirm, color = Theme.no) } },
+      dismissButton = { TextButton({ cancelling = null }) { Text(Words.Connect.keepWaiting, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -102,8 +103,8 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
       onDismissRequest = { ending = null },
       title = { Text(ConnectionWords.disconnectTitle(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
       text = { Text(ConnectionWords.disconnectBody(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
-      confirmButton = { TextButton({ ending = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text("Disconnect", color = Theme.no) } },
-      dismissButton = { TextButton({ ending = null }) { Text("Cancel", color = Theme.soft) } },
+      confirmButton = { TextButton({ ending = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text(Words.Connect.disconnect, color = Theme.no) } },
+      dismissButton = { TextButton({ ending = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }

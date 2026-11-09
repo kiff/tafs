@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveDialog
 import android.annotation.SuppressLint
 import android.webkit.WebResourceRequest
@@ -68,7 +69,7 @@ fun SiteSignInScreen(view: SiteSignInView, onClose: () -> Unit) {
     Column(Modifier.fillMaxSize().background(Theme.background).statusBarsPadding().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(view.words.orEmpty(), style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f))
-        TextButton(onClose) { Text("Close", style = scaled(15, FontWeight.SemiBold, Theme.amber)) }
+        TextButton(onClose) { Text(Words.Common.close, style = scaled(15, FontWeight.SemiBold, Theme.amber)) }
       }
       AndroidView({ web }, Modifier.fillMaxWidth().weight(1f))
     }

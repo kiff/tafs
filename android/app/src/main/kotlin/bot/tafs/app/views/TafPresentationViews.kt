@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.model.ConnectionWords
 import bot.tafs.app.drive.DriveSheet
@@ -49,8 +50,8 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
   val scope = rememberCoroutineScope()
   val improve = LocalImproveInCoach.current
   Panel {
-    Eyebrow("Connected tools")
-    (error ?: source?.connectionsError)?.let { Text(it, style = scaled(13, color = Theme.no)); TextButton({ scope.launch { actions.loadSetup(taf.id) } }) { Text("Try again", color = Theme.amberText) } }
+    Eyebrow(Words.Connect.connectedTools)
+    (error ?: source?.connectionsError)?.let { Text(it, style = scaled(13, color = Theme.no)); TextButton({ scope.launch { actions.loadSetup(taf.id) } }) { Text(Words.Common.tryAgain, color = Theme.amberText) } }
     if (source == null && error == null) CircularProgressIndicator(Modifier.size(24.dp), color = Theme.amber)
     val apps = source?.connections.orEmpty()
     BoxWithConstraints(Modifier.fillMaxWidth().height(280.dp)) {
@@ -83,7 +84,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
       onConnect?.let { connect ->
         val angle = -Math.PI / 2 + apps.size * 2 * Math.PI / slots
         Box(Modifier.align(Alignment.Center).offset(x = radius * cos(angle).toFloat(), y = radius * sin(angle).toFloat()).size(48.dp)
-          .clip(CircleShape).background(Theme.raised).clickable(onClick = connect).semantics { contentDescription = "Connect an app" }, contentAlignment = Alignment.Center) {
+          .clip(CircleShape).background(Theme.raised).clickable(onClick = connect).semantics { contentDescription = Words.Connect.connectAnApp }, contentAlignment = Alignment.Center) {
           Canvas(Modifier.fillMaxSize()) { drawCircle(line, style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())))) }
           Text("+", style = scaled(26, color = Theme.amberText))
         }
@@ -103,7 +104,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
             }
           }
         }
-        improve?.let { TextButton({ it(taf.id) }) { Text("Change the workflow with Coach", color = Theme.amberText) } }
+        improve?.let { TextButton({ it(taf.id) }) { Text(Words.Taf.Workflow.changeWithCoach, color = Theme.amberText) } }
       }
     }
   }
@@ -118,11 +119,11 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         // A browser connection: the owner signs in to a site themselves, in planque's live view (tafs cloud's words).
         app.siteSignIn?.takeIf { state.manages(taf.id) }?.let { action ->
           TextButton({ scope.launch { actions.connections.siteSignIn(app.id) } }, enabled = state.openingSiteSignIn == null) {
-            Text(if (state.openingSiteSignIn == app.id) "Opening…" else action.title, color = Theme.amberText)
+            Text(if (state.openingSiteSignIn == app.id) Words.Common.opening else action.title, color = Theme.amberText)
           }
           if (action.words.isNotBlank()) Text(action.words, style = scaled(13, color = Theme.soft))
         }
-        if (app.reconnect && state.manages(taf.id)) TextButton({ actions.connections.reconnectId(app.id) }, enabled = state.connecting == null) { Text("Sign in again", color = Theme.amberText) }
+        if (app.reconnect && state.manages(taf.id)) TextButton({ actions.connections.reconnectId(app.id) }, enabled = state.connecting == null) { Text(Words.Connect.signInAgain, color = Theme.amberText) }
         // Gap 13, where an owner whose taf fails looks first: its last failed call, and how to fix the connection.
         state.grants.firstOrNull { it.id == app.id }?.let { grant ->
           ConnectionWords.lastFailure(grant, state.record)?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -135,7 +136,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
           }
         }
         state.coachNotes[app.id]?.let { Text(it, color = Theme.no) }
-        Eyebrow("What it may do")
+        Eyebrow(Words.Taf.App.whatItMayDo)
         app.actions.forEach { action ->
           Text(action.title, style = scaled(16, FontWeight.SemiBold, Theme.ink))
           action.limits.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
@@ -145,25 +146,25 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         app.workflowSteps.forEach { step -> Text(workflowLine(step), style = scaled(14, color = Theme.soft)) }
         // No saved workflow: said once, under a Workflow line of its own, not under any one action.
         app.workflowWords?.let { words ->
-          Eyebrow("Workflow")
+          Eyebrow(Words.Taf.Workflow.title)
           Text(words, style = scaled(14, color = Theme.soft))
         }
         TextButton({ chosen = null; onActivity(app.stats.activityQuery) }, enabled = app.actions.isNotEmpty()) { Text(app.stats.words + " ›", color = if (app.stats.complete) Theme.amberText else Theme.no) }
         if (state.manages(taf.id)) {
-          improve?.let { TextButton({ chosen = null; it(taf.id) }) { Text("Add actions with Coach", color = Theme.amberText) } }
+          improve?.let { TextButton({ chosen = null; it(taf.id) }) { Text(Words.Taf.App.addActions, color = Theme.amberText) } }
           var confirming by remember { mutableStateOf(false) }
-          TextButton({ confirming = true }) { Text("Disconnect", color = Theme.no) }
-          if (confirming) DriveAlert(onDismissRequest = { confirming = false }, title = { Text("Disconnect ${app.name}?") },
-            text = { Text("Its actions stop working for this taf.") }, containerColor = Theme.panel,
-            confirmButton = { TextButton({ confirming = false; scope.launch { if (actions.connections.disconnect(app.id)) { chosen = null; actions.loadSetup(taf.id) } } }, modifier = Modifier.confirms()) { Text("Disconnect", color = Theme.no) } },
-            dismissButton = { TextButton({ confirming = false }) { Text("Cancel", color = Theme.soft) } })
+          TextButton({ confirming = true }) { Text(Words.Connect.disconnect, color = Theme.no) }
+          if (confirming) DriveAlert(onDismissRequest = { confirming = false }, title = { Text(Words.Connect.disconnectTitle(app.name)) },
+            text = { Text(Words.Connect.disconnectBody) }, containerColor = Theme.panel,
+            confirmButton = { TextButton({ confirming = false; scope.launch { if (actions.connections.disconnect(app.id)) { chosen = null; actions.loadSetup(taf.id) } } }, modifier = Modifier.confirms()) { Text(Words.Connect.disconnect, color = Theme.no) } },
+            dismissButton = { TextButton({ confirming = false }) { Text(Words.Common.cancel, color = Theme.soft) } })
         }
         Spacer(Modifier.height(20.dp))
       }
     }
   }
   if (showJob) DriveAlert(onDismissRequest = { showJob = false }, title = { Text(taf.name) }, text = { Text(taf.job) },
-    confirmButton = { TextButton({ showJob = false }) { Text("Done", color = Theme.amberText) } }, containerColor = Theme.panel)
+    confirmButton = { TextButton({ showJob = false }) { Text(Words.Common.done, color = Theme.amberText) } }, containerColor = Theme.panel)
 }
 
 @Composable
@@ -190,7 +191,7 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     // When it runs, with Run now and Pause, ahead of what it did.
     item(key = "runs") { RunsPanel(taf, taf.id in state.runsInFlight, actions) }
     item { RetainedRuns(taf, state, actions) }
-    if (selection.isNotBlank()) item { TextButton(clearSelection) { Text("All apps", color = Theme.amberText) } }
+    if (selection.isNotBlank()) item { TextButton(clearSelection) { Text(Words.Taf.Activity.allApps, color = Theme.amberText) } }
     item {
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { cache?.pages?.firstOrNull()?.filters?.forEach { choice ->
         FilterChip(selected = filter == choice.id, onClick = { filter = choice.id }, label = { Text(choice.title) })
@@ -200,9 +201,9 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
       if (group.title.isNotBlank()) item(key = "heading-$page-${group.id}") { Eyebrow(group.title) }
       items(group.entries, key = { it.id }) { entry -> SourceActivityRow(entry, taf, state, actions, onConnectApps) }
     } }
-    cache?.error?.let { error -> item { Text(error, color = Theme.no); TextButton({ scope.launch { actions.loadActivity(taf.id, filter, false, selection) } }) { Text("Try again", color = Theme.amberText) } } }
+    cache?.error?.let { error -> item { Text(error, color = Theme.no); TextButton({ scope.launch { actions.loadActivity(taf.id, filter, false, selection) } }) { Text(Words.Common.tryAgain, color = Theme.amberText) } } }
     if (cache == null || cache.loading) item { CircularProgressIndicator(Modifier.size(24.dp), color = Theme.amber) }
-    if (cache != null && cache.pages.isNotEmpty() && cache.pages.all { it.entries.isEmpty() } && next == null) item { Text("Nothing yet.", color = Theme.dim) }
+    if (cache != null && cache.pages.isNotEmpty() && cache.pages.all { it.entries.isEmpty() } && next == null) item { Text(Words.Common.nothingYet, color = Theme.dim) }
     else if (next == null && !loading) cache?.pages?.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
   }
 }
@@ -220,7 +221,7 @@ private fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppStat
     Row(Modifier.fillMaxWidth()) { Text(source.title, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f)); Text(source.time, style = scaled(12, color = Theme.dim)) }
     Text(source.detail, style = scaled(13, color = Theme.soft))
     source.amountText?.let { Text(it, style = scaled(14, FontWeight.Medium, Theme.ink)) }
-    if (call.receipt?.status == "signed") Text("KIFF receipt", style = scaled(12, color = Theme.ok))
+    if (call.receipt?.status == "signed") Text(Words.Receipt.kiffReceipt, style = scaled(12, color = Theme.ok))
     source.next?.let { NextStepRow(it, source, taf, state, actions, onConnectApps) }
   }
   if (open) ReceiptSheet(entry, state) { open = false }
@@ -234,12 +235,12 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
   val source = state.runPages["${taf.id}:false"]
   val scope = rememberCoroutineScope()
   Panel {
-    Eyebrow(source?.pages?.firstOrNull()?.title ?: "Its work")
+    Eyebrow(source?.pages?.firstOrNull()?.title ?: Words.Taf.itsWork)
     source?.pages?.forEach { page -> page.requests.forEach { run ->
       TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) }
     } }
     source?.error?.let { Text(it, color = Theme.no) }
-    TextButton({ all = true }) { Text(source?.pages?.firstOrNull()?.moreTitle ?: "Show all runs", color = Theme.amberText) }
+    TextButton({ all = true }) { Text(source?.pages?.firstOrNull()?.moreTitle ?: Words.Taf.showAllRuns, color = Theme.amberText) }
   }
   if (all) DriveSheet(onDismissRequest = { all = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     val cache = state.runPages["${taf.id}:true"]; val list = rememberLazyListState()
@@ -249,11 +250,11 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
     val loading = cache?.loading == true; val failed = cache?.error != null
     LaunchedEffect(end, next, loading, failed) { if (end && next != null && !loading && !failed) scope.launch { actions.loadRuns(taf.id, true, true) } }
     LazyColumn(Modifier.fillMaxWidth().heightIn(min = 160.dp, max = 600.dp), state = list, contentPadding = PaddingValues(16.dp)) {
-      item { Text("Its work", style = scaled(24, FontWeight.Bold, Theme.ink)) }
+      item { Text(Words.Taf.itsWork, style = scaled(24, FontWeight.Bold, Theme.ink)) }
       cache?.pages?.forEach { page -> items(page.requests, key = { it.id }) { run -> TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) } } }
       if (cache?.loading != false) item { CircularProgressIndicator(color = Theme.amber) }
       else if (next == null) cache.pages.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
-      cache?.error?.let { item { Text(it, color = Theme.no); TextButton({ scope.launch { actions.loadRuns(taf.id, false, true) } }) { Text("Try again", color = Theme.amberText) } } }
+      cache?.error?.let { item { Text(it, color = Theme.no); TextButton({ scope.launch { actions.loadRuns(taf.id, false, true) } }) { Text(Words.Common.tryAgain, color = Theme.amberText) } } }
     }
   }
 }
@@ -265,9 +266,9 @@ internal fun MemorySummaryPanel(taf: Taf, state: AppState, actions: TafActions) 
   val summary = state.tafSetups[taf.id]?.memory
   val scope = rememberCoroutineScope()
   Panel {
-    Eyebrow("What it remembers")
+    Eyebrow(Words.Taf.Memory.title)
     summary?.let { Text(it.title, style = scaled(15, FontWeight.SemiBold, Theme.ink)); it.latest?.let { note -> Text(note, style = scaled(14, color = Theme.soft), maxLines = 2, overflow = TextOverflow.Ellipsis) } }
-    TextButton({ all = true }) { Text("See all", color = Theme.amberText) }
+    TextButton({ all = true }) { Text(Words.Taf.Memory.seeAll, color = Theme.amberText) }
   }
   if (all) DriveSheet(
     onDismissRequest = { all = false; scope.launch { actions.loadSetup(taf.id) } },
