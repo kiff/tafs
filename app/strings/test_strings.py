@@ -12,8 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 
 # The plural forms each language's whole numbers need (CLDR), beside "other".
-NEEDS = {"en": {"one"}, "de": {"one"}, "nl": {"one"}, "it": {"one"}, "es": {"one"}, "pt": {"one"}, "fr": {"one"},
-         "pl": {"one", "few", "many"}}
+NEEDS = {lang: set(forms) for lang, forms in generate.PLURALS.items()}
 
 # Lines that read the same in English and another language, on purpose: by language, the keys.
 SAME_AS_ENGLISH = {}
@@ -86,7 +85,6 @@ class SharedWords(unittest.TestCase):
                     continue
                 self.assertEqual(sorted(set(line) - set(generate.PLURAL_FORMS)), [], f"{lang} {key}")
                 self.assertEqual(sorted((NEEDS[lang] | {"other"}) - set(line)), [], f"{lang} {key} lacks a plural form")
-                self.assertIn("count", generate.placeholders(line), f"{lang} {key} counts nothing")
 
     def test_a_line_has_the_same_placeholders_in_every_language(self):
         for lang, lines in self.lines.items():
@@ -94,7 +92,7 @@ class SharedWords(unittest.TestCase):
                 want = set(generate.placeholders(self.source[key]))
                 for text in generate.forms_of(line):
                     got = set(generate.PLACEHOLDER.findall(text))
-                    # A count's "one" form may write the number out ("One request").
+                    # A count's form may leave the number out ("One request", "All of the Cards").
                     extra_ok = {"count"} if isinstance(line, dict) else set()
                     self.assertTrue(got <= want and want - got <= extra_ok, f"{lang} {key}: {sorted(got)} != {sorted(want)}")
                     self.assertNotRegex(generate.PLACEHOLDER.sub("", text), r"[{}]", f"{lang} {key} has a stray brace")
@@ -140,11 +138,13 @@ class Generator(unittest.TestCase):
             "en.json": {
                 "chat.kept_for": {"one": "Kept {count} for {name}, whose Card uses it.", "other": "Kept {count} for {name}, whose Cards use them."},
                 "chat.waiting": "{taf} is waiting on {who}: 100% of it's \"held\" & <new>",
+                "home.all_of": {"one": "All of the Card", "other": "All of the Cards"},
                 "home.title": "Tafs",
             },
             "pl.json": {
                 "chat.kept_for": {"one": "{name}: zachowano {count}", "few": "{name}: zachowano {count}", "many": "{name}: zachowano {count}", "other": "{name}: zachowano {count}"},
                 "chat.waiting": "{who} czeka na {taf}",
+                "home.all_of": {"one": "Cała Card", "few": "Całe Cards", "many": "Całe Cards", "other": "Całe Cards"},
                 "home.title": "Tafy",
             },
             "de.json": {"home.title": "Tafs"},
@@ -161,17 +161,40 @@ class Generator(unittest.TestCase):
         waiting = strings["chat.waiting"]["localizations"]
         self.assertEqual(waiting["en"]["stringUnit"]["value"], "%1$@ is waiting on %2$@: 100%% of it's \"held\" & <new>")
         self.assertEqual(waiting["pl"]["stringUnit"]["value"], "%2$@ czeka na %1$@")
-        kept = strings["chat.kept_for"]["localizations"]
-        self.assertEqual(kept["en"]["variations"]["plural"]["one"]["stringUnit"]["value"], "Kept %1$lld for %2$@, whose Card uses it.")
-        self.assertEqual(sorted(kept["pl"]["variations"]["plural"]), ["few", "many", "one", "other"])
-        self.assertEqual(kept["pl"]["variations"]["plural"]["few"]["stringUnit"]["value"], "%2$@: zachowano %1$lld")
+
+    def test_ios_gets_an_entry_for_each_plural_form_a_language_has(self):
+        strings = json.loads(self.files["ios/Tafs/Localizable.xcstrings"])["strings"]
+        self.assertNotIn("chat.kept_for", strings, "a count has an entry per form, none of its own")
+        # The count is the first value, then English's order.
+        self.assertEqual(strings["chat.kept_for|one"]["localizations"]["en"]["stringUnit"]["value"], "Kept %1$@ for %2$@, whose Card uses it.")
+        self.assertEqual(strings["chat.kept_for|few"]["localizations"]["pl"]["stringUnit"]["value"], "%2$@: zachowano %1$@")
+        self.assertEqual(sorted(strings["chat.kept_for|few"]["localizations"]), ["pl"], "English has no few")
+        self.assertEqual(sorted(strings["chat.kept_for|other"]["localizations"]), ["en", "pl"])
+        # A count whose words don't show the number still has its forms.
+        self.assertEqual(strings["home.all_of|one"]["localizations"]["en"]["stringUnit"]["value"], "All of the Card")
+        self.assertEqual(strings["home.all_of|other"]["localizations"]["en"]["stringUnit"]["value"], "All of the Cards")
+
+    def test_ios_asks_the_catalog_which_form_a_number_takes(self):
+        plural = json.loads(self.files["ios/Tafs/Localizable.xcstrings"])["strings"]["_plural"]["localizations"]
+        self.assertEqual(sorted(plural["en"]["variations"]["plural"]), ["one", "other"])
+        self.assertEqual(sorted(plural["pl"]["variations"]["plural"]), ["few", "many", "one", "other"])
+        self.assertEqual(plural["pl"]["variations"]["plural"]["few"]["stringUnit"]["value"], "%lld|few")
 
     def test_ios_gets_a_typed_accessor_for_each_key(self):
         swift = self.files["ios/Tafs/Design/Words.swift"]
         self.assertIn('static var title: String { Words.line("home.title") }', swift)
         self.assertIn('static func waiting(taf: String, who: String) -> String { Words.line("chat.waiting", taf, who) }', swift)
-        self.assertIn('static func keptFor(count: Int, name: String) -> String { Words.line("chat.kept_for", count, name) }', swift)
+        self.assertIn('static func keptFor(count: Int, name: String) -> String { Words.count("chat.kept_for", count, name) }', swift)
+        # A count always takes its number, to pick the form, even when its words don't show it.
+        self.assertIn('static func allOf(count: Int) -> String { Words.count("home.all_of", count) }', swift)
         self.assertIn("enum Chat {", swift)
+
+    def test_a_counts_number_always_comes_first(self):
+        source = {"a.shown": {"one": "{name} has {count}", "other": "{name} has {count}"},
+                  "a.hidden": {"one": "All of the Card", "other": "All of the Cards"}, "a.plain": "{count} of {name}"}
+        self.assertEqual(generate.arguments("a.shown", source), ["count", "name"])
+        self.assertEqual(generate.arguments("a.hidden", source), ["count"])
+        self.assertEqual(generate.arguments("a.plain", source), ["count", "name"], "a plain line keeps its own order")
 
     def test_a_reserved_word_is_still_a_swift_name(self):
         self.assertEqual(generate.camel("default"), "`default`")

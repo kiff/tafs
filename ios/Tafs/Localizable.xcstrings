@@ -1,7 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "connect.clear_removed.title": {
+    "_plural": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -10,16 +10,38 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Clear %1$lld connection from removed tafs?"
+                  "value": "%lld|one"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Clear %1$lld connections from removed tafs?"
+                  "value": "%lld|other"
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "connect.clear_removed.title|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear %1$@ connection from removed tafs?"
+          }
+        }
+      }
+    },
+    "connect.clear_removed.title|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear %1$@ connections from removed tafs?"
           }
         }
       }
@@ -79,25 +101,24 @@
         }
       }
     },
-    "work.requests_need_you": {
+    "work.requests_need_you|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld request needs you"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld requests need you"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ request needs you"
+          }
+        }
+      }
+    },
+    "work.requests_need_you|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ requests need you"
           }
         }
       }

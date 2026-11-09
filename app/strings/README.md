@@ -42,6 +42,8 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
 - **iPhone and iPad:** `ios/Tafs/Localizable.xcstrings`, and `ios/Tafs/Design/Words.swift`
   with a typed accessor for each key (`Words.NeedsYou.approveOnce`,
   `Words.Work.requestsNeedYou(count:)`). A key that isn't here doesn't compile.
+  A count has one catalog entry per plural form (`work.requests_need_you|one`), and the
+  catalog's own `_plural` entry says which form a number takes in the app's language.
 - **Android:** its resources and typed accessors, written by `android.py` beside the
   generator. A key that isn't here doesn't compile there either.
 

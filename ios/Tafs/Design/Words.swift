@@ -7,7 +7,7 @@ enum Words {
     enum Connect {
         enum ClearRemoved {
             /// Clear {count} connections from removed tafs?
-            static func title(count: Int) -> String { Words.line("connect.clear_removed.title", count) }
+            static func title(count: Int) -> String { Words.count("connect.clear_removed.title", count) }
         }
     }
     enum Home {
@@ -28,11 +28,30 @@ enum Words {
     }
     enum Work {
         /// {count} requests need you
-        static func requestsNeedYou(count: Int) -> String { Words.line("work.requests_need_you", count) }
+        static func requestsNeedYou(count: Int) -> String { Words.count("work.requests_need_you", count) }
     }
 
-    /// A line by its key, with its values. A count picks the plural form its language needs.
-    static func line(_ key: String, _ values: CVarArg...) -> String {
+    /// A line by its key, with its values.
+    static func line(_ key: String, _ values: String...) -> String {
+        filled(key, values)
+    }
+
+    /// A count's line: the plural form its number takes in the app's language, else `other`.
+    /// The number is the line's first value, written as the app writes a number.
+    static func count(_ key: String, _ count: Int, _ values: String...) -> String {
+        let form = "\(key)|\(pluralForm(count))"
+        let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form
+        return filled(known ? form : "\(key)|other", [String(count)] + values)
+    }
+
+    /// The plural form a number takes in the app's language: one, few, many, other…
+    static func pluralForm(_ count: Int) -> String {
+        let format = Bundle.main.localizedString(forKey: "_plural", value: nil, table: nil)
+        let picked = String(format: format, locale: Locale.current, count)
+        return picked.split(separator: "|").last.map(String.init) ?? "other"
+    }
+
+    private static func filled(_ key: String, _ values: [String]) -> String {
         let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
         return values.isEmpty ? format : String(format: format, locale: Locale.current, arguments: values)
     }
