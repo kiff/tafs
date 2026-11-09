@@ -476,6 +476,28 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "")).status).toBe(401);
   });
 
+  it("ends a run kiff/agents stopped with a code with that code and its words, for the apps to show as they are", async () => {
+    const w = world();
+    const started = await stream(w, PATH, { token: "ana", body: { text: "Refund T-3001" } });
+    const run = String(started.events[0]!.data.run);
+    const stored = w.agents.runs.find((x) => x.id === run)!;
+    const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
+    Object.assign(stored, { status: "ERROR", error: words, code: "ai_unavailable" });
+    const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    // Whole, all three sentences: words for people are never cut to two.
+    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [], code: "ai_unavailable", words } });
+    // A failure with no code ends as before: kiff/agents' error text isn't passed on as words.
+    Object.assign(stored, { error: "anthropic: 500 internal", code: undefined });
+    const plain = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    expect(plain.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [] } });
+    // A code that isn't one (spaces, capitals, too long) isn't passed on either.
+    for (const bad of ["AI Unavailable", "x".repeat(41), ""]) {
+      Object.assign(stored, { error: words, code: bad });
+      const odd = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+      expect(odd.events.at(-1)!.data).toEqual({ status: "ERROR", stop: "", done: [] });
+    }
+  });
+
   it("says what a failed run did before it stopped, by tool, what it acted on and KIFF's key, never the input (kiff/agents#249)", async () => {
     const w = world();
     const started = await stream(w, PATH, { token: "ana", body: { text: "Refund T-3001" } });

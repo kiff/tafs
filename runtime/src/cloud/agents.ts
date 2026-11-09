@@ -207,6 +207,11 @@ export interface Run {
   stop?: string;
   output?: string;
   error?: string;
+  /**
+   * Why an ERROR run stopped, as a code, when kiff/agents has one with words for people in `error`: `ai_unavailable`,
+   * the AI provider not serving us (our side; none of the person's credits used). Absent on any other run.
+   */
+  code?: string;
   cost_micro_usd: number;
   turns: number;
   requirements?: Requirement[];

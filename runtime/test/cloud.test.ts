@@ -3326,6 +3326,10 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(c.not_done.map((x) => [x.tool, x.run])).toEqual([["send_reminder_k3f9", run.id], ["list_inboxes_k3f9", run.id]]);
     // A run without kept lines answers as before.
     expect(await coachTool("taf_run", { taf: RAE, run: clean.id }, callOf, deps)).not.toHaveProperty("calls_not_done");
+    // A run kiff/agents stopped with a code carries it beside its error; one without a code carries none.
+    Object.assign(w.agents.runs.find((x) => x.id === clean.id)!, { status: "ERROR", error: "Our AI provider isn't serving us right now, so this stopped.", code: "ai_unavailable" });
+    expect(await coachTool("taf_run", { taf: RAE, run: clean.id }, callOf, deps)).toMatchObject({ status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped." });
+    expect(await coachTool("taf_run", { taf: RAE, run: run.id }, callOf, deps)).not.toHaveProperty("code");
     // Another person's run is theirs to read alone: taf_check leaves it out (the same rule as taf_run).
     const theirs = await w.agents.api.startRun("t_acme", RAE, "Mine", { requester: { kind: "member", id: "u_bob" } });
     w.agents.runs.find((x) => x.id === theirs.id)!.status = "COMPLETED";

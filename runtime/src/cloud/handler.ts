@@ -13,7 +13,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { skippedOf, summaryOf, workOf } from "./work.js";
+import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
@@ -4831,7 +4831,10 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
       case "end": {
         const given = [...heldFailures.values()].join("");
         heldFailures.clear();
-        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
+        // A run kiff/agents stopped with a code (`ai_unavailable`) ends with it and its words, for the apps to show as
+        // they are; any other failure as before.
+        const coded = runFailure(d);
+        return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done), ...(coded ?? {}) } : {}) });
       }
       default:
         return undefined;
@@ -5545,6 +5548,7 @@ function runSummary(r: Run) {
   return {
     run: r.id, status: r.status, trigger: r.trigger, started: iso(r.created), updated: iso(r.updated),
     ...(r.output ? { answer: r.output } : {}), ...(r.error ? { error: r.error } : {}),
+    ...(runFailure(r) ? { code: runFailure(r)!.code } : {}),
     ...(r.status === "PAUSED" ? { waits_on: waitsOn(r) } : {}),
   };
 }
@@ -6342,6 +6346,9 @@ function coachLine(name: string, task: Task, r: Run): { line: string; said: stri
     return { line: `${head} It waits for the owner to answer a held call${waits ? ` (${waits})` : ""}. Never answer it yourself.`, said: "Waits for your answer." };
   }
   if (r.status === "ERROR") {
+    // A coded failure's words are for people as they are, whole: what the owner sees in Coach's chat.
+    const coded = runFailure(r);
+    if (coded) return { line: `${head} It failed (${coded.code}). error: ${JSON.stringify(coded.words)}`, said: coded.words };
     const why = twoSentences(r.error || "no reason given");
     return { line: `${head} It failed. error: ${JSON.stringify(why)}`, said: `It failed: ${why}` };
   }
