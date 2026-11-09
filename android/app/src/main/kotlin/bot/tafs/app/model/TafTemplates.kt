@@ -21,91 +21,91 @@ object TafTemplates {
 
   /** Support: settle refund and credit requests within policy. */
   val refunds = TafTemplate(
-    key = "refunds", name = "Refunds",
-    job = "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
-    tools = listOf("Payments", "Store", "Email"),
+    key = "refunds", name = Words.Sample.Refunds.name,
+    job = Words.Sample.Refunds.job,
+    tools = listOf(Words.Sample.Tool.payments, Words.Sample.Tool.store, Words.Sample.Tool.email),
     rules = listOf(
-      CardRule(action = "refund", label = "Refunds", perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day, nextSteps = listOf("Return first")),
-      CardRule(action = "credit", label = "Credits", perAction = Money.eur(100.0), perWindow = Money.eur(1_000.0), window = Window.day),
-      CardRule(action = "payout", label = "Payouts", never = true, outside = Outside.refuse),
+      CardRule(action = "refund", label = Words.Sample.Refunds.Rule.refunds, perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day, nextSteps = listOf("Return first")),
+      CardRule(action = "credit", label = Words.Sample.Refunds.Rule.credits, perAction = Money.eur(100.0), perWindow = Money.eur(1_000.0), window = Window.day),
+      CardRule(action = "payout", label = Words.Sample.Refunds.Rule.payouts, never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("refund", "Refund order #4471", Money.eur(40.0), "Arrived 6 days late"),
-      ProposedAction("credit", "Credit on account #2290", Money.eur(25.0), "Billing error last month"),
-      ProposedAction("refund", "Refund order #4502", Money.eur(480.0), "Damaged on arrival, photo attached"),
-      ProposedAction("payout", "Pay out to a new bank account", Money.eur(900.0), "Customer asked for cash instead"),
+      ProposedAction("refund", Words.Sample.Refunds.refund4471, Money.eur(40.0), Words.Sample.Refunds.refund4471Why),
+      ProposedAction("credit", Words.Sample.Refunds.credit2290, Money.eur(25.0), Words.Sample.Refunds.credit2290Why),
+      ProposedAction("refund", Words.Sample.Refunds.refund4502, Money.eur(480.0), Words.Sample.Refunds.refund4502Why),
+      ProposedAction("payout", Words.Sample.Refunds.payout, Money.eur(900.0), Words.Sample.Refunds.payoutWhy),
     ),
   )
 
   /** Accounts payable: match, approve and pay routine vendor bills. */
   val billPay = TafTemplate(
-    key = "billpay", name = "Bill pay",
-    job = "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
-    tools = listOf("Accounting", "Email"),
+    key = "billpay", name = Words.Sample.BillPay.name,
+    job = Words.Sample.BillPay.job,
+    tools = listOf(Words.Sample.Tool.accounting, Words.Sample.Tool.email),
     rules = listOf(
-      CardRule(action = "pay_bill", label = "Bills", perAction = Money.eur(5_000.0), perWindow = Money.eur(25_000.0), window = Window.week, nextSteps = listOf("Pay half now")),
-      CardRule(action = "wire", label = "Wires", alwaysAsk = true),
-      CardRule(action = "bank_details", label = "Bank detail changes", never = true, outside = Outside.refuse),
-      CardRule(action = "new_payee", label = "New payees", never = true, outside = Outside.refuse),
+      CardRule(action = "pay_bill", label = Words.Sample.BillPay.Rule.bills, perAction = Money.eur(5_000.0), perWindow = Money.eur(25_000.0), window = Window.week, nextSteps = listOf("Pay half now")),
+      CardRule(action = "wire", label = Words.Sample.BillPay.Rule.wires, alwaysAsk = true),
+      CardRule(action = "bank_details", label = Words.Sample.BillPay.Rule.bankDetails, never = true, outside = Outside.refuse),
+      CardRule(action = "new_payee", label = Words.Sample.BillPay.Rule.newPayees, never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("pay_bill", "Pay Northwind Packaging", Money.eur(1_240.0), "Matches PO-3381"),
-      ProposedAction("pay_bill", "Pay Atlas Freight", Money.eur(8_400.0), "Matches PO-3390, quarterly"),
-      ProposedAction("bank_details", "Update Atlas Freight's bank account", null, "Email from a new address asked for it"),
+      ProposedAction("pay_bill", Words.Sample.BillPay.payNorthwind, Money.eur(1_240.0), Words.Sample.BillPay.payNorthwindWhy),
+      ProposedAction("pay_bill", Words.Sample.BillPay.payAtlas, Money.eur(8_400.0), Words.Sample.BillPay.payAtlasWhy),
+      ProposedAction("bank_details", Words.Sample.BillPay.updateBank, null, Words.Sample.BillPay.updateBankWhy),
     ),
   )
 
   /** IT: joiners, movers and leavers across identity, workspace and code. */
   val access = TafTemplate(
-    key = "access", name = "Access",
-    job = "Give new joiners their apps and remove leavers the day they go. Roles from the approved list only. Deactivate, never delete.",
-    tools = listOf("Sign-in", "Code"),
+    key = "access", name = Words.Sample.Access.name,
+    job = Words.Sample.Access.job,
+    tools = listOf(Words.Sample.Tool.signIn, Words.Sample.Tool.code),
     rules = listOf(
-      CardRule(action = "grant_role", label = "Approved roles", countPerWindow = 40, window = Window.day),
-      CardRule(action = "deactivate", label = "Deactivations", countPerWindow = 20, window = Window.day),
-      CardRule(action = "elevate", label = "Elevated access", alwaysAsk = true),
-      CardRule(action = "grant_admin", label = "Admin roles", never = true, outside = Outside.refuse),
-      CardRule(action = "delete_user", label = "Deleting users", never = true, outside = Outside.refuse),
+      CardRule(action = "grant_role", label = Words.Sample.Access.Rule.approvedRoles, countPerWindow = 40, window = Window.day),
+      CardRule(action = "deactivate", label = Words.Sample.Access.Rule.deactivations, countPerWindow = 20, window = Window.day),
+      CardRule(action = "elevate", label = Words.Sample.Access.Rule.elevated, alwaysAsk = true),
+      CardRule(action = "grant_admin", label = Words.Sample.Access.Rule.adminRoles, never = true, outside = Outside.refuse),
+      CardRule(action = "delete_user", label = Words.Sample.Access.Rule.deletingUsers, never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("grant_role", "Give Ana the Sales role", null, "Starts Monday, per HR"),
-      ProposedAction("deactivate", "Deactivate Tom's accounts", null, "Left Friday, per HR"),
-      ProposedAction("elevate", "Production database access for Lee, 8 hours", null, "On call, incident open"),
-      ProposedAction("grant_admin", "Make Lee an admin of the code", null, "Asked in the team chat"),
+      ProposedAction("grant_role", Words.Sample.Access.salesRole, null, Words.Sample.Access.salesRoleWhy),
+      ProposedAction("deactivate", Words.Sample.Access.deactivateTom, null, Words.Sample.Access.deactivateTomWhy),
+      ProposedAction("elevate", Words.Sample.Access.databaseLee, null, Words.Sample.Access.databaseLeeWhy),
+      ProposedAction("grant_admin", Words.Sample.Access.adminLee, null, Words.Sample.Access.adminLeeWhy),
     ),
   )
 
   /** Engineering: ship fixes and roll back, never destroy. */
   val deploys = TafTemplate(
-    key = "deploys", name = "Deploys",
-    job = "Ship merged fixes to production when CI is green, and roll back when errors spike. Never drop or delete production data.",
-    tools = listOf("Code", "Hosting", "Network"),
+    key = "deploys", name = Words.Sample.Deploys.name,
+    job = Words.Sample.Deploys.job,
+    tools = listOf(Words.Sample.Tool.code, Words.Sample.Tool.hosting, Words.Sample.Tool.network),
     rules = listOf(
-      CardRule(action = "deploy", label = "Production deploys", countPerWindow = 10, window = Window.day),
-      CardRule(action = "rollback", label = "Rollbacks", countPerWindow = 20, window = Window.day),
-      CardRule(action = "migration", label = "Schema migrations", alwaysAsk = true, nextSteps = listOf("Run it tonight")),
-      CardRule(action = "destroy_data", label = "Dropping or deleting data", never = true, outside = Outside.refuse),
+      CardRule(action = "deploy", label = Words.Sample.Deploys.Rule.deploys, countPerWindow = 10, window = Window.day),
+      CardRule(action = "rollback", label = Words.Sample.Deploys.Rule.rollbacks, countPerWindow = 20, window = Window.day),
+      CardRule(action = "migration", label = Words.Sample.Deploys.Rule.migrations, alwaysAsk = true, nextSteps = listOf("Run it tonight")),
+      CardRule(action = "destroy_data", label = Words.Sample.Deploys.Rule.destroyData, never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("deploy", "Deploy api v2.14.1", null, "PR #812 merged, CI green"),
-      ProposedAction("migration", "Run migration 0042_orders_index", null, "Adds an index, 3M rows"),
-      ProposedAction("destroy_data", "DROP TABLE sessions_old", null, "Looks unused"),
+      ProposedAction("deploy", Words.Sample.Deploys.deployApi, null, Words.Sample.Deploys.deployApiWhy),
+      ProposedAction("migration", Words.Sample.Deploys.migration, null, Words.Sample.Deploys.migrationWhy),
+      ProposedAction("destroy_data", "DROP TABLE sessions_old", null, Words.Sample.Deploys.dropTableWhy),
     ),
   )
 
   /** Payments: answer disputes with evidence before the deadline. */
   val chargebacks = TafTemplate(
-    key = "chargebacks", name = "Chargebacks",
-    job = "Answer card disputes with the order's evidence before the deadline. Accept small ones that can't be won. Share nothing beyond the template.",
-    tools = listOf("Payments"),
+    key = "chargebacks", name = Words.Sample.Chargebacks.name,
+    job = Words.Sample.Chargebacks.job,
+    tools = listOf(Words.Sample.Tool.payments),
     rules = listOf(
-      CardRule(action = "submit_evidence", label = "Evidence", perAction = Money.eur(500.0), countPerWindow = 50, window = Window.day),
-      CardRule(action = "accept_dispute", label = "Accepting a loss", perAction = Money.eur(100.0), perWindow = Money.eur(500.0), window = Window.week),
+      CardRule(action = "submit_evidence", label = Words.Sample.Chargebacks.Rule.evidence, perAction = Money.eur(500.0), countPerWindow = 50, window = Window.day),
+      CardRule(action = "accept_dispute", label = Words.Sample.Chargebacks.Rule.acceptingLoss, perAction = Money.eur(100.0), perWindow = Money.eur(500.0), window = Window.week),
     ),
     script = listOf(
-      ProposedAction("submit_evidence", "Answer dispute on #3318", Money.eur(120.0), "Delivered, signed for"),
-      ProposedAction("accept_dispute", "Accept dispute on #3342", Money.eur(35.0), "No proof of delivery"),
-      ProposedAction("submit_evidence", "Answer dispute on #3360", Money.eur(1_800.0), "Due in 2 days"),
+      ProposedAction("submit_evidence", Words.Sample.Chargebacks.answer3318, Money.eur(120.0), Words.Sample.Chargebacks.answer3318Why),
+      ProposedAction("accept_dispute", Words.Sample.Chargebacks.accept3342, Money.eur(35.0), Words.Sample.Chargebacks.accept3342Why),
+      ProposedAction("submit_evidence", Words.Sample.Chargebacks.answer3360, Money.eur(1_800.0), Words.Sample.Chargebacks.answer3360Why),
     ),
   )
 }

@@ -60,7 +60,7 @@ object ConnectAppsWords {
   val NOT_LISTED_WHY get() = Words.Connect.Apps.notListedWhy
   val NONE get() = Words.Connect.Apps.none
   val MORE get() = Words.Connect.Apps.more
-  val DISCONNECT get() = Words.Connect.disconnect
+  val DISCONNECT get() = Words.Connect.disconnectButton
 
   /** A connection's row, under its taf's heading: the vendor account planque gives, else the app's name. */
   fun rowTitle(app: String, grant: bot.tafs.app.kiff.Grant): String = grant.account?.takeIf { it.isNotBlank() } ?: app

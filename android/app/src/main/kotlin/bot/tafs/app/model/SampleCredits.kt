@@ -14,16 +14,16 @@ import java.time.Instant
  * the same on iPhone. Its tafs' rows don't open: the sample has no runs to read.
  */
 object SampleCredits {
-  private const val NOTE = "Each run counts once, when it ends, in whole credits."
+  private val NOTE get() = Words.Sample.Credits.note
 
-  val balance = Balance(
+  val balance get() = Balance(
     balance = BalanceNow(
       state = BalanceNow.OK,
       meterPct = 48,
-      words = "Solo · 260 of 500 credits left this period",
-      detail = "Then 900 in packs, which never expire",
+      words = Words.Sample.Credits.balanceWords,
+      detail = Words.Sample.Credits.balanceDetail,
     ),
-    planLine = "Solo · 260 credits left",
+    planLine = Words.Sample.Credits.planLine,
     planTone = BalanceNow.OK,
   )
 
@@ -31,10 +31,10 @@ object SampleCredits {
     Credits(
       period = CreditsPeriod(Instant.parse("2026-10-01T00:00:00Z"), Instant.parse("2026-11-01T00:00:00Z"), current = false),
       credits = 2310, runs = 126,
-      words = "Last period: 2,310 credits used · 1 Oct to 31 Oct",
+      words = Words.Sample.Credits.lastPeriod,
       tafs = listOf(
-        CreditsTaf("sample-refunds", 1480, 74, "Refunds · 1,480 credits · 74 runs"),
-        CreditsTaf("sample-invoices", 830, 52, "Overdue invoices · 830 credits · 52 runs"),
+        CreditsTaf("sample-refunds", 1480, 74, Words.Sample.Credits.refundsLast),
+        CreditsTaf("sample-invoices", 830, 52, Words.Sample.Credits.invoicesLast),
       ),
       note = NOTE,
     )
@@ -42,17 +42,17 @@ object SampleCredits {
     Credits(
       period = CreditsPeriod(Instant.parse("2026-11-01T00:00:00Z"), Instant.parse("2026-12-01T00:00:00Z")),
       credits = 1240, runs = 69,
-      words = "This period: 1,240 credits used · ends on 30 Nov",
+      words = Words.Sample.Credits.thisPeriod,
       tafs = listOf(
-        CreditsTaf("sample-refunds", 820, 41, "Refunds · 820 credits · 41 runs"),
-        CreditsTaf("sample-invoices", 420, 28, "Overdue invoices · 420 credits · 28 runs"),
+        CreditsTaf("sample-refunds", 820, 41, Words.Sample.Credits.refundsThis),
+        CreditsTaf("sample-invoices", 420, 28, Words.Sample.Credits.invoicesThis),
       ),
       notCounted = CreditsNotCounted(
-        runs = 9, words = "Not counted: 9 runs",
+        runs = 9, words = Words.Sample.Credits.notCounted,
         lines = listOf(
-          CreditsWhy("coach", 6, "Coach, within its fair use · 6 runs"),
-          CreditsWhy("trial", 2, "Trials of a new version · 2 runs"),
-          CreditsWhy("failed", 1, "Failed on our side · 1 run"),
+          CreditsWhy("coach", 6, Words.Sample.Credits.notCountedCoach),
+          CreditsWhy("trial", 2, Words.Sample.Credits.notCountedTrials),
+          CreditsWhy("failed", 1, Words.Sample.Credits.notCountedFailed),
         ),
       ),
       note = NOTE,

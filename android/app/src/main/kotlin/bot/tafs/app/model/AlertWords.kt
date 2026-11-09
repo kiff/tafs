@@ -2,35 +2,36 @@ package bot.tafs.app.model
 
 /** What Settings says of alerts. */
 object AlertWords {
-  const val NOT_IN_BUILD = "Alerts aren't set up in this build of tafs."
-  const val ON_THIS_PHONE = "Alerts on this phone"
-  const val SOUND = "Sound"
-  const val SOUND_WORDS = "For a hold or a halt only"
-  const val WITH_SOUND = "With sound"
-  const val SILENT = "Silent"
-  const val WHAT_ALERTS = "What alerts you"
+  val NOT_IN_BUILD get() = Words.Alert.notInBuild
+  val ON_THIS_PHONE get() = Words.Alert.onThisPhone
+  val SOUND get() = Words.Alert.sound
+  val SOUND_WORDS get() = Words.Alert.soundWords
+  val WITH_SOUND get() = Words.Alert.withSound
+  val SILENT get() = Words.Alert.silent
+  val WHAT_ALERTS get() = Words.Alert.whatAlerts
 
   /** The lock screen's two kinds, as examples: a hold, loud; an answer, silent. */
-  const val LOUD_EXAMPLE = "Chargebacks needs you · Dispute #4825 · €640 is over its limit"
-  const val SILENT_EXAMPLE = "Refunds answered maria@… · By email"
+  val LOUD_EXAMPLE get() = Words.Alert.loudExample
+  val SILENT_EXAMPLE get() = Words.Alert.silentExample
 
   /** What alerts the owner, at its level (`push/Alerts.kt`): the event, and how it comes. */
-  const val NEEDS_YOU = "A taf needs you"
-  const val ALL_HALTED = "Every taf halted"
-  const val ANSWERED = "A taf answered someone"
-  const val NOT_SENT = "A reply wasn't sent"
-  const val ALWAYS = "Sound, always"
+  val NEEDS_YOU get() = Words.Alert.needsYou
+  val ALL_HALTED get() = Words.Alert.allHalted
+  val ANSWERED get() = Words.Alert.answered
+  val NOT_SENT get() = Words.Alert.notSent
+  val ALWAYS get() = Words.Alert.always
 
   /** "3 tafs ›": the tafs whose results alert the phones. */
-  fun tafs(n: Int): String = if (n == 1) "1 taf ›" else "$n tafs ›"
+  fun tafs(n: Int): String = Words.Alert.tafs(count = n)
 
   /** Where alerts stand on this phone. */
-  fun status(available: Boolean, ready: Boolean): String = if (!available) "Not available" else if (ready) "On" else "Off"
+  fun status(available: Boolean, ready: Boolean): String =
+    if (!available) Words.Alert.Status.notAvailable else if (ready) Words.Alert.Status.on else Words.Alert.Status.off
 
   /** The line under the alerts' rows: what they are, or why they can't be. */
   fun foot(available: Boolean, canAnswerHolds: Boolean?): String? = when {
     !available -> NOT_IN_BUILD
-    canAnswerHolds == false -> "Alerts go to the people who may answer held calls. Your role on this account can't."
-    else -> "When a taf needs you, this phone tells you even with tafs closed. Nothing is sent until you approve."
+    canAnswerHolds == false -> Words.Alert.Foot.cantAnswerHolds
+    else -> Words.Alert.Foot.tellsYou
   }
 }

@@ -153,10 +153,10 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         if (state.manages(taf.id)) {
           improve?.let { TextButton({ chosen = null; it(taf.id) }) { Text(Words.Taf.App.addActions, color = Theme.amberText) } }
           var confirming by remember { mutableStateOf(false) }
-          TextButton({ confirming = true }) { Text(Words.Connect.disconnect, color = Theme.no) }
-          if (confirming) DriveAlert(onDismissRequest = { confirming = false }, title = { Text(Words.Connect.disconnectTitle(app.name)) },
+          TextButton({ confirming = true }) { Text(Words.Connect.disconnectButton, color = Theme.no) }
+          if (confirming) DriveAlert(onDismissRequest = { confirming = false }, title = { Text(Words.Connect.disconnectAppQuestion(app.name)) },
             text = { Text(Words.Connect.disconnectBody) }, containerColor = Theme.panel,
-            confirmButton = { TextButton({ confirming = false; scope.launch { if (actions.connections.disconnect(app.id)) { chosen = null; actions.loadSetup(taf.id) } } }, modifier = Modifier.confirms()) { Text(Words.Connect.disconnect, color = Theme.no) } },
+            confirmButton = { TextButton({ confirming = false; scope.launch { if (actions.connections.disconnect(app.id)) { chosen = null; actions.loadSetup(taf.id) } } }, modifier = Modifier.confirms()) { Text(Words.Connect.disconnectButton, color = Theme.no) } },
             dismissButton = { TextButton({ confirming = false }) { Text(Words.Common.cancel, color = Theme.soft) } })
         }
         Spacer(Modifier.height(20.dp))

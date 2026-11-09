@@ -81,7 +81,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
         }
         // A sign-in that never came back is cancelled, not disconnected: nothing was connected.
         Text(
-          if (grant.waitingSignIn) ConnectionWords.CANCEL_SIGN_IN else Words.Connect.disconnect,
+          if (grant.waitingSignIn) ConnectionWords.CANCEL_SIGN_IN else Words.Connect.disconnectButton,
           style = scaled(14, FontWeight.Medium, Theme.no),
           modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (grant.waitingSignIn) cancelling = grant else ending = grant }.padding(top = 8.dp),
         )
@@ -103,7 +103,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
       onDismissRequest = { ending = null },
       title = { Text(ConnectionWords.disconnectTitle(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
       text = { Text(ConnectionWords.disconnectBody(grant, taf.name, ConnectAppsWords.alsoStops(state, grant))) },
-      confirmButton = { TextButton({ ending = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text(Words.Connect.disconnect, color = Theme.no) } },
+      confirmButton = { TextButton({ ending = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text(Words.Connect.disconnectButton, color = Theme.no) } },
       dismissButton = { TextButton({ ending = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )

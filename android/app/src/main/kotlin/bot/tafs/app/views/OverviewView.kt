@@ -58,7 +58,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
       // The tafs' scheduled work to come (kiff/tafs#534), as iOS's Overview has it.
       androidx.compose.foundation.layout.Box(
         Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.raised).clickable(onClick = onOpenCalendar)
-          .semantics { contentDescription = Words.Calendar.title }.testTag("overview.calendar"),
+          .semantics { contentDescription = Words.Calendar.heading }.testTag("overview.calendar"),
         contentAlignment = Alignment.Center,
       ) {
         androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))

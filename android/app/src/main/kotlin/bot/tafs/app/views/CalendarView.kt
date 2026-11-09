@@ -111,7 +111,7 @@ fun CalendarView(
           Text(Words.Home.tafs, style = scaled(16, color = Theme.amber))
         }
       }
-      Text(Words.Calendar.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+      Text(Words.Calendar.heading, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
       val error = state.calendarError
       when {
         error != null -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {

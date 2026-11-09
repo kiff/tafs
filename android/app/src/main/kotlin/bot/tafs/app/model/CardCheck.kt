@@ -15,23 +15,23 @@ sealed interface Decision {
  */
 object CardCheck {
   fun decide(proposed: ProposedAction, taf: Taf): Decision {
-    if (taf.card.revoked) return Decision.Refused("Card revoked")
+    if (taf.card.revoked) return Decision.Refused(Words.Card.cardRevoked)
     val rule = taf.card.rules.firstOrNull { it.action == proposed.action }
-      ?: return Decision.Refused("Not on this taf's Card")
-    if (rule.never) return Decision.Refused("${rule.label}: never allowed")
-    if (rule.alwaysAsk) return Decision.Held("${rule.label}: always asks you")
+      ?: return Decision.Refused(Words.Card.Check.notOnCard)
+    if (rule.never) return Decision.Refused(Words.Card.Check.neverAllowed(rule.label))
+    if (rule.alwaysAsk) return Decision.Held(Words.Card.Check.alwaysAsks(rule.label))
 
     val breaches = mutableListOf<String>()
     val amount = proposed.amount
     if (rule.perAction != null && amount != null && amount > rule.perAction) {
-      breaches += "Over ${rule.perAction.formatted} each"
+      breaches += Words.Card.Check.overEach(rule.perAction.formatted)
     }
     if (rule.perWindow != null && amount != null) {
       val used = taf.used[rule.action] ?: Money.ZERO
-      if (used + amount > rule.perWindow) breaches += "Over ${rule.perWindow.formatted} ${rule.window.label}"
+      if (used + amount > rule.perWindow) breaches += Words.Card.Check.overTotal(rule.perWindow.formatted, rule.window.label)
     }
     if (rule.countPerWindow != null && (taf.counted[rule.action] ?: 0) + 1 > rule.countPerWindow) {
-      breaches += "Over ${rule.countPerWindow} ${rule.window.label}"
+      breaches += Words.Card.Check.overCount(count = rule.countPerWindow, window = rule.window.label)
     }
     if (breaches.isEmpty()) return Decision.Allowed
 

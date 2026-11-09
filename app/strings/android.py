@@ -53,8 +53,11 @@ def order(value):
         for name in names_in(text):
             if name not in seen:
                 seen.append(name)
-    if isinstance(value, dict) and "count" in seen:
-        seen.remove("count")
+    # A count always takes its number first, even when no form shows it ("All of the Card" / "All of the Cards"): the
+    # number picks the form.
+    if isinstance(value, dict):
+        if "count" in seen:
+            seen.remove("count")
         seen.insert(0, "count")
     return seen
 

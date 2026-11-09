@@ -159,7 +159,7 @@ fun SettingsSheet(
               state.suggestionsError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
             }
           }
-          Section(Words.Settings.theme) {
+          Section(Words.Settings.themeTitle) {
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
               ThemePreference.entries.forEach { choice ->
                 Row(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (Theme.preference == choice) Theme.ink else Theme.raised)

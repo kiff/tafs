@@ -452,7 +452,7 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         if (DoorWords.canDoIt(knock)) {
           Text(
-            Words.Door.doIt,
+            Words.Door.doItButton,
             style = scaled(14, FontWeight.SemiBold, Theme.panel),
             modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).background(Theme.amberText).clickable(enabled = !busy) { asking = true }.padding(horizontal = 12.dp, vertical = 8.dp),
           )
@@ -532,7 +532,7 @@ class SlackPicking(
 private fun SlackDoorStep(app: DoorApp, slack: SlackPicking, busy: Boolean) {
   var bot by remember { mutableStateOf(slack.bots.singleOrNull()) }
   Panel {
-    Eyebrow(Words.Door.slack)
+    Eyebrow(Words.Door.slackDoor)
     if (slack.bots.isEmpty()) {
       Text(DoorWords.SLACK_CONNECT_FIRST, style = scaled(14, color = Theme.ink))
       return@Panel

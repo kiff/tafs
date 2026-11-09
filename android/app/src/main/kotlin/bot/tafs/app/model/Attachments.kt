@@ -52,7 +52,7 @@ object FilePrep {
   const val PER_MESSAGE = 5
 
   /** tafs cloud doesn't take the file: its kind or its size. Another file may go. */
-  const val NOT_TAKEN = "tafs can't attach this file: it isn't a kind or size it takes. Pick another one."
+  val NOT_TAKEN get() = Words.Attachment.notTaken
 
   /** A photo's long edge, at most: the most the model reads. */
   const val LONG_EDGE = 2576
@@ -100,21 +100,21 @@ object FilePrep {
 
   /** A file as it is, not a photo: refused when it can't be attached or is over its limit. */
   fun file(name: String, data: ByteArray, mediaType: String?): PreparedFile {
-    val type = mediaType ?: throw FileProblem("$name can't be attached. Photos, PDFs, text, CSV, Markdown, Word and Excel files can.")
+    val type = mediaType ?: throw FileProblem(Words.Attachment.wrongKind(name))
     check(name, data.size.toLong(), type)
     return PreparedFile(name, type, data)
   }
 
   /** Refuses a file over its type's limit, saying which. */
   fun check(name: String, size: Long, mediaType: String) {
-    val limit = LIMITS[mediaType] ?: throw FileProblem("$name can't be attached.")
-    if (size > limit) throw FileProblem("$name is ${megabytes(size)}; the most is ${megabytes(limit)}.")
+    val limit = LIMITS[mediaType] ?: throw FileProblem(Words.Attachment.cantAttach(name))
+    if (size > limit) throw FileProblem(Words.Attachment.tooLarge(name, megabytes(size), megabytes(limit)))
   }
 
-  fun megabytes(n: Long): String = String.format(Locale.ROOT, "%.1f MB", n.toDouble() / MB)
+  fun megabytes(n: Long): String = Words.Attachment.megabytes(String.format(Locale.ROOT, "%.1f", n.toDouble() / MB))
 
   /** A sent file's size, as its line says it: kilobytes under a megabyte. */
-  fun sizeWords(n: Long): String = if (n < MB) "${maxOf(1, (n + 512) / 1024)} KB" else megabytes(n)
+  fun sizeWords(n: Long): String = if (n < MB) Words.Attachment.kilobytes("${maxOf(1, (n + 512) / 1024)}") else megabytes(n)
 
   /** A file's SHA-256, in lowercase hex, as its upload is signed for. */
   fun sha256(data: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) }

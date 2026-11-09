@@ -150,13 +150,13 @@ fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, fill: (String) 
   val improving = state.coachImproving?.let { state.taf(it)?.name }
   val sending = COACH_CHAT in state.chatSending
   Column(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    Text(improving?.let { Words.Coach.improve(it) } ?: CoachWords.ASK_ANYTHING, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
+    Text(improving?.let { Words.Coach.improveTaf(it) } ?: CoachWords.ASK_ANYTHING, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
     Text(improving?.let(CoachWords::improveLine) ?: CoachWords.ASK_ANYTHING_LINE, style = scaled(15, color = Theme.soft))
     // Or start on one taf, as iOS does: each taf this person manages, its own conversation.
     if (improving == null) {
       CoachWords.improvable(state).forEach { taf ->
         Text(
-          Words.Coach.improve(taf.name),
+          Words.Coach.improveTaf(taf.name),
           style = scaled(15, FontWeight.SemiBold, Theme.amberText),
           modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !sending) { improve(taf.id) }.padding(vertical = 10.dp),
         )

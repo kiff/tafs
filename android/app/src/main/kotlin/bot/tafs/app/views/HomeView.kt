@@ -225,7 +225,7 @@ private fun Header(accountLabel: String?, onCalendar: (() -> Unit)? = null) {
     // The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from here.
     if (onCalendar != null) {
       Box(
-        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = Words.Calendar.title },
+        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = Words.Calendar.heading },
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
