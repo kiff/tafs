@@ -140,12 +140,14 @@ class Generator(unittest.TestCase):
                 "chat.waiting": "{taf} is waiting on {who}: 100% of it's \"held\" & <new>",
                 "home.all_of": {"one": "All of the Card", "other": "All of the Cards"},
                 "home.title": "Tafs",
+                "usage.all": "100% used",
             },
             "pl.json": {
                 "chat.kept_for": {"one": "{name}: zachowano {count}", "few": "{name}: zachowano {count}", "many": "{name}: zachowano {count}", "other": "{name}: zachowano {count}"},
                 "chat.waiting": "{who} czeka na {taf}",
                 "home.all_of": {"one": "Cała Card", "few": "Całe Cards", "many": "Całe Cards", "other": "Całe Cards"},
                 "home.title": "Tafy",
+                "usage.all": "100% zużyte",
             },
             "de.json": {"home.title": "Tafs"},
         })
@@ -161,6 +163,12 @@ class Generator(unittest.TestCase):
         waiting = strings["chat.waiting"]["localizations"]
         self.assertEqual(waiting["en"]["stringUnit"]["value"], "%1$@ is waiting on %2$@: 100%% of it's \"held\" & <new>")
         self.assertEqual(waiting["pl"]["stringUnit"]["value"], "%2$@ czeka na %1$@")
+
+    def test_ios_leaves_a_line_with_no_values_as_it_is(self):
+        # Words.line returns a line with no values without formatting it, so "%%" would show.
+        strings = json.loads(self.files["ios/Tafs/Localizable.xcstrings"])["strings"]
+        self.assertEqual(strings["usage.all"]["localizations"]["en"]["stringUnit"]["value"], "100% used")
+        self.assertEqual(strings["usage.all"]["localizations"]["pl"]["stringUnit"]["value"], "100% zużyte")
 
     def test_ios_gets_an_entry_for_each_plural_form_a_language_has(self):
         strings = json.loads(self.files["ios/Tafs/Localizable.xcstrings"])["strings"]

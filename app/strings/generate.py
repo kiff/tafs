@@ -85,8 +85,11 @@ PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["o
 
 def ios_text(text, key, source):
     """A line in the catalog's form: each placeholder by its position, so a language may reorder
-    them. Every value is text, a count's number too, as the app writes it."""
+    them. Every value is text, a count's number too, as the app writes it. A line with no
+    values is never formatted (`Words.line` returns it as it is), so its `%` stays as it is."""
     names = arguments(key, source)
+    if not names:
+        return text
     text = text.replace("%", "%%")
     return PLACEHOLDER.sub(lambda m: f"%{names.index(m.group(1)) + 1}$@", text)
 
