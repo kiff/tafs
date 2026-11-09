@@ -97,7 +97,7 @@ never reach the phone.
 | `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
 | `component` | `{component}` | Something the agent showed: the thread has it |
 | `part` | `{at}` | A resumed run went on after a held call was answered: a fresh live answer starts (resumed streams only) |
-| `end` | `{status, stop, done?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249) |
+| `end` | `{status, stop, done?, code?, words?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249). One kiff/agents stopped with a code adds `code` and `words`, its words for people, whole, which the apps show as they are: `ai_unavailable` is the AI provider not serving us, on our side, with none of the person's credits used. It isn't a credits refusal, so a chat keeps Not sent with Retry. An app shows a code it doesn't know by its `words`. A failure with no code has neither, and kiff/agents' error text is never passed on as words (`runFailure` in `runtime/src/cloud/work.ts`) |
 | `error` | `{error}` | The stream broke; the thread has the rest |
 
 What a step says comes from tafs cloud, never the tool's name (`steps.ts`): for a tool

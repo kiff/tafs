@@ -30,6 +30,8 @@ export interface RequestView {
   line: string;
   /** What a waiting run waits for, in the connection's words, when it waits for a vendor's event (the slow-tools design). */
   waiting_for?: string;
+  /** Why a failed run stopped, as kiff/agents' code (`runFailure`), when it has one: its words are the line. */
+  code?: string;
   /** Where its result went: the door's reply as far as tafs cloud sent it, and each place of the taf's own (delivery.ts). */
   deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true } | DeliveryView>;
 }
@@ -88,6 +90,18 @@ function validZone(zone: string): string {
   }
 }
 
+/**
+ * A failed run's code and its words for people, when kiff/agents gave both (`code`, `error`): passed on to the
+ * apps as they are, so a new code needs no tafs release. A run with no code has none: its error text is never shown
+ * as words for people where a code would be. The words are one line, at most 400 characters.
+ */
+export function runFailure(r: { status?: unknown; error?: unknown; code?: unknown }): { code: string; words: string } | undefined {
+  if (r.status !== "ERROR" || typeof r.code !== "string" || !/^[a-z_]{1,40}$/.test(r.code) || typeof r.error !== "string") return undefined;
+  const flat = r.error.replace(/\s+/g, " ").trim();
+  if (!flat) return undefined;
+  return { code: r.code, words: flat.length > 400 ? `${flat.slice(0, 399)}…` : flat };
+}
+
 /** One run as a request: its state and the words for it. */
 export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], again = new Set<string>(), own: DeliveryView[] = []): RequestView {
   // The newest stamp per run: a reply sent again replaces the one that wasn't.
@@ -124,8 +138,11 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
       return { ...base, state: "done", line: `Done at ${timeIn(r.updated, zone, now)}` };
     case "CANCELLED":
       return { ...base, state: "stopped", line: "Stopped" };
-    default:
+    default: {
+      const coded = runFailure(r);
+      if (coded) return { ...base, state: "failed", line: coded.words, code: coded.code };
       return { ...base, state: "failed", line: r.error ? `It failed: ${r.error}` : "It failed" };
+    }
   }
 }
 

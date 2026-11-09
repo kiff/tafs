@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { requestOf, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
+import { requestOf, runFailure, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
 const run = (o: Partial<Run>): Run => ({
@@ -103,5 +103,25 @@ describe("the thread as one ordered list", () => {
       [{ at: "2026-10-30T10:02:00Z", session: "s", run: "r", exception: "ex_1", invocation: "inv_1" }]);
     expect(items.map((i) => i.type)).toEqual(["message", "held", "message"]);
     expect(items[1]).toEqual({ type: "held", held: { at: "2026-10-30T10:02:00Z", session: "s", run: "r", exception: "ex_1", invocation: "inv_1" } });
+  });
+});
+
+describe("a failed run's code", () => {
+  const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
+  it("makes the request's line kiff/agents' words, with the code beside them; a failure with no code reads as before", () => {
+    expect(requestOf(run({ status: "ERROR", error: words, code: "ai_unavailable" }), "UTC", NOW)).toMatchObject({ state: "failed", line: words, code: "ai_unavailable" });
+    const plain = requestOf(run({ status: "ERROR", error: "Stripe said no." }), "UTC", NOW);
+    expect(plain).toMatchObject({ state: "failed", line: "It failed: Stripe said no." });
+    expect(plain).not.toHaveProperty("code");
+  });
+
+  it("is passed on only for an ERROR run with a code and words, in one line of at most 400 characters", () => {
+    expect(runFailure({ status: "ERROR", error: `  ${words}\n`, code: "ai_unavailable" })).toEqual({ code: "ai_unavailable", words });
+    expect(runFailure({ status: "ERROR", error: "a\n\nb", code: "new_code" })).toEqual({ code: "new_code", words: "a b" });
+    expect(runFailure({ status: "ERROR", error: "x".repeat(500), code: "ai_unavailable" })!.words).toHaveLength(400);
+    expect(runFailure({ status: "COMPLETED", error: words, code: "ai_unavailable" })).toBeUndefined();
+    expect(runFailure({ status: "ERROR", error: words })).toBeUndefined();
+    expect(runFailure({ status: "ERROR", error: "  ", code: "ai_unavailable" })).toBeUndefined();
+    expect(runFailure({ status: "ERROR", error: words, code: "Ai-Unavailable" })).toBeUndefined();
   });
 });
