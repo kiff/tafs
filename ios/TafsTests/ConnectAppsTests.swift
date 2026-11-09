@@ -37,6 +37,23 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertTrue(url.absoluteString.contains("a%2Bb"), url.absoluteString)
     }
 
+    /// The read carries this phone's signed grants read when it has one, as Setup's does, so
+    /// tafs cloud can list each removed taf's connections; without one, no header is sent.
+    func testTheReadSendsTheSignedGrantsRead() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["GET /v1/connect/apps"] = (200, #"{"apps":[],"removed_tafs":[{"agent":"gone-1","grants":[{"grant":"g2","used_by":[]}]}]}"#)
+        let page = try await cloud.connectApps(proof: "t=1,v1=sig,d=dev_phone01")
+        XCTAssertEqual(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"), "t=1,v1=sig,d=dev_phone01")
+        XCTAssertEqual(page.removedTafs.first?.grants?.first?.grant, "g2")
+        _ = try await cloud.connectApps()
+        XCTAssertNil(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
+    }
+
     /// A Slack door listens through the taf's Slack bot connection, known by planque's mark,
     /// and the phone signs only the account, the event and the channel: planque builds the rest.
     func testASlackDoorSubscribesOnlyTheApprovedChannel() async throws {

@@ -141,6 +141,9 @@ final class PlanqueClient {
         /// provider, as planque marks it: what the app matches on, never a vendor's name.
         var entry: String?
         var provider: String?
+        /// The name of the taf it was made for, as planque keeps it: what a removed taf's
+        /// connection is still called.
+        var agentName: String?
         /// The Slack bot connection a Slack door listens through.
         var slackBot: Bool { entry == Self.slackBotEntry || (entry == nil && request.connector?.toolkit == "slackbot") }
         static let slackBotEntry = "connector:composio:slackbot"
@@ -152,7 +155,7 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
