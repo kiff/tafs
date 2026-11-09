@@ -191,7 +191,8 @@ def write(languages, root, check=False):
     """Writes Android's files, or with [check] returns the ones that differ from what would be written."""
     stale = []
     for path, text in outputs(languages, Path(root)).items():
-        current = path.read_text(encoding="utf-8") if path.exists() else None
+        # A checkout may turn line ends into CRLF: the words are the same.
+        current = path.read_text(encoding="utf-8").replace("\r\n", "\n") if path.exists() else None
         if current != text:
             stale.append(str(path))
             if not check:
