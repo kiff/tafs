@@ -15,6 +15,17 @@ const ARGS: Record<string, unknown[][]> = {
   delivered: [["Invoices", { hm: "09:00" }], ["Invoices", { hm: "09:00", day: "Fri" }]],
   handed: [["Rae", { hm: "09:00" }]],
   delivery_retrying: [["Invoices", { hm: "09:00", day: "Fri" }], ["Invoices", undefined]],
+  dial_days_at: [[[1], "09:00"], [[1, 5], "09:00"]],
+  dial_day_short: [[1], [5]],
+  dial_times_a_day: [[["09:00", "17:00"]]],
+  dial_weekly_at: [[["mon", "fri"], "09:00"]],
+  dial_every_on: [[15, { from: "09:00", to: "17:00" }, ["mon"]], [30, undefined, []]],
+  dial_once_on: [["2026-11-05T09:00"], ["2026-11-05"]],
+  dial_turn_stop: [["Replies to whoever wrote"]],
+  dial_turn_on: [["Replies to whoever wrote"]],
+  dial_checks_again: [["Fri 09:00", "the invoice"], ["09:00", ""]],
+  dial_place_handed: [["Invoices", ""], ["Invoices", ": A, B"]],
+  dial_place_goes: [["Sheets", ""]],
   delivered_line: [
     [[{ name: "Sheets", handed: false }, { name: "Invoices", handed: true }], [{ name: "Slack", retrying: true }]],
     [[], [{ name: "Slack", retrying: false }, { name: "Email", retrying: false }]],
@@ -47,10 +58,11 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   const SAME_AS_ENGLISH: Record<string, string[]> = {
     // "Company" is a plan name, kept in every language (docs/languages.md); the seats around it are translated.
     all: ["cr_company"],
-    de: ["push_credits_title"], // "Credits" is the German term in the glossary
-    fr: ["cr_actions"], // "action", "actions" are French words too
-    it: ["cr_pct"], pt: ["cr_pct"], pl: ["cr_pct"], // "80%" is written alike
-    nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title"], // "credit", "run" are the Dutch terms in the glossary
+    de: ["push_credits_title", "dial_app"], // "Credits" is the German term in the glossary; "App" is German too
+    fr: ["cr_actions", "dial_app"], // "action", "actions" and "App" are French words too
+    es: ["dial_app"], // "App" is used as is
+    it: ["cr_pct", "dial_place_email", "dial_app"], pt: ["cr_pct", "dial_place_email", "dial_app"], pl: ["cr_pct"], // "80%" is written alike; "Email" and "App" are used as is
+    nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app"], // "credit", "run" are the Dutch terms in the glossary; "Open" and "App" are Dutch too
   };
 
   it("isn't English in another language: a line copied over untranslated would read the same", () => {

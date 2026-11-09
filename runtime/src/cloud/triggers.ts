@@ -4,6 +4,7 @@
  * exactly is refused with the nearest one in words, for Coach and the apps to offer before the owner
  * confirms. Nothing here reaches the scheduler: only a version made live does.
  */
+import { type Lang, wordsIn } from "./words/index.js";
 
 /** A schedule as kiff/agents stores it. */
 export interface PlannedSchedule {
@@ -164,26 +165,27 @@ export function instantIn(local: string, zone: string): string {
   return new Date(guess - offset(first)).toISOString().replace(/\.000Z$/, "Z");
 }
 
-/** The words for what a version's rings change, one line each, for the owner to confirm. */
-export function triggerWords(t: Trigger): string {
+/** The words for what a version's rings change, one line each, for the owner to confirm: in the person's language. */
+export function triggerWords(t: Trigger, lang: Lang = "en"): string {
+  const w = wordsIn(lang);
   switch (t.kind) {
-    case "door": return "Wakes on its door";
-    case "vendor_event": return "Wakes on a vendor's event";
-    case "app_check": return `Checks ${t.operation} every ${t.every_minutes} minutes, and works only on what's new`;
-    case "before_event": return "Wakes before a calendar event";
-    case "app_event": return `Wakes on ${(t.name ?? t.event ?? "an app's event").replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 100)}`;
+    case "door": return w.dial_wakes_door;
+    case "vendor_event": return w.dial_wakes_vendor;
+    case "app_check": return w.dial_checks(t.operation ?? "", t.every_minutes ?? 0);
+    case "before_event": return w.dial_wakes_before;
+    case "app_event": return w.dial_wakes_on((t.name ?? t.event ?? w.dial_an_app_event).replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 100));
   }
   switch (t.form) {
-    case "daily": return `Every day at ${t.at}`;
-    case "weekdays": return `Weekdays at ${t.at}`;
-    case "weekly": return `${(t.days ?? []).join(", ")} at ${t.at}`;
-    case "monthly": return `On day ${t.date} of each month at ${t.at}`;
-    case "monthly_last_day": return `On the last day of each month at ${t.at}`;
-    case "times_a_day": return `Every day at ${(t.times ?? []).join(", ")}`;
-    case "every": return `Every ${t.every_minutes} minutes${t.between ? ` from ${t.between.from} to ${t.between.to}` : ""}${t.days?.length ? ` on ${t.days.join(", ")}` : ""}`;
-    case "once": return `Once, on ${(t.date ?? "").replace("T", " at ")}`;
+    case "daily": return w.dial_daily(t.at ?? "");
+    case "weekdays": return w.dial_weekdays_at(t.at ?? "");
+    case "weekly": return w.dial_weekly_at(t.days ?? [], t.at ?? "");
+    case "monthly": return w.dial_monthly_at(t.date ?? "", t.at ?? "");
+    case "monthly_last_day": return w.dial_last_day_at(t.at ?? "");
+    case "times_a_day": return w.dial_times_a_day(t.times ?? []);
+    case "every": return w.dial_every_on(t.every_minutes ?? 0, t.between, t.days ?? []);
+    case "once": return w.dial_once_on(t.date ?? "");
   }
-  return "On a schedule";
+  return w.dial_on_schedule;
 }
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];

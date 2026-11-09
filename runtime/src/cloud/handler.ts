@@ -3382,7 +3382,7 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
     ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
     today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
-    zone, now,
+    zone, now, lang: langOf(event),
   });
   }
 
