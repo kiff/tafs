@@ -15,17 +15,16 @@ owner's answer on their phone.
 
 tafs is an app for iPhone, iPad and Android, with **They taf. You kiff.** as its line.
 
-## A typical AI agent vs a taf
+## A good agent harness vs a taf
 
-| | A typical AI agent | A taf |
+| | A good agent harness | A taf |
 |---|---|---|
-| Your sign-ins | Gets your password | Never sees a password |
-| Its limits | Rules in its instructions | A Card, checked outside the AI |
-| Proof it did it | "Done!" Take its word for it | A signed receipt your phone checks |
-| Spending | Spends until someone notices | Over a limit, it asks you |
-| Stopping it | Stopping it means hoping | One tap halts it everywhere |
-| A change to how it works | Made live at once | A next version, tried under a trial Card, made live when you say |
-| What it remembers | Hidden in its context | Notes you can read and forget one by one |
+| Where the rules live | Rules in the harness, on the machine it runs on | A Card, checked by a separate service before every call |
+| Your sign-ins | Tools reach whatever the account running them can read | Sign-ins sit in a separate vault the agent never holds |
+| What a rule can say | A rule allows or denies a tool | A Card limits how much, how often, and until when |
+| Approvals | You approve in the session that's running | You approve on your phone, signed, for that exact call, once |
+| The record | A transcript on the same machine | A signed receipt your phone checks |
+| Stopping | Stop the process | One tap halts it in every system it works through |
 
 ## What's new in it
 
