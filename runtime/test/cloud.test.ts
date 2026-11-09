@@ -3033,6 +3033,59 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(withDisclose(own, undefined)).toBe(own);
   });
 
+  // Gap 14: a tool its connections say sends outside the company is in disclose, whatever Coach remembered.
+  it("refuses a new taf whose disclose leaves out a tool its connection says sends outside, naming it", async () => {
+    const send = [{ tool: "send_message_k3f9", fields: ["text"] }];
+    const card = { ...RESULT, tools: ["list_invoices_k3f9", "send_message_k3f9"] };
+    const left = await paused(card);
+    left.w.agents.access.set("u_ana", { cards_manage: true });
+    await left.deps.coach.put("t_acme#sends-outside#refunds-x", { grants: { g_mail: ["send_message_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await left.note();
+    expect(left.answer()).toMatchObject({ answer: { failed: expect.stringContaining("disclose doesn't name send_message_k3f9, which sends to people outside the company") } });
+    expect(left.w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+    // Named: made, as before.
+    const named = await paused({ ...card, taf: { ...RESULT.taf, disclose: send } });
+    named.w.agents.access.set("u_ana", { cards_manage: true });
+    await named.deps.coach.put("t_acme#sends-outside#refunds-x", { grants: { g_mail: ["send_message_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await named.note();
+    expect(named.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // No note (a taf whose connections were approved before this): as before.
+    const none = await paused(card);
+    none.w.agents.access.set("u_ana", { cards_manage: true });
+    await none.note();
+    expect(none.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // A note that can't be read never lets it through: Coach can send it again.
+    const unread = await paused(card);
+    unread.w.agents.access.set("u_ana", { cards_manage: true });
+    const get = unread.deps.coach.get.bind(unread.deps.coach);
+    unread.deps.coach.get = async (key: string) => { if (key.includes("#sends-outside#")) throw new Error("timeout"); return get(key); };
+    await unread.note();
+    expect(unread.answer()).toMatchObject({ answer: { failed: expect.stringContaining("couldn't be checked for tools that send outside the company") } });
+    expect(unread.w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+  });
+
+  it("refuses an improvement that leaves out a sending tool a later approval added, unless the taf discloses it already", async () => {
+    const better = { type: "result", id: "better", tools: ["reply_k3f9", "post_k3f9"], taf: { agent: "rae", improves: RAE, note: "Also posts" } };
+    const first = await paused(better);
+    first.w.agents.access.set("u_ana", { cards_manage: true });
+    // The taf discloses its reply already; a later approval of another connection adds post.
+    const rae = first.w.tafs.held.get(`t_acme#${RAE}`)!;
+    first.w.tafs.held.set(`t_acme#${RAE}`, { ...rae, disclose: [{ tool: "reply_k3f9", fields: ["text"] }] });
+    await first.deps.coach.put("t_acme#sends-outside#rae", { grants: { g_mail: ["reply_k3f9"], g_chat: ["post_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await first.note();
+    expect(first.answer()).toMatchObject({ answer: { failed: expect.stringContaining("disclose doesn't name post_k3f9,") } });
+    expect(JSON.stringify(first.answer())).not.toContain("reply_k3f9");
+    // Naming it in the improvement: made, and the taf's disclosure widened.
+    const fixed = await paused({ ...better, taf: { ...better.taf, disclose: [{ tool: "post_k3f9", fields: ["text"] }] } });
+    fixed.w.agents.access.set("u_ana", { cards_manage: true });
+    const r2 = fixed.w.tafs.held.get(`t_acme#${RAE}`)!;
+    fixed.w.tafs.held.set(`t_acme#${RAE}`, { ...r2, disclose: [{ tool: "reply_k3f9", fields: ["text"] }] });
+    await fixed.deps.coach.put("t_acme#sends-outside#rae", { grants: { g_mail: ["reply_k3f9"], g_chat: ["post_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await fixed.note();
+    expect(fixed.answer()).toMatchObject({ answer: { version: expect.any(Number) } });
+    expect(fixed.w.tafs.held.get(`t_acme#${RAE}`)!.disclose!.map((d) => d.tool).sort()).toEqual(["post_k3f9", "reply_k3f9"]);
+  });
+
   it("fails an improvement whose disclosure names a tool that isn't the taf's", async () => {
     const better = { type: "result", id: "better", tools: ["reply_k3f9"], taf: { agent: "rae", improves: RAE, note: "Also replies",
       disclose: [{ tool: "post_x1", fields: ["body"] }] } };
