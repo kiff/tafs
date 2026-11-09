@@ -1,6 +1,7 @@
 import type { Fired, Run } from "./agents.js";
 import { type Lang, plural, type When, wordsIn } from "./words/index.js";
 import type { DeliveryView } from "./delivery.js";
+import { type Health, healthLine } from "./health.js";
 import type { Sent } from "./doors/model.js";
 
 /**
@@ -37,35 +38,46 @@ export interface RequestView {
   deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true } | DeliveryView>;
 }
 
-/** A firing its schedule skipped, as the taf's page shows it: not a failure, nothing was run. */
+/**
+ * A firing that didn't end in finished work, as the taf's page shows it: one its schedule skipped (nothing was
+ * run), one whose check couldn't read the app, and one whose run didn't finish (its work goes to the next run,
+ * or was dropped). An app that doesn't know a `why` draws its `words` plainly.
+ */
 export interface SkippedView {
   due: string;
-  why: "missed" | "busy";
+  why: "missed" | "busy" | "switching" | "check_failed" | "retrying" | "unfinished";
   words: string;
 }
+
+/** The firings the page lists, with why each is there. A halt's and a credits skip have their own words elsewhere. */
+const SKIPPED_WHY: Record<string, SkippedView["why"]> = {
+  skipped_missed: "missed", skipped_busy: "busy", skipped_switching: "switching",
+  failed_check: "check_failed", failed_retrying: "retrying", failed_unfinished: "unfinished",
+};
 
 /** How many skipped firings the page shows, newest first, and from how far back. */
 const SKIPPED_SHOWN = 5;
 const SKIPPED_DAYS = 7;
 
 /**
- * The firings the taf's schedule skipped lately, in words: one that came too
- * late, or while its last run was still working.
+ * The firings of the taf's schedule that didn't end in finished work lately, in words: one that came too
+ * late, while its last run was still working or while the taf switched versions, one whose check couldn't
+ * read the app, and one whose run didn't finish.
  */
 export function skippedOf(fired: Fired[], zone: string, now: Date, lang: Lang = "en"): SkippedView[] {
   const w = wordsIn(lang);
   const since = now.getTime() - SKIPPED_DAYS * 86_400_000;
   return fired
-    .filter((f) => (f.outcome === "skipped_missed" || f.outcome === "skipped_busy") && new Date(f.due).getTime() >= since)
+    .filter((f) => SKIPPED_WHY[f.outcome] !== undefined && new Date(f.due).getTime() >= since)
     .slice(0, SKIPPED_SHOWN)
     .map((f) => {
-      const busy = f.outcome === "skipped_busy";
+      const why = SKIPPED_WHY[f.outcome]!;
       const when = whenIn(f.due, zone, now, lang);
-      return {
-        due: new Date(f.due).toISOString(),
-        why: busy ? "busy" : "missed",
-        words: busy ? w.work_skipped_busy(when) : w.work_skipped_late(when),
-      };
+      const words = {
+        missed: w.work_skipped_late, busy: w.work_skipped_busy, switching: w.work_skipped_switching,
+        check_failed: w.work_check_failed, retrying: w.work_run_retrying, unfinished: w.work_run_unfinished,
+      }[why](when);
+      return { due: new Date(f.due).toISOString(), why, words };
     });
 }
 
@@ -174,7 +186,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
 }
 
 /** A taf's status and line on the list, from its recent runs, newest first. */
-export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date, lang: Lang = "en"): WorkSummary {
+export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date, lang: Lang = "en", health?: Health): WorkSummary {
   const w = wordsIn(lang);
   const { paused = false, halted = false, unscheduled = false, next = null } = typeof how === "boolean" ? { paused: how } : how;
   // Halted stops everything, its holds included: that comes first.
@@ -197,6 +209,9 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   });
   if (waiting) return { status: "waiting_on_app", line: requestOf(waiting, zone, now, [], undefined, [], lang).line, needs_you: 0 };
   if (paused) return { status: "paused", line: w.work_paused, needs_you: 0 };
+  // A taf that isn't healthy says why, where an idle one would say its next run: what's happening now, and
+  // what waits for the owner, came first.
+  if (health && health.level !== "healthy") return { status: "idle", line: healthLine(health.reasons[0]!, lang), needs_you: 0 };
   if (unscheduled) return { status: "idle", line: w.work_from_chat, needs_you: 0 };
   if (next) return { status: "idle", line: w.work_next_run(whenIn(next, zone, now, lang)), needs_you: 0 };
   const last = runs.find((r) => r.status === "COMPLETED");

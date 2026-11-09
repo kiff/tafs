@@ -193,7 +193,13 @@ export interface Requirement {
 export interface Fired {
   due: string;
   at: string;
-  outcome: "run" | "skipped_missed" | "skipped_busy";
+  /**
+   * What came of it (kiff/agents' docs/schedules.md): `run`, `quiet`, `skipped_missed`, `skipped_busy`,
+   * `skipped_switching`, `skipped_halted`, `skipped_credits`, `failed_unworked`, `failed_check`,
+   * `failed_retrying`, `failed_unfinished`, and others a newer kiff/agents may add. One this code doesn't
+   * know is neither a failure nor a run.
+   */
+  outcome: string;
   run?: string;
 }
 
@@ -488,7 +494,7 @@ export interface Schedule {
    * `failed_unfinished`; absent from an older kiff/agents). kiff/agents keeps it, and ends it once a run
    * works.
    */
-  failing?: { since: string; firings: number; run?: string; outcome?: string };
+  failing?: { since: string; firings: number; run?: string; outcome?: string; last?: string };
   /**
    * The last firing that started no run because the account's tafs wait for credits (kiff/agents'
    * skipped_credits): its due time and KIFF's why. Unset once one of its runs starts.

@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsView, readBalance, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
@@ -14,6 +14,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
+import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
 import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, withLanguage, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
@@ -726,15 +727,16 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
       view(taf, me, deps),
       deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
-      // A taf with no schedule, or a kiff/agents without the history, has no skipped firings to show.
-      taf.unscheduled ? Promise.resolve([]) : deps.agents.scheduleFirings(me.tenantID, taf.id, 20).catch(() => []),
+      // A taf with no schedule has no firings. A read that fails leaves the skipped firings and the health out.
+      taf.unscheduled ? Promise.resolve([] as Fired[]) : deps.agents.scheduleFirings(me.tenantID, taf.id, HEALTH_FIRINGS).catch(() => undefined),
     ]);
+    const health = fired ? healthOf(runs, fired, now) : undefined;
     const zone = me.timeZone ?? "UTC";
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event)), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired, zone, now, langOf(event)) };
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event)) } : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
     // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
@@ -5275,7 +5277,12 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // Where each taf's work stands (docs/reliability.md): one read of its recent runs, for its
   // last run and its work line. A read that fails leaves both out.
   const now = deps.now?.() ?? new Date();
-  const recent = await Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined)));
+  // Its schedule's last firings too, for its health: read beside its runs, and never waited for long. A read
+  // that fails or is slow leaves the health out, and the taf shows as it did before.
+  const [recent, fired] = await Promise.all([
+    Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined))),
+    Promise.all(tafs.map((t) => firingsFor(deps, me.tenantID, t))),
+  ]);
   const views = await Promise.all(tafs.map((t, i) => view(t, me, deps, undefined, { runs: recent[i] }, langOf(event))));
   // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
   // be read leaves that entry out, never the list.
@@ -5295,8 +5302,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const words = tafPurpose(t, jobMaybe(t));
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
-    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now, langOf(event)) : undefined;
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}) };
+    const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
+    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now, langOf(event), health) : undefined;
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event)) } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
@@ -6180,9 +6188,12 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       if (!taf || taf.removing) continue;
       // Halted, or not known not to be: nothing is said now, and the next sweep asks again.
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
-      // Once for each run of failures, and once more when that run comes to drop work: an owner told its
-      // runs couldn't start still hears that what one was working on won't be tried again.
-      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${dropped ? "#unfinished" : ""}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      // Once for each run of failures, and again when that run comes to drop work: an owner told its runs
+      // couldn't start still hears that what one was working on won't be tried again. Each later partway
+      // stop dropped other work, so it's said too, at most once every DROPPED_AGAIN_MS for this schedule:
+      // one that drops work at every firing would otherwise alert every time.
+      const again = dropped ? `#unfinished#${Math.floor((Date.parse(f.last ?? f.since) - Date.parse(f.since)) / DROPPED_AGAIN_MS) || 0}` : "";
+      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${again}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
       await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f, lang));
       told.push({ tenant, schedule: s.id });
     }
@@ -6190,10 +6201,77 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
   return told;
 }
 
+/** How long after a partway stop was said a later one in the same run of failures is said again. */
+const DROPPED_AGAIN_MS = 6 * 3600_000;
 /** How long one failed firing waits, with none working since, before it's said. */
 const FAILING_ALONE_MS = 6 * 3600_000;
 /** How long a run of failures is remembered as said. */
 const FAILING_KEPT_MS = 30 * 24 * 3600_000;
+
+/** How long Home waits for a taf's firings before it shows the taf without its health. */
+const HEALTH_READ_MS = 1500;
+
+/**
+ * A taf's schedule's last firings, for its health: none for a taf with no schedule, and undefined when the
+ * read fails or takes longer than HEALTH_READ_MS, so a slow kiff/agents never holds the list.
+ */
+async function firingsFor(deps: Deps, tenant: string, taf: Taf): Promise<Fired[] | undefined> {
+  if (taf.unscheduled) return [];
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<undefined>((resolve) => { timer = setTimeout(() => resolve(undefined), HEALTH_READ_MS); });
+  try {
+    return await Promise.race([deps.agents.scheduleFirings(tenant, taf.id, HEALTH_FIRINGS).catch(() => undefined), late]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * The sweep's look at each taf's health (health.ts): a taf that turns failing is said once for that bad
+ * spell, to the phones that answer its holds, as a failing schedule is. Only what the failing alert hasn't
+ * said already: its runs failing one after another. A run of failures at its schedule, and work a run
+ * dropped, are sweepFailingSchedules' to say. At risk shows in the app and sends nothing.
+ *
+ * Only a taf whose schedule fired since the last pass is read: its schedule's next time, as last seen, has
+ * come. A halted or paused taf says nothing. One that recovers and fails again is another spell.
+ */
+export async function sweepHealth(deps: Deps): Promise<Array<{ tenant: string; taf: string }>> {
+  const store = deps.coach;
+  if (!store) return [];
+  const now = deps.now?.() ?? new Date();
+  const told: Array<{ tenant: string; taf: string }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const schedules = await deps.agents.listSchedules(tenant).catch(() => [] as Schedule[]);
+    for (const s of schedules) {
+      // A taf's own schedule carries its id. Its follow-ups and extra times are its work too, read with it.
+      if (s.id !== s.agent || !s.enabled) continue;
+      const key = `${tenant}#health-next#${s.id}`;
+      const seen = await store.get(key).catch(() => undefined);
+      if (s.next && seen !== s.next) await store.put(key, s.next, new Date(now.getTime() + FAILING_KEPT_MS)).catch(() => undefined);
+      // Nothing fired since the last pass: nothing new to read.
+      if (typeof seen !== "string" || Date.parse(seen) > now.getTime()) continue;
+      const taf = await deps.tafs.get(tenant, s.agent).catch(() => undefined);
+      if (!taf || taf.removing || taf.paused) continue;
+      const runs = await deps.agents.runs(tenant, taf.id, false, 20).catch(() => undefined);
+      if (!runs) continue;
+      const bad = healthOf(runs, [], now).reasons.find((r) => r.code === "all_failed");
+      if (!bad) continue;
+      if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
+      if (!(await store.once(`${tenant}#taf-health#${taf.id}#${bad.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      await tellPhones(deps, tenant, (lang) => healthNotification(taf, bad, lang));
+      told.push({ tenant, taf: taf.id });
+    }
+  }
+  return told;
+}
+
+function healthNotification(taf: Taf, reason: Health["reasons"][number], lang: Lang = "en"): Notification {
+  return {
+    kind: "alert",
+    payload: { aps: { alert: { title: taf.name, body: wordsIn(lang).health_alert(healthLine(reason, lang)) }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    collapseID: `health-${taf.id}`.slice(0, 64),
+  };
+}
 
 /**
  * What the alert says, as every app shows it: how many in a row, that it keeps trying, and where to look. A
