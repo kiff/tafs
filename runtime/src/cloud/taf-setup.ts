@@ -16,6 +16,8 @@ export interface GrantView {
   /** A managed connection's vendor account, as the provider names it, and its mode in planque's words ("Live", "Test", ...). */
   account_name?: string; mode_words?: string;
   request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }> };
+  /** The connection's tools as KIFF names them, once planque has connected them: the Card's actions. */
+  tools?: string[];
 }
 
 /** One line on who holds a connection's sign-in, for the apps to draw as it comes; none when planque doesn't say. */

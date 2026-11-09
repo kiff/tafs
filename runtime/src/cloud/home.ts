@@ -203,6 +203,13 @@ export async function readKIFF(token: string, doFetch: Fetch = fetch, base = KIF
   return { mandates: m.mandates ?? [], held: e };
 }
 
+/** The account's Cards alone, read with the person's session. */
+export async function readMandates(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Mandate[]> {
+  const m = await read<{ mandates?: Mandate[] }>("/v1/me/mandates", token, doFetch, base);
+  if (!Array.isArray(m.mandates)) throw new KIFFError(502, "KIFF's Cards could not be read");
+  return m.mandates;
+}
+
 export async function readExceptions(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Held[]> {
   const result = await read<{ exceptions?: Held[] }>("/v1/me/card-exceptions?status=held", token, doFetch, base, "the waiting calls");
   if (!Array.isArray(result.exceptions)) throw new KIFFError(502, "KIFF's waiting calls could not be read");

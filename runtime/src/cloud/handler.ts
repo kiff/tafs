@@ -11,7 +11,7 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
@@ -36,7 +36,7 @@ import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
-import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
+import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { CARD_UNIT_NOTICE, cardUnitExceptions } from "./card-unit.js";
@@ -6489,24 +6489,61 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
   throw new HTTPError(404, "not found");
 }
 
+/** A removed taf's live connection, and the live tafs whose Cards still use it, so Clear keeps it. */
+export interface RemovedGrant { grant: string; used_by: Array<{ taf: string; name: string }> }
+
 /**
  * The removed tafs whose connections Connect apps may offer to clear (docs/connect-apps.md): each KIFF agent KIFF
  * has archived, as removing a taf does, that is no taf of tafs cloud's any more (not live, not still being
  * removed, not Setup). A grant whose agent is one of these is from a removed taf: the apps act on this alone.
  * Only for someone who manages Cards, who alone can clear; anyone else, and a KIFF that can't be read, gets none,
  * so nothing is ever offered to clear on a guess.
+ *
+ * With the phone's signed grants read (`Planque-Device-Signature`), each also carries `grants`: its live
+ * connections, each with `used_by`, the live tafs whose Card has a rule on one of the connection's actions
+ * (KIFF's tools are the account's, so a taf can draw on a connection another asked for). Clear keeps those, and
+ * says so. Without the proof, or when planque's grants or KIFF's Cards can't be read, there's no `grants`: the
+ * apps offer no Clear on a removed taf that has none.
  */
-async function removedTafs(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<Array<{ agent: string; removed_at: string }>> {
+async function removedTafs(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<Array<{ agent: string; removed_at: string; grants?: RemovedGrant[] }>> {
   if (!me.capabilities.includes("cards.manage")) return [];
+  let removed: Array<{ agent: string; removed_at: string }>;
+  let records: Taf[];
   try {
-    const [archived, records] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
-    const ours = new Set(records.map((t) => t.kiffAgent).filter(Boolean));
-    return [...archived].filter(([agent]) => !ours.has(agent)).map(([agent, at]) => ({ agent, removed_at: at }))
+    const [archived, all] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
+    records = all;
+    const ours = new Set(all.map((t) => t.kiffAgent).filter(Boolean));
+    removed = [...archived].filter(([agent]) => !ours.has(agent)).map(([agent, at]) => ({ agent, removed_at: at }))
       .sort((a, b) => b.removed_at.localeCompare(a.removed_at) || a.agent.localeCompare(b.agent));
   } catch (err) {
     console.error(`connect apps: removed tafs for ${me.tenantID}: ${(err as Error).message}`);
     return [];
   }
+  const proof = event.headers?.["planque-device-signature"] ?? "";
+  if (!removed.length || !proof || !deps.planqueBase) return removed;
+  try {
+    const [grants, cards] = await Promise.all([setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch), readMandates(bearer(event), deps.fetch, deps.kiffBase)]);
+    const live = records.filter((t) => !t.removing && t.job !== SETUP_JOB && t.kiffAgent);
+    return removed.map((r) => ({ ...r, grants: grants.filter((g) => g.request?.agent === r.agent && g.status !== "disconnected" && g.status !== "failed")
+      .map((g) => ({ grant: g.id, used_by: tafsUsing(g, live, cards) })) }));
+  } catch (err) {
+    console.error(`connect apps: removed tafs' connections for ${me.tenantID}: ${(err as Error).message}`);
+    return removed;
+  }
+}
+
+/**
+ * The live tafs that use a connection: a rule on one of its actions on a Card in force. The connection's actions are
+ * its tools as KIFF names them: planque's `tools` once connected, else each asked tool's `name` or `tool`, leaving
+ * out Setup's own reads. One rule, here, for both
+ * apps (kiff/tafs's Connect apps).
+ */
+export function tafsUsing(g: GrantView, tafs: Taf[], cards: Mandate[]): Array<{ taf: string; name: string }> {
+  const actions = new Set((Array.isArray(g.tools) ? g.tools : (g.request?.tools ?? []).filter((t) => t.setup_reads !== true).map((t) => t.name || t.tool)).filter(Boolean));
+  if (!actions.size) return [];
+  return tafs.filter((t) => t.kiffAgent !== g.request.agent && cards.some((m) => m.subject === t.kiffAgent && m.active && !m.revoked_at
+    && (m.grants ?? []).some((x) => actions.has(x.action))))
+    .map((t) => ({ taf: t.id, name: t.name })).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** The most catalog pages the recipes route reads: planque keeps a provider's apps in one page, so this is room, not a limit. */

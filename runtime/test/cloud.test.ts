@@ -984,15 +984,22 @@ describe("Connect apps' removed tafs", () => {
   // "Removed" comes from KIFF: removing a taf archives its KIFF agent. Never from a taf missing from
   // someone's list, so a live taf, one still being removed, Setup, or an agent KIFF hasn't archived is
   // never offered for Clear.
-  const connect = async (w: World, token: string, agents: () => Response) => {
-    const r = await handle({ rawPath: "/v1/connect/apps", requestContext: { http: { method: "GET" } }, headers: { Authorization: `Bearer ${token}` } },
+  const connect = async (w: World, token: string, agents: () => Response, more: { proof?: string; grants?: () => Response; mandates?: () => Response; asked?: string[] } = {}) => {
+    const r = await handle({ rawPath: "/v1/connect/apps", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: `Bearer ${token}`, ...(more.proof ? { "planque-device-signature": more.proof } : {}) } },
       { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+        if (url === "https://planque.test/v1/accounts/t_acme/grants") {
+          more.asked?.push(`grants with ${(init?.headers as Record<string, string>)["Planque-Device-Signature"]}`);
+          return more.grants?.() ?? new Response("{}", { status: 500 });
+        }
         if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ entries: [{ entry: "stripe@3", title: "Stripe", how: "key", state: "connected", grant: "g1" }] }), { status: 200 });
         if (url.endsWith("/v1/me/agents")) return agents();
+        if (url.endsWith("/v1/me/mandates")) { more.asked?.push("mandates"); return more.mandates?.() ?? new Response("{}", { status: 500 }); }
         return depsOf(w).fetch!(url, init);
       }) as Deps["fetch"] });
     return { status: r.statusCode, body: JSON.parse(r.body) };
   };
+  const json = (v: unknown) => () => new Response(JSON.stringify(v), { status: 200 });
   const agents = (list: unknown[]) => () => new Response(JSON.stringify({ agents: list }), { status: 200 });
 
   it("lists KIFF's archived agents that are no taf of tafs cloud's any more, newest first", async () => {
@@ -1011,6 +1018,51 @@ describe("Connect apps' removed tafs", () => {
     expect(got.status).toBe(200);
     expect(got.body.apps).toHaveLength(1);
     expect(got.body.removed_tafs).toEqual([{ agent: "newer", removed_at: "2026-11-08T08:00:00Z" }, { agent: "old-refunds", removed_at: "2026-11-07T20:00:00Z" }]);
+  });
+
+  // An agent id made live again is a taf of tafs cloud's, so it's never listed, whatever KIFF's record says
+  // (the "rae" row above); tafs cloud's own ids are never reused either way.
+
+  it("with the phone's grants read, gives each removed taf its live connections, and the live tafs whose Cards still use each", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${NEW}`, { id: NEW, name: "Chargebacks", job: "refunds", kiffAgent: "chargebacks", nameClaim: "c", created: "2026-10-14T09:00:00Z" });
+    w.tafs.held.set(`t_acme#${NEW2}`, { id: NEW2, name: "Going", job: "refunds", kiffAgent: "going", nameClaim: "c2", created: "2026-10-14T09:00:00Z", removing: true });
+    const asked: string[] = [];
+    const grants = json({ grants: [
+      { id: "g-stripe", status: "connected", tools: ["stripe.refund"], request: { agent: "old-refunds", tools: [{ tool: "refund", name: "stripe.ignored" }] } },
+      { id: "g-gmail", status: "needs_reconnect", request: { agent: "old-refunds", tools: [{ tool: "gmail.send" }, { tool: "gmail.read", setup_reads: true }] } },
+      { id: "g-gone", status: "disconnected", tools: ["stripe.refund"], request: { agent: "old-refunds" } },
+      { id: "g-live", status: "connected", tools: ["stripe.refund"], request: { agent: "rae" } },
+    ] });
+    const mandates = json({ mandates: [
+      { id: "m1", subject: "rae", active: true, grants: [{ action: "stripe.refund" }] },
+      { id: "m2", subject: "chargebacks", active: true, grants: [{ action: "stripe.refund" }, { action: "gmail.read" }] },
+      { id: "m3", subject: "going", active: true, grants: [{ action: "gmail.send" }] }, // its taf is being removed
+      { id: "m4", subject: "chargebacks", active: true, revoked_at: "2026-11-01T00:00:00Z", grants: [{ action: "gmail.send" }] }, // revoked
+      { id: "m5", subject: "old-refunds", active: true, grants: [{ action: "gmail.send" }] }, // the removed taf's own
+    ] });
+    const got = await connect(w, "ana", agents([{ id: "old-refunds", archived_at: "2026-11-07T20:00:00Z" }]), { proof: "proof-1", grants, mandates, asked });
+    expect(got.status).toBe(200);
+    expect(asked).toEqual(["grants with proof-1", "mandates"]);
+    expect(got.body.removed_tafs).toEqual([{ agent: "old-refunds", removed_at: "2026-11-07T20:00:00Z", grants: [
+      { grant: "g-stripe", used_by: [{ taf: NEW, name: "Chargebacks" }, { taf: RAE, name: "Rae" }] },
+      // Setup's own read isn't one of the connection's actions, and a revoked Card or a taf being removed uses nothing.
+      { grant: "g-gmail", used_by: [] },
+    ] }]);
+  });
+
+  it("gives no connections, so no Clear, without the phone's grants read or when planque or KIFF's Cards can't be read", async () => {
+    const w = world();
+    const archived = agents([{ id: "old-refunds", archived_at: "2026-11-07T20:00:00Z" }]);
+    const bare = [{ agent: "old-refunds", removed_at: "2026-11-07T20:00:00Z" }];
+    const asked: string[] = [];
+    expect((await connect(w, "ana", archived, { asked })).body.removed_tafs).toEqual(bare);
+    expect(asked).toEqual([]); // nothing read without the proof
+    const grants = json({ grants: [{ id: "g-stripe", status: "connected", tools: ["stripe.refund"], request: { agent: "old-refunds" } }] });
+    expect((await connect(w, "ana", archived, { proof: "p", grants })).body.removed_tafs).toEqual(bare); // KIFF's Cards down
+    expect((await connect(w, "ana", archived, { proof: "p", mandates: json({ mandates: [] }) })).body.removed_tafs).toEqual(bare); // planque down
+    expect((await connect(w, "ana", archived, { proof: "p", grants, mandates: json({ mandates: [] }) })).body.removed_tafs)
+      .toEqual([{ ...bare[0], grants: [{ grant: "g-stripe", used_by: [] }] }]);
   });
 
   it("lists none for someone who can't manage Cards, or when KIFF's agents can't be read", async () => {
