@@ -48,11 +48,11 @@ them do.
 
 | Taf | What it does | Card, for example |
 |---|---|---|
-| Refunds | Settles refund and credit requests from the support queue | ≤ $150 each, $2,000 a day; payouts never |
-| Bill pay | Pays vendor bills that match a purchase order | ≤ $5,000 each, $25,000 a week; wires always ask; bank detail changes never |
+| Refunds | Settles refund and credit requests from the support queue | ≤ €150 each, €2,000 a day; payouts never |
+| Bill pay | Pays vendor bills that match a purchase order | ≤ €5,000 each, €25,000 a week; wires always ask; bank detail changes never |
 | Access | Gives joiners their apps, removes leavers | Approved roles only; elevated access always asks; admin and deleting users never |
 | Deploys | Ships fixes when CI is green, rolls back | 10 deploys a day; migrations always ask; dropping data never |
-| Chargebacks | Answers card disputes with evidence | Evidence ≤ $500 each; accepting a loss ≤ $100 each |
+| Chargebacks | Answers card disputes with evidence | Evidence ≤ €500 each; accepting a loss ≤ €100 each |
 
 ## How to get it
 

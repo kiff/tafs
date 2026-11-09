@@ -55,7 +55,7 @@ Tracked on KIFF's side, privately.
 - `GET /v1/me/mandates` gives every limit its `unit` and `scale`.
 - `?include=use` adds each Card's `used` and `remaining`.
 
-So a Card shows "$212.00 of $2,000.00 today" without a statement call per Card.
+So a Card shows "€212.00 of €2,000.00 today" without a statement call per Card.
 
 ## 5. An agent key for a taf, without the dashboard — shipped, in use
 
