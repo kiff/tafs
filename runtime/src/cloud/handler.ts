@@ -41,7 +41,7 @@ import { activityPage, ActivityError, representationTag, nextForCalled, type Nex
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { CARD_UNIT_NOTICE, cardUnitExceptions } from "./card-unit.js";
+import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, settle as settleApproval } from "./approval.js";
 
 /**
@@ -504,7 +504,7 @@ function conditionalPage(event: HTTPEvent, value: unknown): PageResponse {
 
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const began = Date.now();
-  const r = await answer(event, deps);
+  const r = await answer(event, withKIFFLanguage(event, deps));
   logRequest(event, r.statusCode, Date.now() - began, r.statusCode >= 500 ? errorOf(r) : undefined);
   return r;
 }
@@ -700,10 +700,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (action === "activity") {
       let unitExceptions: Awaited<ReturnType<typeof readExceptions>> = [], unitExceptionsNotice: string | undefined;
       try { unitExceptions = await readExceptions(bearer(event), deps.fetch, deps.kiffBase); }
-      catch { unitExceptionsNotice = CARD_UNIT_NOTICE; }
+      catch { unitExceptionsNotice = cardUnitNotice(langOf(event)); }
       return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
         taf: taf.id, tafName: taf.name, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? ""),
-        unitExceptions, unitExceptionsNotice }, deps.fetch, deps.kiffBase));
+        unitExceptions, unitExceptionsNotice, lang: langOf(event) }, deps.fetch, deps.kiffBase));
     }
     if (action === "work") return runsPage(event, me, taf, deps, access.get(taf.kiffAgent)?.manage === true);
     return setupPage(event, me, taf, deps);
@@ -3317,7 +3317,7 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
   const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent)).rules;
-  const unitExceptions = cardUnitExceptions(taf, cards.held, rules, me.timeZone ?? "UTC", now);
+  const unitExceptions = cardUnitExceptions(taf, cards.held, rules, me.timeZone ?? "UTC", now, langOf(event));
   return { ...setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
     versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete }),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
@@ -4407,7 +4407,8 @@ export class StreamTiming {
  * invocation's: a phone that goes away loses nothing, and reads the rest in
  * the conversation.
  */
-export async function handleStream(event: HTTPEvent, deps: Deps): Promise<StreamResult> {
+export async function handleStream(event: HTTPEvent, given: Deps): Promise<StreamResult> {
+  const deps = withKIFFLanguage(event, given);
   try {
     const method = event.requestContext.http.method.toUpperCase();
     const parts = event.rawPath.split("/").filter(Boolean);
@@ -5313,7 +5314,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
   // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
   const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
-  const unitExceptions = tafs.flatMap((taf) => cardUnitExceptions(taf, kiff.held, summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now));
+  const unitExceptions = tafs.flatMap((taf) => cardUnitExceptions(taf, kiff.held, summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now, langOf(event)));
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
@@ -5497,6 +5498,32 @@ function minutes(field: string): number[] | undefined {
     }
   }
   return [...out].sort((a, b) => a - b);
+}
+
+/**
+ * The person's language on every call tafs cloud makes to KIFF for this request, so KIFF's words in a tafs cloud
+ * answer (held calls' reasons, warnings, the approval window) match the screen (docs/languages.md). Only when the
+ * app sent one: an app that sends none leaves KIFF's own choice as it was. Resolved to one of the eight.
+ */
+function withKIFFLanguage(event: HTTPEvent, deps: Deps): Deps {
+  if (!header(event, "accept-language")) return deps;
+  const lang = langOf(event);
+  const base = deps.kiffBase ?? KIFF_API;
+  const inner = deps.fetch ?? fetch;
+  const withLang: Fetch = (input, init) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (url !== base && !url.startsWith(`${base}/`)) return inner(input, init);
+    const given = init?.headers;
+    if (given instanceof Headers) {
+      const headers = new Headers(given);
+      if (!headers.has("accept-language")) headers.set("accept-language", lang);
+      return inner(input, { ...init, headers });
+    }
+    const pairs = Array.isArray(given) ? Object.fromEntries(given) : { ...(given as Record<string, string> | undefined) };
+    if (!Object.keys(pairs).some((k) => k.toLowerCase() === "accept-language")) pairs["accept-language"] = lang;
+    return inner(input, { ...init, headers: pairs });
+  };
+  return { ...deps, fetch: withLang };
 }
 
 /** The person's language for this request: their app's own, sent as Accept-Language (docs/languages.md). */

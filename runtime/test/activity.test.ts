@@ -196,6 +196,48 @@ describe("Activity's HTTP contract", () => {
   });
 });
 
+describe("Activity in the person's language", () => {
+  it("writes its words, days and amounts in it, and asks KIFF in it too, only when the app sent a language", async () => {
+    const id = "taf-01234567890123456789";
+    const sent: Array<string | undefined> = [];
+    const refused: ActivityCall = { ...call(1, "refused_by_tool"), tool_outcome: { status: "refused_by_tool", refused_by: "connection", code: "not_granted" } };
+    const older: ActivityCall = { ...call(0), created_at: "2026-10-30T09:00:00Z", amount: { value: "1250.5", unit: "EUR" } };
+    const deps = {
+      now: () => now,
+      tafs: { get: async () => ({ id, name: "Example", job: "refunds", kiffAgent: "agent-example" }) },
+      fetch: (async (url: string | URL | Request, init?: RequestInit) => {
+        const u = new URL(String(url));
+        sent.push((init?.headers as Record<string, string> | undefined)?.["accept-language"]);
+        if (u.pathname === "/v1/me") return new Response(JSON.stringify({ tenant_id: "account-example", subject: "person-example", api_key: false, capabilities: ["read"], time_zone: "UTC" }));
+        if (u.pathname === "/v1/me/access") return new Response(JSON.stringify({ agents: { "agent-example": { use: true } } }));
+        if (u.pathname === "/v1/me/card-exceptions") return new Response("{}", { status: 503 });
+        if (u.pathname === "/v1/me/activity") return new Response(JSON.stringify({ calls: [refused, older], shown: 2 }));
+        throw new Error("unexpected request");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const event = (headers: Record<string, string>): HTTPEvent => ({ rawPath: `/v1/tafs/${id}/activity`, headers: { authorization: "Bearer synthetic-session", ...headers }, requestContext: { http: { method: "GET" } } });
+    const r = await handle(event({ "accept-language": "de-DE,de;q=0.9" }), deps);
+    expect(r.statusCode).toBe(200);
+    const page = JSON.parse(r.body);
+    expect(page.filters.map((f: { title: string }) => f.title)).toEqual(["Alle", "Erledigt", "Zurückgehalten", "Abgelehnt"]);
+    expect(page.end_words).toBe("Nichts Älteres in dieser Ansicht");
+    expect(page.card_unit_exceptions_notice).toBe("Währungsanfragen konnten nicht gelesen werden. Deine Aktivität wird trotzdem angezeigt; versuche es mit Aktualisieren.");
+    expect(page.entries[0]).toMatchObject({ day_title: "Heute", detail: "Die Verbindung hat es abgelehnt: die Verbindung enthält diese Aktion nicht. Es wurde nichts gesendet.",
+      next: { kind: "ask_coach", words: "Coach bitten, den taf zu ändern", message: "Ändere Example: Read a case ist fehlgeschlagen." } });
+    expect(page.entries[1]).toMatchObject({ detail: "Erledigt, innerhalb seiner Card", amount_text: new Intl.NumberFormat("de", { style: "currency", currency: "EUR" }).format(1250.5) });
+    expect(page.entries[1].day_title).toBe(new Intl.DateTimeFormat("de", { timeZone: "UTC", weekday: "long", day: "numeric", month: "short" }).format(new Date("2026-10-30T09:00:00Z")));
+    // Every call to KIFF for this request carried the person's language, resolved to one of the eight.
+    expect(sent.length).toBeGreaterThan(2);
+    expect(new Set(sent)).toEqual(new Set(["de"]));
+    // An app that sends none leaves KIFF's own choice: no header is added, and the words are English.
+    sent.length = 0;
+    const plain = JSON.parse((await handle(event({}), deps)).body);
+    expect(new Set(sent)).toEqual(new Set([undefined]));
+    expect(plain.filters[2].title).toBe("Held");
+    expect(plain.entries[0].detail).toBe("The connection refused it: the connection doesn't include this action. Nothing was sent.");
+  });
+});
+
 describe("recent work pages", () => {
   it("pages the retained runs without repeats when a newer run arrives and excludes another member's work", async () => {
     const id = "taf-01234567890123456789";

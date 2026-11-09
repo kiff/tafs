@@ -2,8 +2,10 @@ import type { Held, Rule } from "./home.js";
 import { timeIn } from "./work.js";
 import { KIFFError } from "./kiff.js";
 import type { ActivityCall } from "./activity.js";
+import { type Lang, plural, wordsIn } from "./words/index.js";
 
-export const CARD_UNIT_NOTICE = "Currency requests couldn't be read. Your activity is still shown; try refreshing.";
+/** When the currency requests couldn't be read, in the person's language. */
+export const cardUnitNotice = (lang: Lang = "en") => wordsIn(lang).unit_notice;
 
 export interface CardUnitException {
   id: string; kind: "card_unit"; taf: string; name: string; title: string; words: string;
@@ -11,8 +13,9 @@ export interface CardUnitException {
 }
 
 /** The same KIFF exception appears once in Needs you and Setup; every decision stays in the Record. */
-export function cardUnitExceptions(taf: { id: string; name: string; kiffAgent: string }, exceptions: Held[], rules: Rule[], zone: string, now: Date): CardUnitException[] {
+export function cardUnitExceptions(taf: { id: string; name: string; kiffAgent: string }, exceptions: Held[], rules: Rule[], zone: string, now: Date, lang: Lang = "en"): CardUnitException[] {
   const seen = new Set<string>();
+  const w = wordsIn(lang);
   return exceptions.flatMap((exception) => {
     if (exception.kind !== "card_unit" || exception.subject !== taf.kiffAgent || exception.status !== "held") return [];
     const breach = exception.breaches?.find((b) => b.outcome === "amount_unit_mismatch");
@@ -24,15 +27,15 @@ export function cardUnitExceptions(taf: { id: string; name: string; kiffAgent: s
     seen.add(exception.id);
     // The action's name without a currency it ends with ("…, in EUR", "… (EUR)"): the ask is about
     // another currency, so the suffix would contradict it (kiff/tafs#469 item 3).
-    const title = (exception.title || rules.find((r) => r.action === exception.action)?.label || "this action")
+    const title = (exception.title || rules.find((r) => r.action === exception.action)?.label || w.unit_this_action)
       .replace(/,?\s+in\s+[A-Z]{3}$|\s*\([A-Z]{3}\)$/, "");
-    const card = cardUnit ? `Its Card only allows ${cardUnit}.` : `Its Card has no ${unit} limit.`;
-    const since = new Intl.DateTimeFormat("en-GB", { timeZone: zone, day: "numeric", month: "short" }).format(new Date(exception.created_at!));
+    const card = cardUnit ? w.unit_card_only(cardUnit) : w.unit_card_none(unit!);
+    const since = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : lang, { timeZone: zone, day: "numeric", month: "short" }).format(new Date(exception.created_at!));
     return [{ id: exception.id, kind: "card_unit" as const, taf: taf.id, name: taf.name,
-      title: `${taf.name} needs a ${unit} limit`, words: `${title} gets work in ${unit}. ${card} Add a ${unit} limit?`,
-      history: `Tried ${exception.count} time${exception.count === 1 ? "" : "s"} since ${since} · last ${timeIn(exception.last_at!, zone, now)}`,
-      action_title: `Add a ${unit} limit to ${title}`, dismiss_title: "Dismiss", can_approve_once: false as const,
-      coach_text: `Add a ${unit} limit to ${title} for ${taf.name}. ${card} Read its current Card first and ask me to approve the change.` }];
+      title: w.unit_title(taf.name, unit!), words: w.unit_words(title, unit!, card),
+      history: w.unit_history(exception.count!, plural(lang, exception.count!), since, timeIn(exception.last_at!, zone, now, lang)),
+      action_title: w.unit_action(unit!, title), dismiss_title: w.unit_dismiss, can_approve_once: false as const,
+      coach_text: w.unit_coach(unit!, title, taf.name, card) }];
   });
 }
 
