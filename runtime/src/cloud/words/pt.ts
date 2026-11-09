@@ -20,6 +20,8 @@ export const pt: Words = {
   work_capped_turns: (t) => `Parado ${at(t)}: atingiu o limite de passos por execução`,
   work_capped_cost: (t) => `Parado ${at(t)}: atingiu o limite de custo por execução`,
   work_stopped_at: (t) => `Parado ${at(t)}`,
+  work_stopped_out_of_room: (t) => `Parado ${at(t)}: a resposta ficou sem espaço`,
+  work_stopped_declined: (t) => `Parado ${at(t)}: a IA recusou-se a continuar`,
   work_failed: "Falhou",
   work_failed_because: (why) => `Falhou: ${why}`,
   work_needs_you: "Precisa da sua atenção.",

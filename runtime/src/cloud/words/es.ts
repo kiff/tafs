@@ -20,6 +20,8 @@ export const es: Words = {
   work_capped_turns: (t) => `Detenido ${at(t)}: alcanzó su límite de pasos por ejecución`,
   work_capped_cost: (t) => `Detenido ${at(t)}: alcanzó su límite de coste por ejecución`,
   work_stopped_at: (t) => `Detenido ${at(t)}`,
+  work_stopped_out_of_room: (t) => `Detenido ${at(t)}: su respuesta se quedó sin espacio`,
+  work_stopped_declined: (t) => `Detenido ${at(t)}: la IA se negó a continuar`,
   work_failed: "Falló",
   work_failed_because: (why) => `Falló: ${why}`,
   work_needs_you: "Necesita que lo revises.",

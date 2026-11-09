@@ -20,6 +20,8 @@ export const it: Words = {
   work_capped_turns: (t) => `Fermato ${at(t)}: ha raggiunto il limite di passaggi per un'esecuzione`,
   work_capped_cost: (t) => `Fermato ${at(t)}: ha raggiunto il limite di costo per un'esecuzione`,
   work_stopped_at: (t) => `Fermato ${at(t)}`,
+  work_stopped_out_of_room: (t) => `Fermato ${at(t)}: la sua risposta ha esaurito lo spazio`,
+  work_stopped_declined: (t) => `Fermato ${at(t)}: l'IA si è rifiutata di continuare`,
   work_failed: "Non riuscito",
   work_failed_because: (why) => `Non riuscito: ${why}`,
   work_needs_you: "Richiede la tua attenzione.",

@@ -20,6 +20,8 @@ export const nl: Words = {
   work_capped_turns: (t) => `Gestopt ${at(t)}: limiet van stappen voor één run bereikt`,
   work_capped_cost: (t) => `Gestopt ${at(t)}: kostenlimiet voor één run bereikt`,
   work_stopped_at: (t) => `Gestopt ${at(t)}`,
+  work_stopped_out_of_room: (t) => `Gestopt ${at(t)}: het antwoord had geen ruimte meer`,
+  work_stopped_declined: (t) => `Gestopt ${at(t)}: de AI weigerde verder te gaan`,
   work_failed: "Mislukt",
   work_failed_because: (why) => `Mislukt: ${why}`,
   work_needs_you: "Dit vraagt je aandacht.",

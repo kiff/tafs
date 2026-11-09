@@ -15,6 +15,8 @@ export const en = {
   work_capped_turns: (t: When) => `Stopped at ${bare(t)}: it reached its limit of turns for one run`,
   work_capped_cost: (t: When) => `Stopped at ${bare(t)}: it reached its cost limit for one run`,
   work_stopped_at: (t: When) => `Stopped at ${bare(t)}`,
+  work_stopped_out_of_room: (t: When) => `Stopped at ${bare(t)}: its reply ran out of room`,
+  work_stopped_declined: (t: When) => `Stopped at ${bare(t)}: the AI declined to continue`,
   work_failed: "It failed",
   work_failed_because: (why: string) => `It failed: ${why}`,
   work_needs_you: "It needs you to look at it.",

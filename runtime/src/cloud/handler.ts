@@ -855,7 +855,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     // What waits in this chat goes now, if the taf is done in it: only this chat's.
@@ -864,7 +864,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -2305,7 +2305,7 @@ function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrot
  * them. `steering`: what the owner wrote to it that it hasn't read (#64).
  * Unknown (kiff/agents not answering) reads as neither.
  */
-async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null; capped?: Capped }> {
+async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped }> {
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
@@ -2338,6 +2338,7 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
         ? { run, status: r.status, untaken, ...(held ? { held } : {}), ...(notSent.length ? { not_sent: notSent } : {}) }
         : null,
       ...(r.stop === "cost_cap" || r.stop === "turn_cap" ? { capped: { run, stop: r.stop } } : {}),
+      ...(STOPS_TO_WORD.has(r.stop ?? "") ? { stopped: { run, stop: r.stop as Stopped["stop"] } } : {}),
     };
   } catch {
     return none;
@@ -2352,6 +2353,18 @@ interface Capped {
   run: string;
   stop: "cost_cap" | "turn_cap";
 }
+
+/**
+ * The latest run ended without finishing and with no words for why: at a cap of its own, with its reply cut
+ * off at its length limit (`max_token`), or with the AI declining to continue (`refused`). The app closes the
+ * thread with a line for it. `capped` stays beside it, for the apps that read only the caps.
+ */
+interface Stopped {
+  run: string;
+  stop: "cost_cap" | "turn_cap" | "max_token" | "refused";
+}
+
+const STOPS_TO_WORD = new Set<string>(["cost_cap", "turn_cap", "max_token", "refused"]);
 
 /**
  * What the owner wrote to the latest run that it hasn't read (kiff/agents#102), as
@@ -3041,7 +3054,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}) };
   }
   await needTaf(event, me, taf, deps);
   const token = bearer(event);

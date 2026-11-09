@@ -20,6 +20,8 @@ export const pl: Words = {
   work_capped_turns: (t) => `Zatrzymane ${at(t)}: osiągnięto limit kroków na jedno uruchomienie`,
   work_capped_cost: (t) => `Zatrzymane ${at(t)}: osiągnięto limit kosztów na jedno uruchomienie`,
   work_stopped_at: (t) => `Zatrzymane ${at(t)}`,
+  work_stopped_out_of_room: (t) => `Zatrzymane ${at(t)}: w odpowiedzi zabrakło miejsca`,
+  work_stopped_declined: (t) => `Zatrzymane ${at(t)}: AI odmówiła kontynuowania`,
   work_failed: "Nie powiodło się",
   work_failed_because: (why) => `Nie powiodło się: ${why}`,
   work_needs_you: "Wymaga Twojej uwagi.",
