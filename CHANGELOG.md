@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android's words come from the shared `app/strings` (Android).** About 1,570 lines the app writes itself move to `app/strings/en.json` by shared key, read through generated accessors (`Words`). Nothing changes on screen: English is the only language shipped, and every unit test checks the same words. The other languages follow in their own change.
 - **A chat that stopped because the AI provider isn't serving us says so (Android).** When tafs cloud's chat `end` names why (`code`, `words`; `ai_unavailable` today), the line under the chat is its words as they are, then what went through if anything did, still with Retry. Before tafs cloud sends them, nothing changes. iOS follows.
 - **The sample's amounts are in euros (Android).** Same numbers, in €, and the README's jobs table with them.
 - **Connect apps clears removed tafs' connections again, on tafs cloud's word (Android).** An app's connections from tafs tafs cloud names as removed (`removed_tafs`) show under "From removed tafs", each with the removed taf's name, between the tafs and Other connections. With the phone's signed grants read, tafs cloud says which a live taf's Card still uses: those are kept and named, and **Clear these connections** ends the rest with one confirmation and one fingerprint. A taf merely missing from the list is never treated as removed. Needs tafs cloud's `removed_tafs` (docs/connect-apps.md › Disconnecting); before it, nothing changes. iOS follows.

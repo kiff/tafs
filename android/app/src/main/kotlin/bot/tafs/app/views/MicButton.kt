@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
 import android.Manifest
 import android.content.Intent
@@ -67,7 +68,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
       Modifier
         .sizeIn(minWidth = 40.dp, minHeight = 40.dp)
         .clickable { dictation.switchLanguage(text, onText) }
-        .semantics { contentDescription = "Dictation in ${SpeechLanguage.name(now)}. Switch language" },
+        .semantics { contentDescription = Words.Voice.dictationIn(SpeechLanguage.name(now)) },
       contentAlignment = Alignment.Center,
     ) {
       Box(
@@ -89,7 +90,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
         else if (!dictation.mayListen && dictation.available) ask.launch(Manifest.permission.RECORD_AUDIO)
         else dictation.start(text, onText)
       }
-      .semantics { contentDescription = if (listening) "Stop dictating" else "Dictate a message" },
+      .semantics { contentDescription = if (listening) Words.Voice.stop else Words.Voice.dictate },
     contentAlignment = Alignment.Center,
   ) {
     if (listening) {
@@ -102,19 +103,19 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
   (state as? Dictation.State.Blocked)?.let { blocked ->
     DriveAlert(
       onDismissRequest = dictation::dismiss,
-      title = { Text("Dictation") },
+      title = { Text(Words.Voice.title) },
       text = { Text(blocked.why) },
       confirmButton = {
         if (blocked.settings) {
           TextButton({
             dictation.dismiss()
             context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
-          }) { Text("Open Settings", color = Theme.amberText) }
+          }) { Text(Words.Voice.openSettings, color = Theme.amberText) }
         } else {
-          TextButton(dictation::dismiss) { Text("OK", color = Theme.amberText) }
+          TextButton(dictation::dismiss) { Text(Words.Common.ok, color = Theme.amberText) }
         }
       },
-      dismissButton = if (blocked.settings) ({ TextButton(dictation::dismiss) { Text("OK", color = Theme.soft) } }) else null,
+      dismissButton = if (blocked.settings) ({ TextButton(dictation::dismiss) { Text(Words.Common.ok, color = Theme.soft) } }) else null,
       containerColor = Theme.panel,
     )
   }

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.Canvas
@@ -102,7 +103,7 @@ internal fun EventApprovalSheet(event: bot.tafs.app.kiff.KnobWire.Item, busy: Bo
       error?.let { Text(it, style = scaled(13, color = Theme.no)) }
       ApprovalGate {
         bot.tafs.app.design.PrimaryButton(
-          if (busy) "Approving…" else KnobWords.approveWith(bot.tafs.app.design.LocalBiometry.current),
+          if (busy) Words.Approval.approving else KnobWords.approveWith(bot.tafs.app.design.LocalBiometry.current),
           onApprove,
           enabled = !busy,
         )

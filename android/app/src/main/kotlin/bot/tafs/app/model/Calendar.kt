@@ -6,7 +6,11 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /** The calendar's three views (kiff/tafs#534). Week is the one it opens on. */
-enum class CalendarMode(val title: String) { Day("Day"), Week("Week"), Month("Month") }
+enum class CalendarMode {
+  Day, Week, Month;
+
+  val title: String get() = when (this) { Day -> Words.Calendar.Mode.day; Week -> Words.Calendar.Mode.week; Month -> Words.Calendar.Mode.month }
+}
 
 /** What the calendar shows: its view and the selected date (YYYY-MM-DD in the account's zone). Kept in the app's state, so a rotation keeps it. */
 data class CalendarState(val mode: CalendarMode = CalendarMode.Week, val selected: String)
@@ -29,9 +33,14 @@ enum class CalendarLayout {
  * (tafs cloud gives each event its day and minute), and iOS counts them the same way (`CalendarMath`). Weeks start on Monday.
  */
 object CalendarMath {
-  val monthNames = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+  val monthNames: List<String>
+    get() = Words.Calendar.MonthName.let {
+      listOf(it.january, it.february, it.march, it.april, it.may, it.june, it.july, it.august, it.september, it.october, it.november, it.december)
+    }
+
   /** Monday first. */
-  val weekdayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+  val weekdayNames: List<String>
+    get() = Words.Calendar.Weekday.let { listOf(it.mon, it.tue, it.wed, it.thu, it.fri, it.sat, it.sun) }
 
   private fun date(day: String): LocalDate? = runCatching { LocalDate.parse(day) }.getOrNull()
 
@@ -89,26 +98,31 @@ object CalendarMath {
   /** The view's title: "Thu 5 November 2026", "2 – 8 November 2026", "November 2026". */
   fun title(state: CalendarState): String {
     val d = date(state.selected) ?: return state.selected
+    val months = monthNames
     return when (state.mode) {
-      CalendarMode.Day -> "${weekdayNames[weekdayIndex(state.selected)]} ${d.dayOfMonth} ${monthNames[d.monthValue - 1]} ${d.year}"
+      CalendarMode.Day -> Words.Calendar.Title.day(weekdayNames[weekdayIndex(state.selected)], d.dayOfMonth.toString(), months[d.monthValue - 1], d.year.toString())
       CalendarMode.Week -> {
         val days = week(state.selected)
         val a = date(days[0]) ?: return state.selected
         val b = date(days[6]) ?: return state.selected
         when {
-          a.year != b.year -> "${a.dayOfMonth} ${monthNames[a.monthValue - 1]} ${a.year} – ${b.dayOfMonth} ${monthNames[b.monthValue - 1]} ${b.year}"
-          a.monthValue != b.monthValue -> "${a.dayOfMonth} ${monthNames[a.monthValue - 1]} – ${b.dayOfMonth} ${monthNames[b.monthValue - 1]} ${b.year}"
-          else -> "${a.dayOfMonth} – ${b.dayOfMonth} ${monthNames[b.monthValue - 1]} ${b.year}"
+          a.year != b.year -> Words.Calendar.Title.weekAcrossYears(
+            a.dayOfMonth.toString(), months[a.monthValue - 1], a.year.toString(), b.dayOfMonth.toString(), months[b.monthValue - 1], b.year.toString(),
+          )
+          a.monthValue != b.monthValue -> Words.Calendar.Title.weekAcrossMonths(
+            a.dayOfMonth.toString(), months[a.monthValue - 1], b.dayOfMonth.toString(), months[b.monthValue - 1], b.year.toString(),
+          )
+          else -> Words.Calendar.Title.week(a.dayOfMonth.toString(), b.dayOfMonth.toString(), months[b.monthValue - 1], b.year.toString())
         }
       }
-      CalendarMode.Month -> "${monthNames[d.monthValue - 1]} ${d.year}"
+      CalendarMode.Month -> Words.Calendar.Title.month(months[d.monthValue - 1], d.year.toString())
     }
   }
 
   /** A day as a heading in the agenda: "Thu 5 November". */
   fun dayHeading(day: String): String {
     val d = date(day) ?: return day
-    return "${weekdayNames[weekdayIndex(day)]} ${d.dayOfMonth} ${monthNames[d.monthValue - 1]}"
+    return Words.Calendar.dayHeading(weekdayNames[weekdayIndex(day)], d.dayOfMonth.toString(), monthNames[d.monthValue - 1])
   }
 
   /** The events of a day, in time order. */

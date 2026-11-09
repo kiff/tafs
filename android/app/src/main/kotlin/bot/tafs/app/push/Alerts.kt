@@ -1,5 +1,6 @@
 package bot.tafs.app.push
 
+import bot.tafs.app.model.Words
 import java.time.Instant
 
 /**
@@ -57,11 +58,11 @@ object AlertPayload {
         val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
         // A held call that has expired is not shown: there is nothing to answer.
         if (expires != null && !expires.isAfter(now)) return null
-        val title = data["title"]?.takeIf { it.isNotBlank() } ?: if (open == NEEDS_YOU) "A taf needs you" else "tafs"
+        val title = data["title"]?.takeIf { it.isNotBlank() } ?: if (open == NEEDS_YOU) Words.Push.aTafNeedsYou else Words.App.name
         val body = data["body"]?.takeIf { it.isNotBlank() } ?: when {
-          open == USAGE -> "Open Usage to see."
-          tafId != null && open != NEEDS_YOU -> "Open the taf to see."
-          else -> "Open Needs you to answer."
+          open == USAGE -> Words.Push.openUsage
+          tafId != null && open != NEEDS_YOU -> Words.Push.openTaf
+          else -> Words.Push.openNeedsYou
         }
         // A door's alerts with nothing else to name them are one per taf: the latest replaces the one before.
         Alert.Show(title, body, open, tag.ifEmpty { tafOf(open)?.let(::taf) ?: "alert" }, loud = data["level"] != "quiet", expiresAt = expires)

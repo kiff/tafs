@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.InstantAsString
 import java.time.Instant
 import kotlinx.serialization.SerialName
@@ -165,19 +166,19 @@ data class DraftCard(
     for (g in grants.orEmpty()) {
       val name = KiffMapping.name(g.action, g.title)
       val caps = g.perActionMax.orEmpty().map { cap ->
-        if (KiffMapping.isSum(cap.quantity)) "up to ${KiffMapping.money(cap.max, cap.unit, cap.scale).formatted} each" else "up to ${cap.max} each"
+        if (KiffMapping.isSum(cap.quantity)) Words.Card.Line.upToEach(amount = KiffMapping.money(cap.max, cap.unit, cap.scale).formatted) else Words.Card.Line.upToEach(amount = cap.max.toString())
       }
       val action = if (name.lowercase() in alike) "$name · ${KiffMapping.toolWords(g.action)}" else name
-      val more = if (asksPastLimits) "; more asks you first" else ""
+      val more = if (asksPastLimits) Words.Card.Line.moreAsks else ""
       out += if (caps.isEmpty()) action else "$action: " + caps.joinToString(", ") + more
     }
-    val then = if (asksPastLimits) ", then it asks you" else ""
+    val then = if (asksPastLimits) Words.Card.Line.thenAsks else ""
     for (a in aggregates.orEmpty()) {
       val window = KiffMapping.window(a.window).label
       out += when {
-        KiffMapping.isSum(a.quantity) -> "${KiffMapping.money(a.limit, a.unit, a.scale).formatted} in total $window$then"
-        asksPastLimits && a.limit == 0L -> "Each call asks you first"
-        else -> "${a.limit} ${if (a.limit == 1L) "call" else "calls"} $window$then"
+        KiffMapping.isSum(a.quantity) -> Words.Card.Line.totalInWindow(amount = KiffMapping.money(a.limit, a.unit, a.scale).formatted, window = window, then = then)
+        asksPastLimits && a.limit == 0L -> Words.Card.Held.eachCallAsks
+        else -> Words.Card.Line.callsInWindow(count = a.limit.toInt(), window = window, then = then)
       }
     }
     return out

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
@@ -85,7 +86,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      problem = e.message ?: "Signing in didn't work."
+      problem = e.message ?: Words.SignIn.didntWork
     }
   }
 
@@ -96,7 +97,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Text(
-        "Cancel",
+        Words.Common.cancel,
         style = scaled(17, color = Theme.amber),
         modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp),
       )
@@ -104,24 +105,24 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
         Modifier.verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
-        Text("Sign in with KIFF", style = scaled(34, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.SignIn.withKiff, style = scaled(34, FontWeight.Bold, Theme.ink, display = true))
         Text(
-          "Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here.",
+          Words.SignIn.lead,
           style = scaled(15, color = Theme.soft),
         )
 
         start?.let { s ->
           Panel(stroke = Theme.amber.copy(alpha = 0.4f)) {
-            Eyebrow("Your code")
+            Eyebrow(Words.SignIn.yourCode)
             SelectionContainer {
               Text(s.userCode, style = scaled(34, FontWeight.SemiBold, Theme.ink, mono = true))
             }
-            Text("Check that KIFF shows the same code before you approve.", style = scaled(13, color = Theme.dim))
+            Text(Words.SignIn.checkCode, style = scaled(13, color = Theme.dim))
           }
-          PrimaryButton("Open KIFF to approve", { uri.openUri(s.verificationUriComplete) })
+          PrimaryButton(Words.SignIn.openKiff, { uri.openUri(s.verificationUriComplete) })
           // To approve in another browser, where they're signed in to KIFF.
           Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Or open this link in another browser:", style = scaled(13, color = Theme.dim))
+            Text(Words.SignIn.otherBrowser, style = scaled(13, color = Theme.dim))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
               SelectionContainer(Modifier.weight(1f)) {
                 Text(
@@ -132,7 +133,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
                 )
               }
               Text(
-                if (copied) "Copied" else "Copy",
+                if (copied) Words.Common.copied else Words.Common.copy,
                 style = scaled(13, FontWeight.SemiBold, Theme.amber),
                 modifier = Modifier.heightIn(min = 44.dp).clickable {
                   scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("KIFF sign-in link", s.verificationUriComplete))) }
@@ -143,7 +144,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
           }
           Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             CircularProgressIndicator(Modifier.size(20.dp), color = Theme.amber, strokeWidth = 2.dp)
-            Text("Waiting for your approval…", style = scaled(14, color = Theme.soft))
+            Text(Words.SignIn.waiting, style = scaled(14, color = Theme.soft))
           }
         }
         if (start == null && problem == null) {
@@ -151,16 +152,19 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
         }
         problem?.let {
           Text(it, style = scaled(14, color = Theme.no))
-          OutlineButton("Try again", { attempt += 1 }, Modifier.fillMaxWidth())
+          OutlineButton(Words.Common.tryAgain, { attempt += 1 }, Modifier.fillMaxWidth())
         }
 
         Text(
           buildAnnotatedString {
-            append("By signing in, you agree to KIFF's ")
-            link("Terms", "https://kiff.dev/terms#tafs")
-            append(", which cover tafs, and its ")
-            link("Privacy policy", "https://kiff.dev/privacy#tafs")
-            append(".")
+            // The links sit where the sentence puts them, in any language.
+            Words.SignIn.agree(terms = "\u0001", privacy = "\u0002").forEach { c ->
+              when (c) {
+                '\u0001' -> link(Words.Settings.terms, "https://kiff.dev/terms#tafs")
+                '\u0002' -> link(Words.Settings.privacyPolicy, "https://kiff.dev/privacy#tafs")
+                else -> append(c)
+              }
+            }
           },
           style = scaled(12, color = Theme.dim),
         )

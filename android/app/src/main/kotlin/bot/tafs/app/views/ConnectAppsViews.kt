@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.secret
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.driveTyped
@@ -50,16 +51,16 @@ import kotlinx.coroutines.launch
 
 /** Connect apps' own words; every app's name and state comes from tafs cloud. */
 object ConnectAppsWords {
-  const val TITLE = "Connect apps"
-  const val SEARCH = "Search apps"
-  const val CONNECTED = "Connected ✓"
-  const val CONNECT = "Connect"
-  const val SIGN_IN_AGAIN = "Sign in again"
-  const val NOT_LISTED = "Not listed? Ask Coach"
-  const val NOT_LISTED_WHY = "Coach can connect an app that isn't here, from its own docs."
-  const val NONE = "No app by that name. Coach can connect one that isn't listed."
-  const val MORE = "Show more apps"
-  const val DISCONNECT = "Disconnect"
+  val TITLE get() = Words.Connect.Apps.title
+  val SEARCH get() = Words.Connect.Apps.search
+  val CONNECTED get() = Words.Connect.Apps.connected
+  val CONNECT get() = Words.Connect.Apps.connect
+  val SIGN_IN_AGAIN get() = Words.Connect.signInAgain
+  val NOT_LISTED get() = Words.Connect.Apps.notListed
+  val NOT_LISTED_WHY get() = Words.Connect.Apps.notListedWhy
+  val NONE get() = Words.Connect.Apps.none
+  val MORE get() = Words.Connect.Apps.more
+  val DISCONNECT get() = Words.Connect.disconnectButton
 
   /** A connection's row, under its taf's heading: the vendor account planque gives, else the app's name. */
   fun rowTitle(app: String, grant: bot.tafs.app.kiff.Grant): String = grant.account?.takeIf { it.isNotBlank() } ?: app
@@ -71,17 +72,17 @@ object ConnectAppsWords {
   /** The other tafs whose live Card has a rule on one of its tools, as a warning above Disconnect; null when none. */
   fun alsoOnCards(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
     state.tafsUsing(grant, except = grant.request.agent).map { it.name }.takeIf { it.isNotEmpty() }
-      ?.let { if (it.size == 1) "Also on ${bot.tafs.app.model.ConnectionWords.possessive(it[0])} Card" else "Also on the Cards of ${it.joinToString(" and ")}" }
+      ?.let { if (it.size == 1) Words.Connect.Apps.alsoOnOne(bot.tafs.app.model.ConnectionWords.possessive(it[0])) else Words.Connect.Apps.alsoOnMany(it.reduce { a, b -> Words.Common.listAnd(a, b) }) }
 
   /** The other tafs whose Card draws on a connection's tools: disconnecting it stops them too. */
   fun alsoStops(state: AppState, grant: bot.tafs.app.kiff.Grant): List<String> =
     state.tafsUsing(grant, except = grant.request.agent).map { it.name }
 
   /** The title over an app's connections. */
-  fun yourConnections(app: String) = "Your $app connections"
+  fun yourConnections(app: String) = Words.Connect.Apps.yourConnections(app)
 
   /** What disconnecting one does, said before the fingerprint. */
-  const val DISCONNECT_WHY = "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay."
+  val DISCONNECT_WHY get() = Words.Connect.Apps.disconnectWhy
 
   /** The taf a connection was set up for, by name; null once that taf was removed. */
   fun tafOf(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
@@ -251,7 +252,7 @@ fun ConnectAppsSheet(
                 }
               }
               if (onClearRemoved != null && clearable.isNotEmpty()) Text(
-                if (state.clearingRemoved) "Clearing…" else bot.tafs.app.model.ConnectionWords.CLEAR_REMOVED,
+                if (state.clearingRemoved) Words.Connect.Apps.clearing else bot.tafs.app.model.ConnectionWords.CLEAR_REMOVED,
                 style = scaled(15, FontWeight.SemiBold, if (state.clearingRemoved) Theme.dim else Theme.no),
                 modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = !state.clearingRemoved) { confirmingClear = clearable }.padding(top = 10.dp),
               )
@@ -276,7 +277,7 @@ fun ConnectAppsSheet(
         confirmButton = {
           androidx.compose.material3.TextButton({ confirmingDisconnect = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(ConnectAppsWords.DISCONNECT, color = Theme.no) }
         },
-        dismissButton = { androidx.compose.material3.TextButton({ confirmingDisconnect = null }) { Text("Cancel", color = Theme.soft) } },
+        dismissButton = { androidx.compose.material3.TextButton({ confirmingDisconnect = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       )
     }
     // Cancelling a sign-in that never came back: its own words, as on the taf's page.
@@ -302,7 +303,7 @@ fun ConnectAppsSheet(
         confirmButton = {
           androidx.compose.material3.TextButton({ confirmingClear = null; onClearRemoved?.invoke(ids) }, modifier = Modifier.confirms()) { Text(bot.tafs.app.model.ConnectionWords.CLEAR, color = Theme.no) }
         },
-        dismissButton = { androidx.compose.material3.TextButton({ confirmingClear = null }) { Text("Cancel", color = Theme.soft) } },
+        dismissButton = { androidx.compose.material3.TextButton({ confirmingClear = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       )
     }
     // Which taf: asked over the list, wherever Connect was tapped, before anything starts.
@@ -325,14 +326,14 @@ fun ConnectAppsSheet(
         },
         confirmButton = {},
         dismissButton = {
-          Text("Cancel", style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { picking = null }.padding(12.dp))
+          Text(Words.Common.cancel, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { picking = null }.padding(12.dp))
         },
       )
     }
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(ConnectAppsWords.TITLE, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -386,7 +387,7 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
         app.connected -> Text(
           ConnectAppsWords.CONNECTED,
           style = scaled(14, FontWeight.SemiBold, Theme.ok),
-          modifier = if (onManage != null) Modifier.heightIn(min = 44.dp).clickable(onClickLabel = "Manage") { onManage(app) }.padding(top = 12.dp) else Modifier,
+          modifier = if (onManage != null) Modifier.heightIn(min = 44.dp).clickable(onClickLabel = Words.Connect.Apps.manage) { onManage(app) }.padding(top = 12.dp) else Modifier,
         )
         // Not set up yet: nothing to tap, only tafs cloud's line under the name.
         app.needsSetup -> Unit
@@ -436,7 +437,7 @@ fun ConnectApprovalSheet(
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
       Text(bot.tafs.app.model.ConnectWords.APPROVE_TITLE, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
       if (grant == null) {
-        Text("Reading what it asks for…", style = scaled(14, color = Theme.soft))
+        Text(Words.Connect.readingAsks, style = scaled(14, color = Theme.soft))
       } else {
         // planque's own words for what it will do.
         Text(grant.text, style = scaled(15, color = Theme.ink))
@@ -472,9 +473,9 @@ fun ConnectApprovalSheet(
             val biometry = bot.tafs.app.design.LocalBiometry.current
             bot.tafs.app.design.PrimaryButton(
               when {
-                busy -> state.connectStep ?: "Approving…"
+                busy -> state.connectStep ?: Words.Approval.approving
                 needsKey -> bot.tafs.app.model.ConnectWords.giveKeyWith(biometry)
-                else -> "Approve with $biometry"
+                else -> Words.Approval.approveWith(biometry)
               },
               { if (needsKey) onGiveKey(grant, key) else onApprove(grant) },
               enabled = !busy && (!profiled || words != null) && (!needsKey || key.isNotBlank()),

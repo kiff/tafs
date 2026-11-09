@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveSheet
@@ -192,9 +193,9 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
           removing = null
           editing = null
           scope.launch { actions.remove(taf.id, d) }
-        }, Modifier.confirms()) { Text("Remove", color = Theme.no) }
+        }, Modifier.confirms()) { Text(Words.Door.remove, color = Theme.no) }
       },
-      dismissButton = { TextButton({ removing = null }) { Text("Cancel", color = Theme.soft) } },
+      dismissButton = { TextButton({ removing = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -211,13 +212,13 @@ fun KnocksPanel(taf: Taf, state: AppState, actions: DoorActions) {
   val (paired, waiting) = doors.openKnocks.filter { !it.isLine }.partition { it.paired }
   if (waiting.isNotEmpty()) {
     Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
-      Eyebrow("Knocks · waiting on you", Theme.amber)
+      Eyebrow(Words.Door.knocksWaiting, Theme.amber)
       waiting.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
     }
   }
   if (paired.isNotEmpty()) {
     Panel {
-      Eyebrow("Paired")
+      Eyebrow(Words.Door.paired)
       paired.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
     }
   }
@@ -232,7 +233,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       DoorBadge(door.app, door.open, 34)
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Eyebrow("${door.label} door")
+        Eyebrow(Words.Door.named(door.label))
         Text(door.words?.state ?: DoorWords.status(door), style = scaled(13, FontWeight.Medium, Theme.soft))
       }
       Switch(
@@ -245,7 +246,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
     Text(door.address, style = scaled(15, FontWeight.Medium, Theme.ink, mono = true))
     if (door.kind == "email") {
       OutlineButton(
-        if (copied) "Copied" else "Copy address",
+        if (copied) Words.Common.copied else Words.Door.copyAddress,
         {
           scope.launch {
             clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("address", door.address)))
@@ -273,7 +274,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
           }
           if (!key.auto) {
             Text(
-              "Unpair",
+              Words.Door.unpair,
               style = scaled(13, FontWeight.Medium, Theme.soft),
               modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { scope.launch { actions.unpair(taf.id, door, key) } }.padding(start = 8.dp, top = 8.dp),
             )
@@ -282,11 +283,11 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
       }
       Text(DoorWords.keysFoot(door), style = scaled(12, color = Theme.dim))
       door.words?.pairFromKnock?.let { Text(it, style = scaled(13, color = Theme.soft)) }
-      OutlineButton("Pair someone", onPair, Modifier.fillMaxWidth())
+      OutlineButton(Words.Door.pairSomeone, onPair, Modifier.fillMaxWidth())
     } else {
       Text(DoorWords.noKeys(door, taf.name), style = scaled(15, color = Theme.ink))
     }
-    Text("Remove door", style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(onClick = onRemove).padding(top = 8.dp))
+    Text(Words.Door.removeDoor, style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(onClick = onRemove).padding(top = 8.dp))
   }
 }
 
@@ -330,8 +331,8 @@ private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, bots: BotPicking,
   ) {
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.6f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("Add a door", style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Door.addDoor, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // WhatsApp's signup runs in a browser this app doesn't open yet.
@@ -345,12 +346,12 @@ private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, bots: BotPicking,
         }
         slackApp?.let { app -> SlackDoorStep(app, slack, doors.busy) }
         botApp?.let { app -> BotDoorStep(app, bots, doors.busy) }
-        AppSection("Knows who's writing · can hold keys", offered.filter { it.proof == "proven" }, doors.busy, pick)
-        AppSection("Can't prove who's writing · knocks only", offered.filter { it.proof != "proven" }, doors.busy, pick)
-        if (offered.isEmpty()) Text("No more doors can be added here.", style = scaled(13, color = Theme.dim))
+        AppSection(Words.Door.provenSection, offered.filter { it.proof == "proven" }, doors.busy, pick)
+        AppSection(Words.Door.unprovenSection, offered.filter { it.proof != "proven" }, doors.busy, pick)
+        if (offered.isEmpty()) Text(Words.Door.noMore, style = scaled(13, color = Theme.dim))
         if (doors.addable.any { it.kind == "whatsapp" }) Text(DoorWords.WHATSAPP_ELSEWHERE, style = scaled(12, color = Theme.dim))
         doors.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
-        Text("Replies go only to who wrote. Anything else the taf does still goes through KIFF.", style = scaled(12, color = Theme.dim), modifier = Modifier.padding(top = 6.dp))
+        Text(Words.Door.repliesOnly, style = scaled(12, color = Theme.dim), modifier = Modifier.padding(top = 6.dp))
       }
     }
   }
@@ -389,16 +390,16 @@ private fun PairDialog(door: Door, busy: Boolean, onClose: () -> Unit, onPair: (
   var name by remember { mutableStateOf("") }
   DriveAlert(
     onDismissRequest = onClose,
-    title = { Text("Pair someone") },
+    title = { Text(Words.Door.pairSomeone) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(DoorWords.pairIntro(door), style = scaled(14, color = Theme.soft))
         Field(sender, { sender = it }, DoorWords.pairHint(door))
-        Field(name, { name = it }, "Name (optional)")
+        Field(name, { name = it }, Words.Door.nameOptional)
       }
     },
-    confirmButton = { TextButton({ onPair(sender, name) }, enabled = sender.isNotBlank() && !busy, modifier = Modifier.confirms()) { Text("Pair", color = Theme.amber) } },
-    dismissButton = { TextButton(onClose) { Text("Cancel", color = Theme.soft) } },
+    confirmButton = { TextButton({ onPair(sender, name) }, enabled = sender.isNotBlank() && !busy, modifier = Modifier.confirms()) { Text(Words.Door.pair, color = Theme.amber) } },
+    dismissButton = { TextButton(onClose) { Text(Words.Common.cancel, color = Theme.soft) } },
     containerColor = Theme.panel,
   )
 }
@@ -442,7 +443,7 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
     if (knock.paired) Text(DoorWords.PAIRED_LINE, style = scaled(12, color = Theme.dim))
     if (knock.rest != null) {
       Text(DoorWords.restLine(knock), style = scaled(14, color = Theme.ink))
-      OutlineButton("OK", { onAnswer("ignore", null) }, Modifier.fillMaxWidth(), enabled = !busy)
+      OutlineButton(Words.Common.ok, { onAnswer("ignore", null) }, Modifier.fillMaxWidth(), enabled = !busy)
     } else {
       Text(DoorWords.wrote(knock), style = scaled(14, FontWeight.SemiBold, Theme.ink))
       Text(knock.text, style = scaled(14, color = Theme.soft), maxLines = if (compact) 3 else 8, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -451,7 +452,7 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         if (DoorWords.canDoIt(knock)) {
           Text(
-            "Do it",
+            Words.Door.doItButton,
             style = scaled(14, FontWeight.SemiBold, Theme.panel),
             modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).background(Theme.amberText).clickable(enabled = !busy) { asking = true }.padding(horizontal = 12.dp, vertical = 8.dp),
           )
@@ -464,7 +465,7 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
           )
         }
         Text(
-          "Ignore",
+          Words.Door.ignore,
           style = scaled(14, FontWeight.Medium, Theme.soft),
           modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { onAnswer("ignore", null) }.padding(horizontal = 8.dp, vertical = 8.dp),
         )
@@ -484,13 +485,13 @@ private fun DoItDialog(knock: Knock, tafName: String?, busy: Boolean, onClose: (
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(DoorWords.doItIntro(knock, tafName), style = scaled(14, color = Theme.soft))
-        Field(say, { say = it }, "What should it do?", minHeight = 90)
+        Field(say, { say = it }, Words.Door.whatShouldItDo, minHeight = 90)
       }
     },
     confirmButton = {
-      TextButton({ onSend(say.trim()) }, enabled = say.isNotBlank() && !busy) { Text(if (busy) "Sending…" else "Send to ${tafName ?: "your taf"}", color = Theme.amber) }
+      TextButton({ onSend(say.trim()) }, enabled = say.isNotBlank() && !busy) { Text(if (busy) Words.Common.sending else tafName?.let { Words.Door.sendTo(it) } ?: Words.Door.sendToYourTaf, color = Theme.amber) }
     },
-    dismissButton = { TextButton(onClose) { Text("Cancel", color = Theme.soft) } },
+    dismissButton = { TextButton(onClose) { Text(Words.Common.cancel, color = Theme.soft) } },
     containerColor = Theme.panel,
   )
 }
@@ -531,7 +532,7 @@ class SlackPicking(
 private fun SlackDoorStep(app: DoorApp, slack: SlackPicking, busy: Boolean) {
   var bot by remember { mutableStateOf(slack.bots.singleOrNull()) }
   Panel {
-    Eyebrow("Slack door")
+    Eyebrow(Words.Door.slackDoor)
     if (slack.bots.isEmpty()) {
       Text(DoorWords.SLACK_CONNECT_FIRST, style = scaled(14, color = Theme.ink))
       return@Panel
@@ -552,7 +553,7 @@ private fun SlackDoorStep(app: DoorApp, slack: SlackPicking, busy: Boolean) {
     val channels = slack.channels[grant.id]
     Text(DoorWords.SLACK_WHICH_CHANNEL, style = scaled(14, color = Theme.ink))
     when {
-      channels == null -> Text("Reading its channels…", style = scaled(13, color = Theme.soft))
+      channels == null -> Text(Words.Door.readingChannels, style = scaled(13, color = Theme.soft))
       channels.isEmpty() -> Text(DoorWords.SLACK_NO_CHANNELS, style = scaled(13, color = Theme.soft))
       else -> channels.forEach { channel ->
         Text(
@@ -580,7 +581,7 @@ private fun BotDoorStep(app: DoorApp, picking: BotPicking, busy: Boolean) {
   val door = app.bot ?: return
   val bots = picking.bots(door.provider)
   Panel {
-    Eyebrow("${app.label} door")
+    Eyebrow(Words.Door.named(app.label))
     if (bots.isEmpty()) {
       Text(door.words.none, style = scaled(14, color = Theme.ink))
       return@Panel

@@ -1,5 +1,6 @@
 package bot.tafs.app.billing
 
+import bot.tafs.app.model.Words
 import android.app.Activity
 import android.content.Context
 import com.android.billingclient.api.BillingClient
@@ -93,8 +94,8 @@ class PlayBillingStore(context: Context) : PlayStore {
     connected()
     // Read again just before: the offer sent is one Play gives this Google account now (its trial only while it can have it).
     products(listOf(id))
-    val product = details[id] ?: throw IllegalStateException("Google Play doesn't sell this here.")
-    val on = activity.get() ?: throw IllegalStateException("Open tafs to buy.")
+    val product = details[id] ?: throw IllegalStateException(Words.Billing.playDoesntSellThis)
+    val on = activity.get() ?: throw IllegalStateException(Words.Billing.openTafsToBuy)
     val each = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product)
     product.offer()?.let { each.setOfferToken(it.offerToken) }
     val params = BillingFlowParams.newBuilder()
@@ -105,7 +106,7 @@ class PlayBillingStore(context: Context) : PlayStore {
     waiting = answer
     try {
       val launched = client.launchBillingFlow(on, params)
-      if (launched.responseCode != BillingClient.BillingResponseCode.OK) throw IllegalStateException(launched.debugMessage.ifEmpty { "Google Play couldn't open the purchase." })
+      if (launched.responseCode != BillingClient.BillingResponseCode.OK) throw IllegalStateException(launched.debugMessage.ifEmpty { Words.Billing.playCouldntOpen })
       val (result, purchases) = answer.await()
       return when (result.responseCode) {
         BillingClient.BillingResponseCode.OK -> {
@@ -119,7 +120,7 @@ class PlayBillingStore(context: Context) : PlayStore {
         BillingClient.BillingResponseCode.USER_CANCELED -> PlayStore.Bought(null)
         // Bought already and not yet finished: it's among the unfinished, and is sent to KIFF from there.
         BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> PlayStore.Bought(unfinished().firstOrNull { it.productId == id })
-        else -> throw IllegalStateException(result.debugMessage.ifEmpty { "Google Play couldn't sell it (${result.responseCode})." })
+        else -> throw IllegalStateException(result.debugMessage.ifEmpty { Words.Billing.playCouldntSellCode(code = result.responseCode.toString()) })
       }
     } finally {
       waiting = null
@@ -198,8 +199,12 @@ class PlayBillingStore(context: Context) : PlayStore {
     fun lengthWords(iso: String): String {
       val m = Regex("""P(\d+)([DWMY])""").matchEntire(iso) ?: return iso
       val n = m.groupValues[1].toInt()
-      val unit = when (m.groupValues[2]) { "D" -> "day"; "W" -> "week"; "M" -> "month"; else -> "year" }
-      return "$n $unit" + if (n == 1) "" else "s"
+      return when (m.groupValues[2]) {
+        "D" -> Words.Billing.Length.days(count = n)
+        "W" -> Words.Billing.Length.weeks(count = n)
+        "M" -> Words.Billing.Length.months(count = n)
+        else -> Words.Billing.Length.years(count = n)
+      }
     }
   }
 }

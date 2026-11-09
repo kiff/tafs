@@ -11,8 +11,11 @@ object PeopleWords {
   fun joined(names: List<String>): String = when (names.size) {
     0 -> ""
     1 -> names[0]
-    else -> names.dropLast(1).joinToString(", ") + " and " + names.last()
+    else -> Words.Common.and(names.dropLast(1).joinToString(", "), names.last())
   }
+
+  /** "a and b and c": each joined with the language's "and". */
+  fun all(names: List<String>): String = names.reduceOrNull { a, b -> Words.Common.and(a, b) }.orEmpty()
 
   fun label(subject: String, people: List<Person>): String = people.firstOrNull { it.subject == subject }?.label ?: subject
 
@@ -23,14 +26,14 @@ object PeopleWords {
   /** "Uses Invoices and Refunds", or that it uses none yet. [tafName] names a KIFF agent the app lists, null for one it doesn't. */
   fun uses(group: Group, tafName: (String) -> String?): String {
     val names = group.agents.mapNotNull(tafName).sorted()
-    if (names.isEmpty()) return if (group.everyone == true) "Everyone on the account · uses no taf" else "Uses no taf yet"
-    return "Uses " + joined(names)
+    if (names.isEmpty()) return if (group.everyone == true) Words.People.everyoneUsesNone else Words.People.usesNone
+    return Words.People.uses(joined(names))
   }
 
   /** "Maria (manager), Ana, Luis". */
   fun peopleOf(group: Group, people: List<Person>): String {
-    val names = managersFirst(group.members, people).map { m -> label(m.subject, people).let { if (m.isManager) "$it (manager)" else it } }
-    return if (names.isEmpty()) "No one yet" else names.joinToString(", ")
+    val names = managersFirst(group.members, people).map { m -> label(m.subject, people).let { if (m.isManager) Words.People.nameManager(it) else it } }
+    return if (names.isEmpty()) Words.People.noOneYet else names.joinToString(", ")
   }
 
   private fun shareName(share: Share, groups: List<Group>, people: List<Person>): String =
@@ -38,9 +41,9 @@ object PeopleWords {
 
   /** "Shared with Support and ana@acme.com", not shared yet, or reading. */
   fun sharedWith(shares: List<Share>?, groups: List<Group>, people: List<Person>): String {
-    if (shares == null) return "Sharing…"
+    if (shares == null) return Words.People.sharing
     val names = shares.map { shareName(it, groups, people) }.filter { it.isNotEmpty() }
-    return if (names.isEmpty()) "Not shared" else "Shared with " + joined(names)
+    return if (names.isEmpty()) Words.People.notShared else Words.People.sharedWith(joined(names))
   }
 
   /**
@@ -49,15 +52,15 @@ object PeopleWords {
    */
   fun consequences(taf: String, had: Set<Share>, chosen: Set<Share>, groups: List<Group>, people: List<Person>): List<String> {
     val lines = mutableListOf<String>()
-    if (chosen.isNotEmpty()) lines += "Each person gets their own chats and notes. No one else sees them in the app."
+    if (chosen.isNotEmpty()) lines += Words.People.ownChats
     for (share in chosen.sortedBy { it.group ?: it.subject ?: "" }) {
       val group = share.group?.let { g -> groups.firstOrNull { it.id == g } }
       when {
-        group != null -> lines += "${group.name} uses $taf: ${peopleOf(group, people)}."
-        share.subject != null -> lines += "${label(share.subject, people)} uses $taf."
+        group != null -> lines += Words.People.groupUses(group.name, taf, peopleOf(group, people))
+        share.subject != null -> lines += Words.People.personUses(label(share.subject, people), taf)
       }
     }
-    for (share in had - chosen) lines += "${shareName(share, groups, people)} stops using $taf. Their chats stay theirs."
+    for (share in had - chosen) lines += Words.People.stopsUsing(shareName(share, groups, people), taf)
     return lines
   }
 }

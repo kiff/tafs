@@ -91,7 +91,7 @@ object QuestionAnswers {
       when (a) {
         is Answer.Choice -> label(a.value)
         is Answer.Choices -> a.values.joinToString(", ") { label(it) }
-        is Answer.Own -> "In your words: “${a.text}”"
+        is Answer.Own -> Words.Coach.Answer.inYourWords(a.text)
       }
     }
     return if (parts.isEmpty()) null else parts.joinToString(" · ")
@@ -136,54 +136,54 @@ data class QuestionSelection(
 
 /** What Coach's chat says, and how its thread is laid out. */
 object CoachWords {
-  const val NOT_ALLOWED = "Coach is for the people KIFF lets use it, by default the account's admins."
+  val NOT_ALLOWED get() = Words.Coach.notAllowed
 
   /** Where a new conversation can start (kiff/tafs#138), as iOS offers them. */
 
   /** Ways to start improving a taf (kiff/tafs#107). */
-  val IMPROVE_EXAMPLES = listOf("How is it going?", "Why was something refused or held?", "It can't find the work it should do")
+  val IMPROVE_EXAMPLES get() = listOf(Words.Coach.Improve.howIsItGoing, Words.Coach.Improve.whyRefused, Words.Coach.Improve.cantFindWork)
 
-  const val ASK_ANYTHING = "Ask anything about your tafs"
+  val ASK_ANYTHING get() = Words.Coach.askAnything
 
-  const val TOOLS_UNKNOWN = "KIFF didn't answer about Coach's tools. Try again in a moment."
+  val TOOLS_UNKNOWN get() = Words.Coach.toolsUnknown
 
   /** A vendor's tool holds one of Coach's names, as tafs cloud says: Coach's Cards grant by name, so it can't have its tools. */
-  fun taken(name: String?) = "Coach can't have its tools yet: another tool in KIFF is named ${name ?: "as one of them"}. Rename or remove it in KIFF."
-  const val ASK_ANYTHING_LINE = "Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval."
+  fun taken(name: String?) = name?.let { Words.Coach.Taken.named(it) } ?: Words.Coach.Taken.unnamed
+  val ASK_ANYTHING_LINE get() = Words.Coach.askAnythingLine
 
-  fun improveLine(name: String) = "Say what should change, or ask how it's going. Coach mode starts from what $name did and what its Card allows."
-  const val NOT_CONNECTABLE = "Connecting tools isn't set up for this account from this phone. Open Coach to start it."
+  fun improveLine(name: String) = Words.Coach.improveLine(name)
+  val NOT_CONNECTABLE get() = Words.Coach.notConnectable
 
   /** Starting Coach, planque couldn't check this phone with KIFF: the session still works, so it's never "signed out". */
-  const val CONNECTING_FAILED = "Connecting your tools didn't work. Tap Start to try again."
-  const val DIGEST_MISMATCH = "This request doesn't match what it asks for, so it can't be approved. Ask Coach to propose it again."
-  const val WAITING_FOR_VENDOR = "If the vendor's sign-in page opened, finish it there and come back."
+  val CONNECTING_FAILED get() = Words.Coach.connectingFailed
+  val DIGEST_MISMATCH get() = Words.Coach.digestMismatch
+  val WAITING_FOR_VENDOR get() = Words.Coach.waitingForVendor
 
   /** Back from the vendor's page, while planque says whether the connection took. */
-  const val CHECKING_SIGN_IN = "Checking the sign-in…"
+  val CHECKING_SIGN_IN get() = Words.Coach.checkingSignIn
 
   /** The vendor's page came back, but planque doesn't hold the connection as connected. */
   fun notConnected(vendor: String, status: String) =
-    "The sign-in at $vendor didn't connect: the connection is ${status.replace('_', ' ')}. Nothing was connected. Try signing in again."
+    Words.Coach.notConnected(vendor, status.replace('_', ' '))
 
   /** An approval with nothing to sign: the connection is connected and it brings no Card. Nothing is approved. */
-  fun nothingToApprove(vendor: String) = "$vendor is already connected. There's nothing new to approve, so nothing was approved."
+  fun nothingToApprove(vendor: String) = Words.Coach.nothingToApprove(vendor)
 
   /** An approval signed earlier (on another phone, or a tap before this one): connected, its Card confirmed in KIFF. */
-  const val ALREADY_APPROVED = "Already approved"
+  val ALREADY_APPROVED get() = Words.Coach.alreadyApproved
 
   /** tafs cloud asked this phone to sign a message that isn't this card's: refused, nothing signed. */
-  const val ASK_NOT_THIS_CARDS = "Setup asked this phone to sign something that isn't this card's. Nothing was signed."
+  val ASK_NOT_THIS_CARDS get() = Words.Coach.askNotThisCards
 
   /** An approval tapped while another goes through: one at a time. */
-  const val ANOTHER_APPROVAL = "Another approval is going through. Approve this one once it's done."
+  val ANOTHER_APPROVAL get() = Words.Coach.anotherApproval
 
   /** Approving needs this phone's key and the connection service, set up at sign-in. */
-  const val NOT_SET_UP_HERE = "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone."
+  val NOT_SET_UP_HERE get() = Words.Coach.notSetUpHere
 
-  const val INTRO = "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it."
-  const val SIGN_IN_NOTE = "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed."
-  const val COACH_KNOWS = "Coach knows, and hands it over again."
+  val INTRO get() = Words.Coach.intro
+  val SIGN_IN_NOTE get() = Words.Coach.signInNote
+  val COACH_KNOWS get() = Words.Coach.coachKnows
 
   /** A hand-over as the card says it, from tafs cloud's answer: set up, why it wasn't, or not answered yet. */
   sealed interface HandOver {
@@ -202,8 +202,8 @@ object CoachWords {
     }
   }
 
-  fun settingUp(name: String) = "Setting up $name…"
-  fun notSetUp(name: String, why: String) = "$name wasn't set up: ${why.trimEnd('.')}."
+  fun settingUp(name: String) = Words.Coach.settingUp(name)
+  fun notSetUp(name: String, why: String) = Words.Coach.notSetUp(name, why.trimEnd('.'))
 
   /** What became of an improvement result, as tafs cloud answered it: the version it made, why it made none, or not yet. */
   sealed interface Improvement {
@@ -221,10 +221,10 @@ object CoachWords {
     }
   }
 
-  fun notImproved(name: String, why: String) = "${possessive(name)} new version wasn't made: ${why.trimEnd('.')}."
+  fun notImproved(name: String, why: String) = Words.Coach.notImproved(possessive(name), why.trimEnd('.'))
 
   /** "Coach's", "Refunds'": a name ending in s takes the apostrophe alone. */
-  fun possessive(name: String) = if (name.endsWith("s")) "$name'" else "$name's"
+  fun possessive(name: String) = ConnectionWords.possessive(name)
 
   /** An owner's message in their own words: an answer to a card reads as what they chose, never as the contract's form. */
   fun ownerWords(text: String, components: List<ShownComponent>): String {
@@ -232,8 +232,8 @@ object CoachWords {
     val component = components.firstOrNull { it.id == a.id }?.component
     return when (a.type) {
       "confirm" -> component?.options?.firstOrNull { it.value == a.text }?.label ?: a.text
-      "approval" -> if (a.failed) "Approve · it didn't go through" else if (a.text == "declined") "Decline" else "Approve"
-      "sign_in" -> if (a.failed) "Sign in · it didn't go through" else if (a.text == "not now") "Not now" else "Signed in"
+      "approval" -> if (a.failed) Words.Coach.Answer.approveFailed else if (a.text == "declined") Words.Coach.Answer.decline else Words.Coach.Answer.approve
+      "sign_in" -> if (a.failed) Words.Coach.Answer.signInFailed else if (a.text == "not now") Words.Common.notNow else Words.Coach.Answer.signedIn
       "questions" -> QuestionAnswers.words(a.text, component?.questions.orEmpty()) ?: a.text
       else -> a.text
     }
@@ -244,9 +244,9 @@ object CoachWords {
    * wrote instead, or that it stopped waiting with none. The phone keeps no answer of its own.
    */
   fun answered(a: bot.tafs.app.kiff.CardAnswer): String = when (a.state) {
-    "wrote" -> "You answered in your own words."
-    "no_answer" -> "It stopped waiting, with no answer."
-    else -> a.words.ifEmpty { "Answered." }
+    "wrote" -> Words.Coach.Answer.wrote
+    "no_answer" -> Words.Coach.Answer.noAnswer
+    else -> a.words.ifEmpty { Words.Coach.answered }
   }
 
   /** The tafs a new Coach conversation can start on, to improve one: those tafs cloud runs that this person manages. */
@@ -257,7 +257,7 @@ object CoachWords {
   fun isEmptyChat(state: bot.tafs.app.app.AppState): Boolean =
     state.coachFresh || (state.chatItems(bot.tafs.app.app.COACH_CHAT).isEmpty() && state.chatSent[bot.tafs.app.app.COACH_CHAT].isNullOrEmpty())
 
-  const val ANSWERING = "Sending your answer…"
+  val ANSWERING get() = Words.Coach.answering
 
   /**
    * An answered approval, in one line: the answer, then what it was ("Approved · Connect Stripe"). What it was is Coach's
@@ -266,13 +266,13 @@ object CoachWords {
   fun answeredApproval(answer: String, c: SetupComponent, grantText: String?, draftLabel: String?): String {
     val what = c.title?.takeIf { it.isNotBlank() }
       ?: grantText?.takeIf { it.isNotBlank() }
-      ?: draftLabel?.takeIf { it.isNotBlank() }?.let { possessive(it) + " Card" }
-      ?: c.service?.let { "Connect $it" }
+      ?: draftLabel?.takeIf { it.isNotBlank() }?.let { Words.Coach.cardOf(possessive(it)) }
+      ?: c.service?.let { Words.Coach.connectService(it) }
     return if (what == null) answer else "$answer · $what"
   }
 
   /** Taken by tafs cloud, before the thread shows it in kiff/agents' words. */
-  const val TAKEN = "Answered."
+  val TAKEN get() = Words.Coach.answered
 
   /**
    * Folds components as the conversation lists them, oldest first: the latest version of each card ([ShownComponent.ref], never
@@ -301,7 +301,7 @@ object CoachWords {
   fun waits(c: SetupComponent): Boolean = !c.waits.isNullOrBlank()
 
   /** A plan's one line, as tafs cloud writes it; before it does, the plan's own title. Never counted on the phone. */
-  fun planLine(plan: SetupComponent): String = plan.line?.takeIf { it.isNotBlank() } ?: plan.title?.takeIf { it.isNotBlank() } ?: "Plan"
+  fun planLine(plan: SetupComponent): String = plan.line?.takeIf { it.isNotBlank() } ?: plan.title?.takeIf { it.isNotBlank() } ?: Words.Coach.planTitle
 
   /**
    * Whether Coach's run handed its taf over and is done: the newest answered `result` card (in [session] when the live answer
@@ -358,5 +358,5 @@ object CoachWords {
   }
 
   /** While KIFF's words for a connection's profile are read: Approve waits for them. */
-  const val READING_KIFF_WORDS = "Reading KIFF's words for this connection…"
+  val READING_KIFF_WORDS get() = Words.Coach.readingKiffWords
 }

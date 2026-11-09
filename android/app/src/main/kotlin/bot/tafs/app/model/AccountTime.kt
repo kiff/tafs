@@ -38,8 +38,8 @@ fun localDate(at: Instant): LocalDate = at.atZone(zone).toLocalDate()
 fun dayTitle(day: LocalDate, today: LocalDate = LocalDate.now(zone)): String {
   val date = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()).format(day)
   return when (day) {
-    today -> "Today · $date"
-    today.minusDays(1) -> "Yesterday · $date"
+    today -> Words.Calendar.todayDate(date)
+    today.minusDays(1) -> Words.Calendar.yesterdayDate(date)
     else -> DateTimeFormatter.ofPattern("EEEE", Locale.getDefault()).format(day) + " · " + date
   }
 }

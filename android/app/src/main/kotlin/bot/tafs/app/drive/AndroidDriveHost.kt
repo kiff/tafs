@@ -1,5 +1,6 @@
 package bot.tafs.app.drive
 
+import bot.tafs.app.model.Words
 import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -320,7 +321,7 @@ class AndroidDriveHost(
         if (c.getOrNull(DriveConfirms) == true) confirm = true
         if (c.contains(SemanticsActions.OnClick) || c.contains(SemanticsActions.OnLongClick) || c.contains(SemanticsActions.SetText)) {
           val area = b.width * b.height
-          if (area < smallest) { smallest = area; words = if (c.getOrNull(DriveSecret) == true) "a secret field" else nameOf(n) }
+          if (area < smallest) { smallest = area; words = if (c.getOrNull(DriveSecret) == true) Words.Drive.aSecretField else nameOf(n) }
         }
         n.children.forEach(::visit)
       }
@@ -456,7 +457,7 @@ class AndroidDriveHost(
     if (!did) return Acted.refused(DriveWords.NO_FIELD)
     val label = (c.getOrNull(SemanticsProperties.ContentDescription)?.firstOrNull() ?: c.getOrNull(SemanticsProperties.Text)?.firstOrNull()?.text)
       ?.takeIf(String::isNotBlank)
-    return Acted(true, DriveWords.typed(label), label?.let { Touched(it, currentTaf()) } ?: Touched("a text field", currentTaf()))
+    return Acted(true, DriveWords.typed(label), label?.let { Touched(it, currentTaf()) } ?: Touched(Words.Drive.aTextField, currentTaf()))
   }
 
   private fun hideKeyboard() {
