@@ -2611,12 +2611,13 @@ describe("a schedule whose runs keep failing to start", () => {
     w.now = new Date(AT.getTime() + 10 * 60_000);
     const runsRead = vi.spyOn(w.agents.api, "runs");
     expect(await sweepHealth(deps)).toEqual([]);
-    expect(runsRead).not.toHaveBeenCalled();
+    const readsOfRae = () => runsRead.mock.calls.filter((c) => c[1] === RAE).length;
+    expect(readsOfRae()).toBe(0);
     // It fired: its last three runs failed, and the phones that answer hear once.
     w.now = new Date(AT.getTime() + 16 * 60_000);
     next(at(30));
     expect(await sweepHealth(deps)).toEqual([{ tenant: "t_acme", taf: RAE }]);
-    expect(runsRead).toHaveBeenCalledTimes(1);
+    expect(readsOfRae()).toBe(1);
     expect(w.pushed).toHaveLength(1);
     expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", payload: {
       aps: { alert: { title: "Rae", body: "Its last 3 runs failed. Open it to see why." }, "interruption-level": "time-sensitive" }, open: "taf", taf_id: RAE,

@@ -379,10 +379,20 @@ phones that answer holds, once for each run of failures, opening the taf:
   run failed or was cut short after it may have changed something, or three runs in a row didn't finish
   the same items, so kiff/agents doesn't hand them to another run. "Its scheduled run stopped partway.
   What it was working on won't be tried again. Open it to see what it did."
+  A later partway stop in the same run of failures dropped other work, so it's said again, at most
+  once every six hours for that schedule.
 - **a follow-up the taf set, or a one-time run:** at once, since it's off after its firing and its work
   won't run again by itself. "A follow-up it set for itself didn't run, and won't try again. Open it to
   see why." Not while it's still on (its owner moved it during the run), and never said again a month on.
 - **nothing for a halted taf or account,** which tries nothing until it's resumed; it's said once it is.
+
+**A taf whose runs fail one after another** (`sweepHealth`, on the sweep). A taf that turns failing
+([reliability.md](reliability.md#its-health)) is said once for that bad spell, to the same phones, opening
+the taf: "Its last 3 runs failed. Open it to see why." Only what the alert above hasn't said already: a
+run of failures at its schedule, and work a run dropped, are that alert's. One that recovers and fails
+again is another spell, said again. At risk shows in the app and sends nothing. Nothing is said while the
+taf is halted or its schedule is off. The sweep reads a taf's runs only when its schedule has fired since
+the last pass.
 
 **Sound**, in Settings under **Notifications & haptics** (`NotificationSettingsView`), is
 on by default and set for each device. Off, the phone says so when it registers
