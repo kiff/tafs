@@ -19,9 +19,10 @@ import type { CoachStore } from "./coach.js";
 import type { Taf, Tafs } from "./handler.js";
 import { apsFor, levelOf } from "./levels.js";
 import { HANDOFF_HEADING, type VendorPlace } from "./places.js";
-import { type Device, type PushStore, type Sender, sendNotification } from "./push.js";
+import { type Device, deviceLang, type PushStore, type Sender, sendNotification } from "./push.js";
 import { stepWhyKey, type StepWhys, whyOf } from "./steps.js";
-import { timeIn } from "./work.js";
+import { whenIn } from "./work.js";
+import { type Lang, type Words, wordsIn } from "./words/index.js";
 
 export type DeliveryState = "sent" | "handed" | "retrying" | "not_sent";
 
@@ -91,6 +92,8 @@ export function placeKey(p: VendorPlace): string {
 }
 
 /** The words the apps show for deliveries, all from here. */
+const HANDOFF_FAILED = "the hand-over failed";
+
 export const DELIVERY_WORDS = {
   noCall: "the taf made no call for it",
   refused: "the app didn't take it",
@@ -130,6 +133,21 @@ export function handoffFence(): string {
 
 /** A reason as a clause of a longer sentence: its own full stop off. */
 const clause = (why: string) => why.replace(/[.\s]+$/, "");
+
+/**
+ * A kept why in the person's language: one of tafs cloud's own (DELIVERY_WORDS, kept in English on the record) in
+ * theirs, and an app's own words as the app gave them.
+ */
+export function whyIn(why: string | undefined, lang: Lang): string | undefined {
+  if (!why) return why;
+  const w = wordsIn(lang);
+  const own: Record<string, string> = {
+    [DELIVERY_WORDS.noCall]: w.why_no_call, [DELIVERY_WORDS.refused]: w.why_refused, [DELIVERY_WORDS.noHandoff]: w.why_no_handoff(HANDOFF_HEADING),
+    [DELIVERY_WORDS.tafGone]: w.why_taf_gone, [DELIVERY_WORDS.retryFailed]: w.why_retry_failed, [DELIVERY_WORDS.retryStopped]: w.why_retry_stopped,
+    [HANDOFF_FAILED]: w.why_handoff_failed,
+  };
+  return Object.hasOwn(own, why) ? own[why] : why;
+}
 
 /** The hand-off the taf wrote: the text under the last "Hand-off" heading of its result, or none. */
 export function handoffOf(output: string | undefined): string | undefined {
@@ -262,7 +280,7 @@ async function handOff(ctx: DeliveryContext, tenant: string, taf: Taf, r: Run, p
     const run = await ctx.agents.startRun(tenant, to.id, DELIVERY_WORDS.handoffTask(taf.name, text, handoffFence()), { source: `handoff:${taf.id}:${r.id}`, dedupKey: `handoff:${r.id}:${key}` });
     return { ...base, name: to.name, state: "handed", handed_run: run.id };
   } catch (err) {
-    return { ...base, state: "not_sent", why: err instanceof Error && err.message ? err.message : "the hand-over failed" };
+    return { ...base, state: "not_sent", why: err instanceof Error && err.message ? err.message : HANDOFF_FAILED };
   }
 }
 
@@ -317,10 +335,11 @@ async function noteManagers(ctx: DeliveryContext, tenant: string, taf: Taf, d: D
   if (!(await ctx.store.once(deliveryKeys.note(tenant, taf.id, d.key), kept(ctx)))) return;
   try {
     const { devices } = await ctx.push.get(tenant);
-    const body = DELIVERY_WORDS.note(taf.name, d.name, d.why);
+    // Each phone in its own language.
+    const body = (lang: Lang) => { const why = whyIn(d.why, lang); return wordsIn(lang).delivery_note(taf.name, d.name, why && clause(why)); };
     await Promise.all(devices.filter((x: Device) => (x.manages ?? x.answers) === true).map((x: Device) => sendNotification(ctx.apns, x, {
       preference: "not_sent", kind: "alert",
-      payload: { aps: { alert: { title: taf.name, body }, ...apsFor(levelOf("run_ended", false)) }, open: "taf", taf_id: taf.id },
+      payload: { aps: { alert: { title: taf.name, body: body(deviceLang(x)) }, ...apsFor(levelOf("run_ended", false)) }, open: "taf", taf_id: taf.id },
       collapseID: `delivery-${taf.id}-${d.key}`.slice(0, 64),
     }).catch(() => "failed")));
   } catch (err) {
@@ -377,14 +396,12 @@ export async function sweepDeliveries(ctx: DeliveryContext): Promise<Array<{ run
  * Google Sheets · Refunds 2026 and handed to Invoices", "Not sent to Slack · #ops yet: trying
  * again"), or none when the run had no place of its own.
  */
-export function deliveredLine(rd: RunDeliveries | undefined): string | undefined {
+export function deliveredLine(rd: RunDeliveries | undefined, lang: Lang = "en"): string | undefined {
   if (!rd?.places.length) return undefined;
-  const went = rd.places.filter((d) => d.state === "sent" || d.state === "handed").map((d) => `${d.state === "handed" ? "handed to" : "sent to"} ${d.name}`);
-  const not = rd.places.filter((d) => d.state === "retrying" || d.state === "not_sent").map((d) => d.state === "retrying" ? `${d.name} yet: trying again` : d.name);
-  const parts: string[] = [];
-  if (went.length) parts.push(`${went[0]!.charAt(0).toUpperCase()}${went[0]!.slice(1)}${went.length > 1 ? ` and ${went.slice(1).join(" and ")}` : ""}`);
-  if (not.length) parts.push(`Not sent to ${not.join(" and ")}`);
-  return parts.join(". ") + ".";
+  return wordsIn(lang).delivered_line(
+    rd.places.filter((d) => d.state === "sent" || d.state === "handed").map((d) => ({ name: d.name, handed: d.state === "handed" })),
+    rd.places.filter((d) => d.state === "retrying" || d.state === "not_sent").map((d) => ({ name: d.name, retrying: d.state === "retrying" })),
+  );
 }
 
 /**
@@ -406,16 +423,22 @@ export async function settleEveryTaf(ctx: DeliveryContext, tenants: () => Promis
 }
 
 /** A run's deliveries as the apps draw them, in the account's zone. */
-export function deliveryViews(rd: RunDeliveries | undefined, taf: string, zone: string, now: Date): DeliveryView[] {
+export function deliveryViews(rd: RunDeliveries | undefined, taf: string, zone: string, now: Date, lang: Lang = "en"): DeliveryView[] {
   if (!rd) return [];
+  const w: Words = wordsIn(lang);
   return rd.places.map((d) => {
-    const when = timeIn(d.at, zone, now);
+    const when = whenIn(d.at, zone, now, lang);
     switch (d.state) {
-      case "sent": return { place: d.place, key: d.key, name: d.name, state: d.state, line: DELIVERY_WORDS.delivered(d.name, when) };
-      case "handed": return { place: d.place, key: d.key, name: d.name, state: d.state, line: DELIVERY_WORDS.handed(d.name, when) };
-      case "retrying": return { place: d.place, key: d.key, name: d.name, state: d.state, line: DELIVERY_WORDS.retrying(d.name, d.next_at ? timeIn(d.next_at, zone, now) : undefined) };
-      default: return { place: d.place, key: d.key, name: d.name, state: d.state, line: DELIVERY_WORDS.notSent(d.name, d.why),
-        ...(d.place === "action" ? { send_again: true as const } : {}), open_coach: true as const, coach_words: DELIVERY_WORDS.coach(taf, d.name, d.why) };
+      case "sent": return { place: d.place, key: d.key, name: d.name, state: d.state, line: w.delivered(d.name, when) };
+      case "handed": return { place: d.place, key: d.key, name: d.name, state: d.state, line: w.handed(d.name, when) };
+      case "retrying": return { place: d.place, key: d.key, name: d.name, state: d.state, line: w.delivery_retrying(d.name, d.next_at ? whenIn(d.next_at, zone, now, lang) : undefined) };
+      default: {
+        const why = whyIn(d.why, lang);
+        return { place: d.place, key: d.key, name: d.name, state: d.state, line: w.delivery_not_sent(d.name, why),
+          ...(d.place === "action" ? { send_again: true as const } : {}), open_coach: true as const,
+          // In English always: tafs cloud knows these words to start Coach with its delivery skill (coach-skills.ts), and Coach answers in the person's language.
+          coach_words: DELIVERY_WORDS.coach(taf, d.name, d.why) };
+      }
     }
   });
 }

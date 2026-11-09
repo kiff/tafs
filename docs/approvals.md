@@ -44,7 +44,7 @@ room raises the total and doesn't itself pass the limit for one call. KIFF keeps
 id: after extra room it's `changed`, and when the taf tries the call again it's back as
 `held`, over the limit for one call only. The card then says plainly that the first step
 went through and why one more is needed, in KIFF's own words (`reason_text`): "Extra room
-went through. This call is held again for a limit of its own: $60 is over the $50 limit
+went through. This call is held again for a limit of its own: €60 is over the €50 limit
 for one call. Approve it once to let it go, or refuse it." (Android: `SecondStep`,
 `roomGiven`). A held call's reason is KIFF's `reason_text` wherever KIFF sends it. Where KIFF
 sends none, the app writes it, never the machine's reason: money in the app's money words, and

@@ -1,3 +1,4 @@
+import { LANGUAGES, type Lang, wordsIn } from "./words/index.js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { apsFor, levelOf } from "./levels.js";
 import { parseKinds, type AlertKind, type AlertKinds } from "./alert-preferences.js";
@@ -43,7 +44,14 @@ export interface Device {
   /** The person turned off Sound for alerts on this phone: each alert arrives quietly (see `silencing`). */
   silent?: boolean;
   kinds?: AlertKinds;
+  /** The language its app showed when it registered (Accept-Language): its alerts come in it (docs/languages.md). */
+  lang?: string;
   at: string;
+}
+
+/** A phone's language for its alerts: one of the eight it registered with, else English. */
+export function deviceLang(d: Pick<Device, "lang">): Lang {
+  return (LANGUAGES as readonly string[]).includes(d.lang ?? "") ? (d.lang as Lang) : "en";
 }
 
 export interface PushStore {
@@ -226,13 +234,14 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED && outcome !== PACK_REQUEST_ANSWERED && outcome !== CONNECTION_SIGNED_OUT &&
     outcome !== CREDITS_WARNING) return { ignored: outcome };
   const eventID = typeof body.event_id === "string" ? body.event_id : "";
-  let n: Notification;
+  // Built per language, once each: every phone hears it in its own (docs/languages.md).
+  let build: (lang: Lang) => Notification | undefined;
   let to: (d: Device) => boolean;
   if (outcome === CREDITS_WARNING) {
     const reasons = Array.isArray(body.reasons) ? body.reasons.filter((r: unknown): r is string => typeof r === "string") : [];
-    const warning = creditsNotification(reasons[0], reasons[1], typeof body.entity_id === "string" ? body.entity_id : "");
-    if (!eventID || !warning) throw new PushError(400, "a credits warning names its event, its share and its period");
-    n = warning;
+    const period = typeof body.entity_id === "string" ? body.entity_id : "";
+    if (!eventID || !creditsNotification(reasons[0], reasons[1], period)) throw new PushError(400, "a credits warning names its event, its share and its period");
+    build = (lang) => creditsNotification(reasons[0], reasons[1], period, lang);
     // The people who manage billing: a pack, or a raise, is theirs.
     to = (d) => d.addsTasks === true;
   } else if (outcome === CONNECTION_SIGNED_OUT) {
@@ -243,7 +252,7 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
     const taf = deps.tafOf ? await deps.tafOf(tenant, agent) : undefined;
     // An agent that no taf runs (removed since): nobody to tell.
     if (!taf) return { ignored: `${outcome}: no taf runs ${agent}` };
-    n = signedOutNotification(taf, typeof c?.vendor === "string" ? c.vendor : "", grant);
+    build = (lang) => signedOutNotification(taf, typeof c?.vendor === "string" ? c.vendor : "", grant, lang);
     // The people who may answer for the account's tafs: they sign in again.
     to = (d) => d.answers;
   } else if (outcome === PACK_REQUEST_ANSWERED) {
@@ -251,21 +260,20 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
     const requestID = typeof r?.id === "string" ? r.id : "";
     const askedBy = typeof r?.asked_by === "string" ? r.asked_by : "";
     if (!eventID || !requestID || !askedBy) throw new PushError(400, "an answer names its event, its request and who asked");
-    const answer = answerNotification(requestID, r?.status, r?.pack, r?.note, r?.kind);
-    if (!answer) return { ignored: `${outcome}: ${String(r?.status)}` };
-    n = answer;
+    if (!answerNotification(requestID, r?.status, r?.pack, r?.note, r?.kind)) return { ignored: `${outcome}: ${String(r?.status)}` };
+    build = (lang) => answerNotification(requestID, r?.status, r?.pack, r?.note, r?.kind, lang);
     // Only the member who asked hears the answer.
     to = (d) => d.subject === askedBy;
   } else if (outcome === PACK_REQUESTED) {
     const requestID = typeof body.entity_id === "string" ? body.entity_id : "";
     if (!eventID || !requestID) throw new PushError(400, "an alert names its event and its request");
-    n = requestNotification(requestID, body.request?.kind);
+    build = (lang) => requestNotification(requestID, body.request?.kind, lang);
     // Only phones of people who may add tasks: they answer it.
     to = (d) => d.addsTasks === true;
   } else {
     const holdID = typeof body.hold?.id === "string" ? body.hold.id : "";
     if (!eventID || !holdID) throw new PushError(400, "an alert names its event and its held call");
-    n = outcome === HELD ? heldNotification(body, holdID, deps.now) : answeredNotification(holdID);
+    build = (lang) => (outcome === HELD ? heldNotification(body, holdID, deps.now, lang) : answeredNotification(holdID));
     // The people KIFF names, when it names them: it decides who may answer, and
     // leaves out whoever asked. Otherwise, as before, the phones of people who may answer.
     const people = named(body.notify);
@@ -274,13 +282,19 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   const inFlight = new Date(deps.now.getTime() + IN_FLIGHT_SECONDS * 1000);
   const done = new Date(deps.now.getTime() + DEDUPE_HOURS * 3600_000);
   let sent = 0, failed = 0, sending = 0, already = 0;
+  const built = new Map<Lang, Notification>();
+  const notificationFor = (d: Device): Notification => {
+    const lang = deviceLang(d);
+    if (!built.has(lang)) built.set(lang, (build(lang) ?? build("en"))!);
+    return built.get(lang)!;
+  };
   for (const device of devices.filter(to)) {
     const delivered = `alert#${tenant}#${eventID}#${device.token}`;
     const key = `sending#${tenant}#${eventID}#${device.token}`;
     if (await deps.held(delivered)) { already++; continue; }
     if (!(await deps.claim(key, inFlight))) { sending++; continue; }
     let r: Awaited<ReturnType<Sender["send"]>>;
-    try { r = await sendNotification(deps.apns, device, n); } catch (err) {
+    try { r = await sendNotification(deps.apns, device, notificationFor(device)); } catch (err) {
       console.error(`push: ${(err as Error).message}`);
       r = "failed";
     }
@@ -299,15 +313,16 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   return already > 0 && sent === 0 ? { duplicate: true } : { sent };
 }
 
-function heldNotification(body: AlertBody, holdID: string, now: Date): Notification {
-  const action = typeof body.action === "string" && body.action ? body.action.replace(/[_.]+/g, " ") : "A call";
+function heldNotification(body: AlertBody, holdID: string, now: Date, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
+  const action = typeof body.action === "string" && body.action ? body.action.replace(/[_.]+/g, " ") : w.push_a_call;
   const expires = typeof body.hold?.expires_at === "string" ? new Date(body.hold.expires_at) : undefined;
   return {
     preference: "needs_you",
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: "A taf needs you", body: `${capitalize(action)} waits for your answer. Nothing is sent until you approve.` },
+        alert: { title: w.push_held_title, body: w.push_held_body(capitalize(action)) },
         "thread-id": "held",
         // Approve and Refuse on the notification (kiff/tafs#210, part 2).
         category: "hold",
@@ -333,13 +348,14 @@ const MAX_NAME = 60;
  * Sign in again. Neither the reason nor the grant's tools are said: only who, and what to do.
  * It sounds, but isn't Time Sensitive: nothing waits on a deadline, the taf just can't use that vendor.
  */
-function signedOutNotification(taf: { id: string; name: string }, vendor: string, grant: string): Notification {
+function signedOutNotification(taf: { id: string; name: string }, vendor: string, grant: string, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
   const clip = (s: string) => { const t = s.replace(/\s+/g, " ").trim(); return t.length > MAX_NAME ? t.slice(0, MAX_NAME - 1) + "…" : t; };
-  const who = clip(vendor) || "A provider";
+  const who = clip(vendor) || w.push_a_provider;
   return {
     kind: "alert",
     payload: {
-      aps: { alert: { title: clip(taf.name), body: `${who} signed ${clip(taf.name)} out · sign in again` }, "thread-id": "connections", sound: "default" },
+      aps: { alert: { title: clip(taf.name), body: w.push_signed_out(who, clip(taf.name)) }, "thread-id": "connections", sound: "default" },
       open: "taf",
       taf_id: taf.id,
     },
@@ -348,10 +364,9 @@ function signedOutNotification(taf: { id: string; name: string }, vendor: string
   };
 }
 
-function requestNotification(requestID: string, kind?: unknown): Notification {
-  const alert = kind === "raise"
-    ? { title: "A raise asked for", body: "Someone on your account asks you to raise the spend limit. Open Plan & usage to answer." }
-    : { title: "A pack asked for", body: "Someone on your account asks you for a pack. Open Plan & usage to answer." };
+function requestNotification(requestID: string, kind?: unknown, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
+  const alert = kind === "raise" ? { title: w.push_raise_title, body: w.push_raise_body } : { title: w.push_pack_title, body: w.push_pack_body };
   return {
     kind: "alert",
     payload: {
@@ -372,17 +387,16 @@ function requestNotification(requestID: string, kind?: unknown): Notification {
  * of it is used and the tafs wait (KIFF's why: the period's credits, or the spend limit). It opens
  * Plan & usage. Once a period each: its period names it.
  */
-function creditsNotification(pct: string | undefined, why: string | undefined, period: string): Notification | undefined {
+function creditsNotification(pct: string | undefined, why: string | undefined, period: string, lang: Lang = "en"): Notification | undefined {
   if (!period || (pct !== "80" && pct !== "100")) return undefined;
+  const w = wordsIn(lang);
   const waiting = pct === "100";
-  const body = !waiting ? "Your tafs have used 80% of what this period has. Open Plan & usage to see more."
-    : why === "limit_reached" ? "Your tafs are waiting: the spend limit is reached. Open Plan & usage to raise it."
-    : "Your tafs are waiting: this period's credits are used. Open Plan & usage to see what lets them go on.";
+  const body = !waiting ? w.push_credits_80 : why === "limit_reached" ? w.push_waiting_limit : w.push_waiting_used;
   return {
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: waiting ? "Your tafs are waiting" : "Credits", body },
+        alert: { title: waiting ? w.push_waiting_title : w.push_credits_title, body },
         "thread-id": "credits",
         ...apsFor(levelOf(waiting ? "credits_waiting" : "credits_warning", false)),
       },
@@ -399,21 +413,22 @@ export const MAX_NOTE = 180;
  * The member's answer to their request: "Your admin added Rayo" or "Your admin declined:
  * <note>". A withdrawn or expired request tells nobody (undefined).
  */
-function answerNotification(requestID: string, status: unknown, pack: unknown, note: unknown, kind?: unknown): Notification | undefined {
+function answerNotification(requestID: string, status: unknown, pack: unknown, note: unknown, kind?: unknown, lang: Lang = "en"): Notification | undefined {
+  const w = wordsIn(lang);
   const raise = kind === "raise";
   let body: string;
   if (status === "approved") {
-    body = raise ? "Your admin raised the spend limit." : `Your admin added ${typeof pack === "string" && pack ? capitalize(pack) : "a pack"}.`;
+    body = raise ? w.push_raised : w.push_added(typeof pack === "string" && pack ? capitalize(pack) : w.push_a_pack);
   } else if (status === "declined") {
     const why = typeof note === "string" ? note.replace(/\s+/g, " ").trim() : "";
-    body = why ? `Your admin declined: ${why.length > MAX_NOTE ? why.slice(0, MAX_NOTE - 1) + "…" : why}` : "Your admin declined your request.";
+    body = why ? w.push_declined_note(why.length > MAX_NOTE ? why.slice(0, MAX_NOTE - 1) + "…" : why) : w.push_declined;
   } else {
     return undefined;
   }
   return {
     kind: "alert",
     payload: {
-      aps: { alert: { title: raise ? "Your request for a raise" : "Your request for a pack", body }, "thread-id": "tasks", ...apsFor(levelOf("request_answered", false)) },
+      aps: { alert: { title: raise ? w.push_answer_raise_title : w.push_answer_pack_title, body }, "thread-id": "tasks", ...apsFor(levelOf("request_answered", false)) },
       open: "usage",
       request_id: requestID,
     },

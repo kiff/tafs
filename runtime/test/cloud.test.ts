@@ -3702,6 +3702,49 @@ describe("the account's connections a Coach conversation starts with", () => {
     expect(asked).toHaveLength(1);
   });
 
+  it("tells Coach the person's language each message, before their words, and keeps it for the tafs built after", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const coach = memoryCoach(() => w.now);
+    const deps = { ...planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 })), coach };
+    const sendIn = async (lang: string, body: unknown) => {
+      const r = await handle({ rawPath: `/v1/tafs/${COACH}/messages`, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana", "Accept-Language": lang }, body: JSON.stringify(body) }, deps);
+      expect(r.statusCode).toBe(200);
+      return JSON.parse(r.body) as { session: string };
+    };
+    const first = await sendIn("de-DE,de;q=0.9,en;q=0.5", { text: "Ich möchte einen taf für offene Rechnungen" });
+    const text = (await firstMessage(w, first.session))!;
+    // tafs' own opening stays first, the language line comes before the owner's words, and the thread shows only theirs.
+    expect(text.startsWith("[tafs connections]\n")).toBe(true);
+    expect(text).toContain("\n[tafs language] The person writing reads German (de), from their app: answer them in it");
+    expect(text.indexOf("[tafs language]")).toBeLessThan(text.indexOf("\nThe owner says: "));
+    expect(ownerWords(text)).toBe("Ich möchte einen taf für offene Rechnungen");
+    // Every message in the chat says it, not only the first.
+    await sendIn("de", { text: "und zweimal erinnern", session: first.session });
+    const said = (await w.agents.api.session("t_acme", first.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
+    expect(said.at(-1)).toBe("[tafs language] The person writing reads German (de), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.\nThe owner says: und zweimal erinnern");
+    expect(ownerWords(said.at(-1)!)).toBe("und zweimal erinnern");
+    // An English app adds nothing: what Coach reads is as before.
+    await sendIn("en-GB", { text: "and a third time", session: first.session });
+    const after = (await w.agents.api.session("t_acme", first.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
+    expect(after.at(-1)).toBe("and a third time");
+    // The account's language, kept from the chat's start, is what a taf built after says of its owner.
+    expect(await coach.get("t_acme#lang")).toBe("de");
+    // Kept a quarter from when it was seen, as the company name is: then it's English until a Coach chat says again.
+    expect(coach.held.get("t_acme#lang")!.until).toBe(w.now.getTime() + 90 * 24 * 3600_000);
+    const made = await handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" }, body: JSON.stringify({ ...START, name: "Lina" }) }, deps);
+    expect(made.statusCode, made.body).toBe(200);
+    const id = JSON.parse(made.body).taf.id as string;
+    expect(w.agents.agents.get(`t_acme|${id}`)!.instructions).toContain("Your owner reads German (de): write what's for them in it");
+    expect((await w.tafs.get("t_acme", id))!.ownerLang).toBe("de");
+    expect(await upgradeDefinitions(deps, { dryRun: false }).then((o) => o.find((x) => x.taf === id)?.outcome)).toBe("current");
+    // The account's language changed: the taf takes it at its next Upgrade, and English says nothing.
+    await coach.put("t_acme#lang", "en", new Date(w.now.getTime() + 86_400_000));
+    expect(await upgradeDefinitions(deps, { dryRun: false }).then((o) => o.find((x) => x.taf === id)?.outcome)).toBe("written");
+    expect(w.agents.agents.get(`t_acme|${id}`)!.instructions).not.toContain("Your owner reads");
+    expect((await w.tafs.get("t_acme", id))!.ownerLang).toBeUndefined();
+  });
+
   // The apps name no session for the live chat (kiff/tafs#543 read it as a new chat each time): a message that goes
   // on in it reads nothing more and carries no lines; one after it went quiet opens a new chat, with them.
   it("adds them only when a live message opens a new chat, not to each message after it", async () => {

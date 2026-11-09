@@ -1456,6 +1456,29 @@ describe("while the account's tafs wait for credits", () => {
     expect(texts[1]).toContain("Newer message.");
   });
 
+  it("tells each phone in the language its app signed up in: a knock, and what went unanswered", async () => {
+    const w = world();
+    w.devices[0] = { ...w.devices[0]!, lang: "fr" };
+    w.devices.push({ token: "phone3", environment: "production", subject: "u_bo", answers: true, manages: true, lang: "de", at: NOW.toISOString() });
+    await emailDoor(w);
+    await emailHook(w, mail(w, { from: "Ana Lima <ana@northwind.example>", text: "Refund my order 4471 now." }));
+    const bodies = () => w.pushed.filter((p) => (p.payload.aps as { alert?: unknown }).alert).map((p) => [p.token, (p.payload.aps as { alert: { body: string } }).alert.body]);
+    expect(bodies()).toEqual([["phone1", "Ana Lima a écrit par e-mail. Rien n'a été fait."], ["phone3", "Ana Lima hat per E-Mail geschrieben. Es wurde nichts unternommen."]]);
+    w.pushed.length = 0;
+    await pairBen(w);
+    wakes(w);
+    w.agents.credits.set("t_acme", "no_plan");
+    await emailHook(w, mail(w, { from: BEN, text: "Refund order 9." }));
+    await appEvent(w, { id: "ev_late" });
+    w.at(new Date(NOW.getTime() + 48 * 3600_000));
+    w.agents.credits.delete("t_acme");
+    await sweepHeld(depsOf(w));
+    expect(bodies()).toEqual([
+      ["phone1", "1 message et 1 événement sont restés sans réponse : vos tafs attendaient des crédits."],
+      ["phone3", "1 Nachricht und 1 Ereignis blieben unbeantwortet: deine tafs warteten auf Credits."],
+    ]);
+  });
+
   it("one still waiting after 48 hours doesn't run: the dial says it went unanswered for 7 days, and the phones that answer holds are told once", async () => {
     const w = world();
     await emailDoor(w);

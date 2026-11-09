@@ -8,6 +8,7 @@ import type { ResultPlace } from "./handler.js";
 import { type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
 import { placeWords, type VendorPlace } from "./places.js";
 import { timeIn } from "./work.js";
+import { type Lang, plural, wordsIn } from "./words/index.js";
 
 /** A version's dial as PUT takes it: its triggers, what a busy taf does, where results go. */
 /** One step of the taf's recipe, as Coach wrote it: what it does, in order. `tool` is the KIFF tool it uses, when one. */
@@ -140,48 +141,55 @@ export interface KnobInput {
   version?: number;
   zone: string;
   now: Date;
+  /** The person's language (docs/languages.md): the dial's words are written in it. */
+  lang?: Lang;
 }
 
-const DAYS = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"];
-
 /** The schedule in words, for the forms the dial sets; any other cron reads as "On a schedule". */
-export function cronWords(cron: string): { label: string; words: string } {
+export function cronWords(cron: string, lang: Lang = "en"): { label: string; words: string } {
+  const w = wordsIn(lang);
   const f = cron.trim().split(/\s+/);
-  if (f.length !== 5) return { label: "Schedule", words: "On a schedule" };
+  if (f.length !== 5) return { label: w.dial_schedule, words: w.dial_on_schedule };
   const [min, hour, dom, mon, dow] = f as [string, string, string, string, string];
   const at = (h: string, m: string) => `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
   const plain = (s: string) => /^\d{1,2}$/.test(s);
   const every = /^\*\/(\d+)$/.exec(min);
-  if (every && hour === "*" && dom === "*" && mon === "*" && dow === "*") return { label: `Every ${every[1]} min`, words: `Every ${every[1]} minutes` };
+  if (every && hour === "*" && dom === "*" && mon === "*" && dow === "*") return { label: w.dial_every_min(Number(every[1])), words: w.dial_every_minutes(Number(every[1])) };
   const between = /^(\d{1,2})-(\d{1,2})$/.exec(hour);
   if (every && between && dom === "*" && mon === "*") {
-    const days = dow === "1-5" ? " on weekdays" : dow === "*" ? "" : null;
-    if (days !== null) return { label: `Every ${every[1]} min`, words: `Every ${every[1]} minutes from ${at(between[1]!, "0")} to ${at(String(Number(between[2]) + 1), "0")}${days}` };
+    if (dow === "1-5" || dow === "*") return { label: w.dial_every_min(Number(every[1])), words: w.dial_every_between(Number(every[1]), at(between[1]!, "0"), at(String(Number(between[2]) + 1), "0"), dow === "1-5") };
   }
-  if (!plain(min) || !plain(hour) || mon !== "*") return { label: "Schedule", words: "On a schedule" };
+  if (!plain(min) || !plain(hour) || mon !== "*") return { label: w.dial_schedule, words: w.dial_on_schedule };
   const t = at(hour, min);
-  if (dom === "*" && dow === "*") return { label: t, words: `Every day at ${t}` };
-  if (dom === "*" && dow === "1-5") return { label: "Weekdays", words: `Weekdays at ${t}` };
+  if (dom === "*" && dow === "*") return { label: t, words: w.dial_daily(t) };
+  if (dom === "*" && dow === "1-5") return { label: w.dial_weekdays, words: w.dial_weekdays_at(t) };
   if (dom === "*" && /^[0-6](,[0-6])*$/.test(dow)) {
-    const names = dow.split(",").map((d) => DAYS[Number(d)]!);
-    const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0]!;
-    return { label: names.length === 1 ? names[0]!.slice(0, 3) : "Weekly", words: `${list} at ${t}` };
+    const days = dow.split(",").map(Number);
+    return { label: days.length === 1 ? w.dial_day_short(days[0]!) : w.dial_weekly, words: w.dial_days_at(days, t) };
   }
-  if (plain(dom) && dow === "*") return { label: "Monthly", words: `On day ${Number(dom)} of each month at ${t}` };
-  return { label: "Schedule", words: "On a schedule" };
+  if (plain(dom) && dow === "*") return { label: w.dial_monthly, words: w.dial_monthly_at(Number(dom), t) };
+  return { label: w.dial_schedule, words: w.dial_on_schedule };
 }
 
-const PLACE: Record<ResultPlace, { label: string; words: string }> = {
-  door_reply: { label: "Sender", words: "Replies to whoever wrote" },
-  app: { label: "You", words: "Shows each result in the app" },
-  owner_email: { label: "Email", words: "Emails you each result" },
-};
+/** tafs' own places, in the person's language. */
+function placeOf(lang: Lang): Record<ResultPlace, { label: string; words: string }> {
+  const w = wordsIn(lang);
+  return {
+    door_reply: { label: w.dial_place_sender, words: w.dial_place_sender_words },
+    app: { label: w.dial_place_you, words: w.dial_place_you_words },
+    owner_email: { label: w.dial_place_email, words: w.dial_place_email_words },
+  };
+}
 
 export function knobOf(k: KnobInput): Knob {
+  const lang = k.lang ?? "en";
+  const w = wordsIn(lang);
+  const PLACE = placeOf(lang);
+  const time = (at: string) => timeIn(at, k.zone, k.now, lang);
   const wakes: RingItem[] = [];
   for (const d of k.doors) {
     wakes.push({ id: `door_${d.id}`, kind: "door", door: d.id, label: d.label, words: d.unanswered ? `${d.words.state} · ${d.unanswered}` : d.words.state, on: d.open,
-      state: d.open ? "Open" : "Closed", tap: d.words.tap, ok: "door",
+      state: d.open ? w.dial_open : w.dial_closed, tap: d.words.tap, ok: "door",
       look: d.knocks ? "knock" : d.resting && d.open ? "resting" : d.open ? "open" : "closed" });
   }
   // The dial's triggers: as the live version set them, or the taf's own schedule read back.
@@ -189,13 +197,13 @@ export function knobOf(k: KnobInput): Knob {
   const timed = k.setting ? k.setting.wakes.filter((t) => t.kind === "schedule" || t.kind === "app_check") : [];
   if (!k.unscheduled && k.schedule && (!k.setting || timed.length)) {
     const s = k.schedule;
-    const next = s.enabled && s.next ? `, next ${timeIn(s.next, k.zone, k.now)}` : "";
-    const stops = k.setting ? timed.map((t) => ({ trigger: t, ...wordsOf(t) })) : [{ trigger: fromSchedule, ...cronWords(s.cron) }];
+    const next = s.enabled && s.next ? w.dial_next(time(s.next)) : "";
+    const stops = k.setting ? timed.map((t) => ({ trigger: t, ...wordsOf(t, lang) })) : [{ trigger: fromSchedule, ...cronWords(s.cron, lang) }];
     for (const [i, t] of stops.entries()) {
       // The scheduler says when the taf's own schedule fires next; that's the first trigger's.
-      const words = s.enabled ? `${t.words}${i === 0 ? next : ""}` : `${t.words}, paused`;
+      const words = s.enabled ? `${t.words}${i === 0 ? next : ""}` : `${t.words}${w.dial_paused_after}`;
       wakes.push({ id: i === 0 ? "trg_schedule" : `trg_${i + 1}`, kind: t.trigger?.kind === "app_check" ? "app_check" : "schedule", label: t.label, words,
-        on: s.enabled, state: s.enabled ? t.label : "Paused", ...(t.trigger ? { trigger: t.trigger } : {}) });
+        on: s.enabled, state: s.enabled ? t.label : w.dial_paused, ...(t.trigger ? { trigger: t.trigger } : {}) });
     }
   }
   // Any connected app's event the live version wakes on: its own stop, named as the owner picked it.
@@ -206,65 +214,65 @@ export function knobOf(k: KnobInput): Knob {
       ...(subscription ? { subscription } : {}) };
     const unanswered = k.unansweredEvents?.find((u) => u.grant === t.grant && u.event === t.event)?.line;
     wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", ...(t.grant ? { grant: t.grant } : {}), label: name.split(" · ")[0] || name,
-      words: unanswered ? `${triggerWords(t)} · ${unanswered}` : triggerWords(t),
-      on: !!subscription, state: subscription ? "On" : "Needs your approval", approval, ...(subscription ? {} : { ok: "approve" as const, tap: "Approve to start listening" }), trigger: t });
+      words: unanswered ? `${triggerWords(t, lang)} · ${unanswered}` : triggerWords(t, lang),
+      on: !!subscription, state: subscription ? w.dial_on : w.dial_needs_approval, approval, ...(subscription ? {} : { ok: "approve" as const, tap: w.dial_approve_tap }), trigger: t });
   }
   for (const f of k.followUps ?? []) {
     const check = f.input.trim().replace(/\s+/g, " ");
-    wakes.push({ id: `trg_${f.id}`, kind: "follow_up", follow_up: f.id, expires: f.at!, label: "Follow-up", on: true, state: timeIn(f.at!, k.zone, k.now),
-      words: `Checks again ${timeIn(f.at!, k.zone, k.now)}${check ? `: ${check.length > 120 ? `${check.slice(0, 119)}…` : check}` : ""}`, tap: "Tap to remove this follow-up", ok: "remove_follow_up" });
+    wakes.push({ id: `trg_${f.id}`, kind: "follow_up", follow_up: f.id, expires: f.at!, label: w.dial_follow_up, on: true, state: time(f.at!),
+      words: w.dial_checks_again(time(f.at!), check.length > 120 ? `${check.slice(0, 119)}…` : check), tap: w.dial_follow_up_tap, ok: "remove_follow_up" });
   }
-  wakes.push({ id: "run_now", kind: "run_now", label: "Run now", words: "Runs it once, now", on: true, state: "Now",
-    ...(k.unscheduled ? {} : { tap: "Tap to run once", ok: "run" as const }) });
+  wakes.push({ id: "run_now", kind: "run_now", label: w.from_run_now, words: w.dial_run_now_words, on: true, state: w.dial_now,
+    ...(k.unscheduled ? {} : { tap: w.dial_run_tap, ok: "run" as const }) });
   // The last When stop, for the people who manage it: a new door is Coach's to set up.
-  if (k.addDoor) wakes.push({ id: "add_door", kind: "add_door", label: "Add a door", words: "Ask Coach to add a door", on: true, state: "Add", tap: "Tap to ask Coach", ok: "coach" });
+  if (k.addDoor) wakes.push({ id: "add_door", kind: "add_door", label: w.dial_add_door, words: w.dial_add_door_words, on: true, state: w.dial_add, tap: w.dial_coach_tap, ok: "coach" });
 
   const when: RingItem[] = [];
-  if (k.doors.some((d) => d.open)) when.push({ id: "when_arrivals", kind: "arrivals", label: "Arrivals", words: "Works each one as it arrives", on: true, state: "On" });
+  if (k.doors.some((d) => d.open)) when.push({ id: "when_arrivals", kind: "arrivals", label: w.dial_arrivals, words: w.dial_arrivals_words, on: true, state: w.dial_on });
   if (!k.unscheduled && k.schedule) {
-    when.push({ id: "when_missed", kind: "missed", label: "If missed", words: "A run missed by under an hour runs once; later, it's skipped", on: true, state: "Once" });
+    when.push({ id: "when_missed", kind: "missed", label: w.dial_if_missed, words: w.dial_missed_words, on: true, state: w.dial_once });
   }
   const busy = k.setting?.busy ?? k.busy ?? "skip";
   const latest = busy === "latest";
-  when.push({ id: "when_busy", kind: "busy", label: "If busy", words: latest ? "Runs the latest once it's free" : "Skips a run while it's working", on: true,
-    state: latest ? "Latest" : "Skip", tap: latest ? "Turn to skip a run while it's working" : "Turn to run the latest once it's free" });
+  when.push({ id: "when_busy", kind: "busy", label: w.dial_if_busy, words: latest ? w.dial_busy_latest : w.dial_busy_skip, on: true,
+    state: latest ? w.dial_latest : w.dial_skip, tap: latest ? w.dial_tap_skip : w.dial_tap_latest });
 
   // Every place, on or off: turning one changes where results go, as the taf's next version. The last one on stays.
   const all = k.setting?.results ?? k.places;
   const places = all.filter((p): p is ResultPlace => typeof p === "string");
   const results: Knob["results"] = (Object.keys(PLACE) as ResultPlace[]).map((p) => {
     const on = places.includes(p);
-    return { id: `res_${p}`, place: p, label: PLACE[p].label, words: PLACE[p].words, on, state: on ? "On" : "Off",
-      ...(on && places.length === 1 ? {} : { tap: on ? `Turn to stop: ${PLACE[p].words.toLowerCase()}` : `Turn on: ${PLACE[p].words.toLowerCase()}` }) };
+    return { id: `res_${p}`, place: p, label: PLACE[p].label, words: PLACE[p].words, on, state: on ? w.dial_on : w.dial_off,
+      ...(on && places.length === 1 ? {} : { tap: on ? w.dial_turn_stop(PLACE[p].words) : w.dial_turn_on(PLACE[p].words) }) };
   });
   // A connected app's action the taf calls itself, or another taf the result is handed to: turning it takes it
   // off; adding one is the picker's or Coach's draft.
   for (const [i, p] of all.filter((x): x is VendorPlace => typeof x !== "string").entries()) {
-    const w = placeWords(p);
+    const pw = placeWords(p, lang);
     const who = p.place === "taf" ? { taf: p.taf } : { grant: p.grant, action: p.action };
-    results.push({ id: `res_${p.place}_${i + 1}`, place: p.place, ...who, ...w, on: true, state: "On", tap: `Turn to stop: ${w.words.charAt(0).toLowerCase()}${w.words.slice(1)}` });
+    results.push({ id: `res_${p.place}_${i + 1}`, place: p.place, ...who, ...pw, on: true, state: w.dial_on, tap: w.dial_turn_stop(pw.words) });
   }
 
   const setting: KnobSetting = k.setting ?? {
     wakes: [...(k.doors.length ? [{ kind: "door" as const }] : []), ...(fromSchedule ? [fromSchedule] : [])],
     busy, results: k.places,
   };
-  sizeStops(wakes, results, setting);
+  sizeStops(wakes, results, setting, lang);
 
   const t = k.today;
-  const parts = [`${t.done} done today`, ...(t.working ? [`${t.working} working`] : []), ...(t.retrying ? [`${t.retrying} retrying`] : []),
-    ...(t.needs_you ? [`${t.needs_you} need${t.needs_you === 1 ? "s" : ""} you`] : [])];
+  const parts = [w.dial_done_today(t.done), ...(t.working ? [w.dial_working(t.working)] : []), ...(t.retrying ? [w.dial_retrying(t.retrying)] : []),
+    ...(t.needs_you ? [w.dial_need_you(t.needs_you, plural(lang, t.needs_you))] : [])];
   return {
     ...(k.version !== undefined ? { version: k.version } : {}), ...(k.shown !== undefined ? { shown: k.shown } : {}),
     does: k.does, wakes, when, results,
     why: (k.setting?.why || k.does.label).slice(0, 60),
-    rings: [{ key: "wakes", name: "When" }, { key: "what", name: "What" }, { key: "results", name: "Where" }],
-    what: whatOf(k),
+    rings: [{ key: "wakes", name: w.dial_ring_when }, { key: "what", name: w.dial_ring_what }, { key: "results", name: w.dial_ring_where }],
+    what: whatOf(k, lang),
     rim: { ...t, line: parts.join(" · ") },
     can_pause: !k.unscheduled,
     connections: connectionsOf(wakes, results),
-    draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting),
-      what: (k.draft.setting.what ?? []).map((s, i) => `${i + 1} · ${s.label}: ${s.words}`), groups: groupsOf(k.draft.setting) } : null,
+    draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting, lang), ...ringWords(k.draft.setting, lang),
+      what: (k.draft.setting.what ?? []).map((s, i) => `${i + 1} · ${s.label}: ${s.words}`), groups: groupsOf(k.draft.setting, lang) } : null,
     setting,
     pending: k.draft ? { version: k.draft.version, changes: Math.max(1, changesOf(k.setting, k.draft.setting)) } : null,
   };
@@ -282,23 +290,24 @@ function changesOf(live: KnobSetting | undefined, next: KnobSetting): number {
 }
 
 /** A dial change's lines by connection: a connected app's events and actions under it, everything else under This taf. */
-function groupsOf(s: KnobSetting): NonNullable<Knob["draft"]>["groups"] {
+function groupsOf(s: KnobSetting, lang: Lang = "en"): NonNullable<Knob["draft"]>["groups"] {
+  const w = wordsIn(lang);
   const by = new Map<string, NonNullable<Knob["draft"]>["groups"][number]>();
-  const own = { name: "This taf", wakes: [] as string[], what: [] as string[], results: [] as string[] };
+  const own = { name: w.dial_this_taf, wakes: [] as string[], what: [] as string[], results: [] as string[] };
   const of = (grant: string | undefined, name: string | undefined) => {
     if (!grant) return own;
     let g = by.get(grant);
-    if (!g) by.set(grant, (g = { grant, name: (name ?? "").split(" · ")[0] || "App", wakes: [], what: [], results: [] }));
+    if (!g) by.set(grant, (g = { grant, name: (name ?? "").split(" · ")[0] || w.dial_app, wakes: [], what: [], results: [] }));
     return g;
   };
-  for (const t of s.wakes) of(t.kind === "app_event" ? t.grant : undefined, t.name).wakes.push(triggerWords(t));
+  for (const t of s.wakes) of(t.kind === "app_event" ? t.grant : undefined, t.name).wakes.push(triggerWords(t, lang));
   for (const [i, w] of (s.what ?? []).entries()) own.what.push(`${i + 1} · ${w.label}: ${w.words}`);
   for (const p of s.results) {
-    if (typeof p === "string") own.results.push(`Results go to ${p}`);
-    else if (p.place === "taf") own.results.push(`Results are handed to ${p.name}`);
-    else of(p.grant, p.name).results.push(`Results go to ${p.name}`);
+    if (typeof p === "string") own.results.push(w.dial_results_go(p));
+    else if (p.place === "taf") own.results.push(w.dial_results_handed(p.name));
+    else of(p.grant, p.name).results.push(w.dial_results_go(p.name));
   }
-  own.wakes.push(s.busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run");
+  own.wakes.push(s.busy === "latest" ? w.dial_busy_latest_line : w.dial_busy_skip_line);
   return [...by.values(), own];
 }
 
@@ -309,7 +318,8 @@ const EVERY = [15, 30, 60, 120, 240];
  * Each stop's one size, from the dial's own forms, so both apps show the same few values: a schedule's time
  * or how often, and a result place on or off (the last place on stays on).
  */
-function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting): void {
+function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting, lang: Lang = "en"): void {
+  const words = wordsIn(lang);
   const json = (x: unknown) => JSON.stringify(x);
   const withWake = (i: number, t: Trigger): KnobSetting => ({ ...s, wakes: s.wakes.map((x, j) => (j === i ? t : x)) });
   for (const w of wakes) {
@@ -318,11 +328,11 @@ function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting):
     if (!t || t.kind !== "schedule") continue;
     if (t.at && ["daily", "weekdays", "weekly", "monthly", "monthly_last_day"].includes(t.form ?? "")) {
       const values = [...new Set([...TIMES, t.at])].sort();
-      w.size = { label: "Time", index: values.indexOf(t.at), choices: values.map((v) => ({ label: v, setting: withWake(i, { ...t, at: v }) })) };
+      w.size = { label: words.dial_time, index: values.indexOf(t.at), choices: values.map((v) => ({ label: v, setting: withWake(i, { ...t, at: v }) })) };
     } else if (t.form === "every" && t.every_minutes) {
       const values = [...new Set([...EVERY, t.every_minutes])].sort((a, b) => a - b);
-      const say = (n: number) => n < 60 ? `Every ${n} minutes` : `Every ${n / 60} hour${n === 60 ? "" : "s"}`;
-      w.size = { label: "How often", index: values.indexOf(t.every_minutes), choices: values.map((v) => ({ label: say(v), setting: withWake(i, { ...t, every_minutes: v }) })) };
+      const say = (n: number) => n < 60 ? words.dial_every_minutes(n) : words.dial_every_hours(n / 60, plural(lang, n / 60));
+      w.size = { label: words.dial_how_often, index: values.indexOf(t.every_minutes), choices: values.map((v) => ({ label: say(v), setting: withWake(i, { ...t, every_minutes: v }) })) };
     }
   }
   // A vendor place is the same one by its connection and action, or by the taf it hands to.
@@ -336,15 +346,16 @@ function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting):
     w(p, isOn, without, added);
   }
   function w(p: Knob["results"][number], isOn: boolean, off: KnobSetting["results"], onSet: KnobSetting["results"]) {
-    p.size = { label: "On or off", index: isOn ? 1 : 0, choices: [{ label: "Off", setting: { ...s, results: off } }, { label: "On", setting: { ...s, results: onSet } }] };
+    p.size = { label: words.dial_on_or_off, index: isOn ? 1 : 0, choices: [{ label: words.dial_off, setting: { ...s, results: off } }, { label: words.dial_on, setting: { ...s, results: onSet } }] };
   }
 }
 
 /** Only a saved recipe says what runs first. The order of connected tools says nothing about execution. */
-function whatOf(k: KnobInput): Knob["what"] {
+function whatOf(k: KnobInput, lang: Lang = "en"): Knob["what"] {
+  const w = wordsIn(lang);
   const steps: Step[] = k.setting?.what ?? [];
-  if (!steps.length) return [{ id: "what_ask", kind: "step", step: 1, label: "Ask Coach", words: "Ask Coach to set what it does", on: true, state: "Ask", tap: "Tap to ask Coach", ok: "coach" }];
-  return steps.map((s, i) => ({ id: `what_${i + 1}`, kind: "step", step: i + 1, label: s.label, words: s.words, on: true, state: `Step ${i + 1}`,
+  if (!steps.length) return [{ id: "what_ask", kind: "step", step: 1, label: w.dial_ask_coach, words: w.dial_ask_coach_words, on: true, state: w.dial_ask, tap: w.dial_coach_tap, ok: "coach" }];
+  return steps.map((s, i) => ({ id: `what_${i + 1}`, kind: "step", step: i + 1, label: s.label, words: s.words, on: true, state: w.dial_step(i + 1),
     ...(s.tool ? { tool: s.tool } : {}) }));
 }
 
@@ -375,26 +386,28 @@ function connectionsOf(wakes: RingItem[], results: Knob["results"]): Knob["conne
 }
 
 /** What a dial change does, by ring, for the owner to confirm. */
-export function ringWords(k: KnobSetting): { wakes: string[]; when: string[]; results: string[] } {
+export function ringWords(k: KnobSetting, lang: Lang = "en"): { wakes: string[]; when: string[]; results: string[] } {
+  const w = wordsIn(lang);
   return {
-    wakes: k.wakes.map(triggerWords),
-    when: [k.busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run"],
-    results: [`Results go to ${k.results.map((p) => (typeof p === "string" ? p : p.name)).join(", ")}`],
+    wakes: k.wakes.map((t) => triggerWords(t, lang)),
+    when: [k.busy === "latest" ? w.dial_busy_latest_line : w.dial_busy_skip_line],
+    results: [w.dial_results_go(k.results.map((p) => (typeof p === "string" ? p : p.name)).join(", "))],
   };
 }
 
-/** The same words in one list, as a dial change answers them. */
-export function settingWords(k: KnobSetting): string[] {
-  const r = ringWords(k);
+/** The same words in one list, as a dial change answers them (a version's note keeps them in English). */
+export function settingWords(k: KnobSetting, lang: Lang = "en"): string[] {
+  const r = ringWords(k, lang);
   return [...r.wakes, ...r.when, ...r.results];
 }
 
 /** A trigger's word on the ring and its line. */
-function wordsOf(t: Trigger): { label: string; words: string } {
-  if (t.kind === "app_check") return { label: "Check", words: triggerWords(t) };
-  const label = t.form === "every" ? `Every ${t.every_minutes} min` : t.form === "weekdays" ? "Weekdays" : t.form === "monthly" || t.form === "monthly_last_day" ? "Monthly"
-    : t.form === "once" ? "Once" : t.form === "weekly" ? "Weekly" : t.form === "times_a_day" ? `${t.times?.length ?? 0} a day` : t.at ?? "Schedule";
-  return { label, words: triggerWords(t) };
+function wordsOf(t: Trigger, lang: Lang = "en"): { label: string; words: string } {
+  const w = wordsIn(lang);
+  if (t.kind === "app_check") return { label: w.dial_check, words: triggerWords(t, lang) };
+  const label = t.form === "every" ? w.dial_every_min(t.every_minutes ?? 0) : t.form === "weekdays" ? w.dial_weekdays : t.form === "monthly" || t.form === "monthly_last_day" ? w.dial_monthly
+    : t.form === "once" ? w.dial_once : t.form === "weekly" ? w.dial_weekly : t.form === "times_a_day" ? w.dial_n_a_day(t.times?.length ?? 0) : t.at ?? w.dial_schedule;
+  return { label, words: triggerWords(t, lang) };
 }
 
 /** The calendar day of an instant in zone, as YYYY-MM-DD: what "today" means for the rim. */

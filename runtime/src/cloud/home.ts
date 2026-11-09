@@ -43,8 +43,8 @@ export interface Rule {
 }
 
 /**
- * A spending window in the owner's words: `each` ends a limit ("$300 a day"), `now` names
- * the window's use so far ("$40 used today"). One case for each of KIFF's windows; a rolling
+ * A spending window in the owner's words: `each` ends a limit ("€300 a day"), `now` names
+ * the window's use so far ("€40 used today"). One case for each of KIFF's windows; a rolling
  * one never reads as a day that resets at midnight, and a window KIFF adds later is shown as
  * it is sent, never guessed.
  */

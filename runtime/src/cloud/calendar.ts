@@ -7,6 +7,7 @@
  */
 import type { Run, Schedule } from "./agents.js";
 import { instantIn, triggerOf, triggerWords } from "./triggers.js";
+import { type Lang, wordsIn } from "./words/index.js";
 
 /** One occurrence, as the apps draw it. */
 export interface CalendarEvent {
@@ -175,19 +176,21 @@ export function firings(s: Schedule, from: string, to: string, zone: string, now
 export interface CalendarTaf { id: string; name: string; color: number }
 
 /** The schedule's words for its occurrences: the dial's form in words, or "On a schedule". */
-function scheduleWords(s: Schedule, zone: string): string {
-  if (s.follow_up) return "Checks again, as it set itself";
+function scheduleWords(s: Schedule, zone: string, lang: Lang = "en"): string {
+  const w = wordsIn(lang);
+  if (s.follow_up) return w.cal_follow_up;
   const t = triggerOf(s, zone);
-  return t ? triggerWords(t) : "On a schedule";
+  return t ? triggerWords(t, lang) : w.dial_on_schedule;
 }
 
 /** A range's events for one taf: its schedules' firings, its follow-ups and its runs' next tries, after now. */
-export function eventsOf(taf: CalendarTaf, schedules: Schedule[], runs: Run[], from: string, to: string, zone: string, now: Date): CalendarEvent[] {
+export function eventsOf(taf: CalendarTaf, schedules: Schedule[], runs: Run[], from: string, to: string, zone: string, now: Date, lang: Lang = "en"): CalendarEvent[] {
+  const w = wordsIn(lang);
   const out: CalendarEvent[] = [];
   const event = (kind: CalendarEvent["kind"], at: string, words: string, count = 1): CalendarEvent => ({ taf: taf.id, name: taf.name, color: taf.color, kind, at, ...localOf(at, zone), words, count });
   for (const s of schedules) {
     const kind = s.follow_up ? "follow_up" : "schedule";
-    const words = scheduleWords(s, zone);
+    const words = scheduleWords(s, zone, lang);
     // By the day it falls on in the account's zone: a day with more than FOLD_AT firings is one event, at its first.
     const byDay = new Map<string, string[]>();
     for (const at of firings(s, from, to, zone, now)) {
@@ -197,7 +200,7 @@ export function eventsOf(taf: CalendarTaf, schedules: Schedule[], runs: Run[], f
     for (const ats of byDay.values()) {
       if (ats.length <= FOLD_AT) { for (const at of ats) out.push(event(kind, at, words)); continue; }
       const first = localOf(ats[0]!, zone).time, last = localOf(ats[ats.length - 1]!, zone).time;
-      out.push(event(kind, ats[0]!, `${words}: ${ats.length} times from ${first} to ${last}`, ats.length));
+      out.push(event(kind, ats[0]!, w.cal_folded(words, ats.length, first, last), ats.length));
     }
   }
   const lower = Math.max(now.getTime(), Date.parse(instantIn(`${from}T00:00`, zone)));
@@ -206,7 +209,7 @@ export function eventsOf(taf: CalendarTaf, schedules: Schedule[], runs: Run[], f
     if (r.state !== "retrying" || !r.next_at) continue;
     const t = Date.parse(r.next_at);
     if (!(t > lower && t < upper)) continue;
-    out.push(event("retry", new Date(t).toISOString().replace(/\.000Z$/, "Z"), `Try ${(r.try ?? 0) + 1}${r.of ? ` of ${r.of}` : ""}`));
+    out.push(event("retry", new Date(t).toISOString().replace(/\.000Z$/, "Z"), w.step_try((r.try ?? 0) + 1, r.of)));
   }
   return out;
 }

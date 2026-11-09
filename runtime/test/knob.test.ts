@@ -36,6 +36,33 @@ describe("the dial", () => {
     expect(k.setting).toEqual({ wakes: [{ kind: "door" }, { kind: "schedule", form: "weekdays", at: "09:00" }], busy: "skip", results: ["door_reply", "app"] });
   });
 
+  it("says every ring in the person's language: its stops, states, taps, times and the rim", () => {
+    const fr = knobOf({ ...base, lang: "fr" });
+    expect(fr.wakes.map((w) => [w.label, w.state, w.tap ?? null])).toEqual([
+      ["Email", "Ouverte", "Tap to close the email door."],
+      ["En semaine", "En semaine", null],
+      ["Lancer maintenant", "Maintenant", "Touchez pour lancer une fois"],
+    ]);
+    const tue = new Intl.DateTimeFormat("fr", { timeZone: "Europe/Paris", weekday: "short" }).format(new Date("2026-11-03T08:00:00Z"));
+    expect(fr.wakes[1]!.words).toBe(`En semaine à 09:00, prochain ${tue} 09:00`);
+    expect(fr.results.map((r) => [r.label, r.state, r.tap])).toEqual([
+      ["Expéditeur", "Activé", "Tournez pour arrêter : répond à la personne qui a écrit"],
+      ["Vous", "Activé", "Tournez pour arrêter : affiche chaque résultat dans l'app"],
+      ["E-mail", "Désactivé", "Activer : vous envoie chaque résultat par e-mail"],
+    ]);
+    expect(fr.rings.map((r) => r.name)).toEqual(["Quand", "Quoi", "Où"]);
+    expect(fr.rim.line).toBe("12 terminées aujourd'hui · 1 en cours · 1 en nouvel essai · 1 vous attend");
+    expect(fr.what[0]).toMatchObject({ label: "Demander à Coach", state: "Demander" });
+    // The setting each stop sends back is the same in every language: only words change.
+    expect(fr.setting).toEqual(knobOf(base).setting);
+    // A schedule read back from cron, in German and Polish, with the weekday in the language.
+    expect(cronWords("0 9 * * 1,5", "de").words).toBe(`${new Intl.ListFormat("de", { type: "conjunction" }).format(["Montag", "Freitag"])} um 09:00`);
+    expect(cronWords("*/15 8-17 * * 1-5", "pl")).toEqual({ label: "Co 15 min", words: "Co 15 minut od 08:00 do 18:00 w dni robocze" });
+    expect(cronWords("0 9 1 * *", "es")).toEqual({ label: "Mensual", words: "El día 1 de cada mes a las 09:00" });
+    // English as before.
+    expect(cronWords("0 9 * * 1,5")).toEqual({ label: "Weekly", words: "Mondays and Fridays at 09:00" });
+  });
+
   it("a version's dial shows each of its triggers, as it set them", () => {
     const setting = { wakes: [{ kind: "door" as const }, { kind: "schedule" as const, form: "daily" as const, at: "09:00" },
       { kind: "schedule" as const, form: "every" as const, every_minutes: 30, between: { from: "08:00", to: "18:00" } }], busy: "latest" as const, results: ["app" as const] };

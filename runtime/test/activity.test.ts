@@ -196,6 +196,91 @@ describe("Activity's HTTP contract", () => {
   });
 });
 
+describe("Activity in the person's language", () => {
+  it("writes its words, days and amounts in it, and asks KIFF in it too, only when the app sent a language", async () => {
+    const id = "taf-01234567890123456789";
+    const sent: Array<string | undefined> = [];
+    const refused: ActivityCall = { ...call(1, "refused_by_tool"), tool_outcome: { status: "refused_by_tool", refused_by: "connection", code: "not_granted" } };
+    const older: ActivityCall = { ...call(0), created_at: "2026-10-30T09:00:00Z", amount: { value: "1250.5", unit: "EUR" } };
+    const deps = {
+      now: () => now,
+      tafs: { get: async () => ({ id, name: "Example", job: "refunds", kiffAgent: "agent-example" }) },
+      fetch: (async (url: string | URL | Request, init?: RequestInit) => {
+        const u = new URL(String(url));
+        sent.push((init?.headers as Record<string, string> | undefined)?.["accept-language"]);
+        if (u.pathname === "/v1/me") return new Response(JSON.stringify({ tenant_id: "account-example", subject: "person-example", api_key: false, capabilities: ["read"], time_zone: "UTC" }));
+        if (u.pathname === "/v1/me/access") return new Response(JSON.stringify({ agents: { "agent-example": { use: true } } }));
+        if (u.pathname === "/v1/me/card-exceptions") return new Response("{}", { status: 503 });
+        if (u.pathname === "/v1/me/activity") return new Response(JSON.stringify({ calls: [refused, older], shown: 2 }));
+        throw new Error("unexpected request");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const event = (headers: Record<string, string>): HTTPEvent => ({ rawPath: `/v1/tafs/${id}/activity`, headers: { authorization: "Bearer synthetic-session", ...headers }, requestContext: { http: { method: "GET" } } });
+    const r = await handle(event({ "accept-language": "de-DE,de;q=0.9" }), deps);
+    expect(r.statusCode).toBe(200);
+    const page = JSON.parse(r.body);
+    expect(page.filters.map((f: { title: string }) => f.title)).toEqual(["Alle", "Erledigt", "Zurückgehalten", "Abgelehnt"]);
+    expect(page.end_words).toBe("Nichts Älteres in dieser Ansicht");
+    expect(page.card_unit_exceptions_notice).toBe("Währungsanfragen konnten nicht gelesen werden. Deine Aktivität wird trotzdem angezeigt; versuche es mit Aktualisieren.");
+    expect(page.entries[0]).toMatchObject({ day_title: "Heute", detail: "Die Verbindung hat es abgelehnt: die Verbindung enthält diese Aktion nicht. Es wurde nichts gesendet.",
+      next: { kind: "ask_coach", words: "Coach bitten, den taf zu ändern", message: "Ändere Example: Read a case ist fehlgeschlagen." } });
+    expect(page.entries[1]).toMatchObject({ detail: "Erledigt, innerhalb seiner Card", amount_text: new Intl.NumberFormat("de", { style: "currency", currency: "EUR" }).format(1250.5) });
+    expect(page.entries[1].day_title).toBe(new Intl.DateTimeFormat("de", { timeZone: "UTC", weekday: "long", day: "numeric", month: "short" }).format(new Date("2026-10-30T09:00:00Z")));
+    // Every call to KIFF for this request carried the person's language, resolved to one of the eight.
+    expect(sent.length).toBeGreaterThan(2);
+    expect(new Set(sent)).toEqual(new Set(["de"]));
+    // An app that sends none leaves KIFF's own choice: no header is added, and the words are English.
+    sent.length = 0;
+    const plain = JSON.parse((await handle(event({}), deps)).body);
+    expect(new Set(sent)).toEqual(new Set([undefined]));
+    expect(plain.filters[2].title).toBe("Held");
+    expect(plain.entries[0].detail).toBe("The connection refused it: the connection doesn't include this action. Nothing was sent.");
+  });
+
+  it("keeps a Request's own headers when it adds the language to a call to KIFF", async () => {
+    const seen: Headers[] = [];
+    const deps = {
+      kiffBase: "https://kiff.test",
+      fetch: (async (_input: string | URL | Request, init?: RequestInit) => {
+        seen.push(new Headers(init?.headers));
+        return new Response(JSON.stringify({ tenant_id: "account-example", subject: "person-example", api_key: false, capabilities: ["read"] }));
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const { withKIFFLanguage } = await import("../src/cloud/handler.js");
+    const wrapped = withKIFFLanguage({ rawPath: "/", headers: { "accept-language": "pl" }, requestContext: { http: { method: "GET" } } }, deps).fetch!;
+    await wrapped(new Request("https://kiff.test/v1/me", { headers: { authorization: "Bearer synthetic-session" } }));
+    expect(seen[0]!.get("authorization")).toBe("Bearer synthetic-session");
+    expect(seen[0]!.get("accept-language")).toBe("pl");
+  });
+
+  it("adds the language only to KIFF's own host, and never over a language the caller set", async () => {
+    const seen: Array<{ url: string; lang: string | null }> = [];
+    const deps = {
+      kiffBase: "https://kiff.test",
+      fetch: (async (input: string | URL | Request, init?: RequestInit) => {
+        seen.push({ url: String(input instanceof Request ? input.url : input), lang: new Headers(init?.headers).get("accept-language") });
+        return new Response("{}");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const { withKIFFLanguage } = await import("../src/cloud/handler.js");
+    const wrapped = withKIFFLanguage({ rawPath: "/", headers: { "accept-language": "de-DE" }, requestContext: { http: { method: "GET" } } }, deps).fetch!;
+    await wrapped("https://kiff.test/v1/me");
+    // planque, or any host that isn't KIFF's, gets none; nor a host that only starts with KIFF's base.
+    await wrapped("https://planque.test/v1/grants", { headers: { authorization: "Bearer x" } });
+    await wrapped("https://kiff.test.evil/v1/me", { headers: { authorization: "Bearer x" } });
+    // A caller's own language stays, in either form of headers.
+    await wrapped("https://kiff.test/v1/me", { headers: new Headers({ "Accept-Language": "fr" }) });
+    await wrapped("https://kiff.test/v1/me", { headers: { "Accept-Language": "it" } });
+    expect(seen).toEqual([
+      { url: "https://kiff.test/v1/me", lang: "de" },
+      { url: "https://planque.test/v1/grants", lang: null },
+      { url: "https://kiff.test.evil/v1/me", lang: null },
+      { url: "https://kiff.test/v1/me", lang: "fr" },
+      { url: "https://kiff.test/v1/me", lang: "it" },
+    ]);
+  });
+});
+
 describe("recent work pages", () => {
   it("pages the retained runs without repeats when a newer run arrives and excludes another member's work", async () => {
     const id = "taf-01234567890123456789";

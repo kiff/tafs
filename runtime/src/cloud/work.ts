@@ -1,5 +1,5 @@
 import type { Fired, Run } from "./agents.js";
-import { type Lang, plural, wordsIn } from "./words/index.js";
+import { type Lang, plural, type When, wordsIn } from "./words/index.js";
 import type { DeliveryView } from "./delivery.js";
 import type { Sent } from "./doors/model.js";
 
@@ -60,7 +60,7 @@ export function skippedOf(fired: Fired[], zone: string, now: Date, lang: Lang = 
     .slice(0, SKIPPED_SHOWN)
     .map((f) => {
       const busy = f.outcome === "skipped_busy";
-      const when = timeIn(f.due, zone, now, lang);
+      const when = whenIn(f.due, zone, now, lang);
       return {
         due: new Date(f.due).toISOString(),
         why: busy ? "busy" : "missed",
@@ -82,6 +82,16 @@ export function timeIn(at: string | Date, zone: string, now: Date, lang: Lang = 
   // The weekday in the person's language ("Fri", "Fr.", "ven."): the time itself reads the same in all eight.
   const wd = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : lang, { timeZone: tz, weekday: "short" }).format(d);
   return `${wd} ${hm}`;
+}
+
+/** A time as a line says it in the person's language: hours and minutes, and the weekday when it isn't today. */
+export function whenIn(at: string | Date, zone: string, now: Date, lang: Lang = "en"): When {
+  const d = typeof at === "string" ? new Date(at) : at;
+  const tz = validZone(zone);
+  const hm = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
+  const day = (x: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(x);
+  if (day(d) === day(now)) return { hm };
+  return { hm, day: new Intl.DateTimeFormat(lang === "en" ? "en-GB" : lang, { timeZone: tz, weekday: "short" }).format(d) };
 }
 
 function validZone(zone: string): string {
@@ -115,7 +125,7 @@ const CODE_WORDS: Record<string, "code_ai_unavailable"> = { ai_unavailable: "cod
 /** One run as a request: its state and the words for it. */
 export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], again = new Set<string>(), own: DeliveryView[] = [], lang: Lang = "en"): RequestView {
   const w = wordsIn(lang);
-  const at = (t: string | Date) => timeIn(t, zone, now, lang);
+  const at = (t: string | Date) => whenIn(t, zone, now, lang);
   // The newest stamp per run: a reply sent again replaces the one that wasn't.
   const last = sent.find((s) => s.run === r.id);
   const deliveries: RequestView["deliveries"] = last ? [{
@@ -182,9 +192,9 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   if (waiting) return { status: "waiting_on_app", line: requestOf(waiting, zone, now, [], undefined, [], lang).line, needs_you: 0 };
   if (paused) return { status: "paused", line: w.work_paused, needs_you: 0 };
   if (unscheduled) return { status: "idle", line: w.work_from_chat, needs_you: 0 };
-  if (next) return { status: "idle", line: w.work_next_run(timeIn(next, zone, now, lang)), needs_you: 0 };
+  if (next) return { status: "idle", line: w.work_next_run(whenIn(next, zone, now, lang)), needs_you: 0 };
   const last = runs.find((r) => r.status === "COMPLETED");
-  return { status: "idle", line: last ? w.work_last_done(timeIn(last.updated, zone, now, lang)) : w.work_nothing_yet, needs_you: 0 };
+  return { status: "idle", line: last ? w.work_last_done(whenIn(last.updated, zone, now, lang)) : w.work_nothing_yet, needs_you: 0 };
 }
 
 /** The taf's page: counts per state, and the recent requests with what was sent. */

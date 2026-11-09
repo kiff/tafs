@@ -3,7 +3,8 @@ import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 import { dayIn } from "./knob.js";
 import { timeIn } from "./work.js";
 import { connectionRefusalWords } from "./refusal.js";
-import { CARD_UNIT_NOTICE, cardUnitExceptions, collapsedCurrencyDecision, type CardUnitException } from "./card-unit.js";
+import { cardUnitExceptions, cardUnitNotice, collapsedCurrencyDecision, type CardUnitException } from "./card-unit.js";
+import { type Lang, wordsIn } from "./words/index.js";
 import type { Held } from "./home.js";
 
 export const ACTIVITY_FILTERS = [
@@ -11,6 +12,13 @@ export const ACTIVITY_FILTERS = [
   { id: "held", title: "Held" }, { id: "refused", title: "Refused" },
 ] as const;
 export type ActivityFilter = typeof ACTIVITY_FILTERS[number]["id"];
+
+/** The filters with their titles in the person's language. */
+export function activityFilters(lang: Lang = "en"): Array<{ id: ActivityFilter; title: string }> {
+  const w = wordsIn(lang);
+  const titles: Record<ActivityFilter, string> = { all: w.act_f_all, done: w.act_f_done, held: w.act_f_held, refused: w.act_f_refused };
+  return ACTIVITY_FILTERS.map((f) => ({ id: f.id, title: titles[f.id] }));
+}
 
 export class ActivityError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
@@ -66,15 +74,16 @@ function saidWhy(message: string | null | undefined): string | undefined {
  * The next step for a call that wasn't done, by what KIFF recorded: the vendor's status in its words, or the
  * connection's code. A call that was done, held, refused by its Card, or whose answer was lost has none.
  */
-export function nextStep(c: ActivityCall, taf?: string): NextStep | undefined {
+export function nextStep(c: ActivityCall, taf?: string, lang: Lang = "en"): NextStep | undefined {
   const o = c.tool_outcome;
   if (c.outcome !== "allowed" || !o) return;
   const title = c.title || c.action_name;
   const base = { tool: c.action_name, ...(taf ? { taf } : {}) };
   const said = saidWhy(o.message);
-  const reconnect: NextStep = { kind: "reconnect", words: "Connect it again", ...base };
-  const later: NextStep = { kind: "try_later", words: "Try again later: the app was busy or down", ...base };
-  const ask: NextStep = { kind: "ask_coach", words: "Ask Coach to change the taf", ...base, message: askCoach(taf, title, said) };
+  const w = wordsIn(lang);
+  const reconnect: NextStep = { kind: "reconnect", words: w.next_reconnect, ...base };
+  const later: NextStep = { kind: "try_later", words: w.next_try_later, ...base };
+  const ask: NextStep = { kind: "ask_coach", words: w.next_ask_coach, ...base, message: askCoach(taf, title, said, lang) };
   if (o.status === "not_sent") return later;
   if (o.status !== "refused_by_tool") return;
   if (o.refused_by === "connection") {
@@ -92,8 +101,8 @@ export function nextStep(c: ActivityCall, taf?: string): NextStep | undefined {
  * Coach's first message for a failed call, for the owner to send: the app's words quoted as the app's, so
  * nothing it answered reads as the owner's request (qa-kiff on #574, as kiff/agents#358 does for the record).
  */
-function askCoach(taf: string | undefined, what: string, said: string | undefined): string {
-  return `${taf ? `Change ${taf}: ` : ""}${what} failed.${said ? ` The app said: "${said.replace(/"/g, "'")}"` : ""}`;
+function askCoach(taf: string | undefined, what: string, said: string | undefined, lang: Lang = "en"): string {
+  return wordsIn(lang).next_ask_message(taf, what, said?.replace(/"/g, "'"));
 }
 
 /** The step a vendor's HTTP status calls for, when it calls for one. */
@@ -117,7 +126,7 @@ export function nextForCalled(tool: string, said: string | undefined, taf?: stri
 
 export interface ActivityPage {
   entries: ActivityEntry[]; groups: Array<{ id: string; title: string; entries: ActivityEntry[] }>;
-  filters: typeof ACTIVITY_FILTERS; filter: ActivityFilter; next_cursor?: string; revision: string; end_words?: string;
+  filters: Array<{ id: ActivityFilter; title: string }>; filter: ActivityFilter; next_cursor?: string; revision: string; end_words?: string;
   card_unit_exceptions: CardUnitException[];
   card_unit_exceptions_notice?: string;
 }
@@ -154,37 +163,40 @@ export function activityMatches(c: ActivityCall, filter: ActivityFilter): boolea
       : kind === "refused" || kind === "not_done");
 }
 
-export function amountWords(amount: ActivityCall["amount"]): string | undefined {
+export function amountWords(amount: ActivityCall["amount"], lang: Lang = "en"): string | undefined {
   if (!amount) return;
   const value = Number(amount.value);
   if (!amount.unit || !Number.isFinite(value) || Math.abs(value) > Number.MAX_SAFE_INTEGER / 100) return `${amount.value}${amount.unit ? ` ${amount.unit}` : ""}`;
   try {
     if (!Intl.supportedValuesOf("currency").includes(amount.unit)) return `${amount.value} ${amount.unit}`;
-    return new Intl.NumberFormat("en-GB", { style: "currency", currency: amount.unit }).format(value);
+    return new Intl.NumberFormat(lang === "en" ? "en-GB" : lang, { style: "currency", currency: amount.unit }).format(value);
   } catch { return `${amount.value} ${amount.unit}`; }
 }
 
-export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string): ActivityEntry {
+export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string, lang: Lang = "en"): ActivityEntry {
   const kind = kindOf(c);
-  const connection = connectionRefusalWords(c.tool_outcome);
+  const w = wordsIn(lang);
+  const connection = connectionRefusalWords(c.tool_outcome, lang);
   // The app's own words for why, as KIFF recorded them, quoted as the app's: never read for whether
   // anything was done, which the outcome says (kiff/tafs#476, gap 10).
   const said = saidWhy(c.tool_outcome?.message);
-  const details = { done: "Done, within its Card", approved: "Approved, then done", held: "Waiting for you",
-    refused: c.reason ? `Not sent · ${c.reason}` : "Not sent", not_done: connection
-      ? c.detail || connection : c.tool_outcome?.status === "refused_by_tool" ? (said ? `The app refused it: "${said}"` : "The app refused it and gave no reason") : "Nothing reached the app",
-    sending: "Sent; waiting for the app's answer", unknown: "The app's answer wasn't recorded; check its records" };
+  const details = { done: w.act_done, approved: w.act_approved, held: w.act_held,
+    refused: w.act_refused(c.reason || undefined), not_done: connection
+      ? c.detail || connection : c.tool_outcome?.status === "refused_by_tool" ? (said ? w.act_app_refused(said) : w.act_app_refused_none) : w.act_not_reached,
+    sending: w.act_sending, unknown: w.act_unknown };
   const raw = hash(c.proposal_id).slice(0, 32);
   const id = `${raw.slice(0, 8)}-${raw.slice(8, 12)}-5${raw.slice(13, 16)}-8${raw.slice(17, 20)}-${raw.slice(20)}`;
   const day = dayIn(c.created_at, zone);
-  const dayTitle = day === dayIn(now.toISOString(), zone) ? "Today" : new Intl.DateTimeFormat("en-GB", { timeZone: zone, weekday: "long", day: "numeric", month: "short" }).format(new Date(c.created_at));
-  const next = kind === "not_done" ? nextStep(c, taf) : undefined;
-  return { id, at: c.created_at, kind, title: c.title || c.action_name, detail: details[kind], time: timeIn(c.created_at, zone, now), day, day_title: dayTitle,
-    ...(amountWords(c.amount) ? { amount_text: amountWords(c.amount) } : {}), call: c, ...(next ? { next } : {}) };
+  const dayTitle = day === dayIn(now.toISOString(), zone) ? w.act_today : new Intl.DateTimeFormat(lang === "en" ? "en-GB" : lang, { timeZone: zone, weekday: "long", day: "numeric", month: "short" }).format(new Date(c.created_at));
+  const next = kind === "not_done" ? nextStep(c, taf, lang) : undefined;
+  const amount = amountWords(c.amount, lang);
+  return { id, at: c.created_at, kind, title: c.title || c.action_name, detail: details[kind], time: timeIn(c.created_at, zone, now, lang), day, day_title: dayTitle,
+    ...(amount ? { amount_text: amount } : {}), call: c, ...(next ? { next } : {}) };
 }
 
 /** Bounded source scanning: a cursor advances even through a page with no matching outcomes. */
-export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
+export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string; lang?: Lang }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
+  const lang = input.lang ?? "en";
   const filter = input.query.get("filter") ?? "all";
   if (!ACTIVITY_FILTERS.some((f) => f.id === filter)) throw new ActivityError(400, "filter is all, done, held or refused");
   const take = Number(input.query.get("limit") ?? 20);
@@ -197,8 +209,8 @@ export async function activityPage(input: { token: string; tenant: string; subje
   const cursor = cursorOf(input.query.get("cursor"), scope);
   let unitExceptions = (input.unitExceptions ?? []).filter((e) => e.subject === input.agent && e.kind === "card_unit" && e.status === "held");
   let exceptionRows: CardUnitException[] = [], notice = input.unitExceptionsNotice;
-  try { exceptionRows = cardUnitExceptions({ id: input.taf, name: input.tafName ?? "This taf", kiffAgent: input.agent }, unitExceptions, [], input.zone, input.now); }
-  catch { unitExceptions = []; notice = CARD_UNIT_NOTICE; }
+  try { exceptionRows = cardUnitExceptions({ id: input.taf, name: input.tafName ?? "This taf", kiffAgent: input.agent }, unitExceptions, [], input.zone, input.now, lang); }
+  catch { unitExceptions = []; notice = cardUnitNotice(lang); }
   const read = async (offset: number, limit: number) => {
     const q = new URLSearchParams({ actor: input.agent, limit: String(limit), offset: String(offset) });
     const res = await net(`${base}/v1/me/activity?${q}`, { headers: { authorization: `Bearer ${input.token}`, accept: "application/json" } });
@@ -219,7 +231,7 @@ export async function activityPage(input: { token: string; tenant: string; subje
     for (const call of source.calls) {
       offset++;
       if (call.actor_id === input.agent && (!tools.length || tools.includes(call.action_name)) && (!from || Date.parse(call.created_at) >= Date.parse(from)) && activityMatches(call, filter as ActivityFilter)
-        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now, input.tafName));
+        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now, input.tafName, lang));
       if (entries.length === take) break;
     }
     more = offset < source.shown && !(from && source.calls.some((c) => Date.parse(c.created_at) < Date.parse(from)) && entries.length < take);
@@ -230,7 +242,7 @@ export async function activityPage(input: { token: string; tenant: string; subje
     if (!group) { group = { id: entry.day, title: entry.day === cursor?.day ? "" : entry.day_title, entries: [] }; groups.push(group); }
     group.entries.push(entry);
   }
-  return { entries, groups, filters: ACTIVITY_FILTERS, filter: filter as ActivityFilter, revision, card_unit_exceptions: exceptionRows,
+  return { entries, groups, filters: activityFilters(lang), filter: filter as ActivityFilter, revision, card_unit_exceptions: exceptionRows,
     ...(notice ? { card_unit_exceptions_notice: notice } : {}),
-    ...(more ? { next_cursor: Buffer.from(JSON.stringify({ scope, offset, revision, day: entries.at(-1)?.day ?? cursor?.day })).toString("base64url") } : { end_words: "Nothing older in this view" }) };
+    ...(more ? { next_cursor: Buffer.from(JSON.stringify({ scope, offset, revision, day: entries.at(-1)?.day ?? cursor?.day })).toString("base64url") } : { end_words: wordsIn(lang).act_end }) };
 }

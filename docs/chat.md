@@ -265,7 +265,7 @@ iOS drops its own queue the same way, with the same words.
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its
   message again. If a call that acts went through before it stopped, the line names each
   one by its tool, what it acted on, and how much moved: "Refunds stopped part-way, after
-  this went through: create refund on ch_3001, US$5." The list is the run's own record
+  this went through: create refund on ch_3001, €5." The list is the run's own record
   (`end`'s `done`), never the model's words; the amount is KIFF's, from the call's Record
   line (by `invocation`), once the Record is read (`failedWords`, kiff/agents#249).
 

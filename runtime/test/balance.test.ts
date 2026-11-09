@@ -16,6 +16,24 @@ const balance = (over: Partial<KIFFBalance> = {}): KIFFBalance => ({
 });
 
 describe("the balance, in words", () => {
+  // docs/languages.md: the person's language changes the words, and amounts, dates and counts format by its locale.
+  it("speaks the person's language, with amounts, dates and counts as its locale writes them", () => {
+    const fmt = (lang: string, cents: number) => new Intl.NumberFormat(lang, { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100);
+    const dec1 = (lang: string) => new Intl.DateTimeFormat(lang, { timeZone: "UTC", day: "numeric", month: "short" }).format(new Date("2026-12-01T00:00:00Z"));
+    const co = balance({ kind: "company", state: "warning", meter_pct: 85, seats: 4, included: 2000, used: 2000, beyond: 300, beyond_cents: 6850, limit_cents: 8000, can_buy: { solo: false, packs: false } });
+    const de = balanceView(co, "de");
+    expect(de.balance.words).toBe(`Company · 4 Plätze · ${fmt("de", 6850)} vom Ausgabenlimit (${new Intl.NumberFormat("de", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(80)}) verbraucht`);
+    expect(de.balance.warning).toBe("85 % des Ausgabenlimits sind verbraucht. Am Limit warten deine tafs, bis ein Admin es erhöht.");
+    const fr = balanceView(balance({ state: "waiting", why: "credits_used_up", meter_pct: 100, left: 0 }), "fr");
+    expect(fr.balance.warning).toBe(`Vos tafs attendent : les crédits de cette période et vos packs sont utilisés. Un pack leur permet de continuer, sinon ils reprennent au début de la prochaine période, le ${dec1("fr")}.`);
+    // Polish counts in its three forms; 1,240 written as Polish writes it.
+    expect(balanceView(balance({ left: 1 }), "pl").balance.words).toBe("Solo · zostało 1 kredyt w tym okresie");
+    expect(balanceView(balance({ left: 3 }), "pl").balance.words).toBe("Solo · zostało 3 kredyty w tym okresie");
+    expect(balanceView(balance({ left: 1240 }), "pl").balance.words).toBe(`Solo · zostało ${new Intl.NumberFormat("pl").format(1240)} kredytów w tym okresie`);
+    // English as before.
+    expect(balanceView(balance({ left: 1 })).balance.words).toBe("Solo · 1 credit left this period");
+  });
+
   it("says what Solo has left, its packs and what wasn't charged, and what may be bought", () => {
     expect(balanceView(balance({ packs_left: 300, left: 900, over: 12 }))).toEqual({
       balance: { state: "ok", why: null, meter_pct: 40, words: "Solo · 900 credits left this period",

@@ -39,9 +39,12 @@ The same as English: plain, short, specific. Say what happened and what the pers
 | French | `fr` | vous | French business software addresses people as vous. |
 | Spanish | `es` | tú | Neutral Spanish, understood in Spain and Latin America. |
 | Italian | `it` | tu | Informal, as business apps in Italian do. |
-| Portuguese | `pt` | você | **To decide:** European (`pt-PT`) or Brazilian (`pt-BR`). Proposed: European, since the customers are in Europe, with `pt-BR` phones reading it too. |
+| Portuguese | `pt` | você | European Portuguese (`pt-PT`), decided: the customers are in Europe, and a `pt-BR` phone reads it fine. |
 | Dutch | `nl` | je | Informal, as Dutch apps do. |
 | Polish | `pl` | Ty | Buttons in the infinitive or imperative, sentences addressing Ty. |
+
+**A time with a weekday** reads as each language says "at" it: "Done at Fri 09:00", "Erledigt am Fr. um 09:00",
+"Terminé le ven. à 09:00", "Hecho el vie. a las 09:00". Today's times have no weekday: "um 09:00", "à 09:00".
 
 ## Names that stay as they are
 
@@ -118,10 +121,31 @@ that tell a message's language, in tafs and kiff/agents together.
 
 - **tafs cloud:** a catalog per language in `runtime/src/cloud/words/`, English the source (`en.ts`),
   each language typed against it, and a test that fails on a key missing from any language, an empty
-  line, or a line left in English. A run code tafs cloud knows (`ai_unavailable`) is worded from the
-  catalog; one it doesn't know passes kiff/agents' words through. The first lines in it are a taf's work
-  lines; the rest of tafs cloud's lines, and the language Coach and the tafs are told, come next.
+  line, or a line left in English. It holds every line tafs cloud writes for people: a taf's work lines,
+  the home list's line, the balance and credits words, refusal words, push titles and bodies, door
+  alerts and a door's page, where a result went, a request's steps, a taf's Activity, the dial, the
+  calendar, a trial's badge, the runs page, a steps card's line, Coach's tools as the phone connects
+  them, and why Coach stopped driving the app. A run code tafs cloud knows (`ai_unavailable`) is
+  worded from the catalog; one it doesn't know passes kiff/agents' words through. `error` fields stay
+  English, for developers; the `words` beside them are the person's. A vendor's or provider's own words
+  (why a reply wasn't sent, KIFF's tool titles) pass as they came.
+- **Which language, with a request:** the app's own resolved language, sent as `Accept-Language`
+  (above). tafs cloud passes it on, resolved to one of the eight, on every call it makes to KIFF for
+  that request, so KIFF's words in tafs cloud's answers match; an app that sends none leaves KIFF's
+  own choice. **Without one** (a push alert, a door's alert, a delivery note), each phone's: the language
+  its app sent when it signed up for alerts (`POST /v1/push`), kept with it. An alert is worded once per
+  language and each phone gets its own.
+- **Coach** is told the person's language with each message from an app in another language than
+  English: a `[tafs language]` line before the owner's words, after tafs' own opening lines, so the
+  thread still shows only the owner's words. Coach answers in it.
+- **A taf** follows the person writing in its chat. Its reports and alerts to its owner go in the
+  account's language, as tafs cloud keeps it from the person's Coach chats: its instructions say so
+  from its build, or its next Upgrade once the language changes. A message to a customer keeps the
+  customer's language, as the disclosure does. English adds nothing to either.
+- **Stays English on purpose:** the words a delivery note opens Coach with (`coach_words`), which
+  tafs cloud reads to start Coach's delivery skill; Coach still answers in the person's language. A
+  version's note, and the titles kept in the account's event log, are written once when they happen
+  and stay as written. What tafs cloud keeps of a language: each phone's, with the phone, and the
+  account's, from Coach chats, for a quarter.
 - **KIFF:** one catalog per language (`internal/words`), the same test.
 - **Android:** `strings.xml` with a `values-xx` set per language; **iPhone and iPad:** a String Catalog.
-- **Coach and the tafs** are told the person's language by tafs cloud with each turn, and a taf's
-  scheduled reports use its owner's last language.
