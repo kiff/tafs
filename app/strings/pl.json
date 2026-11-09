@@ -1,0 +1,12 @@
+{
+  "needs_you.approve_once": "Zatwierdź raz",
+  "needs_you.refuse": "Odrzuć",
+  "needs_you.title": "Czeka na Ciebie",
+  "record.title": "Rejestr",
+  "work.requests_need_you": {
+    "few": "{count} prośby czekają na Ciebie",
+    "many": "{count} próśb czeka na Ciebie",
+    "one": "{count} prośba czeka na Ciebie",
+    "other": "{count} prośby czeka na Ciebie"
+  }
+}

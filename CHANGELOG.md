@@ -5,6 +5,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **The apps' words get one shared source, and the iPhone app asks the servers for English until it ships its languages.**
+  - **`app/strings`** holds each of the apps' own lines once, by a key named for what it says, in each language, with plural forms and named placeholders. A generator writes the iPhone and iPad String Catalog and typed accessors from it; Android's files follow from the same source. CI fails when a generated file is out of date. Two lines read from it so far, with nothing changed on screen.
+  - **iPhone and iPad** sent Spanish or French as the app's language on such a phone, because Siri's phrases ship in those two, so KIFF's words came in that language beside an English screen. The app now asks for the languages its screens are written in: English, until the others ship.
+
 - **A run cut off at its turn or cost cap no longer reads "Done" (tafs cloud).** Its request is `stopped`, and its line says which limit stopped it ("Stopped at 14:20: it reached its limit of turns for one run"), in all 8 languages, on the work page and the request page, and on the list where it shows the last run. A stop tafs cloud doesn't know reads "Stopped", never "Done". Both apps already know `stopped` (a cancelled run's state), so no app change (docs/reliability.md).
 - **The account's roles are glossary terms.** admin, editor, approver and viewer are in `docs/languages.md`'s Terms table in all 8 languages, with `docs/glossary.sha256` updated for KIFF's check. Coach's example of a limit with extra room writes amounts as KIFF does ("€300 a day, plus €30 …", cards-and-holds@3).
 - **tafs cloud's words are held to the glossary.** A test fails when a line in any of the eight catalogs uses another word for a glossary term than `docs/languages.md` gives, and `docs/glossary.sha256` lets KIFF's copy of the glossary fail loudly when it falls behind. Coach's example of a limit with extra room is in euros now (cards-and-holds@2). One Polish line follows the glossary ("Nie powiodło się" for Failed).

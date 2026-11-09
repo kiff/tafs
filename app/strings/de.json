@@ -1,0 +1,10 @@
+{
+  "needs_you.approve_once": "Einmal genehmigen",
+  "needs_you.refuse": "Ablehnen",
+  "needs_you.title": "Braucht dich",
+  "record.title": "Protokoll",
+  "work.requests_need_you": {
+    "one": "{count} Anfrage braucht dich",
+    "other": "{count} Anfragen brauchen dich"
+  }
+}

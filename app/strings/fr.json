@@ -1,0 +1,10 @@
+{
+  "needs_you.approve_once": "Approuver une fois",
+  "needs_you.refuse": "Refuser",
+  "needs_you.title": "Vous attend",
+  "record.title": "Registre",
+  "work.requests_need_you": {
+    "one": "{count} demande vous attend",
+    "other": "{count} demandes vous attendent"
+  }
+}
