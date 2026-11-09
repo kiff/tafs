@@ -360,4 +360,13 @@ export const es: Words = {
   ct_app_look: "Ver la app en tu teléfono mientras la maneja",
   ct_app_act: "Tocar, escribir y desplazarse en la app de tu teléfono mientras la maneja",
   ct_replaces: "sustituye a la conexión anterior",
+  drive_end_owner_took_over: "Tocaste la app, así que ahora es tuya",
+  drive_end_left_app: "La app salió de la pantalla, así que Coach se detuvo",
+  drive_end_stopped: "Detuviste a Coach",
+  drive_end_locked: "El teléfono se bloqueó, así que Coach se detuvo",
+  drive_end_signed_out: "Cerraste sesión, así que Coach se detuvo",
+  drive_end_halted: "La cuenta está bloqueada, así que Coach se detuvo",
+  drive_end_done: "Coach ha terminado",
+  drive_end_idle: "No se hizo nada en 15 minutos, así que Coach se detuvo",
+  drive_end_replaced: "Empezó otro manejo",
 };

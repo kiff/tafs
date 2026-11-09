@@ -360,4 +360,13 @@ export const fr: Words = {
   ct_app_look: "Voir l'app sur votre téléphone pendant qu'il la pilote",
   ct_app_act: "Toucher, écrire et faire défiler dans l'app sur votre téléphone pendant qu'il la pilote",
   ct_replaces: "remplace la connexion précédente",
+  drive_end_owner_took_over: "Vous avez touché l'app, elle est à vous maintenant",
+  drive_end_left_app: "L'app a quitté l'écran, Coach s'est donc arrêté",
+  drive_end_stopped: "Vous avez arrêté Coach",
+  drive_end_locked: "Le téléphone s'est verrouillé, Coach s'est donc arrêté",
+  drive_end_signed_out: "Vous vous êtes déconnecté, Coach s'est donc arrêté",
+  drive_end_halted: "Le compte est bloqué, Coach s'est donc arrêté",
+  drive_end_done: "Coach a terminé",
+  drive_end_idle: "Rien n'a été fait pendant 15 minutes, Coach s'est donc arrêté",
+  drive_end_replaced: "Un autre pilotage a commencé",
 };

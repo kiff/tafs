@@ -29,7 +29,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_SAID, END_WORDS, putResult, startDrive } from "./drive.js";
+import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, putResult, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
@@ -2177,7 +2177,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   held.sort((a, b) => a.at.localeCompare(b.at));
   // Coach's drives' ends, in its chats, at their times (kiff/tafs#568): tafs cloud's record, never the model's.
   const drives = taf.job === SETUP_JOB && deps.coach
-    ? (await Promise.all(picked.filter((x) => x.kind === "chat").map((x) => driveRecaps(deps.coach!, me.tenantID, x.id).catch(() => [])))).flat()
+    ? (await Promise.all(picked.filter((x) => x.kind === "chat").map((x) => driveRecaps(deps.coach!, me.tenantID, x.id).catch(() => [])))).flat().map((r) => ({ ...r, words: endSaid(r.why, lang) }))
     : [];
   drives.sort((a, b) => a.at.localeCompare(b.at));
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
@@ -2554,7 +2554,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await currentDrive(store, me.tenantID, me.subject, now);
     if (!d) return { drive: null, steps: [] };
     const { person: _p, ...shown } = d;
-    return { drive: { ...shown, ...(d.ended ? { ended: { ...d.ended, words: END_SAID[d.ended.why] } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
+    return { drive: { ...shown, ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
   }
   if (parts.length === 3 && method === "POST") {
     const body = parseBody(event);
@@ -2588,7 +2588,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     if (d?.ended && d.ended.at === now.toISOString()) {
       await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS[why] }, now);
     }
-    return { ended: d?.ended ? { ...d.ended, words: END_SAID[d.ended.why] } : null };
+    return { ended: d?.ended ? { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } : null };
   }
   if (parts.length === 6 && parts[4] === "results" && method === "POST") {
     const t = await putResult(store, me.tenantID, me.subject, parts[3] ?? "", parts[5] ?? "", parseBody(event), now).catch(fail);
@@ -4495,7 +4495,7 @@ async function driveStreamRoute(event: HTTPEvent, drive: string, deps: Deps): Pr
   const d = await currentDrive(deps.coach, me.tenantID, me.subject, now());
   if (!d || d.id !== drive) throw new HTTPError(404, "that isn't your drive");
   if (d.ended) throw new HTTPError(409, `the drive is over: ${END_WORDS[d.ended.why]}`);
-  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: driveStream(deps.coach, me.tenantID, me.subject, d.id, now, deps.sleep) };
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: driveStream(deps.coach, me.tenantID, me.subject, d.id, now, deps.sleep, langOf(event)) };
 }
 
 /**

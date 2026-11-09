@@ -360,4 +360,13 @@ export const de: Words = {
   ct_app_look: "Die App auf deinem Telefon sehen, während er sie bedient",
   ct_app_act: "In der App auf deinem Telefon tippen, schreiben und scrollen, während er sie bedient",
   ct_replaces: "ersetzt die frühere Verbindung",
+  drive_end_owner_took_over: "Du hast die App berührt, also gehört sie jetzt dir",
+  drive_end_left_app: "Die App hat den Bildschirm verlassen, also hat Coach aufgehört",
+  drive_end_stopped: "Du hast Coach gestoppt",
+  drive_end_locked: "Das Telefon wurde gesperrt, also hat Coach aufgehört",
+  drive_end_signed_out: "Du hast dich abgemeldet, also hat Coach aufgehört",
+  drive_end_halted: "Das Konto ist angehalten, also hat Coach aufgehört",
+  drive_end_done: "Coach ist fertig",
+  drive_end_idle: "15 Minuten lang ist nichts passiert, also hat Coach aufgehört",
+  drive_end_replaced: "Eine andere Steuerung hat begonnen",
 };

@@ -123,12 +123,16 @@ that tell a message's language, in tafs and kiff/agents together.
   each language typed against it, and a test that fails on a key missing from any language, an empty
   line, or a line left in English. It holds every line tafs cloud writes for people: a taf's work lines,
   the home list's line, the balance and credits words, refusal words, push titles and bodies, door
-  alerts, where a result went, and a request's steps. A run code tafs cloud knows (`ai_unavailable`) is
+  alerts and a door's page, where a result went, a request's steps, a taf's Activity, the dial, the
+  calendar, a trial's badge, the runs page, a steps card's line, Coach's tools as the phone connects
+  them, and why Coach stopped driving the app. A run code tafs cloud knows (`ai_unavailable`) is
   worded from the catalog; one it doesn't know passes kiff/agents' words through. `error` fields stay
   English, for developers; the `words` beside them are the person's. A vendor's or provider's own words
   (why a reply wasn't sent, KIFF's tool titles) pass as they came.
 - **Which language, with a request:** the app's own resolved language, sent as `Accept-Language`
-  (above). **Without one** (a push alert, a door's alert, a delivery note), each phone's: the language
+  (above). tafs cloud passes it on, resolved to one of the eight, on every call it makes to KIFF for
+  that request, so KIFF's words in tafs cloud's answers match; an app that sends none leaves KIFF's
+  own choice. **Without one** (a push alert, a door's alert, a delivery note), each phone's: the language
   its app sent when it signed up for alerts (`POST /v1/push`), kept with it. An alert is worded once per
   language and each phone gets its own.
 - **Coach** is told the person's language with each message from an app in another language than
@@ -139,6 +143,9 @@ that tell a message's language, in tafs and kiff/agents together.
   from its build, or its next Upgrade once the language changes. A message to a customer keeps the
   customer's language, as the disclosure does. English adds nothing to either.
 - **Stays English on purpose:** the words a delivery note opens Coach with (`coach_words`), which
-  tafs cloud reads to start Coach's delivery skill; Coach still answers in the person's language.
+  tafs cloud reads to start Coach's delivery skill; Coach still answers in the person's language. A
+  version's note, and the titles kept in the account's event log, are written once when they happen
+  and stay as written. What tafs cloud keeps of a language: each phone's, with the phone, and the
+  account's, from Coach chats, for a quarter.
 - **KIFF:** one catalog per language (`internal/words`), the same test.
 - **Android:** `strings.xml` with a `values-xx` set per language; **iPhone and iPad:** a String Catalog.

@@ -360,4 +360,13 @@ export const pt: Words = {
   ct_app_look: "Ver a app no seu telefone enquanto ele a conduz",
   ct_app_act: "Tocar, escrever e deslizar na app do seu telefone enquanto ele a conduz",
   ct_replaces: "substitui a ligação anterior",
+  drive_end_owner_took_over: "Tocou na app, por isso agora é sua",
+  drive_end_left_app: "A app saiu do ecrã, por isso o Coach parou",
+  drive_end_stopped: "Parou o Coach",
+  drive_end_locked: "O telefone bloqueou, por isso o Coach parou",
+  drive_end_signed_out: "Terminou a sessão, por isso o Coach parou",
+  drive_end_halted: "A conta está bloqueada, por isso o Coach parou",
+  drive_end_done: "O Coach terminou",
+  drive_end_idle: "Nada foi feito durante 15 minutos, por isso o Coach parou",
+  drive_end_replaced: "Começou outra condução",
 };

@@ -360,4 +360,13 @@ export const pl: Words = {
   ct_app_look: "Zobacz aplikację na swoim telefonie, gdy nią steruje",
   ct_app_act: "Dotykaj, pisz i przewijaj w aplikacji na swoim telefonie, gdy nią steruje",
   ct_replaces: "zastępuje wcześniejsze połączenie",
+  drive_end_owner_took_over: "Aplikacja została dotknięta, więc jest teraz Twoja",
+  drive_end_left_app: "Aplikacja zniknęła z ekranu, więc Coach przestał",
+  drive_end_stopped: "Coach został zatrzymany",
+  drive_end_locked: "Telefon został zablokowany, więc Coach przestał",
+  drive_end_signed_out: "Nastąpiło wylogowanie, więc Coach przestał",
+  drive_end_halted: "Konto jest zablokowane, więc Coach przestał",
+  drive_end_done: "Coach skończył",
+  drive_end_idle: "Przez 15 minut nic nie zrobiono, więc Coach przestał",
+  drive_end_replaced: "Rozpoczęto inne sterowanie",
 };

@@ -384,6 +384,16 @@ export const en = {
   ct_app_look: "See the app on your phone while it drives",
   ct_app_act: "Tap, type and scroll in the app on your phone while it drives",
   ct_replaces: "replaces the earlier connection",
+  // Why Coach stopped driving the app (drive.ts END_SAID), as the person reads it.
+  drive_end_owner_took_over: "You touched the app, so it's yours now",
+  drive_end_left_app: "The app left the screen, so Coach stopped",
+  drive_end_stopped: "You stopped Coach",
+  drive_end_locked: "The phone locked, so Coach stopped",
+  drive_end_signed_out: "You signed out, so Coach stopped",
+  drive_end_halted: "The account is halted, so Coach stopped",
+  drive_end_done: "Coach is done",
+  drive_end_idle: "Nothing was done for 15 minutes, so Coach stopped",
+  drive_end_replaced: "Another drive started",
 };
 
 export type Words = typeof en;

@@ -7,6 +7,7 @@ import { APPS } from "../src/cloud/doors/apps.js";
 import { eventsOf } from "../src/cloud/calendar.js";
 import { trialView, withLine, type Taf } from "../src/cloud/handler.js";
 import { coachConnect, TOOLS } from "../src/cloud/coach.js";
+import { END_SAID, endSaid } from "../src/cloud/drive.js";
 import { en } from "../src/cloud/words/en.js";
 import { requestOf, summaryOf, timeIn } from "../src/cloud/work.js";
 import type { Run } from "../src/cloud/agents.js";
@@ -181,5 +182,11 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(de.body).toEqual(en.body);
     expect(de.lines).toEqual(["Deine tafs, ihre Versionen und ihre Läufe sehen", "Eine Änderung an einem taf entwerfen · ersetzt die frühere Verbindung"]);
     expect(en.lines).toEqual(["See your tafs, their versions and their runs", "Draft a change to a taf · replaces the earlier connection"]);
+  });
+
+  it("says why Coach stopped driving in the language, English as END_SAID", () => {
+    expect(endSaid("owner_took_over", "nl")).toBe("Je raakte de app aan, dus hij is nu van jou");
+    expect(endSaid("idle", "pt")).toBe("Nada foi feito durante 15 minutos, por isso o Coach parou");
+    for (const why of Object.keys(END_SAID) as Array<keyof typeof END_SAID>) expect(endSaid(why)).toBe(END_SAID[why]);
   });
 });

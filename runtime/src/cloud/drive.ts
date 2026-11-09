@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { CoachStore } from "./coach.js";
+import { type Lang, wordsIn } from "./words/index.js";
 
 /**
  * Coach drives the app (kiff/tafs#544, docs/drive.md): the person asks Coach to do
@@ -76,6 +77,11 @@ export const END_SAID: Record<EndWhy, string> = {
   idle: "Nothing was done for 15 minutes, so Coach stopped",
   replaced: "Another drive started",
 };
+
+/** Why a drive ended, as the person reads it, in their language (END_SAID is the English). */
+export function endSaid(why: EndWhy, lang: Lang = "en"): string {
+  return wordsIn(lang)[`drive_end_${why}`];
+}
 
 export interface Drive {
   id: string;
@@ -451,14 +457,14 @@ function sse(name: string, data: unknown): string {
  * (`request`), then `ended` with why once the drive ends, or `reopen` when the stream
  * has lived DRIVE.streamMs. A comment line every DRIVE.pingMs keeps it open.
  */
-export async function* driveStream(store: CoachStore, tenant: string, person: string, drive: string, now: () => Date, wait: Sleep = sleep): AsyncGenerator<string> {
+export async function* driveStream(store: CoachStore, tenant: string, person: string, drive: string, now: () => Date, wait: Sleep = sleep, lang: Lang = "en"): AsyncGenerator<string> {
   const opened = now().getTime();
   let pinged = opened;
   yield sse("drive", { drive });
   for (;;) {
     const d = await currentDrive(store, tenant, person, now());
     if (!d || d.id !== drive) { yield sse("ended", { why: "replaced", words: END_SAID.replaced }); return; }
-    if (d.ended) { yield sse("ended", { why: d.ended.why, words: END_SAID[d.ended.why] }); return; }
+    if (d.ended) { yield sse("ended", { why: d.ended.why, words: endSaid(d.ended.why, lang) }); return; }
     for (const r of (await store.take(driveKeys.queue(tenant, drive))) as DriveRequest[]) {
       // A request Coach has given up on, or nearly, is never sent: a reconnecting stream doesn't do stale steps.
       const left = Date.parse(r.at) + DRIVE.holdMs - now().getTime();

@@ -360,4 +360,13 @@ export const nl: Words = {
   ct_app_look: "De app op je telefoon zien terwijl het die bedient",
   ct_app_act: "Tikken, typen en scrollen in de app op je telefoon terwijl het die bedient",
   ct_replaces: "vervangt de eerdere koppeling",
+  drive_end_owner_took_over: "Je raakte de app aan, dus hij is nu van jou",
+  drive_end_left_app: "De app verliet het scherm, dus Coach is gestopt",
+  drive_end_stopped: "Je hebt Coach gestopt",
+  drive_end_locked: "De telefoon werd vergrendeld, dus Coach is gestopt",
+  drive_end_signed_out: "Je hebt je afgemeld, dus Coach is gestopt",
+  drive_end_halted: "Het account is stilgezet, dus Coach is gestopt",
+  drive_end_done: "Coach is klaar",
+  drive_end_idle: "Er is 15 minuten niets gedaan, dus Coach is gestopt",
+  drive_end_replaced: "Er is een andere bediening gestart",
 };
