@@ -6,8 +6,9 @@ Writes, from the languages' JSON files:
 - android/app/src/main/kotlin/bot/tafs/app/model/Words.kt, typed accessors: a missing key, a wrong argument or a wrong name
   fails the Kotlin build.
 
-Nobody edits those files by hand. `generate.py` calls `write(languages, root)`; run alone (`python app/strings/android.py`),
-it reads the JSON files itself. `--check` writes nothing and fails when a file differs from what it would write.
+Nobody edits those files by hand. `generate.py` calls `generated(source, lines, languages)` and writes what it returns, for
+the shipped languages only. Run alone (`python app/strings/android.py`), it reads the JSON files itself; `--check` writes
+nothing and fails when a file differs from what it would write.
 """
 
 import json
@@ -44,15 +45,18 @@ def names_in(text):
 
 
 def order(value):
-    """The arguments' order, from English: `count` first in a count, then each placeholder as it first appears."""
-    if isinstance(value, dict):
-        seen = ["count"]
-        for form in FORMS:
-            for name in names_in(value.get(form, "")):
-                if name not in seen:
-                    seen.append(name)
-        return seen
-    return names_in(value)
+    """The arguments' order, as generate.py's `arguments`: each placeholder as it first appears (a count's `other` form
+    first), and `count` first in a count."""
+    forms = ([value["other"]] if "other" in value else []) + list(value.values()) if isinstance(value, dict) else [value]
+    seen = []
+    for text in forms:
+        for name in names_in(text):
+            if name not in seen:
+                seen.append(name)
+    if isinstance(value, dict) and "count" in seen:
+        seen.remove("count")
+        seen.insert(0, "count")
+    return seen
 
 
 def escape(text, formatted):
@@ -176,43 +180,45 @@ def check_keys(english):
         seen[r] = key
 
 
-def outputs(languages, root):
-    english = languages["en"]
-    check_keys(english)
+REPO = Path(__file__).resolve().parent.parent.parent
+
+
+def generated(source, lines, languages):
+    """generate.py's hook: Android's files for the shipped languages, by absolute path."""
+    check_keys(source)
+    shipped = languages["shipped"]
     files = {}
-    for lang, words in languages.items():
-        files[root / RES / folder(lang) / "strings.xml"] = strings_xml(lang, words, english)
-    files[root / RES / "xml" / "locales_config.xml"] = locales_xml(list(languages))
-    files[root / WORDS_KT] = words_kt(english)
+    for lang in shipped:
+        files[str(REPO / RES / folder(lang) / "strings.xml")] = strings_xml(lang, lines[lang], source)
+    files[str(REPO / RES / "xml" / "locales_config.xml")] = locales_xml(shipped)
+    files[str(REPO / WORDS_KT)] = words_kt(source)
     return files
 
 
-def write(languages, root, check=False):
-    """Writes Android's files, or with [check] returns the ones that differ from what would be written."""
+def main(argv):
+    """Alone, before generate.py is here: reads the JSON files itself and writes, or with --check compares."""
+    here = Path(__file__).resolve().parent
+    langs_file = here / "languages.json"
+    langs = json.loads(langs_file.read_text(encoding="utf-8")) if langs_file.exists() else {"all": ["en"], "shipped": ["en"]}
+    lines = {lang: json.loads((here / f"{lang}.json").read_text(encoding="utf-8"))
+             for lang in langs["all"] if (here / f"{lang}.json").exists()}
     stale = []
-    for path, text in outputs(languages, Path(root)).items():
+    for path, text in generated(lines["en"], lines, langs).items():
+        p = Path(path)
         # A checkout may turn line ends into CRLF: the words are the same.
-        current = path.read_text(encoding="utf-8").replace("\r\n", "\n") if path.exists() else None
-        if current != text:
-            stale.append(str(path))
-            if not check:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(text, encoding="utf-8", newline="\n")
-    return stale
-
-
-def load(strings_dir):
-    order_ = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
-    found = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in Path(strings_dir).glob("*.json")
-             if p.stem in order_}
-    return {lang: found[lang] for lang in order_ if lang in found}
+        current = p.read_text(encoding="utf-8").replace("\r\n", "\n") if p.exists() else None
+        if current == text:
+            continue
+        stale.append(path)
+        if "--check" not in argv:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(text, encoding="utf-8", newline="\n")
+            print("wrote " + path)
+    if "--check" in argv and stale:
+        print("Not generated: " + ", ".join(stale) + ". Run python app/strings/android.py.")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    here = Path(__file__).resolve().parent
-    stale = write(load(here), here.parent.parent, check="--check" in sys.argv)
-    if "--check" in sys.argv and stale:
-        print("Not generated: " + ", ".join(stale) + ". Run python app/strings/android.py.")
-        sys.exit(1)
-    for path in stale:
-        print("wrote " + path)
+    sys.exit(main(sys.argv[1:]))
