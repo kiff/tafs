@@ -5,9 +5,9 @@ name: Strings
 on:
   push:
     branches: [main]
-    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/Localizable.xcstrings", "ios/Tafs/Design/Words.swift", "android/app/src/main/res/**", ".github/workflows/strings.yml"]
+    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/Localizable.xcstrings", "ios/Tafs/Design/Words.swift", "android/app/src/main/res/**", "android/app/src/main/kotlin/bot/tafs/app/model/Words.kt", ".github/workflows/strings.yml"]
   pull_request:
-    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/Localizable.xcstrings", "ios/Tafs/Design/Words.swift", "android/app/src/main/res/**", ".github/workflows/strings.yml"]
+    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/Localizable.xcstrings", "ios/Tafs/Design/Words.swift", "android/app/src/main/res/**", "android/app/src/main/kotlin/bot/tafs/app/model/Words.kt", ".github/workflows/strings.yml"]
 
 permissions:
   contents: read

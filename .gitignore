@@ -16,3 +16,7 @@ runtime/lambda.zip
 .tmp-*
 *.xcarchive/
 *.ipa
+
+# Python caches (app/strings)
+__pycache__/
+*.pyc
