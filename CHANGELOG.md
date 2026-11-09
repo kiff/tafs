@@ -5,6 +5,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **A scheduled run that stopped partway says so (tafs cloud).** When an app check's run stops partway and kiff/agents drops what it was working on (`failing.outcome` is `failed_unfinished`), the alert reads "Its scheduled run stopped partway. What it was working on won't be tried again. Open it to see what it did.", in all 8 languages, and is sent at once, even when the same run of failures was already said as one that couldn't start. It no longer says the run "couldn't start". Older kiff/agents send no `outcome`, and the alert reads as before (docs/approvals.md).
+- **Each language is reviewed against the glossary, and fixes go forward after release.** No language waits for a native speaker before it ships or is listed (docs/languages.md, docs/store-listing.md).
 - **The apps' words get one shared source, and the iPhone app asks the servers for English until it ships its languages.**
   - **`app/strings`** holds each of the apps' own lines once, by a key named for what it says, in each language, with plural forms and named placeholders. A generator writes the iPhone and iPad String Catalog and typed accessors from it; Android's files follow from the same source. CI fails when a generated file is out of date. Two lines read from it so far, with nothing changed on screen.
   - **iPhone and iPad** sent Spanish or French as the app's language on such a phone, because Siri's phrases ship in those two, so KIFF's words came in that language beside an English screen. The app now asks for the languages its screens are written in: English, until the others ship.

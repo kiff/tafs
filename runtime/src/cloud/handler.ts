@@ -6172,13 +6172,18 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       if (!f) continue;
       const age = now.getTime() - Date.parse(f.since);
       const once = s.kind === "once";
-      if (once ? s.enabled || !(age < FAILING_KEPT_MS) : !s.enabled || !(f.firings >= 2 || age >= FAILING_ALONE_MS)) continue;
+      // A run that stopped partway dropped what it was handed, and the next run that works ends the run of
+      // failures: it's said at once, like a once schedule's, or the owner would never hear of it.
+      const dropped = f.outcome === "failed_unfinished";
+      if (once ? s.enabled || !(age < FAILING_KEPT_MS) : !s.enabled || !(dropped || f.firings >= 2 || age >= FAILING_ALONE_MS)) continue;
       const taf = await deps.tafs.get(tenant, s.agent).catch(() => undefined);
       if (!taf || taf.removing) continue;
       // Halted, or not known not to be: nothing is said now, and the next sweep asks again.
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
-      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
-      await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f.firings, lang));
+      // Once for each run of failures, and once more when that run comes to drop work: an owner told its
+      // runs couldn't start still hears that what one was working on won't be tried again.
+      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${dropped ? "#unfinished" : ""}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f, lang));
       told.push({ tenant, schedule: s.id });
     }
   }
@@ -6197,14 +6202,21 @@ const FAILING_KEPT_MS = 30 * 24 * 3600_000;
 export const FAILING_WORDS = {
   one: wordsIn("en").failing_one,
   many: wordsIn("en").failing_many,
+  unfinishedOne: wordsIn("en").failing_unfinished_one,
+  unfinishedMany: wordsIn("en").failing_unfinished_many,
   followUp: wordsIn("en").failing_follow_up,
   once: wordsIn("en").failing_once,
 } as const;
 
-function failingWords(s: Schedule, firings: number, lang: Lang = "en"): string {
+/**
+ * A run of failures whose last firing's run stopped partway (kiff/agents' `failed_unfinished`) says so, and
+ * that what it was working on won't be tried again: "couldn't start" isn't true of it.
+ */
+function failingWords(s: Schedule, failing: NonNullable<Schedule["failing"]>, lang: Lang = "en"): string {
   const w = wordsIn(lang);
   if (s.kind === "once") return s.follow_up ? w.failing_follow_up : w.failing_once;
-  return firings > 1 ? w.failing_many(firings) : w.failing_one;
+  if (failing.outcome === "failed_unfinished") return failing.firings > 1 ? w.failing_unfinished_many(failing.firings) : w.failing_unfinished_one;
+  return failing.firings > 1 ? w.failing_many(failing.firings) : w.failing_one;
 }
 
 /** What a follow-up that waited for credits says: it didn't run, why, and where to look. */
@@ -6218,10 +6230,10 @@ function waitedNotification(taf: Taf, s: Schedule, lang: Lang = "en"): Notificat
   };
 }
 
-function failingNotification(taf: Taf, s: Schedule, firings: number, lang: Lang = "en"): Notification {
+function failingNotification(taf: Taf, s: Schedule, failing: NonNullable<Schedule["failing"]>, lang: Lang = "en"): Notification {
   return {
     kind: "alert",
-    payload: { aps: { alert: { title: taf.name, body: failingWords(s, firings, lang) }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    payload: { aps: { alert: { title: taf.name, body: failingWords(s, failing, lang) }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
     collapseID: `failing-${s.id}`.slice(0, 64),
   };
 }

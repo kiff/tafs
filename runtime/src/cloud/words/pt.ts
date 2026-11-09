@@ -136,6 +136,8 @@ export const pt: Words = {
   push_ended_done: "Terminou. Abra o modo Coach para ler como correu.",
   failing_one: "A sua execução agendada não conseguiu começar. Tenta novamente na próxima hora. Abra-o para ver porquê.",
   failing_many: (n) => `As suas últimas ${n} execuções agendadas não conseguiram começar. Tenta novamente a cada hora agendada. Abra-o para ver porquê.`,
+  failing_unfinished_one: "A sua execução agendada parou a meio. Aquilo em que estava a trabalhar não voltará a ser tentado. Abra-o para ver o que fez.",
+  failing_unfinished_many: (n) => `As suas últimas ${n} execuções agendadas não terminaram. Aquilo em que a última estava a trabalhar não voltará a ser tentado. Abra-o para ver o que fez.`,
   failing_follow_up: "Um acompanhamento que definiu para si não foi executado e não será repetido. Abra-o para ver porquê.",
   failing_once: "A sua execução agendada única não conseguiu começar e não será repetida. Abra-o para ver porquê.",
   waited_follow_up: "Um acompanhamento que definiu para si não foi executado: os seus tafs esperavam créditos. Não será repetido. Abra-o para saber mais.",

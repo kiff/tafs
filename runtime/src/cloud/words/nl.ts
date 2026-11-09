@@ -136,6 +136,8 @@ export const nl: Words = {
   push_ended_done: "Klaar. Open de Coach-modus om te lezen hoe het ging.",
   failing_one: "De geplande run kon niet starten. Het probeert het op het volgende tijdstip opnieuw. Open het om te zien waarom.",
   failing_many: (n) => `De laatste ${n} geplande runs konden niet starten. Het probeert het op elk gepland tijdstip opnieuw. Open het om te zien waarom.`,
+  failing_unfinished_one: "De geplande run is halverwege gestopt. Waar het mee bezig was, wordt niet opnieuw geprobeerd. Open het om te zien wat het heeft gedaan.",
+  failing_unfinished_many: (n) => `De laatste ${n} geplande runs zijn niet afgemaakt. Waar de laatste mee bezig was, wordt niet opnieuw geprobeerd. Open het om te zien wat het heeft gedaan.`,
   failing_follow_up: "Een opvolging die het zichzelf had gezet, is niet uitgevoerd en wordt niet opnieuw geprobeerd. Open het om te zien waarom.",
   failing_once: "De eenmalige geplande run kon niet starten en wordt niet opnieuw geprobeerd. Open het om te zien waarom.",
   waited_follow_up: "Een opvolging die het zichzelf had gezet, is niet uitgevoerd: je tafs wachtten op credits. Het wordt niet opnieuw geprobeerd. Open het voor meer.",
