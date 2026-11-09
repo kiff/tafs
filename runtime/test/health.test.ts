@@ -111,6 +111,24 @@ describe("a taf's health", () => {
     expect(level([run(15, "ERROR", { turns: 1 }), run(30, "ERROR", { turns: 2 }), run(45, "ERROR", { turns: 1 })])).toBe("failing");
   });
 
+  it("never counts our own outage: a run the AI provider didn't serve, or the scheduled time that started it", () => {
+    const down = (m: number, more: Partial<Run> = {}) => run(m, "ERROR", { code: "ai_unavailable", error: "The AI isn't available right now.", ...more });
+    // Scheduled runs that never started for it, with their times: nothing against the taf.
+    const never = [down(15, { id: "r1", turns: 0 }), down(30, { id: "r2", turns: 0 }), down(45, { id: "r3", turns: 0 })];
+    const times = [{ ...fired(15, "failed_unworked"), run: "r1" }, { ...fired(30, "failed_unworked"), run: "r2" }, { ...fired(45, "failed_unworked"), run: "r3" }];
+    expect(healthOf(never, times, NOW)).toEqual({ level: "healthy", reasons: [] });
+    // Runs it cut off after they began, and chat runs: the same.
+    expect(level([down(15), down(30), down(45)])).toBe("healthy");
+    expect(level([down(15, { trigger: "owner" }), down(30, { trigger: "owner" }), down(45, { trigger: "owner" })])).toBe("healthy");
+    // They neither fail nor recover: the taf's own failures around them still count.
+    const mixed = [bad(10), down(20), bad(30), down(40), bad(50)];
+    expect(healthOf(mixed, [], NOW)).toMatchObject({ level: "failing", reasons: [{ code: "all_failed", n: 3 }] });
+    const around = [{ ...fired(15, "failed_unworked"), run: "r1" }, fired(30, "failed_unworked"), { ...fired(45, "failed_unworked"), run: "r3" }, fired(60, "failed_unworked"), fired(75, "run")];
+    expect(healthOf(never, around, NOW)).toMatchObject({ level: "failing", reasons: [{ code: "streak", n: 2, since: ago(60) }] });
+    // A scheduled time whose run failed for another reason still counts.
+    expect(healthOf([run(15, "ERROR", { id: "r1", turns: 0 }), run(30, "ERROR", { id: "r2", turns: 0 })], times.slice(0, 2), NOW)).toMatchObject({ level: "failing", reasons: [{ code: "streak", n: 2 }] });
+  });
+
   it("is healthy for an outcome or a stop it doesn't know, without a crash", () => {
     expect(level([run(10, "COMPLETED", { stop: "something_new" }), run(20, "COMPLETED", { stop: "something_new" })], firings("brand_new_outcome", "brand_new_outcome", "another_one"))).toBe("healthy");
     // An unknown outcome neither fails nor recovers: the failures around it still count.

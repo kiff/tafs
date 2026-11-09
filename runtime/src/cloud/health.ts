@@ -49,12 +49,22 @@ const SKIPPED_FIRING = new Set(["skipped_missed", "skipped_busy"]);
  *   - one tafs already shows as retrying or as needing them;
  *   - a scheduled run that failed before its first turn. kiff/agents makes the run, then it never starts:
  *     its schedule's time already says what it was (it couldn't start, or the taf was switching versions),
- *     so counting the run too would say one thing twice.
+ *     so counting the run too would say one thing twice;
+ *   - one that failed because the AI provider wasn't serving us (`ours`).
  */
 function ended(r: Run): boolean {
-  if (r.state === "retrying" || r.state === "needs_you") return false;
+  if (r.state === "retrying" || r.state === "needs_you" || ours(r)) return false;
   if (r.status === "ERROR" && r.trigger === "schedule" && r.turns === 0) return false;
   return r.status === "ERROR" || r.status === "COMPLETED";
+}
+
+/**
+ * Whether a run failed on our side, not the taf's: the AI provider wasn't serving us (`ai_unavailable`).
+ * It's our outage to watch, never the owner's to hear of taf by taf: neither the run nor the scheduled time
+ * that started it counts toward a taf's health or its alert.
+ */
+function ours(r: Run): boolean {
+  return r.code === "ai_unavailable";
 }
 
 /** Whether a run that ended is a failure: it failed, or a turn of it was declined. */
@@ -75,7 +85,10 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   const firings = fired.filter((f) => new Date(f.due).getTime() >= since).slice(0, HEALTH_FIRINGS);
   const streak: Fired[] = [];
   let retrying = false;
+  // The scheduled times whose run failed on our side: they neither fail nor recover, like a skip.
+  const oursToWatch = new Set(runs.filter(ours).map((r) => r.id));
   for (const f of firings) {
+    if (f.run && oursToWatch.has(f.run)) continue;
     if (GOOD_FIRING.has(f.outcome)) break;
     if (FAILED_FIRING.has(f.outcome)) streak.push(f);
     // A run that didn't finish, whose work goes to the next run: not a failure, and the failures before it

@@ -6190,8 +6190,9 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
       // Once for each run of failures, and again when that run comes to drop work: an owner told its runs
       // couldn't start still hears that what one was working on won't be tried again. Each later partway
-      // stop dropped other work, so it's said too, at most once every DROPPED_AGAIN_MS for this schedule:
-      // one that drops work at every firing would otherwise alert every time.
+      // stop dropped other work, so it's said too, at most once in each DROPPED_AGAIN_MS window of this
+      // schedule's run of failures (windows count from its start): one that drops work at every firing
+      // would otherwise alert every time.
       const again = dropped ? `#unfinished#${Math.floor((Date.parse(f.last ?? f.since) - Date.parse(f.since)) / DROPPED_AGAIN_MS) || 0}` : "";
       if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${again}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
       await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f, lang));
@@ -6201,7 +6202,7 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
   return told;
 }
 
-/** How long after a partway stop was said a later one in the same run of failures is said again. */
+/** The window, counted from the start of a run of failures, in which a partway stop is said once. */
 const DROPPED_AGAIN_MS = 6 * 3600_000;
 /** How long one failed firing waits, with none working since, before it's said. */
 const FAILING_ALONE_MS = 6 * 3600_000;
@@ -6230,7 +6231,8 @@ async function firingsFor(deps: Deps, tenant: string, taf: Taf): Promise<Fired[]
  * The sweep's look at each taf's health (health.ts): a taf that turns failing is said once for that bad
  * spell, to the phones that answer its holds, as a failing schedule is. Only what the failing alert hasn't
  * said already: its runs failing one after another. A run of failures at its schedule, and work a run
- * dropped, are sweepFailingSchedules' to say. At risk shows in the app and sends nothing.
+ * dropped, are sweepFailingSchedules' to say. At risk shows in the app and sends nothing. Runs started from
+ * the taf's chat don't count toward the alert: whoever asked saw them fail.
  *
  * Only a taf whose schedule fired since the last pass is read: its schedule's next time, as last seen, has
  * come. A halted or paused taf says nothing. One that recovers and fails again is another spell.
@@ -6254,7 +6256,8 @@ export async function sweepHealth(deps: Deps): Promise<Array<{ tenant: string; t
       if (!taf || taf.removing || taf.paused) continue;
       const runs = await deps.agents.runs(tenant, taf.id, false, 20).catch(() => undefined);
       if (!runs) continue;
-      const bad = healthOf(runs, [], now).reasons.find((r) => r.code === "all_failed");
+      // The runs nobody watched: one started from its chat failed in front of the person who asked.
+      const bad = healthOf(runs.filter((r) => r.trigger !== "owner"), [], now).reasons.find((r) => r.code === "all_failed");
       if (!bad) continue;
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
       if (!(await store.once(`${tenant}#taf-health#${taf.id}#${bad.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;

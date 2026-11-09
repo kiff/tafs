@@ -2684,6 +2684,38 @@ describe("a schedule whose runs keep failing to start", () => {
     expect(JSON.parse(page.body ?? "{}").health).toEqual({ level: "failing", lines: ["Its last 4 scheduled runs couldn't start. Open one to see why."] });
   });
 
+  it("doesn't alert for runs started from the taf's chat: whoever asked saw them fail", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const x = await setUp();
+    x.w.agents.runs.length = 0;
+    for (const m of [-40, -25, -10]) x.w.agents.runs.unshift({ tenant: "t_acme", id: `c${m}`, agent: RAE, session: "s", trigger: "owner", status: "ERROR", cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+    x.w.agents.schedules.set(`t_acme|${RAE}`, { ...x.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+    expect(await sweepHealth(x.deps)).toEqual([]);
+    expect(await sweepHealth(x.deps)).toEqual([]);
+    expect(x.w.pushed).toHaveLength(0);
+    // Its page still says it: the health counts every run.
+    const page = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, x.deps);
+    expect(JSON.parse(page.body ?? "{}").health.level).toBe("failing");
+  });
+
+  it("says nothing of a taf's health for our own outage, or for a version switch", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    for (const [what, more] of [
+      ["the AI provider not serving us", { code: "ai_unavailable", error: "The AI isn't available right now.", turns: 2 }],
+      ["a version switch", { error: "the agent is switching versions, so the run didn't start", turns: 0 }],
+    ] as const) {
+      const x = await setUp();
+      x.w.agents.runs.length = 0;
+      for (const m of [-40, -25, -10]) x.w.agents.runs.unshift({ tenant: "t_acme", id: `r${m}`, agent: RAE, session: "s", trigger: "schedule", status: "ERROR", cost_micro_usd: 0, created: at(m), updated: at(m), ...more });
+      x.w.agents.schedules.set(`t_acme|${RAE}`, { ...x.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+      expect(await sweepHealth(x.deps), what).toEqual([]);
+      expect(await sweepHealth(x.deps), what).toEqual([]);
+      expect(x.w.pushed, what).toHaveLength(0);
+      const page = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, x.deps);
+      expect(JSON.parse(page.body ?? "{}").health, what).toEqual({ level: "healthy", lines: [] });
+    }
+  });
+
   it("says nothing for a schedule that works, nor for a taf being removed", async () => {
     const { w, deps } = await setUp();
     expect(await sweepFailingSchedules(deps)).toEqual([]);

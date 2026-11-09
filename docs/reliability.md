@@ -228,6 +228,9 @@ days count, of its last 10 runs that ended and its schedule's last 20 times.
 - **Never counted:** a skip for a halt, a version switch or credits; a run paused for its
   owner; a run its owner stopped; a run already shown as needing them or as retrying; and an
   outcome this code doesn't know.
+- **Our own outage is never the taf's:** a run that failed because the AI provider wasn't
+  serving us (`code: "ai_unavailable"`), and the scheduled time that started it, count for
+  nothing, toward the level or the alert.
 - **Said once:** a scheduled run that never started leaves a failed run with no turn behind
   it. Its scheduled time already says it couldn't start, so that run isn't counted again
   among the failed runs.
