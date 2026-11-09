@@ -171,8 +171,11 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
       // A run cut off at its turn or cost cap ended without finishing: it stopped, and says why (never "Done").
       if (r.stop === "turn_cap") return { ...base, state: "stopped", line: w.work_capped_turns(at(r.updated)) };
       if (r.stop === "cost_cap") return { ...base, state: "stopped", line: w.work_capped_cost(at(r.updated)) };
+      // Its reply was cut off at its length limit, or the AI declined to go on: stopped, and says which.
+      if (r.stop === "max_token") return { ...base, state: "stopped", line: w.work_stopped_out_of_room(at(r.updated)) };
+      if (r.stop === "refused") return { ...base, state: "stopped", line: w.work_stopped_declined(at(r.updated)) };
       // Done only when it answered (or a run from before stops were kept): any other stop, one tafs doesn't know
-      // included (out of room mid-answer, a refused turn), reads as stopped, never as success.
+      // included, reads as stopped, never as success.
       if (r.stop && r.stop !== "answered") return { ...base, state: "stopped", line: w.work_stopped_at(at(r.updated)) };
       return { ...base, state: "done", line: w.work_done_at(at(r.updated)) };
     case "CANCELLED":

@@ -20,6 +20,8 @@ export const de: Words = {
   work_capped_turns: (t) => `Gestoppt ${at(t)}: er hat die Höchstzahl an Schritten für einen Lauf erreicht`,
   work_capped_cost: (t) => `Gestoppt ${at(t)}: er hat das Kostenlimit für einen Lauf erreicht`,
   work_stopped_at: (t) => `Gestoppt ${at(t)}`,
+  work_stopped_out_of_room: (t) => `Gestoppt ${at(t)}: seine Antwort hatte keinen Platz mehr`,
+  work_stopped_declined: (t) => `Gestoppt ${at(t)}: die KI hat es abgelehnt, fortzufahren`,
   work_failed: "Fehlgeschlagen",
   work_failed_because: (why) => `Fehlgeschlagen: ${why}`,
   work_needs_you: "Bitte sieh es dir an.",
