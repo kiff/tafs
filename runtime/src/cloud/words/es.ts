@@ -2,6 +2,9 @@ import type { When, Words } from "./en.js";
 
 /** "at" a time, as the language says it with and without a weekday (docs/languages.md). */
 const at = (t: When) => (t.day ? `el ${t.day} a las ${t.hm}` : `a las ${t.hm}`);
+/** A list joined as the language joins one ("A, B und C"), and a line's first letter capitalized. */
+const list = (xs: string[]) => new Intl.ListFormat("es", { type: "conjunction" }).format(xs);
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 
 /** Spanish (tú), in the glossary's terms (docs/languages.md). */
 export const es: Words = {
@@ -130,4 +133,35 @@ export const es: Words = {
   failing_follow_up: "Un seguimiento que se programó no se ejecutó y no se volverá a intentar. Ábrelo para ver por qué.",
   failing_once: "Su ejecución programada única no pudo empezar y no se volverá a intentar. Ábrelo para ver por qué.",
   waited_follow_up: "Un seguimiento que se programó no se ejecutó: tus tafs esperaban créditos. No se volverá a intentar. Ábrelo para ver más.",
+  door_name: (id, label) => (id === "email" ? "correo" : label),
+  door_a: "una puerta",
+  door_knock: (who, door, spoofed) => `${who} escribió por ${door}${spoofed ? " (la comprobación del remitente falló)" : ""}. No se hizo nada.`,
+  door_full_keys: (door, n) => `Tu puerta de ${door} recibió hoy sus ${n} mensajes tuyos y de remitentes vinculados. Los siguientes se descartan hasta mañana.`,
+  door_full_others: (door, n) => `Tu puerta de ${door} recibió hoy ${n} mensajes de personas no vinculadas. Los siguientes se descartan hasta mañana.`,
+  door_handled: (who, place, taf) => `Mensaje de ${who} atendido en ${place}; ${taf} publica allí su respuesta.`,
+  door_answered: (who, door) => `Respondido a ${who} por su puerta de ${door}.`,
+  door_reply_not_sent: (who, taf) => `Tu respuesta a ${who} no se envió. Puedes volver a enviarla desde ${taf}.`,
+  unanswered_dial: (n, form, event) => `${n} ${event ? (form === "one" ? "evento" : "eventos") : form === "one" ? "mensaje" : "mensajes"} ${form === "one" ? "quedó" : "quedaron"} sin respuesta mientras tus tafs esperaban créditos`,
+  unanswered_door: (who, door) => `Un mensaje de ${who} por ${door} quedó sin respuesta: tus tafs esperaban créditos.`,
+  unanswered_event: (name) => `Un evento de ${name} quedó sin respuesta: tus tafs esperaban créditos.`,
+  unanswered_many: (messages, mf, events, ef) =>
+    `${[messages ? `${messages} ${mf === "one" ? "mensaje" : "mensajes"}` : "", events ? `${events} ${ef === "one" ? "evento" : "eventos"}` : ""].filter(Boolean).join(" y ")} quedaron sin respuesta: tus tafs esperaban créditos.`,
+  delivered: (name, t) => `Entregado a ${name} ${at(t)}`,
+  handed: (name, t) => `Pasado a ${name} ${at(t)}`,
+  delivery_retrying: (name, t) => `Aún no entregado a ${name}: nuevo intento ${t ? at(t) : "ahora"}`,
+  delivery_not_sent: (name, why) => `No entregado a ${name}${why ? `: ${why}` : ""}`,
+  delivery_note: (taf, name, why) => `${taf} no entregó a ${name}${why ? `: ${why}` : ""}. Vuelve a enviarlo desde la página de ${taf} o abre Coach para pedir ayuda.`,
+  why_no_call: "el taf no hizo ninguna llamada para ello",
+  why_refused: "la app no lo aceptó",
+  why_no_handoff: (heading) => `el resultado no tiene una sección «${heading}»`,
+  why_taf_gone: "ese taf ya no está en la cuenta",
+  why_retry_failed: "el nuevo intento no terminó",
+  why_retry_stopped: "el nuevo intento se detuvo",
+  why_handoff_failed: "el traspaso falló",
+  delivered_line: (went, not) => {
+    const parts: string[] = [];
+    if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "pasado a" : "enviado a"} ${d.name}`))));
+    if (not.length) parts.push(`No enviado a ${list(not.map((d) => `${d.name}${d.retrying ? " (se vuelve a intentar)" : ""}`))}`);
+    return parts.join(". ") + ".";
+  },
 };

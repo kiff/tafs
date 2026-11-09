@@ -2,6 +2,9 @@ import type { When, Words } from "./en.js";
 
 /** "at" a time, as the language says it with and without a weekday (docs/languages.md). */
 const at = (t: When) => (t.day ? `${t.day} om ${t.hm}` : `om ${t.hm}`);
+/** A list joined as the language joins one ("A, B und C"), and a line's first letter capitalized. */
+const list = (xs: string[]) => new Intl.ListFormat("nl", { type: "conjunction" }).format(xs);
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 
 /** Dutch (je), in the glossary's terms (docs/languages.md). */
 export const nl: Words = {
@@ -130,4 +133,35 @@ export const nl: Words = {
   failing_follow_up: "Een opvolging die het zichzelf had gezet, is niet uitgevoerd en wordt niet opnieuw geprobeerd. Open het om te zien waarom.",
   failing_once: "De eenmalige geplande run kon niet starten en wordt niet opnieuw geprobeerd. Open het om te zien waarom.",
   waited_follow_up: "Een opvolging die het zichzelf had gezet, is niet uitgevoerd: je tafs wachtten op credits. Het wordt niet opnieuw geprobeerd. Open het voor meer.",
+  door_name: (id, label) => (id === "email" ? "e-mail" : label),
+  door_a: "een deur",
+  door_knock: (who, door, spoofed) => `${who} schreef via ${door}${spoofed ? " (de afzendercontrole is mislukt)" : ""}. Er is niets gedaan.`,
+  door_full_keys: (door, n) => `Je ${door}-deur had vandaag zijn ${n} berichten van jou en gekoppelde afzenders. Meer worden tot morgen genegeerd.`,
+  door_full_others: (door, n) => `Je ${door}-deur had vandaag ${n} berichten van mensen die niet gekoppeld zijn. Meer worden tot morgen genegeerd.`,
+  door_handled: (who, place, taf) => `Het bericht van ${who} in ${place} is afgehandeld; ${taf} plaatst het antwoord daar zelf.`,
+  door_answered: (who, door) => `${who} beantwoord via de ${door}-deur.`,
+  door_reply_not_sent: (who, taf) => `Je antwoord aan ${who} is niet verzonden. Je kunt het opnieuw verzenden vanuit ${taf}.`,
+  unanswered_dial: (n, form, event) => `${n} ${event ? (form === "one" ? "event" : "events") : form === "one" ? "bericht" : "berichten"} ${form === "one" ? "bleef" : "bleven"} onbeantwoord terwijl je tafs op credits wachtten`,
+  unanswered_door: (who, door) => `Een bericht via ${door} van ${who} bleef onbeantwoord: je tafs wachtten op credits.`,
+  unanswered_event: (name) => `Een event van ${name} bleef onbeantwoord: je tafs wachtten op credits.`,
+  unanswered_many: (messages, mf, events, ef) =>
+    `${[messages ? `${messages} ${mf === "one" ? "bericht" : "berichten"}` : "", events ? `${events} ${ef === "one" ? "event" : "events"}` : ""].filter(Boolean).join(" en ")} bleven onbeantwoord: je tafs wachtten op credits.`,
+  delivered: (name, t) => `Afgeleverd bij ${name} ${at(t)}`,
+  handed: (name, t) => `Doorgegeven aan ${name} ${at(t)}`,
+  delivery_retrying: (name, t) => `Nog niet afgeleverd bij ${name}: nieuwe poging ${t ? at(t) : "nu"}`,
+  delivery_not_sent: (name, why) => `Niet afgeleverd bij ${name}${why ? `: ${why}` : ""}`,
+  delivery_note: (taf, name, why) => `${taf} heeft niet afgeleverd bij ${name}${why ? `: ${why}` : ""}. Verzend het opnieuw vanaf de pagina van ${taf}, of open Coach voor hulp.`,
+  why_no_call: "het taf heeft er geen aanroep voor gedaan",
+  why_refused: "de app heeft het niet aangenomen",
+  why_no_handoff: (heading) => `het resultaat heeft geen sectie "${heading}"`,
+  why_taf_gone: "dat taf staat niet meer op het account",
+  why_retry_failed: "de nieuwe poging is niet afgerond",
+  why_retry_stopped: "de nieuwe poging is gestopt",
+  why_handoff_failed: "de overdracht is mislukt",
+  delivered_line: (went, not) => {
+    const parts: string[] = [];
+    if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "doorgegeven aan" : "verzonden naar"} ${d.name}`))));
+    if (not.length) parts.push(`Niet verzonden naar ${list(not.map((d) => `${d.name}${d.retrying ? " (wordt opnieuw geprobeerd)" : ""}`))}`);
+    return parts.join(". ") + ".";
+  },
 };

@@ -7,11 +7,24 @@ import type { Run } from "../src/cloud/agents.js";
 const NOW = new Date("2026-11-09T12:00:00Z");
 const run = (o: Partial<Run>): Run => ({ id: "r1", agent: "a", session: "s", trigger: "owner", status: "COMPLETED", cost_micro_usd: 0, turns: 1, created: "2026-11-09T10:00:00Z", updated: "2026-11-09T11:00:00Z", ...o });
 
+/** The words whose arguments aren't strings or counts, with what they're given. */
+const ARGS: Record<string, unknown[][]> = {
+  door_name: [["email", "Email"], ["slack", "Slack"]],
+  delivered: [["Invoices", { hm: "09:00" }], ["Invoices", { hm: "09:00", day: "Fri" }]],
+  handed: [["Rae", { hm: "09:00" }]],
+  delivery_retrying: [["Invoices", { hm: "09:00", day: "Fri" }], ["Invoices", undefined]],
+  delivered_line: [
+    [[{ name: "Sheets", handed: false }, { name: "Invoices", handed: true }], [{ name: "Slack", retrying: true }]],
+    [[], [{ name: "Slack", retrying: false }, { name: "Email", retrying: false }]],
+  ],
+};
+
 /** Each word filled in: a string, or a function's answer for sample values. */
-function sample(v: unknown): string[] {
+function sample(v: unknown, key = ""): string[] {
   if (typeof v === "string") return [v];
   if (typeof v !== "function") return [];
   const f = v as (...a: unknown[]) => string;
+  if (ARGS[key]) return ARGS[key].map((a) => f(...a));
   // Every catalog function takes strings, numbers and a plural form: try both kinds for each.
   return [f("X", "Y"), f(1, 3), f(2, "few"), f(5, "many"), f(1, "one")];
 }
@@ -23,7 +36,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
       expect(Object.keys(words).sort(), lang).toEqual(Object.keys(en).sort());
       for (const [key, v] of Object.entries(words)) {
         expect(typeof v, `${lang}.${key}`).toBe(typeof (en as Record<string, unknown>)[key]);
-        for (const line of sample(v)) expect(line.trim().length, `${lang}.${key}`).toBeGreaterThan(0);
+        for (const line of sample(v, key)) expect(line.trim().length, `${lang}.${key}`).toBeGreaterThan(0);
       }
     }
   });
@@ -42,7 +55,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     for (const lang of LANGUAGES.filter((l) => l !== "en")) {
       const words = wordsIn(lang) as Record<string, unknown>;
       const allowed = new Set([...SAME_AS_ENGLISH.all!, ...(SAME_AS_ENGLISH[lang] ?? [])]);
-      const same = Object.keys(en).filter((k) => !allowed.has(k) && JSON.stringify(sample(words[k])) === JSON.stringify(sample((en as Record<string, unknown>)[k])));
+      const same = Object.keys(en).filter((k) => !allowed.has(k) && JSON.stringify(sample(words[k], k)) === JSON.stringify(sample((en as Record<string, unknown>)[k], k)));
       expect(same, lang).toEqual([]);
     }
   });

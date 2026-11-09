@@ -32,7 +32,7 @@ import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan
 import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endWhyOf, END_SAID, END_WORDS, putResult, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
-import { replayHeld, type Unanswered, UNANSWERED_WORDS, unansweredOf } from "./doors/hold.js";
+import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -731,7 +731,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
-    const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false));
+    const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
     return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event)), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired, zone, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
@@ -748,7 +748,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       titlesOf(event, me, taf, deps),
     ]);
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
-    const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC", others || await managesTaf(event, me, taf, deps).catch(() => false));
+    const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC", others || await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
     return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? [], langOf(event));
   }
   if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
@@ -848,7 +848,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // What the person wrote that waits for the taf to be done goes now, in each chat where it's done (docs/chat.md).
     await settleChats(event, me, taf, deps).catch(() => undefined);
     const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles);
+    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
@@ -857,7 +857,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // What waits in this chat goes now, if the taf is done in it: only this chat's.
     await settleChat(event, me, taf, parts[4] ?? "", deps).catch(() => undefined);
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
@@ -1996,7 +1996,7 @@ export interface ThreadUsage {
   cost_micro_usd: number;
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map(), lang: Lang = "en"): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; drives: ThreadDrive[]; sessions: Session[]; usage?: ThreadUsage }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -2161,7 +2161,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     if (r.session.kind === "run" && deps.coach && taf.actionResults?.length) {
       const kept = await deliveriesOf(deps.coach, me.tenantID, taf.id, [...runs.keys()]);
       for (const [id] of runs) {
-        const line = deliveredLine(kept.get(id));
+        const line = deliveredLine(kept.get(id), lang);
         const report = messages.filter((m) => m.from === "taf" && m.session === r.session.id && m.id.startsWith(`${id}.`)).at(-1);
         if (line && report) report.delivered = line;
       }
@@ -3003,7 +3003,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const open = await openTrialOf(me, taf, deps);
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
     const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, drives, sessions } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, drives, sessions } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
@@ -3312,13 +3312,14 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   // What went unanswered while the tafs waited for credits, on its door's or event's stop for 7 days (doors/hold.ts).
   const unanswered = deps.doors ? await unansweredOf({ doors: deps.doors, now }, me.tenantID, taf.id).catch(() => []) : [];
   const count = (f: (u: Unanswered) => boolean) => unanswered.filter(f).length;
+  const lang = langOf(event);
   const shownDoors = doors.map((d) => {
     const n = count((u) => u.kind === "door" && u.door === d.id);
-    return n ? { ...d, unanswered: UNANSWERED_WORDS.dial(n, "message") } : d;
+    return n ? { ...d, unanswered: unansweredWords(n, "message", lang) } : d;
   });
   const unansweredEvents = [...new Set(unanswered.filter((u) => u.kind === "app_event").map((u) => `${u.grant}\u0000${u.event}`))].map((k) => {
     const [grant = "", event = ""] = k.split("\u0000");
-    return { grant, event, line: UNANSWERED_WORDS.dial(count((u) => u.kind === "app_event" && u.grant === grant && u.event === event), "event") };
+    return { grant, event, line: unansweredWords(count((u) => u.kind === "app_event" && u.grant === grant && u.event === event), "event", lang) };
   });
   const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
     .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
@@ -6156,12 +6157,12 @@ function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): Delivery
 }
 
 /** The taf's own deliveries for these runs, settled first (delivery.ts; `act`: a manager's read starts a hand-off or a retry, a viewer's doesn't), as the apps draw them. */
-async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string, act: boolean): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
+async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string, act: boolean, lang: Lang = "en"): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
   if (!deps.coach) return new Map();
   const ctx = deliveryContext(deps, now);
   await settleRuns(ctx, tenant, taf, runs, act).catch((err) => console.error("deliveries not settled:", err instanceof Error ? err.message : "error"));
   const kept = await deliveriesOf(deps.coach, tenant, taf.id, runs.map((r) => r.id));
-  return new Map(runs.map((r) => [r.id, deliveryViews(kept.get(r.id), taf.name, zone, now)]));
+  return new Map(runs.map((r) => [r.id, deliveryViews(kept.get(r.id), taf.name, zone, now, lang)]));
 }
 
 /** Where the hand-overs a server error left undone wait for the sweep: one list for all accounts. */

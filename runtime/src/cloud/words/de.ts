@@ -2,6 +2,9 @@ import type { When, Words } from "./en.js";
 
 /** "at" a time, as the language says it with and without a weekday (docs/languages.md). */
 const at = (t: When) => (t.day ? `am ${t.day} um ${t.hm}` : `um ${t.hm}`);
+/** A list joined as the language joins one ("A, B und C"), and a line's first letter capitalized. */
+const list = (xs: string[]) => new Intl.ListFormat("de", { type: "conjunction" }).format(xs);
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 
 /** German (du), in the glossary's terms (docs/languages.md). */
 export const de: Words = {
@@ -130,4 +133,35 @@ export const de: Words = {
   failing_follow_up: "Ein Nachfassen, das er sich selbst gesetzt hat, lief nicht und wird nicht wiederholt. Öffne ihn, um zu sehen, warum.",
   failing_once: "Sein einmaliger geplanter Lauf konnte nicht starten und wird nicht wiederholt. Öffne ihn, um zu sehen, warum.",
   waited_follow_up: "Ein Nachfassen, das er sich selbst gesetzt hat, lief nicht: deine tafs warteten auf Credits. Es wird nicht wiederholt. Öffne ihn für mehr.",
+  door_name: (id, label) => (id === "email" ? "E-Mail" : label),
+  door_a: "eine Tür",
+  door_knock: (who, door, spoofed) => `${who} hat per ${door} geschrieben${spoofed ? " (die Absenderprüfung ist fehlgeschlagen)" : ""}. Es wurde nichts unternommen.`,
+  door_full_keys: (door, n) => `Deine ${door}-Tür hatte heute ihre ${n} Nachrichten von dir und gekoppelten Absendern. Weitere werden bis morgen verworfen.`,
+  door_full_others: (door, n) => `Deine ${door}-Tür hatte heute ${n} Nachrichten von Personen, die nicht gekoppelt sind. Weitere werden bis morgen verworfen.`,
+  door_handled: (who, place, taf) => `Die Nachricht von ${who} in ${place} wurde bearbeitet; ${taf} postet seine Antwort dort selbst.`,
+  door_answered: (who, door) => `${who} hat über die ${door}-Tür eine Antwort erhalten.`,
+  door_reply_not_sent: (who, taf) => `Deine Antwort an ${who} wurde nicht gesendet. Du kannst sie in ${taf} erneut senden.`,
+  unanswered_dial: (n, form, event) => `${n} ${event ? (form === "one" ? "Ereignis" : "Ereignisse") : form === "one" ? "Nachricht" : "Nachrichten"} ${form === "one" ? "blieb" : "blieben"} unbeantwortet, während deine tafs auf Credits warteten`,
+  unanswered_door: (who, door) => `Eine Nachricht von ${who} per ${door} blieb unbeantwortet: deine tafs warteten auf Credits.`,
+  unanswered_event: (name) => `Ein Ereignis von ${name} blieb unbeantwortet: deine tafs warteten auf Credits.`,
+  unanswered_many: (messages, mf, events, ef) =>
+    `${[messages ? `${messages} ${mf === "one" ? "Nachricht" : "Nachrichten"}` : "", events ? `${events} ${ef === "one" ? "Ereignis" : "Ereignisse"}` : ""].filter(Boolean).join(" und ")} blieben unbeantwortet: deine tafs warteten auf Credits.`,
+  delivered: (name, t) => `Zugestellt an ${name} ${at(t)}`,
+  handed: (name, t) => `Übergeben an ${name} ${at(t)}`,
+  delivery_retrying: (name, t) => `Noch nicht an ${name} zugestellt: neuer Versuch ${t ? at(t) : "jetzt"}`,
+  delivery_not_sent: (name, why) => `Nicht an ${name} zugestellt${why ? `: ${why}` : ""}`,
+  delivery_note: (taf, name, why) => `${taf} hat nicht an ${name} zugestellt${why ? `: ${why}` : ""}. Sende es auf der Seite von ${taf} erneut oder öffne Coach, um Hilfe zu bekommen.`,
+  why_no_call: "der taf hat dafür keinen Aufruf gemacht",
+  why_refused: "die App hat es nicht angenommen",
+  why_no_handoff: (heading) => `das Ergebnis hat keinen Abschnitt „${heading}“`,
+  why_taf_gone: "dieser taf ist nicht mehr im Konto",
+  why_retry_failed: "der neue Versuch wurde nicht beendet",
+  why_retry_stopped: "der neue Versuch wurde gestoppt",
+  why_handoff_failed: "die Übergabe ist fehlgeschlagen",
+  delivered_line: (went, not) => {
+    const parts: string[] = [];
+    if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "übergeben an" : "gesendet an"} ${d.name}`))));
+    if (not.length) parts.push(`Nicht gesendet an ${list(not.map((d) => `${d.name}${d.retrying ? " (wird erneut versucht)" : ""}`))}`);
+    return parts.join(". ") + ".";
+  },
 };

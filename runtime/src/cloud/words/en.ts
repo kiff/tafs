@@ -136,6 +136,44 @@ export const en = {
   failing_follow_up: "A follow-up it set for itself didn't run, and won't try again. Open it to see why.",
   failing_once: "Its one-time scheduled run couldn't start, and won't try again. Open it to see why.",
   waited_follow_up: "A follow-up it set for itself didn't run: your tafs were waiting for credits. It won't try again. Open it to see more.",
+  // Doors (doors.ts, hold.ts): alerts to the people who manage the taf, and the dial's unanswered line. A door is
+  // named by door_name: "email" is a word in each language, every other door is its app's own name.
+  door_name: (_id: string, label: string) => label.toLowerCase(),
+  door_a: "a door",
+  door_knock: (who: string, door: string, spoofed: boolean) => `${who} wrote by ${door}${spoofed ? " (the sender check failed)" : ""}. Nothing was done.`,
+  door_full_keys: (door: string, n: number) => `Your ${door} door had its ${n} messages from you and paired senders today. More are dropped until tomorrow.`,
+  door_full_others: (door: string, n: number) => `Your ${door} door had ${n} messages from people who aren't paired today. More are dropped until tomorrow.`,
+  door_handled: (who: string, place: string, taf: string) => `Handled ${who}'s message in ${place}; ${taf} posts its answer there itself.`,
+  door_answered: (who: string, door: string) => `Answered ${who} through its ${door} door.`,
+  door_reply_not_sent: (who: string, taf: string) => `Your reply to ${who} wasn't sent. You can send it again from ${taf}.`,
+  unanswered_dial: (n: number, form: Intl.LDMLPluralRule, event: boolean) => `${n} ${event ? "event" : "message"}${form === "one" ? "" : "s"} went unanswered while your tafs waited for credits`,
+  unanswered_door: (who: string, door: string) => `A message by ${door} from ${who} went unanswered: your tafs waited for credits.`,
+  unanswered_event: (name: string) => `An event from ${name} went unanswered: your tafs waited for credits.`,
+  // Two or more at once, in one push: either count can be 0, never both.
+  unanswered_many: (messages: number, mf: Intl.LDMLPluralRule, events: number, ef: Intl.LDMLPluralRule) =>
+    `${[messages ? `${messages} message${mf === "one" ? "" : "s"}` : "", events ? `${events} event${ef === "one" ? "" : "s"}` : ""].filter(Boolean).join(" and ")} went unanswered: your tafs waited for credits.`,
+  // Where a run's result went (delivery.ts), on the taf's page and in the note to its managers. A why is one of
+  // the why_ words, or the app's own words as it gave them.
+  delivered: (name: string, t: When) => `Delivered to ${name} at ${bare(t)}`,
+  handed: (name: string, t: When) => `Handed to ${name} at ${bare(t)}`,
+  delivery_retrying: (name: string, t?: When) => `Not delivered to ${name} yet: trying again${t ? ` at ${bare(t)}` : " now"}`,
+  delivery_not_sent: (name: string, why?: string) => `Not delivered to ${name}${why ? `: ${why}` : ""}`,
+  delivery_note: (taf: string, name: string, why?: string) => `${taf} didn't deliver to ${name}${why ? `: ${why}` : ""}. Send it again from ${taf}'s page, or open Coach for help.`,
+  why_no_call: "the taf made no call for it",
+  why_refused: "the app didn't take it",
+  why_no_handoff: (heading: string) => `the result has no "${heading}" section`,
+  why_taf_gone: "that taf is no longer on the account",
+  why_retry_failed: "the retry didn't finish",
+  why_retry_stopped: "the retry was stopped",
+  why_handoff_failed: "the hand-over failed",
+  // The line above a run's report in the thread (delivery.ts deliveredLine): where its result went, each place once.
+  delivered_line: (went: Array<{ name: string; handed: boolean }>, not: Array<{ name: string; retrying: boolean }>) => {
+    const w = went.map((d) => `${d.handed ? "handed to" : "sent to"} ${d.name}`);
+    const parts: string[] = [];
+    if (w.length) parts.push(`${w[0]!.charAt(0).toUpperCase()}${w[0]!.slice(1)}${w.length > 1 ? ` and ${w.slice(1).join(" and ")}` : ""}`);
+    if (not.length) parts.push(`Not sent to ${not.map((d) => (d.retrying ? `${d.name} yet: trying again` : d.name)).join(" and ")}`);
+    return parts.join(". ") + ".";
+  },
 };
 
 export type Words = typeof en;

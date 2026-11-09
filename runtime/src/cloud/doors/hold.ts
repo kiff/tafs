@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { AgentsError } from "../agents.js";
-import { type Notification, sendNotification } from "../push.js";
+import { deviceLang, type Notification, sendNotification } from "../push.js";
+import { type Lang, plural, type Words, wordsIn } from "../words/index.js";
 import { apsFor, levelOf } from "../levels.js";
 import type { Taf } from "../handler.js";
 import { APPS } from "./apps.js";
@@ -223,19 +224,10 @@ async function start(ctx: DoorsContext, tenant: string, taf: Taf, held: Held): P
   return true;
 }
 
-/** What the dial and the push say of items that went unanswered (docs/accounts.md). */
-export const UNANSWERED_WORDS = {
-  /** Added to a door's stop, or an app event's, on the dial, for 7 days. */
-  dial: (n: number, what: "message" | "event") => `${n} ${what}${n === 1 ? "" : "s"} went unanswered while your tafs waited for credits`,
-  door: (who: string, door: string) => `A message by ${door} from ${who} went unanswered: your tafs waited for credits.`,
-  event: (name: string) => `An event from ${name} went unanswered: your tafs waited for credits.`,
-  /** Several at once, in one push. */
-  many: (messages: number, events: number) => {
-    const part = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
-    const what = [messages ? part(messages, "message") : "", events ? part(events, "event") : ""].filter(Boolean).join(" and ");
-    return `${what} went unanswered: your tafs waited for credits.`;
-  },
-} as const;
+/** What the dial says of items that went unanswered (docs/accounts.md), for 7 days, beside a door's stop or an app event's. */
+export function unansweredWords(n: number, what: "message" | "event", lang: Lang = "en"): string {
+  return wordsIn(lang).unanswered_dial(n, plural(lang, n), what === "event");
+}
 
 /** Keeps that a held item went unanswered, for its stop on the dial, 7 days. */
 async function markUnanswered(ctx: DoorsContext, tenant: string, taf: Taf, held: Held): Promise<void> {
@@ -255,29 +247,34 @@ async function markUnanswered(ctx: DoorsContext, tenant: string, taf: Taf, held:
  */
 async function tellUnanswered(ctx: DoorsContext, tenant: string, taf: Taf, items: Held[]): Promise<void> {
   if (!items.length) return;
-  let body: string;
+  let body: (w: Words, lang: Lang) => string;
   const one = items.length === 1 ? items[0]! : undefined;
   if (one?.kind === "door") {
     const door = (await doorsOf(ctx.doors.store, tenant, taf.id).catch(() => [])).find((d) => d.id === one.door);
-    const label = (APPS.find((x) => x.id === door?.app)?.label ?? "a door").toLowerCase();
-    body = UNANSWERED_WORDS.door(one.arrival.name ?? one.arrival.from, label);
+    const app = APPS.find((x) => x.id === door?.app);
+    body = (w) => w.unanswered_door(one.arrival.name ?? one.arrival.from, app ? w.door_name(app.id, app.label) : w.door_a);
   } else if (one?.kind === "app_event") {
-    body = UNANSWERED_WORDS.event(one.name);
+    body = (w) => w.unanswered_event(one.name);
   } else {
-    body = UNANSWERED_WORDS.many(items.filter((i) => i.kind === "door").length, items.filter((i) => i.kind === "app_event").length);
+    const messages = items.filter((i) => i.kind === "door").length;
+    const events = items.filter((i) => i.kind === "app_event").length;
+    body = (w, lang) => w.unanswered_many(messages, plural(lang, messages), events, plural(lang, events));
   }
-  await tellAnswerers(ctx, tenant, {
+  await tellAnswerers(ctx, tenant, (lang) => ({
     kind: "alert",
-    payload: { aps: { alert: { title: taf.name, body }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    payload: { aps: { alert: { title: taf.name, body: body(wordsIn(lang), lang) }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
     collapseID: `unanswered-${taf.id}`.slice(0, 64),
-  });
+  }));
 }
 
 /** The phones of the people who answer the account's holds; a failure is logged, never in the way. */
-async function tellAnswerers(ctx: DoorsContext, tenant: string, n: Notification): Promise<void> {
+// Each phone in its own language, the alert built once per language.
+async function tellAnswerers(ctx: DoorsContext, tenant: string, build: (lang: Lang) => Notification): Promise<void> {
   try {
     const { devices } = await ctx.push.get(tenant);
-    await Promise.all(devices.filter((d) => d.answers).map((d) => sendNotification(ctx.apns, d, n).catch(() => "failed")));
+    const built = new Map<Lang, Notification>();
+    const of = (lang: Lang) => built.get(lang) ?? built.set(lang, build(lang)).get(lang)!;
+    await Promise.all(devices.filter((d) => d.answers).map((d) => sendNotification(ctx.apns, d, of(deviceLang(d))).catch(() => "failed")));
   } catch (err) {
     console.error("unanswered alert not sent:", err instanceof Error ? err.message : "error");
   }

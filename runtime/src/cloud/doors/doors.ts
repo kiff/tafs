@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { AgentsError, type AIBound, type Run } from "../agents.js";
 import { refTenant, type Note } from "../coach.js";
-import { type Device, type PushStore, type Sender, sendNotification, tellChange } from "../push.js";
+import { type Device, deviceLang, type PushStore, type Sender, sendNotification, tellChange } from "../push.js";
+import { type Lang, type Words, wordsIn } from "../words/index.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
@@ -315,7 +316,7 @@ async function addKnock(ctx: DoorsContext, tenant: string, taf: Taf, door: Door,
   };
   await changeKnocks(ctx.doors.store, tenant, taf.id, ctx.now, (knocks) => [knock, ...knocks]);
   await logEvent(eventLog(ctx.doors.store), tenant, { kind: "knocked", taf: taf.id, name: taf.name, app: app.id, from: a.name }, ctx.now);
-  await tellOwner(ctx, tenant, taf, `${a.name ?? a.from} wrote by ${app.label.toLowerCase()}${a.spoofed ? " (the sender check failed)" : ""}. Nothing was done.`, knock.id);
+  await tellOwner(ctx, tenant, taf, (w) => w.door_knock(a.name ?? a.from, w.door_name(app.id, app.label), Boolean(a.spoofed)), knock.id);
   // Every phone of the account reads the taf's thread again, so the knock shows in an open chat.
   await tellChange(tenant, "knock", taf.id, { push: ctx.push, apns: ctx.apns });
 }
@@ -339,23 +340,30 @@ async function countDropped(ctx: DoorsContext, tenant: string, taf: Taf, door: D
     return [{ id, door: door.id, app: app.id, from: "", proof: "none" as const, text: "", attachments: 0, at: ctx.now.toISOString(), state: "open" as const, rest: who, dropped: 1 }, ...knocks];
   });
   if (first) {
-    await tellOwner(ctx, tenant, taf, who === "keys"
-      ? `Your ${app.label.toLowerCase()} door had its ${DOOR.keysPerDay} messages from you and paired senders today. More are dropped until tomorrow.`
-      : `Your ${app.label.toLowerCase()} door had ${DOOR.othersPerDay} messages from people who aren't paired today. More are dropped until tomorrow.`, id);
+    await tellOwner(ctx, tenant, taf, (w) => who === "keys"
+      ? w.door_full_keys(w.door_name(app.id, app.label), DOOR.keysPerDay)
+      : w.door_full_others(w.door_name(app.id, app.label), DOOR.othersPerDay), id);
   }
 }
 
 /** One alert to the phones of the people who manage Cards; a failure is logged, never in the way. */
 // The phones of people who manage the account's tafs. A phone registered before tafs cloud kept `manages`
 // counts by whether its person may answer held calls, so it isn't left out until it registers again.
-async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string, about: "knock" | "reply" | "not_sent" = "knock"): Promise<void> {
+// Each phone hears it in its own language (deviceLang), worded once per language.
+async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, words: (w: Words) => string, knock: string, about: "knock" | "reply" | "not_sent" = "knock"): Promise<void> {
   try {
     const { devices } = await ctx.push.get(tenant);
+    const bodies = new Map<Lang, string>();
+    const bodyFor = (d: Device) => {
+      const lang = deviceLang(d);
+      if (!bodies.has(lang)) bodies.set(lang, words(wordsIn(lang)));
+      return bodies.get(lang)!;
+    };
     await Promise.all(devices.filter((d: Device) => (d.manages ?? d.answers) === true).map((d: Device) => sendNotification(ctx.apns, d, {
       preference: about === "knock" ? "needs_you" : about === "not_sent" ? "not_sent" : "answered",
       kind: "alert",
       // Every door alert opens the taf (`open`, `taf_id`, read by both apps); a knock's also names the knock.
-      payload: { aps: { alert: { title: taf.name, body }, ...apsFor(levelOf(about === "knock" ? "hold" : "run_ended", false)) }, open: "taf", taf_id: taf.id, ...(about === "knock" ? { door_knock: { taf: taf.id, knock } } : {}) },
+      payload: { aps: { alert: { title: taf.name, body: bodyFor(d) }, ...apsFor(levelOf(about === "knock" ? "hold" : "run_ended", false)) }, open: "taf", taf_id: taf.id, ...(about === "knock" ? { door_knock: { taf: taf.id, knock } } : {}) },
       collapseID: knock.slice(0, 64),
     }).catch(() => "failed")));
   } catch (err) {
@@ -522,8 +530,8 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       // that reply waits for its next try the alert waits with it, and one given up on is said below.
       if (taf && placesOf(taf).includes("door_reply") && !done.has("door_reply")) continue;
       // A Slack answer is the taf's own post, which tafs cloud doesn't see: it says handled, not answered.
-      if (taf) await tellOwner(ctx, tenant, taf, door?.kind === "slack" || door?.kind === "telegram" ? `Handled ${reply.name || reply.to}'s message in ${door.kind === "slack" ? "Slack" : "Telegram"}; ${taf.name} posts its answer there itself.`
-        : `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
+      if (taf) await tellOwner(ctx, tenant, taf, (w) => door?.kind === "slack" || door?.kind === "telegram" ? w.door_handled(reply.name || reply.to, door.kind === "slack" ? "Slack" : "Telegram", taf.name)
+        : w.door_answered(reply.name || reply.to, door?.kind === "whatsapp" ? "WhatsApp" : w.door_name("email", "email")), `reply-${ref}`, "reply");
       done.add(place);
     } else if (place === "owner_email") {
       const owner = door?.keys.find((k) => k.auto)?.id ?? (await ownerEmailOf(store, tenant, reply.taf));
@@ -563,7 +571,7 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   if (sent && !done.has("door_reply")) {
     await stamp(sent);
     if (taf && placesOf(taf).includes("app") && !done.has("app")) {
-      await tellOwner(ctx, tenant, taf, `Your reply to ${reply.name || reply.to} wasn't sent. You can send it again from ${taf.name}.`, `reply-${ref}`, "not_sent");
+      await tellOwner(ctx, tenant, taf, (w) => w.door_reply_not_sent(reply.name || reply.to, taf.name), `reply-${ref}`, "not_sent");
     }
     if (taf && door && app) {
       await store.put(doorKeys.unsent(tenant, reply.taf, runID), { ref, reply: { ...reply, run: runID } }, addDays(ctx.now, DOOR.replyDays));
