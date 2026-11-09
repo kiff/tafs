@@ -11,7 +11,7 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readDidThisHappen, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
@@ -85,7 +85,7 @@ import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, 
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
- *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
+ *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
@@ -6466,8 +6466,12 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
   try {
     if (parts.length === 3 && method === "GET") {
       const query = new URLSearchParams(event.rawQueryString ?? "");
-      return await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), query.get("q") ?? "",
-        { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined });
+      const [page, removed] = await Promise.all([
+        listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), query.get("q") ?? "",
+          { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined }),
+        removedTafs(event, me, deps),
+      ]);
+      return { ...page, removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");
@@ -6483,6 +6487,26 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
     throw err;
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * The removed tafs whose connections Connect apps may offer to clear (docs/connect-apps.md): each KIFF agent KIFF
+ * has archived, as removing a taf does, that is no taf of tafs cloud's any more (not live, not still being
+ * removed, not Setup). A grant whose agent is one of these is from a removed taf: the apps act on this alone.
+ * Only for someone who manages Cards, who alone can clear; anyone else, and a KIFF that can't be read, gets none,
+ * so nothing is ever offered to clear on a guess.
+ */
+async function removedTafs(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<Array<{ agent: string; removed_at: string }>> {
+  if (!me.capabilities.includes("cards.manage")) return [];
+  try {
+    const [archived, records] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
+    const ours = new Set(records.map((t) => t.kiffAgent).filter(Boolean));
+    return [...archived].filter(([agent]) => !ours.has(agent)).map(([agent, at]) => ({ agent, removed_at: at }))
+      .sort((a, b) => b.removed_at.localeCompare(a.removed_at) || a.agent.localeCompare(b.agent));
+  } catch (err) {
+    console.error(`connect apps: removed tafs for ${me.tenantID}: ${(err as Error).message}`);
+    return [];
+  }
 }
 
 /** The most catalog pages the recipes route reads: planque keeps a provider's apps in one page, so this is room, not a limit. */

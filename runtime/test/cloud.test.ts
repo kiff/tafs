@@ -980,6 +980,53 @@ describe("the home list", () => {
   });
 });
 
+describe("Connect apps' removed tafs", () => {
+  // "Removed" comes from KIFF: removing a taf archives its KIFF agent. Never from a taf missing from
+  // someone's list, so a live taf, one still being removed, Setup, or an agent KIFF hasn't archived is
+  // never offered for Clear.
+  const connect = async (w: World, token: string, agents: () => Response) => {
+    const r = await handle({ rawPath: "/v1/connect/apps", requestContext: { http: { method: "GET" } }, headers: { Authorization: `Bearer ${token}` } },
+      { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+        if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ entries: [{ entry: "stripe@3", title: "Stripe", how: "key", state: "connected", grant: "g1" }] }), { status: 200 });
+        if (url.endsWith("/v1/me/agents")) return agents();
+        return depsOf(w).fetch!(url, init);
+      }) as Deps["fetch"] });
+    return { status: r.statusCode, body: JSON.parse(r.body) };
+  };
+  const agents = (list: unknown[]) => () => new Response(JSON.stringify({ agents: list }), { status: 200 });
+
+  it("lists KIFF's archived agents that are no taf of tafs cloud's any more, newest first", async () => {
+    const w = world();
+    await w.tafs.put("t_acme", { id: NEW, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-14T09:00:00Z" });
+    await w.tafs.put("t_acme", { id: NEW2, name: "Going", job: "refunds", kiffAgent: "going", nameClaim: "c2", created: "2026-10-14T09:00:00Z", removing: true });
+    const got = await connect(w, "ana", agents([
+      { id: "old-refunds", recorded: true, archived_at: "2026-11-07T20:00:00Z", sources: ["record"] },
+      { id: "newer", recorded: true, archived_at: "2026-11-08T08:00:00Z", sources: ["record"] },
+      { id: "rae", recorded: true, archived_at: "2026-11-08T10:00:00Z", sources: ["record"] }, // still a live taf here
+      { id: "going", recorded: true, archived_at: "2026-11-08T11:00:00Z", sources: ["record"] }, // its removal isn't finished
+      { id: "setup-acme", recorded: true, archived_at: "2026-11-08T12:00:00Z", sources: ["record"] }, // Coach
+      { id: "live-elsewhere", recorded: true, sources: ["record"] }, // not archived
+      { id: "", archived_at: "2026-11-08T12:00:00Z" },
+    ]));
+    expect(got.status).toBe(200);
+    expect(got.body.apps).toHaveLength(1);
+    expect(got.body.removed_tafs).toEqual([{ agent: "newer", removed_at: "2026-11-08T08:00:00Z" }, { agent: "old-refunds", removed_at: "2026-11-07T20:00:00Z" }]);
+  });
+
+  it("lists none for someone who can't manage Cards, or when KIFF's agents can't be read", async () => {
+    const w = world();
+    const archived = agents([{ id: "old-refunds", archived_at: "2026-11-07T20:00:00Z" }]);
+    expect((await connect(w, "viewer", archived)).body.removed_tafs).toEqual([]);
+    // Nothing is offered to clear on a guess: the catalog still comes, with no removed tafs.
+    for (const down of [() => new Response("{}", { status: 500 }), () => new Response(JSON.stringify({ error: "no" }), { status: 200 })]) {
+      const got = await connect(w, "ana", down);
+      expect(got.status).toBe(200);
+      expect(got.body.apps).toHaveLength(1);
+      expect(got.body.removed_tafs).toEqual([]);
+    }
+  });
+});
+
 describe("removing a taf", () => {
   it("removes it from kiff/agents, then its key, then frees its name", async () => {
     const w = world();
