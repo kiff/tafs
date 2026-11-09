@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveMenu
@@ -96,12 +97,12 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("People & groups", style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
+        Text(Words.People.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
         // Words, not "+": it makes a group.
         if (state.canManagePeople) {
-          Text("+ Group", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { namingNew = true }.padding(top = 8.dp))
+          Text(Words.People.addGroup, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { namingNew = true }.padding(top = 8.dp))
         }
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -109,7 +110,7 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
       ) {
         state.peopleError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         state.kiffAccount?.let { account ->
-          Text("${account.name} · ${state.people.size} ${if (state.people.size == 1) "person" else "people"}", style = scaled(14, color = Theme.soft), modifier = Modifier.padding(horizontal = 4.dp))
+          Text("${account.name} · " + Words.People.count(count = state.people.size), style = scaled(14, color = Theme.soft), modifier = Modifier.padding(horizontal = 4.dp))
         }
         state.groups.forEach { group ->
           GroupPanel(
@@ -121,7 +122,7 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
             removeMember = { subject -> scope.launch { actions.removeMember(group, subject) } },
           )
         }
-        if (loaded && state.groups.isEmpty() && state.peopleError == null) Text("No groups yet.", style = scaled(14, color = Theme.dim))
+        if (loaded && state.groups.isEmpty() && state.peopleError == null) Text(Words.People.noGroups, style = scaled(14, color = Theme.dim))
       }
     }
   }
@@ -136,10 +137,10 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
   deleting?.let { group ->
     DriveAlert(
       onDismissRequest = { deleting = null },
-      title = { Text("Delete ${group.name}?") },
-      text = { Text("Its people lose the tafs they used through it, unless another group or a share of their own gives them those tafs. Their chats stay theirs.") },
-      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }, Modifier.confirms()) { Text("Delete ${group.name}", color = Theme.no) } },
-      dismissButton = { TextButton({ deleting = null }) { Text("Cancel", color = Theme.soft) } },
+      title = { Text(Words.People.deleteGroupTitle(group.name)) },
+      text = { Text(Words.People.deleteGroupBody) },
+      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }, Modifier.confirms()) { Text(Words.People.deleteGroupButton(group.name), color = Theme.no) } },
+      dismissButton = { TextButton({ deleting = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -167,15 +168,15 @@ private fun GroupPanel(
         Box {
           Text("•••", style = scaled(16, FontWeight.SemiBold, Theme.soft), modifier = Modifier.heightIn(min = 44.dp).clickable { menu = true }.padding(horizontal = 6.dp, vertical = 8.dp))
           DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
-            DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; onRename() })
-            DropdownMenuItem(text = { Text("Delete", color = Theme.no) }, onClick = { menu = false; onDelete() }, modifier = Modifier.confirms())
+            DropdownMenuItem(text = { Text(Words.People.rename) }, onClick = { menu = false; onRename() })
+            DropdownMenuItem(text = { Text(Words.People.delete, color = Theme.no) }, onClick = { menu = false; onDelete() }, modifier = Modifier.confirms())
           }
         }
       }
     }
     PeopleWords.managersFirst(group.members, state.people).forEach { member -> MemberRow(member, group, state, setMember, removeMember) }
     if (state.managesGroup(group)) {
-      Text("+ Add someone to ${group.name}", style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 8.dp))
+      Text(Words.People.addSomeone(group.name), style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 8.dp))
     }
   }
 }
@@ -197,15 +198,15 @@ private fun MemberRow(member: GroupMember, group: Group, state: AppState, setMem
       PersonBadge(label)
       Column(Modifier.weight(1f)) {
         Text(label, style = scaled(15, color = Theme.ink), maxLines = 1)
-        Text(if (member.isManager) "Manager" else "Member", style = scaled(12, color = if (member.isManager) Theme.amber else Theme.dim))
+        Text(if (member.isManager) Words.People.manager else Words.People.member, style = scaled(12, color = if (member.isManager) Theme.amber else Theme.dim))
       }
     }
     DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
       if (mayRole) {
         val role = if (member.isManager) "member" else "manager"
-        DropdownMenuItem(text = { Text(if (member.isManager) "Make a member" else "Make the manager") }, onClick = { menu = false; setMember(member.subject, role) })
+        DropdownMenuItem(text = { Text(if (member.isManager) Words.People.makeMember else Words.People.makeManager) }, onClick = { menu = false; setMember(member.subject, role) })
       }
-      if (mayRemove) DropdownMenuItem(text = { Text("Remove from ${group.name}", color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) }, modifier = Modifier.confirms())
+      if (mayRemove) DropdownMenuItem(text = { Text(Words.People.removeFrom(group.name), color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) }, modifier = Modifier.confirms())
     }
   }
 }
@@ -219,22 +220,22 @@ private fun GroupNameDialog(group: Group?, onClose: () -> Unit, onSave: suspend 
   val trimmed = name.trim()
   DriveAlert(
     onDismissRequest = onClose,
-    title = { Text(if (group == null) "New group" else "Rename ${group.name}") },
+    title = { Text(if (group == null) Words.People.newGroup else Words.People.renameGroupTitle(group.name)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Field(name, { name = it }, "Support, Finance…")
+        Field(name, { name = it }, Words.People.groupNameHint)
         Text(
-          if (group == null) "Add its people next, then share a taf with it from the taf's page." else "Only the name changes: its people and tafs stay.",
+          if (group == null) Words.People.newGroupHint else Words.People.renameHint,
           style = scaled(13, color = Theme.dim),
         )
       }
     },
     confirmButton = {
       TextButton({ saving = true; scope.launch { val done = onSave(trimmed); saving = false; if (done) onClose() } }, enabled = trimmed.isNotEmpty() && !saving) {
-        Text(if (group == null) "Create" else "Save", color = Theme.amber)
+        Text(if (group == null) Words.People.create else Words.Common.save, color = Theme.amber)
       }
     },
-    dismissButton = { TextButton(onClose) { Text("Cancel", color = Theme.soft) } },
+    dismissButton = { TextButton(onClose) { Text(Words.Common.cancel, color = Theme.soft) } },
     containerColor = Theme.panel,
   )
 }
@@ -250,22 +251,22 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("Add to ${group.name}", style = scaled(24, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text("Cancel", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.People.addTo(group.name), style = scaled(24, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
+        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Naming a manager is for whoever manages people (KIFF's members.manage).
         if (state.canManagePeople) {
           Panel {
             Row(verticalAlignment = Alignment.CenterVertically) {
-              Text("As the group's manager", style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
+              Text(Words.People.asManager, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
               Switch(checked = asManager, onCheckedChange = { asManager = it }, colors = SwitchDefaults.colors(checkedTrackColor = Theme.ok))
             }
-            Text("A manager adds and removes the group's members. Managing doesn't let them change a taf's Cards.", style = scaled(12, color = Theme.dim))
+            Text(Words.People.managerExplains, style = scaled(12, color = Theme.dim))
           }
         }
         Panel {
-          Text("THE ACCOUNT'S PEOPLE", style = scaled(12, color = Theme.dim, mono = true))
+          Text(Words.People.accountPeople, style = scaled(12, color = Theme.dim, mono = true))
           outside.forEach { person ->
             Row(
               Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable {
@@ -281,7 +282,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
               Text(person.label, style = scaled(15, color = Theme.ink), maxLines = 1)
             }
           }
-          if (outside.isEmpty()) Text("Everyone on the account is in ${group.name}. Invite people from the KIFF dashboard.", style = scaled(14, color = Theme.dim))
+          if (outside.isEmpty()) Text(Words.People.everyoneIn(group.name), style = scaled(14, color = Theme.dim))
         }
         state.peopleError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
       }

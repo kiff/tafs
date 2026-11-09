@@ -30,7 +30,7 @@ class HomeHaltedChipTest {
       TafsTheme {
         HomeView(
           AppState(mode = Mode.kiff, ready = true, tafs = listOf(halted)),
-          onNeedsYou = {}, onPlayNext = {}, onOpenTaf = { opened += "open $it" }, onNewTaf = {}, onHaltAll = {},
+          onNeedsYou = {}, onPlayNext = {}, onOpenTaf = { opened += "open $it" }, onHaltAll = {},
           onHalted = { opened += "halt $it" },
         )
       }

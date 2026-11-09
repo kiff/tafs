@@ -51,7 +51,7 @@ data class Money(val minor: Long, val currency: String? = null, val scale: Int =
    * currency is the vendor's own number, often its smallest unit (cents), so it never stands
    * alone where money would.
    */
-  val formatted: String get() = if (hasUnit) figure else "$figure (no currency)"
+  val formatted: String get() = if (hasUnit) figure else Words.Card.noCurrency(figure)
 
   /** The amount without the "no currency" note: for a figure whose words say it once. */
   val figure: String
@@ -81,6 +81,8 @@ data class Money(val minor: Long, val currency: String? = null, val scale: Int =
     fun of(minor: Long, currency: String?, scale: Int) = Money(minor, currency, if (currency == null) 0 else scale)
     fun bare(value: Long) = Money(value, null, 0)
     fun usd(dollars: Double) = Money(Math.round(dollars * 100), "USD", 2)
+    /** The sample's money: euros, written as the phone's locale writes them. */
+    fun eur(euros: Double) = Money(Math.round(euros * 100), "EUR", 2)
 
     private fun power(n: Int): Long {
       var p = 1L
@@ -96,15 +98,37 @@ data class Money(val minor: Long, val currency: String? = null, val scale: Int =
  * rolling or lifetime total never reads as a day (docs/tafs.md).
  */
 @Serializable
-enum class Window(val label: String, val current: String) {
-  day("a day", "today"),
-  week("a week", "this week"),
-  month("a month", "this month"),
-  calendar_day("a day", "today"),
-  rolling_24h("in any 24 hours", "in the last 24 hours"),
-  rolling_1h("in any hour", "in the last hour"),
-  rolling_7d("in any 7 days", "in the last 7 days"),
-  lifetime("in total", "so far"),
+enum class Window {
+  day,
+  week,
+  month,
+  calendar_day,
+  rolling_24h,
+  rolling_1h,
+  rolling_7d,
+  lifetime;
+
+  val label: String
+    get() = when (this) {
+      day, calendar_day -> Words.Card.Window.aDay
+      week -> Words.Card.Window.aWeek
+      month -> Words.Card.Window.aMonth
+      rolling_24h -> Words.Card.Window.anyDay
+      rolling_1h -> Words.Card.Window.anyHour
+      rolling_7d -> Words.Card.Window.anyWeek
+      lifetime -> Words.Card.Window.inTotal
+    }
+
+  val current: String
+    get() = when (this) {
+      day, calendar_day -> Words.Card.Window.today
+      week -> Words.Card.Window.thisWeek
+      month -> Words.Card.Window.thisMonth
+      rolling_24h -> Words.Card.Window.lastDay
+      rolling_1h -> Words.Card.Window.lastHour
+      rolling_7d -> Words.Card.Window.lastWeek
+      lifetime -> Words.Card.Window.soFar
+    }
 }
 
 /** What happens to an action the Card does not allow. */
@@ -153,7 +177,7 @@ data class CardRule(
     get() {
       val extra = extraRoom ?: return null
       if (baseLimit == null) return null
-      return "+${extra.formatted} extra room " + (roomEnds?.let { "until ${endsWords(it)}" } ?: window.current)
+      return roomEnds?.let { Words.Card.extraRoomUntil(extra.formatted, endsWords(it)) } ?: Words.Card.extraRoom(extra.formatted, window.current)
     }
 
   /**
@@ -164,27 +188,27 @@ data class CardRule(
     val total = perWindow ?: return null
     if (used == null || total.currency != used.currency || total.scale != used.scale) return null
     val left = Money.of(maxOf(0, total.minor - used.minor), total.currency, total.scale)
-    return "${left.formatted} left ${window.current}"
+    return Words.Card.left(left.formatted, window.current)
   }
 
   val summary: String
     get() {
-      if (never) return "never"
-      if (alwaysAsk) return "always asks you"
+      if (never) return Words.Card.Rule.never
+      if (alwaysAsk) return Words.Card.Rule.alwaysAsks
       val parts = mutableListOf<String>()
       if (outside == Outside.hold) {
         // Past a limit the call asks the owner, in the words KIFF's Cards use: "up to $40 each; more asks you first".
-        perAction?.let { parts += "up to ${it.formatted} each; more asks you first" }
-        ownTotal?.let { parts += "${it.formatted} in total ${window.label}, then it asks you" }
+        perAction?.let { parts += Words.Card.Rule.upToEach(it.formatted) }
+        ownTotal?.let { parts += Words.Card.Rule.totalThenAsks(it.formatted, window.label) }
         roomWords?.let { parts += it }
-        countPerWindow?.let { parts += if (it == 0) "Each call asks you first" else "$it ${if (it == 1) "call" else "calls"} ${window.label}, then it asks you" }
+        countPerWindow?.let { parts += if (it == 0) Words.Card.Rule.eachCallAsks else Words.Card.Rule.callsThenAsks(count = it, window = window.label) }
         return parts.joinToString(" · ")
       }
-      perAction?.let { parts += "≤ ${it.formatted} each" }
+      perAction?.let { parts += Words.Card.Rule.atMostEach(it.formatted) }
       // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
-      ownTotal?.let { parts += if (it.hasUnit) "${it.formatted} ${window.label}" else "${it.formatted} in total ${window.label}" }
+      ownTotal?.let { parts += if (it.hasUnit) Words.Card.amountWindow(it.formatted, window.label) else Words.Card.Rule.inTotal(it.formatted, window.label) }
       roomWords?.let { parts += it }
-      countPerWindow?.let { parts += "$it ${if (it == 1) "call" else "calls"} ${window.label}" }
+      countPerWindow?.let { parts += Words.Card.Rule.calls(count = it, window = window.label) }
       return parts.joinToString(" · ")
     }
 }
@@ -246,23 +270,24 @@ data class TafCard(
         // beside it: "30 000 left today of 30 000 · no currency" (kiff/tafs#309).
         val unitless = !t.limit.hasUnit
         val shown = { m: Money -> if (unitless) m.figure else m.formatted }
-        val note = if (unitless) " · no currency" else ""
+        val note = if (unitless) " · " + Words.Card.Hero.noCurrency else ""
         val used = t.used
         if (used != null && used.currency == t.limit.currency && used.scale == t.limit.scale) {
           val left = Money.of(maxOf(0, t.limit.minor - used.minor), t.limit.currency, t.limit.scale)
           // The Card's own total and the extra room apart, as KIFF says them.
           if (t.extra != null && t.base != null) {
-            val until = t.roomEnds?.let { " until ${endsWords(it)}" } ?: ""
-            return Hero(shown(left), "left ${t.window.current} of ${shown(t.base)} + ${shown(t.extra)} extra room$until$note")
+            val words = t.roomEnds?.let { Words.Card.Hero.leftOfExtraUntil(t.window.current, shown(t.base), shown(t.extra), endsWords(it)) }
+              ?: Words.Card.Hero.leftOfExtra(t.window.current, shown(t.base), shown(t.extra))
+            return Hero(shown(left), words + note)
           }
-          return Hero(shown(left), "left ${t.window.current} of ${shown(t.limit)}$note")
+          return Hero(shown(left), Words.Card.Hero.leftOf(t.window.current, shown(t.limit)) + note)
         }
-        return Hero(shown(t.limit), "${t.window.label} · use unavailable$note")
+        return Hero(shown(t.limit), Words.Card.Hero.useUnavailable(t.window.label) + note)
       }
       calls?.let { c ->
-        val used = c.used ?: return Hero("${c.limit}", "calls ${c.window.label} · use unavailable")
+        val used = c.used ?: return Hero("${c.limit}", Words.Card.Hero.callsUseUnavailable(c.window.label))
         val left = maxOf(0, c.limit - used)
-        return Hero("$left", "${if (left == 1) "call" else "calls"} left ${c.window.current} of ${c.limit}")
+        return Hero("$left", Words.Card.Hero.callsLeftOf(count = left, window = c.window.current, limit = c.limit.toString()))
       }
       return null
     }
@@ -272,10 +297,12 @@ data class TafCard(
     get() {
       val hero = hero ?: return null
       total?.let { t ->
-        val figure = if (t.limit.hasUnit) hero.figure else "${hero.figure} (no currency)"
-        return if (hero.words.startsWith("left")) "$figure left" else figure
+        val figure = if (t.limit.hasUnit) hero.figure else Words.Card.noCurrency(hero.figure)
+        // The hero says what's left only when the use was read in the limit's own unit.
+        val leftShown = t.used != null && t.used.currency == t.limit.currency && t.used.scale == t.limit.scale
+        return if (leftShown) Words.Card.figureLeft(figure) else figure
       }
-      calls?.let { c -> if (c.used != null) return "${hero.figure} ${if (hero.figure == "1") "call" else "calls"} left" }
+      calls?.let { c -> if (c.used != null) return Words.Card.callsLeft(count = maxOf(0, c.limit - c.used)) }
       return null
     }
 
@@ -288,14 +315,14 @@ data class TafCard(
     get() {
       val out = mutableListOf<String>()
       if (hero == null) {
-        out += rules.take(2).map { "${it.label.lowercase()} ${it.summary}" }
-        if (rules.size > 2) out += "${rules.size - 2} more"
+        out += rules.take(2).map { Words.Card.ruleLine(it.label.lowercase(), it.summary) }
+        if (rules.size > 2) out += Words.Card.more(count = rules.size - 2)
         return out
       }
       rules.firstOrNull { it.perAction != null }?.let { rule ->
-        out += if (rule.outside == Outside.hold) "up to ${rule.perAction!!.formatted} each; more asks you first" else "≤ ${rule.perAction!!.formatted} each · refused above"
+        out += if (rule.outside == Outside.hold) Words.Card.Rule.upToEach(rule.perAction!!.formatted) else Words.Card.Rule.atMostEachRefusedAbove(rule.perAction!!.formatted)
       }
-      if (rules.size > 1) out += "${rules.size} tools"
+      if (rules.size > 1) out += Words.Card.tools(count = rules.size)
       return out
     }
 
@@ -335,15 +362,25 @@ data class Card(
 )
 
 @Serializable
-enum class TafState(val label: String) {
-  working("Working"),
-  waiting("Waiting"),
-  idle("Ready"),
-  paused("Paused"),
-  revoked("Stopped"),
+enum class TafState {
+  working,
+  waiting,
+  idle,
+  paused,
+  revoked,
 
   /** Halted, on its own or with its account (kiff/tafs#236, item 13): nothing of it runs until resumed. */
-  halted("Halted"),
+  halted;
+
+  val label: String
+    get() = when (this) {
+      working -> Words.Taf.State.working
+      waiting -> Words.Taf.State.waiting
+      idle -> Words.Taf.State.ready
+      paused -> Words.Taf.State.paused
+      revoked -> Words.Taf.State.stopped
+      halted -> Words.Taf.State.halted
+    }
 }
 
 @Serializable
@@ -358,7 +395,7 @@ data class Taf(
   val colorIndex: Int,
   val card: Card,
   val state: TafState = TafState.idle,
-  val now: String = "Ready",
+  val now: String = Words.Taf.State.ready,
   /** Spent so far in the current window, per rule action. */
   val used: Map<String, Money> = emptyMap(),
   /** Rule actions whose use KIFF could not read: shown as unknown, never as zero. Null in sample mode. */
@@ -445,7 +482,7 @@ data class ProposedAction(
  */
 object SecondStep {
   fun words(reason: String): String =
-    "Extra room went through. This call is held again for a limit of its own: ${reason.trim().trimEnd('.')}. Approve it once to let it go, or refuse it."
+    Words.NeedsYou.secondStep(reason.trim().trimEnd('.'))
 }
 
 /** An action outside the Card, waiting for the owner. */
@@ -593,8 +630,8 @@ data class RecordEntry(
   val onText: String?
     get() {
       val value = onValue ?: return null
-      val noun = (onArg ?: "it").replace("_", " ")
-      return if (value.length > 6) "$noun …${value.takeLast(5)}" else "$noun $value"
+      val noun = onArg?.replace("_", " ") ?: Words.Record.On.it
+      return if (value.length > 6) Words.Record.On.short(noun, value.takeLast(5)) else Words.Record.On.whole(noun, value)
     }
 
   /** The person reading answered it, as KIFF says (`answer.you`). */
@@ -603,34 +640,34 @@ data class RecordEntry(
   /** Who answered, in words: "you", or by KIFF's role for them ("an admin"). */
   val answerer: String
     get() {
-      if (answeredByOwner) return "you"
-      val role = answer?.by?.replace("_", " ")?.takeIf { it.isNotEmpty() } ?: return "someone else"
-      return (if (role.first() in "aeiou") "an " else "a ") + role
+      if (answeredByOwner) return Words.Record.Answerer.you
+      val role = answer?.by?.replace("_", " ")?.takeIf { it.isNotEmpty() } ?: return Words.Record.Answerer.someoneElse
+      return if (role.first() in "aeiou") Words.Common.an(role) else Words.Common.a(role)
     }
 
   /** Who decided: its Card, the owner or another person (approving or refusing), or KIFF's refusal. */
   val decidedLine: String
     get() {
-      answer?.let { return if (it.decision == "refused") "refused by $answerer" else "approved by $answerer" }
+      answer?.let { return if (it.decision == "refused") Words.Record.Decided.refusedBy(answerer) else Words.Record.Decided.approvedBy(answerer) }
       return when (kind) {
-        Kind.refused -> "refused by its Card"
-        Kind.held -> "waiting for you"
-        Kind.revoked -> "Card revoked"
-        Kind.started -> "Card issued"
-        else -> if (ownerApproved == true) "approved by you" else "within its Card"
+        Kind.refused -> Words.Record.Decided.refusedByCard
+        Kind.held -> Words.Record.Decided.waitingForYou
+        Kind.revoked -> Words.Card.cardRevoked
+        Kind.started -> Words.Record.Decided.cardIssued
+        else -> if (ownerApproved == true) Words.Record.Decided.approvedByYou else Words.Record.Decided.withinCard
       }
     }
 
   /** What became of it at the tool. */
   val resultLine: String
     get() = when (kind) {
-      Kind.done, Kind.approved -> "done"
-      Kind.refused, Kind.revoked -> "nothing sent"
-      Kind.notDone -> "not done"
-      Kind.held -> "nothing sent yet"
-      Kind.sending -> "sent, no answer yet"
-      Kind.unknown -> "result unknown"
-      Kind.started -> "started"
+      Kind.done, Kind.approved -> Words.Record.Result.done
+      Kind.refused, Kind.revoked -> Words.Record.Result.nothingSent
+      Kind.notDone -> Words.Record.Result.notDone
+      Kind.held -> Words.Record.Result.nothingSentYet
+      Kind.sending -> Words.Record.Result.noAnswerYet
+      Kind.unknown -> Words.Record.Result.unknown
+      Kind.started -> Words.Record.Result.started
       Kind.inTafs -> ""
     }
 

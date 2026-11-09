@@ -1,7 +1,11 @@
-package bot.tafs.app.kiff
+package bot.tafs.app.kiff
+
+import bot.tafs.app.model.Words
 
 /** The owner closed the vendor's sign-in page, or left it unfinished: nothing was connected. */
-class VendorSignInCancelled : Exception("The sign-in was closed.")
+class VendorSignInCancelled : Exception() {
+  override val message: String get() = Words.Connect.signInClosed
+}
 
 /**
  * The vendor's own sign-in page, which the phone opens and which planque sends the owner back from with a confirmation code:

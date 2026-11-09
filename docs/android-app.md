@@ -106,10 +106,16 @@ wasn't.
 - **Play's offers are read again** each time Usage shows, after every purchase and restore, and
   just before Play's sheet opens (`Purchases.load`, `PlayBillingStore.purchase`), never kept
   from an earlier read. Solo's free trial is offered only while Play lists it for the Google
-  account in the Play Store, and the words follow it: "Free for 1 week, then €10.99 a month", or
-  "€10.99 a month". When Play can't be reached for that read (no network, its service down), the
+  account in the Play Store, and the words follow it: "Free for 1 week, then €12.50 a month", or
+  "€12.50 a month". When Play can't be reached for that read (no network, its service down), the
   purchase says "Couldn't reach Google Play. Try again.", never that Play doesn't sell it
   (`PlayBillingStore.unreachable`).
+- **When Play lists none of what's offered,** the panel says why above Restore purchases, rather
+  than standing empty (`Purchases.buyNote`): "Couldn't reach Google Play. Try again." when Play
+  couldn't be read, else "Google Play can't sell on this phone, so nothing can be bought here."
+  That's Play billing off for this app on this phone (`BILLING_UNAVAILABLE`, such as a build Play
+  didn't install), or nothing listed for this Google account. Nothing is said before Play is asked,
+  or once it lists one of them.
 - **How a purchase or restore went** shows under what was tapped (Start Solo, the pack, Restore
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
@@ -172,6 +178,24 @@ icons dark on the light ground and light on the dark one when the choice changes
 | `views/` | One file per screen or feature: `HomeView`, `TafDetailView`, `TafChatView`, `CoachViews`, `CoachChats`, `NeedsYouView`, `RecordView`, `ReceiptSheet`, `UsageViews`, `TaskRequestViews`, `SettingsView`, `PeopleViews`, `ShareViews`, `DevicesView`, `DoorViews`, `SetupViews`, `EventApproval`, `VersionViews`, `HaltViews`, `AttachViews`, `MicButton`… |
 | `design/` | `Theme` (colours, the amber accent, type), `Components`, `MarkdownText` |
 
+## Words and languages
+
+Every line the app writes itself is in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
+iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.py` writes, from it,
+`res/values/strings.xml` (counts as `<plurals>`), `res/xml/locales_config.xml` and `model/Words.kt`, a typed accessor per
+key (`Words.NeedsYou.approveOnce`, `Words.Taf.worksUnderCards(count = n)`), so a missing key or a wrong value doesn't
+compile. Nobody edits those three files by hand: change the JSON and run the generator, and `--check` fails CI when they
+differ. Code reads a line only through `Words`, which asks `Res`: the app's resources in the language Android resolved for
+tafs, set in `TafsApplication`. Errors that are objects (`KiffError`, `PlanqueError`) read their words when shown, so they
+follow the language. Unit tests run on the JVM without Android's resources: there `Res` reads the generated English
+`strings.xml` itself (`XmlWords`, named by a test service file), so every test still checks the exact English words.
+
+What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, file names,
+what's sent to a server as data, and every signed message (`tafs.connect.v1|…`, `tafs.cards.v1|…`, an answer's wire name).
+The one signature over words, a people change (`tafs.people.v1|…`), is a fingerprint check on the phone whose result isn't
+sent. Lines only Coach reads (the screen's description in a drive) stay English. The terms and the voice for each language
+are in [languages.md](languages.md).
+
 ## Live updates
 
 A silent push from tafs cloud names what changed on the account (`kind: background` with
@@ -232,8 +256,10 @@ Account opens Settings and Coach opens Coach; the three between are tabs, and Ne
 its count. Coach is a filled button (ink, with the ground's colour as its label), shown only to
 someone KIFF lets use Coach, so the bar has four places otherwise. In landscape and on tablets
 the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
-`MainActivity`). Home's header keeps the account's name, and in the sample a new taf; Settings
-and Coach are no longer there. Coach from a taf's page is that taf's conversation: the one
+`MainActivity`). Home's header keeps the account's name; Settings and Coach are no longer there.
+A new taf starts in Coach, signed in. The sample has no form for one: under its list it says
+"Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf
+starts in Coach." (`HomeWords.SAMPLE_FOOT`). Coach from a taf's page is that taf's conversation: the one
 already open about it, else a new one about it; from anywhere else, the conversation open as
 it was (`AppModel.openCoachOn`). Leaving a conversation stops following it on this phone (work it
 accepted goes on at tafs cloud), and a read of it that lands later doesn't replace the one shown.
@@ -363,8 +389,9 @@ Live"), as tafs cloud sends it; with none sent, nothing shows.
 
 A connected app opens its connections by taf (`byTaf`), as on iPhone and iPad
 ([ios-app.md](ios-app.md#connect-apps)): one section per taf, those that need the owner first,
-the same rows with **Sign in again**, **Disconnect** and **Cancel**, and **Other connections**
-last. The section for removed tafs, and its Clear, come with Android's next batch.
+the same rows with **Sign in again**, **Disconnect** and **Cancel**, then **From removed tafs**
+with **Clear these connections** on tafs cloud's `used_by` (`AppModel.clearRemovedConnections`),
+one fingerprint for them all, and **Other connections** last.
 
 ## Signing
 

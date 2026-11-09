@@ -85,6 +85,8 @@ class SharedWords(unittest.TestCase):
                     continue
                 self.assertEqual(sorted(set(line) - set(generate.PLURAL_FORMS)), [], f"{lang} {key}")
                 self.assertEqual(sorted((NEEDS[lang] | {"other"}) - set(line)), [], f"{lang} {key} lacks a plural form")
+                # A form needn't show the number ("All of the Cards"), but the count is always its first value.
+                self.assertEqual(generate.arguments(key, self.lines["en"])[0], "count", f"{lang} {key}")
 
     def test_a_line_has_the_same_placeholders_in_every_language(self):
         for lang, lines in self.lines.items():

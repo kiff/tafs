@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveMenu
@@ -76,19 +77,19 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (archived) {
-          Text("‹ Back", style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { archived = false }.padding(top = 10.dp, end = 12.dp))
+          Text(Words.Coach.Chats.back, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { archived = false }.padding(top = 10.dp, end = 12.dp))
         }
-        Text(if (archived) "Archived" else "Previous conversations", style = scaled(22, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text(if (archived) Words.Coach.Chats.archived else Words.Coach.Chats.previous, style = scaled(22, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
       }
       val chats = if (archived) state.coachArchived else state.coachChats
       if (chats.isEmpty()) {
-        Text(if (archived) "Nothing archived." else "No conversations yet.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(vertical = 16.dp))
+        Text(if (archived) Words.Coach.Chats.nothingArchived else Words.Coach.Chats.none, style = scaled(15, color = Theme.dim), modifier = Modifier.padding(vertical = 16.dp))
       }
       chats.forEach { chat ->
         ChatRow(
           chat,
-          action = if (archived) "Put back" else "Archive",
+          action = if (archived) Words.Coach.Chats.putBack else Words.Coach.Chats.archive,
           onOpen = {
             scope.launch {
               actions.open(chat.session)
@@ -99,22 +100,22 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
         )
       }
       if (!archived) {
-        Text("Archived", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { archived = true }.padding(top = 12.dp))
+        Text(Words.Coach.Chats.archived, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { archived = true }.padding(top = 12.dp))
       }
     }
   }
   archiving?.let { chat ->
     DriveAlert(
       onDismissRequest = { archiving = null },
-      title = { Text("Archive this conversation?") },
-      text = { Text("It leaves this list on all your devices. You'll find it under Archived, where you can open it or put it back.") },
+      title = { Text(Words.Coach.Chats.archiveTitle) },
+      text = { Text(Words.Coach.Chats.archiveBody) },
       confirmButton = {
         TextButton({
           archiving = null
           scope.launch { actions.archive(chat.session) }
-        }) { Text("Archive", color = Theme.no) }
+        }) { Text(Words.Coach.Chats.archive, color = Theme.no) }
       },
-      dismissButton = { TextButton({ archiving = null }) { Text("Cancel", color = Theme.soft) } },
+      dismissButton = { TextButton({ archiving = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -130,7 +131,7 @@ private fun ChatRow(chat: TafsCloud.Chat, action: String, onOpen: () -> Unit, on
       Modifier.fillMaxWidth().heightIn(min = 52.dp).combinedClickable(onClick = onOpen, onLongClick = { menu = true }).padding(vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-      Text(chat.title.ifBlank { "Conversation" }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 2)
+      Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 2)
       Text(endsWords(chat.updated), style = scaled(12, color = Theme.dim))
     }
     DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
@@ -149,13 +150,13 @@ fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, fill: (String) 
   val improving = state.coachImproving?.let { state.taf(it)?.name }
   val sending = COACH_CHAT in state.chatSending
   Column(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    Text(improving?.let { "Improve $it" } ?: CoachWords.ASK_ANYTHING, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
+    Text(improving?.let { Words.Coach.improveTaf(it) } ?: CoachWords.ASK_ANYTHING, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
     Text(improving?.let(CoachWords::improveLine) ?: CoachWords.ASK_ANYTHING_LINE, style = scaled(15, color = Theme.soft))
     // Or start on one taf, as iOS does: each taf this person manages, its own conversation.
     if (improving == null) {
       CoachWords.improvable(state).forEach { taf ->
         Text(
-          "Improve ${taf.name}",
+          Words.Coach.improveTaf(taf.name),
           style = scaled(15, FontWeight.SemiBold, Theme.amberText),
           modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !sending) { improve(taf.id) }.padding(vertical = 10.dp),
         )
@@ -214,7 +215,7 @@ fun CoachLines(lines: List<TafsCloud.CoachLine>) {
   Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     if (away.isNotEmpty()) {
       bot.tafs.app.design.Panel(Modifier.semantics(mergeDescendants = true) {}) {
-        bot.tafs.app.design.Eyebrow("While you were away")
+        bot.tafs.app.design.Eyebrow(Words.Coach.away)
         away.forEach { Text("${it.taf}: ${it.said}", style = scaled(14, color = Theme.ink)) }
       }
     }
@@ -234,7 +235,7 @@ fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
   val scope = rememberCoroutineScope()
   var giving by remember { mutableStateOf(false) }
   bot.tafs.app.design.Panel(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), stroke = Theme.amber.copy(alpha = 0.45f)) {
-    bot.tafs.app.design.Eyebrow("Coach's tools", color = Theme.amber)
+    bot.tafs.app.design.Eyebrow(Words.Coach.Tools.title, color = Theme.amber)
     when (tools.state) {
       "taken" -> Text(CoachWords.taken(tools.taken), style = scaled(14, color = Theme.ink))
       "unknown" -> Text(CoachWords.TOOLS_UNKNOWN, style = scaled(14, color = Theme.ink))
@@ -248,7 +249,7 @@ fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
           }
         }
         bot.tafs.app.design.PrimaryButton(
-          if (giving) "Giving…" else "Give Coach its tools",
+          if (giving) Words.Coach.Tools.giving else Words.Coach.Tools.give,
           {
             giving = true
             scope.launch {

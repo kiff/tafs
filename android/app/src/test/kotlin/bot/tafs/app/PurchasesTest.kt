@@ -81,6 +81,26 @@ class PurchasesTest {
     assertEquals(setOf("pack_rayo"), purchases.products.value.keys)
   }
 
+  @Test fun aFailedReadKeepsWhyAndTheNextAnswerClearsIt() = runTest {
+    assertFalse("not asked yet", purchases.loaded.value)
+    play.listed = { throw IllegalStateException(Purchases.PLAY_UNREACHABLE) }
+    purchases.load(listOf("pack_rayo"))
+    assertTrue(purchases.loaded.value)
+    assertEquals(Purchases.PLAY_UNREACHABLE, purchases.loadFailed.value)
+    play.listed = { ids -> ids.map { StoreProduct(it, it, "€9.99") } }
+    purchases.load(listOf("pack_rayo"))
+    assertNull(purchases.loadFailed.value)
+  }
+
+  @Test fun theBuyPanelSaysWhyWhenPlayListsNoneOfWhatsOffered() {
+    val offered = listOf("solo_monthly", "pack_rayo")
+    assertNull("before Play is asked, nothing is said", Purchases.buyNote(offered, emptySet(), loaded = false, failed = null))
+    assertEquals(Purchases.PLAY_CANT_SELL, Purchases.buyNote(offered, emptySet(), loaded = true, failed = null))
+    assertEquals(Purchases.PLAY_UNREACHABLE, Purchases.buyNote(offered, emptySet(), loaded = true, failed = Purchases.PLAY_UNREACHABLE))
+    assertNull("one listed is enough", Purchases.buyNote(offered, setOf("pack_rayo"), loaded = true, failed = null))
+    assertNull("nothing offered, nothing to say", Purchases.buyNote(emptyList(), emptySet(), loaded = true, failed = null))
+  }
+
   @Test fun aPurchaseIsFinishedOnlyOnceKiffRecordedIt() = runTest {
     recording()
     var told = 0
@@ -258,5 +278,15 @@ class PurchasesTest {
     assertTrue(offer.offers("solo"))
     assertTrue(offer.offers("packs"))
     assertTrue(m.state.value.offersPurchases)
+  }
+
+  @Test fun wherePlayCantSellHereTheAppSaysSoInsteadOfAnEmptyPanel() = runTest {
+    // Play billing off for this app on this phone (a build Play didn't install): Play answers, listing nothing.
+    play.listed = { emptyList() }
+    val m = model(playBilling = true)
+    m.loadStore()
+    val s = m.state.value
+    assertTrue(s.storeLoaded)
+    assertEquals(Purchases.PLAY_CANT_SELL, Purchases.buyNote(listOf("solo_monthly", "pack_rayo"), s.storeProducts.keys, s.storeLoaded, s.storeFailed))
   }
 }

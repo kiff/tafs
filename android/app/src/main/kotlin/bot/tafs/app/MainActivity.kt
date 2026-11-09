@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
 import android.Manifest
 import android.content.Intent
@@ -94,7 +95,6 @@ import bot.tafs.app.views.CalendarView
 import bot.tafs.app.views.OverviewView
 import bot.tafs.app.views.LocalCoachInstalls
 import bot.tafs.app.views.NeedsYouView
-import bot.tafs.app.views.NewTafFlow
 import bot.tafs.app.views.OnboardingView
 import bot.tafs.app.views.RecordView
 import bot.tafs.app.views.SettingsSheet
@@ -236,10 +236,13 @@ class MainActivity : FragmentActivity() {
   }
 }
 
-enum class Tab(val title: String, val icon: Int) {
-  Tafs("Tafs", R.drawable.ic_stack),
-  NeedsYou("Needs you", R.drawable.ic_bell),
-  Record("Record", R.drawable.ic_list),
+enum class Tab(private val named: () -> String, val icon: Int) {
+  Tafs({ Words.Home.title }, R.drawable.ic_stack),
+  NeedsYou({ Words.NeedsYou.title }, R.drawable.ic_bell),
+  Record({ Words.Record.title }, R.drawable.ic_list);
+
+  /** Read each time, in the app's language now. */
+  val title: String get() = named()
 }
 
 @Composable
@@ -310,10 +313,10 @@ fun RootView(model: AppModel) {
   if (state.alertsOffSinceSignOut && state.lastError == null) {
     DriveAlert(
       onDismissRequest = model::dismissAlertsOff,
-      title = { Text("Alerts are off on this phone") },
-      text = { Text("They went off when this phone signed out. Turn them on to get an alert when a taf needs you.") },
-      confirmButton = { TextButton({ model.dismissAlertsOff(); rootScope.launch { model.turnOnAlerts() } }) { Text("Turn on", color = Theme.amber) } },
-      dismissButton = { TextButton(model::dismissAlertsOff) { Text("Not now", color = Theme.soft) } },
+      title = { Text(Words.Settings.AlertsOff.title) },
+      text = { Text(Words.Settings.AlertsOff.text) },
+      confirmButton = { TextButton({ model.dismissAlertsOff(); rootScope.launch { model.turnOnAlerts() } }) { Text(Words.Settings.AlertsOff.turnOn, color = Theme.amber) } },
+      dismissButton = { TextButton(model::dismissAlertsOff) { Text(Words.Common.notNow, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -328,7 +331,7 @@ fun RootView(model: AppModel) {
   state.lastError?.let { error ->
     DriveAlert(
       onDismissRequest = model::dismissError,
-      title = { Text("Not done") },
+      title = { Text(Words.Common.notDone) },
       text = { Text(error) },
       confirmButton = { TextButton(model::dismissError) { Text("OK", color = Theme.amber) } },
       containerColor = Theme.panel,
@@ -340,10 +343,10 @@ fun RootView(model: AppModel) {
     val zoneScope = rememberCoroutineScope()
     DriveAlert(
       onDismissRequest = {},
-      title = { Text("Use $offer for times in tafs?") },
-      text = { Text("Holds' deadlines, Activity, the Record and what your tafs write would use this phone's time zone. Your account uses ${state.kiffAccount?.timeZone ?: "UTC"} now.") },
-      confirmButton = { TextButton({ zoneScope.launch { model.answerTimeZoneOffer(use = true) } }) { Text("Use $offer", color = Theme.amber) } },
-      dismissButton = { TextButton({ zoneScope.launch { model.answerTimeZoneOffer(use = false) } }) { Text("Not now", color = Theme.soft) } },
+      title = { Text(Words.Settings.TimeZoneOffer.title(zone = offer)) },
+      text = { Text(Words.Settings.TimeZoneOffer.text(current = state.kiffAccount?.timeZone ?: "UTC")) },
+      confirmButton = { TextButton({ zoneScope.launch { model.answerTimeZoneOffer(use = true) } }) { Text(Words.Settings.TimeZoneOffer.use(zone = offer), color = Theme.amber) } },
+      dismissButton = { TextButton({ zoneScope.launch { model.answerTimeZoneOffer(use = false) } }) { Text(Words.Common.notNow, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }
@@ -360,7 +363,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
   // The taf open on the Tafs tab: the screens inside a tab keep its bar, as a navigation stack does.
   var openTaf by rememberSaveable { mutableStateOf<String?>(null) }
-  var showingNew by rememberSaveable { mutableStateOf(false) }
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
@@ -410,17 +412,17 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val people = remember(model) {
     PeopleActions(
       refresh = model::refreshPeople,
-      createGroup = { name -> model.changePeople("Create the group $name") { it.createGroup(name) } },
-      renameGroup = { group, name -> model.changePeople("Rename ${group.name} to $name") { it.renameGroup(group.id, name) } },
-      deleteGroup = { group -> model.changePeople("Delete the group ${group.name}") { it.deleteGroup(group.id) } },
+      createGroup = { name -> model.changePeople(Words.People.createGroup(name = name)) { it.createGroup(name) } },
+      renameGroup = { group, name -> model.changePeople(Words.People.renameGroup(group = group.name, name = name)) { it.renameGroup(group.id, name) } },
+      deleteGroup = { group -> model.changePeople(Words.People.deleteGroup(group = group.name)) { it.deleteGroup(group.id) } },
       setMember = { group, subject, role ->
         val who = model.state.value.person(subject)?.label ?: subject
-        val what = if (group.members.any { it.subject == subject }) "Make $who a $role of ${group.name}" else "Add $who to ${group.name}"
+        val what = if (group.members.any { it.subject == subject }) Words.People.makeRole(who = who, role = role, group = group.name) else Words.People.addToGroup(who = who, group = group.name)
         model.changePeople(what) { it.setGroupMember(group.id, subject, role) }
       },
       removeMember = { group, subject ->
         val who = model.state.value.person(subject)?.label ?: subject
-        model.changePeople("Remove $who from ${group.name}") { it.removeGroupMember(group.id, subject) }
+        model.changePeople(Words.People.removeFromGroup(who = who, group = group.name)) { it.removeGroupMember(group.id, subject) }
       },
       shares = model::shares,
       setShares = { agent, name, add, remove -> model.setShares(agent, name, add, remove) },
@@ -600,7 +602,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               // The sample plays its next round; signed in, KIFF is read again.
               onPlayNext = { if (state.mode == Mode.sample) model.playNextDemoActions() else model.refresh() },
               onOpenTaf = { coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; openTaf = it },
-              onNewTaf = { showingNew = true },
               onCalendar = if (state.mode == Mode.kiff && state.tafs.isNotEmpty() && !wide) ({ coachOpen = false; trialTaf = null; calendarOpen = true }) else null,
               onHaltAll = { haltTaf = null; haltOpen = true },
               // A halted taf's chip: the account's Halt when the account is halted (that's what resumes it), else the taf's.
@@ -686,20 +687,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         Tab.Record -> RecordView(state)
       }
     }
-    if (showingNew) {
-      NewTafFlow(
-        draftFrom = model::draft,
-        issuer = model.issuer,
-        colorIndex = state.tafs.size,
-        onIssue = { draft ->
-          model.start(draft)?.also { taf ->
-            openTaf = taf.id
-            tab = Tab.Tafs
-          }
-        },
-        onClose = { showingNew = false },
-      )
-    }
     if (showingSettings) {
       SettingsSheet(
         state,
@@ -748,6 +735,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         },
         // One connection disconnected (the fingerprint asked first), then the list read again with the account's connections.
         onDisconnect = if (state.canManageCards) ({ id -> scope.launch { if (model.disconnect(id)) model.loadConnectApps(null) } }) else null,
+        // Removed tafs' connections, cleared at once (one fingerprint), then the list read again.
+        onClearRemoved = if (state.canManageCards) ({ ids -> scope.launch { model.clearRemovedConnections(ids); model.loadConnectApps(null) } }) else null,
         // Gap 13: a new key on the key sheet over the list, or a sign-in again, each behind the fingerprint.
         onReplaceKey = if (state.canManageCards) model::openReplaceKey else null,
         onSignInAgain = if (state.canManageCards) model::startReconnect else null,
@@ -870,8 +859,8 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
       style = scaled(18, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.dim),
       modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp).size(24.dp, 44.dp)
         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).background(Theme.panel)
-        .clickable(onClickLabel = if (folded) "Show the list" else "Hide the list", onClick = onToggle)
-        .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = if (folded) "Show the list" else "Hide the list" }
+        .clickable(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
+        .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = if (folded) Words.Common.showTheList else Words.Common.hideTheList }
         .wrapContentSize(Alignment.Center),
     )
   }

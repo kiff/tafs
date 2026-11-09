@@ -125,13 +125,12 @@ When you remove a taf for good, its connections are disconnected with it, under 
 confirmation. If some couldn't be, the result says how many, and you can disconnect them
 here.
 
-On iPhone and iPad, connections left by a taf that was removed earlier show under **From
-removed tafs**, with that taf's name. **Clear these connections** ends the ones no live taf
-uses, after one question (“Clear 2 connections from removed tafs?”) and one Face ID. A
+Connections left by a taf that was removed earlier show under **From removed tafs**, with
+that taf's name. **Clear these connections** ends the ones no live taf uses, after one
+question (“Clear 2 connections from removed tafs?”) and one Face ID or fingerprint. A
 connection another taf's Card still uses is kept, and says so (“Kept: Chargebacks's Card
 uses it”). The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose
-Card uses it.”). When tafs can't tell which ones are still used, there's no Clear. Android
-gets this section in a later release.
+Card uses it.”). When tafs can't tell which ones are still used, there's no Clear.
 
 How the apps build these lists is in [api.md](api.md#connect-apps),
 [ios-app.md](ios-app.md#connect-apps) and [android-app.md](android-app.md#connect-apps).

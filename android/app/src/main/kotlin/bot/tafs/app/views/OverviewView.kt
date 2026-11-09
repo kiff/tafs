@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,13 +52,13 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
   ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("Overview", style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
-        Text("Today, across your tafs", style = scaled(14, color = Theme.dim))
+        Text(Words.Home.Overview.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.Home.Overview.subtitle, style = scaled(14, color = Theme.dim))
       }
       // The tafs' scheduled work to come (kiff/tafs#534), as iOS's Overview has it.
       androidx.compose.foundation.layout.Box(
         Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.raised).clickable(onClick = onOpenCalendar)
-          .semantics { contentDescription = "Calendar" }.testTag("overview.calendar"),
+          .semantics { contentDescription = Words.Calendar.heading }.testTag("overview.calendar"),
         contentAlignment = Alignment.Center,
       ) {
         androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
@@ -65,7 +66,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
     }
     if (state.held.isNotEmpty()) {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Eyebrow("Needs you", color = Theme.amber)
+        Eyebrow(Words.NeedsYou.title, color = Theme.amber)
         state.held.forEach { call ->
           val taf = state.taf(call.tafId) ?: return@forEach
           Row(
@@ -75,18 +76,18 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
           ) {
             Dot(Theme.amber, 8.dp)
             Text("${taf.name} · ${call.proposed.summary}", style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Text("answer by ${shortTime(call.expiresAt)}", style = scaled(12, color = Theme.soft))
+            Text(Words.NeedsYou.answerBy(shortTime(call.expiresAt)), style = scaled(12, color = Theme.soft))
           }
         }
       }
     }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        listOf("TAF" to 1.3f, "NOW" to 1f, "CARD" to 1.2f, "LAST RESULT" to 1.5f).forEach { (title, weight) ->
+        listOf(Words.Home.Overview.columnTaf to 1.3f, Words.Home.Overview.columnNow to 1f, Words.Home.Overview.columnCard to 1.2f, Words.Home.Overview.columnLastResult to 1.5f).forEach { (title, weight) ->
           Text(title, style = scaled(11, FontWeight.Bold, Theme.dim), modifier = Modifier.weight(weight))
         }
       }
-      if (state.tafs.isEmpty()) Text("No tafs yet.", style = scaled(14, color = Theme.dim))
+      if (state.tafs.isEmpty()) Text(Words.Home.noTafs, style = scaled(14, color = Theme.dim))
       state.tafs.forEach { taf ->
         androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().height(1.dp).background(Theme.line))
         val card = OverviewWords.cardLine(taf)
@@ -106,7 +107,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
           Text(last, style = scaled(13, color = Theme.soft), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1.5f))
         }
       }
-      Text("Each line opens the taf.", style = scaled(12, color = Theme.dim))
+      Text(Words.Home.Overview.eachLineOpens, style = scaled(12, color = Theme.dim))
     }
   }
 }

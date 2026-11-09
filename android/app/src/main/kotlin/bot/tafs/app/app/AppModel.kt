@@ -7,6 +7,7 @@ import bot.tafs.app.kiff.phoneAlerts
 import bot.tafs.app.kiff.timeZones
 
 import bot.tafs.app.model.ErrorWords
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.Unsent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -414,6 +415,9 @@ data class AppState(
   val setupDrafts: Map<String, AgentDraft> = emptyMap(),
   /** Why a card's step wasn't done, by card. */
   val coachNotes: Map<String, String> = emptyMap(),
+  /** Clearing removed tafs' connections is on its way, and how it went, under them in Connect apps. */
+  val clearingRemoved: Boolean = false,
+  val clearNote: String? = null,
   /** A drive card being approved, by its key: Approve waits for the fingerprint and tafs cloud. */
   val driveStarting: String? = null,
   /** The drive that just ended, for the "What I did" card in Coach's chat, until the person closes it. */
@@ -462,6 +466,9 @@ data class AppState(
   val playBilling: Boolean = false,
   /** Play's names and prices for what KIFF sells; the product being bought; and what happened to the last purchase, request or answer. */
   val storeProducts: Map<String, StoreProduct> = emptyMap(),
+  /** Whether Play has been asked for them yet, and why its last answer failed (Purchases.buyNote says it). */
+  val storeLoaded: Boolean = false,
+  val storeFailed: String? = null,
   val buying: String? = null,
   val tasksMessage: String? = null,
   /** How the latest purchase or restore went, said under what was tapped (Start Solo, a pack, Restore purchases). */
@@ -509,7 +516,7 @@ data class AppState(
    * Who a taf's Card reads as issued by: "You" on a taf this person manages, else the account, by its name, never a person
    * (a taf shared with them was issued by whoever manages it), as iOS's `issuer(of:)`.
    */
-  fun issuer(taf: Taf): String = if (mode != Mode.kiff || manages(taf.id)) taf.card.issuedBy else accountLabel ?: "The account"
+  fun issuer(taf: Taf): String = if (mode != Mode.kiff || manages(taf.id)) taf.card.issuedBy else accountLabel ?: Words.Card.issuedByAccount
 
   /**
    * Doors are tafs cloud's, and only where it offers one: a taf it runs, that this person manages: who may give it work
@@ -546,7 +553,7 @@ data class AppState(
   val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size)
 
   /** Home's line for it: tafs cloud's words, else the app's for its own count. */
-  val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) "Nothing needs you." else "$it ${if (it == 1) "needs" else "need"} you." }
+  val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) Words.NeedsYou.nothing else Words.NeedsYou.count(count = it) }
 
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)
@@ -620,7 +627,7 @@ data class AppState(
   }
 
   private fun coach(cloudId: String?) =
-    Taf(id = COACH_CHAT, name = "Coach", job = "", tools = emptyList(), colorIndex = 2, card = Card(rules = emptyList(), issuedBy = ""), now = "", cloudId = cloudId)
+    Taf(id = COACH_CHAT, name = Words.Coach.name, job = "", tools = emptyList(), colorIndex = 2, card = Card(rules = emptyList(), issuedBy = ""), now = "", cloudId = cloudId)
 
   /**
    * Who holds a call, as the owner reads it: its taf, or Coach for a call from Coach's own KIFF agent, which no taf in the list
@@ -640,9 +647,9 @@ data class AppState(
     val taf = tafs.firstOrNull { it.id == tafId } ?: return null
     return taf.copy(
       id = chatId,
-      name = "${taf.name} · v${trial.n}",
-      badge = trial.label ?: "Trial",
-      now = listOfNotNull(trial.title ?: "Trying version ${trial.n}", trial.ends?.let { "ends ${shownDate(it)} if unused" }).joinToString(" · "),
+      name = Words.Version.Trial.chatName(taf = taf.name, n = trial.n.toString()),
+      badge = trial.label ?: Words.Version.Trial.badge,
+      now = listOfNotNull(trial.title ?: Words.Version.Trial.trying(n = trial.n.toString()), trial.ends?.let { Words.Version.Trial.endsIfUnused(date = shownDate(it)) }).joinToString(" · "),
     )
   }
 
@@ -769,7 +776,7 @@ class AppModel(
   private val cloud: TafsCloud,
   /** Where the KIFF session is kept: this phone only. */
   private val secrets: SecretStore,
-  private val ownerName: String = "You",
+  private val ownerName: String = Words.Common.you,
   private val clock: () -> Instant = Instant::now,
   /** How long a sample taf takes to answer; tests set it to zero. */
   private val sampleReplyDelayMs: Long = 700,
@@ -1075,13 +1082,13 @@ class AppModel(
       // KIFF ended this session: signed out, with the words to sign in again.
       if (generation == accountGeneration) {
         signOut(tellKiff = false)
-        fail(KiffError.Unauthorized.message ?: "Signed out of KIFF. Sign in again.")
+        fail(KiffError.Unauthorized.message ?: Words.SignIn.signedOutOfKiff)
       }
       return
     } catch (_: CloudError) {
       if (generation != accountGeneration) return
       // A refresh is the app's own doing, so it never shows as "Not done" (kiff/tafs#318).
-      refreshFailed("Couldn't load your tafs", generation)
+      refreshFailed(Words.Home.couldntLoadTafs, generation)
       _state.update { if (it.listLoaded) it else it.copy(listUnread = true) }
     } catch (e: Exception) {
       if (generation != accountGeneration) return
@@ -1099,7 +1106,7 @@ class AppModel(
   private var retries = 0
 
   /** Words true to what failed: the network, or KIFF answering with an error. */
-  private fun refreshWords(e: Exception): String = if (e is java.io.IOException) "Can't reach KIFF" else "Couldn't load from KIFF"
+  private fun refreshWords(e: Exception): String = if (e is java.io.IOException) Words.Home.cantReachKiff else Words.Home.couldntLoadFromKiff
 
   /**
    * A refresh the app made by itself failed (kiff/tafs#318): said quietly under the account's name, never as an alert, and
@@ -1196,7 +1203,7 @@ class AppModel(
   }
 
   /** What the fingerprint prompt says for a request that grants authority: the step's own words. */
-  private var approvalReason = "Approve on KIFF"
+  private var approvalReason = Words.Approval.Prompt.approveOnKiff
 
   /**
    * Before a step that grants authority, in [reason]'s words. With the approval key in KIFF, each of the step's requests
@@ -1307,12 +1314,12 @@ class AppModel(
 
   /** Why Approve again didn't go through, in words the owner can act on. */
   private fun relinkFailure(e: Exception): String = when {
-    e is KiffError.Expired -> "The code expired before it was approved in your browser. Try again."
-    e is KiffError.Server && e.message == "access_denied" -> "It wasn't approved in the browser."
-    e is KiffError.Server && e.message == "relink_in_progress" -> "KIFF is finishing the last one. Try again in a moment."
-    e is ApprovalKeyRenewed -> "Your fingerprints changed just now. Try again."
+    e is KiffError.Expired -> Words.SignIn.Relink.codeExpired
+    e is KiffError.Server && e.message == "access_denied" -> Words.SignIn.Relink.notApprovedInBrowser
+    e is KiffError.Server && e.message == "relink_in_progress" -> Words.SignIn.Relink.finishingLast
+    e is ApprovalKeyRenewed -> Words.SignIn.Relink.fingerprintsChanged
     e is SignerException -> e.message ?: RELINK_FAILED
-    e is IOException -> "No connection. Try again."
+    e is IOException -> Words.SignIn.Relink.noConnection
     else -> RELINK_FAILED
   }
 
@@ -1452,46 +1459,29 @@ class AppModel(
     // Two rounds: a few actions within the Cards, and two held for the owner.
     playNextDemoActions()
     playNextDemoActions()
-    _state.value.tafs.firstOrNull { it.name == "Refunds" }?.let { refunds ->
-      val question = "How did this morning go?"
+    _state.value.let { s -> s.tafs.firstOrNull { s.templateOf[it.id] == "refunds" } }?.let { refunds ->
+      val question = Words.Sample.Chat.question
       say(refunds.id, ChatMessage.From.taf, Chat.hello(refunds))
       say(refunds.id, ChatMessage.From.owner, question)
       say(refunds.id, ChatMessage.From.taf, sampleReply(question, refunds.id))
     }
   }
 
-  fun draft(job: String): TafDraft = TafTemplates.draft(job)
-
-  /** The owner's name on a Card they issue, and the colour the next taf takes. */
+  /** The owner's name on a Card they issue. A new taf starts in Coach, signed in; the sample's tafs are its own. */
   val issuer: String get() = ownerName
-  val nextColorIndex: Int get() = _state.value.tafs.size
-
-  /**
-   * Issues the Card, after the owner confirms it on the phone, and starts the taf; null when they
-   * didn't. The sample starts from its form; signed in, a new taf starts in Coach mode.
-   */
-  suspend fun start(draft: TafDraft): Taf? {
-    try {
-      signer.sign(Messages.issue("card-${newId()}"), "Issue ${draft.name}'s Card")
-    } catch (_: SignerException) {
-      fail("The Card was not issued: it wasn't confirmed.")
-      return null
-    }
-    return create(draft)
-  }
 
   private fun create(draft: TafDraft): Taf {
     val s = _state.value
     val taf = Taf(
       name = draft.name, job = draft.job, tools = draft.tools, colorIndex = s.tafs.size,
       card = Card(rules = draft.rules, issuedBy = ownerName, expires = threeMonthsOn(clock())),
-      state = TafState.working, now = "Starting",
+      state = TafState.working, now = Words.Taf.Now.starting,
     )
     _state.update {
       it.copy(
         tafs = listOf(taf) + it.tafs,
         templateOf = if (draft.templateKey != null) it.templateOf + (taf.id to draft.templateKey) else it.templateOf,
-        record = listOf(entry(taf.id, RecordEntry.Kind.started, "${taf.name} started", "Card issued by $ownerName")) + it.record,
+        record = listOf(entry(taf.id, RecordEntry.Kind.started, Words.Record.started(taf = taf.name), Words.Record.cardIssuedBy(owner = ownerName))) + it.record,
       )
     }
     save()
@@ -1505,7 +1495,7 @@ class AppModel(
     val taf = _state.value.taf(tafId) ?: return
     if (taf.state == TafState.revoked) return
     val paused = taf.state != TafState.paused
-    update(taf.copy(state = if (paused) TafState.paused else TafState.working, now = if (paused) "Paused by you" else "Back to work"))
+    update(taf.copy(state = if (paused) TafState.paused else TafState.working, now = if (paused) Words.Taf.Now.pausedByYou else Words.Taf.Now.backToWork))
     save()
   }
 
@@ -1526,7 +1516,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("KIFF didn't revoke the Card. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) fail(Words.Card.revokeFailed(why = ErrorWords.of(e)))
       return false
     }
     if (generation != accountGeneration) return false
@@ -1537,10 +1527,10 @@ class AppModel(
   private fun revoked(tafId: String) {
     val taf = _state.value.taf(tafId) ?: return
     val dropped = _state.value.heldCalls(tafId)
-    update(taf.copy(card = taf.card.copy(revoked = true), state = TafState.revoked, now = "Stopped: Card revoked"))
+    update(taf.copy(card = taf.card.copy(revoked = true), state = TafState.revoked, now = Words.Taf.Now.cardRevoked))
     _state.update { s -> s.copy(held = s.held.filterNot { it.tafId == tafId }) }
-    val detail = if (dropped.isEmpty()) "No new action goes through" else "No new action goes through. ${dropped.size} waiting action(s) refused."
-    log(tafId, RecordEntry.Kind.revoked, "You revoked ${taf.name}'s Card", detail)
+    val detail = if (dropped.isEmpty()) Words.Record.Revoked.noNewAction else Words.Record.Revoked.refusedWaiting(count = dropped.size)
+    log(tafId, RecordEntry.Kind.revoked, Words.Record.Revoked.title(taf = taf.name), detail)
     save()
   }
 
@@ -1645,7 +1635,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("Not archived. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) fail(Words.Taf.notArchived(why = ErrorWords.of(e)))
       return false
     }
     if (generation != accountGeneration) return false
@@ -1664,7 +1654,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("Not put back. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) fail(Words.Taf.notPutBack(why = ErrorWords.of(e)))
       return false
     }
     if (generation != accountGeneration) return false
@@ -1688,7 +1678,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail(creditsRefusal(e) ?: "The run didn't start. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) fail(creditsRefusal(e) ?: Words.Taf.runNotStarted(why = ErrorWords.of(e)))
       return null
     } finally {
       _state.update { it.copy(runsInFlight = it.runsInFlight - tafId) }
@@ -1724,11 +1714,11 @@ class AppModel(
       if (generation != accountGeneration) return
       val version = current.accountingVersion
       if (current.kind != "card_unit" || current.status != "held" || _state.value.holder(current.subject)?.id != taf.id || version == null) {
-        fail("This request changed. Read it again before dismissing it.")
+        fail(Words.NeedsYou.CardUnit.changed)
         return
       }
       var signedAt = ""
-      val signature = signer.sign("Dismiss ${ask.title}") {
+      val signature = signer.sign(Words.NeedsYou.CardUnit.dismissPrompt(title = ask.title)) {
         signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
         KiffClient.answerMessage(tenant, current.id, Answer.Refuse.kiffName, null, null, version, signedAt)
       }
@@ -1747,11 +1737,11 @@ class AppModel(
       refresh()
       loadTafSetup(taf.id)
     } catch (e: SignerException) {
-      if (generation == accountGeneration) fail(notSigned(e, "Not dismissed: it wasn't confirmed."))
+      if (generation == accountGeneration) fail(notSigned(e, Words.NeedsYou.CardUnit.notDismissedUnconfirmed))
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("The request wasn't dismissed. ${AnswerRefusals.answerRefusedWords(e)}")
+      if (generation == accountGeneration) fail(Words.NeedsYou.CardUnit.notDismissed(why = AnswerRefusals.answerRefusedWords(e)))
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(dismissingCardUnits = it.dismissingCardUnits - ask.id) }
     }
@@ -1773,7 +1763,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == shownGeneration()) _state.update { it.copy(workErrors = it.workErrors + (tafId to "Its work couldn't be read. ${ErrorWords.of(e)}")) }
+      if (generation == shownGeneration()) _state.update { it.copy(workErrors = it.workErrors + (tafId to Words.Work.notRead(why = ErrorWords.of(e)))) }
       return
     }
     if (generation == shownGeneration()) _state.update { it.copy(works = it.works + (tafId to work), workErrors = it.workErrors - tafId) }
@@ -1794,7 +1784,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      "It wasn't sent again. ${ErrorWords.of(e)}"
+      Words.Work.notSentAgain(why = ErrorWords.of(e))
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(sendingAgain = it.sendingAgain - run) }
     }
@@ -1820,7 +1810,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      (_state.value.reports[tafId] ?: RunReport()).copy(error = "Its runs couldn't be loaded. ${ErrorWords.of(e)}")
+      (_state.value.reports[tafId] ?: RunReport()).copy(error = Words.Report.runsNotLoaded(why = ErrorWords.of(e)))
     }
     if (generation == accountGeneration) _state.update { it.copy(reports = it.reports + (tafId to report)) }
   }
@@ -1839,7 +1829,7 @@ class AppModel(
       val cloud = e as? bot.tafs.app.kiff.CloudError
       val said = cloud?.takeIf { it.status == 409 && it.words == null }?.message
         ?: cloud?.takeIf { it.status == 502 && paused }?.let { bot.tafs.app.model.SetupWords.NOT_EVERY_PAUSED }
-      if (generation == accountGeneration) fail(said ?: "tafs cloud didn't ${if (paused) "pause" else "resume"} it. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) fail(said ?: if (paused) Words.Taf.Schedule.notPaused(why = ErrorWords.of(e)) else Words.Taf.Schedule.notResumed(why = ErrorWords.of(e)))
       return
     }
     if (generation != accountGeneration) return
@@ -1848,7 +1838,7 @@ class AppModel(
     if (taf.state != TafState.waiting && taf.state != TafState.revoked && taf.state != TafState.halted) {
       updated = updated.copy(
         state = if (schedule.paused) TafState.paused else TafState.working,
-        now = if (schedule.paused) "Paused by you" else schedule.nextRun?.let { "Next run ${shortTime(it)}" } ?: "Back to work",
+        now = if (schedule.paused) Words.Taf.Now.pausedByYou else schedule.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.backToWork,
       )
     }
     update(updated)
@@ -1866,7 +1856,7 @@ class AppModel(
     if (s.mode != Mode.kiff || taf == null || cloudId == null) return null
     val generation = accountGeneration
     try {
-      signer.sign("tafs.remove.v1|$cloudId".toByteArray(), "Remove ${taf.name} for good")
+      signer.sign("tafs.remove.v1|$cloudId".toByteArray(), Words.Taf.Remove.prompt(taf = taf.name))
     } catch (_: SignerException) {
       return null
     }
@@ -1890,10 +1880,10 @@ class AppModel(
     // offered them to the next taf as "already connected".
     // A connection another taf still uses stays: KIFF's tools are the account's, so a later taf can draw on this one's.
     val connections = disconnectGrantsOf(taf.id, generation) ?: return null
-    val cards = (if (cardsLeft == 0) "Its Cards are revoked in KIFF." else "KIFF didn't revoke $cardsLeft of its Cards: revoke them in KIFF.") +
+    val cards = (if (cardsLeft == 0) Words.Taf.Remove.cardsRevoked else Words.Taf.Remove.cardsLeft(count = cardsLeft)) +
       when {
-        connections.left > 0 -> " ${connections.left} of its connections couldn't be disconnected: disconnect them in Connect apps."
-        connections.done > 0 -> " Its connections are disconnected."
+        connections.left > 0 -> " " + Words.Taf.Remove.connectionsLeft(count = connections.left)
+        connections.done > 0 -> " " + Words.Taf.Remove.connectionsDisconnected
         else -> ""
       } + connections.kept.joinToString("") { " $it" }
     val removal = try {
@@ -1902,16 +1892,16 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return null
-      return "$cards ${ErrorWords.of(e)} If the removal began, tafs finishes it the next time it refreshes."
+      return "$cards ${ErrorWords.of(e)} ${Words.Taf.Remove.finishesOnRefresh}"
     }
     if (generation != accountGeneration) return null
-    if (cardsLeft == 0) _state.value.taf(tafId)?.let { update(it.copy(card = it.card.copy(revoked = true), state = TafState.revoked, now = "Removed")) }
+    if (cardsLeft == 0) _state.value.taf(tafId)?.let { update(it.copy(card = it.card.copy(revoked = true), state = TafState.revoked, now = Words.Taf.Now.removed)) }
     if (!removal.done) {
-      return "$cards Not finished: its ${removal.failed.joinToString(", ") { removalStep(it) }} couldn't be removed. tafs tries again each time it refreshes."
+      return "$cards " + Words.Taf.Remove.notFinished(steps = removal.failed.joinToString(", ") { removalStep(it) })
     }
-    log(tafId, RecordEntry.Kind.revoked, "You removed ${taf.name}", "Schedule, memory and key deleted; name free")
+    log(tafId, RecordEntry.Kind.revoked, Words.Record.Removed.title(taf = taf.name), Words.Record.Removed.detail)
     refresh()
-    return "$cards Its schedule, chats, run reports, memory and key are deleted, and the name ${taf.name} is free. KIFF's receipts stay."
+    return "$cards " + Words.Taf.Remove.done(taf = taf.name)
   }
 
   /**
@@ -1944,7 +1934,7 @@ class AppModel(
   }
 
   private fun removalStep(step: String): String = when (step) {
-    "history" -> "runs and chats"
+    "history" -> Words.Taf.Remove.stepHistory
     else -> step
   }
 
@@ -2041,7 +2031,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (current()) _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "The thread couldn't be loaded. ${ErrorWords.of(e)}")) }
+      if (current()) _state.update { it.copy(chatErrors = it.chatErrors + (tafId to Words.Chat.threadNotLoaded(why = ErrorWords.of(e)))) }
       return
     }
     if (!current() || _state.value.mode != Mode.kiff) return
@@ -2330,11 +2320,11 @@ class AppModel(
   suspend fun turnOnAlerts(): Boolean {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null) {
-      fail("Sign in with KIFF again to turn on alerts: this sign-in can't sign for the phone.")
+      fail(Words.Alert.signInAgain)
       return false
     }
     if (!push.available) {
-      fail("Alerts aren't set up in this build of tafs.")
+      fail(Words.Alert.notInBuild)
       return false
     }
     if (_state.value.turningOnAlerts) return false
@@ -2342,18 +2332,18 @@ class AppModel(
     try {
       val generation = accountGeneration
       if (!push.allowed()) {
-        fail("Allow notifications for tafs in Settings, then try again.")
+        fail(Words.Alert.allowNotifications)
         return false
       }
       val token = pushToken ?: push.token()?.also { pushToken = it }
       if (token == null) {
-        fail("This phone didn't give tafs a push token. Try again in a moment.")
+        fail(Words.Alert.noPushToken)
         return false
       }
       var handoff = pendingHandoff()
       if (handoff == null) {
         try {
-          signer.sign("tafs.alerts.v1|$tenant".toByteArray(), "Get an alert when a taf needs you")
+          signer.sign("tafs.alerts.v1|$tenant".toByteArray(), Words.Alert.prompt)
         } catch (_: SignerException) {
           return false
         }
@@ -2372,15 +2362,15 @@ class AppModel(
         } catch (e: KiffError.Server) {
           if (e.status == 403) {
             fail(
-              if ((e.message ?: "").contains("phone_alert_url_forbidden") || (e.message ?: "").contains("app backend")) "KIFF doesn't send alerts to tafs yet on this account."
-              else "Your role on this KIFF account can't turn on alerts.",
+              if ((e.message ?: "").contains("phone_alert_url_forbidden") || (e.message ?: "").contains("app backend")) Words.Alert.kiffDoesntSend
+              else Words.Alert.roleCant,
             )
           } else {
-            fail("Alerts aren't on. " + ErrorWords.of(e))
+            fail(Words.Alert.notOn(why = ErrorWords.of(e)))
           }
           return false
         } catch (e: Exception) {
-          fail("Alerts aren't on. " + ErrorWords.of(e))
+          fail(Words.Alert.notOn(why = ErrorWords.of(e)))
           return false
         } finally {
           kiff.setupSigner = null
@@ -2397,7 +2387,7 @@ class AppModel(
         throw e
       } catch (e: Exception) {
         if (generation == accountGeneration) {
-          fail("Alerts aren't on for this phone yet. " + ErrorWords.of(e))
+          fail(Words.Alert.notOnForPhone(why = ErrorWords.of(e)))
           _state.update { it.copy(alertsReady = false) }
         }
         false
@@ -2418,7 +2408,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(coachChecked = true, chatErrors = it.chatErrors + (COACH_CHAT to "Coach couldn't be reached. ${ErrorWords.of(e)}")) }
+      if (generation == accountGeneration) _state.update { it.copy(coachChecked = true, chatErrors = it.chatErrors + (COACH_CHAT to Words.Coach.notReached(why = ErrorWords.of(e)))) }
       return
     }
     if (generation == accountGeneration) {
@@ -2462,7 +2452,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(calendarError = "The calendar couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(calendarError = Words.Home.calendarNotRead(why = ErrorWords.of(e))) }
     }
   }
 
@@ -2489,7 +2479,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(suggestionsError = "It didn't change. ${(e as? bot.tafs.app.kiff.CloudError)?.message ?: ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(suggestionsError = Words.Settings.suggestionsNotChanged(why = (e as? bot.tafs.app.kiff.CloudError)?.message ?: ErrorWords.of(e))) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(suggestionsBusy = false) }
     }
@@ -2504,7 +2494,7 @@ class AppModel(
   suspend fun startCoach(): Boolean {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null) {
-      startFailed("Sign in with KIFF again: this sign-in can't sign for the phone.")
+      startFailed(Words.SignIn.againToSign)
       return false
     }
     if (_state.value.approvalKeyLost) {
@@ -2521,7 +2511,7 @@ class AppModel(
       try {
         // The owner says yes before anything is made: Coach's connector key and its drafts. Its drafts grant authority, so
         // with the approval key in KIFF each asks for its own fingerprint as well.
-        signer.sign("tafs.setup.v1|$tenant".toByteArray(), "Connect your tools")
+        signer.sign("tafs.setup.v1|$tenant".toByteArray(), Words.Coach.Prompt.connectTools)
       } catch (e: SignerException) {
         notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
         return false
@@ -2541,15 +2531,15 @@ class AppModel(
           } catch (e: CancellationException) {
             throw e
           } catch (e: KiffError.Server) {
-            startFailed(if (e.status == 403) "Only an admin of this KIFF account can connect tools." else "Connecting tools isn't set up. ${ErrorWords.of(e)}")
+            startFailed(if (e.status == 403) Words.Coach.connectAdminOnly else Words.Coach.connectingNotSetUp(why = ErrorWords.of(e)))
             return false
           } catch (e: PlanqueError.Server) {
             startFailed(
               when (e.status) {
-                409 -> "Another device connects this account's tools for now. Connect them from that one."
+                409 -> Words.Coach.connectOtherDevice
                 // planque couldn't check this phone with KIFF. KIFF's session works, so it isn't a sign-out.
                 401 -> CoachWords.CONNECTING_FAILED
-                else -> "Connecting tools isn't set up. ${ErrorWords.of(e)}"
+                else -> Words.Coach.connectingNotSetUp(why = ErrorWords.of(e))
               },
             )
             return false
@@ -2557,12 +2547,12 @@ class AppModel(
           if (generation != accountGeneration) return false
         }
         if (setup == null) {
-          approvalReason = "Start Coach"
+          approvalReason = Words.Coach.Prompt.start
           val draft = kiff.submitNoToolsDraft(COACH_AGENT, "Coach")
           val secret = draft.claimSecret
           if (generation != accountGeneration) return false
           if (secret == null) {
-            startFailed("Coach didn't start. " + ErrorWords.OURS)
+            startFailed(Words.Coach.didntStart(why = ErrorWords.OURS))
             return false
           }
           setup = cloud.startSetup(draft.id, secret)
@@ -2573,7 +2563,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) startFailed("Couldn't start. ${ErrorWords.of(e)}")
+        if (generation == accountGeneration) startFailed(Words.Coach.couldntStart(why = ErrorWords.of(e)))
         return false
       }
       if (generation != accountGeneration) return false
@@ -2615,7 +2605,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Couldn't read Coach's tools. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = Words.Coach.toolsNotRead(why = ErrorWords.of(e))) }
       return false
     } ?: return false
     if (generation != accountGeneration) return false
@@ -2643,7 +2633,7 @@ class AppModel(
       if (generation != accountGeneration) return false
       card?.let {
         // Its own fingerprint, in its own words: it gives Coach its Cards.
-        approvalReason = "Give Coach its Card"
+        approvalReason = Words.Coach.Prompt.giveCard
         kiff.submitDraft(it.body)
       }
     } catch (e: CancellationException) {
@@ -2652,7 +2642,7 @@ class AppModel(
       if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { words -> _state.update { it.copy(coachToolsError = words) } }
       return false
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Coach's tools weren't given. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = Words.Coach.toolsNotGiven(why = ErrorWords.of(e))) }
       return false
     } finally {
       kiff.setupSigner = null
@@ -2744,12 +2734,15 @@ class AppModel(
     val asked = ++connectAppsAsked
     val generation = accountGeneration
     try {
-      val apps = cloud.connectApps(q)
+      // This phone's signed grants read, as Setup sends it: tafs cloud then says which removed taf's connections Clear may end.
+      planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
+      val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
+      val apps = cloud.connectApps(q, proof = proof)
       if (generation == accountGeneration && asked == connectAppsAsked) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "The apps couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appsNotRead(why = ErrorWords.of(e))) }
     }
   }
 
@@ -2768,12 +2761,13 @@ class AppModel(
       val page = cloud.connectApps(connectAppsQuery, now.provider, cursor)
       if (generation == accountGeneration) _state.update { s ->
         val shown = s.connectApps ?: return@update s
-        s.copy(connectApps = page.copy(apps = shown.apps + page.apps.filter { app -> shown.apps.none { it.entry == app.entry } }), connectAppsError = null)
+        // The removed tafs stay as the first page read them, with its proof: a further page only adds apps.
+        s.copy(connectApps = page.copy(apps = shown.apps + page.apps.filter { app -> shown.apps.none { it.entry == app.entry } }, removedTafs = shown.removedTafs), connectAppsError = null)
       }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "The apps couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appsNotRead(why = ErrorWords.of(e))) }
     }
   }
 
@@ -2786,7 +2780,7 @@ class AppModel(
     val tenant = kiffTenant
     val key = call.proposal
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Sign in with KIFF again: this sign-in can't sign for the phone.")) }
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.SignIn.againToSign)) }
       return false
     }
     if (_state.value.approvalKeyLost) {
@@ -2803,7 +2797,7 @@ class AppModel(
       kiff.setupSigner = { signer.signConfirmed(it) }
       kiff.answerDidThisHappen(key, happened)
     } catch (e: SignerException) {
-      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to notSigned(e, "Not sent: it wasn't confirmed."))) }
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to notSigned(e, Words.Common.notSentUnconfirmed))) }
       return false
     } catch (_: KiffError.ApprovalKeyRequired) {
       if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to KiffClient.APPROVAL_KEY_LOST)) }
@@ -2811,7 +2805,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Your answer wasn't taken. ${ErrorWords.of(e)}")) }
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.NeedsYou.Unsure.answerNotTaken(why = ErrorWords.of(e)))) }
       return false
     } finally {
       kiff.setupSigner = null
@@ -2832,7 +2826,7 @@ class AppModel(
     val tenant = kiffTenant
     val key = call.proposal
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Sign in with KIFF again: this sign-in can't sign for the phone.")) }
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.SignIn.againToSign)) }
       return false
     }
     val generation = accountGeneration
@@ -2845,7 +2839,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Coach couldn't open on it. ${ErrorWords.of(e)}")) }
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.NeedsYou.Unsure.coachNotOpened(why = ErrorWords.of(e)))) }
       return false
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(answeringUnsure = null) }
@@ -2868,7 +2862,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(requestError = "That request couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(requestError = Words.NeedsYou.requestNotRead(why = ErrorWords.of(e))) }
     }
   }
 
@@ -2898,7 +2892,7 @@ class AppModel(
       val view = planque.siteSignIn(grantId) { signer.signConfirmed(it) }
       if (generation != accountGeneration) return
       if (!onPlanque(view.view)) {
-        note(grantId, "The sign-in view didn't open: it wasn't on the connection's own address.")
+        note(grantId, Words.Connect.SignInView.wrongAddress)
         return
       }
       _state.update { it.copy(siteSignIn = view) }
@@ -2906,7 +2900,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       // planque's own words say why (a view already open, the connection not connected); anything else, in the app's.
-      if (generation == accountGeneration) note(grantId, "The sign-in view didn't open. " + ((e as? PlanqueError.Server)?.message ?: ErrorWords.of(e)))
+      if (generation == accountGeneration) note(grantId, Words.Connect.SignInView.notOpened(why = (e as? PlanqueError.Server)?.message ?: ErrorWords.of(e)))
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(openingSiteSignIn = null) }
     }
@@ -2959,7 +2953,7 @@ class AppModel(
       try {
         signer.sign("tafs.slack-door.v1|$tenant|${grant.id}|${channel.id}".toByteArray(), DoorWords.slackReason(taf.name, channel.name.ifBlank { channel.id }))
       } catch (e: SignerException) {
-        updateDoors(tafId) { it.copy(error = notSigned(e, "Not added: it wasn't confirmed.")) }
+        updateDoors(tafId) { it.copy(error = notSigned(e, Words.Door.notAddedUnconfirmed)) }
         return null
       }
       if (generation != accountGeneration) return null
@@ -2969,7 +2963,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = "The Slack bot couldn't listen to that channel. ${ErrorWords.of(e)}") }
+        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = Words.Door.slackCantListen(why = ErrorWords.of(e))) }
         return null
       }
       if (generation != accountGeneration) return null
@@ -2981,7 +2975,7 @@ class AppModel(
       } catch (e: Exception) {
         // No door: the subscription goes again, so nothing listens for it.
         trigger.key?.let { key -> runCatching { planque.unsubscribe(grant.id, key, account) } }
-        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = "The Slack door wasn't added. ${ErrorWords.of(e)}") }
+        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = Words.Door.slackNotAdded(why = ErrorWords.of(e))) }
         return null
       }
       if (generation == accountGeneration) loadDoors(tafId)
@@ -3017,7 +3011,7 @@ class AppModel(
     val tenant = kiffTenant
     val cloudId = _state.value.taf(tafId)?.cloudId
     if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId) || tenant == null || cloudId == null) return false
-    if (!_state.value.sessionHasKey || !_state.value.planqueReady) return knobError(tafId, "Approving events isn't set up for this account from this phone.")
+    if (!_state.value.sessionHasKey || !_state.value.planqueReady) return knobError(tafId, Words.Setup.Knob.eventsNotSetUp)
     val shown = _state.value.knobs[tafId] ?: return false
     val item = shown.item(triggerId)?.takeIf { it.kind == "app_event" && it.ok == "approve" } ?: return false
     val approval = item.approval?.takeIf { it.needed } ?: return false
@@ -3052,7 +3046,7 @@ class AppModel(
         try {
           signer.sign("tafs.event.v1|$tenant|$cloudId|$version|$triggerId|${approval.grant}|${approval.event}|$filters".toByteArray(), item.words)
         } catch (e: SignerException) {
-          return knobError(tafId, notSigned(e, "Not approved: it wasn't confirmed."))
+          return knobError(tafId, notSigned(e, Words.Setup.Knob.notApprovedUnconfirmed))
         }
         if (generation != accountGeneration) return false
         planque.tenant = tenant
@@ -3064,7 +3058,7 @@ class AppModel(
           planque.signer = null
         }
         if (generation != accountGeneration) return false
-        val id = made.key ?: return knobError(tafId, "The connection didn't say which subscription it made. Try again.")
+        val id = made.key ?: return knobError(tafId, Words.Setup.Knob.noSubscription)
         EventReceipt(version, approval, id).also { eventReceipts[key] = it }
       }
       val updated = cloud.recordKnobSubscription(cloudId, triggerId, receipt.subscription, receipt.version)
@@ -3081,7 +3075,7 @@ class AppModel(
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
       val said = (e as? PlanqueError.Server)?.message ?: (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
-      return knobError(tafId, "Not approved. " + (said ?: ErrorWords.of(e)))
+      return knobError(tafId, Words.Setup.Knob.notApproved(why = said ?: ErrorWords.of(e)))
     } finally {
       approvingEvents.remove(tafId)
       if (generation == accountGeneration) _state.update { it.copy(approvingEvent = it.approvingEvent - tafId) }
@@ -3108,7 +3102,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not changed. ${ErrorWords.of(e)}")) }
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to Words.Setup.Knob.notChanged(why = ErrorWords.of(e)))) }
       return
     }
     if (generation != accountGeneration) return
@@ -3127,7 +3121,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not removed. ${ErrorWords.of(e)}")) }
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to Words.Setup.Knob.notRemoved(why = ErrorWords.of(e)))) }
       return
     }
     if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
@@ -3187,7 +3181,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       // A form the scheduler can't keep exactly: tafs cloud's words name the nearest one.
-      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not changed. ${ErrorWords.of(e)}")) }
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to Words.Setup.Knob.notChanged(why = ErrorWords.of(e)))) }
       false
     }
   }
@@ -3200,7 +3194,7 @@ class AppModel(
     val pending = _state.value.knobs[tafId]?.pending ?: return false
     loadVersions(tafId)
     val version = _state.value.versions[tafId]?.firstOrNull { it.n == pending.version } ?: run {
-      _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Version ${pending.version} couldn't be read. Try again.")) }
+      _state.update { it.copy(knobErrors = it.knobErrors + (tafId to Words.Setup.Knob.versionNotRead(n = pending.version.toString()))) }
       return false
     }
     if (!useVersion(version, tafId)) return false
@@ -3232,7 +3226,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "${app.title} couldn't be started. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appNotStarted(app = app.title, why = ErrorWords.of(e))) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(startingApp = null) }
     }
@@ -3291,7 +3285,7 @@ class AppModel(
     val noteKey = ConnectWords.cardKey(grantId)
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
-      note(noteKey, "Connecting tools isn't set up for this account from this phone.")
+      note(noteKey, Words.Connect.notSetUpHere)
       return false
     }
     if (_state.value.approvalKeyLost) return false.also { note(noteKey, KiffClient.APPROVAL_KEY_LOST) }
@@ -3308,20 +3302,20 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        return false.also { note(noteKey, "Couldn't read what to approve. ${ErrorWords.of(e)}") }
-      } ?: return false.also { note(noteKey, "There's no connection with that id.") }
+        return false.also { note(noteKey, Words.Connect.approveNotRead(why = ErrorWords.of(e))) }
+      } ?: return false.also { note(noteKey, Words.Connect.noSuchConnection) }
       if (!grant.digestMatches) return false.also { note(noteKey, PlanqueError.DigestMismatch.message!!) }
       if (grant.digest != shownDigest) {
         _state.update { s -> s.copy(grants = s.grants.map { if (it.id == grant.id) grant else it }) }
         return false.also { note(noteKey, VersionWords.OUT_OF_DATE_CARD) }
       }
       val words = grant.request.profile?.let {
-        _state.value.profileWordsFor(grant) ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
+        _state.value.profileWordsFor(grant) ?: return false.also { note(noteKey, Words.Connect.profileWordsUnread) }
       }
       try {
-        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Give ${grant.vendor} its key for ${grant.request.agent}")
+        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), Words.Connect.Prompt.giveKey(vendor = grant.vendor, agent = grant.request.agent))
       } catch (_: SignerException) {
-        return false.also { note(noteKey, "Not done: it wasn't confirmed.") }
+        return false.also { note(noteKey, Words.Common.notDoneUnconfirmed) }
       }
       if (generation != accountGeneration) return false
       try {
@@ -3329,7 +3323,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        return false.also { note(noteKey, "The key wasn't given. ${ErrorWords.of(e)}") }
+        return false.also { note(noteKey, Words.Connect.keyNotGiven(why = ErrorWords.of(e))) }
       }
       refreshConnections()
       return true
@@ -3362,7 +3356,7 @@ class AppModel(
     if (generation != accountGeneration) return
     result.onSuccess { w -> _state.update { it.copy(profileWords = it.profileWords + (grantId to w), profileWordsErrors = it.profileWordsErrors - grantId) } }
       .onFailure { e ->
-        val words = if (e is bot.tafs.app.kiff.ProfileWords.Mismatch) e.message!! else "KIFF's words for this connection couldn't be read. ${ErrorWords.of(e)}"
+        val words = if (e is bot.tafs.app.kiff.ProfileWords.Mismatch) e.message!! else Words.Connect.profileWordsNotRead(why = ErrorWords.of(e))
         _state.update { it.copy(profileWordsErrors = it.profileWordsErrors + (grantId to words)) }
       }
   }
@@ -3374,11 +3368,11 @@ class AppModel(
   ): Connected {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
-      return Connected.Failed("Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.")
+      return Connected.Failed(Words.Connect.notSetUpHereIphone, told = "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.")
     }
     if (_state.value.approvalKeyLost) return Connected.Failed(KiffClient.APPROVAL_KEY_LOST)
     if (_state.value.connecting != null) {
-      note(cardId, "Another approval is going through. Approve this one once it's done.")
+      note(cardId, Words.Connect.anotherApproval)
       return Connected.Stopped
     }
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - cardId) }
@@ -3394,12 +3388,12 @@ class AppModel(
       val grant: Grant
       var draft: AgentDraft? = null
       try {
-        grant = planque.grants().firstOrNull { it.id == grantId } ?: return Connected.Failed("There's no connection with that id.")
+        grant = planque.grants().firstOrNull { it.id == grantId } ?: return Connected.Failed(Words.Connect.noSuchConnection, told = "There's no connection with that id.")
         if (draftId != null && grant.connected) draft = kiff.draft(draftId)
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        return Connected.Failed("Couldn't read what to approve. ${ErrorWords.of(e)}", "couldn't read what to approve: ${e.message}")
+        return Connected.Failed(Words.Connect.approveNotRead(why = ErrorWords.of(e)), "couldn't read what to approve: ${e.message}")
       }
       if (grant.connected && !again) {
         // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a draft. One confirmation confirms them.
@@ -3415,24 +3409,27 @@ class AppModel(
           return Connected.Stopped
         }
         try {
-          confirmGrant("tafs.cards.v1|$tenant|${d.id}|${d.version}", "Give ${d.agentId} its Card")
+          confirmGrant("tafs.cards.v1|$tenant|${d.id}|${d.version}", Words.Connect.Prompt.giveCard(agent = d.agentId))
           if (generation != accountGeneration) return Connected.Stopped
           kiff.setupSigner = sign
           kiff.confirmDraft(d.id, d.version)
         } catch (e: SignerException) {
-          note(cardId, notSigned(e, "Not done: it wasn't confirmed."))
+          note(cardId, notSigned(e, Words.Common.notDoneUnconfirmed))
           return Connected.Stopped
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          return Connected.Failed("KIFF didn't issue the taf's Cards. ${ErrorWords.of(e)}", "KIFF didn't issue the taf's Cards: ${e.message}")
+          return Connected.Failed(Words.Connect.cardsNotIssued(why = ErrorWords.of(e)), "KIFF didn't issue the taf's Cards: ${e.message}")
         }
         return Connected.Done(grant)
       }
       // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
       // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until this phone confirms the new one.
       if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect") && !(again && grant.connected)) {
-        return Connected.Failed("This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."))
+        return Connected.Failed(
+          grant.status.replace('_', ' ').let { status -> grant.reason?.let { Words.Connect.connectionIsBecause(status = status, reason = it) } ?: Words.Connect.connectionIs(status = status) },
+          told = "This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."),
+        )
       }
       if (!grant.digestMatches) return Connected.Failed(PlanqueError.DigestMismatch.message!!)
       if (grant.digest != shownDigest) {
@@ -3442,12 +3439,12 @@ class AppModel(
       }
       // A connection with a profile is approved only with KIFF's words for exactly that profile, as the owner read them.
       val words = grant.request.profile?.let {
-        _state.value.profileWordsFor(grant) ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
+        _state.value.profileWordsFor(grant) ?: return Connected.Failed(Words.Connect.profileWordsUnread, told = "KIFF's words for this connection aren't read yet. Nothing was approved.")
       }
       try {
-        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Connect ${grant.vendor} to ${grant.request.agent}")
+        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), Words.Connect.Prompt.connect(vendor = grant.vendor, agent = grant.request.agent))
       } catch (_: SignerException) {
-        note(cardId, "Not done: it wasn't confirmed.")
+        note(cardId, Words.Common.notDoneUnconfirmed)
         return Connected.Stopped
       }
       if (generation != accountGeneration) return Connected.Stopped
@@ -3458,7 +3455,7 @@ class AppModel(
           // planque already holds the sign-in: approving the tools Setup chose from the vendor's list connected them, with no second sign-in.
           if (approved.status != "connected" && approved.status != "listed") {
             refreshConnections()
-            return Connected.Failed("The connection came back ${approved.status} with no sign-in link. Nothing was connected.")
+            return Connected.Failed(Words.Connect.noSignInLink(status = approved.status), told = "The connection came back ${approved.status} with no sign-in link. Nothing was connected.")
           }
           refreshConnections()
           return Connected.Done(_state.value.grants.firstOrNull { it.id == grant.id && it.connected } ?: grant.marked(true))
@@ -3466,7 +3463,7 @@ class AppModel(
         val back = vendorSignIn.signIn(url)
         val signedIn = PlanqueClient.signedIn(back)
         if (signedIn == null || signedIn.grant != grant.id || signedIn.tenant != tenant) {
-          return Connected.Failed("The sign-in at ${grant.vendor} came back without its confirmation code. Nothing was connected.")
+          return Connected.Failed(Words.Connect.noConfirmationCode(vendor = grant.vendor), told = "The sign-in at ${grant.vendor} came back without its confirmation code. Nothing was connected.")
         }
         if (generation != accountGeneration) return Connected.Stopped
         // Back from the vendor: signed in only once planque says the grant is connected, never because the page closed.
@@ -3478,12 +3475,12 @@ class AppModel(
         return Connected.Done(connected)
       } catch (e: VendorSignInCancelled) {
         refreshConnections()
-        return Connected.Failed("The sign-in was closed. Nothing was connected.")
+        return Connected.Failed(Words.Connect.signInClosedNothingConnected, told = "The sign-in was closed. Nothing was connected.")
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
         refreshConnections()
-        return Connected.Failed("Not connected. ${ErrorWords.of(e)}", "Not connected: ${e.message}")
+        return Connected.Failed(Words.Connect.notConnected(why = ErrorWords.of(e)), "Not connected: ${e.message}")
       }
     } finally {
       planque.signer = null
@@ -3586,7 +3583,7 @@ class AppModel(
               if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
             }
           } catch (e: SignerException) {
-            note(c.id, notSigned(e, "Not done: it wasn't confirmed."))
+            note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
             return
           }
           if (generation != accountGeneration) return
@@ -3599,7 +3596,7 @@ class AppModel(
             try {
               holdWindow(asked.reason)
             } catch (e: SignerException) {
-              note(c.id, notSigned(e, "Not done: it wasn't confirmed."))
+              note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
               return
             }
             if (generation != accountGeneration) return
@@ -3623,13 +3620,13 @@ class AppModel(
           note(c.id, outcome.note)
           coachAnswered(cloudId, key, outcome.session, outcome.run)
         }
-        else -> note(c.id, "Setup answered something this app doesn't read. Update the app.")
+        else -> note(c.id, Words.Coach.unknownAnswer)
       }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return
-      note(c.id, "Your answer didn't reach Setup. ${ErrorWords.of(e)}")
+      note(c.id, Words.Coach.answerNotReached(why = ErrorWords.of(e)))
       readThread(COACH_CHAT)
     } finally {
       planque.signer = null
@@ -3836,7 +3833,7 @@ class AppModel(
     val users = asked.associate { it.id to _state.value.tafsUsing(it, except = agent) }
     val kept = asked.filter { users[it.id].orEmpty().isNotEmpty() }.map { g ->
       val names = users[g.id].orEmpty().map { it.name }
-      "Kept your ${g.vendor} connection: ${names.joinToString(" and ")} ${if (names.size == 1) "uses" else "use"} it."
+      Words.Connect.keptConnection(count = names.size, vendor = g.vendor, names = names.reduce { a, b -> Words.Common.andJoin(first = a, second = b) })
     }
     val grants = asked.filter { users[it.id].orEmpty().isEmpty() }
     if (grants.isEmpty()) return Disconnected(kept = kept)
@@ -3861,6 +3858,64 @@ class AppModel(
     }
     refreshConnections()
     return Disconnected(grants.size - left, left, kept)
+  }
+
+  /**
+   * Clears the connections of tafs removed since, from Connect apps (the owner's ask): one confirmation, one fingerprint, then the
+   * device key signs each disconnect, as removing a taf does. Only the ones tafs cloud lists, and one a live taf's Card still uses
+   * (tafs cloud's `used_by`) is kept, with the line naming that taf.
+   */
+  suspend fun clearRemovedConnections(grantIds: List<String>): Boolean {
+    val tenant = kiffTenant
+    // Only a connection tafs cloud lists as a removed taf's (`removed_tafs[].grants`): never one whose taf the phone merely can't
+    // see. Which to keep is tafs cloud's word too: one a live taf's Card still uses (`used_by`) is kept, and the line names it.
+    val listed = _state.value.connectApps?.removedTafs.orEmpty().flatMap { it.grants.orEmpty() }.associateBy { it.grant }
+    val grants = _state.value.grants.filter { it.id in grantIds && it.id in listed }
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || grants.isEmpty() || !_state.value.planqueReady) return false
+    if (_state.value.clearingRemoved) return false
+    val keptBy = grants.mapNotNull { g -> listed[g.id]?.usedBy?.takeIf { it.isNotEmpty() } }
+    val ending = grants.filter { listed[it.id]?.usedBy.isNullOrEmpty() }
+    if (ending.isEmpty()) {
+      _state.update { it.copy(clearNote = bot.tafs.app.model.ConnectionWords.cleared(0, keptBy.size, keptBy.flatten().map { u -> u.name }, 0)) }
+      return true
+    }
+    val generation = accountGeneration
+    _state.update { it.copy(clearingRemoved = true, clearNote = null) }
+    try {
+      try {
+        signer.sign("tafs.disconnect.v1|$tenant|${ending.joinToString(",") { it.id }}".toByteArray(), bot.tafs.app.model.ConnectionWords.clearTitle(ending.size))
+      } catch (e: SignerException) {
+        if (generation == accountGeneration) _state.update { it.copy(clearNote = notSigned(e, Words.Common.notDoneUnconfirmed)) }
+        return false
+      }
+      if (generation != accountGeneration) return false
+      var left = 0
+      run {
+        planque.tenant = tenant
+        planque.deviceLoader = { kiff.thisDeviceId() }
+        val signer = signer
+        planque.signer = { signer.signConfirmed(it) }
+        try {
+          for (g in ending) {
+            if (generation != accountGeneration) return false
+            try {
+              planque.disconnect(g.id)
+            } catch (e: CancellationException) {
+              throw e
+            } catch (_: Exception) {
+              left += 1
+            }
+          }
+        } finally {
+          planque.signer = null
+        }
+      }
+      refreshConnections()
+      if (generation == accountGeneration) _state.update { it.copy(clearNote = bot.tafs.app.model.ConnectionWords.cleared(ending.size - left, keptBy.size, keptBy.flatten().map { u -> u.name }, left)) }
+      return left == 0
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(clearingRemoved = false) }
+    }
   }
 
   /** What removing a taf did to its connections: disconnected, couldn't be, and kept for another taf (in words). */
@@ -3890,7 +3945,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      fail("Not disconnected. ${ErrorWords.of(e)}")
+      fail(Words.Connect.notDisconnected(why = ErrorWords.of(e)))
       return false
     } finally {
       planque.signer = null
@@ -3991,9 +4046,9 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: SignerException) {
-      note(c.id, notSigned(e, "Not started: it wasn't confirmed."))
+      note(c.id, notSigned(e, Words.Coach.Drive.notStartedUnconfirmed))
     } catch (e: Exception) {
-      note(c.id, "Coach can't drive: ${ErrorWords.of(e)}")
+      note(c.id, Words.Coach.Drive.cant(why = ErrorWords.of(e)))
       bot.tafs.app.drive.DriveDiagnostics.error("Coach can't drive: ${ErrorWords.of(e)}")
     } finally {
       _state.update { it.copy(driveStarting = null) }
@@ -4039,7 +4094,7 @@ class AppModel(
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
       val gone = e is CloudError && e.status == 409
-      if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (key to "Your answer wasn't sent. ${ErrorWords.of(e)}")) }
+      if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (key to Words.Coach.cardAnswerNotSent(why = ErrorWords.of(e)))) }
       _state.update { it.copy(cardsAnswering = it.cardsAnswering - key) }
       readThread(COACH_CHAT)
       return false
@@ -4149,7 +4204,7 @@ class AppModel(
     val files = withFiles && _state.value.mode == Mode.kiff && _state.value.files(tafId).any { it.ref != null }
     if (words.isEmpty() && !files) return false
     if (words.length > Chat.LIMIT) {
-      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "That's longer than ${Chat.LIMIT} characters. Say it in fewer words.")) }
+      _state.update { it.copy(chatErrors = it.chatErrors + (tafId to Words.Chat.tooLong(count = Chat.LIMIT))) }
       return false
     }
     if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId, withFiles)
@@ -4316,7 +4371,7 @@ class AppModel(
   suspend fun attach(file: PreparedFile, tafId: String) {
     val target = filesTarget(tafId) ?: return
     if (_state.value.files(tafId).size >= FilePrep.PER_MESSAGE) {
-      refuseFile("A message carries at most ${FilePrep.PER_MESSAGE} files.", tafId)
+      refuseFile(Words.Chat.File.tooMany(count = FilePrep.PER_MESSAGE), tafId)
       return
     }
     val pending = PendingFile(name = file.name, mediaType = file.mediaType, thumbnail = file.thumbnail)
@@ -4333,7 +4388,7 @@ class AppModel(
         // tafs cloud refused the file itself: the owner can pick another.
         if (e is CloudError && e.status in 400..499 && e.status !in listOf(401, 403, 409, 429)) FilePrep.NOT_TAKEN
         else if (e is bot.tafs.app.model.OwnWords) ErrorWords.of(e)
-        else "It didn't upload. " + ErrorWords.of(e),
+        else Words.Chat.File.notUploaded(why = ErrorWords.of(e)),
       )
     }
     if (generation != accountGeneration) return
@@ -4382,7 +4437,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      refuseFile("${ref.name} couldn't be opened. ${ErrorWords.of(e)}", tafId)
+      refuseFile(Words.Chat.File.notOpened(file = ref.name, why = ErrorWords.of(e)), tafId)
       null
     }
   }
@@ -4493,7 +4548,7 @@ class AppModel(
       _state.update { s ->
         val how = when {
           end == null -> null
-          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done)
+          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done, end.words)
           end.status == "CANCELLED" -> ChatEnd.Stopped
           end.stop in CAP_STOPS -> ChatEnd.Capped(end.stop)
           else -> null
@@ -4526,7 +4581,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("Not stopped. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) fail(Words.Chat.notStopped(why = ErrorWords.of(e)))
       return
     }
     if (generation != accountGeneration) return
@@ -4573,8 +4628,8 @@ class AppModel(
    * halted), else the app's for the status.
    */
   private fun sendFailure(e: Exception, name: String): String =
-    if (e is CloudError && e.status == 429 && e.words == null) "That's a lot of messages in a few minutes. Give $name a moment, then try again."
-    else "The message wasn't sent. ${ErrorWords.of(e)}"
+    if (e is CloudError && e.status == 429 && e.words == null) Words.Chat.tooMany(taf = name)
+    else Words.Chat.notSent(why = ErrorWords.of(e))
 
   /**
    * A run refused because the tafs wait on credits (docs/accounts.md#the-balance-read): 409 with `credits_used_up`, `limit_reached`
@@ -4594,24 +4649,24 @@ class AppModel(
   /** A sample taf answers from its own record: what it did, what waits, or a pause. */
   private fun sampleReply(text: String, tafId: String): String {
     val lower = text.lowercase()
-    val taf = _state.value.taf(tafId) ?: return "I'm not here any more."
+    val taf = _state.value.taf(tafId) ?: return Words.Sample.Reply.gone
     if (listOf("stop", "pause", "hold off").any { lower.contains(it) }) {
       if (taf.state != TafState.paused) togglePause(tafId)
-      return "Paused. Nothing more goes out until you tell me to carry on."
+      return Words.Sample.Reply.paused
     }
     if (listOf("go", "carry on", "resume", "continue").any { lower == it || lower.startsWith("$it ") }) {
       if (taf.state == TafState.paused) togglePause(tafId)
-      return "Back to work."
+      return Words.Sample.Reply.backToWork
     }
     if (listOf("more", "raise", "limit", "bigger", "increase").any { lower.contains(it) }) {
-      return "I can't give myself more room: only you can, by changing my Card. Anything over it waits for you in Needs you."
+      return Words.Sample.Reply.moreRoom
     }
     val done = _state.value.entries(tafId).take(3).map { "• " + it.title }
     val waiting = _state.value.heldCalls(tafId).size
     val lines = mutableListOf<String>()
-    lines += if (done.isEmpty()) "Nothing done yet today." else "Lately:\n" + done.joinToString("\n")
-    if (waiting > 0) lines += "$waiting thing${if (waiting == 1) " waits" else "s wait"} on you in Needs you."
-    lines += "(Sample reply. Signed in with KIFF, your taf answers for real.)"
+    lines += if (done.isEmpty()) Words.Sample.Reply.nothingDone else Words.Sample.Reply.lately(done = done.joinToString("\n"))
+    if (waiting > 0) lines += Words.Sample.Reply.waiting(count = waiting)
+    lines += Words.Sample.Reply.note
     return lines.joinToString("\n\n")
   }
 
@@ -4646,7 +4701,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(memoryErrors = it.memoryErrors + (tafId to "Its notes couldn't be loaded. ${ErrorWords.of(e)}")) }
+      if (generation == accountGeneration) _state.update { it.copy(memoryErrors = it.memoryErrors + (tafId to Words.Taf.Memory.notLoaded(why = ErrorWords.of(e)))) }
       return
     }
     if (generation == accountGeneration) _state.update { it.copy(memories = it.memories + (tafId to notes), memoryErrors = it.memoryErrors - tafId) }
@@ -4682,14 +4737,14 @@ class AppModel(
     if (generation != accountGeneration) return
     _state.update { s ->
       val notes = (s.memories[tafId].orEmpty().filterNot { it.id == note.id } + note).sortedByDescending { it.updatedAt }
-      s.copy(memories = s.memories + (tafId to notes), memoryErrors = s.memoryErrors + (tafId to "It wasn't forgotten. ${ErrorWords.of(e)}"))
+      s.copy(memories = s.memories + (tafId to notes), memoryErrors = s.memoryErrors + (tafId to Words.Taf.Memory.notForgotten(why = ErrorWords.of(e))))
     }
   }
 
   private fun sampleNotes(tafId: String, now: Instant): List<MemoryNote> = listOf(
-    Triple("/how-you-like-it.md", "You'd rather I explain a decision in one line than in a paragraph.", 3_600L),
-    Triple("/customers/regulars.md", "Customers who write every week get a reply the same morning.", 86_400L),
-    Triple("/from-the-owner.md", "Ask before anything unusual, even when it fits the Card.", 3 * 86_400L),
+    Triple("/how-you-like-it.md", Words.Sample.Memory.explain, 3_600L),
+    Triple("/customers/regulars.md", Words.Sample.Memory.regulars, 86_400L),
+    Triple("/from-the-owner.md", Words.Sample.Memory.askFirst, 3 * 86_400L),
   ).mapIndexed { i, (path, content, ago) -> MemoryNote("sample-$tafId-$i", path, content, now.minusSeconds(ago)) }
 
   /** Plays the next scripted action of every working taf, so the sample shows the Card at work. */
@@ -4711,7 +4766,7 @@ class AppModel(
     when (val decision = CardCheck.decide(proposed, taf)) {
       Decision.Allowed -> {
         update(CardCheck.draw(proposed, taf).copy(state = TafState.working, now = proposed.summary))
-        log(tafId, RecordEntry.Kind.done, proposed.summary, amountLine(proposed, "within the Card"), proposed)
+        log(tafId, RecordEntry.Kind.done, proposed.summary, amountLine(proposed, { Words.Record.withinCard(amount = it) }, Words.Record.withinCardAlone), proposed)
       }
       is Decision.Held -> {
         val now = clock()
@@ -4719,12 +4774,12 @@ class AppModel(
         val call = HeldCall(tafId = tafId, proposed = proposed, reason = decision.reason, heldAt = now,
           expiresAt = now.plus(Duration.ofMinutes(10)), nextSteps = rule?.nextSteps ?: emptyList())
         _state.update { it.copy(held = listOf(call) + it.held) }
-        update(taf.copy(state = TafState.waiting, now = "Waiting on you · ${proposed.summary}"))
-        log(tafId, RecordEntry.Kind.held, "Held: ${proposed.summary}", decision.reason, proposed)
+        update(taf.copy(state = TafState.waiting, now = Words.Taf.Now.waitingOn(summary = proposed.summary)))
+        log(tafId, RecordEntry.Kind.held, Words.Record.held(summary = proposed.summary), decision.reason, proposed)
       }
       is Decision.Refused -> {
-        update(taf.copy(now = "Refused · ${proposed.summary}"))
-        log(tafId, RecordEntry.Kind.refused, "Refused: ${proposed.summary}", decision.reason, proposed)
+        update(taf.copy(now = Words.Taf.Now.refused(summary = proposed.summary)))
+        log(tafId, RecordEntry.Kind.refused, Words.Record.refused(summary = proposed.summary), decision.reason, proposed)
       }
     }
   }
@@ -4754,7 +4809,7 @@ class AppModel(
     // Approving Coach's install is installing it (kiff/tafs#206): the switch and its Card come first, then this answer, so
     // tafs never hears of a half-done install.
     if (call.install != null && answer is Answer.ApproveOnce && !confirmed && !installed) {
-      fail("Install it from its card: the version goes live, then Coach hears.")
+      fail(Words.NeedsYou.installFromCard)
       return false
     }
     val kiffId = call.kiffId
@@ -4768,14 +4823,14 @@ class AppModel(
     // A call KIFF holds is answered here only when KIFF checks this phone's signature on it (kiff/tafs#138).
     if (kiffId != null && !before.canAnswer(call)) {
       fail(
-        if (!before.sessionHasKey) "Sign out and in again to answer from this phone, so KIFF knows its key. Or answer this one in KIFF."
-        else "Answer this one in KIFF. Answering from the phone arrives once KIFF checks the phone's signature.",
+        if (!before.sessionHasKey) Words.NeedsYou.signInAgainToAnswer
+        else Words.NeedsYou.answerInKiff,
       )
       return false
     }
     if (kiffId == null && clock() > call.expiresAt) {
       resolve(call)
-      log(call.tafId, RecordEntry.Kind.refused, "Expired: ${call.proposed.summary}", "Nobody answered in time")
+      log(call.tafId, RecordEntry.Kind.refused, Words.Record.expired(summary = call.proposed.summary), Words.Record.expiredDetail)
       save()
       return true
     }
@@ -4787,10 +4842,10 @@ class AppModel(
     }
     val generation = accountGeneration
     val answered = try {
-      presigned ?: signAnswer(call, answer, "Answer ${call.proposed.summary}", confirmed)
+      presigned ?: signAnswer(call, answer, Words.NeedsYou.Prompt.answer(summary = call.proposed.summary), confirmed)
     } catch (e: SignerException) {
       // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept).
-      fail("${notSigned(e, "Not sent: it wasn't confirmed.")} ${bot.tafs.app.model.ApprovalWords.KEPT}")
+      fail("${notSigned(e, Words.Common.notSentUnconfirmed)} ${bot.tafs.app.model.ApprovalWords.KEPT}")
       return false
     }
     val signature = answered.value
@@ -4907,20 +4962,20 @@ class AppModel(
     when (answer) {
       Answer.ApproveOnce -> {
         taf?.let { update((if (sample) CardCheck.draw(call.proposed, it) else it).copy(now = summary)) }
-        decide(call, RecordEntry.Kind.approved, "Approved once by you · $at · $summary", amountLine(call.proposed, "approved once by $ownerName"), signature)
+        decide(call, RecordEntry.Kind.approved, Words.Record.approvedOnce(at = at, summary = summary), amountLine(call.proposed, { Words.Record.approvedOnceBy(amount = it, owner = ownerName) }, Words.Record.approvedOnceByAlone(owner = ownerName)), signature)
       }
       is Answer.NextStep -> {
         taf?.let { update(it.copy(now = answer.step)) }
-        decide(call, RecordEntry.Kind.refused, "Refused by you · $at, with a next step · $summary", "Refused, with a next step for the taf: ${answer.step}", signature)
+        decide(call, RecordEntry.Kind.refused, Words.Record.refusedNextStep(at = at, summary = summary), Words.Record.refusedNextStepDetail(step = answer.step), signature)
       }
       Answer.ExtraRoom -> {
         taf?.let { update(it.copy(now = summary)) }
-        decide(call, RecordEntry.Kind.approved, "Extra room by you · $at · $summary", "Its Card got the room for this total, until it resets. Over a limit for one call as well, the call is held again for that", signature)
+        decide(call, RecordEntry.Kind.approved, Words.Record.extraRoom(at = at, summary = summary), Words.Record.extraRoomDetail, signature)
         call.kiffId?.let { id -> _state.update { it.copy(roomGiven = it.roomGiven + id) } }
       }
       Answer.Refuse -> {
-        taf?.let { update(it.copy(now = "Refused · $summary")) }
-        decide(call, RecordEntry.Kind.refused, "Refused by you · $at · $summary", call.reason, signature)
+        taf?.let { update(it.copy(now = Words.Taf.Now.refused(summary = summary))) }
+        decide(call, RecordEntry.Kind.refused, Words.Record.refusedByYou(at = at, summary = summary), call.reason, signature)
       }
     }
     _state.value.taf(call.tafId)?.let { t ->
@@ -4946,7 +5001,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Its versions couldn't be loaded. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) versionError(tafId, Words.Version.notLoaded(why = ErrorWords.of(e)))
       return
     }
     if (generation != accountGeneration || _state.value.mode != Mode.kiff) return
@@ -4974,7 +5029,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Couldn't read this version's Card. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) versionError(tafId, Words.Version.cardNotRead(why = ErrorWords.of(e)))
       null
     }
   }
@@ -5000,13 +5055,13 @@ class AppModel(
       if (generation != accountGeneration) return null
       if (e.status == 409 && e.blocking.isNotEmpty()) {
         _state.update { it.copy(blockedInstalls = it.blockedInstalls + (tafId to version.n)) }
-        versionError(tafId, e.words ?: "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
+        versionError(tafId, e.words ?: Words.Version.cantGoLive(n = version.n.toString(), why = ErrorWords.of(e)))
       } else {
-        versionError(tafId, "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
+        versionError(tafId, Words.Version.cantGoLive(n = version.n.toString(), why = ErrorWords.of(e)))
       }
       null
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) versionError(tafId, Words.Version.cantGoLive(n = version.n.toString(), why = ErrorWords.of(e)))
       null
     }
   }
@@ -5067,13 +5122,13 @@ class AppModel(
     val tafs = _state.value.tafs
     val taf = tafs.firstOrNull { it.cloudId == ask.taf } ?: tafs.firstOrNull { it.name.equals(ask.taf, ignoreCase = true) }
     if (taf == null) {
-      fail("Coach asked to install a version of a taf that isn't here.")
+      fail(Words.Version.coachUnknownTaf)
       return null
     }
     loadVersions(taf.id)
     val version = _state.value.versions[taf.id]?.firstOrNull { it.n == ask.n }
     if (version == null) {
-      fail("${taf.name} has no version ${ask.n}.")
+      fail(Words.Version.noSuch(taf = taf.name, n = ask.n.toString()))
       return null
     }
     if (version.live) {
@@ -5106,7 +5161,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) versionError(tafId, Words.Version.cantGoLive(n = version.n.toString(), why = ErrorWords.of(e)))
       return false
     }
     if (generation != accountGeneration) return false
@@ -5116,14 +5171,14 @@ class AppModel(
     if (sw.draft != null) {
       // Nothing shown, nothing signed.
       if (shownDraft == null) return false
-      if (!_state.value.sessionHasKey) return dropSwitch(tafId, "Sign in with KIFF again: this sign-in can't sign for the phone.")
+      if (!_state.value.sessionHasKey) return dropSwitch(tafId, Words.SignIn.againToSign)
       if (_state.value.approvalKeyLost) return dropSwitch(tafId, KiffClient.APPROVAL_KEY_LOST)
       draft = try {
         kiff.draft(sw.draft)
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) versionError(tafId, "Couldn't read this version's Card. ${ErrorWords.of(e)}")
+        if (generation == accountGeneration) versionError(tafId, Words.Version.cardNotRead(why = ErrorWords.of(e)))
         return false
       }
     }
@@ -5142,7 +5197,7 @@ class AppModel(
       // Coach's held install goes with the Card's confirm, so the one fingerprint approves both, and the prompt says so.
       val hold = held?.let { holdAnswered(it.call) }
       try {
-        confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Use version ${version.n} of $name, with its Card${if (hold != null) ", as Coach asked" else ""}")
+        confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", if (hold != null) Words.Version.Prompt.useWithCardCoach(n = version.n.toString(), taf = name) else Words.Version.Prompt.useWithCard(n = version.n.toString(), taf = name))
         if (generation != accountGeneration) return false
         val signer = signer
         kiff.setupSigner = { signer.signConfirmed(it) }
@@ -5165,9 +5220,9 @@ class AppModel(
         if (e is KiffError.Server && e.status == 409 && e.reason == "card_revised") {
           // A Card moved on since it was drafted (KIFF's reason): drafted again, it is read again.
           _state.update { it.copy(staleVersionCards = it.staleVersionCards + (tafId to version.n)) }
-          versionError(tafId, "Version ${version.n}'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve.")
+          versionError(tafId, Words.Version.cardOutOfDate(n = version.n.toString()))
         } else {
-          versionError(tafId, "Installing version ${version.n} didn't finish: KIFF didn't confirm its Card. ${ErrorWords.of(e)} Your taf doesn't run until you finish or cancel it.")
+          versionError(tafId, Words.Version.installUnconfirmed(n = version.n.toString(), why = ErrorWords.of(e)))
         }
         return false
       }
@@ -5177,7 +5232,7 @@ class AppModel(
       // Coach's install with no Card: approving Coach's held call is the confirmation, signed now, before the version goes
       // live, and sent once it is. One fingerprint, and nothing goes live unless the owner gave it.
       try {
-        held.signed = signAnswer(held.call, Answer.ApproveOnce, "Use version ${version.n} of $name, as Coach asked", confirmed = false)
+        held.signed = signAnswer(held.call, Answer.ApproveOnce, Words.Version.Prompt.useCoach(n = version.n.toString(), taf = name), confirmed = false)
       } catch (e: SignerException) {
         if (generation == accountGeneration) {
           cancelSwitch(tafId)
@@ -5187,7 +5242,7 @@ class AppModel(
       }
     } else {
       try {
-        signer.sign("tafs.version.v1|$tenant|$cloudId|${version.n}".toByteArray(), "Use version ${version.n} of $name")
+        signer.sign("tafs.version.v1|$tenant|$cloudId|${version.n}".toByteArray(), Words.Version.Prompt.use(n = version.n.toString(), taf = name))
       } catch (_: SignerException) {
         // Backed out: the switch it began is dropped, and the taf runs again as it was.
         if (generation == accountGeneration) cancelSwitch(tafId)
@@ -5203,8 +5258,8 @@ class AppModel(
       if (generation == accountGeneration) {
         versionError(
           tafId,
-          if (sw.draft == null) "Version ${version.n} isn't live. ${ErrorWords.of(e)}"
-          else "Installing version ${version.n} didn't finish. ${ErrorWords.of(e)} Your taf doesn't run until you finish or cancel it.",
+          if (sw.draft == null) Words.Version.notLive(n = version.n.toString(), why = ErrorWords.of(e))
+          else Words.Version.installUnfinished(n = version.n.toString(), why = ErrorWords.of(e)),
         )
       }
       return false
@@ -5236,7 +5291,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return
-      versionError(tafId, "The switch wasn't cancelled. ${ErrorWords.of(e)}")
+      versionError(tafId, Words.Version.switchNotCancelled(why = ErrorWords.of(e)))
     }
     loadVersions(tafId)
   }
@@ -5270,7 +5325,7 @@ class AppModel(
         if (generation != accountGeneration) return
       }
     }
-    if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = "The doors couldn't be read just now. They're tried again when you come back here.") }
+    if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = Words.Door.notRead) }
   }
 
   /** A change on tafs cloud that answers with the door: it replaces the one shown. */
@@ -5298,7 +5353,7 @@ class AppModel(
   /** Turns a door on: email at once. WhatsApp's signup runs in a browser the app doesn't open here yet. */
   suspend fun addDoor(tafId: String, app: DoorApp): Door? {
     if (app.kind == "whatsapp") {
-      updateDoors(tafId) { it.copy(error = "Adding a WhatsApp door isn't in the Android app yet. Add it from tafs on an iPhone.") }
+      updateDoors(tafId) { it.copy(error = Words.Door.whatsappAndroid) }
       return null
     }
     return doorWork(tafId) { cloud.addDoor(it, app.id) }
@@ -5323,7 +5378,7 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          updateDoors(tafId) { it.copy(error = (if (door.kind == "slack") "The Slack bot still listens to that channel" else "The bot still listens") + ", so the door stays. ${ErrorWords.of(e)}") }
+          updateDoors(tafId) { it.copy(error = if (door.kind == "slack") Words.Door.slackStillListens(why = ErrorWords.of(e)) else Words.Door.botStillListens(why = ErrorWords.of(e))) }
           return
         } finally {
           planque.signer = null
@@ -5365,7 +5420,7 @@ class AppModel(
     } catch (e: Exception) {
       if (generation != accountGeneration) return
       // In the app's words, as the chat says it, not tafs cloud's.
-      val words = if (e is CloudError && e.status == 429) "That's a lot of messages in a few minutes. Wait a little, then send it again: nothing was sent." else "Nothing was sent. " + ErrorWords.of(e)
+      val words = if (e is CloudError && e.status == 429) Words.Door.Knock.tooMany else Words.Door.Knock.notSent(why = ErrorWords.of(e))
       updateDoors(tafId) { it.copy(error = words) }
     } finally {
       if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
@@ -5420,7 +5475,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) trialError(tafId, "The trial couldn't be read. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) trialError(tafId, Words.Version.Trial.notRead(why = ErrorWords.of(e)))
       return
     }
     if (generation == accountGeneration) setTrial(open, tafId)
@@ -5441,7 +5496,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) trialError(tafId, "Version ${version.n}'s trial Card couldn't be read. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) trialError(tafId, Words.Version.Trial.cardNotRead(n = version.n.toString(), why = ErrorWords.of(e)))
       null
     }
   }
@@ -5460,7 +5515,7 @@ class AppModel(
     try {
       trialError(tafId, null)
       if (!_state.value.sessionHasKey) {
-        trialError(tafId, "Sign in with KIFF again: this sign-in can't sign for the phone.")
+        trialError(tafId, Words.SignIn.againToSign)
         return null
       }
       if (_state.value.approvalKeyLost) {
@@ -5474,18 +5529,18 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "Version ${version.n} can't be tried now. ${ErrorWords.of(e)}")
+        if (generation == accountGeneration) trialError(tafId, Words.Version.Trial.cantTry(n = version.n.toString(), why = ErrorWords.of(e)))
         return null
       }
       if (generation != accountGeneration) return null
       // What the owner read is what the confirmation signs: changed since, it is read again.
       if (draft.version != shownDraft) {
         _state.update { it.copy(changedVersionCards = it.changedVersionCards + (tafId to draft)) }
-        trialError(tafId, "What you're asked to approve changed since it was shown. Read it again, then start.")
+        trialError(tafId, Words.Version.Trial.changed)
         return null
       }
       try {
-        confirmGrant("tafs.trial.v1|$tenant|${draft.id}|${draft.version}", "Try version ${version.n} of ${taf.name}, with its own Card")
+        confirmGrant("tafs.trial.v1|$tenant|${draft.id}|${draft.version}", Words.Version.Trial.prompt(n = version.n.toString(), taf = taf.name))
         if (generation != accountGeneration) return null
         val signer = signer
         kiff.setupSigner = { signer.signConfirmed(it) }
@@ -5508,7 +5563,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "Trying version ${version.n} didn't start. ${ErrorWords.of(e)}")
+        if (generation == accountGeneration) trialError(tafId, Words.Version.Trial.notStarted(n = version.n.toString(), why = ErrorWords.of(e)))
         return null
       }
     } finally {
@@ -5538,10 +5593,10 @@ class AppModel(
         if (generation != accountGeneration) return false
         if (!draft.confirmed) {
           if (!_state.value.sessionHasKey) {
-            trialError(tafId, "Sign in with KIFF again: this sign-in can't sign for the phone.")
+            trialError(tafId, Words.SignIn.againToSign)
             return false
           }
-          confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Install version ${open.n} of ${taf.name}, with its Card")
+          confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", Words.Version.Prompt.install(n = open.n.toString(), taf = taf.name))
           if (generation != accountGeneration) return false
           val signer = signer
           kiff.setupSigner = { signer.signConfirmed(it) }
@@ -5554,7 +5609,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "Installing version ${open.n} didn't finish. ${ErrorWords.of(e)}")
+        if (generation == accountGeneration) trialError(tafId, Words.Version.Trial.installUnfinished(n = open.n.toString(), why = ErrorWords.of(e)))
         return false
       }
       if (generation != accountGeneration) return false
@@ -5587,7 +5642,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "The trial didn't end. ${ErrorWords.of(e)}")
+        if (generation == accountGeneration) trialError(tafId, Words.Version.Trial.notEnded(why = ErrorWords.of(e)))
         return false
       }
       if (generation != accountGeneration) return false
@@ -5620,7 +5675,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) haltFailed("tafs couldn't halt ${if (tafId == null) "your tafs" else "it"}. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) haltFailed(if (tafId == null) Words.Taf.Halt.notHaltedAll(why = ErrorWords.of(e)) else Words.Taf.Halt.notHalted(why = ErrorWords.of(e)))
       return
     }
     if (generation != accountGeneration) return
@@ -5677,7 +5732,7 @@ class AppModel(
     val generation = accountGeneration
     _state.update { it.copy(timeZoneError = null) }
     try {
-      signer.sign("tafs.time-zone.v1|$tenant|$zone".toByteArray(), "Set your account's time zone to $zone")
+      signer.sign("tafs.time-zone.v1|$tenant|$zone".toByteArray(), Words.Settings.TimeZone.prompt(zone = zone))
     } catch (_: SignerException) {
       return
     }
@@ -5692,7 +5747,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(timeZoneError = "The time zone didn't change. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(timeZoneError = Words.Settings.TimeZone.notChanged(why = ErrorWords.of(e))) }
       return
     } finally {
       kiff.setupSigner = null
@@ -5749,7 +5804,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(peopleError = "People and groups couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(peopleError = Words.People.notRead(why = ErrorWords.of(e))) }
     }
   }
 
@@ -5781,7 +5836,7 @@ class AppModel(
       if (generation != accountGeneration) return false
       // Read again first: a read that works clears the error, and this one must stay on screen.
       refreshPeople()
-      val words = if (e is SignerException) notSigned(e, "$what didn't go through: it wasn't confirmed.") else "$what didn't go through. ${ErrorWords.of(e)}"
+      val words = if (e is SignerException) notSigned(e, Words.Common.didntGoThroughUnconfirmed(what = what)) else Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))
       if (generation == accountGeneration) _state.update { it.copy(peopleError = words) }
       return false
     } finally {
@@ -5828,7 +5883,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = "Couldn't load your devices. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Settings.Devices.notLoaded(why = ErrorWords.of(e))) }
     }
   }
 
@@ -5837,7 +5892,7 @@ class AppModel(
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice) return false
     val generation = accountGeneration
-    val what = "Sign ${device.name ?: "this device"} out of your account"
+    val what = Words.Settings.Devices.signOutPrompt(device = device.name ?: Words.Settings.Devices.thisDevice)
     try {
       signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
     } catch (_: SignerException) {
@@ -5850,7 +5905,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = "$what didn't go through. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
       return false
     }
     refreshDevices()
@@ -5875,12 +5930,12 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || _state.value.deletingAccount) return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(deleteAccountError = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
+      _state.update { it.copy(deleteAccountError = Words.SignIn.againToSign) }
       return false
     }
     val generation = accountGeneration
     try {
-      signer.sign("tafs.delete-account.v1|$tenant".toByteArray(), "Delete your account")
+      signer.sign("tafs.delete-account.v1|$tenant".toByteArray(), Words.Settings.DeleteAccount.prompt)
     } catch (_: SignerException) {
       return false
     }
@@ -5892,13 +5947,13 @@ class AppModel(
     _state.update { it.copy(deletingAccount = true) }
     try {
       try {
-        if (!cloud.deleteAccount().done) return stopped("tafs couldn't erase everything yet. Your KIFF account isn't deleted. Try again.")
+        if (!cloud.deleteAccount().done) return stopped(Words.Settings.DeleteAccount.notErasedYet)
       } catch (e: CancellationException) {
         throw e
       } catch (e: CloudError) {
-        return stopped(if (e.status == 403) "Only the account's owner can delete it." else "tafs couldn't erase your tafs. Your KIFF account isn't deleted. ${ErrorWords.of(e)}.")
+        return stopped(if (e.status == 403) Words.Settings.DeleteAccount.ownerOnly else Words.Settings.DeleteAccount.notErased(why = ErrorWords.of(e)))
       } catch (e: Exception) {
-        return stopped("tafs couldn't erase your tafs. Your KIFF account isn't deleted. ${ErrorWords.of(e)}.")
+        return stopped(Words.Settings.DeleteAccount.notErased(why = ErrorWords.of(e)))
       }
       if (generation != accountGeneration) return false
       val signer = signer
@@ -5913,14 +5968,14 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          return stopped("Your tafs are erased, but your connections aren't yet. ${ErrorWords.of(e)}")
+          return stopped(Words.Settings.DeleteAccount.connectionsLeft(why = ErrorWords.of(e)))
         }
         try {
           kiff.deleteAccount()
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          return stopped("Your tafs and connections are erased, but KIFF didn't delete the account. ${ErrorWords.of(e)}")
+          return stopped(Words.Settings.DeleteAccount.kiffNotDeleted(why = ErrorWords.of(e)))
         }
       } finally {
         kiff.setupSigner = null
@@ -5939,7 +5994,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || key == null) return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      haltFailed("Sign in with KIFF again: this sign-in can't sign for the phone.")
+      haltFailed(Words.SignIn.againToSign)
       return false
     }
     if (_state.value.approvalKeyLost) {
@@ -5953,7 +6008,7 @@ class AppModel(
       // Resuming gives authority back: the approval key signs KIFF's request, behind its own fingerprint. A confirmation still
       // unanswered after 10 seconds is cancelled, the prompt with it, so a late answer sends nothing (#464 item 18).
       kotlinx.coroutines.withTimeoutOrNull(RESUME_CONFIRM_MS) {
-        confirmGrant("tafs.resume.v1|$tenant|${tafId ?: "*"}", name?.let { "Resume $it" } ?: "Resume all your tafs")
+        confirmGrant("tafs.resume.v1|$tenant|${tafId ?: "*"}", name?.let { Words.Taf.Halt.resumePrompt(taf = it) } ?: Words.Taf.Halt.resumeAllPrompt)
       } ?: throw bot.tafs.app.signing.ConfirmationTimedOut()
       if (generation != accountGeneration) return false
       kiff.tenant = tenant
@@ -5972,7 +6027,7 @@ class AppModel(
         if (kiff.approvalSigner === bounded) kiff.approvalSigner = confirm
       }
     } catch (e: SignerException) {
-      if (generation == accountGeneration) haltFailed(notSigned(e, "Not resumed: it wasn't confirmed."))
+      if (generation == accountGeneration) haltFailed(notSigned(e, Words.Taf.Halt.notResumedUnconfirmed))
       return false
     } catch (_: KiffError.ApprovalKeyRequired) {
       haltFailed(KiffClient.APPROVAL_KEY_LOST)
@@ -5980,7 +6035,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) haltFailed("KIFF didn't resume ${name ?: "your tafs"}. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) haltFailed(name?.let { Words.Taf.Halt.kiffNotResumed(taf = it, why = ErrorWords.of(e)) } ?: Words.Taf.Halt.kiffNotResumedAll(why = ErrorWords.of(e)))
       return false
     } finally {
       kiff.setupSigner = null
@@ -5991,7 +6046,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) haltFailed("KIFF resumed ${name ?: "your tafs"}, but tafs cloud didn't yet. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) haltFailed(name?.let { Words.Taf.Halt.cloudNotResumed(taf = it, why = ErrorWords.of(e)) } ?: Words.Taf.Halt.cloudNotResumedAll(why = ErrorWords.of(e)))
       return false
     }
     if (generation != accountGeneration) return false
@@ -6027,7 +6082,7 @@ class AppModel(
     val store = _state.value.usage?.store ?: return
     if (!_state.value.offersPurchases) return
     purchases.load(store.googleProducts)
-    _state.update { it.copy(storeProducts = purchases.products.value) }
+    _state.update { it.copy(storeProducts = purchases.products.value, storeLoaded = purchases.loaded.value, storeFailed = purchases.loadFailed.value) }
   }
 
   // MARK: Asking an admin for tasks
@@ -6043,7 +6098,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      _state.update { it.copy(tasksMessage = "The request didn't go. ${ErrorWords.of(e)}") }
+      _state.update { it.copy(tasksMessage = Words.Billing.Request.notSent(why = ErrorWords.of(e))) }
       false
     }
   }
@@ -6057,7 +6112,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      _state.update { it.copy(tasksMessage = "The request wasn't withdrawn. ${ErrorWords.of(e)}") }
+      _state.update { it.copy(tasksMessage = Words.Billing.Request.notWithdrawn(why = ErrorWords.of(e))) }
     }
     refreshUsage()
   }
@@ -6068,12 +6123,12 @@ class AppModel(
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || tenant == null) return false
     if (!_state.value.sessionHasKey) {
-      _state.update { it.copy(tasksMessage = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
+      _state.update { it.copy(tasksMessage = Words.SignIn.againToSign) }
       return false
     }
     val generation = accountGeneration
     try {
-      signer.sign("tafs.decline-request.v1|$tenant|$id".toByteArray(), "Decline the request")
+      signer.sign("tafs.decline-request.v1|$tenant|$id".toByteArray(), Words.Billing.Request.declinePrompt)
     } catch (_: SignerException) {
       return false
     }
@@ -6087,7 +6142,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
-      _state.update { it.copy(tasksMessage = "The request wasn't declined. ${ErrorWords.of(e)}") }
+      _state.update { it.copy(tasksMessage = Words.Billing.Request.notDeclined(why = ErrorWords.of(e))) }
       refreshUsage()
       return false
     } finally {
@@ -6105,7 +6160,7 @@ class AppModel(
     _state.update { it.copy(tasksMessage = null, purchaseNote = null) }
     val token = _state.value.usage?.store?.appAccountToken
     if (!_state.value.offersPurchases || token == null) {
-      _state.update { it.copy(tasksMessage = "Only the account's admin adds tasks.") }
+      _state.update { it.copy(tasksMessage = Words.Billing.adminAddsTasks) }
       return
     }
     _state.update { it.copy(buying = product) }
@@ -6125,11 +6180,11 @@ class AppModel(
     _state.update { it.copy(buying = PurchaseNote.RESTORE) }
     val outcome = purchases.restore()
     val words = when (val o = outcome) {
-      PurchaseOutcome.Done -> "Purchases restored."
-      is PurchaseOutcome.NotRecorded -> "Restored. KIFF hasn't added everything yet: tafs tries again when it opens."
+      PurchaseOutcome.Done -> Words.Billing.restored
+      is PurchaseOutcome.NotRecorded -> Words.Billing.restoredNotRecorded
       is PurchaseOutcome.NotAdded -> o.why
       is PurchaseOutcome.NeedsSupport -> o.why
-      is PurchaseOutcome.Failed -> "Purchases couldn't be restored: ${o.why}"
+      is PurchaseOutcome.Failed -> Words.Billing.notRestored(why = o.why)
       else -> null
     }
     _state.update { it.copy(buying = null, purchaseNote = words?.let { PurchaseNote(PurchaseNote.RESTORE, it, offersRestore = outcome is PurchaseOutcome.NotRecorded) }) }
@@ -6138,12 +6193,12 @@ class AppModel(
 
   private fun buyWords(o: PurchaseOutcome): String? = when (o) {
     PurchaseOutcome.Done, PurchaseOutcome.Cancelled -> null
-    PurchaseOutcome.Pending -> "The purchase is waiting for approval. Your tasks are added once it's done."
-    is PurchaseOutcome.NotRecorded -> "Bought. KIFF hasn't added it yet: tafs tries again when it opens."
+    PurchaseOutcome.Pending -> Words.Billing.pending
+    is PurchaseOutcome.NotRecorded -> Words.Billing.boughtNotRecorded
     is PurchaseOutcome.NotAdded -> o.why
     is PurchaseOutcome.NeedsSupport -> o.why
     // Play unreachable is said on its own, with what to do: nothing was bought.
-    is PurchaseOutcome.Failed -> if (o.why == bot.tafs.app.billing.Purchases.PLAY_UNREACHABLE) o.why else "The purchase didn't go through: ${o.why}"
+    is PurchaseOutcome.Failed -> if (o.why == bot.tafs.app.billing.Purchases.PLAY_UNREACHABLE) o.why else Words.Billing.notBought(why = o.why)
   }
 
   /**
@@ -6157,7 +6212,7 @@ class AppModel(
     val from = _state.value.balance?.balance?.raise?.fromCents ?: return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(raiseError = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
+      _state.update { it.copy(raiseError = Words.SignIn.againToSign) }
       return false
     }
     val generation = accountGeneration
@@ -6165,7 +6220,7 @@ class AppModel(
     // Busy until the balance is read after KIFF took it: never a second tap against the limit from before.
     var sent = false
     try {
-      signer.sign("tafs.raise-limit.v1|$tenant|$from".toByteArray(), "Raise the spend limit")
+      signer.sign("tafs.raise-limit.v1|$tenant|$from".toByteArray(), Words.Usage.RaiseLimit.prompt)
       if (generation != accountGeneration) return false
       kiff.tenant = tenant
       val signer = signer
@@ -6173,7 +6228,7 @@ class AppModel(
       kiff.raiseLimit(from)
       sent = true
     } catch (e: SignerException) {
-      if (generation == accountGeneration) _state.update { it.copy(raiseError = notSigned(e, "Not done: it wasn't confirmed.")) }
+      if (generation == accountGeneration) _state.update { it.copy(raiseError = notSigned(e, Words.Common.notDoneUnconfirmed)) }
       return false
     } catch (e: CancellationException) {
       throw e
@@ -6189,7 +6244,7 @@ class AppModel(
         // KIFF's words say to contact it; the app's, the same as iPhone's, where it sends none.
         _state.update { it.copy(raiseError = server.words ?: bot.tafs.app.model.UsageWords.LIMIT_CEILING) }
       } else {
-        _state.update { it.copy(raiseError = server?.words ?: "The limit wasn't raised. ${ErrorWords.of(e)}") }
+        _state.update { it.copy(raiseError = server?.words ?: Words.Usage.RaiseLimit.notRaised(why = ErrorWords.of(e))) }
       }
       return false
     } finally {
@@ -6236,7 +6291,7 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          if (generation == accountGeneration) _state.update { it.copy(usageError = "Usage couldn't be read. ${ErrorWords.of(e)}") }
+          if (generation == accountGeneration) _state.update { it.copy(usageError = Words.Usage.notRead(why = ErrorWords.of(e))) }
         }
         readCredits(_state.value.creditsPrevious)
       }
@@ -6254,7 +6309,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(balanceError = (e as? CloudError)?.words ?: "The balance couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(balanceError = (e as? CloudError)?.words ?: Words.Usage.balanceNotRead(why = ErrorWords.of(e))) }
     }
   }
 
@@ -6277,7 +6332,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       // tafs cloud's words when it can't read KIFF (503); what was shown stays, said as not read now.
-      if (generation == accountGeneration) _state.update { it.copy(creditsError = (e as? CloudError)?.words ?: "Credits couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(creditsError = (e as? CloudError)?.words ?: Words.Usage.creditsNotRead(why = ErrorWords.of(e))) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(readingCredits = false) }
     }
@@ -6298,7 +6353,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return
-      val words = (e as? CloudError)?.words ?: "Its runs couldn't be read. ${ErrorWords.of(e)}"
+      val words = (e as? CloudError)?.words ?: Words.Usage.tafRunsNotRead(why = ErrorWords.of(e))
       if (_state.value.tafCredits == null) fail(words) else _state.update { it.copy(tafCreditsError = words) }
     }
   }
@@ -6320,7 +6375,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(tafCreditsError = (e as? CloudError)?.words ?: "More runs couldn't be read. ${ErrorWords.of(e)}") }
+      if (generation == accountGeneration) _state.update { it.copy(tafCreditsError = (e as? CloudError)?.words ?: Words.Usage.moreRunsNotRead(why = ErrorWords.of(e))) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(readingCredits = false) }
     }
@@ -6332,7 +6387,7 @@ class AppModel(
   suspend fun openCreditsRun(taf: String, run: String) {
     val tafId = _state.value.tafs.firstOrNull { it.cloudId == taf }?.id
     if (tafId == null) {
-      _state.update { it.copy(requestError = "That request couldn't be read: its taf isn't on this phone.") }
+      _state.update { it.copy(requestError = Words.NeedsYou.requestTafMissing) }
       return
     }
     openRequest(tafId, run)
@@ -6350,8 +6405,8 @@ class AppModel(
 
   private fun update(taf: Taf) = _state.update { s -> s.copy(tafs = s.tafs.map { if (it.id == taf.id) taf else it }) }
 
-  private fun amountLine(p: ProposedAction, tail: String): String =
-    p.amount?.let { "${it.formatted}, $tail" } ?: tail.replaceFirstChar { it.uppercase() }
+  private fun amountLine(p: ProposedAction, withAmount: (String) -> String, alone: String): String =
+    p.amount?.let { withAmount(it.formatted) } ?: alone
 
   private fun entry(tafId: String, kind: RecordEntry.Kind, title: String, detail: String, proposed: ProposedAction? = null, signature: String? = null) =
     RecordEntry(tafId = tafId, kind = kind, title = title, detail = detail, at = clock(), signature = signature,
@@ -6416,7 +6471,7 @@ class AppModel(
     const val HELD_FULL = "held_full"
 
     /** Why a message can't go to a taf that tafs cloud doesn't run. */
-    const val NOT_ON_CLOUD = "This taf isn't running on tafs cloud, so it can't be messaged."
+    val NOT_ON_CLOUD get() = Words.Chat.notOnCloud
 
     /**
      * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and the
@@ -6450,16 +6505,18 @@ class AppModel(
 
     /** What the chat says when its latest run stopped at a cap, never "…". */
     fun capWords(stop: String, taf: String): String? = when (stop) {
-      "cost_cap" -> "$taf stopped: this task would cost more than its limit for one task. Ask for something narrower, or someone who manages $taf can raise the limit."
-      "turn_cap" -> "$taf stopped: this task took more steps than its limit for one task. Ask for something narrower."
+      "cost_cap" -> Words.Chat.Cap.cost(taf = taf)
+      "turn_cap" -> Words.Chat.Cap.turns(taf = taf)
       else -> null
     }
 
     /** A run that failed part-way, with what went through before it stopped, from the run's own record. */
-    fun failedWords(taf: String, done: List<bot.tafs.app.kiff.DoneCall>): String {
-      if (done.isEmpty()) return "$taf stopped part-way. Nothing went through."
-      val calls = done.joinToString("; ") { c -> KiffMapping.toolWords(c.tool) + (c.resource?.let { " on $it" } ?: "") }
-      return "$taf stopped part-way, after this went through: $calls."
+    fun failedWords(taf: String, done: List<bot.tafs.app.kiff.DoneCall>, words: String? = null): String {
+      val calls = done.joinToString("; ") { c -> KiffMapping.toolWords(c.tool).let { tool -> c.resource?.let { Words.Chat.callOn(tool = tool, resource = it) } ?: tool } }
+      // tafs cloud's words say why, as they are; what went through still follows, from the run's own record.
+      if (words != null) return if (done.isEmpty()) words else Words.Chat.Failed.withWords(words = words.trim(), calls = calls)
+      if (done.isEmpty()) return Words.Chat.Failed.nothing(taf = taf)
+      return Words.Chat.Failed.after(taf = taf, calls = calls)
     }
 
     /** Waits between tries of a doors read that failed. */
@@ -6475,7 +6532,7 @@ class AppModel(
     const val APPROVAL_KEYED = "kiff.session-approval-keyed"
 
     /** What the fingerprint prompt says when Approve again proves this phone holds its new key. */
-    const val RELINK_REASON = "Approve again with this fingerprint"
+    val RELINK_REASON get() = Words.SignIn.Relink.prompt
 
     /** How long an approval window is asked for: KIFF takes five minutes at most, and restarts it with each approval in it. */
     const val WINDOW_SECONDS = 300L
@@ -6484,9 +6541,9 @@ class AppModel(
     const val WINDOW_BACKGROUND_MS = 30_000L
 
     /** KIFF answered, but holds another key, or this one was turned off while the browser waited. */
-    const val RELINK_DIDNT_TAKE = "This phone still can't approve. Try again, or sign in again in Settings."
+    val RELINK_DIDNT_TAKE get() = Words.SignIn.Relink.didntTake
 
-    const val RELINK_FAILED = "Approving again didn't work. Try again, or sign in again in Settings."
+    val RELINK_FAILED get() = Words.SignIn.Relink.failed
 
     // What alerts keep on this phone: a target's secret not yet handed to tafs cloud, whether alerts were turned on, and the sound.
     const val HANDOFF = "kiff.alert-handoff"
@@ -6505,7 +6562,7 @@ class AppModel(
     val SIGN_OUT_RETRY_SECONDS = listOf(2L, 10L, 30L, 60L, 120L)
 
     /** A sign-out KIFF hasn't confirmed: the phone stays signed in, and says so, and keeps trying. */
-    const val NOT_SIGNED_OUT = "Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices."
+    val NOT_SIGNED_OUT get() = Words.SignIn.notSignedOut
   }
 }
 

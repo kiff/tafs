@@ -23,6 +23,12 @@ import bot.tafs.app.signing.KeystoreKeys
  * session. The signer stays across a rotation; the prompt shows on whichever activity is on screen.
  */
 class TafsApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+    // The words, in the language Android resolved for tafs, before anything is shown (docs/languages.md).
+    bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords(this))
+  }
+
   val authenticator: BiometricAuthenticator by lazy { BiometricAuthenticator(this) }
 
   /** Created when it first signs: the Keystore makes the keys then. */

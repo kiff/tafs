@@ -270,7 +270,7 @@ iOS drops its own queue the same way, with the same words.
   line (by `invocation`), once the Record is read (`failedWords`, kiff/agents#249).
   When tafs cloud's `end` names why (`code` and `words`, such as `ai_unavailable`: the AI
   provider isn't serving us, and no credits were used), the line is its words as they are,
-  then "This went through: …" when something did, still with Retry (iPhone and iPad).
+  then "This went through: …" when something did, still with Retry (both apps).
 
 ## Held calls in the chat
 

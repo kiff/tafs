@@ -5,7 +5,7 @@
 **AI that works on a Card.**
 
 <p align="center">
-  <img src="docs/screenshots/hero.png" width="760" alt="Three phones: Tafs on iPhone with three working and two needing you; Needs you on Android with a migration and an $8,400 payment held, each with Approve once and Refuse; Coach on Android: Ask anything about your tafs">
+  <img src="docs/screenshots/hero.png" width="760" alt="Three phones: Tafs on iPhone with three working and two needing you; Needs you on Android with a migration and an €8,400 payment held, each with Approve once and Refuse; Coach on Android: Ask anything about your tafs">
 </p>
 
 A taf is an AI agent a business hands one job to, such as refunds, bill pay or deploys. It

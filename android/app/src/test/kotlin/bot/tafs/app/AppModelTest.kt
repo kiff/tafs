@@ -149,23 +149,4 @@ class AppModelTest {
     m.dismissError()
     assertNull(m.state.value.lastError)
   }
-
-  @Test fun issuingACardAsksTheOwnerAndStartsTheTaf() = runTest {
-    val auth = FakeAuthenticator()
-    val m = model(auth)
-    val before = m.state.value.tafs.size
-    val taf = m.start(bot.tafs.app.model.TafTemplates.draft("refund"))
-    assertNotNull(taf)
-    assertEquals(before + 1, m.state.value.tafs.size)
-    assertEquals(listOf("Issue Refunds's Card"), auth.asked)
-  }
-
-  @Test fun aCardTheOwnerDidNotConfirmIsNotIssued() = runTest {
-    val m = model(FakeAuthenticator(confirms = false))
-    val before = m.state.value
-    assertNull(m.start(bot.tafs.app.model.TafTemplates.draft("refund")))
-    assertEquals(before.tafs, m.state.value.tafs)
-    assertEquals(before.record, m.state.value.record)
-    assertEquals("The Card was not issued: it wasn't confirmed.", m.state.value.lastError)
-  }
 }

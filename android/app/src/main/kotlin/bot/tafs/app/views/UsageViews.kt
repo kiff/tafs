@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
@@ -78,7 +79,7 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
         // Billed by Google Play: Play's own page to manage or cancel it. The app never points anywhere else to buy.
         if (usage.billing?.source == "google") {
           val uri = LocalUriHandler.current
-          Text("Manage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 6.dp))
+          Text(Words.Usage.manage, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 6.dp))
         }
       }
     }
@@ -113,12 +114,12 @@ internal fun BalancePanel(state: AppState, actions: AccountActions) {
     if (state.balanceStale) {
       // It went through; what's above is from before. Reading signs nothing, and no raise until it's read.
       Text(UsageWords.RAISED_UNREAD, style = scaled(15, color = Theme.ink))
-      OutlineButton(if (state.readingBalance) "Reading…" else "Read it again", { scope.launch { actions.readBalance() } }, Modifier.fillMaxWidth(), enabled = !state.readingBalance)
+      OutlineButton(if (state.readingBalance) Words.Usage.reading else Words.Usage.readAgain, { scope.launch { actions.readBalance() } }, Modifier.fillMaxWidth(), enabled = !state.readingBalance)
     } else b?.raise?.let { raise ->
       // Raising lets the tafs spend more, so it waits on the phone being able to approve, as Go on did. KIFF takes it signed by
       // the device key, once the person confirms.
       ApprovalGate {
-        PrimaryButton(if (state.raising) "Raising…" else raise.words, { scope.launch { actions.raiseLimit() } }, enabled = !state.raising)
+        PrimaryButton(if (state.raising) Words.Usage.raising else raise.words, { scope.launch { actions.raiseLimit() } }, enabled = !state.raising)
       }
       state.raiseError?.let { Text(it, style = scaled(13, color = Theme.no)) }
     }
@@ -140,13 +141,13 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
     if (offer.offers("solo")) {
       store.googleSoloProduct?.let { id ->
         state.storeProducts[id]?.let { solo ->
-          Text("Solo", style = scaled(16, FontWeight.SemiBold, Theme.ink))
+          Text(Words.Usage.solo, style = scaled(16, FontWeight.SemiBold, Theme.ink))
           Text(UsageWords.soloTerms(solo.price, solo.period, solo.freeTrial), style = scaled(13, color = Theme.soft))
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Terms", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/terms#tafs") }.padding(vertical = 6.dp))
-            Text("Privacy policy", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/privacy#tafs") }.padding(vertical = 6.dp))
+            Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/terms#tafs") }.padding(vertical = 6.dp))
+            Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/privacy#tafs") }.padding(vertical = 6.dp))
           }
-          PrimaryButton(if (state.buying == id) "Buying…" else "Start Solo", { scope.launch { actions.buy(id) } }, enabled = state.buying == null, modifier = Modifier.confirms())
+          PrimaryButton(if (state.buying == id) Words.Usage.buying else Words.Usage.startSolo, { scope.launch { actions.buy(id) } }, enabled = state.buying == null, modifier = Modifier.confirms())
           PurchaseNoteLine(state, id, actions)
         }
       }
@@ -160,15 +161,23 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
           Text(UsageWords.PACKS_KEEP, style = scaled(12, color = Theme.dim))
         }
         Text(
-          if (state.buying == id) "Buying…" else product.price,
+          if (state.buying == id) Words.Usage.buying else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
           modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
         )
       }
       PurchaseNoteLine(state, id, actions)
     }
+    // Play lists none of what's offered: said, rather than an empty panel (Play billing off for this app on this phone, or unreachable).
+    val offered = buildList {
+      if (offer.offers("solo")) store.googleSoloProduct?.let { add(it) }
+      if (offer.offers("packs")) store.packs.forEach { p -> p.googleProduct?.let { add(it) } }
+    }
+    bot.tafs.app.billing.Purchases.buyNote(offered, state.storeProducts.keys, state.storeLoaded, state.storeFailed)?.let {
+      Text(it, style = scaled(13, color = Theme.soft))
+    }
     Text(
-      if (state.buying == PurchaseNote.RESTORE) "Restoring…" else "Restore purchases",
+      if (state.buying == PurchaseNote.RESTORE) Words.Usage.restoring else Words.Usage.restorePurchases,
       style = scaled(14, FontWeight.SemiBold, Theme.amberText),
       modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 6.dp),
     )
@@ -188,7 +197,7 @@ private fun PurchaseNoteLine(state: AppState, at: String, actions: AccountAction
   Text(note.words, style = scaled(14, color = Theme.ink), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
   if (note.offersRestore && at != PurchaseNote.RESTORE) {
     Text(
-      "Restore purchases",
+      Words.Usage.restorePurchases,
       style = scaled(14, FontWeight.SemiBold, Theme.amberText),
       modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 10.dp),
     )
@@ -260,7 +269,7 @@ fun CreditsRunsSheet(open: bot.tafs.app.kiff.TafCredits, state: AppState, action
       }
     }
     if (open.next != null) {
-      OutlineButton(if (state.readingCredits) "Reading…" else UsageWords.MORE_RUNS, { scope.launch { actions.moreTafCredits() } }, Modifier.fillMaxWidth(), enabled = !state.readingCredits)
+      OutlineButton(if (state.readingCredits) Words.Usage.reading else UsageWords.MORE_RUNS, { scope.launch { actions.moreTafCredits() } }, Modifier.fillMaxWidth(), enabled = !state.readingCredits)
     }
     state.tafCreditsError?.let { Text(it, style = scaled(14, color = Theme.no)) }
     state.requestError?.let { Text(it, style = scaled(14, color = Theme.no)) }
@@ -272,7 +281,7 @@ fun CreditsRunsSheet(open: bot.tafs.app.kiff.TafCredits, state: AppState, action
 fun UsageRow(onClick: () -> Unit) {
   Panel(Modifier.clickable(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text("Usage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.weight(1f))
+      Text(Words.Usage.label, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.weight(1f))
       Text("›", style = scaled(20, color = Theme.dim))
     }
   }
@@ -290,7 +299,7 @@ private fun UsageFrame(title: String, onClose: () -> Unit, content: @Composable 
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(start = 8.dp, top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(start = 8.dp, top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),

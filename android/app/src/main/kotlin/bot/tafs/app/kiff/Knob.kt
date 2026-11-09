@@ -210,7 +210,29 @@ data class ConnectApps(
   val provider: String? = null,
   /** The next page's cursor; none on the last page. */
   @SerialName("next_cursor") val nextCursor: String? = null,
+  /**
+   * The tafs removed since, as tafs cloud names them from KIFF's archived agents, newest first: a grant whose `request.agent` is one
+   * is from a removed taf. Only for someone who manages Cards; empty otherwise, or from a tafs cloud without it.
+   */
+  @SerialName("removed_tafs") val removedTafs: List<RemovedTaf> = emptyList(),
 ) {
+  @Serializable
+  data class RemovedTaf(
+    val agent: String,
+    @SerialName("removed_at") val removedAt: String? = null,
+    /**
+     * Its live connections, each with the live tafs whose Card in force still uses one of its actions, which Clear keeps. Only with
+     * this phone's signed grants read, and only when tafs cloud could read planque and KIFF's Cards: null means no Clear.
+     */
+    val grants: List<RemovedGrant>? = null,
+  )
+
+  @Serializable
+  data class RemovedGrant(val grant: String, @SerialName("used_by") val usedBy: List<UsedBy> = emptyList())
+
+  @Serializable
+  data class UsedBy(val taf: String = "", val name: String = "")
+
   @Serializable
   data class App(
     val entry: String,

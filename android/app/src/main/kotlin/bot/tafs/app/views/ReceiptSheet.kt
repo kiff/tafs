@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.model.ErrorWords
 import android.content.ClipData
@@ -92,7 +93,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (e: Exception) {
-      problem = "KIFF's receipt couldn't be loaded. ${ErrorWords.of(e)}"
+      problem = Words.Receipt.notLoaded(ErrorWords.of(e))
     }
   }
   LaunchedEffect(trace) { if (state.mode == Mode.kiff) loadReceipt() }
@@ -106,20 +107,20 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Dot(entry.kind.color, 10.dp)
         Text(ReceiptWords.state(entry), style = scaled(14, FontWeight.SemiBold, entry.kind.color), modifier = Modifier.padding(start = 8.dp).weight(1f))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
       }
       Text(entry.titleWithAmount, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
       Panel {
-        Fact("Taf", state.taf(entry.tafId)?.name ?: "–")
-        Fact("When", "${shownDate(entry.at)}, ${seconds(entry.at)}")
-        entry.onValue?.let { Fact("On", "${(entry.onArg ?: "").replace("_", " ")} $it".trim()) }
-        Fact("Outcome", ReceiptWords.outcome(entry), bold = true)
+        Fact(Words.Receipt.Fact.taf, state.taf(entry.tafId)?.name ?: "–")
+        Fact(Words.Receipt.Fact.at, "${shownDate(entry.at)}, ${seconds(entry.at)}")
+        entry.onValue?.let { Fact(Words.Receipt.Fact.on, "${(entry.onArg ?: "").replace("_", " ")} $it".trim()) }
+        Fact(Words.Receipt.Fact.outcome, ReceiptWords.outcome(entry), bold = true)
         // KIFF's words, never its codes.
-        entry.reason?.let { Fact("Why", it) }
-        Fact("Decided by", ReceiptWords.decidedBy(entry, state.mode == Mode.kiff))
+        entry.reason?.let { Fact(Words.Receipt.Fact.why, it) }
+        Fact(Words.Receipt.Fact.decidedBy, ReceiptWords.decidedBy(entry, state.mode == Mode.kiff))
       }
       if (steps.isNotEmpty()) {
-        Eyebrow("What happened")
+        Eyebrow(Words.Receipt.whatHappened)
         Column {
           steps.forEach { step ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -134,8 +135,8 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
       }
       entry.signature?.let { signature ->
         Panel(stroke = Theme.ok.copy(alpha = 0.4f)) {
-          Text("✓ Signed on this phone", style = scaled(14, FontWeight.SemiBold, Theme.ok))
-          Text("Your answer was signed with a key that never leaves this phone.", style = scaled(13, color = Theme.soft))
+          Text(Words.Receipt.signedOnPhone, style = scaled(14, FontWeight.SemiBold, Theme.ok))
+          Text(Words.Receipt.signedOnPhoneWhy, style = scaled(13, color = Theme.soft))
           Text(signature, style = scaled(11, color = Theme.dim, mono = true), maxLines = 3)
         }
       }
@@ -143,9 +144,9 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
         val mismatch = if (check is ReceiptCheck.Verified) ReceiptSteps.mismatch(entry, steps) else null
         when (val c = check) {
           is ReceiptCheck.Verified -> if (mismatch != null) Failed(mismatch, entry, raw, steps, null) else Panel(stroke = Theme.ok.copy(alpha = 0.4f)) {
-            Text("✓ KIFF's receipt · checked on this phone", style = scaled(14, FontWeight.SemiBold, Theme.ok))
+            Text(Words.Receipt.checked, style = scaled(14, FontWeight.SemiBold, Theme.ok))
             Text(
-              "KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.",
+              Words.Receipt.checkedWhy,
               style = scaled(13, color = Theme.soft),
             )
             Facts(entry, raw)
@@ -155,25 +156,25 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
           ReceiptCheck.NotSignedYet -> Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               Dot(Theme.amber, 9.dp)
-              Text("KIFF's receipt · not signed yet", style = scaled(14, FontWeight.SemiBold, Theme.ink))
+              Text(Words.Receipt.notSignedYet, style = scaled(14, FontWeight.SemiBold, Theme.ink))
             }
-            Text("KIFF signs receipts within a minute of deciding. Check again shortly.", style = scaled(13, color = Theme.soft))
+            Text(Words.Receipt.signsWithin, style = scaled(13, color = Theme.soft))
             if (java.time.Duration.between(entry.at, Instant.now()).toMinutes() > 10) {
-              Text("If this stays, tell us the receipt id below.", style = scaled(13, color = Theme.soft))
+              Text(Words.Receipt.ifItStays, style = scaled(13, color = Theme.soft))
               Text(trace.orEmpty(), style = scaled(11, color = Theme.dim, mono = true))
             }
-            OutlineButton("Check again", { scope.launch { loadReceipt() } })
+            OutlineButton(Words.Receipt.checkAgain, { scope.launch { loadReceipt() } })
           }
-          is ReceiptCheck.Failed -> Failed("This receipt was changed after KIFF signed it, or it wasn't signed by KIFF. Don't rely on this line.", entry, raw, steps, null)
+          is ReceiptCheck.Failed -> Failed(Words.Receipt.changed, entry, raw, steps, null)
           null -> Panel {
             val p = problem
             if (p != null) {
               Text(p, style = scaled(13, color = Theme.no))
-              OutlineButton("Try again", { scope.launch { loadReceipt() } })
+              OutlineButton(Words.Common.tryAgain, { scope.launch { loadReceipt() } })
             } else if (state.mode == Mode.kiff) {
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircularProgressIndicator(Modifier.size(14.dp), color = Theme.amber, strokeWidth = 2.dp)
-                Text("Checking KIFF's receipt on this phone…", style = scaled(13, color = Theme.soft))
+                Text(Words.Receipt.checking, style = scaled(13, color = Theme.soft))
               }
             }
           }
@@ -194,7 +195,7 @@ private fun Fact(name: String, value: String, bold: Boolean = false) {
 @Composable
 private fun Failed(why: String, entry: RecordEntry, raw: ByteArray?, steps: List<bot.tafs.app.kiff.ReceiptStep>, signer: String?) {
   Panel(stroke = Theme.no.copy(alpha = 0.5f)) {
-    Text("✕ KIFF's receipt doesn't check out", style = scaled(14, FontWeight.SemiBold, Theme.no))
+    Text(Words.Receipt.doesntCheckOut, style = scaled(14, FontWeight.SemiBold, Theme.no))
     Text(why, style = scaled(13, color = Theme.soft))
     Facts(entry, raw)
     FullReceipt(entry, raw, steps, signer)
@@ -206,7 +207,7 @@ private fun Failed(why: String, entry: RecordEntry, raw: ByteArray?, steps: List
 @Composable
 private fun Facts(entry: RecordEntry, raw: ByteArray?) {
   val issued = raw?.let { field(it, "issued_at") }?.let { runCatching { Instant.parse(it) }.getOrNull() }
-  val lines = listOfNotNull(ReceiptWords.decision(entry), issued?.let { "issued ${shownDate(it)}, ${seconds(it)}" })
+  val lines = listOfNotNull(ReceiptWords.decision(entry), issued?.let { Words.Receipt.issued("${shownDate(it)}, ${seconds(it)}") })
   Text(lines.joinToString(" · "), style = scaled(11, color = Theme.dim, mono = true))
 }
 
@@ -216,7 +217,7 @@ private fun FullReceipt(entry: RecordEntry, raw: ByteArray?, steps: List<bot.taf
   if (steps.isEmpty()) return
   var open by remember { mutableStateOf(false) }
   Text(
-    if (open) "Hide the full receipt" else "Show the full receipt",
+    if (open) Words.Receipt.hideFull else Words.Receipt.showFull,
     style = scaled(13, FontWeight.SemiBold, Theme.amberText),
     modifier = Modifier.heightIn(min = 44.dp).clickable { open = !open }.padding(top = 12.dp),
   )
@@ -240,10 +241,10 @@ private fun ReceiptButtons(raw: ByteArray?, share: Boolean) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-    OutlineButton("Copy receipt", { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("KIFF receipt", text))) } }, Modifier.weight(1f))
-    if (share) OutlineButton("Share", {
+    OutlineButton(Words.Receipt.copy, { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("KIFF receipt", text))) } }, Modifier.weight(1f))
+    if (share) OutlineButton(Words.Receipt.share, {
       val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-      context.startActivity(Intent.createChooser(send, "KIFF receipt").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+      context.startActivity(Intent.createChooser(send, Words.Receipt.kiffReceipt).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }, Modifier.weight(1f))
   }
 }
