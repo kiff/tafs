@@ -10,7 +10,10 @@ class WordsTest {
   private val english = XmlWords()
 
   @Test fun everyStringTheCodeNamesIsInTheEnglishFiles() {
-    val named = R.string::class.java.fields.map { it.name }.toSet()
+    // The Google services plugin adds Firebase's own settings as strings where its config is (CI, release builds): they're
+    // not words.
+    val firebase = setOf("gcm_defaultSenderId", "google_api_key", "google_app_id", "google_crash_reporting_api_key", "google_storage_bucket", "project_id")
+    val named = R.string::class.java.fields.map { it.name }.toSet() - firebase
     assertEquals(emptySet<String>(), named - english.stringNames)
     val plurals = runCatching { Class.forName("bot.tafs.app.R\$plurals").fields.map { it.name }.toSet() }.getOrDefault(emptySet())
     assertEquals(emptySet<String>(), plurals - english.pluralNames)
