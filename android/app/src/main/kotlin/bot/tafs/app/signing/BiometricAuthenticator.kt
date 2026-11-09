@@ -99,7 +99,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
     val info = BiometricPrompt.PromptInfo.Builder()
       .setTitle(reason)
       .setAllowedAuthenticators(BIOMETRIC_STRONG)
-      .setNegativeButtonText("Cancel")
+      .setNegativeButtonText(Words.Common.cancel)
       .build()
     prompt.authenticate(info, BiometricPrompt.CryptoObject(signature))
     cont.invokeOnCancellation { prompt.cancelAuthentication() }

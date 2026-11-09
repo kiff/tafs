@@ -178,6 +178,24 @@ icons dark on the light ground and light on the dark one when the choice changes
 | `views/` | One file per screen or feature: `HomeView`, `TafDetailView`, `TafChatView`, `CoachViews`, `CoachChats`, `NeedsYouView`, `RecordView`, `ReceiptSheet`, `UsageViews`, `TaskRequestViews`, `SettingsView`, `PeopleViews`, `ShareViews`, `DevicesView`, `DoorViews`, `SetupViews`, `EventApproval`, `VersionViews`, `HaltViews`, `AttachViews`, `MicButton`… |
 | `design/` | `Theme` (colours, the amber accent, type), `Components`, `MarkdownText` |
 
+## Words and languages
+
+Every line the app writes itself is in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
+iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.py` writes, from it,
+`res/values/strings.xml` (counts as `<plurals>`), `res/xml/locales_config.xml` and `model/Words.kt`, a typed accessor per
+key (`Words.NeedsYou.approveOnce`, `Words.Taf.worksUnderCards(count = n)`), so a missing key or a wrong value doesn't
+compile. Nobody edits those three files by hand: change the JSON and run the generator, and `--check` fails CI when they
+differ. Code reads a line only through `Words`, which asks `Res`: the app's resources in the language Android resolved for
+tafs, set in `TafsApplication`. Errors that are objects (`KiffError`, `PlanqueError`) read their words when shown, so they
+follow the language. Unit tests run on the JVM without Android's resources: there `Res` reads the generated English
+`strings.xml` itself (`XmlWords`, named by a test service file), so every test still checks the exact English words.
+
+What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, file names,
+what's sent to a server as data, and every signed message (`tafs.connect.v1|…`, `tafs.cards.v1|…`, an answer's wire name).
+The one signature over words, a people change (`tafs.people.v1|…`), is a fingerprint check on the phone whose result isn't
+sent. Lines only Coach reads (the screen's description in a drive) stay English. The terms and the voice for each language
+are in [languages.md](languages.md).
+
 ## Live updates
 
 A silent push from tafs cloud names what changed on the account (`kind: background` with
