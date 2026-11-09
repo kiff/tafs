@@ -25,10 +25,10 @@ class TafDetailTest {
   // MARK: The Card's face
 
   @Test fun theFaceShowsWhatIsLeftOfTheMoneyTotal() {
-    val card = TafCard.merged("c", "Refunds", refunds.rules, null, used = mapOf("refund" to Money.usd(40.0)))
+    val card = TafCard.merged("c", "Refunds", refunds.rules, null, used = mapOf("refund" to Money.eur(40.0)))
     val hero = card.hero!!
-    assertEquals(Money.usd(1_960.0).formatted, hero.figure)
-    assertEquals("left today of ${Money.usd(2_000.0).formatted}", hero.words)
+    assertEquals(Money.eur(1_960.0).formatted, hero.figure)
+    assertEquals("left today of ${Money.eur(2_000.0).formatted}", hero.words)
   }
 
   @Test fun aCardWithOnlyACountShowsCallsLeft() {
@@ -41,7 +41,7 @@ class TafDetailTest {
   @Test fun useKiffCouldNotReadIsNeverShownAsZero() {
     val card = TafCard.merged("c", "Refunds", refunds.rules, null, unknown = setOf("refund"))
     assertEquals("a day · use unavailable", card.hero!!.words)
-    assertEquals(Money.usd(2_000.0).formatted, card.hero!!.figure)
+    assertEquals(Money.eur(2_000.0).formatted, card.hero!!.figure)
   }
 
   @Test fun anAmountWithNoCurrencySaysSoOnceAfterTheWords() {
@@ -60,7 +60,7 @@ class TafDetailTest {
 
   @Test fun theFaceNamesTheLimitForOneCallAndHowManyTools() {
     val card = TafCard.merged("c", "Refunds", refunds.rules, null)
-    assertEquals(listOf("up to ${Money.usd(150.0).formatted} each; more asks you first", "3 tools"), card.facts)
+    assertEquals(listOf("up to ${Money.eur(150.0).formatted} each; more asks you first", "3 tools"), card.facts)
   }
 
   @Test fun aTafWithoutKiffCardsDrawsItsLinesAsOneCard() {
@@ -79,15 +79,15 @@ class TafDetailTest {
   @Test fun aTafThatHasUsedNothingReadsZeroInTheLimitsUnit() {
     val taf = Taf(name = "Refunds", job = "", tools = emptyList(), colorIndex = 0, card = Card(refunds.rules, "You"))
     val used = taf.usedOf(refunds.rules.first { it.action == "refund" })
-    assertEquals(Money.usd(0.0), used)
-    assertEquals("USD", used.currency)
+    assertEquals(Money.eur(0.0), used)
+    assertEquals("EUR", used.currency)
     assertTrue(!used.formatted.contains("no currency"))
   }
 
   @Test fun whatIsUsedReadsAsTheCardCountedIt() {
     val taf = Taf(name = "Refunds", job = "", tools = emptyList(), colorIndex = 0, card = Card(refunds.rules, "You"),
-      used = mapOf("refund" to Money.usd(40.0)))
-    assertEquals(Money.usd(40.0), taf.usedOf(refunds.rules.first { it.action == "refund" }))
+      used = mapOf("refund" to Money.eur(40.0)))
+    assertEquals(Money.eur(40.0), taf.usedOf(refunds.rules.first { it.action == "refund" }))
   }
 
   // MARK: The sample's tafs (a new taf starts in Coach once signed in; the sample has no form for one)

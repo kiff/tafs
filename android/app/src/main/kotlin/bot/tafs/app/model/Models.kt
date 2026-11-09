@@ -81,6 +81,8 @@ data class Money(val minor: Long, val currency: String? = null, val scale: Int =
     fun of(minor: Long, currency: String?, scale: Int) = Money(minor, currency, if (currency == null) 0 else scale)
     fun bare(value: Long) = Money(value, null, 0)
     fun usd(dollars: Double) = Money(Math.round(dollars * 100), "USD", 2)
+    /** The sample's money: euros, written as the phone's locale writes them. */
+    fun eur(euros: Double) = Money(Math.round(euros * 100), "EUR", 2)
 
     private fun power(n: Int): Long {
       var p = 1L

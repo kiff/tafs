@@ -25,15 +25,15 @@ object TafTemplates {
     job = "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
     tools = listOf("Payments", "Store", "Email"),
     rules = listOf(
-      CardRule(action = "refund", label = "Refunds", perAction = Money.usd(150.0), perWindow = Money.usd(2_000.0), window = Window.day, nextSteps = listOf("Return first")),
-      CardRule(action = "credit", label = "Credits", perAction = Money.usd(100.0), perWindow = Money.usd(1_000.0), window = Window.day),
+      CardRule(action = "refund", label = "Refunds", perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day, nextSteps = listOf("Return first")),
+      CardRule(action = "credit", label = "Credits", perAction = Money.eur(100.0), perWindow = Money.eur(1_000.0), window = Window.day),
       CardRule(action = "payout", label = "Payouts", never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("refund", "Refund order #4471", Money.usd(40.0), "Arrived 6 days late"),
-      ProposedAction("credit", "Credit on account #2290", Money.usd(25.0), "Billing error last month"),
-      ProposedAction("refund", "Refund order #4502", Money.usd(480.0), "Damaged on arrival, photo attached"),
-      ProposedAction("payout", "Pay out to a new bank account", Money.usd(900.0), "Customer asked for cash instead"),
+      ProposedAction("refund", "Refund order #4471", Money.eur(40.0), "Arrived 6 days late"),
+      ProposedAction("credit", "Credit on account #2290", Money.eur(25.0), "Billing error last month"),
+      ProposedAction("refund", "Refund order #4502", Money.eur(480.0), "Damaged on arrival, photo attached"),
+      ProposedAction("payout", "Pay out to a new bank account", Money.eur(900.0), "Customer asked for cash instead"),
     ),
   )
 
@@ -43,14 +43,14 @@ object TafTemplates {
     job = "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
     tools = listOf("Accounting", "Email"),
     rules = listOf(
-      CardRule(action = "pay_bill", label = "Bills", perAction = Money.usd(5_000.0), perWindow = Money.usd(25_000.0), window = Window.week, nextSteps = listOf("Pay half now")),
+      CardRule(action = "pay_bill", label = "Bills", perAction = Money.eur(5_000.0), perWindow = Money.eur(25_000.0), window = Window.week, nextSteps = listOf("Pay half now")),
       CardRule(action = "wire", label = "Wires", alwaysAsk = true),
       CardRule(action = "bank_details", label = "Bank detail changes", never = true, outside = Outside.refuse),
       CardRule(action = "new_payee", label = "New payees", never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("pay_bill", "Pay Northwind Packaging", Money.usd(1_240.0), "Matches PO-3381"),
-      ProposedAction("pay_bill", "Pay Atlas Freight", Money.usd(8_400.0), "Matches PO-3390, quarterly"),
+      ProposedAction("pay_bill", "Pay Northwind Packaging", Money.eur(1_240.0), "Matches PO-3381"),
+      ProposedAction("pay_bill", "Pay Atlas Freight", Money.eur(8_400.0), "Matches PO-3390, quarterly"),
       ProposedAction("bank_details", "Update Atlas Freight's bank account", null, "Email from a new address asked for it"),
     ),
   )
@@ -99,13 +99,13 @@ object TafTemplates {
     job = "Answer card disputes with the order's evidence before the deadline. Accept small ones that can't be won. Share nothing beyond the template.",
     tools = listOf("Payments"),
     rules = listOf(
-      CardRule(action = "submit_evidence", label = "Evidence", perAction = Money.usd(500.0), countPerWindow = 50, window = Window.day),
-      CardRule(action = "accept_dispute", label = "Accepting a loss", perAction = Money.usd(100.0), perWindow = Money.usd(500.0), window = Window.week),
+      CardRule(action = "submit_evidence", label = "Evidence", perAction = Money.eur(500.0), countPerWindow = 50, window = Window.day),
+      CardRule(action = "accept_dispute", label = "Accepting a loss", perAction = Money.eur(100.0), perWindow = Money.eur(500.0), window = Window.week),
     ),
     script = listOf(
-      ProposedAction("submit_evidence", "Answer dispute on #3318", Money.usd(120.0), "Delivered, signed for"),
-      ProposedAction("accept_dispute", "Accept dispute on #3342", Money.usd(35.0), "No proof of delivery"),
-      ProposedAction("submit_evidence", "Answer dispute on #3360", Money.usd(1_800.0), "Due in 2 days"),
+      ProposedAction("submit_evidence", "Answer dispute on #3318", Money.eur(120.0), "Delivered, signed for"),
+      ProposedAction("accept_dispute", "Accept dispute on #3342", Money.eur(35.0), "No proof of delivery"),
+      ProposedAction("submit_evidence", "Answer dispute on #3360", Money.eur(1_800.0), "Due in 2 days"),
     ),
   )
 }
