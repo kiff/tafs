@@ -159,4 +159,8 @@ that tell a message's language, in tafs and kiff/agents together.
   rows: KIFF keeps a copy of the glossary and checks it against the digest, so a change here fails there until
   its copy follows. Change the table and the digest together.
 - **KIFF:** one catalog per language (`internal/words`), the same test.
-- **Android:** `strings.xml` with a `values-xx` set per language; **iPhone and iPad:** a String Catalog.
+- **The apps' own words have one source,** [app/strings](../app/strings/README.md): each line once, by a key
+  named for what it says, in each language. A generator writes both apps' files from it (**Android:**
+  `strings.xml` with a `values-xx` set per language; **iPhone and iPad:** a String Catalog), with a typed
+  accessor per key, so a key that isn't there doesn't compile. Nobody edits a generated file by hand, and CI
+  fails when one is out of date.

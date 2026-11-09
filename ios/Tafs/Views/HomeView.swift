@@ -106,7 +106,7 @@ struct HomeView: View {
                     Button("Play the next sample actions") { model.playNextDemoActions() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.soft))
                     // The sample has no form for a new taf (as on Android): one starts in Coach, signed in.
-                    Text(HomeWords.sampleFoot)
+                    Text(Words.Home.sampleFoot)
                         .scaledFont(12)
                         .foregroundColor(Theme.dim)
                 } else {

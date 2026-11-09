@@ -1,0 +1,15 @@
+{
+  "connect.clear_removed.title": {
+    "one": "Clear {count} connection from removed tafs?",
+    "other": "Clear {count} connections from removed tafs?"
+  },
+  "home.sample_foot": "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach.",
+  "needs_you.approve_once": "Approve once",
+  "needs_you.refuse": "Refuse",
+  "needs_you.title": "Needs you",
+  "record.title": "Record",
+  "work.requests_need_you": {
+    "one": "{count} request needs you",
+    "other": "{count} requests need you"
+  }
+}
