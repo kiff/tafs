@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.HomeWords
 import bot.tafs.app.model.TafState
 import bot.tafs.app.model.ListOrder
@@ -124,7 +125,7 @@ fun HomeView(
       if (sample) {
         item {
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Eyebrow("They taf. You kiff.")
+            Eyebrow(Words.Home.tagline)
             Headline(state)
           }
         }
@@ -132,7 +133,7 @@ fun HomeView(
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
         }
         item { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { state.tafs.forEach { taf -> TafRow(taf, onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } } } }
-        item { OutlineButton("Play the next sample actions", { pullScope.launch { onPlayNext() } }, Modifier.fillMaxWidth(), color = Theme.soft) }
+        item { OutlineButton(Words.Sample.playNext, { pullScope.launch { onPlayNext() } }, Modifier.fillMaxWidth(), color = Theme.soft) }
         item {
           Text(
             HomeWords.SAMPLE_FOOT,
@@ -142,7 +143,7 @@ fun HomeView(
       } else {
         item {
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Eyebrow("They taf. You kiff.")
+            Eyebrow(Words.Home.tagline)
             Headline(state)
           }
         }
@@ -161,7 +162,7 @@ fun HomeView(
           // Agents made through KIFF's API, not run by tafs: their Cards, apart.
           item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-              Eyebrow("Other agents with Cards")
+              Eyebrow(Words.Home.otherAgents)
               state.otherAgents.forEach { taf -> TafRow(taf, onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } }
             }
           }
@@ -169,7 +170,7 @@ fun HomeView(
         if (state.listLoaded && !state.listUnread && state.tafs.isEmpty()) {
           item {
             Panel {
-              Text("No tafs yet.", style = scaled(15, FontWeight.SemiBold, Theme.ink))
+              Text(Words.Home.noTafs, style = scaled(15, FontWeight.SemiBold, Theme.ink))
               // Setting one up is Coach's: someone a taf is shared with who can't use Coach waits for one instead.
               Text(HomeWords.empty(state.mayUseCoach), style = scaled(14, color = Theme.soft))
             }
@@ -177,7 +178,7 @@ fun HomeView(
         }
         // Stopping every taf at once is one row away, with where it stands.
         if (state.canHalt(null) && state.tafs.isNotEmpty()) item { HaltRow(null, state.haltOf(null), onHaltAll) }
-        item { Text("Signed in with KIFF. KIFF decides every action. Pull down to refresh.", style = scaled(12, color = Theme.dim)) }
+        item { Text(Words.Home.footer, style = scaled(12, color = Theme.dim)) }
       }
     }
   }
@@ -191,7 +192,7 @@ private const val STATUS_PAGE = "https://status.kiff.dev"
 fun PlanLine(words: String, tone: String, onUsage: () -> Unit) {
   val color = planColor(tone, calm = Theme.amberText)
   Row(
-    Modifier.fillMaxWidth().clickable(onClick = onUsage).padding(vertical = 6.dp).semantics { contentDescription = "$words Opens Plan & usage." },
+    Modifier.fillMaxWidth().clickable(onClick = onUsage).padding(vertical = 6.dp).semantics { contentDescription = Words.Home.planLineDescription(words) },
     horizontalArrangement = Arrangement.spacedBy(6.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
@@ -207,8 +208,8 @@ fun UnreachableLine(words: String, retrying: Boolean) {
   val uri = androidx.compose.ui.platform.LocalUriHandler.current
   Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.size(7.dp).clip(CircleShape).background(Theme.amber))
-    Text(if (retrying) "$words · trying again" else words, style = scaled(12, color = Theme.dim))
-    Text("Status", style = scaled(12, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(STATUS_PAGE) }.padding(vertical = 6.dp))
+    Text(if (retrying) Words.Home.statusRetrying(words) else words, style = scaled(12, color = Theme.dim))
+    Text(Words.Home.status, style = scaled(12, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(STATUS_PAGE) }.padding(vertical = 6.dp))
   }
 }
 
@@ -224,7 +225,7 @@ private fun Header(accountLabel: String?, onCalendar: (() -> Unit)? = null) {
     // The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from here.
     if (onCalendar != null) {
       Box(
-        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = "Calendar" },
+        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = Words.Calendar.title },
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
@@ -239,14 +240,14 @@ private fun Headline(state: AppState) {
   Column {
     // Never "0 tafs working" before the tafs are read (#91).
     if (state.mode == Mode.kiff && !state.listLoaded) {
-      Text("Loading your tafs…", style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
+      Text(Words.Home.loading, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
       return@Column
     }
     if (state.mode == Mode.kiff && state.listUnread) {
-      Text("Couldn't load your tafs.", style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
+      Text(Words.Home.notLoaded, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
       return@Column
     }
-    Text("$working ${if (working == 1) "taf" else "tafs"} working.", style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
+    Text(Words.Home.working(count = working), style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
     // tafs cloud's words for what Needs you holds, else the app's for its own count.
     Text(state.needsYouWords, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
   }
@@ -269,9 +270,9 @@ private fun NeedsYouStrip(call: HeldCall, taf: Taf, onClick: () -> Unit) {
     Dot(Theme.amber, 10.dp)
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text("${taf.name}: ${call.proposed.summary}", style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
-      Text("${call.reason} · answer by ${shortTime(call.expiresAt)}", style = scaled(13, color = Theme.soft), maxLines = 1, overflow = TextOverflow.Ellipsis)
+      Text("${call.reason} · " + Words.NeedsYou.answerBy(shortTime(call.expiresAt)), style = scaled(13, color = Theme.soft), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
-    Text("Answer", style = scaled(14, FontWeight.Medium, Theme.amberText))
+    Text(Words.NeedsYou.answer, style = scaled(14, FontWeight.Medium, Theme.amberText))
   }
 }
 
@@ -317,7 +318,7 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
         // The label takes what the amount leaves: a long one never squeezes the amount to a digit a line.
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Text("${rule.label} · ${limit.formatted} ${rule.window.label}", style = scaled(12, color = Theme.dim), modifier = Modifier.weight(1f))
-          Text(if (unknown) "use unavailable" else used.formatted, style = scaled(12, color = Theme.dim, mono = true), maxLines = 1, softWrap = false)
+          Text(if (unknown) Words.Usage.useUnavailable else used.formatted, style = scaled(12, color = Theme.dim, mono = true), maxLines = 1, softWrap = false)
         }
         if (!unknown) Meter(used.minor.toDouble() / maxOf(limit.minor, 1L), Theme.tafColor(taf.colorIndex))
       }

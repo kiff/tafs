@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveDatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -105,21 +106,21 @@ fun CalendarView(
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
       if (onBack != null) {
-        Row(Modifier.clickable(onClick = onBack).semantics { contentDescription = "Back" }, verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.clickable(onClick = onBack).semantics { contentDescription = Words.Common.back }, verticalAlignment = Alignment.CenterVertically) {
           Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.amber, modifier = Modifier.size(20.dp))
-          Text("Tafs", style = scaled(16, color = Theme.amber))
+          Text(Words.Home.tafs, style = scaled(16, color = Theme.amber))
         }
       }
-      Text("Calendar", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+      Text(Words.Calendar.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
       val error = state.calendarError
       when {
         error != null -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
           Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.weight(1f, fill = false))
-          OutlineButton("Try again", onClick = { retries += 1 }, modifier = Modifier.testTag("calendar.retry"))
+          OutlineButton(Words.Common.tryAgain, onClick = { retries += 1 }, modifier = Modifier.testTag("calendar.retry"))
         }
         read == null -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("calendar.loading")) {
           androidx.compose.material3.CircularProgressIndicator(Modifier.size(16.dp), color = Theme.dim, strokeWidth = 2.dp)
-          Text("Reading the calendar…", style = scaled(13, color = Theme.dim))
+          Text(Words.Calendar.reading, style = scaled(13, color = Theme.dim))
         }
         // tafs cloud's words: the account is halted, or some work was left out of this read.
         read.halted || read.more ->
@@ -179,15 +180,15 @@ private fun Header(c: Ctx, compact: Boolean) {
   var picking by rememberSaveable { mutableStateOf(false) }
   Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-      OutlineButton("Today", onClick = { c.select(c.today) }, enabled = c.state.selected != c.today, modifier = Modifier.testTag("calendar.today"))
-      Chevron(R.drawable.ic_chevron_left, "Previous ${c.state.mode.title.lowercase()}") { c.show(CalendarMath.step(c.state, -1)) }
-      Chevron(R.drawable.ic_chevron_right, "Next ${c.state.mode.title.lowercase()}") { c.show(CalendarMath.step(c.state, 1)) }
+      OutlineButton(Words.Calendar.today, onClick = { c.select(c.today) }, enabled = c.state.selected != c.today, modifier = Modifier.testTag("calendar.today"))
+      Chevron(R.drawable.ic_chevron_left, when (c.state.mode) { CalendarMode.Day -> Words.Calendar.previousDay; CalendarMode.Week -> Words.Calendar.previousWeek; CalendarMode.Month -> Words.Calendar.previousMonth }) { c.show(CalendarMath.step(c.state, -1)) }
+      Chevron(R.drawable.ic_chevron_right, when (c.state.mode) { CalendarMode.Day -> Words.Calendar.nextDay; CalendarMode.Week -> Words.Calendar.nextWeek; CalendarMode.Month -> Words.Calendar.nextMonth }) { c.show(CalendarMath.step(c.state, 1)) }
       Text(
         CalendarMath.title(c.state), style = scaled(if (compact) 16 else 20, FontWeight.Bold, Theme.ink, display = true),
         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).testTag("calendar.title"),
       )
       Box(
-        Modifier.size(40.dp).clip(CircleShape).background(Theme.raised).clickable { picking = true }.semantics { contentDescription = "Choose a date" },
+        Modifier.size(40.dp).clip(CircleShape).background(Theme.raised).clickable { picking = true }.semantics { contentDescription = Words.Calendar.chooseDate },
         contentAlignment = Alignment.Center,
       ) { Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(20.dp)) }
     }
@@ -205,9 +206,9 @@ private fun Header(c: Ctx, compact: Boolean) {
         TextButton(onClick = {
           picker.selectedDateMillis?.let { c.select(CalendarMath.today(ZoneOffset.UTC, Instant.ofEpochMilli(it))) }
           picking = false
-        }) { Text("Choose", style = scaled(15, FontWeight.SemiBold, Theme.amberText)) }
+        }) { Text(Words.Common.choose, style = scaled(15, FontWeight.SemiBold, Theme.amberText)) }
       },
-      dismissButton = { TextButton(onClick = { picking = false }) { Text("Cancel", style = scaled(15, color = Theme.soft)) } },
+      dismissButton = { TextButton(onClick = { picking = false }) { Text(Words.Common.cancel, style = scaled(15, color = Theme.soft)) } },
     ) { DatePicker(state = picker) }
   }
 }
@@ -228,8 +229,8 @@ private fun Navigator(c: Ctx, modifier: Modifier) {
   ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
       Text(CalendarMath.title(CalendarState(CalendarMode.Month, c.state.selected)), style = scaled(15, FontWeight.SemiBold), modifier = Modifier.weight(1f))
-      Chevron(R.drawable.ic_chevron_left, "Previous month") { c.select(CalendarMath.plusMonths(c.state.selected, -1)) }
-      Chevron(R.drawable.ic_chevron_right, "Next month") { c.select(CalendarMath.plusMonths(c.state.selected, 1)) }
+      Chevron(R.drawable.ic_chevron_left, Words.Calendar.previousMonth) { c.select(CalendarMath.plusMonths(c.state.selected, -1)) }
+      Chevron(R.drawable.ic_chevron_right, Words.Calendar.nextMonth) { c.select(CalendarMath.plusMonths(c.state.selected, 1)) }
     }
     MonthCells(c, large = false)
   }
@@ -261,7 +262,7 @@ private fun DayCell(c: Ctx, day: String, large: Boolean, modifier: Modifier) {
       .border(1.5.dp, if (day == c.today) Theme.amber else Color.Transparent, RoundedCornerShape(8.dp))
       .clickable { c.select(day) }
       .semantics(mergeDescendants = true) {
-        contentDescription = CalendarMath.dayHeading(day) + if (count > 0) ", $count scheduled" else ""
+        contentDescription = if (count > 0) Words.Calendar.dayScheduled(count = count, day = CalendarMath.dayHeading(day)) else CalendarMath.dayHeading(day)
         this.selected = selected
       }
       .padding(vertical = 4.dp),
@@ -340,7 +341,7 @@ private fun TimeGrid(c: Ctx, days: List<String>) {
         }
       }
     }
-    if (c.loaded && days.all { CalendarMath.events(c.events, it).isEmpty() }) Empty(if (days.size == 1) "Nothing scheduled on this day." else "Nothing scheduled this week.")
+    if (c.loaded && days.all { CalendarMath.events(c.events, it).isEmpty() }) Empty(if (days.size == 1) Words.Calendar.nothingOnDay else Words.Calendar.nothingThisWeek)
   }
 }
 
@@ -350,14 +351,14 @@ private fun SlotChip(c: Ctx, slot: CalendarMath.Slot, compact: Boolean) {
   Row(
     Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp)).background(Theme.tafColor(slot.color).copy(alpha = 0.16f))
       .then(if (opens) Modifier.clickable { c.open(slot.taf) } else Modifier)
-      .semantics(mergeDescendants = true) { contentDescription = "${slot.name}, ${if (slot.count > 1) "${slot.count} times from" else "at"} ${slot.first}" }
+      .semantics(mergeDescendants = true) { contentDescription = if (slot.count > 1) Words.Calendar.slotTimes(count = slot.count, name = slot.name, first = slot.first) else Words.Calendar.slotAt(name = slot.name, first = slot.first) }
       .padding(horizontal = 6.dp, vertical = 3.dp),
     horizontalArrangement = Arrangement.spacedBy(5.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Dot(Theme.tafColor(slot.color), 7.dp)
     Text(if (compact) slot.name else "${slot.first} · ${slot.name}", style = scaled(12, FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-    if (slot.count > 1) Text("×${slot.count}", style = scaled(11, color = Theme.soft))
+    if (slot.count > 1) Text(Words.Calendar.times(count = slot.count), style = scaled(11, color = Theme.soft))
   }
 }
 
@@ -367,7 +368,7 @@ private fun DayList(c: Ctx, day: String) {
   val on = CalendarMath.events(c.events, day)
   Column(Modifier.testTag("calendar.day"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Eyebrow(CalendarMath.dayHeading(day))
-    if (c.loaded && on.isEmpty()) Empty("Nothing scheduled on this day.")
+    if (c.loaded && on.isEmpty()) Empty(Words.Calendar.nothingOnDay)
     on.forEach { EventRow(c, it) }
   }
 }
@@ -377,9 +378,9 @@ private fun DayList(c: Ctx, day: String) {
 private fun Agenda(c: Ctx) {
   val groups = CalendarMath.agenda(c.events, CalendarMath.shown(c.state))
   Column(Modifier.testTag("calendar.agenda"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-    Eyebrow("Agenda")
+    Eyebrow(Words.Calendar.agenda)
     // tafs cloud's own words when nothing is to come, so both apps say the same.
-    if (c.loaded && groups.isEmpty()) Empty(c.words.ifEmpty { "Nothing scheduled in these days." })
+    if (c.loaded && groups.isEmpty()) Empty(c.words.ifEmpty { Words.Calendar.nothingTheseDays })
     groups.forEach { (day, events) ->
       Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(CalendarMath.dayHeading(day), style = scaled(14, FontWeight.SemiBold, if (day == c.today) Theme.amberText else Theme.ink))

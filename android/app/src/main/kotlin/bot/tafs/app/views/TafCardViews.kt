@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -67,10 +68,10 @@ fun spokenCard(card: TafCard, issuedBy: String, revoked: Boolean): String {
   card.hero?.let { parts += "${it.figure} ${it.words}" }
   parts += listOfNotNull(card.title, card.environmentLabel).joinToString(", ")
   parts += card.facts
-  if (card.rules.isEmpty()) parts += "No actions yet"
-  parts += "Issued by $issuedBy"
+  if (card.rules.isEmpty()) parts += Words.Card.noActions
+  parts += Words.Card.issuedByNamed(issuedBy)
   val end = card.expires?.let(::shownDate)
-  parts += if (revoked) "Revoked" else if (!card.active) "Ended ${end ?: ""}" else end?.let { "Until $it" } ?: "No end date"
+  parts += if (revoked) Words.Card.revoked else if (!card.active) (end?.let { Words.Card.endedOn(it) } ?: Words.Card.ended) else end?.let { Words.Card.untilDate(it) } ?: Words.Card.noEndDate
   return parts.joinToString(". ") { it.trim() } + "."
 }
 
@@ -110,20 +111,20 @@ fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean 
       card.facts.forEach { fact ->
         Text(fact, style = scaled(11, color = white, mono = true), modifier = Modifier.alpha(0.92f), maxLines = 1, overflow = TextOverflow.Ellipsis)
       }
-      if (card.rules.isEmpty()) Text("no actions yet", style = scaled(12, color = white, mono = true))
+      if (card.rules.isEmpty()) Text(Words.Card.noActionsShort, style = scaled(12, color = white, mono = true))
       Spacer(Modifier.weight(1f))
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-          Text("Issued by", style = scaled(10, color = white), modifier = Modifier.alpha(0.75f))
+          Text(Words.Card.issuedBy, style = scaled(10, color = white), modifier = Modifier.alpha(0.75f))
           Text(issuedBy, style = scaled(12, FontWeight.SemiBold, white), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(1.dp)) {
           // A Card with no end says so, never a far-off date (kiff/tafs#96).
           Text(
-            if (revoked) "Revoked" else if (!card.active) "Ended" else if (card.expires == null) "Ends" else "Until",
+            if (revoked) Words.Card.revoked else if (!card.active) Words.Card.ended else if (card.expires == null) Words.Card.ends else Words.Card.until,
             style = scaled(10, color = white), modifier = Modifier.alpha(0.75f),
           )
-          Text(card.expires?.let(::shownDate) ?: "No end date", style = scaled(12, FontWeight.SemiBold, white))
+          Text(card.expires?.let(::shownDate) ?: Words.Card.noEndDate, style = scaled(12, FontWeight.SemiBold, white))
         }
       }
     }
@@ -214,7 +215,7 @@ fun CardBar(card: TafCard, count: Int, color: Color, revoked: Boolean = false, o
 private fun details(card: TafCard, count: Int): String {
   val parts = mutableListOf(card.title)
   card.environmentLabel?.let { parts += it.lowercase().replaceFirstChar(Char::uppercase) }
-  if (count > 1) parts += "$count Cards"
+  if (count > 1) parts += Words.Card.count(count = count)
   return parts.joinToString(" · ")
 }
 
@@ -230,7 +231,7 @@ fun CardLines(rules: List<CardRule>) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Text(rule.label, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-          Text(if (rule.outside == Outside.hold) "Outside: held for you" else "Outside: refused", style = scaled(12, color = Theme.dim))
+          Text(if (rule.outside == Outside.hold) Words.Card.outsideHeld else Words.Card.outsideRefused, style = scaled(12, color = Theme.dim))
         }
         Text(
           rule.summary,

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
@@ -32,11 +33,11 @@ import bot.tafs.app.design.scaled
 import kotlinx.coroutines.launch
 
 /** What deleting the account erases, as its sheet lists it. */
-private val GOES = listOf(
-  "Every taf, with its runs, chats, notes and schedules",
-  "Your tools' sign-ins, disconnected",
-  "Your Cards and keys: they stop working",
-  "KIFF's records of your account, erased after 30 days",
+private val GOES get() = listOf(
+  Words.Settings.DeleteAccount.goesTafs,
+  Words.Settings.DeleteAccount.goesSignIns,
+  Words.Settings.DeleteAccount.goesCards,
+  Words.Settings.DeleteAccount.goesRecords,
 )
 
 /**
@@ -57,9 +58,9 @@ fun DeleteAccountSheet(state: AppState, delete: suspend () -> Boolean, clearErro
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("Delete account", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.Settings.DeleteAccount.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         Text(
-          "Cancel",
+          Words.Common.cancel,
           style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
           modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy, onClick = onClose).padding(top = 8.dp),
         )
@@ -69,25 +70,25 @@ fun DeleteAccountSheet(state: AppState, delete: suspend () -> Boolean, clearErro
         verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         Panel {
-          Text("This deletes your KIFF account and everything tafs keeps for it. It can't be undone.", style = scaled(15, FontWeight.SemiBold, Theme.ink))
+          Text(Words.Settings.DeleteAccount.warning, style = scaled(15, FontWeight.SemiBold, Theme.ink))
         }
         Panel {
-          Eyebrow("What goes")
+          Eyebrow(Words.Settings.DeleteAccount.whatGoes)
           GOES.forEach { Text("• $it", style = scaled(14, color = Theme.soft)) }
         }
         state.deleteAccountError?.let { why -> Panel { Text(why, style = scaled(14, color = Theme.no)) } }
         Text(
           when {
-            busy -> "Deleting…"
-            state.deleteAccountError == null -> "Delete account"
-            else -> "Try again"
+            busy -> Words.Settings.DeleteAccount.deleting
+            state.deleteAccountError == null -> Words.Settings.DeleteAccount.title
+            else -> Words.Common.tryAgain
           },
           style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.no),
           modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).confirms()
             .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }
             .padding(horizontal = 12.dp, vertical = 8.dp),
         )
-        Text("You confirm with $biometry before anything is deleted. Signed in elsewhere, you're signed out there too.", style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 12.dp))
+        Text(Words.Settings.DeleteAccount.confirmWith(biometry), style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 12.dp))
       }
     }
   }
