@@ -252,6 +252,33 @@ describe("Activity in the person's language", () => {
     expect(seen[0]!.get("authorization")).toBe("Bearer synthetic-session");
     expect(seen[0]!.get("accept-language")).toBe("pl");
   });
+
+  it("adds the language only to KIFF's own host, and never over a language the caller set", async () => {
+    const seen: Array<{ url: string; lang: string | null }> = [];
+    const deps = {
+      kiffBase: "https://kiff.test",
+      fetch: (async (input: string | URL | Request, init?: RequestInit) => {
+        seen.push({ url: String(input instanceof Request ? input.url : input), lang: new Headers(init?.headers).get("accept-language") });
+        return new Response("{}");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const { withKIFFLanguage } = await import("../src/cloud/handler.js");
+    const wrapped = withKIFFLanguage({ rawPath: "/", headers: { "accept-language": "de-DE" }, requestContext: { http: { method: "GET" } } }, deps).fetch!;
+    await wrapped("https://kiff.test/v1/me");
+    // planque, or any host that isn't KIFF's, gets none; nor a host that only starts with KIFF's base.
+    await wrapped("https://planque.test/v1/grants", { headers: { authorization: "Bearer x" } });
+    await wrapped("https://kiff.test.evil/v1/me", { headers: { authorization: "Bearer x" } });
+    // A caller's own language stays, in either form of headers.
+    await wrapped("https://kiff.test/v1/me", { headers: new Headers({ "Accept-Language": "fr" }) });
+    await wrapped("https://kiff.test/v1/me", { headers: { "Accept-Language": "it" } });
+    expect(seen).toEqual([
+      { url: "https://kiff.test/v1/me", lang: "de" },
+      { url: "https://planque.test/v1/grants", lang: null },
+      { url: "https://kiff.test.evil/v1/me", lang: null },
+      { url: "https://kiff.test/v1/me", lang: "fr" },
+      { url: "https://kiff.test/v1/me", lang: "it" },
+    ]);
+  });
 });
 
 describe("recent work pages", () => {

@@ -3730,6 +3730,8 @@ describe("the account's connections a Coach conversation starts with", () => {
     expect(after.at(-1)).toBe("and a third time");
     // The account's language, kept from the chat's start, is what a taf built after says of its owner.
     expect(await coach.get("t_acme#lang")).toBe("de");
+    // Kept a quarter from when it was seen, as the company name is: then it's English until a Coach chat says again.
+    expect(coach.held.get("t_acme#lang")!.until).toBe(w.now.getTime() + 90 * 24 * 3600_000);
     const made = await handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" }, body: JSON.stringify({ ...START, name: "Lina" }) }, deps);
     expect(made.statusCode, made.body).toBe(200);
     const id = JSON.parse(made.body).taf.id as string;
