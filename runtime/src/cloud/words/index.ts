@@ -48,3 +48,38 @@ export function languageFrom(header: string | undefined): Lang {
 export function plural(lang: Lang, n: number): Intl.LDMLPluralRule {
   return new Intl.PluralRules(lang).select(n);
 }
+
+/** Each language's name in English, for the lines Coach and the tafs read (they're written in English, as their instructions). */
+export const LANGUAGE_NAMES: Record<Lang, string> = {
+  en: "English", de: "German", fr: "French", es: "Spanish", it: "Italian", pt: "European Portuguese", nl: "Dutch", pl: "Polish",
+};
+
+/** The line tafs cloud opens a Coach message with for a person whose app is in another language than English. */
+export const LANGUAGE_LINE = "[tafs language]";
+
+/**
+ * A Coach message with the person's language said, when it isn't English: Coach replies in it, and words
+ * what they read in it. The line goes before the owner's words, after any of tafs' own opening lines, so
+ * what reads a message's opening (entryOf, ownerWords) reads it as before.
+ */
+export function withLanguage(text: string, lang: Lang): string {
+  if (lang === "en") return text;
+  const line = `${LANGUAGE_LINE} The person writing reads ${LANGUAGE_NAMES[lang]} (${lang}), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`;
+  // A door's knock quotes the message after the owner's words: the line goes last, out of the quote.
+  if (text.startsWith("[door knock ")) return `${text}\n\n${line}`;
+  const at = text.lastIndexOf("\nThe owner says: ");
+  if (text.startsWith("[") && at >= 0) return `${text.slice(0, at)}\n${line}${text.slice(at)}`;
+  return `${line}\nThe owner says: ${text}`;
+}
+
+/** What a taf's instructions say of its owner's language, when it isn't English: its reports and alerts to them go in it. */
+export function ownerLanguageLine(lang: Lang): string | undefined {
+  if (lang === "en") return undefined;
+  return `Your owner reads ${LANGUAGE_NAMES[lang]} (${lang}): write what's for them in it (your reports, summaries and alerts, and your chat answers when they write in it). A message to anyone else, such as a customer, keeps that person's language. Names stay as they are: taf, Coach, Card.`;
+}
+
+/** The owner's language as ownerLanguageLine wrote it into instructions, or undefined. */
+export function ownerLanguageIn(text: string): Lang | undefined {
+  const m = /Your owner reads [A-Za-z ]+ \(([a-z]{2})\):/.exec(text);
+  return m && (LANGUAGES as readonly string[]).includes(m[1]!) ? (m[1] as Lang) : undefined;
+}

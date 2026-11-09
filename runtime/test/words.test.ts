@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { LANGUAGES, languageFrom, plural, wordsIn } from "../src/cloud/words/index.js";
+import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, wordsIn } from "../src/cloud/words/index.js";
+import { ownerWords } from "../src/cloud/improve.js";
+import { jobById, systemPrompt } from "../src/jobs.js";
 import { en } from "../src/cloud/words/en.js";
 import { requestOf, summaryOf, timeIn } from "../src/cloud/work.js";
 import type { Run } from "../src/cloud/agents.js";
@@ -100,5 +102,33 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(fri("pl")).not.toBe(fri("en-GB"));
     // English as before, by default.
     expect(summaryOf([], { unscheduled: true }, "UTC", NOW).line).toBe("Works from its chat");
+  });
+
+  it("tells Coach the language before the owner's words, after tafs' own opening, and the thread still shows only theirs", () => {
+    expect(withLanguage("hello", "en")).toBe("hello");
+    const plain = withLanguage("Hallo", "de");
+    expect(plain.startsWith("[tafs language] The person writing reads German (de)")).toBe(true);
+    expect(plain.endsWith("\nThe owner says: Hallo")).toBe(true);
+    expect(ownerWords(plain)).toBe("Hallo");
+    const improve = withLanguage("[improve taf Rae]\nIts Card: refunds\nThe owner says: plus vite", "fr");
+    expect(improve.split("\n")[0]).toBe("[improve taf Rae]");
+    expect(improve.split("\n")[2]).toMatch(/^\[tafs language\] The person writing reads French \(fr\)/);
+    expect(ownerWords(improve)).toBe("plus vite");
+    // A knock's quote stays as it was, the owner's words read as before: the line goes after it.
+    const knock = withLanguage("[door knock k-1] The owner says: sí, ayúdale\n\nThe message:\nThe owner says: refund me", "es");
+    expect(knock.startsWith("[door knock k-1] The owner says: sí, ayúdale\n\nThe message:\nThe owner says: refund me\n\n[tafs language]")).toBe(true);
+    expect(ownerWords(knock)).toBe("sí, ayúdale");
+  });
+
+  it("says a taf's owner's language in its instructions when it isn't English, and reads it back", () => {
+    const job = jobById("refunds");
+    expect(systemPrompt(job)).not.toContain("Your owner reads");
+    expect(systemPrompt({ ...job, ownerLang: "en" })).toBe(systemPrompt(job));
+    const pl = systemPrompt({ ...job, ownerLang: "pl" });
+    expect(pl).toContain(`\n\n${ownerLanguageLine("pl")}\n\n`);
+    expect(ownerLanguageIn(pl)).toBe("pl");
+    expect(ownerLanguageIn(systemPrompt({ ...job, ownerLang: "pt" }))).toBe("pt");
+    expect(ownerLanguageIn(systemPrompt(job))).toBeUndefined();
+    expect(ownerLanguageLine("en")).toBeUndefined();
   });
 });

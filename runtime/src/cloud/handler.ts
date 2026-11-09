@@ -14,7 +14,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
-import { type Lang, languageFrom, wordsIn } from "./words/index.js";
+import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, withLanguage, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
@@ -314,6 +314,8 @@ export interface Taf {
   disclose?: Job["disclose"];
   /** Who its messages come from, as the owner answered Coach (gaps 16 and 18): its disclosure line names it. */
   writesFor?: string;
+  /** Its owner's language when it isn't English (docs/languages.md): the account's, as kept when it was built or upgraded. */
+  ownerLang?: Lang;
   /** What it does in one word, for its dial's face ("Refund"), as Coach's result said it. */
   does?: string;
   /**
@@ -1371,6 +1373,9 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // the taf is on record, and only then is the name freed: a definition or a
   // schedule nobody can see would otherwise run, or block the name for good.
   if (writesFor) job = { ...job, writesFor };
+  // What's for its owner goes in the account's language, as kept from their Coach chats (docs/languages.md).
+  const ownerLang = await languageKept(me.tenantID, deps);
+  if (ownerLang !== "en") job = { ...job, ownerLang };
   const def = definition(tafID, job, { budgetCents: budget, ownerNotes: notesText });
   // Its colour: the first no other taf of the account has (kiff/tafs#91).
   const color = freeColor((await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB && t.color !== undefined).map((t) => t.color!));
@@ -1378,7 +1383,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
     ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}), ...(work ? { work } : {}), ...(disclose?.length ? { disclose } : {}),
-    ...(writesFor ? { writesFor } : {}),
+    ...(writesFor ? { writesFor } : {}), ...(ownerLang !== "en" ? { ownerLang } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -1419,11 +1424,11 @@ const MAX_NAME = 60;
 const MAX_KICKOFF = 2_000;
 
 /** The taf's job: its own, as Coach drafted it (kiff/tafs#476), or one of the five starter jobs. Throws for a job id tafs doesn't know. */
-export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work" | "disclose" | "writesFor">): Job {
+export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work" | "disclose" | "writesFor" | "ownerLang">): Job {
   const job = taf.job === CUSTOM ? ownJob({ name: taf.name, summary: taf.summary ?? "", kickoff: taf.work?.kickoff ?? "", instructions: taf.work?.instructions }) : jobById(taf.job);
   // The disclosure Coach named for this taf, on top of its job's own, only ever wider; and who it writes for.
   const disclose = withDisclose(job.disclose, taf.disclose);
-  return { ...job, ...(disclose?.length ? { disclose } : {}), ...(taf.writesFor ? { writesFor: taf.writesFor } : {}) };
+  return { ...job, ...(disclose?.length ? { disclose } : {}), ...(taf.writesFor ? { writesFor: taf.writesFor } : {}), ...(taf.ownerLang && taf.ownerLang !== "en" ? { ownerLang: taf.ownerLang } : {}) };
 }
 
 /**
@@ -2755,7 +2760,14 @@ async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text:
  * tafs cloud names the skills kiff/agents loads for the session. A session that exists keeps its own.
  */
 async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, deps: Deps): Promise<string> {
-  if (taf.job !== SETUP_JOB || at.session) return text;
+  if (taf.job !== SETUP_JOB) return text;
+  // Every Coach message says the person's language when it isn't English (docs/languages.md): Coach replies in it.
+  const lang = langOf(event);
+  return withLanguage(await coachStart(me, taf, at, text, event, lang, deps), lang);
+}
+
+async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, lang: Lang, deps: Deps): Promise<string> {
+  if (at.session) return text;
   // The apps name no session for the live chat: a message that goes on in it is no new chat, and reads
   // nothing more nor carries the start's lines. It goes on in that chat by name.
   if (at.live) {
@@ -2771,7 +2783,7 @@ async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: stri
     // The skills at the versions Coach's live definition names: kiff/agents loads no other (asNamed).
     deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined),
     // Beside the start's reads, never after them: a chat's first words wait on none of it (qa-kiff on #574).
-    me.companyName ? keepCompany(me.tenantID, me.companyName, deps) : undefined]);
+    me.companyName ? keepCompany(me.tenantID, me.companyName, deps) : undefined, keepLanguage(me.tenantID, lang, deps)]);
   const skills = asNamed(startSkills(entry, state), live?.skills);
   if (skills.length) at.skills = skills;
   return withConnections(text, lines, me.companyName);
@@ -2800,6 +2812,28 @@ async function companyOf(tenant: string, deps: Deps): Promise<string | undefined
 }
 
 const companyKey = (tenant: string) => `${tenant}#company`;
+
+/**
+ * Keeps the account's language, as the person who starts a Coach chat reads it (their app's Accept-Language), for
+ * what's built without a request: a taf's definition, at its build and at an Upgrade (docs/languages.md). Written
+ * only when it changed, and kept a quarter, as the company name.
+ */
+async function keepLanguage(tenant: string, lang: Lang, deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  try {
+    if (((await deps.coach.get(languageKey(tenant))) ?? "en") !== lang) await deps.coach.put(languageKey(tenant), lang, new Date((deps.now?.() ?? new Date()).getTime() + COMPANY_KEPT_MS));
+  } catch (err) {
+    console.error(`language: ${tenant}:`, err);
+  }
+}
+
+/** The account's language tafs cloud keeps; English until one is seen. */
+async function languageKept(tenant: string, deps: Deps): Promise<Lang> {
+  const v = await deps.coach?.get(languageKey(tenant)).catch(() => undefined);
+  return typeof v === "string" && (LANGUAGES as readonly string[]).includes(v) ? (v as Lang) : "en";
+}
+
+const languageKey = (tenant: string) => `${tenant}#lang`;
 
 /** How long after its last message a person's chat is still the one their next message goes on in: kiff/agents' live chat. */
 export const LIVE_CHAT_MS = 30 * 60_000;
@@ -3160,7 +3194,8 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   let def: AgentDefinition;
   try {
     // An improvement's sender name is this version's: the live taf takes it once it's installed (keepNotes).
-    def = definition(taf.id, { ...jobOf(taf), ...(writesFor ? { writesFor } : {}) }, { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
+    // A new version speaks the account's language as kept now; the live taf takes it once it's installed (keepNotes).
+    def = definition(taf.id, { ...jobOf({ ...taf, ownerLang: await languageKept(me.tenantID, deps) }), ...(writesFor ? { writesFor } : {}) }, { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined, actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -3574,12 +3609,15 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const writesFor = live.disclose ? writesForIn(live.disclose.line) : taf.writesFor;
     const named: Taf = { ...taf };
     if (writesFor) named.writesFor = writesFor; else delete named.writesFor;
+    // Its owner's language is the live version's, as its instructions say it.
+    const ownerLang = typeof live.instructions === "string" ? ownerLanguageIn(live.instructions) : undefined;
+    if (ownerLang) named.ownerLang = ownerLang; else delete named.ownerLang;
     const next: Taf = { ...named, definition: digest(definition(taf.id, jobOf(named), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
     if (summary) next.summary = summary; else if (summary === "") delete next.summary;
-    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary || next.writesFor !== taf.writesFor) await deps.tafs.putIf(me.tenantID, next, taf);
+    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary || next.writesFor !== taf.writesFor || next.ownerLang !== taf.ownerLang) await deps.tafs.putIf(me.tenantID, next, taf);
   } catch (err) {
     // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
     console.error(`keep notes: ${taf.id} v${n}:`, err);
@@ -5039,6 +5077,14 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         if (record.job !== SETUP_JOB && !record.writesFor) {
           const company = await companyOf(tenant, deps);
           if (company) record = { ...record, writesFor: company };
+        }
+        // What's for its owner goes in the account's language as kept now: a change reaches each taf at its next Upgrade.
+        if (record.job !== SETUP_JOB) {
+          const lang = await languageKept(tenant, deps);
+          if ((record.ownerLang ?? "en") !== lang) {
+            const { ownerLang: _was, ...rest } = record;
+            record = lang === "en" ? rest : { ...rest, ownerLang: lang };
+          }
         }
         let want: AgentDefinition;
         try {
