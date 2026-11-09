@@ -14,7 +14,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
-import { type Lang, languageFrom } from "./words/index.js";
+import { type Lang, languageFrom, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
@@ -4497,7 +4497,7 @@ async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): P
   if (typeof code !== "string" || !CREDITS_CODES.includes(code)) return err.extra;
   try {
     const b = await readBalance(bearer(event), deps.fetch, deps.kiffBase);
-    return { ...err.extra, words: waitingWords({ ...b, why: code }) };
+    return { ...err.extra, words: waitingWords({ ...b, why: code }, langOf(event)) };
   } catch {
     return err.extra;
   }
@@ -5300,7 +5300,7 @@ async function aiUsage(_event: HTTPEvent, me: KIFFIdentity, _deps: Deps): Promis
  * (docs/accounts.md, "The balance read"): for Plan & usage, Settings' Plan card and Home.
  */
 async function usageBalance(event: HTTPEvent, _me: KIFFIdentity, deps: Deps): Promise<BalanceView> {
-  return balanceView(await creditsRead(() => readBalance(bearer(event), deps.fetch, deps.kiffBase)));
+  return balanceView(await creditsRead(() => readBalance(bearer(event), deps.fetch, deps.kiffBase), langOf(event)), langOf(event));
 }
 
 /**
@@ -5311,13 +5311,13 @@ async function usageBalance(event: HTTPEvent, _me: KIFFIdentity, deps: Deps): Pr
 async function usageCredits(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<CreditsView> {
   const token = bearer(event), previous = new URLSearchParams(event.rawQueryString ?? "").get("period") === "previous";
   const [k, records, access] = await Promise.all([
-    creditsRead(() => readCredits(token, previous, deps.fetch, deps.kiffBase)),
+    creditsRead(() => readCredits(token, previous, deps.fetch, deps.kiffBase), langOf(event)),
     deps.tafs.list(me.tenantID),
-    creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase)),
+    creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase), langOf(event)),
   ]);
   const tafs = records.filter((t) => t.job !== SETUP_JOB)
     .map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, opens: !t.removing && listable(access, t.kiffAgent) }));
-  return creditsView(k, tafs);
+  return creditsView(k, tafs, langOf(event));
 }
 
 /**
@@ -5328,24 +5328,25 @@ async function usageCredits(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Pro
 async function tafCredits(event: HTTPEvent, me: KIFFIdentity, id: string, deps: Deps): Promise<TafCreditsView> {
   const taf = await owned(me, id, deps);
   const token = bearer(event), q = new URLSearchParams(event.rawQueryString ?? "");
-  if (!listable(await creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase)), taf.kiffAgent)) throw new HTTPError(404, "no such taf");
+  if (!listable(await creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase), langOf(event)), taf.kiffAgent)) throw new HTTPError(404, "no such taf");
   const previous = q.get("period") === "previous", after = q.get("after") ?? "";
   const [k, page] = await Promise.all([
-    creditsRead(() => readCredits(token, previous, deps.fetch, deps.kiffBase)),
-    creditsRead(() => readCreditRuns(token, taf.id, previous, after, deps.fetch, deps.kiffBase)),
+    creditsRead(() => readCredits(token, previous, deps.fetch, deps.kiffBase), langOf(event)),
+    creditsRead(() => readCreditRuns(token, taf.id, previous, after, deps.fetch, deps.kiffBase), langOf(event)),
   ]);
-  return tafCreditsView(k, page, { id: taf.id, name: taf.name, kiffAgent: taf.kiffAgent, opens: true }, deps.now?.() ?? new Date());
+  return tafCreditsView(k, page, { id: taf.id, name: taf.name, kiffAgent: taf.kiffAgent, opens: true }, deps.now?.() ?? new Date(), langOf(event));
 }
 
 /**
  * A read of KIFF for the credits, its credits or what the person may use: one that failed answers
  * 503 with words the apps show as they are. A sign-in KIFF refuses stays the person's to fix.
  */
-async function creditsRead<T>(work: () => Promise<T>): Promise<T> {
+async function creditsRead<T>(work: () => Promise<T>, lang: Lang = "en"): Promise<T> {
   try { return await work(); } catch (err) {
-    if (err instanceof CreditsError) throw new HTTPError(err.status, err.message, { words: err.message });
+    // The error stays English for developers; the words beside it are the person's (docs/languages.md).
+    if (err instanceof CreditsError) throw new HTTPError(err.status, err.message, { words: err.message === UNREADABLE ? wordsIn(lang).cr_unreadable : err.message });
     if (err instanceof KIFFError && err.status === 401) throw err;
-    throw new HTTPError(503, UNREADABLE, { words: UNREADABLE });
+    throw new HTTPError(503, UNREADABLE, { words: wordsIn(lang).cr_unreadable });
   }
 }
 

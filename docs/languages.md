@@ -39,9 +39,12 @@ The same as English: plain, short, specific. Say what happened and what the pers
 | French | `fr` | vous | French business software addresses people as vous. |
 | Spanish | `es` | tú | Neutral Spanish, understood in Spain and Latin America. |
 | Italian | `it` | tu | Informal, as business apps in Italian do. |
-| Portuguese | `pt` | você | **To decide:** European (`pt-PT`) or Brazilian (`pt-BR`). Proposed: European, since the customers are in Europe, with `pt-BR` phones reading it too. |
+| Portuguese | `pt` | você | European Portuguese (`pt-PT`), decided: the customers are in Europe, and a `pt-BR` phone reads it fine. |
 | Dutch | `nl` | je | Informal, as Dutch apps do. |
 | Polish | `pl` | Ty | Buttons in the infinitive or imperative, sentences addressing Ty. |
+
+**A time with a weekday** reads as each language says "at" it: "Done at Fri 09:00", "Erledigt am Fr. um 09:00",
+"Terminé le ven. à 09:00", "Hecho el vie. a las 09:00". Today's times have no weekday: "um 09:00", "à 09:00".
 
 ## Names that stay as they are
 

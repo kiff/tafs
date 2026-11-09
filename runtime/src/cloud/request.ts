@@ -1,4 +1,4 @@
-import type { Lang } from "./words/index.js";
+import { type Lang, wordsIn } from "./words/index.js";
 /**
  * One request, from the dial's rim (docs/api.md, "A request"): what started it, what it did step by
  * step, where its result went and what comes next, every line and time in tafs cloud's words and the
@@ -29,16 +29,17 @@ export interface RequestDetail extends RequestView {
 const DOOR: Record<string, string> = { email: "email", whatsapp: "WhatsApp", slack: "Slack", telegram: "Telegram" };
 
 /** Where a run came from, in words. */
-export function fromOf(r: Run): string {
-  return fromWords(r.trigger, r.source, r.requester?.kind);
+export function fromOf(r: Run, lang: Lang = "en"): string {
+  return fromWords(r.trigger, r.source, r.requester?.kind, lang);
 }
 
 /** Where a run came from, in words, from what started it: its trigger, its source and who asked. */
-export function fromWords(trigger: string | undefined, source: string | undefined, requesterKind: string | undefined): string {
-  if (requesterKind === "door" || (source && DOOR[source])) return `By ${DOOR[source ?? ""] ?? "its door"}`;
-  if (trigger === "schedule" || trigger === "cron") return "Its schedule";
-  if (requesterKind === "member") return "From its chat";
-  return "Run now";
+export function fromWords(trigger: string | undefined, source: string | undefined, requesterKind: string | undefined, lang: Lang = "en"): string {
+  const w = wordsIn(lang);
+  if (requesterKind === "door" || (source && DOOR[source])) return w.from_door(DOOR[source ?? ""]);
+  if (trigger === "schedule" || trigger === "cron") return w.from_schedule;
+  if (requesterKind === "member") return w.from_chat;
+  return w.from_run_now;
 }
 
 /** The waited calls each turn recorded, as kiff/agents writes them on a usage event. */
@@ -50,7 +51,7 @@ function callsOf(body: unknown): Array<{ tool: string; error: boolean; notMade: 
 
 export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>(), own: DeliveryView[] = [], lang: Lang = "en"): RequestDetail {
   const view = requestOf(r, zone, now, sent, again, own, lang);
-  const from = fromOf(r);
+  const from = fromOf(r, lang);
   const at = (t: string) => timeIn(t, zone, now);
   const steps: RequestStep[] = [{ label: "Received", line: `${from}, ${at(r.created)}`, state: "done" }];
   // Each call's step, with its tool and whether it failed, so a failed call Coach retried

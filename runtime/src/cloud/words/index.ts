@@ -5,7 +5,7 @@
  * changes words: never what a Card allows, nor how an amount or a date is formatted beyond the locale.
  */
 import { de } from "./de.js";
-import { en, type Words } from "./en.js";
+import { en, type When, type Words } from "./en.js";
 import { es } from "./es.js";
 import { fr } from "./fr.js";
 import { it } from "./it.js";
@@ -13,7 +13,7 @@ import { nl } from "./nl.js";
 import { pl } from "./pl.js";
 import { pt } from "./pt.js";
 
-export type { Words };
+export type { When, Words };
 
 export const LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const;
 export type Lang = (typeof LANGUAGES)[number];

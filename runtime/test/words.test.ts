@@ -28,10 +28,20 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     }
   });
 
+  // Lines that read as English does on purpose, and why: anything else the same as English was left untranslated.
+  const SAME_AS_ENGLISH: Record<string, string[]> = {
+    // "Company" is a plan name, kept in every language (docs/languages.md); the seats around it are translated.
+    all: ["cr_company"],
+    fr: ["cr_actions"], // "action", "actions" are French words too
+    it: ["cr_pct"], pt: ["cr_pct"], pl: ["cr_pct"], // "80%" is written alike
+    nl: ["cr_pct", "cr_credits", "cr_runs"], // "credit", "run" are the Dutch terms in the glossary
+  };
+
   it("isn't English in another language: a line copied over untranslated would read the same", () => {
     for (const lang of LANGUAGES.filter((l) => l !== "en")) {
       const words = wordsIn(lang) as Record<string, unknown>;
-      const same = Object.keys(en).filter((k) => JSON.stringify(sample(words[k])) === JSON.stringify(sample((en as Record<string, unknown>)[k])));
+      const allowed = new Set([...SAME_AS_ENGLISH.all!, ...(SAME_AS_ENGLISH[lang] ?? [])]);
+      const same = Object.keys(en).filter((k) => !allowed.has(k) && JSON.stringify(sample(words[k])) === JSON.stringify(sample((en as Record<string, unknown>)[k])));
       expect(same, lang).toEqual([]);
     }
   });
@@ -63,7 +73,15 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(requestOf(run({ status: "ERROR", error: "x", code: "ai_unavailable" }), "UTC", NOW, [], undefined, [], "it")).toMatchObject({ code: "ai_unavailable", line: wordsIn("it").code_ai_unavailable });
     // The weekday as the language writes it (its exact form is the runtime's locale data's).
     const fri = (lang: string) => new Intl.DateTimeFormat(lang, { timeZone: "UTC", weekday: "short" }).format(new Date("2026-11-06T09:00:00Z"));
-    expect(summaryOf([run({ status: "COMPLETED", updated: "2026-11-06T09:00:00Z" })], false, "UTC", NOW, "de").line).toBe(`Zuletzt erledigt um ${fri("de")} 09:00`);
+    // With a weekday, each language says "at" its own way: "am Fr. um 09:00", "le ven. à 09:00".
+    const old = [run({ status: "COMPLETED", updated: "2026-11-06T09:00:00Z" })];
+    expect(summaryOf(old, false, "UTC", NOW, "de").line).toBe(`Zuletzt erledigt am ${fri("de")} um 09:00`);
+    expect(summaryOf(old, false, "UTC", NOW, "fr").line).toBe(`Dernière exécution terminée le ${fri("fr")} à 09:00`);
+    expect(summaryOf(old, false, "UTC", NOW, "es").line).toBe(`Hecho por última vez el ${fri("es")} a las 09:00`);
+    expect(summaryOf(old, false, "UTC", NOW, "en").line).toBe(`Last done at ${fri("en-GB")} 09:00`);
+    // Today, the time alone: "um 11:00", "à 11:00".
+    expect(requestOf(run({ status: "COMPLETED" }), "UTC", NOW, [], undefined, [], "de").line).toBe("Erledigt um 11:00");
+    expect(requestOf(run({ status: "COMPLETED" }), "UTC", NOW, [], undefined, [], "fr").line).toBe("Terminé à 11:00");
     expect(timeIn("2026-11-06T09:00:00Z", "UTC", NOW, "pl")).toBe(`${fri("pl")} 09:00`);
     expect(fri("pl")).not.toBe(fri("en-GB"));
     // English as before, by default.
