@@ -515,6 +515,7 @@ object Words {
     }
     val title: String get() = Res.s(R.string.coach_title)
     object Tools {
+      val give: String get() = Res.s(R.string.coach_tools_give)
       val giving: String get() = Res.s(R.string.coach_tools_giving)
       val title: String get() = Res.s(R.string.coach_tools_title)
     }
@@ -859,6 +860,8 @@ object Words {
     val tryAgain: String get() = Res.s(R.string.export_try_again)
   }
   object Halt {
+    val again: String get() = Res.s(R.string.halt_again)
+    val allNow: String get() = Res.s(R.string.halt_all_now)
     object Explain {
       val halted: String get() = Res.s(R.string.halt_explain_halted)
       fun haltedSince(time: String): String = Res.s(R.string.halt_explain_halted_since, time)
@@ -871,6 +874,7 @@ object Words {
       val halting: String get() = Res.s(R.string.halt_headline_halting)
       val running: String get() = Res.s(R.string.halt_headline_running)
     }
+    val now: String get() = Res.s(R.string.halt_now)
     val rowRunning: String get() = Res.s(R.string.halt_row_running)
   }
   object Home {
@@ -1543,6 +1547,7 @@ object Words {
       val replyWords: String get() = Res.s(R.string.setup_place_reply_words)
     }
     val remove: String get() = Res.s(R.string.setup_remove)
+    val removeForGood: String get() = Res.s(R.string.setup_remove_for_good)
     val resultsGoTo: String get() = Res.s(R.string.setup_results_go_to)
     val resumeEvery: String get() = Res.s(R.string.setup_resume_every)
     val runAfter: String get() = Res.s(R.string.setup_run_after)

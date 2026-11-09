@@ -501,6 +501,7 @@
     <string name="coach_taken_named">Coach can\'t have its tools yet: another tool in KIFF is named %1$s. Rename or remove it in KIFF.</string>
     <string name="coach_taken_unnamed">Coach can\'t have its tools yet: another tool in KIFF is named as one of them. Rename or remove it in KIFF.</string>
     <string name="coach_title">Coach</string>
+    <string name="coach_tools_give">Give Coach its tools</string>
     <string name="coach_tools_giving">Giving…</string>
     <string name="coach_tools_title">Coach\'s tools</string>
     <string name="coach_tools_not_given">Coach\'s tools weren\'t given. %1$s</string>
@@ -831,6 +832,8 @@
     <string name="export_preparing">Preparing your chats…</string>
     <string name="export_row">Export my chats</string>
     <string name="export_try_again">Try again</string>
+    <string name="halt_again">Halt again</string>
+    <string name="halt_all_now">Halt all now</string>
     <string name="halt_explain_halted">Halted. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again.</string>
     <string name="halt_explain_halted_since">Halted since %1$s. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again.</string>
     <string name="halt_explain_halting">Nothing new starts. Halted shows once KIFF and the connection both confirm.</string>
@@ -839,6 +842,7 @@
     <string name="halt_headline_halted">Halted</string>
     <string name="halt_headline_halting">Halting…</string>
     <string name="halt_headline_running">Running</string>
+    <string name="halt_now">Halt now</string>
     <string name="halt_row_running">Stop it until you resume</string>
     <string name="home_calendar_not_read">The calendar couldn\'t be read. %1$s</string>
     <string name="home_cant_reach_kiff">Can\'t reach KIFF</string>
@@ -1413,6 +1417,7 @@
     <string name="setup_place_reply_title">Reply to the sender</string>
     <string name="setup_place_reply_words">On the same thread, through the door it came in on</string>
     <string name="setup_remove">Remove</string>
+    <string name="setup_remove_for_good">Remove for good</string>
     <string name="setup_results_go_to">Results go to</string>
     <string name="setup_resume_every">Resume every start</string>
     <string name="setup_run_after">Run after</string>

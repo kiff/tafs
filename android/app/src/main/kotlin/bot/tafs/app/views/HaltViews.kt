@@ -137,7 +137,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
         }
         when {
           h.running -> OutlineButton(
-            if (busy) underway!!.words else if (tafId == null) "Halt all now" else "Halt now",
+            if (busy) underway!!.words else if (tafId == null) Words.Halt.allNow else Words.Halt.now,
             { scope.launch { underway = Underway.Halting; actions.halt(tafId); underway = null; follow() } },
             Modifier.fillMaxWidth().confirms(), color = Theme.no, enabled = !busy,
           )
@@ -155,7 +155,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
             }
             // Halt again: a part that didn't take it the first time is asked again.
             OutlineButton(
-              "Halt again",
+              Words.Halt.again,
               { scope.launch { underway = Underway.Halting; actions.halt(tafId); underway = null; follow() } },
               Modifier.fillMaxWidth().confirms(), color = Theme.no, enabled = !busy,
             )

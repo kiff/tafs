@@ -249,7 +249,7 @@ fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
           }
         }
         bot.tafs.app.design.PrimaryButton(
-          if (giving) Words.Coach.Tools.giving else "Give Coach its tools",
+          if (giving) Words.Coach.Tools.giving else Words.Coach.Tools.give,
           {
             giving = true
             scope.launch {

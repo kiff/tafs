@@ -345,14 +345,25 @@ object Chat {
   fun hello(taf: Taf): String =
     Words.Sample.hello(taf.name, taf.now.lowercase())
 
+  /**
+   * Whether [title] is the owner's own decision line ("Refused by you · …", "Approved once by you · …"), in the app's
+   * language: it starts as that line does, up to its first value.
+   */
+  private fun byYou(title: String, refused: Boolean): Boolean {
+    val mark = "\u0000"
+    val lines = if (refused) listOf(Words.Record.refusedByYou(at = mark, summary = mark), Words.Record.refusedNextStep(at = mark, summary = mark))
+    else listOf(Words.Record.approvedOnce(at = mark, summary = mark))
+    return lines.any { line -> line.substringBefore(mark).trimEnd(' ', '·').let { it.isNotEmpty() && title.startsWith(it) } }
+  }
+
   /** What a held call's outcome says in the chat. */
   fun outcomeText(entry: RecordEntry): String = when (entry.kind) {
     // Why, as the Record says it: a vendor's refusal still counts (kiff/tafs#206 6.13).
     RecordEntry.Kind.notDone -> Words.Chat.Outcome.notDone(entry.title, entry.detail)
     RecordEntry.Kind.sending -> Words.Chat.Outcome.sending(entry.title)
     RecordEntry.Kind.unknown -> Words.Chat.Outcome.unknown(entry.title)
-    RecordEntry.Kind.refused -> if (!entry.title.startsWith("Refused by you")) Words.Chat.Outcome.refused(entry.title) else entry.title
-    RecordEntry.Kind.approved -> if (!entry.title.startsWith("Approved once by you")) Words.Chat.Outcome.approved(entry.title) else entry.title
+    RecordEntry.Kind.refused -> if (!byYou(entry.title, refused = true)) Words.Chat.Outcome.refused(entry.title) else entry.title
+    RecordEntry.Kind.approved -> if (!byYou(entry.title, refused = false)) Words.Chat.Outcome.approved(entry.title) else entry.title
     else -> entry.title
   }
 }

@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.Box
 import bot.tafs.app.drive.DriveDiagnostics
 import bot.tafs.app.drive.Shot
@@ -75,16 +76,16 @@ class DriveContractTest {
       "views/CoachViews.kt" to "{ actions.approve(c, grant.digest, draft?.version) }",
       "views/CoachViews.kt" to "actions.confirmKnob(taf.id)",
       "views/CoachViews.kt" to "{ actions.approveDrive(c) }",
-      "views/CoachChats.kt" to "\"Give Coach its tools\"",
+      "views/CoachChats.kt" to "Words.Coach.Tools.give",
       "views/TaskRequestViews.kt" to "actions.approveRequest(product, r.id)",
       "views/UsageViews.kt" to "actions.buy(id)",
-      "views/HaltViews.kt" to "\"Halt all now\" else \"Halt now\"",
-      "views/HaltViews.kt" to "\"Halt again\"",
+      "views/HaltViews.kt" to "Words.Halt.allNow else Words.Halt.now",
+      "views/HaltViews.kt" to "Words.Halt.again",
       "views/TafDetailView.kt" to "actions.revoke(taf.id)",
       "views/TafDetailView.kt" to "actions.remove(taf.id)",
       "views/TafDetailView.kt" to "actions.setPaused(taf.id, !taf.paused)",
       "views/SetupViews.kt" to "actions.togglePause(taf.id)",
-      "views/SetupViews.kt" to "\"Remove for good\"",
+      "views/SetupViews.kt" to "Words.Setup.removeForGood",
       "views/ConnectAppsViews.kt" to "onDisconnect?.invoke(g.id)",
       "views/TafPresentationViews.kt" to "actions.connections.disconnect(app.id)",
       "views/TafPresentationViews.kt" to "actions.connections.replaceKey(grant)",

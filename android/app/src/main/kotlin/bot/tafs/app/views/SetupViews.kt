@@ -108,7 +108,7 @@ fun SetupTab(
   if (state.mode == Mode.sample && taf.state != bot.tafs.app.model.TafState.revoked) {
     OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) Words.Taf.resume else Words.Taf.pause, { actions.togglePause(taf.id) }, Modifier.fillMaxWidth().confirms())
   }
-  onRemove?.let { OutlineButton("Remove for good", it, Modifier.fillMaxWidth().confirms(), color = Theme.no) }
+  onRemove?.let { OutlineButton(Words.Setup.removeForGood, it, Modifier.fillMaxWidth().confirms(), color = Theme.no) }
 
   if (startsOpen && knob != null) StartsWhenSheet(taf, knob, state, actions) { startsOpen = false }
   if (resultsOpen && knob != null) ResultsSheet(taf, knob, state, actions) { resultsOpen = false }
