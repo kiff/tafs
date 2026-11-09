@@ -143,6 +143,7 @@ class Generator(unittest.TestCase):
                 "home.all_of": {"one": "All of the Card", "other": "All of the Cards"},
                 "home.title": "Tafs",
                 "usage.all": "100% used",
+                "usage.two_lines": "They taf.\nYou kiff.",
             },
             "pl.json": {
                 "chat.kept_for": {"one": "{name}: zachowano {count}", "few": "{name}: zachowano {count}", "many": "{name}: zachowano {count}", "other": "{name}: zachowano {count}"},
@@ -150,6 +151,7 @@ class Generator(unittest.TestCase):
                 "home.all_of": {"one": "Cała Card", "few": "Całe Cards", "many": "Całe Cards", "other": "Całe Cards"},
                 "home.title": "Tafy",
                 "usage.all": "100% zużyte",
+                "usage.two_lines": "Oni tafują.\nTy kiffujesz.",
             },
             "de.json": {"home.title": "Tafs"},
         })
@@ -171,6 +173,11 @@ class Generator(unittest.TestCase):
         strings = json.loads(self.files["ios/Tafs/Localizable.xcstrings"])["strings"]
         self.assertEqual(strings["usage.all"]["localizations"]["en"]["stringUnit"]["value"], "100% used")
         self.assertEqual(strings["usage.all"]["localizations"]["pl"]["stringUnit"]["value"], "100% zużyte")
+
+    def test_a_line_with_a_line_break_stays_one_comment_line_in_swift(self):
+        swift = self.files["ios/Tafs/Design/Words.swift"]
+        self.assertIn("/// They taf.\\nYou kiff.\n", swift)
+        self.assertNotIn("\nYou kiff.", swift.replace("\\nYou kiff.", ""), "a raw line break would end the comment")
 
     def test_ios_gets_an_entry_for_each_plural_form_a_language_has(self):
         strings = json.loads(self.files["ios/Tafs/Localizable.xcstrings"])["strings"]

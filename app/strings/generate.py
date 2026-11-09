@@ -156,7 +156,8 @@ def ios_swift(source):
                 continue
             key = value
             english = source[key]["other"] if isinstance(source[key], dict) else source[key]
-            out.append(f"{pad}/// {english}")
+            # One comment line: a line's own line breaks are written as \n.
+            out.append(f"{pad}/// {english}".replace("\n", "\\n"))
             names = arguments(key, source)
             if not names:
                 out.append(f'{pad}static var {camel(name)}: String {{ Words.line("{key}") }}')

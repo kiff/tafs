@@ -2526,8 +2526,7 @@ enum Words {
             static var backToWork: String { Words.line("sample.reply.back_to_work") }
             /// I'm not here any more.
             static var gone: String { Words.line("sample.reply.gone") }
-            /// Lately:
-{done}
+            /// Lately:\n{done}
             static func lately(done: String) -> String { Words.line("sample.reply.lately", done) }
             /// I can't give myself more room: only you can, by changing my Card. Anything over it waits for you in Needs you.
             static var moreRoom: String { Words.line("sample.reply.more_room") }
@@ -2893,8 +2892,7 @@ enum Words {
             static var revokedLead: String { Words.line("sign_in.welcome.revoked_lead") }
             /// no new action goes through.
             static var revokedRest: String { Words.line("sign_in.welcome.revoked_rest") }
-            /// They taf.
-You kiff.
+            /// They taf.\nYou kiff.
             static var title: String { Words.line("sign_in.welcome.title") }
         }
         /// Sign in with KIFF
@@ -2974,9 +2972,7 @@ You kiff.
             static var explains: String { Words.line("taf.memory.explains") }
             /// Forget
             static var forget: String { Words.line("taf.memory.forget") }
-            /// “{note}”
-
-It can't be undone: the taf stops working with it from its next run or chat. Other notes stay.
+            /// “{note}”\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.
             static func forgetBody(note: String) -> String { Words.line("taf.memory.forget_body", note) }
             /// Forget this note?
             static var forgetTitle: String { Words.line("taf.memory.forget_title") }
