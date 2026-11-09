@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import java.math.BigInteger
 import java.security.MessageDigest
 import kotlinx.serialization.json.JsonObject
@@ -40,19 +41,19 @@ sealed interface ReceiptCheck {
 
     fun check(response: ByteArray, signer: String = KIFF_SIGNER): ReceiptCheck {
       val receipt = runCatching { KiffClient.json.parseToJsonElement(String(response)) as? JsonObject }.getOrNull()
-        ?: return Failed("The receipt couldn't be read.")
+        ?: return Failed(Words.Receipt.Check.unreadable)
       val attestation = receipt["attestation"] as? JsonObject ?: return NotSignedYet
-      if (attestation["algorithm"]?.jsonPrimitive?.contentOrNull != ALGORITHM) return Failed("It's signed in a way this app doesn't know.")
-      val chain = RawJson.valueOf("causal_chain", response) ?: return Failed("The receipt has no steps to check.")
+      if (attestation["algorithm"]?.jsonPrimitive?.contentOrNull != ALGORITHM) return Failed(Words.Receipt.Check.unknownSignature)
+      val chain = RawJson.valueOf("causal_chain", response) ?: return Failed(Words.Receipt.Check.noSteps)
       val signature = attestation["signature"]?.jsonPrimitive?.contentOrNull?.let(Hex::decode)
-      if (signature == null || signature.size != 65) return Failed("The signature is malformed.")
+      if (signature == null || signature.size != 65) return Failed(Words.Receipt.Check.malformedSignature)
       val declared = attestation["wallet_address"]?.jsonPrimitive?.contentOrNull.orEmpty().lowercase()
 
       val chainHash = Hex.encode(MessageDigest.getInstance("SHA-256").digest(chain))
       val digest = keccak256(chainHash.toByteArray(Charsets.US_ASCII))
-      val recovered = recoverAddress(digest, signature) ?: return Failed("The signature doesn't match these steps.")
-      if (recovered != declared) return Failed("The signature doesn't match these steps.")
-      if (recovered != signer.lowercase()) return Failed("It isn't signed by KIFF.")
+      val recovered = recoverAddress(digest, signature) ?: return Failed(Words.Receipt.Check.signatureMismatch)
+      if (recovered != declared) return Failed(Words.Receipt.Check.signatureMismatch)
+      if (recovered != signer.lowercase()) return Failed(Words.Receipt.Check.notKiff)
       return Verified(recovered)
     }
 
@@ -237,15 +238,15 @@ object ReceiptSteps {
   fun mismatch(entry: bot.tafs.app.model.RecordEntry, steps: List<ReceiptStep>): String? {
     val on = entry.onValue
     val signedOn = steps.firstNotNullOfOrNull { it.onHash }
-    if (on != null && signedOn != null && !KiffMapping.isOn(on, signedOn)) return "The payment on this line doesn't match KIFF's receipt."
+    if (on != null && signedOn != null && !KiffMapping.isOn(on, signedOn)) return Words.Receipt.Check.paymentMismatch
     val signedAmount = steps.firstOrNull { it.amountValue != null }
     if (entry.amountValue != null && signedAmount != null &&
       (entry.amountValue != signedAmount.amountValue || entry.amountUnit.orEmpty() != signedAmount.amountUnit.orEmpty())
-    ) return "The amount on this line doesn't match KIFF's receipt."
+    ) return Words.Receipt.Check.amountMismatch
     val signedAnswer = steps.firstOrNull { it.kind == "hold_settled" }?.answer
     val answer = entry.answer
     if (answer != null && signedAnswer != null && (answer.decision == "refused") != (signedAnswer == "reject")) {
-      return "The answer on this line doesn't match KIFF's receipt."
+      return Words.Receipt.Check.answerMismatch
     }
     return null
   }

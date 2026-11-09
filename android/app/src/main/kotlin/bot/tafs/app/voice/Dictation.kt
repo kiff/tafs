@@ -1,5 +1,6 @@
 package bot.tafs.app.voice
 
+import bot.tafs.app.model.Words
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -121,8 +122,8 @@ class Dictation(private val engine: SpeechEngine, private val memory: LanguageMe
 
   companion object {
     const val QUIET_ENDS = 2
-    const val NOT_ON_DEVICE = "This phone can't recognise speech on the phone itself, so the mic doesn't work here: your voice would have to leave it. You can type instead."
-    const val NO_MICROPHONE = "Allow tafs to use the microphone to dictate. Your voice becomes text on this phone and isn't sent anywhere."
+    val NOT_ON_DEVICE: String get() = Words.Voice.notOnDevice
+    val NO_MICROPHONE: String get() = Words.Voice.noMicrophone
 
     /** What's been heard after what the box had: a space between, unless one is there already. */
     fun join(before: String, heard: String): String {
@@ -210,10 +211,10 @@ object SpeechLanguage {
   }
 
   /** The owner's words when the phone gets its language first: it can't dictate yet, and the mic works once it's done. */
-  fun downloading(language: String) = "This phone is getting $language for dictation. The mic works once it's ready, in a minute or two."
+  fun downloading(language: String) = Words.Voice.downloading(language = language)
 
   /** The owner's words when the phone has nothing in their language: nothing to do but type. */
-  fun cannot(language: String) = "This phone can't recognise $language on the phone itself, so the mic doesn't work here. You can type instead."
+  fun cannot(language: String) = Words.Voice.cannot(language = language)
 }
 
 /** The phone's speech recognizer, on the phone only: tests use a fake. */

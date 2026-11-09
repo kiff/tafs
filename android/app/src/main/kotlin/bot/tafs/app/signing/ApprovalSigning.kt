@@ -1,5 +1,6 @@
 package bot.tafs.app.signing
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.Answer
 import java.security.Signature
 import java.util.Base64
@@ -17,10 +18,10 @@ class ApprovalKeyRenewed(cause: Throwable? = null) : SignerException(WORDS, caus
      * The approval key is gone, or a finger wasn't recognized: approvals need a fingerprint, and the screen lock never approves,
      * so the way on is a new sign-in, which registers a new key. Said where the owner would approve, before any tap.
      */
-    const val WORDS = "Your fingerprints changed, or none was recognized, so this phone can't approve until you sign in again."
+    val WORDS: String get() = Words.Approval.keyGoneSignIn
 
     /** The same, where KIFF can re-link the phone: its new key is approved in the browser, with no sign-out. */
-    const val APPROVE_AGAIN_WORDS = "Your fingerprints changed, or none was recognized, so this phone can't approve until you approve it again in your browser."
+    val APPROVE_AGAIN_WORDS: String get() = Words.Approval.keyGoneApproveAgain
   }
 }
 
@@ -100,7 +101,7 @@ interface SigningKeys {
  */
 class ConfirmationTimedOut : SignerException(WORDS) {
   companion object {
-    const val WORDS = "The fingerprint check timed out. Try again."
+    val WORDS: String get() = Words.Approval.checkTimedOut
   }
 }
 
@@ -138,9 +139,9 @@ class DeviceSigner(
   override suspend fun sign(reason: String, built: () -> ByteArray): String {
     if (!authenticator.canAuthenticate) {
       // No screen lock set on a debug phone: let the demo through.
-      if (!demoWithoutLock) throw SignerException("Set a screen lock on this phone to approve")
+      if (!demoWithoutLock) throw SignerException(Words.Approval.setAScreenLock)
     } else if (!authenticator.authenticate(reason)) {
-      throw SignerException("Not confirmed")
+      throw SignerException(Words.Approval.notConfirmed)
     }
     return signConfirmed(built())
   }
@@ -162,7 +163,7 @@ class DeviceSigner(
       signature.update(built())
       encode(signature.sign())
     } catch (e: Exception) {
-      throw SignerException("The key could not sign", e)
+      throw SignerException(Words.Approval.keyCouldNotSign, e)
     }
   }
 
@@ -181,7 +182,7 @@ class DeviceSigner(
   private fun encode(der: ByteArray): String = Base64.getEncoder().encodeToString(der)
 
   companion object {
-    const val NO_FINGERPRINT = "Add a fingerprint to this phone to approve from it. Refusing still works."
-    const val NOT_RECOGNIZED = "Try again, or sign in again if your fingerprints changed."
+    val NO_FINGERPRINT: String get() = Words.Approval.noFingerprint
+    val NOT_RECOGNIZED: String get() = Words.Approval.notRecognized
   }
 }

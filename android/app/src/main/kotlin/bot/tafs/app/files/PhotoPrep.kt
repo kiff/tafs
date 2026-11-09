@@ -1,5 +1,6 @@
 package bot.tafs.app.files
 
+import bot.tafs.app.model.Words
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -36,9 +37,9 @@ object PhotoPrep {
     val type = FilePrep.mediaType(resolver.getType(uri), name)
     // Over every limit: refused before it's read into memory.
     if (type != null && !FilePrep.isImage(type) && size > FilePrep.LARGEST) {
-      throw FileProblem("$name is ${FilePrep.megabytes(size)}; the most is ${FilePrep.megabytes(FilePrep.LARGEST)}.")
+      throw FileProblem(Words.Chat.Attach.tooBig(name = name, size = FilePrep.megabytes(size), most = FilePrep.megabytes(FilePrep.LARGEST)))
     }
-    val data = resolver.openInputStream(uri)?.use { it.readBytes() } ?: throw FileProblem("$name couldn't be read.")
+    val data = resolver.openInputStream(uri)?.use { it.readBytes() } ?: throw FileProblem(Words.Chat.Attach.unreadable(name = name))
     return if (type != null && FilePrep.isImage(type)) photo(data, name) else FilePrep.file(name, data, type)
   }
 
@@ -51,7 +52,7 @@ object PhotoPrep {
         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
       }
     } catch (e: Exception) {
-      throw FileProblem("$name couldn't be read as a photo.")
+      throw FileProblem(Words.Chat.Attach.notAPhoto(name = name))
     }
     val named = FilePrep.photoName(name)
     val jpeg = jpeg(onWhite(bitmap, bitmap.width, bitmap.height), 85)

@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import java.security.MessageDigest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -62,5 +63,5 @@ data class ProfileWords(val profileSha256: String, val wordsSha256: String, val 
   }
 
   /** KIFF's words don't match what the phone hashed: nothing is approved. */
-  class Mismatch(what: String) : Exception("KIFF's words for this connection don't check out ($what). Nothing was approved.")
+  class Mismatch(what: String) : Exception(Words.Connect.wordsMismatch(what = what))
 }

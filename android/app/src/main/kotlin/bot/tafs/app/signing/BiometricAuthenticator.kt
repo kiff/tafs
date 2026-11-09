@@ -1,5 +1,6 @@
 package bot.tafs.app.signing
 
+import bot.tafs.app.model.Words
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.biometric.BiometricManager
@@ -119,10 +120,10 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
  */
 object Biometry {
   fun name(strongEnrolled: Boolean, face: Boolean, fingerprint: Boolean): String = when {
-    !strongEnrolled -> "your screen lock"
-    fingerprint -> "your fingerprint"
-    face -> "face unlock"
-    else -> "your screen lock"
+    !strongEnrolled -> Words.Approval.Biometry.screenLock
+    fingerprint -> Words.Approval.Biometry.fingerprint
+    face -> Words.Approval.Biometry.face
+    else -> Words.Approval.Biometry.screenLock
   }
 
   fun of(context: Context): String {

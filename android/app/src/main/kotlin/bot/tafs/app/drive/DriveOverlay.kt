@@ -1,5 +1,6 @@
 package bot.tafs.app.drive
 
+import bot.tafs.app.model.Words
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
@@ -35,7 +36,7 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
       is DriveState.On -> {
         if (glow == null) addGlow()
         if (caption == null) addCaption()
-        captionText?.text = state.caption ?: "Coach is driving: ${state.drive.task}".take(60)
+        captionText?.text = state.caption ?: Words.Drive.caption(task = state.drive.task).take(60)
         stopButton?.visibility = View.VISIBLE
         raise()
       }
@@ -109,7 +110,7 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
       setTextColor(accent)
       setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
       setPadding(dp(14), dp(6), dp(4), dp(6))
-      contentDescription = "Stop Coach"
+      contentDescription = Words.Drive.stop
       setOnClickListener { stop() }
     }
     val bar = LinearLayout(activity).apply {

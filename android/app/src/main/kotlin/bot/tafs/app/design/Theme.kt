@@ -1,5 +1,6 @@
 package bot.tafs.app.design
 
+import bot.tafs.app.model.Words
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
@@ -85,7 +86,7 @@ object Theme {
 }
 
 /** What this phone asks for before it signs, for "Approve once with …": "your fingerprint", "your screen lock". */
-val LocalBiometry = androidx.compose.runtime.staticCompositionLocalOf { "your screen lock" }
+val LocalBiometry = androidx.compose.runtime.staticCompositionLocalOf { Words.Approval.Biometry.screenLock }
 
 /** The brand's sweep over whatever this is drawn on, topLeading to bottomTrailing, as iOS's `Theme.brand`. */
 fun Modifier.brandBackground(): Modifier = drawBehind { drawRect(Theme.brand(size.width, size.height)) }

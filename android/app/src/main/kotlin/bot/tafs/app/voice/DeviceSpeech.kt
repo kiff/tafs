@@ -1,5 +1,6 @@
 package bot.tafs.app.voice
 
+import bot.tafs.app.model.Words
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -116,7 +117,7 @@ class DeviceSpeech(private val context: Context) : SpeechEngine {
         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> listener.failed(Dictation.NO_MICROPHONE)
         SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED, SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE ->
           listener.failed(SpeechLanguage.cannot(Locale.getDefault().displayLanguage))
-        else -> listener.failed("Dictation stopped. Tap the mic to start again.")
+        else -> listener.failed(Words.Voice.stopped)
       }
 
       override fun onReadyForSpeech(params: Bundle?) {}

@@ -1,5 +1,6 @@
 package bot.tafs.app.drive
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.kiff.CloudError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -289,56 +290,56 @@ class DriveController(
 
 /** The app's own words in a drive (docs/drive.md, "The app's lines"), the same on iOS. */
 object DriveWords {
-  const val CONFIRM = "That's yours to confirm"
-  const val TOO_LATE = "Too late"
-  const val NOTHING_THERE = "Nothing Coach can use there"
-  const val NOT_ON_SCREEN = "That isn't on screen now"
-  const val NO_FIELD = "No field is focused"
-  const val SECRET_FIELD = "That's yours to fill"
-  const val NOTHING_BACK = "Nothing to go back to"
-  const val UNKNOWN = "This app can't do that step"
-  const val SWIPED = "Swiped"
-  const val WENT_BACK = "Went back"
-  const val DONE = "Done"
+  val CONFIRM: String get() = Words.Drive.yoursToConfirm
+  val TOO_LATE: String get() = Words.Drive.tooLate
+  val NOTHING_THERE: String get() = Words.Drive.nothingThere
+  val NOT_ON_SCREEN: String get() = Words.Drive.notOnScreen
+  val NO_FIELD: String get() = Words.Drive.noField
+  val SECRET_FIELD: String get() = Words.Drive.yoursToFill
+  val NOTHING_BACK: String get() = Words.Drive.nothingBack
+  val UNKNOWN: String get() = Words.Drive.cantDoStep
+  val SWIPED: String get() = Words.Drive.swiped
+  val WENT_BACK: String get() = Words.Drive.wentBack
+  val DONE: String get() = Words.Drive.done
 
-  const val DRIVE_CARD = "Coach asks to drive the app"
-  const val DRIVE_NOTE = "Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app or tap Stop to take over."
-  const val WHAT_I_DID = "What I did"
-  const val NO_STEPS = "Nothing was done."
+  val DRIVE_CARD: String get() = Words.Drive.cardTitle
+  val DRIVE_NOTE: String get() = Words.Drive.cardNote
+  val WHAT_I_DID: String get() = Words.Drive.whatIDid
+  val NO_STEPS: String get() = Words.Drive.noSteps
 
   /** What the fingerprint prompt says when the person approves a drive. */
-  fun approval(task: String) = "Let Coach drive the app: $task".take(120)
+  fun approval(task: String) = Words.Drive.approval(task = task).take(120)
 
-  fun tapped(words: String?) = words?.let { "Tapped $it" } ?: "Tapped"
+  fun tapped(words: String?) = words?.let { Words.Drive.tappedOn(what = it) } ?: Words.Drive.tapped
 
-  fun longPressed(words: String?) = words?.let { "Long-pressed $it" } ?: "Long-pressed"
+  fun longPressed(words: String?) = words?.let { Words.Drive.longPressedOn(what = it) } ?: Words.Drive.longPressed
 
-  fun scrolled(direction: String) = "Scrolled $direction"
+  fun scrolled(direction: String) = Words.Drive.scrolled(direction = direction)
 
-  fun cantScroll(direction: String) = "Can't scroll $direction there"
+  fun cantScroll(direction: String) = Words.Drive.cantScroll(direction = direction)
 
-  fun typed(field: String?) = field?.let { "Typed into $it" } ?: "Typed"
+  fun typed(field: String?) = field?.let { Words.Drive.typedInto(field = it) } ?: Words.Drive.typed
 
-  fun failed(why: String?) = "That step failed" + (why?.takeIf(String::isNotBlank)?.let { ": ${it.take(120)}" } ?: "")
+  fun failed(why: String?) = Words.Drive.stepFailed + (why?.takeIf(String::isNotBlank)?.let { ": ${it.take(120)}" } ?: "")
 
   fun looked(waited: Waited?): String = when {
-    waited == null -> "Looked"
-    waited.came -> "Looked once ${waited.event} came"
-    else -> "Looked: ${waited.event} didn't come in time"
+    waited == null -> Words.Drive.looked
+    waited.came -> Words.Drive.lookedOnceCame(event = waited.event)
+    else -> Words.Drive.lookedDidntCome(event = waited.event)
   }
 
   /** The caption once it's over, when tafs cloud's words didn't come: the same words tafs cloud keeps. */
   fun ended(why: String): String = when (why) {
-    "owner_took_over" -> "You touched the app, so it's yours now"
-    "left_app" -> "The app left the screen, so Coach stopped"
-    "stopped" -> "You stopped Coach"
-    "locked" -> "The phone locked, so Coach stopped"
-    "signed_out" -> "You signed out, so Coach stopped"
-    "halted" -> "The account is halted, so Coach stopped"
-    "done" -> "Coach is done"
-    "idle" -> "Nothing was done for 15 minutes, so Coach stopped"
-    "replaced" -> "Another drive started"
-    else -> "Coach stopped"
+    "owner_took_over" -> Words.Drive.Ended.ownerTookOver
+    "left_app" -> Words.Drive.Ended.leftApp
+    "stopped" -> Words.Drive.Ended.stopped
+    "locked" -> Words.Drive.Ended.locked
+    "signed_out" -> Words.Drive.Ended.signedOut
+    "halted" -> Words.Drive.Ended.halted
+    "done" -> Words.Drive.Ended.done
+    "idle" -> Words.Drive.Ended.idle
+    "replaced" -> Words.Drive.Ended.replaced
+    else -> Words.Drive.Ended.other
   }
 }
 

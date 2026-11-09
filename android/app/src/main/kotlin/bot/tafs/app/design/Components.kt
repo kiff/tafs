@@ -1,5 +1,6 @@
 package bot.tafs.app.design
 
+import bot.tafs.app.model.Words
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,7 +70,7 @@ fun StateChip(state: TafState, onClick: (() -> Unit)? = null) {
     style = scaled(12, FontWeight.Medium, color),
     modifier = Modifier
       .clip(CircleShape)
-      .then(if (onClick != null) Modifier.clickable(onClickLabel = "Open Halt", onClick = onClick) else Modifier)
+      .then(if (onClick != null) Modifier.clickable(onClickLabel = Words.Home.openHalt, onClick = onClick) else Modifier)
       .background(color.copy(alpha = 0.15f))
       .padding(horizontal = 8.dp, vertical = 4.dp),
   )
