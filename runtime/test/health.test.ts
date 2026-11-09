@@ -95,6 +95,22 @@ describe("a taf's health", () => {
     expect(level(retrying)).toBe("healthy");
   });
 
+  it("says a scheduled run that never started once, from its schedule, never a second time from its runs", () => {
+    // kiff/agents leaves a run behind each time: ERROR, with no turn.
+    const never = (m: number) => run(m, "ERROR", { turns: 0, error: "the run didn't start" });
+    const three = [never(15), never(30), never(45)];
+    expect(healthOf(three, firings("failed_unworked", "failed_unworked", "failed_unworked", "run"), NOW)).toMatchObject({ level: "failing", reasons: [{ code: "streak", n: 3 }] });
+    expect(healthOf(three, firings("failed_unworked", "failed_unworked", "failed_unworked", "run"), NOW).reasons).toHaveLength(1);
+    // A run a version switch stopped before it began is the same kind of run, and is never a failure.
+    expect(level(three, firings("skipped_switching", "skipped_switching", "skipped_switching"))).toBe("healthy");
+    // With no schedule times to say it (a read of its runs alone), they still count for nothing.
+    expect(level(three)).toBe("healthy");
+    // A run its owner started that fails before a turn still counts, and so does a scheduled one that worked first.
+    const owner = (m: number) => run(m, "ERROR", { turns: 0, trigger: "owner" });
+    expect(healthOf([owner(15), owner(30), owner(45)], [], NOW)).toMatchObject({ level: "failing", reasons: [{ code: "all_failed", n: 3 }] });
+    expect(level([run(15, "ERROR", { turns: 1 }), run(30, "ERROR", { turns: 2 }), run(45, "ERROR", { turns: 1 })])).toBe("failing");
+  });
+
   it("is healthy for an outcome or a stop it doesn't know, without a crash", () => {
     expect(level([run(10, "COMPLETED", { stop: "something_new" }), run(20, "COMPLETED", { stop: "something_new" })], firings("brand_new_outcome", "brand_new_outcome", "another_one"))).toBe("healthy");
     // An unknown outcome neither fails nor recovers: the failures around it still count.

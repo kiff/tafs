@@ -228,6 +228,9 @@ days count, of its last 10 runs that ended and its schedule's last 20 times.
 - **Never counted:** a skip for a halt, a version switch or credits; a run paused for its
   owner; a run its owner stopped; a run already shown as needing them or as retrying; and an
   outcome this code doesn't know.
+- **Said once:** a scheduled run that never started leaves a failed run with no turn behind
+  it. Its scheduled time already says it couldn't start, so that run isn't counted again
+  among the failed runs.
 - **Where it shows today:** when the taf is otherwise idle, `summary.line` (and the list's
   `work.line`) says the first reason, where it would say the next run. A taf that is halted,
   needs its owner, is retrying, working, waiting on an app or paused says that first.

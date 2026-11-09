@@ -2668,15 +2668,20 @@ describe("a schedule whose runs keep failing to start", () => {
     const off = await failing3();
     off.w.agents.schedules.set(`t_acme|${RAE}`, { ...off.w.agents.schedules.get(`t_acme|${RAE}`)!, enabled: false });
     expect(await sweepHealth(off.deps)).toEqual([]);
-    // A run of failures at its schedule is the failing alert's to say: this sweep adds nothing for it.
+    // A run of failures at its schedule is the failing alert's to say: this sweep adds nothing for it, though
+    // kiff/agents left a failed run, with no turn, behind each of those times.
     const streak = await setUp({ since: SINCE, firings: 4, outcome: "failed_unworked" });
     streak.w.agents.runs.length = 0;
+    for (const m of [-55, -40, -25, -10]) streak.w.agents.runs.unshift({ tenant: "t_acme", id: `never${m}`, agent: RAE, session: "s", trigger: "schedule", status: "ERROR", error: "the run didn't start", cost_micro_usd: 0, turns: 0, created: at(m), updated: at(m) });
     streak.w.agents.firings.set(`t_acme|${RAE}`, [-10, -25, -40, -55].map((m) => ({ due: at(m), at: at(m), outcome: "failed_unworked" })));
     streak.w.agents.schedules.set(`t_acme|${RAE}`, { ...streak.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
     expect(await sweepHealth(streak.deps)).toEqual([]);
     expect(await sweepHealth(streak.deps)).toEqual([]);
     expect(await sweepFailingSchedules(streak.deps)).toHaveLength(1);
     expect(streak.w.pushed).toHaveLength(1);
+    // One alert in all, and one failing line on its page.
+    const page = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, streak.deps);
+    expect(JSON.parse(page.body ?? "{}").health).toEqual({ level: "failing", lines: ["Its last 4 scheduled runs couldn't start. Open one to see why."] });
   });
 
   it("says nothing for a schedule that works, nor for a taf being removed", async () => {

@@ -44,11 +44,17 @@ const GOOD_FIRING = new Set(["run", "quiet", "skipped_too_large"]);
 const SKIPPED_FIRING = new Set(["skipped_missed", "skipped_busy"]);
 
 /**
- * Whether a run ended, for its health: it finished or it failed. One paused for its owner, one its owner
- * stopped, and one tafs already shows as retrying or as needing them aren't counted at all.
+ * Whether a run ended, for its health: it finished or it failed. Not counted at all:
+ *   - one paused for its owner, and one its owner stopped;
+ *   - one tafs already shows as retrying or as needing them;
+ *   - a scheduled run that failed before its first turn. kiff/agents makes the run, then it never starts:
+ *     its schedule's time already says what it was (it couldn't start, or the taf was switching versions),
+ *     so counting the run too would say one thing twice.
  */
 function ended(r: Run): boolean {
-  return (r.status === "ERROR" || r.status === "COMPLETED") && r.state !== "retrying" && r.state !== "needs_you";
+  if (r.state === "retrying" || r.state === "needs_you") return false;
+  if (r.status === "ERROR" && r.trigger === "schedule" && r.turns === 0) return false;
+  return r.status === "ERROR" || r.status === "COMPLETED";
 }
 
 /** Whether a run that ended is a failure: it failed, or a turn of it was declined. */
