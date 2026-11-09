@@ -38,7 +38,7 @@ Inside its Card, a taf acts and leaves a receipt. Outside it, the taf waits for 
 
 WHY YOU CAN HAND IT THE WORK
 • Limits it can't talk its way past: every action is checked against its Card by KIFF, outside the AI, before it reaches your tool. No prompt changes a limit.
-• Your sign-ins stay sealed: the taf never sees your passwords or tokens. KIFF's connection service holds them, never the phone.
+• Your sign-ins stay sealed: the taf never sees your passwords or tokens. KIFF's connection service and its sign-in provider hold them, never the phone.
 • Your fingerprint for what matters: routine work goes ahead within its limits. Anything past its Card is refused, or, if its Card says Ask, waits for you, approved with your fingerprint or face.
 • You decide what really happened: when an app can't confirm a payment went through, tafs asks you "Did this happen?" Nothing is counted as done on a guess.
 
@@ -77,7 +77,7 @@ Innerhalb seiner Card handelt ein taf und hinterlässt einen Beleg. Außerhalb w
 
 WARUM DU IHM DIE ARBEIT ÜBERGEBEN KANNST
 • Grenzen, die er sich nicht wegreden kann: KIFF prüft jede Aktion gegen ihre Card, außerhalb der KI, bevor sie dein Tool erreicht. Kein Prompt ändert ein Limit.
-• Deine Anmeldungen bleiben versiegelt: Der taf sieht nie deine Passwörter oder Tokens. Der Verbindungsdienst von KIFF verwahrt sie, nie das Handy.
+• Deine Anmeldungen bleiben versiegelt: Der taf sieht nie deine Passwörter oder Tokens. Der Verbindungsdienst von KIFF und sein Anmeldeanbieter verwahren sie, nie das Handy.
 • Dein Fingerabdruck für das, was zählt: Routinearbeit läuft innerhalb ihrer Grenzen. Alles jenseits der Card wird abgelehnt oder wartet, wenn die Card „Fragen“ sagt, auf dich und wird mit Fingerabdruck oder Gesicht genehmigt.
 • Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Zahlung durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
 
@@ -116,7 +116,7 @@ Dans sa Card, un taf agit et laisse un reçu. En dehors, le taf attend votre ré
 
 POURQUOI VOUS POUVEZ LUI CONFIER LE TRAVAIL
 • Des limites qu'il ne peut pas contourner par la parole : chaque action est vérifiée par KIFF au regard de sa Card, en dehors de l'IA, avant d'atteindre votre outil. Aucun prompt ne change une limite.
-• Vos identifiants restent scellés : le taf ne voit jamais vos mots de passe ni vos jetons. Le service de connexion de KIFF les conserve, jamais le téléphone.
+• Vos identifiants restent scellés : le taf ne voit jamais vos mots de passe ni vos jetons. Le service de connexion de KIFF et son fournisseur d'identification les conservent, jamais le téléphone.
 • Votre empreinte pour ce qui compte : le travail courant avance dans ses limites. Tout ce qui dépasse sa Card est refusé ou, si sa Card dit « Demander », vous attend et s'approuve avec votre empreinte ou votre visage.
 • Vous décidez de ce qui s'est vraiment passé : quand une app ne peut pas confirmer qu'un paiement est passé, tafs vous demande « Est-ce que c'est arrivé ? » Rien n'est compté comme fait sur une supposition.
 
@@ -155,7 +155,7 @@ Dentro de su Card, un taf actúa y deja un recibo. Fuera de ella, el taf espera 
 
 POR QUÉ PUEDES ENCARGARLE EL TRABAJO
 • Límites que no puede saltarse hablando: KIFF comprueba cada acción contra su Card, fuera de la IA, antes de que llegue a tu herramienta. Ningún prompt cambia un límite.
-• Tus accesos siguen sellados: el taf nunca ve tus contraseñas ni tus tokens. Los guarda el servicio de conexión de KIFF, nunca el teléfono.
+• Tus accesos siguen sellados: el taf nunca ve tus contraseñas ni tus tokens. Los guardan el servicio de conexión de KIFF y su proveedor de inicio de sesión, nunca el teléfono.
 • Tu huella para lo importante: el trabajo rutinario avanza dentro de sus límites. Lo que va más allá de su Card se rechaza o, si su Card dice «Preguntar», te espera y se aprueba con tu huella o tu cara.
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
@@ -194,7 +194,7 @@ Dentro la sua Card, un taf agisce e lascia una ricevuta. Fuori, il taf aspetta l
 
 PERCHÉ PUOI AFFIDARGLI IL LAVORO
 • Limiti che non può aggirare a parole: ogni azione viene verificata da KIFF rispetto alla sua Card, fuori dall'IA, prima che raggiunga il tuo strumento. Nessun prompt cambia un limite.
-• I tuoi accessi restano sigillati: il taf non vede mai le tue password né i tuoi token. Li custodisce il servizio di connessione di KIFF, mai il telefono.
+• I tuoi accessi restano sigillati: il taf non vede mai le tue password né i tuoi token. Li custodiscono il servizio di connessione di KIFF e il suo fornitore di accesso, mai il telefono.
 • La tua impronta per ciò che conta: il lavoro di routine va avanti entro i suoi limiti. Tutto ciò che va oltre la sua Card viene rifiutato oppure, se la sua Card dice «Chiedi», ti aspetta e si approva con l'impronta o il volto.
 • Decidi tu cosa è successo davvero: quando un'app non riesce a confermare che un pagamento è andato a buon fine, tafs ti chiede «È successo?». Niente viene considerato fatto per supposizione.
 
@@ -235,7 +235,7 @@ Dentro da sua Card, um taf age e deixa um recibo. Fora dela, o taf aguarda a sua
 
 PORQUE PODE ENTREGAR-LHE O TRABALHO
 • Limites que não consegue contornar com conversa: cada ação é verificada pela KIFF face à sua Card, fora da IA, antes de chegar à sua ferramenta. Nenhum prompt altera um limite.
-• Os seus acessos ficam selados: o taf nunca vê as suas palavras-passe nem os seus tokens. É o serviço de ligação da KIFF que os guarda, nunca o telemóvel.
+• Os seus acessos ficam selados: o taf nunca vê as suas palavras-passe nem os seus tokens. São o serviço de ligação da KIFF e o seu fornecedor de início de sessão que os guardam, nunca o telemóvel.
 • A sua impressão digital para o que importa: o trabalho de rotina avança dentro dos seus limites. O que vai além da sua Card é recusado ou, se a sua Card disser «Perguntar», aguarda por si e é aprovado com a sua impressão digital ou o seu rosto.
 • É você quem decide o que aconteceu de facto: quando uma app não consegue confirmar que um pagamento foi feito, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por suposição.
 
@@ -274,7 +274,7 @@ Binnen zijn Card handelt een taf en laat hij een bewijs achter. Daarbuiten wacht
 
 WAAROM JE HEM HET WERK KUNT GEVEN
 • Grenzen waar hij zich niet uit kan praten: KIFF toetst elke actie aan zijn Card, buiten de AI, voordat die je tool bereikt. Geen prompt verandert een limiet.
-• Je inloggegevens blijven verzegeld: de taf ziet nooit je wachtwoorden of tokens. De koppelingsdienst van KIFF bewaart ze, nooit de telefoon.
+• Je inloggegevens blijven verzegeld: de taf ziet nooit je wachtwoorden of tokens. De koppelingsdienst van KIFF en zijn inlogprovider bewaren ze, nooit de telefoon.
 • Je vingerafdruk voor wat ertoe doet: routinewerk gaat door binnen zijn grenzen. Alles buiten zijn Card wordt geweigerd of, als zijn Card 'Vragen' zegt, wacht op jou en wordt goedgekeurd met je vingerafdruk of gezicht.
 • Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een betaling is gelukt, vraagt tafs je "Is dit gebeurd?" Niets telt op goed geluk als gedaan.
 
@@ -313,7 +313,7 @@ W ramach swojej Card taf działa i zostawia potwierdzenie. Poza nią taf czeka n
 
 DLACZEGO MOŻESZ POWIERZYĆ MU PRACĘ
 • Granice, których nie obejdzie słowami: KIFF sprawdza każdą akcję względem jej Card, poza AI, zanim dotrze ona do Twojego narzędzia. Żaden prompt nie zmienia limitu.
-• Twoje dane logowania pozostają zapieczętowane: taf nigdy nie widzi Twoich haseł ani tokenów. Przechowuje je usługa połączeń KIFF, nigdy telefon.
+• Twoje dane logowania pozostają zapieczętowane: taf nigdy nie widzi Twoich haseł ani tokenów. Przechowują je usługa połączeń KIFF i jej dostawca logowania, nigdy telefon.
 • Twój odcisk palca do tego, co ważne: rutynowa praca idzie naprzód w swoich granicach. Wszystko poza jego Card zostaje odrzucone albo, jeśli jego Card mówi „Pytaj”, czeka na Ciebie i jest zatwierdzane odciskiem palca lub twarzą.
 • To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że płatność przeszła, tafs pyta Cię „Czy to się stało?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
 
