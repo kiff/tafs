@@ -5,30 +5,29 @@ import bot.tafs.app.model.RecordEntry.Kind
 /** What a Record line's sheet says of it (kiff/tafs#167), as iOS's `ReceiptView` says it: KIFF's facts in words, never its codes. */
 object ReceiptWords {
   fun label(kind: Kind): String = when (kind) {
-    Kind.done -> "Done within the Card"
-    Kind.approved -> "Approved once by you"
-    Kind.refused -> "Refused"
-    Kind.held -> "Held for you"
-    Kind.unknown -> "Outcome unknown"
-    Kind.notDone -> "Not done"
-    Kind.sending -> "In progress"
-    Kind.revoked -> "Card revoked"
-    Kind.started -> "Taf started"
-    Kind.inTafs -> "In tafs"
+    Kind.done -> Words.Receipt.Label.done
+    Kind.approved -> Words.Receipt.Label.approved
+    Kind.refused -> Words.Receipt.Label.refused
+    Kind.held -> Words.Receipt.Label.held
+    Kind.unknown -> Words.Receipt.Label.unknown
+    Kind.notDone -> Words.Receipt.Label.notDone
+    Kind.sending -> Words.Receipt.Label.sending
+    Kind.revoked -> Words.Card.revoked
+    Kind.started -> Words.Receipt.Label.started
+    Kind.inTafs -> Words.Receipt.Label.inTafs
   }
 
   /** The line's state at the top: who answered, when someone did. */
   fun state(entry: RecordEntry): String {
     val answer = entry.answer ?: return label(entry.kind)
-    return if (answer.decision == "refused") "Refused by ${entry.answerer}" else "Approved once by ${entry.answerer}"
+    return if (answer.decision == "refused") Words.Receipt.refusedBy(entry.answerer) else Words.Receipt.approvedOnceBy(entry.answerer)
   }
 
   fun outcome(entry: RecordEntry): String {
-    val money = entry.amountText?.let { " $it" } ?: ""
     return when (entry.kind) {
-      Kind.done, Kind.approved -> if (entry.amountText == null) "Done." else "Done.$money moved."
-      Kind.refused -> if (entry.answer?.decision == "refused") "Not sent. Refused by ${entry.answerer}." else "Not sent. Its Card refused it."
-      Kind.held -> "Waiting for your answer."
+      Kind.done, Kind.approved -> entry.amountText?.let { Words.Receipt.Outcome.moved(it) } ?: Words.Receipt.Outcome.done
+      Kind.refused -> if (entry.answer?.decision == "refused") Words.Receipt.Outcome.refusedBy(entry.answerer) else Words.Receipt.Outcome.cardRefused
+      Kind.held -> Words.Receipt.Outcome.waiting
       else -> entry.detail
     }
   }
@@ -36,29 +35,29 @@ object ReceiptWords {
   /** How KIFF decided, in a line under its receipt. */
   fun decision(entry: RecordEntry): String {
     val answer = entry.answer
-    if (answer != null) return if (answer.decision == "refused") "held → refused by ${entry.answerer}" else "held → approved once by ${entry.answerer}"
+    if (answer != null) return if (answer.decision == "refused") Words.Receipt.Decision.heldRefusedBy(entry.answerer) else Words.Receipt.Decision.heldApprovedOnceBy(entry.answerer)
     return when (entry.kind) {
-      Kind.refused -> "refused by the Card"
+      Kind.refused -> Words.Receipt.Decision.refusedByCard
       // Still waiting: the Card held it, it didn't allow it.
-      Kind.held -> "held for you by the Card"
-      else -> if (entry.ownerApproved == true) "held → approved by you" else "allowed by the Card"
+      Kind.held -> Words.Receipt.Decision.heldByCard
+      else -> if (entry.ownerApproved == true) Words.Receipt.Decision.heldApprovedByYou else Words.Receipt.Decision.allowedByCard
     }
   }
 
   fun decidedBy(entry: RecordEntry, signedIn: Boolean): String {
     val answer = entry.answer
     if (answer != null) {
-      var how = if (entry.answeredByOwner) "You" else entry.answerer.replaceFirstChar { it.uppercase() }
-      if (answer.signed == true) how += ", signed on ${answer.device ?: "your device"}"
+      val how = if (entry.answeredByOwner) Words.Receipt.DecidedBy.you else entry.answerer.replaceFirstChar { it.uppercase() }
+      if (answer.signed == true) return Words.Receipt.DecidedBy.signedOn(how, answer.device ?: Words.Receipt.DecidedBy.yourDevice)
       return how
     }
     return when {
-      entry.kind == Kind.approved || entry.ownerApproved == true -> "You, approving once"
-      entry.kind == Kind.refused && entry.signature != null -> "You"
-      entry.kind == Kind.revoked -> "You, revoking the Card"
-      entry.kind == Kind.started -> "You, issuing the Card"
-      signedIn -> "KIFF, against the Card"
-      else -> "The Card"
+      entry.kind == Kind.approved || entry.ownerApproved == true -> Words.Receipt.DecidedBy.youApprovingOnce
+      entry.kind == Kind.refused && entry.signature != null -> Words.Receipt.DecidedBy.you
+      entry.kind == Kind.revoked -> Words.Receipt.DecidedBy.youRevoking
+      entry.kind == Kind.started -> Words.Receipt.DecidedBy.youIssuing
+      signedIn -> Words.Receipt.DecidedBy.kiff
+      else -> Words.Receipt.DecidedBy.card
     }
   }
 }

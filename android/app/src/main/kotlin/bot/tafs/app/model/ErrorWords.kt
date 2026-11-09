@@ -34,13 +34,13 @@ object ErrorWords {
     else -> OURS
   }
 
-  const val OFFLINE = "It didn't reach the server. Try again once you're online."
-  const val SIGNED_OUT = "You're signed out. Sign in again."
-  const val NOT_ALLOWED = "Your role on this account doesn't allow this."
-  const val CHANGED = "It changed in the meantime. What's shown now is how it is."
-  const val BUSY = "Too many tries just now. Try again in a minute."
-  const val DOWN = "It isn't working on our side right now. Nothing to do on your side; try again later."
-  const val OURS = "This phone and the server didn't understand each other. Nothing to do on your side; we're on it."
+  val OFFLINE get() = Words.Error.offline
+  val SIGNED_OUT get() = Words.Error.signedOut
+  val NOT_ALLOWED get() = Words.Error.notAllowed
+  val CHANGED get() = Words.Error.changed
+  val BUSY get() = Words.Error.busy
+  val DOWN get() = Words.Error.down
+  val OURS get() = Words.Error.ours
 }
 
 /** A failure the app words itself, for the owner as it is: [ErrorWords] passes it on unchanged. */
