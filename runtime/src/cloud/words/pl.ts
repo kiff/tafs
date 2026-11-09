@@ -49,7 +49,7 @@ export const pl: Words = {
   cr_last_period: (used, start, end) => `Poprzedni okres: ${used} · od ${start} do ${end}`,
   cr_why_coach: "Coach, w ramach uczciwego użycia",
   cr_why_trial: "Próby nowej wersji",
-  cr_why_failed: "Błąd po naszej stronie",
+  cr_why_failed: "Nie powiodło się po naszej stronie",
   cr_note: "Każde uruchomienie liczy się raz, gdy się kończy, w pełnych kredytach.",
   cr_other_tafs: "Inne tafs",
   cr_removed_tafs: "Usunięte tafs",
