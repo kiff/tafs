@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { ownerWords } from "../src/cloud/improve.js";
@@ -188,5 +190,89 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(endSaid("owner_took_over", "nl")).toBe("Je raakte de app aan, dus hij is nu van jou");
     expect(endSaid("idle", "pt")).toBe("Nada foi feito durante 15 minutos, por isso o Coach parou");
     for (const why of Object.keys(END_SAID) as Array<keyof typeof END_SAID>) expect(endSaid(why)).toBe(END_SAID[why]);
+  });
+
+  /**
+   * The glossary's Terms table (docs/languages.md), read as it is: the doc stays the one source. A term in English
+   * with a capital is a label (a button, a state) and matches as written; a lowercase one is a noun and matches in
+   * any case. Its words in each language match in any case.
+   */
+  function glossary(): Array<{ en: string; label: boolean; words: Record<string, string> }> {
+    const md = readFileSync(new URL("../../docs/languages.md", import.meta.url), "utf8");
+    const from = md.indexOf("\n## Terms");
+    const table = md.slice(from, md.indexOf("\n## ", from + 1)).split("\n").filter((l) => l.startsWith("|"));
+    const head = table[0]!.split("|").slice(1, -1).map((c) => c.trim());
+    expect(head).toEqual(["English", "German", "French", "Spanish", "Italian", "Portuguese", "Dutch", "Polish"]);
+    return table.slice(2).map((row) => {
+      const cells = row.split("|").slice(1, -1).map((c) => c.trim());
+      const en = cells[0]!.replace(/\s*\(.*\)$/, "");
+      return { en, label: /^[A-Z]/.test(en), words: Object.fromEntries(LANGUAGES.map((l, i) => [l, cells[i]!.toLowerCase()])) };
+    });
+  }
+
+  /**
+   * The other forms a term takes in a language's grammar, each written out: never a fuzzy match. By language, then
+   * by the glossary's word; any one of them counts as the term.
+   */
+  const FORMS: Partial<Record<string, Record<string, string[]>>> = {
+    de: {
+      "coach fragen": ["coach bitten"], // "Ask Coach to …": asking Coach to do something
+      "erneut versuchen": ["noch einmal"], // "Try again in a moment": "versuch es gleich noch einmal"
+      klopfen: ["klopft"],
+    },
+    fr: { crédits: ["crédit"], approuver: ["approuvez"], réessayer: ["réessayez"] },
+    es: {
+      créditos: ["crédito"], hecho: ["hechas"], aprobar: ["aprueba"], "falló": ["fallos"], llamada: ["llamará"],
+      "preguntar a coach": ["pedir a coach"], reintentar: ["vuelve a intentar"],
+    },
+    it: { crediti: ["credito"], fatto: ["fatte"], trattenuta: ["trattenute"], "non riuscito": ["non riuscite"], bussata: ["busserà"], "metti in pausa": ["mettere in pausa"] },
+    pt: {
+      créditos: ["crédito"], concluído: ["concluídas"], aprovar: ["aprove"], falhou: ["falhas"],
+      "perguntar ao coach": ["pedir ao coach"], "tentar novamente": ["tente novamente", "tente mais tarde"],
+    },
+    nl: { goedkeuren: ["keur goed"], "opnieuw proberen": ["probeer het zo opnieuw", "probeer het later opnieuw"] },
+    pl: {
+      kredyty: ["kredyt"], wersja: ["wersji", "wersję"], "limit wydatków": ["limitu wydatków"], prośba: ["prośbę", "prośby", "próśb"],
+      pukanie: ["zapuka"], "zapytaj coacha": ["poproś coacha"], "spróbuj ponownie": ["spróbuj później"],
+    },
+  };
+
+  /** Lines where the English word isn't the glossary's term (a verb where the term is a noun), by catalog key. */
+  const NOT_THE_TERM: Record<string, string[]> = {
+    run: ["dial_run_tap", "dial_tap_latest", "failing_follow_up", "waited_follow_up"], // "to run": the verb, not a run
+  };
+
+  it("uses the glossary's word for each glossary term, in every line of every language", () => {
+    const terms = glossary().sort((a, b) => b.en.length - a.en.length);
+    const misses: string[] = [];
+    const escape = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    for (const key of Object.keys(en)) {
+      // The longest terms first: "Run now" is one term, and its "run" isn't another.
+      let english = sample((en as Record<string, unknown>)[key], key).join(" \u0000 ");
+      for (const term of terms) {
+        const pattern = new RegExp(`\\b${escape(term.en)}\\b`, term.label ? "g" : "gi");
+        if (!pattern.test(english)) continue;
+        english = english.replace(pattern, " ");
+        if (NOT_THE_TERM[term.en]?.includes(key)) continue;
+        for (const lang of LANGUAGES.filter((l) => l !== "en")) {
+          const line = sample((wordsIn(lang) as Record<string, unknown>)[key], key).join(" ").toLowerCase();
+          const want = term.words[lang]!;
+          const forms = [want, ...(FORMS[lang]?.[want] ?? [])];
+          if (!forms.some((f) => line.includes(f))) misses.push(`${lang}.${key}: "${term.en}" is "${want}" in the glossary`);
+        }
+      }
+    }
+    expect(misses).toEqual([]);
+  });
+
+  // KIFF keeps a copy of the glossary (its internal/words/glossary.md) and checks it against this digest of the
+  // Terms table's rows: a change to the table changes docs/glossary.sha256 here, and KIFF's check fails until its
+  // copy follows. Update the file with the table: the digest of its "|" rows, each ending in a newline.
+  it("has docs/glossary.sha256 for the Terms table as it is", () => {
+    const md = readFileSync(new URL("../../docs/languages.md", import.meta.url), "utf8");
+    const from = md.indexOf("\n## Terms");
+    const rows = md.slice(from + 1, md.indexOf("\n## ", from + 1)).split("\n").filter((l) => l.startsWith("|"));
+    const digest = createHash("sha256").update(rows.map((r) => `${r}\n`).join("")).digest("hex");
+    expect(readFileSync(new URL("../../docs/glossary.sha256", import.meta.url), "utf8").split(/\s+/)[0]).toBe(digest);
   });
 });

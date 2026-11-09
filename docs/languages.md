@@ -147,5 +147,11 @@ that tell a message's language, in tafs and kiff/agents together.
   version's note, and the titles kept in the account's event log, are written once when they happen
   and stay as written. What tafs cloud keeps of a language: each phone's, with the phone, and the
   account's, from Coach chats, for a quarter.
+- **Held to this glossary:** a test reads the Terms table above, as it is, and fails when a catalog line whose
+  English has a term doesn't have that language's word for it (`runtime/test/words.test.ts`). A label (a
+  capitalized term) matches as written, a noun in any case, the longest term first; the other grammatical
+  forms a word takes are listed in the test, one by one. `docs/glossary.sha256` is the digest of the table's
+  rows: KIFF keeps a copy of the glossary and checks it against the digest, so a change here fails there until
+  its copy follows. Change the table and the digest together.
 - **KIFF:** one catalog per language (`internal/words`), the same test.
 - **Android:** `strings.xml` with a `values-xx` set per language; **iPhone and iPad:** a String Catalog.
