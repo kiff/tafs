@@ -56,6 +56,17 @@ describe("tools that send outside the company (gap 14)", () => {
     expect(await notedSendingOutside(store, "t1", "rae")).toEqual(["send_email"]);
   });
 
+  it("leave a claim alone once the write took longer than its claim, since another write may hold it", async () => {
+    const store = memoryCoach(() => NOW);
+    const key = `${sendsOutsideKey("t1", "rae")}#claim`;
+    let t = 0;
+    // The write ran past its claim: the claim isn't given back, it expires on its own.
+    const slow = () => { const at = t; t += NOTE_CLAIM_MS; return at; };
+    await noteSendingOutside(store, "t1", "rae", "g_mail", { operations: [op("send_email", "sends", true)] }, NOW, async () => undefined, slow);
+    expect(store.held.has(key)).toBe(true);
+    expect(await notedSendingOutside(store, "t1", "rae")).toEqual(["send_email"]);
+  });
+
   it("refuse a result whose disclose leaves one out, naming each, among the tools the taf has", () => {
     expect(undisclosedSending(["send_email"], ["list", "send_email"], ["send_email"])).toBeUndefined();
     expect(undisclosedSending([], ["send_email"], [])).toBeUndefined();
