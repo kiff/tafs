@@ -668,8 +668,9 @@ extension TafChatView {
         case .sending: return "\(entry.title): sent, waiting for the tool"
         case .unknown: return "\(entry.title): outcome unknown"
         // KIFF's own record of a held call, after a restart: what the owner decided (kiff/tafs#138).
-        case .refused where !entry.title.hasPrefix("Refused by you"): return "\(entry.title): refused, not sent"
-        case .approved where !entry.title.hasPrefix("Approved once by you"): return "\(entry.title): approved by you, done"
+        // The phone's own line is shown as it is; KIFF's, titled by the action, gets the outcome.
+        case .refused where entry.byYou != true: return "\(entry.title): refused, not sent"
+        case .approved where entry.byYou != true: return "\(entry.title): approved by you, done"
         default: return entry.title
         }
     }

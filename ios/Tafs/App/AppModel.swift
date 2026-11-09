@@ -180,7 +180,19 @@ final class AppModel: ObservableObject {
     @Published private(set) var cloudTafs: [String: TafsCloud.CloudTaf] = [:]
     @Published var lastError: String? {
         // The app's recent errors, in its own words, for a drive's diagnostics (docs/drive.md).
-        didSet { if let lastError, lastError != oldValue { DriveDiagnostics.shared.error(lastError) } }
+        didSet {
+            lastErrorFrom = nil
+            if let lastError, lastError != oldValue { DriveDiagnostics.shared.error(lastError) }
+        }
+    }
+    /// What the last error came from, when a screen shows only its own: set with `fail`,
+    /// cleared by any other error, so no screen reads an error's words to know whose it is.
+    enum ErrorFrom { case disconnect, knob }
+    @Published private(set) var lastErrorFrom: ErrorFrom?
+
+    func fail(_ words: String, from: ErrorFrom) {
+        lastError = words
+        lastErrorFrom = from
     }
 
     let ownerName: String
@@ -1975,12 +1987,12 @@ final class AppModel: ObservableObject {
             }
             guard gen == accountGeneration, presentation == presentationGeneration else { return }
             knobs[tafID] = knob
-            if lastError?.hasPrefix("The dial couldn't be read:") == true { lastError = nil }
+            if lastErrorFrom == .knob { lastError = nil }
             // Its change is live now: nothing left to switch to.
             if let made = knobChanges[tafID], let live = knob.version, live >= made.version { knobChanges[tafID] = nil }
         } catch {
             guard gen == accountGeneration, presentation == presentationGeneration else { return }
-            lastError = "The dial couldn't be read: \(error.localizedDescription)"
+            fail("The dial couldn't be read: \(error.localizedDescription)", from: .knob)
         }
     }
 
@@ -4936,6 +4948,7 @@ final class AppModel: ObservableObject {
         let id = (call.proposalID ?? call.kiffID).map(KIFFMapping.recordID) ?? UUID()
         var entry = RecordEntry(id: id, tafID: call.tafID, kind: kind, title: title, detail: detail, at: call.heldAt, signature: signature)
         if kind == .approved { entry.ownerApproved = true }
+        entry.byYou = true
         record.removeAll { $0.id == id }
         record.insert(entry, at: 0)
         if call.kiffID != nil { decided[id] = entry }
@@ -4980,6 +4993,7 @@ final class AppModel: ObservableObject {
                     // words for it ("Refused by you · 08:56 · …"), so it doesn't change on
                     // screen (kiff/tafs#206).
                     out[i].title = mine.title
+                    out[i].byYou = mine.byYou
                 } else {
                     settled.insert(id)
                 }
@@ -5669,7 +5683,7 @@ final class AppModel: ObservableObject {
         do {
             _ = try await planque.disconnect(grantID: grantID)
         } catch {
-            lastError = "Not disconnected: \(error.localizedDescription)"
+            fail("Not disconnected: \(error.localizedDescription)", from: .disconnect)
             return false
         }
         await refreshConnections()

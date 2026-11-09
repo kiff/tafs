@@ -61,6 +61,19 @@ final class AppModelTests: XCTestCase {
         XCTAssertNotNil(model.record.first?.signature, "an approval is signed on the phone")
     }
 
+    /// Whose error it is goes with it, not in its words, and any other error clears it.
+    func testAnErrorsSourceIsAFlagNotItsWords() {
+        let model = AppModel(signer: StubSigner())
+        model.fail("No desconectado: sin red", from: .disconnect)
+        XCTAssertEqual(model.lastErrorFrom, .disconnect, "in any wording")
+        XCTAssertEqual(model.lastError, "No desconectado: sin red")
+        model.lastError = "Not disconnected: but from elsewhere"
+        XCTAssertNil(model.lastErrorFrom, "another error is no screen's own, whatever it says")
+        model.fail("The dial couldn't be read: offline", from: .knob)
+        model.lastError = nil
+        XCTAssertNil(model.lastErrorFrom)
+    }
+
     func testRefusedAnswerDrawsNothing() async {
         let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)

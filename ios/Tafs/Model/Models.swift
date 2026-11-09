@@ -532,6 +532,9 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var refusedByTool: Bool?
     /// Who refused it at the tool: the vendor as connected, when known.
     var refusedBy: String?
+    /// Its title is this phone's own line for the owner's answer ("Refused by you · 08:56 ·
+    /// …"), so the chat shows it as it is. KIFF's lines, titled by the action, leave it unset.
+    var byYou: Bool? = nil
 }
 
 struct AvatarRim: Codable, Hashable { let visible: Bool; let tint: String; let length: Double }

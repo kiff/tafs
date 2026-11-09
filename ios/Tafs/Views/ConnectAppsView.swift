@@ -265,7 +265,7 @@ struct AppConnectionsView: View {
             if model.canManageCards {
                 Section { } footer: { Text(DisconnectWords.footer) }
             }
-            if let error = model.lastError, error.hasPrefix("Not disconnected") {
+            if model.lastErrorFrom == .disconnect, let error = model.lastError {
                 Text(error).foregroundColor(Theme.no)
             }
         }
