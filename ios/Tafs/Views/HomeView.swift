@@ -3,7 +3,6 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Binding var tab: Tab
-    @State private var showingNew = false
     @State private var showingBuyCredits = false
     @State private var showingSolo = false
     @State private var showingExport = false
@@ -106,7 +105,8 @@ struct HomeView: View {
                 if model.mode == .sample {
                     Button("Play the next sample actions") { model.playNextDemoActions() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.soft))
-                    Text("Sample data. The Card is checked on this phone; signed in with KIFF, KIFF decides.")
+                    // The sample has no form for a new taf (as on Android): one starts in Coach, signed in.
+                    Text(HomeWords.sampleFoot)
                         .scaledFont(12)
                         .foregroundColor(Theme.dim)
                 } else {
@@ -150,7 +150,7 @@ struct HomeView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if model.canStartTafs {
                     // A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59).
-                    Button { if model.mode == .kiff { model.startNewTaf() } else { showingNew = true } } label: {
+                    Button { model.startNewTaf() } label: {
                         Image(systemName: "plus")
                             .scaledFont(17, weight: .bold)
                             .foregroundColor(Theme.amberInk)
@@ -162,7 +162,6 @@ struct HomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         // The purchase screens, for their screenshots (Screenshots.screen).
         .sheet(isPresented: $showingBuyCredits) { BuyCreditsView().environmentObject(model) }
         .sheet(isPresented: $showingSolo) { NavStack { SoloView() }.environmentObject(model) }
@@ -180,7 +179,6 @@ struct HomeView: View {
             try? await Task.sleep(nanoseconds: 500_000_000)
             switch Screenshots.screen {
             case "taf", "chat", "card", "setup", "starts", "results": openingFirst = true
-            case "new": showingNew = true
             case "buy-credits": showingBuyCredits = true
             case "solo": showingSolo = true
             case "export": showingExport = true

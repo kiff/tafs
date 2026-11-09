@@ -1675,12 +1675,11 @@ final class AppModel: ObservableObject {
 
     // MARK: Starting a taf
 
-    /// Signed in, a new taf starts in Coach mode (`startNewTaf()`); the sample starts from its form.
-    var canStartTafs: Bool { mode != .signedOut }
+    /// Signed in, a new taf starts in Coach mode (`startNewTaf()`). The sample has no form for
+    /// one (its old form is gone, as on Android), so it has no + either.
+    var canStartTafs: Bool { mode == .kiff }
 
-    func draft(job: String) -> TafDraft { TafTemplates.draft(from: job) }
-
-    /// Issues the Card (after Face ID) and starts the taf.
+    /// Starts one of the sample's tafs with its Card: the sample's own data, and its tests.
     @discardableResult
     func start(_ draft: TafDraft, confirm: Bool = true) async -> Taf? {
         if confirm {

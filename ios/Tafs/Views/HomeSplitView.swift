@@ -46,7 +46,6 @@ struct HomeSplitView: View {
     /// do, the first taf in the list is the one open (the 859 test).
     @State private var opened: HomeSelection?
     @State private var chosen = false
-    @State private var showingNew = false
 
     var body: some View {
         NavigationSplitView {
@@ -90,7 +89,6 @@ struct HomeSplitView: View {
             withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) }
             model.requestedTaf = nil
         }
-        .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         // Something open from the start: the first taf in the list, which is the one used
         // last, a call waiting on it first (CI's screenshots open Refunds, as on the phone).
         // While the list settles at launch it follows its first taf, until the owner chooses
@@ -194,10 +192,10 @@ struct HomeSplitView: View {
         .navigationTitle("tafs")
     }
 
-    /// A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59); the sample
-    /// keeps its own form, with nothing real behind it.
+    /// A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59). The sample has
+    /// no form for one, so its + isn't shown (`canStartTafs`).
     private func startNewTaf() {
-        if model.mode == .kiff { model.startNewTaf() } else { showingNew = true }
+        model.startNewTaf()
     }
 
     /// A taf in the list, and its open trial under it (kiff/tafs#173).

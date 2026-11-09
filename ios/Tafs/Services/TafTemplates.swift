@@ -27,15 +27,6 @@ struct TafDraft: Hashable {
 enum TafTemplates {
     static let all: [TafTemplate] = [refunds, billPay, access, deploys, chargebacks]
 
-    static func draft(from job: String) -> TafDraft {
-        let words = job.lowercased()
-        let match = all.first { t in t.keywords.contains { words.contains($0) } }
-        guard let t = match else {
-            return TafDraft(name: "New taf", job: job, tools: [], rules: [], templateKey: nil)
-        }
-        return TafDraft(name: t.name, job: job, tools: t.tools, rules: t.rules, templateKey: t.key)
-    }
-
     static func template(_ key: String?) -> TafTemplate? {
         all.first { $0.key == key }
     }

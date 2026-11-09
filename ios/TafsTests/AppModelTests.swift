@@ -115,9 +115,12 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(loss.window, .week)
     }
 
-    func testDraftMatchesTheJob() {
-        let draft = AppModel(signer: StubSigner()).draft(job: "Pay our vendor bills when they match a PO")
-        XCTAssertEqual(draft.templateKey, "billpay")
-        XCTAssertTrue(draft.rules.contains { $0.action == "new_payee" && $0.never })
+    /// The sample has no new-taf form: a new taf starts in Coach, signed in, and its foot says so.
+    func testTheSampleHasNoNewTafButtonAndSaysWhereOneStarts() async {
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        XCTAssertEqual(model.mode, .sample)
+        XCTAssertFalse(model.canStartTafs)
+        XCTAssertEqual(HomeWords.sampleFoot, "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach.")
     }
 }
