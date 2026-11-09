@@ -2,68 +2,44 @@
 
 # tafs
 
-**They taf. You kiff.**
+**AI that works on a Card.**
 
-tafs is an app for iPhone, iPad and Android where a business hands jobs to AI agents, called tafs, and
-gives each one a Card: the limits it works inside. Inside the Card a taf acts and
-leaves a receipt. Outside it, the taf waits for the owner's answer on their phone.
-Revoked, no new action goes through. tafs is in a closed test on Android and on
-TestFlight for iPhone and iPad.
-
-Cards are enforced by [KIFF](https://kiff.dev): every action a taf takes passes
-through KIFF's gateway, which checks the Card before any call reaches a tool.
-
-<p>
-  <img src="docs/screenshots/welcome.png" width="220" alt="Welcome: They taf. You kiff.">
-  <img src="docs/screenshots/tafs.png" width="220" alt="Tafs: three working, two need you, with the bar: Account, Tafs, Needs you, Record">
-  <img src="docs/screenshots/needs-you.png" width="220" alt="Needs you: held actions with Approve once and Refuse">
-  <img src="docs/screenshots/record.png" width="220" alt="Record: a chip for each taf above the filter by kind, each entry starting with its taf">
-  <img src="docs/screenshots/taf.png" width="220" alt="A taf's Activity: what's left today, All, Done, Held and Refused, then its work by day">
-  <img src="docs/screenshots/chat.png" width="220" alt="Chat: ask a taf what it did, or tell it what to do differently">
-  <img src="docs/screenshots/setup.png" width="220" alt="A taf's Setup: the job, Starts when, Results go to and what it remembers">
-  <img src="docs/screenshots/starts-when.png" width="220" alt="Starts when: its schedule with − and +, Skip it or Run after, an app event to approve, one listening, and its doors">
-  <img src="docs/screenshots/results-go-to.png" width="220" alt="Results go to: Reply to the sender, Alert our phones and Email me, then a place in a connected app">
-  <img src="docs/screenshots/account.png" width="220" alt="Account: Alerts, Theme (Light, Dark or System), how it works and Legal">
-  <img src="docs/screenshots/tafs-dark.png" width="220" alt="Tafs in dark">
-  <img src="docs/screenshots/setup-dark.png" width="220" alt="Setup in dark">
-  <img src="docs/screenshots/new-taf.png" width="220" alt="Starting a new taf">
+<p align="center">
+  <img src="docs/screenshots/hero.png" width="760" alt="Three phones: Tafs on iPhone with three working and two needing you; Needs you on Android with a migration and an $8,400 payment held, each with Approve once and Refuse; Coach on Android: Ask anything about your tafs">
 </p>
 
-On iPad:
+A taf is an AI agent a business hands one job to, such as refunds, bill pay or deploys. It
+works inside a Card, the limits [KIFF](https://kiff.dev) checks before any of its calls
+reaches a tool. Inside the Card it acts and leaves a receipt; outside it, it waits for the
+owner's answer on their phone.
 
-<p>
-  <img src="docs/screenshots/ipad-welcome.png" width="340" alt="Welcome on iPad">
-  <img src="docs/screenshots/ipad-needs-you.png" width="340" alt="Needs you on iPad: held actions with Approve once and Refuse">
-  <img src="docs/screenshots/ipad-setup.png" width="340" alt="A taf's Setup on iPad, beside the list of tafs, with the bar as a rail on the left">
-  <img src="docs/screenshots/ipad-setup-dark.png" width="340" alt="Setup on iPad in dark">
-</p>
+tafs is an app for iPhone, iPad and Android, with **They taf. You kiff.** as its line.
 
-On Android: a taf's Setup with its connected tools and workflow, Account's alerts and theme,
-the bar, Activity and Record by taf, light and dark, on a phone and a tablet:
+## A good agent harness vs a taf
 
-<p>
-  <img src="docs/screenshots/android/v24-setup.png" width="180" alt="A taf's Setup: the job, Starts when, and Connected tools as a ring of apps around the taf, with its workflow in one line">
-  <img src="docs/screenshots/android/v24-workflow-dark.png" width="180" alt="Setup's workflow opened, step by step with each step's app, in dark">
-  <img src="docs/screenshots/android/v24-account-theme.png" width="180" alt="Account: alerts on this phone, what alerts you, and the theme: Light, Dark or System">
-  <img src="docs/screenshots/android/v24-account-dark.png" width="180" alt="Account in dark">
-  <img src="docs/screenshots/android/home-bar.png" width="180" alt="Home with the bar: Account, Tafs, Needs you, Record">
-  <img src="docs/screenshots/android/taf-activity-dark.png" width="180" alt="A taf's Activity, in dark">
-  <img src="docs/screenshots/android/record-by-taf-dark.png" width="180" alt="Record by taf, in dark">
-</p>
+| | A good agent harness | A taf |
+|---|---|---|
+| Where the rules live | Rules in the harness, on the machine it runs on | A Card, checked by a separate service before every call |
+| Your sign-ins | Tools reach whatever the account running them can read | Sign-ins sit in a separate vault the agent never holds |
+| What a rule can say | A rule allows or denies a tool | A Card limits how much, how often, and until when |
+| Approvals | You approve in the session that's running | You approve on your phone, signed, for that exact call, once |
+| The record | A transcript on the same machine | A signed receipt your phone checks |
+| Stopping | Stop the process | One tap halts it in every system it works through |
 
-On an Android tablet:
+## What's new in it
 
-<p>
-  <img src="docs/screenshots/android/v24-setup-tablet.png" width="340" alt="A taf's Setup on an Android tablet">
-  <img src="docs/screenshots/android/v24-account-theme-dark-tablet.png" width="340" alt="Account's alerts and theme on an Android tablet, in dark">
-</p>
-
-Screenshots come from CI, with sample data, as the `screenshots` artifact. On
-iOS, a release build (a version tag, or a manual run of the iOS workflow) takes
-the full set; a pull request that changes a screen takes a key set (Tafs, a
-taf, Setup and Account, light and dark); a manual run can pick `full`, `key`
-or `none`. On Android,
-the UI tests draw them from synthetic data ([docs/android-app.md](docs/android-app.md)).
+- **Signed approvals.** An answer to a held call is signed with the phone's key and checked
+  by KIFF, so no server can answer for the owner ([approvals](docs/approvals.md#how-an-answer-is-signed)).
+- **Receipts the phone checks.** Each call in the Record opens KIFF's receipt, and the phone
+  checks KIFF signed it ([the Record](docs/tafs.md#the-record)).
+- **"Did this happen?"** A money call whose outcome KIFF can't prove asks the owner, and No
+  gives the Card its room back ([Did this happen?](docs/approvals.md#did-this-happen)).
+- **Trial versions.** Coach drafts a taf's next version, which runs beside the live one under
+  a trial Card of its own before it's made live ([trying a version](docs/coach.md#trying-a-version)).
+- **Doors.** An email address, a WhatsApp number, a Slack channel or a Telegram bot a taf takes work from
+  ([doors](docs/doors.md)).
+- **A memory you can read.** A taf's notes shape how it works, never what its Card allows,
+  and each one can be read and forgotten ([memory](docs/tafs.md#memory)).
 
 ## The first five jobs
 
@@ -78,12 +54,19 @@ them do.
 | Deploys | Ships fixes when CI is green, rolls back | 10 deploys a day; migrations always ask; dropping data never |
 | Chargebacks | Answers card disputes with evidence | Evidence ≤ $500 each; accepting a loss ≤ $100 each |
 
-## What it does
+## How to get it
 
-A working app for iPhone and iPad (SwiftUI) and for Android phones and tablets
-(Kotlin and Jetpack Compose, Android 11 and later), in two modes: signed in with
-KIFF, or with sample data on the phone. Both use the same public routes of KIFF,
-tafs cloud and planque. Each feature has a page in [docs/](docs/README.md):
+tafs is in testing:
+
+- **Android:** a closed test on Google Play, for phones and tablets on Android 11 and later.
+- **iPhone and iPad:** TestFlight, on iOS 16 and later.
+
+Both work signed in with KIFF, or with sample data on the phone. More screens, on each
+platform, light and dark: [docs/screenshots.md](docs/screenshots.md).
+
+## Documentation
+
+Each feature has a page in [docs/](docs/README.md), written from the code:
 
 - **[A taf](docs/tafs.md):** its job, Cards, runs, reports, memory and Record; pausing,
   halting and removing it.
@@ -91,28 +74,22 @@ tafs cloud and planque. Each feature has a page in [docs/](docs/README.md):
   its work stream as it goes, and a held call shows where it was made.
 - **[The app's screens](docs/taf-screen.md):** a bar with Account, Tafs, Needs you,
   Record and Coach; the Record filtered by taf; each taf's Chat, Activity, Card and Setup.
-  Setup says what starts it (schedule, app events you approve, doors, follow-ups, Pause)
-  and where its results go. Changes wait as the taf's next version until you make them
-  live. Light and dark.
 - **[Coach mode](docs/coach.md):** say the job; Coach connects the tools, drafts the taf,
-  its Card and how it runs, and you confirm with Face ID, Touch ID or your fingerprint. Improve a taf, try a new
-  version under a trial Card, then install it.
+  its Card and how it runs, and you confirm with Face ID, Touch ID or your fingerprint.
 - **[Held calls](docs/approvals.md):** in Needs you, the chat, the lock screen and a push
-  alert. Approve once, refuse, or give the Card extra room: each answer is signed on the
-  phone and checked by KIFF. **Did this happen?** asks about a money call whose outcome
-  KIFF can't prove; No gives the Card its room back.
-- **[Connect apps](docs/connect-apps.md)**, from Settings: the apps a taf can work in,
-  searched as you type, each approved on the phone before you sign in at the app.
+  alert. Approve once, refuse, or give the Card extra room.
+- **[Connect apps](docs/connect-apps.md):** the apps a taf can work in, each approved on the
+  phone before you sign in at the app.
 - **[Accounts](docs/accounts.md):** sign in with KIFF, people and groups, sharing a taf,
-  usage, Solo and task packs through the App Store or Google Play, deleting the account.
-- **[Photos and files](docs/attachments.md)** on a message, and **[doors](docs/doors.md)**:
-  an email address, a Slack channel or a WhatsApp number a taf takes work from.
+  credits and plans, deleting the account.
+- **[Photos and files](docs/attachments.md)** on a message, and **[doors](docs/doors.md)**.
 
 How the pieces fit: [docs/README.md](docs/README.md). The API: [docs/api.md](docs/api.md).
 Where tafs data lives, for how long, and who deletes it: [docs/data.md](docs/data.md).
+How KIFF decides every action, shown on real runs: [docs/kiff-decides.md](docs/kiff-decides.md).
 What tafs still needs from KIFF: [docs/needs-from-kiff.md](docs/needs-from-kiff.md).
 
-## The runtime
+### The runtime
 
 Every taf runs on [kiff/agents](https://github.com/kiff/agents), tafs's own
 agent runtime: stored definitions, runs that pause on a held call and go on
@@ -120,7 +97,7 @@ when it is answered, chats, notes and schedules, in the EU. tafs cloud calls it;
 the phone never does.
 
 - **A taf** is one agent definition (`runtime/src/cloud/tafdef.ts`):
-  `claude-opus-5-5`, its job's instructions, how its notes work, what the
+  `claude-sonnet-5-5`, its job's instructions, how its notes work, what the
   owner said when starting it, two sections of KIFF's skill, a cost cap per run from its
   budget, and keep rules (a tool's call and what it returns stay only until the
   run ends, the rest 30 days). For each call through KIFF, the run also keeps
@@ -152,7 +129,7 @@ definitions. To move it, run `runtime/scripts/vendor-kiff-skill.sh [commit]`
 tests fail if a pasted section's heading is gone. Running tafs get the new pin
 through the Upgrade workflow, once kiff/agents' nightly eval has passed on it.
 
-## tafs cloud
+### tafs cloud
 
 The phone talks to tafs cloud (`runtime/src/cloud/`), which runs in the EU. A
 chat's answer streams to the phone as it's written.
@@ -172,16 +149,7 @@ action.
 Deploying tafs cloud and kiff/agents is done by the maintainers; `infra/` holds
 the scripts.
 
-## TestFlight
-
-`.github/workflows/ios.yml` builds and tests every push on GitHub's macOS 26
-runners. A `v*` tag or a manual run (Actions → iOS → Run workflow) also uploads
-to TestFlight: the internal testers ("Team") get it at once, and the external group
-"Beta testers" after Apple's Beta App Review, unless a manual run sets `external` to
-false. Its signing and upload credentials are repository secrets, set by the
-maintainers.
-
-## Build
+## Building
 
 iOS:
 
@@ -194,7 +162,12 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
 ```
 
 Needs a current Xcode (CI uses Xcode 26 on macOS 26) and runs on iOS 16 and
-later. App Store builds come from CI.
+later. `.github/workflows/ios.yml` builds and tests every push on GitHub's macOS 26
+runners. A `v*` tag or a manual run (Actions → iOS → Run workflow) also uploads
+to TestFlight: the internal testers ("Team") get it at once, and the external group
+"Beta testers" after Apple's Beta App Review, unless a manual run sets `external` to
+false. Its signing and upload credentials are repository secrets, set by the
+maintainers.
 
 Android:
 

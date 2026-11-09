@@ -203,6 +203,13 @@ export async function readKIFF(token: string, doFetch: Fetch = fetch, base = KIF
   return { mandates: m.mandates ?? [], held: e };
 }
 
+/** The account's Cards alone, read with the person's session. */
+export async function readMandates(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Mandate[]> {
+  const m = await read<{ mandates?: Mandate[] }>("/v1/me/mandates", token, doFetch, base);
+  if (!Array.isArray(m.mandates)) throw new KIFFError(502, "KIFF's Cards could not be read");
+  return m.mandates;
+}
+
 export async function readExceptions(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Held[]> {
   const result = await read<{ exceptions?: Held[] }>("/v1/me/card-exceptions?status=held", token, doFetch, base, "the waiting calls");
   if (!Array.isArray(result.exceptions)) throw new KIFFError(502, "KIFF's waiting calls could not be read");
@@ -258,6 +265,17 @@ export interface Access {
 export async function readAccess(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Map<string, Access>> {
   const out = await read<{ agents?: Record<string, Partial<Access>> }>("/v1/me/access", token, doFetch, base, "what this person may use");
   return new Map(Object.entries(out.agents ?? {}).map(([agent, a]) => [agent, { use: a.use === true, oversee: a.oversee === true, manage: a.manage === true }]));
+}
+
+/**
+ * The account's KIFF agents that KIFF has archived, each with when (`GET /v1/me/agents`, read with the person's
+ * session). Removing a taf archives its KIFF agent (kiff/agents' removal, with the taf's own key), so this is
+ * where "removed" comes from: KIFF's record, never a taf missing from someone's list.
+ */
+export async function readArchived(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Map<string, string>> {
+  const out = await read<{ agents?: Array<{ id?: unknown; archived_at?: unknown }> }>("/v1/me/agents", token, doFetch, base, "the account's agents");
+  if (!Array.isArray(out.agents)) throw new KIFFError(502, "KIFF's agents could not be read");
+  return new Map(out.agents.flatMap((a) => (typeof a.id === "string" && a.id && typeof a.archived_at === "string" && a.archived_at ? [[a.id, a.archived_at] as const] : [])));
 }
 
 /** Whether the list shows an agent: KIFF says the person may use it or oversee it. tafs cloud decides nothing. */
