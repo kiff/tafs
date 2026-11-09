@@ -128,8 +128,24 @@ after.
 **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing
 that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that
 isn't a taf, so nothing there says it was removed (`byTaf` on Android; `AppModel.connectionGroups` and
-`AppConnectionsView` on iPhone and iPad). Clearing removed tafs'
-connections at once waits for tafs cloud to mark a grant whose taf it actually removed.
+`AppConnectionsView` on iPhone and iPad).
+
+**Removed tafs** are named by the server, never inferred by the apps. `GET /v1/connect/apps` carries `removed_tafs`:
+each KIFF agent that KIFF has archived, as removing a taf does, and that is no taf of tafs cloud's any more (not
+live, not still being removed, not Setup), with when KIFF archived it (`removed_at`), newest first. A grant whose
+`request.agent` is one of these is from a removed taf, and its `agent_name` names the taf. It's listed only for
+someone who manages Cards, who alone can clear. Anyone else gets none, and so does everyone when KIFF's agents can't
+be read, so nothing is offered to clear on a guess. Tafs removed before removal archived their KIFF agent aren't on
+it, so their connections stay under Other connections.
+
+**What Clear keeps is decided there too.** When the app sends its signed grants read (`Planque-Device-Signature`, as
+for a taf's Setup), each removed taf also carries `grants`: its live connections (not `disconnected` or `failed`),
+each with `used_by`, the live tafs whose Card in force has a rule on one of the connection's actions. KIFF's tools are
+the account's, so a taf can draw on a connection another taf asked for. A connection's actions are planque's `tools`
+once it's connected, else each asked tool's name, leaving out Setup's own reads. Clear disconnects only those with an
+empty `used_by`, and says which it kept and for which taf. Without the proof, or when planque's grants or KIFF's
+Cards can't be read, a removed taf has no `grants`, and the apps offer no Clear on it (`removedTafs` and `tafsUsing`
+in `runtime/src/cloud/handler.ts`). The apps' section and Clear come with each app's next batch.
 
 Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own
 confirmation, after its Cards are revoked and before tafs cloud removes the rest. Its result says the connections are
