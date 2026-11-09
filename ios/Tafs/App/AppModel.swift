@@ -698,6 +698,7 @@ final class AppModel: ObservableObject {
         doorsOffered = []
         grants = []
         connectApps = nil; connectStart = nil; connectAppsQuery = ""; connectAppsRequest = nil
+        clearingRemoved = false; clearNote = nil
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
@@ -1052,6 +1053,7 @@ final class AppModel: ObservableObject {
         doorsOffered = []
         grants = []
         connectApps = nil; connectStart = nil; connectAppsQuery = ""; connectAppsRequest = nil
+        clearingRemoved = false; clearNote = nil
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
@@ -1760,6 +1762,10 @@ final class AppModel: ObservableObject {
     /// The connection started from the list, waiting for its approval sheet.
     @Published var connectStart: TafsCloud.ConnectStart?
 
+    /// Clearing removed tafs' connections is on its way, and how it went, under them in Connect apps.
+    @Published private(set) var clearingRemoved = false
+    @Published private(set) var clearNote: String?
+
     /// The search Connect apps last listed, for its next page.
     private var connectAppsQuery = ""
     /// Only the newest search may replace its page, even if an older request ignores cancellation.
@@ -1778,7 +1784,12 @@ final class AppModel: ObservableObject {
         if connectAppsQuery != q { connectApps = nil }
         connectAppsQuery = q
         do {
-            let page = try await cloud.connectApps(q)
+            // This phone's signed grants read, as Setup sends it: tafs cloud then says which
+            // removed taf's connections Clear may end.
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let page = try await cloud.connectApps(q, proof: proof)
             guard gen == accountGeneration, request == connectAppsRequest, !Task.isCancelled else { return }
             connectApps = page
         } catch {
@@ -1801,6 +1812,8 @@ final class AppModel: ObservableObject {
             let seen = Set(shown.apps.map(\.entry))
             merged.apps = shown.apps + page.apps.filter { !seen.contains($0.entry) }
             merged.byKey = shown.byKey || page.byKey
+            // The removed tafs stay as the first page read them, with its proof: a further page only adds apps.
+            merged.removedTafs = shown.removedTafs
             connectApps = merged
         } catch {
             guard gen == accountGeneration, request == connectAppsRequest else { return }
@@ -5464,18 +5477,25 @@ final class AppModel: ObservableObject {
 
     /// An app's connections grouped by the taf each was set up for. Tafs with one needing
     /// attention (waiting on its sign-in, signed out, or a failed last call) come first, then
-    /// the rest by name. Those with no taf this app can name come apart, to show last: the app
-    /// can't tell a removed taf from one it doesn't see, so it never says which.
-    func connectionGroups(of app: TafsCloud.ConnectApps.App) -> (tafs: [ConnectionGroup], others: [PlanqueClient.Grant]) {
-        Self.connectionGroups(connections(of: app), taf: { self.tafOf($0) }, attention: { $0.waitingSignIn || $0.needsReconnect || self.lastFailure($0) != nil })
+    /// the rest by name. Then the removed tafs', only those whose agent tafs cloud names as
+    /// removed (`removed_tafs`). Those with no taf this app can name come last: a taf missing
+    /// from this person's list isn't proof it was removed (one they don't see, an agent that
+    /// isn't a taf), so only the server's word puts a connection under removed.
+    func connectionGroups(of app: TafsCloud.ConnectApps.App) -> (tafs: [ConnectionGroup], removed: [PlanqueClient.Grant], others: [PlanqueClient.Grant]) {
+        Self.connectionGroups(connections(of: app), taf: { self.tafOf($0) }, removed: Set((connectApps?.removedTafs ?? []).map(\.agent)),
+                              attention: { $0.waitingSignIn || $0.needsReconnect || self.lastFailure($0) != nil })
     }
 
-    static func connectionGroups(_ grants: [PlanqueClient.Grant], taf: (PlanqueClient.Grant) -> String?,
-                                 attention: (PlanqueClient.Grant) -> Bool) -> (tafs: [ConnectionGroup], others: [PlanqueClient.Grant]) {
+    static func connectionGroups(_ grants: [PlanqueClient.Grant], taf: (PlanqueClient.Grant) -> String?, removed removedAgents: Set<String> = [],
+                                 attention: (PlanqueClient.Grant) -> Bool) -> (tafs: [ConnectionGroup], removed: [PlanqueClient.Grant], others: [PlanqueClient.Grant]) {
         var groups: [ConnectionGroup] = []
+        var removed: [PlanqueClient.Grant] = []
         var others: [PlanqueClient.Grant] = []
         for g in grants {
-            guard let name = taf(g) else { others.append(g); continue }
+            guard let name = taf(g) else {
+                if removedAgents.contains(g.request.agent) { removed.append(g) } else { others.append(g) }
+                continue
+            }
             if let i = groups.firstIndex(where: { $0.id == g.request.agent }) {
                 groups[i].grants.append(g)
             } else {
@@ -5489,7 +5509,70 @@ final class AppModel: ObservableObject {
             let order = a.taf.localizedCaseInsensitiveCompare(b.taf)
             return order == .orderedSame ? a.id < b.id : order == .orderedAscending
         }
-        return (groups, others)
+        return (groups, removed, others)
+    }
+
+    /// What tafs cloud says of each removed taf's connection (`removed_tafs[].grants`), by grant:
+    /// listed with the tafs whose Cards still use it, or not listed (its reads failed, or no
+    /// signed read), and then nothing is cleared.
+    var removedListed: [String: TafsCloud.ConnectApps.RemovedGrant] {
+        Self.removedListed(connectApps?.removedTafs ?? [])
+    }
+
+    static func removedListed(_ removed: [TafsCloud.ConnectApps.RemovedTaf]) -> [String: TafsCloud.ConnectApps.RemovedGrant] {
+        Dictionary(removed.flatMap { $0.grants ?? [] }.map { ($0.grant, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Which of `ids` Clear ends and which it keeps: only a connection tafs cloud lists as a
+    /// removed taf's, never one whose taf the phone merely can't see. Which to keep is tafs
+    /// cloud's word too: one a live taf's Card still uses (`used_by`) is kept, for those tafs.
+    static func clearPlan(_ ids: [String], grants: [PlanqueClient.Grant], listed: [String: TafsCloud.ConnectApps.RemovedGrant])
+        -> (ending: [PlanqueClient.Grant], keptFor: [[TafsCloud.ConnectApps.UsedBy]]) {
+        let asked = grants.filter { ids.contains($0.id) && listed[$0.id] != nil }
+        let keptFor = asked.compactMap { g in listed[g.id].flatMap { $0.usedBy.isEmpty ? nil : $0.usedBy } }
+        return (asked.filter { listed[$0.id]?.usedBy.isEmpty == true }, keptFor)
+    }
+
+    /// Clears the connections of tafs removed since, from Connect apps (the owner's ask): one
+    /// confirmation, one Face ID, then the device key signs each disconnect, as removing a taf
+    /// does. Only the ones tafs cloud lists, and one a live taf's Card still uses is kept, with
+    /// the line naming that taf.
+    @discardableResult
+    func clearRemovedConnections(_ ids: [String]) async -> Bool {
+        let plan = Self.clearPlan(ids, grants: grants, listed: removedListed)
+        let asked = plan.ending.count + plan.keptFor.count
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant, asked > 0, !clearingRemoved else { return false }
+        let keptNames = plan.keptFor.flatMap { $0 }.map(\.name)
+        guard !plan.ending.isEmpty else {
+            clearNote = ConnectionGroupWords.cleared(done: 0, kept: plan.keptFor.count, keptFor: keptNames, left: 0)
+            return true
+        }
+        let gen = accountGeneration
+        clearingRemoved = true
+        clearNote = nil
+        defer { if gen == accountGeneration { clearingRemoved = false } }
+        do {
+            _ = try await signer.sign(Data("tafs.disconnect.v1|\(tenant)|\(plan.ending.map(\.id).joined(separator: ","))".utf8),
+                                      reason: ConnectionGroupWords.clearTitle(plan.ending.count))
+        } catch {
+            if gen == accountGeneration { clearNote = "Not done: it wasn't confirmed." }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        var left = 0
+        for g in plan.ending {
+            guard gen == accountGeneration else { return false }
+            do { _ = try await planque.disconnect(grantID: g.id) } catch { left += 1 }
+        }
+        await refreshConnections()
+        if gen == accountGeneration {
+            clearNote = ConnectionGroupWords.cleared(done: plan.ending.count - left, kept: plan.keptFor.count, keptFor: keptNames, left: left)
+        }
+        return left == 0
     }
 
     /// The taf a connection was set up for, by name; nil when this app can't name it: removed,

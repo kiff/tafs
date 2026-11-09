@@ -118,4 +118,84 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertEqual(ConnectionFixWords.waiting("Google Calendar"), "Waiting for the sign-in at Google Calendar")
         XCTAssertEqual(ConnectionFixWords.cancelTitle("Google Calendar"), "Cancel the sign-in to Google Calendar?")
     }
+
+    // MARK: From removed tafs (tafs cloud's `removed_tafs`, as Android's ConnectAppsByTafTest)
+
+    private func page(_ removed: String) throws -> TafsCloud.ConnectApps {
+        try KIFFClient.decoder.decode(TafsCloud.ConnectApps.self, from: Data(#"{"apps":[],"removed_tafs":\#(removed)}"#.utf8))
+    }
+
+    /// tafs cloud names the removed tafs, and with the signed read each one's live connections
+    /// with the tafs whose Cards still use them. No `grants` key means it couldn't say.
+    func testRemovedTafsAreReadAsTafsCloudListsThem() throws {
+        let read = try page(#"[{"agent":"gone-1","removed_at":"2026-11-08T10:00:00Z","grants":[{"grant":"g2","used_by":[]},{"grant":"g6","used_by":[{"taf":"taf_9","name":"Chargebacks"}]}]},{"agent":"gone-2"}]"#)
+        XCTAssertEqual(read.removedTafs.map(\.agent), ["gone-1", "gone-2"])
+        XCTAssertEqual(read.removedTafs[0].grants?.map(\.grant), ["g2", "g6"])
+        XCTAssertEqual(read.removedTafs[0].grants?[1].usedBy, [.init(taf: "taf_9", name: "Chargebacks")])
+        XCTAssertNil(read.removedTafs[1].grants, "not listed: never an empty list")
+        let old = try KIFFClient.decoder.decode(TafsCloud.ConnectApps.self, from: Data(#"{"apps":[]}"#.utf8))
+        XCTAssertTrue(old.removedTafs.isEmpty, "a tafs cloud without it")
+        let listed = AppModel.removedListed(read.removedTafs)
+        XCTAssertEqual(Set(listed.keys), ["g2", "g6"])
+    }
+
+    /// Only the server's word puts a connection under removed: a taf merely missing from this
+    /// person's list stays under Other connections.
+    func testOnlyTafsCloudsFlagPutsAConnectionUnderRemoved() throws {
+        let req = { (agent: String) in #"{"server":"https://mcp.stripe.com","agent":"\#(agent)","tools":[]}"# }
+        let grants = [try g("g1", req("refunds-1")), try g("g2", req("gone-1")), try g("g3", req("unseen-1")), try g("g4", req("gone-1"))]
+        let names = ["refunds-1": "Refunds"]
+        let split = AppModel.connectionGroups(grants, taf: { names[$0.request.agent] }, removed: ["gone-1"], attention: { _ in false })
+        XCTAssertEqual(split.tafs.map(\.taf), ["Refunds"])
+        XCTAssertEqual(split.removed.map(\.id), ["g2", "g4"])
+        XCTAssertEqual(split.others.map(\.id), ["g3"], "missing, but not named as removed")
+        // Without the flag, nothing is under removed.
+        let unflagged = AppModel.connectionGroups(grants, taf: { names[$0.request.agent] }, attention: { _ in false })
+        XCTAssertTrue(unflagged.removed.isEmpty)
+        XCTAssertEqual(unflagged.others.map(\.id), ["g2", "g3", "g4"])
+        // A live taf is never under removed, whatever the list says: ids aren't reused.
+        let live = AppModel.connectionGroups(grants, taf: { names[$0.request.agent] }, removed: ["refunds-1"], attention: { _ in false })
+        XCTAssertTrue(live.removed.isEmpty)
+    }
+
+    /// Clear ends only the connections tafs cloud lists with nobody using them. One a live
+    /// taf's Card uses is kept for that taf, and one it doesn't list is never touched.
+    func testClearEndsOnlyListedConnectionsNobodyUses() throws {
+        let req = { (agent: String) in #"{"server":"https://mcp.stripe.com","agent":"\#(agent)","tools":[]}"# }
+        let grants = [try g("g2", req("gone-1")), try g("g6", req("gone-1")), try g("g8", req("gone-2")), try g("g3", req("unseen-1"))]
+        let listed = AppModel.removedListed(try page(#"[{"agent":"gone-1","grants":[{"grant":"g2","used_by":[]},{"grant":"g6","used_by":[{"taf":"taf_9","name":"Chargebacks"}]}]},{"agent":"gone-2"}]"#).removedTafs)
+        let plan = AppModel.clearPlan(["g2", "g6", "g8", "g3"], grants: grants, listed: listed)
+        XCTAssertEqual(plan.ending.map(\.id), ["g2"])
+        XCTAssertEqual(plan.keptFor.map { $0.map(\.name) }, [["Chargebacks"]])
+        // Asked for less, it ends less.
+        XCTAssertTrue(AppModel.clearPlan(["g6"], grants: grants, listed: listed).ending.isEmpty)
+        // With no list at all (no signed read, or tafs cloud's reads failed), nothing is cleared.
+        let none = AppModel.clearPlan(["g2", "g6"], grants: grants, listed: [:])
+        XCTAssertTrue(none.ending.isEmpty)
+        XCTAssertTrue(none.keptFor.isEmpty)
+    }
+
+    /// The words of the section, the same as Android's.
+    func testTheRemovedSectionsWords() {
+        XCTAssertEqual(ConnectionGroupWords.fromRemoved, "From removed tafs")
+        XCTAssertEqual(ConnectionGroupWords.clearRemoved, "Clear these connections")
+        XCTAssertEqual(ConnectionGroupWords.clearTitle(1), "Clear 1 connection from removed tafs?")
+        XCTAssertEqual(ConnectionGroupWords.clearTitle(2), "Clear 2 connections from removed tafs?")
+        XCTAssertEqual(ConnectionGroupWords.clearBody, "Each is signed out at its vendor. One another taf's Card uses is kept.")
+        XCTAssertEqual(ConnectionGroupWords.cleared(done: 1, kept: 1, keptFor: ["Chargebacks"], left: 0), "Cleared 1. Kept 1 for Chargebacks, whose Card uses it.")
+        XCTAssertEqual(ConnectionGroupWords.cleared(done: 2, kept: 0, keptFor: [], left: 1), "Cleared 2. 1 couldn't be cleared. Try again.")
+        XCTAssertEqual(ConnectionGroupWords.cleared(done: 0, kept: 2, keptFor: ["Refunds", "Bills", "Refunds", " "], left: 0), "Kept 2 for Refunds and Bills, whose Cards use them.")
+        XCTAssertEqual(ConnectionGroupWords.keptLine(1, []), "Kept 1 for another taf, whose Card uses it.")
+        XCTAssertEqual(ConnectionGroupWords.usedBy(["Chargebacks"]), "Kept: Chargebacks's Card uses it")
+        XCTAssertEqual(ConnectionGroupWords.usedBy(["Refunds", "Bills", "Save"]), "Kept: Refunds, Bills and Save's Cards use it")
+        XCTAssertNil(ConnectionGroupWords.usedBy([]))
+        XCTAssertNil(ConnectionGroupWords.usedBy([""]))
+    }
+
+    /// planque keeps the name of the taf a connection was made for: what a removed taf's row is called.
+    func testAGrantKeepsItsTafsName() throws {
+        let json = #"{"id":"g2","status":"connected","text":"","digest":"d","vendor":"Stripe","agent_name":"Old refunds","request":{"server":"https://mcp.stripe.com","agent":"gone-1","tools":[]},"events":[]}"#
+        XCTAssertEqual(try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(json.utf8)).agentName, "Old refunds")
+        XCTAssertNil(try g("g1", #"{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}"#).agentName)
+    }
 }

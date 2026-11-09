@@ -389,17 +389,55 @@ extension TafsCloud {
                 grant = try c.decodeIfPresent(String.self, forKey: .grant)
             }
         }
+        /// A live taf whose Card in force still uses a removed taf's connection, by tafs cloud's name.
+        struct UsedBy: Decodable, Equatable {
+            var taf = ""
+            var name = ""
+            enum CodingKeys: String, CodingKey { case taf, name }
+            init(taf: String = "", name: String = "") { self.taf = taf; self.name = name }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                taf = try c.decodeIfPresent(String.self, forKey: .taf) ?? ""
+                name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+            }
+        }
+        /// A removed taf's live connection, with the live tafs whose Cards still use it: Clear keeps those.
+        struct RemovedGrant: Decodable, Equatable {
+            let grant: String
+            var usedBy: [UsedBy] = []
+            enum CodingKeys: String, CodingKey { case grant, usedBy = "used_by" }
+            init(grant: String, usedBy: [UsedBy] = []) { self.grant = grant; self.usedBy = usedBy }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                grant = try c.decode(String.self, forKey: .grant)
+                usedBy = try c.decodeIfPresent([UsedBy].self, forKey: .usedBy) ?? []
+            }
+        }
+        /// A taf removed since, as tafs cloud names it from KIFF's archived agents.
+        struct RemovedTaf: Decodable, Equatable {
+            let agent: String
+            var removedAt: String?
+            /// Its live connections. Only with this phone's signed grants read, and only when tafs
+            /// cloud could read planque and KIFF's Cards: nil means no Clear.
+            var grants: [RemovedGrant]?
+            enum CodingKeys: String, CodingKey { case agent, removedAt = "removed_at", grants }
+        }
         var apps: [App] = []
+        /// The tafs removed since, newest first: a grant whose `request.agent` is one is from a
+        /// removed taf. Only for someone who manages Cards; empty otherwise, or from a tafs
+        /// cloud without it.
+        var removedTafs: [RemovedTaf] = []
         /// Coach can draft a vendor that isn't listed.
         var byKey = false
         /// The managed provider this page lists apps of, and its next page's cursor: none on
         /// the last page.
         var provider: String?
         var nextCursor: String?
-        enum CodingKeys: String, CodingKey { case apps, byKey = "by_key", provider, nextCursor = "next_cursor" }
+        enum CodingKeys: String, CodingKey { case apps, removedTafs = "removed_tafs", byKey = "by_key", provider, nextCursor = "next_cursor" }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             apps = try c.decodeIfPresent([App].self, forKey: .apps) ?? []
+            removedTafs = try c.decodeIfPresent([RemovedTaf].self, forKey: .removedTafs) ?? []
             byKey = try c.decodeIfPresent(Bool.self, forKey: .byKey) ?? false
             provider = try c.decodeIfPresent(String.self, forKey: .provider)
             nextCursor = try c.decodeIfPresent(String.self, forKey: .nextCursor)
@@ -431,8 +469,10 @@ extension TafsCloud {
     }
 
     /// One page of Connect apps, filtered by `q` when given; the next page with the
-    /// provider and cursor the last one gave.
-    func connectApps(_ q: String? = nil, provider: String? = nil, cursor: String? = nil) async throws -> ConnectApps {
+    /// provider and cursor the last one gave. With `proof`, this phone's signed grants read,
+    /// tafs cloud also lists each removed taf's connections with the live tafs whose Cards
+    /// still use them (`removed_tafs[].grants`).
+    func connectApps(_ q: String? = nil, provider: String? = nil, cursor: String? = nil, proof: String? = nil) async throws -> ConnectApps {
         var items: [URLQueryItem] = []
         if let q = q?.trimmingCharacters(in: .whitespaces), !q.isEmpty { items.append(URLQueryItem(name: "q", value: q)) }
         if let provider { items.append(URLQueryItem(name: "provider", value: provider)) }
@@ -441,7 +481,7 @@ extension TafsCloud {
         c.queryItems = items.isEmpty ? nil : items
         // A cursor may hold + or /: encoded as a value, never as a separator.
         let query = (c.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")).map { "?" + $0 } ?? ""
-        return try await send("GET", "/v1/connect/apps" + query)
+        return try await send("GET", "/v1/connect/apps" + query, headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
     }
 }
 
