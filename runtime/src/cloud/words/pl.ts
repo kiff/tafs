@@ -136,6 +136,8 @@ export const pl: Words = {
   push_ended_done: "Gotowe. Otwórz tryb Coach, aby przeczytać, jak poszło.",
   failing_one: "Zaplanowane uruchomienie nie mogło wystartować. Spróbuje ponownie o następnej porze. Otwórz je, aby zobaczyć dlaczego.",
   failing_many: (n) => `Ostatnie zaplanowane uruchomienia (${n}) nie mogły wystartować. Spróbuje ponownie o każdej zaplanowanej porze. Otwórz je, aby zobaczyć dlaczego.`,
+  failing_unfinished_one: "Zaplanowane uruchomienie zatrzymało się w połowie. To, nad czym pracowało, nie zostanie ponowione. Otwórz je, aby zobaczyć, co zrobiło.",
+  failing_unfinished_many: (n) => `Ostatnie zaplanowane uruchomienia (${n}) nie zostały ukończone. To, nad czym pracowało ostatnie, nie zostanie ponowione. Otwórz je, aby zobaczyć, co zrobiło.`,
   failing_follow_up: "Przypomnienie, które sobie ustawił, nie zostało wykonane i nie będzie ponawiane. Otwórz je, aby zobaczyć dlaczego.",
   failing_once: "Jednorazowe zaplanowane uruchomienie nie mogło wystartować i nie będzie ponawiane. Otwórz je, aby zobaczyć dlaczego.",
   waited_follow_up: "Przypomnienie, które sobie ustawił, nie zostało wykonane: Twoje tafs czekały na kredyty. Nie będzie ponawiane. Otwórz je, aby zobaczyć więcej.",

@@ -136,6 +136,8 @@ export const en = {
   push_ended_done: "It finished. Open Coach mode to read how it went.",
   failing_one: "Its scheduled run couldn't start. It tries again at its next time. Open it to see why.",
   failing_many: (n: number) => `Its last ${n} scheduled runs couldn't start. It tries again at each scheduled time. Open it to see why.`,
+  failing_unfinished_one: "Its scheduled run stopped partway. What it was working on won't be tried again. Open it to see what it did.",
+  failing_unfinished_many: (n: number) => `Its last ${n} scheduled runs didn't finish. What the latest was working on won't be tried again. Open it to see what it did.`,
   failing_follow_up: "A follow-up it set for itself didn't run, and won't try again. Open it to see why.",
   failing_once: "Its one-time scheduled run couldn't start, and won't try again. Open it to see why.",
   waited_follow_up: "A follow-up it set for itself didn't run: your tafs were waiting for credits. It won't try again. Open it to see more.",

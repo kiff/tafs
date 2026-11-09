@@ -136,6 +136,8 @@ export const es: Words = {
   push_ended_done: "Terminó. Abre el modo Coach para leer cómo fue.",
   failing_one: "Su ejecución programada no pudo empezar. Lo vuelve a intentar a su próxima hora. Ábrelo para ver por qué.",
   failing_many: (n) => `Sus últimas ${n} ejecuciones programadas no pudieron empezar. Lo vuelve a intentar a cada hora programada. Ábrelo para ver por qué.`,
+  failing_unfinished_one: "Su ejecución programada se detuvo a medias. Aquello en lo que trabajaba no se volverá a intentar. Ábrelo para ver qué hizo.",
+  failing_unfinished_many: (n) => `Sus últimas ${n} ejecuciones programadas no terminaron. Aquello en lo que trabajaba la última no se volverá a intentar. Ábrelo para ver qué hizo.`,
   failing_follow_up: "Un seguimiento que se programó no se ejecutó y no se volverá a intentar. Ábrelo para ver por qué.",
   failing_once: "Su ejecución programada única no pudo empezar y no se volverá a intentar. Ábrelo para ver por qué.",
   waited_follow_up: "Un seguimiento que se programó no se ejecutó: tus tafs esperaban créditos. No se volverá a intentar. Ábrelo para ver más.",
