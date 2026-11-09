@@ -14,6 +14,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
+import { type Lang, languageFrom } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
@@ -731,7 +732,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own), skipped: skippedOf(fired, zone, now) };
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event)), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired, zone, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
     // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
@@ -748,7 +749,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     ]);
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
     const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC", others || await managesTaf(event, me, taf, deps).catch(() => false));
-    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? []);
+    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? [], langOf(event));
   }
   if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
     // A follow-up the taf set itself, removed by someone who manages it (docs/api.md, "The knob"). Only a
@@ -3256,7 +3257,7 @@ async function runsPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps
   const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, sent.filter((s) => s.status === "not_sent").map((s) => s.run)).catch(() => new Set<string>()) : new Set<string>();
   const now = deps.now?.() ?? new Date();
   const last = selected.at(-1);
-  return conditionalPage(event, { ...workOf(selected, me.timeZone ?? "UTC", now, sent, again),
+  return conditionalPage(event, { ...workOf(selected, me.timeZone ?? "UTC", now, sent, again, undefined, langOf(event)),
     ...(remaining.length > limit && last ? { next_cursor: Buffer.from(JSON.stringify({ scope, at: last.created, id: last.id })).toString("base64url") } : {}),
     title: "Its work", more_title: "Show all runs", ...(remaining.length <= limit ? { end_words: "Nothing older in the retained runs" } : {}) });
 }
@@ -4386,7 +4387,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
     const answered = await oldFormAnswer(event, me, taf, owner, deps);
-    if (answered) return answeredStream(me, taf, answered, deps, await titlesOf(event, me, taf, deps));
+    if (answered) return answeredStream(me, taf, answered, deps, await titlesOf(event, me, taf, deps), langOf(event));
     timing.mark("answer");
     const lines = await takeCoachLines(me, taf, deps);
     timing.mark("lines");
@@ -4419,7 +4420,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       throw err;
     }
     // Once the answer ends, what the person wrote that waited for it goes (docs/chat.md).
-    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps))), () => settleChats(event, me, taf, deps));
+    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps), "", langOf(event))), () => settleChats(event, me, taf, deps));
     return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
@@ -4459,7 +4460,7 @@ async function driveStreamRoute(event: HTTPEvent, drive: string, deps: Deps): Pr
  * A card answered from the old form, streamed as a message would be: its chat, the message
  * taken, then the run that waited going on, as a resumed run's stream shows it.
  */
-async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: Deps, titles: ToolTitles): Promise<StreamResult> {
+async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: Deps, titles: ToolTitles, lang: Lang = "en"): Promise<StreamResult> {
   const run = deps.agents.resumeRun(me.tenantID, taf.id, answered.id, 0, ownerKey(me));
   let first: IteratorResult<RunStreamEvent>;
   try {
@@ -4470,7 +4471,7 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
   async function* body(): AsyncGenerator<string> {
     yield sse("session", { session: answered.session, new_session: false, run: answered.id });
     yield sse("taken", {});
-    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), answered.id);
+    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), answered.id, lang);
   }
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: body() };
 }
@@ -4599,7 +4600,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID), () => settleChats(event, me, taf, deps));
+  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID, langOf(event)), () => settleChats(event, me, taf, deps));
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
 }
 
@@ -4739,7 +4740,7 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
   };
 }
 
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = ""): AsyncGenerator<string> {
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en"): AsyncGenerator<string> {
   const steps = new Steps(titles);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
@@ -4834,7 +4835,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         heldFailures.clear();
         // A run kiff/agents stopped with a code (`ai_unavailable`) ends with it and its words, for the apps to show as
         // they are; any other failure as before.
-        const coded = runFailure(d);
+        const coded = runFailure(d, lang);
         return given + sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done), ...(coded ?? {}) } : {}) });
       }
       default:
@@ -5243,7 +5244,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const words = tafPurpose(t, jobMaybe(t));
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
-    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now) : undefined;
+    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now, langOf(event)) : undefined;
     return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
@@ -5446,6 +5447,11 @@ function minutes(field: string): number[] | undefined {
     }
   }
   return [...out].sort((a, b) => a - b);
+}
+
+/** The person's language for this request: their app's own, sent as Accept-Language (docs/languages.md). */
+function langOf(event: HTTPEvent): Lang {
+  return languageFrom(header(event, "accept-language"));
 }
 
 function header(event: HTTPEvent, name: string): string {

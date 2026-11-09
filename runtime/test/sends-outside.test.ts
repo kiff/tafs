@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NOTE_CLAIM_MS, noteSendingOutside, notedSendingOutside, sendingOutside, sendsOutsideKey, undisclosedSending } from "../src/cloud/sends-outside.js";
+import { NOTE_CLAIM_MS, NOTE_RELEASE_MARGIN_MS, noteSendingOutside, notedSendingOutside, sendingOutside, sendsOutsideKey, undisclosedSending } from "../src/cloud/sends-outside.js";
 import { memoryCoach } from "./fakes.js";
 
 const NOW = new Date("2026-11-09T12:00:00Z");
@@ -61,7 +61,7 @@ describe("tools that send outside the company (gap 14)", () => {
     const key = `${sendsOutsideKey("t1", "rae")}#claim`;
     let t = 0;
     // The write ran past its claim: the claim isn't given back, it expires on its own.
-    const slow = () => { const at = t; t += NOTE_CLAIM_MS; return at; };
+    const slow = () => { const at = t; t += NOTE_CLAIM_MS - NOTE_RELEASE_MARGIN_MS; return at; };
     await noteSendingOutside(store, "t1", "rae", "g_mail", { operations: [op("send_email", "sends", true)] }, NOW, async () => undefined, slow);
     expect(store.held.has(key)).toBe(true);
     expect(await notedSendingOutside(store, "t1", "rae")).toEqual(["send_email"]);

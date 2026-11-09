@@ -109,19 +109,19 @@ describe("the thread as one ordered list", () => {
 describe("a failed run's code", () => {
   const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
   it("makes the request's line kiff/agents' words, with the code beside them; a failure with no code reads as before", () => {
-    expect(requestOf(run({ status: "ERROR", error: words, code: "ai_unavailable" }), "UTC", NOW)).toMatchObject({ state: "failed", line: words, code: "ai_unavailable" });
+    expect(requestOf(run({ status: "ERROR", error: words, code: "new_code" }), "UTC", NOW)).toMatchObject({ state: "failed", line: words, code: "new_code" });
     const plain = requestOf(run({ status: "ERROR", error: "Stripe said no." }), "UTC", NOW);
     expect(plain).toMatchObject({ state: "failed", line: "It failed: Stripe said no." });
     expect(plain).not.toHaveProperty("code");
   });
 
   it("is passed on only for an ERROR run with a code and words, in one line of at most 400 characters", () => {
-    expect(runFailure({ status: "ERROR", error: `  ${words}\n`, code: "ai_unavailable" })).toEqual({ code: "ai_unavailable", words });
+    expect(runFailure({ status: "ERROR", error: `  ${words}\n`, code: "new_code" })).toEqual({ code: "new_code", words });
     expect(runFailure({ status: "ERROR", error: "a\n\nb", code: "new_code" })).toEqual({ code: "new_code", words: "a b" });
-    expect(runFailure({ status: "ERROR", error: "x".repeat(500), code: "ai_unavailable" })!.words).toHaveLength(400);
+    expect(runFailure({ status: "ERROR", error: "x".repeat(500), code: "new_code" })!.words).toHaveLength(400);
     expect(runFailure({ status: "COMPLETED", error: words, code: "ai_unavailable" })).toBeUndefined();
     expect(runFailure({ status: "ERROR", error: words })).toBeUndefined();
-    expect(runFailure({ status: "ERROR", error: "  ", code: "ai_unavailable" })).toBeUndefined();
+    expect(runFailure({ status: "ERROR", error: "  ", code: "new_code" })).toBeUndefined();
     expect(runFailure({ status: "ERROR", error: words, code: "Ai-Unavailable" })).toBeUndefined();
   });
 });

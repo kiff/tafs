@@ -1,0 +1,30 @@
+import type { Words } from "./en.js";
+
+/** French (vous), in the glossary's terms (docs/languages.md). */
+export const fr: Words = {
+  work_working: "En cours",
+  work_waiting_approval: "En attente de votre approbation",
+  work_waiting_answer: "En attente d'une réponse",
+  work_waiting_event: (event) => `En attente de l'événement ${event} de l'app`,
+  work_done_at: (time) => `Terminé à ${time}`,
+  work_stopped: "Arrêté",
+  work_failed: "Échec",
+  work_failed_because: (why) => `Échec : ${why}`,
+  work_needs_you: "Cela demande votre attention.",
+  work_retry_at: (time, of) => `Il s'est arrêté en cours de travail. Nouvel essai à ${time}${of}.`,
+  work_retry_soon: (of) => `Il s'est arrêté en cours de travail. Nouvel essai bientôt${of}.`,
+  work_try_of: (n, of) => `, ${n} sur ${of}`,
+  work_replied_at: (time) => `Répondu à ${time}`,
+  work_reply_not_sent: (why) => `Réponse non envoyée : ${why}`,
+  work_provider_refused: "le fournisseur ne l'a pas acceptée",
+  work_skipped_busy: (time) => `Exécution de ${time} sautée : la précédente était encore en cours`,
+  work_skipped_late: (time) => `Exécution de ${time} sautée : elle est arrivée trop tard`,
+  work_halted: "Bloqué · débloquez-le depuis Bloquer",
+  work_needs_you_count: (n, form) => (form === "one" ? `${n} demande vous attend` : `${n} demandes vous attendent`),
+  work_paused: "En pause",
+  work_from_chat: "Travaille depuis son chat",
+  work_next_run: (time) => `Prochaine exécution ${time}`,
+  work_last_done: (time) => `Dernière exécution terminée à ${time}`,
+  work_nothing_yet: "Rien pour l'instant",
+  code_ai_unavailable: "Notre fournisseur d'IA ne nous répond pas pour le moment : cela s'est donc arrêté, sans utiliser aucun de vos crédits. Le problème vient de nous, pas de vous : réessayez un peu plus tard.",
+};

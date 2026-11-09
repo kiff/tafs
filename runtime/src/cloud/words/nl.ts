@@ -1,0 +1,30 @@
+import type { Words } from "./en.js";
+
+/** Dutch (je), in the glossary's terms (docs/languages.md). */
+export const nl: Words = {
+  work_working: "Bezig",
+  work_waiting_approval: "Wacht op je goedkeuring",
+  work_waiting_answer: "Wacht op een antwoord",
+  work_waiting_event: (event) => `Wacht op het ${event}-event van de app`,
+  work_done_at: (time) => `Klaar om ${time}`,
+  work_stopped: "Gestopt",
+  work_failed: "Mislukt",
+  work_failed_because: (why) => `Mislukt: ${why}`,
+  work_needs_you: "Dit vraagt je aandacht.",
+  work_retry_at: (time, of) => `Het stopte tijdens het werk. Nieuwe poging om ${time}${of}.`,
+  work_retry_soon: (of) => `Het stopte tijdens het werk. Binnenkort een nieuwe poging${of}.`,
+  work_try_of: (n, of) => `, ${n} van ${of}`,
+  work_replied_at: (time) => `Beantwoord om ${time}`,
+  work_reply_not_sent: (why) => `Antwoord niet verzonden: ${why}`,
+  work_provider_refused: "de provider nam het niet aan",
+  work_skipped_busy: (time) => `Run van ${time} overgeslagen: de vorige liep nog`,
+  work_skipped_late: (time) => `Run van ${time} overgeslagen: die kwam te laat`,
+  work_halted: "Stilgezet · hervat via Stilzetten",
+  work_needs_you_count: (n, form) => (form === "one" ? `${n} verzoek wacht op jou` : `${n} verzoeken wachten op jou`),
+  work_paused: "Gepauzeerd",
+  work_from_chat: "Werkt vanuit de chat",
+  work_next_run: (time) => `Volgende run ${time}`,
+  work_last_done: (time) => `Laatst klaar om ${time}`,
+  work_nothing_yet: "Nog niets",
+  code_ai_unavailable: "Onze AI-provider bedient ons op dit moment niet, dus dit is gestopt en er zijn geen credits van je gebruikt. Het ligt aan ons, niet aan jou: probeer het iets later opnieuw.",
+};

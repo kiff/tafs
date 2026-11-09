@@ -1,3 +1,4 @@
+import type { Lang } from "./words/index.js";
 /**
  * One request, from the dial's rim (docs/api.md, "A request"): what started it, what it did step by
  * step, where its result went and what comes next, every line and time in tafs cloud's words and the
@@ -47,8 +48,8 @@ function callsOf(body: unknown): Array<{ tool: string; error: boolean; notMade: 
   return waited.filter((w) => typeof w?.tool === "string").map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true, ...(typeof w.input_hash === "string" && w.input_hash ? { inputHash: w.input_hash } : {}) }));
 }
 
-export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>(), own: DeliveryView[] = []): RequestDetail {
-  const view = requestOf(r, zone, now, sent, again, own);
+export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>(), own: DeliveryView[] = [], lang: Lang = "en"): RequestDetail {
+  const view = requestOf(r, zone, now, sent, again, own, lang);
   const from = fromOf(r);
   const at = (t: string) => timeIn(t, zone, now);
   const steps: RequestStep[] = [{ label: "Received", line: `${from}, ${at(r.created)}`, state: "done" }];

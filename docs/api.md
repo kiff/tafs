@@ -18,6 +18,12 @@ the two streams, and `lambda.ts` wires the stores.
   only the tafs they made.
 - A few routes take no sign-in; each says what checks it instead.
 
+**The person's language:** the apps send their own resolved languages as `Accept-Language`, as
+they do to KIFF. tafs cloud writes the lines it words for people in the best of its eight languages,
+else English ([languages.md](languages.md)): so far a taf's work lines and requests (`…/work`, the request
+page, the home list's line), the skipped firings, and a run code's `words` (`ai_unavailable`) on a chat's
+`end`. The rest of its lines follow. An `error` stays in English; `words` beside it are the person's.
+
 Capabilities are KIFF's: `cards.manage`, `holds.answer`, `members.manage`,
 `billing.manage`, `account.delete` ([accounts.md](accounts.md#roles-and-what-a-person-may-do)).
 

@@ -1,0 +1,30 @@
+import type { Words } from "./en.js";
+
+/** Polish (Ty), in the glossary's terms (docs/languages.md). */
+export const pl: Words = {
+  work_working: "W toku",
+  work_waiting_approval: "Czeka na Twoje zatwierdzenie",
+  work_waiting_answer: "Czeka na odpowiedź",
+  work_waiting_event: (event) => `Czeka na zdarzenie ${event} z aplikacji`,
+  work_done_at: (time) => `Gotowe o ${time}`,
+  work_stopped: "Zatrzymane",
+  work_failed: "Nie powiodło się",
+  work_failed_because: (why) => `Nie powiodło się: ${why}`,
+  work_needs_you: "Wymaga Twojej uwagi.",
+  work_retry_at: (time, of) => `Zatrzymało się w trakcie pracy. Ponowna próba o ${time}${of}.`,
+  work_retry_soon: (of) => `Zatrzymało się w trakcie pracy. Ponowna próba wkrótce${of}.`,
+  work_try_of: (n, of) => `, ${n} z ${of}`,
+  work_replied_at: (time) => `Odpowiedziano o ${time}`,
+  work_reply_not_sent: (why) => `Nie wysłano odpowiedzi: ${why}`,
+  work_provider_refused: "dostawca jej nie przyjął",
+  work_skipped_busy: (time) => `Pominięto uruchomienie o ${time}: poprzednie jeszcze trwało`,
+  work_skipped_late: (time) => `Pominięto uruchomienie o ${time}: przyszło za późno`,
+  work_halted: "Zablokowane · odblokuj w Zablokuj",
+  work_needs_you_count: (n, form) => (form === "one" ? `${n} prośba czeka na Ciebie` : form === "few" ? `${n} prośby czekają na Ciebie` : `${n} próśb czeka na Ciebie`),
+  work_paused: "Wstrzymane",
+  work_from_chat: "Pracuje ze swojego czatu",
+  work_next_run: (time) => `Następne uruchomienie ${time}`,
+  work_last_done: (time) => `Ostatnio gotowe o ${time}`,
+  work_nothing_yet: "Jeszcze nic",
+  code_ai_unavailable: "Nasz dostawca AI nie obsługuje nas w tej chwili, więc to się zatrzymało i nie zużyło żadnych Twoich kredytów. To po naszej stronie, nie Twojej: spróbuj ponownie trochę później.",
+};

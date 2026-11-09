@@ -16,6 +16,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [chat.md](chat.md) | A taf's chat: sending, the streamed answer, the work block, held calls in the chat, steering, Stop, chats and archives |
 | [coach.md](coach.md) | Coach mode: making a taf, connecting tools, improving a taf, versions, trials, and Coach's own tools |
 | [approvals.md](approvals.md) | Held calls: how they reach the owner, how an answer is signed, what happens next, halting |
+| [languages.md](languages.md) | The eight languages, the glossary every surface uses, and how the person's language is chosen |
 | [accounts.md](accounts.md) | Signing in, roles, people and groups, sharing a taf, usage, plans and purchases, the time zone, deleting the account |
 | [attachments.md](attachments.md) | Photos and files on a message |
 | [coach-drives-the-app.md](coach-drives-the-app.md) | Coach drives the app, for the person running tafs: starting and stopping a drive, what Coach can't do, and what it never sees |
