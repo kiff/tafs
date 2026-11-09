@@ -2564,6 +2564,120 @@ describe("a schedule whose runs keep failing to start", () => {
     }
   });
 
+  it("says a later partway stop in the same run of failures again, at most once every six hours for that schedule", async () => {
+    const hours = (h: number) => new Date(Date.parse(SINCE) + h * 3600_000).toISOString();
+    const stopped = (firings: number, last: string) => ({ since: SINCE, firings, run: `run_${firings}`, outcome: "failed_unfinished", last });
+    const { w, deps } = await setUp(stopped(1, SINCE));
+    const set = (id: string, failing: ReturnType<typeof stopped>) => w.agents.schedules.set(`t_acme|${id}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, id, failing });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    // Another partway stop an hour later, and one just under six: both quiet.
+    set(RAE, stopped(2, hours(1)));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    set(RAE, stopped(3, hours(5.9)));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(1);
+    // Six hours on: said again, once, in the same words with its count.
+    set(RAE, stopped(4, hours(6)));
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(bodyOf(w.pushed[1]!.n)).toBe(FAILING_WORDS.unfinishedMany(4));
+    set(RAE, stopped(5, hours(11)));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    set(RAE, stopped(6, hours(12.5)));
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(w.pushed).toHaveLength(3);
+    // The six hours count for each schedule: the taf's other schedule says its own partway stop.
+    set(`${RAE}-t2`, stopped(1, hours(12.6)));
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: `${RAE}-t2` }]);
+    expect(w.pushed).toHaveLength(4);
+    // A kiff/agents that sends no `last` says the first one only.
+    const older = await setUp({ since: SINCE, firings: 1, outcome: "failed_unfinished" });
+    expect(await sweepFailingSchedules(older.deps)).toHaveLength(1);
+    older.w.agents.schedules.set(`t_acme|${RAE}`, { ...older.w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 9, outcome: "failed_unfinished" } });
+    expect(await sweepFailingSchedules(older.deps)).toEqual([]);
+  });
+
+  it("says once when a taf's runs fail one after another, for each bad spell, and nothing for one at risk", async () => {
+    const { w, deps } = await setUp();
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const next = (iso: string) => w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, next: iso });
+    const ended = (id: string, m: number, status: "ERROR" | "COMPLETED") => w.agents.runs.unshift({ tenant: "t_acme", id, agent: RAE, session: "s", trigger: "schedule", status, ...(status === "COMPLETED" ? { stop: "answered" } : { error: "the run failed" }), cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+    w.agents.runs.length = 0;
+    // The first pass only notes the schedule's next time: nothing has fired since a pass before it.
+    next(at(15));
+    ended("f1", -40, "ERROR"); ended("f2", -25, "ERROR"); ended("f3", -10, "ERROR");
+    expect(await sweepHealth(deps)).toEqual([]);
+    // Before its next time comes, nothing is read.
+    w.now = new Date(AT.getTime() + 10 * 60_000);
+    const runsRead = vi.spyOn(w.agents.api, "runs");
+    expect(await sweepHealth(deps)).toEqual([]);
+    expect(runsRead).not.toHaveBeenCalled();
+    // It fired: its last three runs failed, and the phones that answer hear once.
+    w.now = new Date(AT.getTime() + 16 * 60_000);
+    next(at(30));
+    expect(await sweepHealth(deps)).toEqual([{ tenant: "t_acme", taf: RAE }]);
+    expect(runsRead).toHaveBeenCalledTimes(1);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", payload: {
+      aps: { alert: { title: "Rae", body: "Its last 3 runs failed. Open it to see why." }, "interruption-level": "time-sensitive" }, open: "taf", taf_id: RAE,
+    } } });
+    // The same spell, a fourth failure later: nothing more.
+    w.now = new Date(AT.getTime() + 31 * 60_000);
+    next(at(45));
+    ended("f4", 30, "ERROR");
+    expect(await sweepHealth(deps)).toEqual([]);
+    // It recovers, then fails three times again: another spell, said once more.
+    w.now = new Date(AT.getTime() + 91 * 60_000);
+    next(at(105));
+    ended("ok", 45, "COMPLETED"); ended("g1", 60, "ERROR"); ended("g2", 75, "ERROR"); ended("g3", 90, "ERROR");
+    expect(await sweepHealth(deps)).toHaveLength(1);
+    expect(w.pushed).toHaveLength(2);
+    w.now = new Date(AT.getTime() + 106 * 60_000);
+    next(at(120));
+    expect(await sweepHealth(deps)).toEqual([]);
+
+    // At risk (two of its runs failed, not in a row) shows in the app and sends nothing.
+    const risk = await setUp();
+    risk.w.agents.runs.length = 0;
+    const put = (id: string, m: number, status: "ERROR" | "COMPLETED") => risk.w.agents.runs.unshift({ tenant: "t_acme", id, agent: RAE, session: "s", trigger: "schedule", status, ...(status === "COMPLETED" ? { stop: "answered" } : {}), cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+    put("a", -40, "ERROR"); put("b", -30, "COMPLETED"); put("c", -20, "ERROR"); put("d", -10, "COMPLETED");
+    risk.w.agents.schedules.set(`t_acme|${RAE}`, { ...risk.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+    expect(await sweepHealth(risk.deps)).toEqual([]);
+    expect(await sweepHealth(risk.deps)).toEqual([]);
+    expect(risk.w.pushed).toHaveLength(0);
+  });
+
+  it("says nothing of a taf's health while it's halted or paused, nor what the failing alert already says", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const failing3 = async () => {
+      const x = await setUp();
+      x.w.agents.runs.length = 0;
+      for (const [i, m] of [-40, -25, -10].entries()) x.w.agents.runs.unshift({ tenant: "t_acme", id: `f${i}`, agent: RAE, session: "s", trigger: "schedule", status: "ERROR", cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+      x.w.agents.schedules.set(`t_acme|${RAE}`, { ...x.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+      expect(await sweepHealth(x.deps)).toEqual([]); // the first pass notes its next time
+      return x;
+    };
+    // Halted: nothing, and it's said once the halt is over.
+    const halted = await failing3();
+    halted.w.agents.halts.set(`t_acme|${RAE}`, { on: true, at: at(-1) });
+    expect(await sweepHealth(halted.deps)).toEqual([]);
+    halted.w.agents.halts.delete(`t_acme|${RAE}`);
+    expect(await sweepHealth(halted.deps)).toHaveLength(1);
+    // Its schedule off: nothing.
+    const off = await failing3();
+    off.w.agents.schedules.set(`t_acme|${RAE}`, { ...off.w.agents.schedules.get(`t_acme|${RAE}`)!, enabled: false });
+    expect(await sweepHealth(off.deps)).toEqual([]);
+    // A run of failures at its schedule is the failing alert's to say: this sweep adds nothing for it.
+    const streak = await setUp({ since: SINCE, firings: 4, outcome: "failed_unworked" });
+    streak.w.agents.runs.length = 0;
+    streak.w.agents.firings.set(`t_acme|${RAE}`, [-10, -25, -40, -55].map((m) => ({ due: at(m), at: at(m), outcome: "failed_unworked" })));
+    streak.w.agents.schedules.set(`t_acme|${RAE}`, { ...streak.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+    expect(await sweepHealth(streak.deps)).toEqual([]);
+    expect(await sweepHealth(streak.deps)).toEqual([]);
+    expect(await sweepFailingSchedules(streak.deps)).toHaveLength(1);
+    expect(streak.w.pushed).toHaveLength(1);
+  });
+
   it("says nothing for a schedule that works, nor for a taf being removed", async () => {
     const { w, deps } = await setUp();
     expect(await sweepFailingSchedules(deps)).toEqual([]);
