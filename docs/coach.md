@@ -490,7 +490,7 @@ connection's profile (KIFF's `kiff.profile.v1`, inside the grant's signed reques
 an operation that `sends`, with `resource.outside`, sends to people who may be outside the company. A reviewed
 catalog entry's profile is the reviewed one, and one Coach drafted counts too when it says so, since that can
 only add a disclosure. tafs cloud reads grants only on the phone's Approve, so each Approve of a connection, or
-of its Card, notes its sending tools for the taf's KIFF agent, replacing that connection's earlier note. Coach's
+of its Card, notes its sending tools for the taf's KIFF agent, replacing that connection's earlier note. The write holds a claim on the note for at most 10 seconds, so two Approves of the same taf at once both keep their entries; one that finds the claim held waits and tries again, and past its tries the Approve fails, to be tapped again. Coach's
 result is then checked against the note: a new taf, or an Improve, whose taf has a noted tool that neither its
 `disclose` nor the taf's existing disclosure names is refused, naming each tool ("disclose doesn't name
 send_email, which sends to people outside the company …"), and Coach sends it again with the tool named. A note
