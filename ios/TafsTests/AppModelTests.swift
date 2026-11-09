@@ -49,13 +49,13 @@ final class AppModelTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)
 
-        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
+        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .eur(480)), by: taf.id)
         XCTAssertEqual(model.held.count, 1)
         XCTAssertEqual(model.taf(taf.id)?.state, .waiting)
 
         await model.answer(model.held[0], with: .approveOnce)
         XCTAssertTrue(model.held.isEmpty)
-        XCTAssertEqual(model.taf(taf.id)?.used["refund"], .usd(480))
+        XCTAssertEqual(model.taf(taf.id)?.used["refund"], .eur(480))
         XCTAssertEqual(model.taf(taf.id)?.state, .working)
         XCTAssertEqual(model.record.first?.kind, .approved)
         XCTAssertNotNil(model.record.first?.signature, "an approval is signed on the phone")
@@ -64,7 +64,7 @@ final class AppModelTests: XCTestCase {
     func testRefusedAnswerDrawsNothing() async {
         let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)
-        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
+        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .eur(480)), by: taf.id)
         await model.answer(model.held[0], with: .refuse)
         XCTAssertNil(model.taf(taf.id)?.used["refund"])
         XCTAssertEqual(model.record.first?.kind, .refused)
@@ -74,7 +74,7 @@ final class AppModelTests: XCTestCase {
         var now = Date()
         let model = AppModel(signer: StubSigner(), clock: { now })
         let taf = await startedRefunds(model)
-        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
+        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .eur(480)), by: taf.id)
         now = now.addingTimeInterval(11 * 60)
         await model.answer(model.held[0], with: .approveOnce)
         XCTAssertTrue(model.held.isEmpty)
@@ -85,13 +85,34 @@ final class AppModelTests: XCTestCase {
     func testRevokeStopsAndDropsWaitingCalls() async {
         let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)
-        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
+        model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .eur(480)), by: taf.id)
         await model.revoke(taf.id)
         XCTAssertTrue(model.held.isEmpty)
         XCTAssertEqual(model.taf(taf.id)?.state, .revoked)
 
-        model.propose(ProposedAction(action: "refund", summary: "Refund #4510", amount: .usd(10)), by: taf.id)
+        model.propose(ProposedAction(action: "refund", summary: "Refund #4510", amount: .eur(10)), by: taf.id)
         XCTAssertEqual(model.record.first?.kind, .refused, "nothing is allowed after a revoke")
+    }
+
+    /// The sample is in euros, with the same numbers as Android's and kiff.dev/tafs.
+    func testTheSampleIsInEurosWithAndroidsNumbers() throws {
+        for t in TafTemplates.all {
+            for money in t.rules.flatMap({ [$0.perAction, $0.perWindow] }).compactMap({ $0 }) + t.script.compactMap(\.amount) {
+                XCTAssertEqual(money.currency, "EUR", "\(t.key)")
+            }
+        }
+        let refund = try XCTUnwrap(TafTemplates.refunds.rules.first { $0.action == "refund" })
+        XCTAssertEqual(refund.perAction, .eur(150))
+        XCTAssertEqual(refund.perWindow, .eur(2_000))
+        let bills = try XCTUnwrap(TafTemplates.template("billpay")?.rules.first { $0.action == "pay_bill" })
+        XCTAssertEqual(bills.perAction, .eur(5_000))
+        XCTAssertEqual(bills.perWindow, .eur(25_000))
+        XCTAssertEqual(bills.window, .week)
+        XCTAssertEqual(bills.window.label, "a week")
+        let loss = try XCTUnwrap(TafTemplates.template("chargebacks")?.rules.first { $0.action == "accept_dispute" })
+        XCTAssertEqual(loss.perAction, .eur(100))
+        XCTAssertEqual(loss.perWindow, .eur(500))
+        XCTAssertEqual(loss.window, .week)
     }
 
     func testDraftMatchesTheJob() {

@@ -22,6 +22,7 @@ struct Money: Hashable, Comparable, Codable {
     /// A number with no declared unit.
     static func bare(_ value: Int64) -> Money { Money(minor: value, currency: nil, scale: 0) }
     static func usd(_ dollars: Double) -> Money { Money(minor: Int64((dollars * 100).rounded()), currency: "USD", scale: 2) }
+    static func eur(_ euros: Double) -> Money { Money(minor: Int64((euros * 100).rounded()), currency: "EUR", scale: 2) }
     static let zero = Money.bare(0)
 
     var hasUnit: Bool { currency != nil }
@@ -85,9 +86,12 @@ struct Window: Hashable, Codable, Sendable {
     let current: String
 
     static let day = Window("calendar_day")
+    /// The sample's week ("€25,000 a week"), as on Android. KIFF's own week is rolling_7d.
+    static let week = Window("week")
 
     private static let known: [String: (each: String, now: String)] = [
         "calendar_day": ("a day", "today"),
+        "week": ("a week", "this week"),
         "rolling_24h": ("in any 24 hours", "in the last 24 hours"),
         "rolling_7d": ("in any 7 days", "in the last 7 days"),
         "rolling_1h": ("in any hour", "in the last hour"),

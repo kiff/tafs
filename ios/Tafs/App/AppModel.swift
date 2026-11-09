@@ -7089,7 +7089,7 @@ enum Screenshots {
     /// one with its total, a read-only one with its calls, and a test one.
     static func cards(_ taf: Taf) -> [TafCard] {
         let refunds = TafCard(id: "sample-refunds", title: "Refunds · Stripe", rules: Array(taf.card.rules.prefix(2)),
-                              total: CardTotal(limit: .usd(2_000), used: .usd(480), window: .day))
+                              total: CardTotal(limit: .eur(2_000), used: .eur(480), window: .day))
         let reads = TafCard(id: "sample-reads", title: "Read Stripe",
                             rules: [CardRule(action: "list_charges", label: "List charges", countPerWindow: 200),
                                     CardRule(action: "get_charge", label: "Look up a charge")],

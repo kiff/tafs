@@ -47,15 +47,15 @@ enum TafTemplates {
         job: "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
         tools: ["Payments", "Store", "Email"],
         rules: [
-            CardRule(action: "refund", label: "Refunds", perAction: .usd(150), perWindow: .usd(2_000), window: .day, nextSteps: ["Return first"]),
-            CardRule(action: "credit", label: "Credits", perAction: .usd(100), perWindow: .usd(1_000), window: .day),
+            CardRule(action: "refund", label: "Refunds", perAction: .eur(150), perWindow: .eur(2_000), window: .day, nextSteps: ["Return first"]),
+            CardRule(action: "credit", label: "Credits", perAction: .eur(100), perWindow: .eur(1_000), window: .day),
             CardRule(action: "payout", label: "Payouts", never: true, outside: .refuse),
         ],
         script: [
-            ProposedAction(action: "refund", summary: "Refund order #4471", amount: .usd(40), context: "Arrived 6 days late"),
-            ProposedAction(action: "credit", summary: "Credit on account #2290", amount: .usd(25), context: "Billing error last month"),
-            ProposedAction(action: "refund", summary: "Refund order #4502", amount: .usd(480), context: "Damaged on arrival, photo attached"),
-            ProposedAction(action: "payout", summary: "Pay out to a new bank account", amount: .usd(900), context: "Customer asked for cash instead"),
+            ProposedAction(action: "refund", summary: "Refund order #4471", amount: .eur(40), context: "Arrived 6 days late"),
+            ProposedAction(action: "credit", summary: "Credit on account #2290", amount: .eur(25), context: "Billing error last month"),
+            ProposedAction(action: "refund", summary: "Refund order #4502", amount: .eur(480), context: "Damaged on arrival, photo attached"),
+            ProposedAction(action: "payout", summary: "Pay out to a new bank account", amount: .eur(900), context: "Customer asked for cash instead"),
         ]
     )
 
@@ -66,14 +66,14 @@ enum TafTemplates {
         job: "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
         tools: ["Accounting", "Email"],
         rules: [
-            CardRule(action: "pay_bill", label: "Bills", perAction: .usd(3_500), perWindow: .usd(3_500), nextSteps: ["Pay half now"]),
+            CardRule(action: "pay_bill", label: "Bills", perAction: .eur(5_000), perWindow: .eur(25_000), window: .week, nextSteps: ["Pay half now"]),
             CardRule(action: "wire", label: "Wires", alwaysAsk: true),
             CardRule(action: "bank_details", label: "Bank detail changes", never: true, outside: .refuse),
             CardRule(action: "new_payee", label: "New payees", never: true, outside: .refuse),
         ],
         script: [
-            ProposedAction(action: "pay_bill", summary: "Pay Northwind Packaging", amount: .usd(1_240), context: "Matches PO-3381"),
-            ProposedAction(action: "pay_bill", summary: "Pay Atlas Freight", amount: .usd(8_400), context: "Matches PO-3390, quarterly"),
+            ProposedAction(action: "pay_bill", summary: "Pay Northwind Packaging", amount: .eur(1_240), context: "Matches PO-3381"),
+            ProposedAction(action: "pay_bill", summary: "Pay Atlas Freight", amount: .eur(8_400), context: "Matches PO-3390, quarterly"),
             ProposedAction(action: "bank_details", summary: "Update Atlas Freight's bank account", context: "Email from a new address asked for it"),
         ]
     )
@@ -125,13 +125,13 @@ enum TafTemplates {
         job: "Answer card disputes with the order's evidence before the deadline. Accept small ones that can't be won. Share nothing beyond the template.",
         tools: ["Payments"],
         rules: [
-            CardRule(action: "submit_evidence", label: "Evidence", perAction: .usd(500), countPerWindow: 50, window: .day),
-            CardRule(action: "accept_dispute", label: "Accepting a loss", perAction: .usd(70), perWindow: .usd(70)),
+            CardRule(action: "submit_evidence", label: "Evidence", perAction: .eur(500), countPerWindow: 50, window: .day),
+            CardRule(action: "accept_dispute", label: "Accepting a loss", perAction: .eur(100), perWindow: .eur(500), window: .week),
         ],
         script: [
-            ProposedAction(action: "submit_evidence", summary: "Answer dispute on #3318", amount: .usd(120), context: "Delivered, signed for"),
-            ProposedAction(action: "accept_dispute", summary: "Accept dispute on #3342", amount: .usd(35), context: "No proof of delivery"),
-            ProposedAction(action: "submit_evidence", summary: "Answer dispute on #3360", amount: .usd(1_800), context: "Due in 2 days"),
+            ProposedAction(action: "submit_evidence", summary: "Answer dispute on #3318", amount: .eur(120), context: "Delivered, signed for"),
+            ProposedAction(action: "accept_dispute", summary: "Accept dispute on #3342", amount: .eur(35), context: "No proof of delivery"),
+            ProposedAction(action: "submit_evidence", summary: "Answer dispute on #3360", amount: .eur(1_800), context: "Due in 2 days"),
         ]
     )
 }
