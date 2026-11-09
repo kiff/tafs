@@ -32,13 +32,41 @@ export function sendingOutside(profile: unknown): string[] {
   return [...out].sort();
 }
 
-/** Notes a grant's sending tools for its agent, replacing what the last Approve of that grant noted. */
-export async function noteSendingOutside(store: CoachStore, tenant: string, agent: string, grant: string, profile: unknown, now: Date): Promise<void> {
+/** How long a note's write holds its claim, at most: a write that died lets the next one in after this. */
+export const NOTE_CLAIM_MS = 10_000;
+
+/** How many times a note's write waits for another's claim before it gives up, and how long each wait grows by. */
+const NOTE_TRIES = 6;
+const NOTE_WAIT_MS = 50;
+
+/**
+ * Notes a grant's sending tools for its agent, replacing what the last Approve of that grant noted and keeping every
+ * other grant's. The read, merge and write hold a claim on the note (`once`), so two Approves of the same taf at
+ * once can't lose one of their entries (agentgabo on #606); one that finds the claim held waits and tries again,
+ * and past its tries throws, so the Approve fails and is tapped again rather than noting nothing.
+ *
+ * It runs as tafs cloud answers "sign", before the owner signs: a note can only make Coach's result checked more
+ * strictly, never less, so an Approve the owner never completes costs nothing, and the report keeps no write.
+ */
+export async function noteSendingOutside(store: CoachStore, tenant: string, agent: string, grant: string, profile: unknown, now: Date,
+  wait: (ms: number) => Promise<void> = (ms) => new Promise((done) => setTimeout(done, ms))): Promise<void> {
   if (!agent || !grant) return;
   const key = sendsOutsideKey(tenant, agent);
-  const read = (await store.get(key)) as Note | undefined;
-  const grants = { ...(read?.grants ?? {}), [grant]: sendingOutside(profile) };
-  await store.put(key, { grants, at: now.toISOString() } satisfies Note, new Date(now.getTime() + SENDS_OUTSIDE_KEPT_MS));
+  const claim = `${key}#claim`;
+  for (let i = 0; i < NOTE_TRIES; i++) {
+    if (await store.once(claim, new Date(now.getTime() + NOTE_CLAIM_MS))) {
+      try {
+        const read = (await store.get(key)) as Note | undefined;
+        const grants = { ...(read?.grants ?? {}), [grant]: sendingOutside(profile) };
+        await store.put(key, { grants, at: now.toISOString() } satisfies Note, new Date(now.getTime() + SENDS_OUTSIDE_KEPT_MS));
+      } finally {
+        await store.remove(claim).catch(() => undefined);
+      }
+      return;
+    }
+    await wait(NOTE_WAIT_MS * (i + 1));
+  }
+  throw new Error("another approval of this taf is noting its connections; approve again");
 }
 
 /** The tools noted as sending outside for an agent, across its grants; throws when the note can't be read. */

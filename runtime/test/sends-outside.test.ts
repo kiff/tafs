@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { noteSendingOutside, notedSendingOutside, sendingOutside, sendsOutsideKey, undisclosedSending } from "../src/cloud/sends-outside.js";
+import { NOTE_CLAIM_MS, noteSendingOutside, notedSendingOutside, sendingOutside, sendsOutsideKey, undisclosedSending } from "../src/cloud/sends-outside.js";
 import { memoryCoach } from "./fakes.js";
 
 const NOW = new Date("2026-11-09T12:00:00Z");
@@ -24,6 +24,36 @@ describe("tools that send outside the company (gap 14)", () => {
     expect(await notedSendingOutside(store, "t1", "max")).toEqual([]);
     expect(await notedSendingOutside(store, "t2", "rae")).toEqual([]);
     expect(await store.get(sendsOutsideKey("t1", "rae"))).toMatchObject({ grants: { g_mail: [], g_chat: ["post"] } });
+  });
+
+  // agentgabo on #606: two Approves of the same taf at once (two phones, two connections) never lose an entry.
+  it("keep both entries when two Approves of the same taf note at once", async () => {
+    const store = memoryCoach(() => NOW);
+    const noWait = async () => undefined;
+    await Promise.all([
+      noteSendingOutside(store, "t1", "rae", "g_mail", { operations: [op("send_email", "sends", true)] }, NOW, noWait),
+      noteSendingOutside(store, "t1", "rae", "g_chat", { operations: [op("post", "sends", true)] }, NOW, noWait),
+      noteSendingOutside(store, "t1", "rae", "g_sms", { operations: [op("send_sms", "sends", true)] }, NOW, noWait),
+    ]);
+    expect(await notedSendingOutside(store, "t1", "rae")).toEqual(["post", "send_email", "send_sms"]);
+    // Every claim is given back.
+    expect([...store.held.keys()].filter((k) => k.endsWith("#claim"))).toEqual([]);
+  });
+
+  it("wait for a claim another write holds, give up past their tries, and pass a claim a dead write left once it expires", async () => {
+    let clock = NOW;
+    const store = memoryCoach(() => clock);
+    const key = `${sendsOutsideKey("t1", "rae")}#claim`;
+    await store.once(key, new Date(NOW.getTime() + NOTE_CLAIM_MS));
+    const waits: number[] = [];
+    await expect(noteSendingOutside(store, "t1", "rae", "g_mail", { operations: [op("send_email", "sends", true)] }, NOW, async (ms) => { waits.push(ms); }))
+      .rejects.toThrow("approve again");
+    expect(waits).toEqual([50, 100, 150, 200, 250, 300]);
+    expect(await notedSendingOutside(store, "t1", "rae")).toEqual([]);
+    // The write that held it died: past its expiry, the next one goes in.
+    clock = new Date(NOW.getTime() + NOTE_CLAIM_MS + 1);
+    await noteSendingOutside(store, "t1", "rae", "g_mail", { operations: [op("send_email", "sends", true)] }, clock, async () => undefined);
+    expect(await notedSendingOutside(store, "t1", "rae")).toEqual(["send_email"]);
   });
 
   it("refuse a result whose disclose leaves one out, naming each, among the tools the taf has", () => {
