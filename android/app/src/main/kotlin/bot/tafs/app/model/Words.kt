@@ -960,6 +960,7 @@ object Words {
     val answerInKiffUntil: String get() = Res.s(R.string.needs_you_answer_in_kiff_until)
     val answerNotTaken: String get() = Res.s(R.string.needs_you_answer_not_taken)
     val approveAgain: String get() = Res.s(R.string.needs_you_approve_again)
+    val approveOnce: String get() = Res.s(R.string.needs_you_approve_once)
     fun approveOnceWith(biometry: String): String = Res.s(R.string.needs_you_approve_once_with, biometry)
     object CardUnit {
       val changed: String get() = Res.s(R.string.needs_you_card_unit_changed)
@@ -1914,6 +1915,7 @@ object Words {
       val tryReplyNow: String get() = Res.s(R.string.work_request_try_reply_now)
       val whatHappened: String get() = Res.s(R.string.work_request_what_happened)
     }
+    fun requestsNeedYou(count: Int): String = Res.p(R.plurals.work_requests_need_you, count, count)
     val sendAgain: String get() = Res.s(R.string.work_send_again)
     val sendingAgain: String get() = Res.s(R.string.work_sending_again)
   }

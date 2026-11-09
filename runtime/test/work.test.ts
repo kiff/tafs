@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { requestOf, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
+import { requestOf, runFailure, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
+import { requestDetail } from "../src/cloud/request.js";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
 const run = (o: Partial<Run>): Run => ({
@@ -72,6 +73,50 @@ describe("a taf's work, as both apps show it", () => {
   });
 });
 
+describe("a run cut off, never read as done", () => {
+  // kiff/agents ends a run that hit its turn or cost cap as COMPLETED, with its stop: it didn't finish.
+  it("says a run stopped at its turn cap or its cost cap, and which, on its line, its request page and the list", () => {
+    const turns = run({ stop: "turn_cap", turns: 50 });
+    const cost = run({ stop: "cost_cap" });
+    expect(requestOf(turns, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its limit of turns for one run" });
+    expect(requestOf(cost, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its cost limit for one run" });
+    expect(requestDetail(turns, [], [], "UTC", NOW).steps.at(-1)).toEqual({ label: "Stopped", line: "Stopped at 11:05: it reached its limit of turns for one run", state: "failed" });
+    expect(requestDetail(cost, [], [], "UTC", NOW).steps.at(-1)).toMatchObject({ label: "Stopped", line: "Stopped at 11:05: it reached its cost limit for one run" });
+    expect(workOf([turns, cost], "UTC", NOW, []).counts).toMatchObject({ done: 0, stopped: 2 });
+    // The list's line for the taf: the last one cut off says so, never "Last done".
+    expect(summaryOf([turns], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its limit of turns for one run");
+    expect(summaryOf([cost], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its cost limit for one run");
+  });
+
+  it("reads Done on the stop, never on the turn count: a run that answered on its last allowed turn is done", () => {
+    expect(requestOf(run({ stop: "answered", turns: 50 }), "UTC", NOW)).toMatchObject({ state: "done", line: "Done at 11:05" });
+    // A run from before kiff/agents kept a stop reads as it did.
+    expect(requestOf(run({ turns: 50 }), "UTC", NOW)).toMatchObject({ state: "done", line: "Done at 11:05" });
+    expect(summaryOf([run({ stop: "answered" })], false, "UTC", NOW).line).toBe("Last done at 11:05");
+  });
+
+  it("reads a stop it doesn't know as stopped, never as success", () => {
+    for (const stop of ["max_token", "refused", "something_new"]) {
+      expect(requestOf(run({ stop }), "UTC", NOW), stop).toMatchObject({ state: "stopped", line: "Stopped at 11:05" });
+      expect(summaryOf([run({ stop })], false, "UTC", NOW).line, stop).toBe("Stopped at 11:05");
+    }
+  });
+
+  it("says it in the person's language with the glossary's Stopped, never Halted's word", () => {
+    const stopped = { de: "Gestoppt", fr: "Arrêté", es: "Detenido", it: "Fermato", pt: "Parado", nl: "Gestopt", pl: "Zatrzymane" } as const;
+    const halted = { de: "Angehalten", fr: "Bloqué", es: "Bloqueado", it: "Bloccato", pt: "Bloqueado", nl: "Stilgezet", pl: "Zablokowane" } as const;
+    for (const lang of Object.keys(stopped) as Array<keyof typeof stopped>) {
+      for (const stop of ["turn_cap", "cost_cap", "max_token"]) {
+        const line = requestOf(run({ stop }), "UTC", NOW, [], undefined, [], lang).line;
+        expect(line.startsWith(stopped[lang]), `${lang} ${stop}: ${line}`).toBe(true);
+        expect(line.toLowerCase().includes(halted[lang].toLowerCase()), `${lang} ${stop}: ${line}`).toBe(false);
+      }
+    }
+    expect(requestOf(run({ stop: "turn_cap" }), "UTC", NOW, [], undefined, [], "de").line).toBe("Gestoppt um 11:05: er hat die Höchstzahl an Schritten für einen Lauf erreicht");
+    expect(requestOf(run({ stop: "cost_cap" }), "UTC", NOW, [], undefined, [], "pl").line).toBe("Zatrzymane o 11:05: osiągnięto limit kosztów na jedno uruchomienie");
+  });
+});
+
 describe("a plan in one line", () => {
   it("names the step at work, or the first still to do, or says it's done", async () => {
     const { withLine } = await import("../src/cloud/handler.js");
@@ -103,5 +148,25 @@ describe("the thread as one ordered list", () => {
       [{ at: "2026-10-30T10:02:00Z", session: "s", run: "r", exception: "ex_1", invocation: "inv_1" }]);
     expect(items.map((i) => i.type)).toEqual(["message", "held", "message"]);
     expect(items[1]).toEqual({ type: "held", held: { at: "2026-10-30T10:02:00Z", session: "s", run: "r", exception: "ex_1", invocation: "inv_1" } });
+  });
+});
+
+describe("a failed run's code", () => {
+  const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
+  it("makes the request's line kiff/agents' words, with the code beside them; a failure with no code reads as before", () => {
+    expect(requestOf(run({ status: "ERROR", error: words, code: "new_code" }), "UTC", NOW)).toMatchObject({ state: "failed", line: words, code: "new_code" });
+    const plain = requestOf(run({ status: "ERROR", error: "Stripe said no." }), "UTC", NOW);
+    expect(plain).toMatchObject({ state: "failed", line: "It failed: Stripe said no." });
+    expect(plain).not.toHaveProperty("code");
+  });
+
+  it("is passed on only for an ERROR run with a code and words, in one line of at most 400 characters", () => {
+    expect(runFailure({ status: "ERROR", error: `  ${words}\n`, code: "new_code" })).toEqual({ code: "new_code", words });
+    expect(runFailure({ status: "ERROR", error: "a\n\nb", code: "new_code" })).toEqual({ code: "new_code", words: "a b" });
+    expect(runFailure({ status: "ERROR", error: "x".repeat(500), code: "new_code" })!.words).toHaveLength(400);
+    expect(runFailure({ status: "COMPLETED", error: words, code: "ai_unavailable" })).toBeUndefined();
+    expect(runFailure({ status: "ERROR", error: words })).toBeUndefined();
+    expect(runFailure({ status: "ERROR", error: "  ", code: "new_code" })).toBeUndefined();
+    expect(runFailure({ status: "ERROR", error: words, code: "Ai-Unavailable" })).toBeUndefined();
   });
 });

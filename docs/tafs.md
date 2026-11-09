@@ -109,7 +109,7 @@ runs once, for its last run and its work line.
 A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, which
 the app shows as they are:
 
-| `window` | `each` ("$300 …") | `now` ("$40 used …") |
+| `window` | `each` ("€300 …") | `now` ("€40 used …") |
 |---|---|---|
 | `calendar_day` | a day | today |
 | `rolling_24h` | in any 24 hours | in the last 24 hours |
@@ -184,9 +184,9 @@ It has up to four tabs:
   it in Coach also needs Coach's permission, since it opens Coach on that taf
   (`TafDetailView.offersReconnect`).
   A limit says what happens past it, from each rule's `outside` in tafs cloud's list (the
-  Card's `on_exceed` in KIFF). On a `hold` rule: "up to $40 each; more asks you first",
-  "$300 in total a day, then it asks you", "20 calls a day, then it asks you", and a count
-  of 0 is "Each call asks you first". A `refuse` rule reads "≤ $40 each · $300 a day ·
+  Card's `on_exceed` in KIFF). On a `hold` rule: "up to €40 each; more asks you first",
+  "€300 in total a day, then it asks you", "20 calls a day, then it asks you", and a count
+  of 0 is "Each call asks you first". A `refuse` rule reads "≤ €40 each · €300 a day ·
   20 calls a day". These are KIFF's own words for its Cards, the same on both apps.
   Below them: its connections ([coach.md](coach.md#connections)), Halt, its Usage, its
   Versions, Revoke and Remove for good.

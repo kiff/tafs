@@ -180,6 +180,17 @@ describe("KIFF's alerts", () => {
     });
   });
 
+  it("speaks each phone's language: the one its app asked in when it signed up", async () => {
+    const push = account();
+    push.devices.set("t_acme", push.devices.get("t_acme")!.map((d) => d.token === TOKEN_A ? { ...d, lang: "fr" } : d.token === TOKEN_B ? { ...d, lang: "xx" } : d));
+    const apns = fakeAPNs();
+    expect((await alert(held(), push, { apns })).body).toEqual({ sent: 2 });
+    const [a, b] = apns.sent.map((s) => (s.n.payload as { aps: { alert: object } }).aps.alert);
+    expect(a).toEqual({ title: "Un taf vous attend", body: "Stripe refund attend votre réponse. Rien n'est envoyé tant que vous n'approuvez pas." });
+    // A language tafs cloud doesn't speak is English.
+    expect(b).toEqual({ title: "A taf needs you", body: "Stripe refund waits for your answer. Nothing is sent until you approve." });
+  });
+
   it("tells only the people KIFF names, never the one who asked, when it names them", async () => {
     const push = account();
     const apns = fakeAPNs();
@@ -576,6 +587,13 @@ describe("a phone signing up for alerts", () => {
     expect(push.devices.get("t_acme")!.map((d) => [d.token, d.environment, d.subject, d.answers])).toEqual([
       [TOKEN_B, "production", "u_vic", false], [TOKEN_A, "sandbox", "u_ana", true],
     ]);
+  });
+
+  it("keeps the language the app asks in, for alerts sent with no request to read it from", async () => {
+    const push = memoryPush();
+    await call("POST", "/v1/push", { body: JSON.stringify({ device_token: TOKEN_A, environment: "production" }), headers: { ...signedIn("ana"), "accept-language": "pl-PL, en;q=0.5" }, push, accounts });
+    await call("POST", "/v1/push", { body: JSON.stringify({ device_token: TOKEN_B, environment: "production" }), headers: signedIn("viewer"), push, accounts });
+    expect(push.devices.get("t_acme")!.map((d) => [d.token, d.lang])).toEqual([[TOKEN_A, "pl"], [TOKEN_B, "en"]]);
   });
 
   it("gives kiff/agents the secret kept from before, when a phone registers again without one", async () => {

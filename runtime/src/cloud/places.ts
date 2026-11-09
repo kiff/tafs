@@ -6,6 +6,8 @@
  * version's instructions carry its places and they go live with it.
  */
 
+import { type Lang, wordsIn } from "./words/index.js";
+
 export interface ActionPlace {
   place: "action";
   /** The connection (planque's grant) the action belongs to. */
@@ -119,10 +121,11 @@ export function vendorPlace(v: unknown, own?: string): VendorPlace {
 }
 
 /** The place on the dial's Results ring, and its line. */
-export function placeWords(p: VendorPlace): { label: string; words: string } {
+export function placeWords(p: VendorPlace, lang: Lang = "en"): { label: string; words: string } {
   const fields = p.fill ? `: ${Object.values(p.fill).join(", ")}` : "";
-  if (p.place === "taf") return { label: p.name, words: `Each result is handed to ${p.name}${fields}` };
-  return { label: p.name.split(" · ")[0] || p.name, words: `Each result goes to ${p.name}${fields}` };
+  const w = wordsIn(lang);
+  if (p.place === "taf") return { label: p.name, words: w.dial_place_handed(p.name, fields) };
+  return { label: p.name.split(" · ")[0] || p.name, words: w.dial_place_goes(p.name, fields) };
 }
 
 /** A Card as KIFF lists it, as far as a place's check reads it: whose it is, its actions, what it counts. */

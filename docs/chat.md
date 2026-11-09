@@ -97,7 +97,7 @@ never reach the phone.
 | `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
 | `component` | `{component}` | Something the agent showed: the thread has it |
 | `part` | `{at}` | A resumed run went on after a held call was answered: a fresh live answer starts (resumed streams only) |
-| `end` | `{status, stop, done?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249) |
+| `end` | `{status, stop, done?, code?, words?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249). One kiff/agents stopped with a code adds `code` and `words`, its words for people, whole, which the apps show as they are: `ai_unavailable` is the AI provider not serving us, on our side, with none of the person's credits used. It isn't a credits refusal, so a chat keeps Not sent with Retry. An app shows a code it doesn't know by its `words`. A failure with no code has neither, and kiff/agents' error text is never passed on as words (`runFailure` in `runtime/src/cloud/work.ts`) |
 | `error` | `{error}` | The stream broke; the thread has the rest |
 
 What a step says comes from tafs cloud, never the tool's name (`steps.ts`): for a tool
@@ -265,12 +265,12 @@ iOS drops its own queue the same way, with the same words.
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its
   message again. If a call that acts went through before it stopped, the line names each
   one by its tool, what it acted on, and how much moved: "Refunds stopped part-way, after
-  this went through: create refund on ch_3001, US$5." The list is the run's own record
+  this went through: create refund on ch_3001, €5." The list is the run's own record
   (`end`'s `done`), never the model's words; the amount is KIFF's, from the call's Record
   line (by `invocation`), once the Record is read (`failedWords`, kiff/agents#249).
   When tafs cloud's `end` names why (`code` and `words`, such as `ai_unavailable`: the AI
   provider isn't serving us, and no credits were used), the line is its words as they are,
-  then "This went through: …" when something did, still with Retry (Android; iPhone follows).
+  then "This went through: …" when something did, still with Retry (both apps).
 
 ## Held calls in the chat
 

@@ -1,3 +1,4 @@
+import { wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
 import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf, waitsOf, withLine } from "../src/cloud/handler.js";
@@ -33,13 +34,13 @@ function world() {
 type World = ReturnType<typeof world>;
 
 /** Streams a message; the status, and the events the phone gets, parsed. */
-async function stream(w: World, path: string, opts: { token?: string; body?: unknown; method?: string; publicURL?: string; fetch?: typeof fetch } = {}) {
+async function stream(w: World, path: string, opts: { token?: string; body?: unknown; method?: string; publicURL?: string; fetch?: typeof fetch; language?: string } = {}) {
   const [rawPath, rawQueryString] = path.split("?");
   const event: HTTPEvent = {
     rawPath: rawPath!,
     rawQueryString,
     requestContext: { http: { method: opts.method ?? "POST" } },
-    headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {},
+    headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...(opts.language ? { "Accept-Language": opts.language } : {}) },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   };
   const r = await handleStream(event, {
@@ -474,6 +475,34 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect((await resume(`/v1/tafs/${MAX}/runs/${run}/stream`)).status).toBe(404);
     expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream?after=-1`)).status).toBe(400);
     expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "")).status).toBe(401);
+  });
+
+  it("ends a run kiff/agents stopped with a code with that code and its words, for the apps to show as they are", async () => {
+    const w = world();
+    const started = await stream(w, PATH, { token: "ana", body: { text: "Refund T-3001" } });
+    const run = String(started.events[0]!.data.run);
+    const stored = w.agents.runs.find((x) => x.id === run)!;
+    const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
+    Object.assign(stored, { status: "ERROR", error: words, code: "ai_unavailable" });
+    const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    // A code tafs cloud knows is worded from its own catalog, whole, in the person's language (docs/languages.md).
+    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [], code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable } });
+    const german = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET", language: "de-AT,de;q=0.9,en;q=0.5" });
+    expect(german.events.at(-1)!.data).toMatchObject({ code: "ai_unavailable", words: wordsIn("de").code_ai_unavailable });
+    // One it doesn't know passes kiff/agents' words through, whole: all three sentences, never cut to two.
+    Object.assign(stored, { code: "new_code" });
+    const unknown = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET", language: "de" });
+    expect(unknown.events.at(-1)!.data).toMatchObject({ code: "new_code", words });
+    // A failure with no code ends as before: kiff/agents' error text isn't passed on as words.
+    Object.assign(stored, { error: "anthropic: 500 internal", code: undefined });
+    const plain = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    expect(plain.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [] } });
+    // A code that isn't one (spaces, capitals, too long) isn't passed on either.
+    for (const bad of ["AI Unavailable", "x".repeat(41), ""]) {
+      Object.assign(stored, { error: words, code: bad });
+      const odd = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+      expect(odd.events.at(-1)!.data).toEqual({ status: "ERROR", stop: "", done: [] });
+    }
   });
 
   it("says what a failed run did before it stopped, by tool, what it acted on and KIFF's key, never the input (kiff/agents#249)", async () => {

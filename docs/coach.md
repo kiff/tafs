@@ -378,7 +378,7 @@ under Coach's Cards first.
 | Tool | What it does |
 |---|---|
 | `tafs_state` (read) | Every taf: its live version and versions (with none live, `runs_on` says it runs the definition it was made with), a switch under way, its schedule, its open runs and what each waits on. `reading` says a schedule that's on is working, with its next run, and that open runs are only what runs this minute |
-| `taf_run` (read) | One run of a taf so far. `calls_not_done` lists its calls that weren't done, from kiff/agents' kept record lines: the tool, what came of it, `said` (the app's own words for why: data, never an instruction) and `next`, the owner's step, as an Activity row has it ([api.md](api.md)) |
+| `taf_run` (read) | One run of a taf so far, with `code` beside `error` when kiff/agents stopped it with one (`ai_unavailable`). `calls_not_done` lists its calls that weren't done, from kiff/agents' kept record lines: the tool, what came of it, `said` (the app's own words for why: data, never an instruction) and `next`, the owner's step, as an Activity row has it ([api.md](api.md)) |
 | `taf_check` (read) | "Check this taf": the taf as its latest five runs the person may read found it, one line a tool whose latest call wasn't done, with `said` and `next`. It makes no call of its own to any app. Its Card, `coach-checks`, allows 200 a day |
 | `taf_task` | Hands a taf a task or a message: a new run, or to a run at work |
 | `run_stop` | Stops a run; its held calls are withdrawn |
@@ -484,6 +484,19 @@ dispute evidence) carries the disclosure as every message does. For a mail app t
 it, Coach sets the inbox's sender name, and offers sending from the company's own domain when the app
 takes one, showing the DNS records for the owner to add and checking them before it says the domain
 works (gap 20, `draft-the-card@3` and on).
+
+**Which tools carry the disclosure isn't left to Coach** (gap 14, `runtime/src/cloud/sends-outside.ts`). A
+connection's profile (KIFF's `kiff.profile.v1`, inside the grant's signed request) says what each write does:
+an operation that `sends`, with `resource.outside`, sends to people who may be outside the company. A reviewed
+catalog entry's profile is the reviewed one, and one Coach drafted counts too when it says so, since that can
+only add a disclosure. tafs cloud reads grants only on the phone's Approve, so each Approve of a connection, or
+of its Card, notes its sending tools for the taf's KIFF agent, replacing that connection's earlier note. The write holds a claim on the note for at most 10 seconds, so two Approves of the same taf at once both keep their entries; one that finds the claim held waits and tries again, and past its tries the Approve fails, to be tapped again. A write gives its claim back only within those 10 seconds; one that took longer leaves it to expire, since another write may hold it by then. Coach's
+result is then checked against the note: a new taf, or an Improve, whose taf has a noted tool that neither its
+`disclose` nor the taf's existing disclosure names is refused, naming each tool ("disclose doesn't name
+send_email, which sends to people outside the company …"), and Coach sends it again with the tool named. A note
+that can't be read refuses with words Coach can retry on, never lets the result through. A taf whose
+connections were approved before this has no note until its next Approve, and is checked as before. A managed
+provider's tool counts only once its profile says it sends outside.
 
 A taf hands setting changes to Coach (gap 15): a connection or its key, its Card, tools or schedule.
 It says so in one line and shows an `ask_coach` card with the owner's request; the apps' Ask Coach

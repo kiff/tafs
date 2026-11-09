@@ -266,7 +266,6 @@ jobs:
           shoot 4-record -screenshots YES -tab record
           shoot 5-taf -screenshots YES -tab tafs -screen taf
           shoot 5b-cards -screenshots YES -tab tafs -screen card
-          shoot 6-new-taf -screenshots YES -tab tafs -screen new
           shoot 7-chat -screenshots YES -tab tafs -screen chat
           # The taf layout: the bar's Account, and the taf's Setup with its two screens.
           shoot 8-setup -screenshots YES -tab tafs -screen setup

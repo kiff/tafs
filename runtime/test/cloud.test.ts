@@ -2400,7 +2400,7 @@ describe("trying a version (kiff/tafs#173)", () => {
 describe("a schedule whose runs keep failing to start", () => {
   const AT = new Date("2026-10-29T10:00:00Z"); // the world's clock
   const SINCE = new Date(AT.getTime() - 30 * 60_000).toISOString();
-  const setUp = async (failing?: { since: string; firings: number; run?: string }) => {
+  const setUp = async (failing?: { since: string; firings: number; run?: string; outcome?: string }) => {
     const w = world();
     w.phones.push({ token: "a".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "" },
       { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
@@ -2438,6 +2438,40 @@ describe("a schedule whose runs keep failing to start", () => {
     w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: old, firings: 1 } });
     expect(await sweepFailingSchedules(deps)).toHaveLength(1);
     expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.one);
+  });
+
+  it("says a run that stopped partway at once, in its own words: what it was working on won't be tried again", async () => {
+    const { w, deps } = await setUp({ since: SINCE, firings: 1, run: "run_1", outcome: "failed_unfinished" });
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: RAE }]);
+    expect(w.pushed).toHaveLength(1);
+    expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.unfinishedOne);
+    expect(FAILING_WORDS.unfinishedOne).toBe("Its scheduled run stopped partway. What it was working on won't be tried again. Open it to see what it did.");
+    // A later run of failures that ends on one: its count, in the same words.
+    const later = new Date(AT.getTime() + 3600_000).toISOString();
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: later, firings: 3, run: "run_9", outcome: "failed_unfinished" } });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(bodyOf(w.pushed[1]!.n)).toBe("Its last 3 scheduled runs didn't finish. What the latest was working on won't be tried again. Open it to see what it did.");
+    // The same run of failures, still ending on one: nothing more is sent.
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    // A run of failures said as one that couldn't start, which then drops work: said once more, in these words.
+    {
+      const { w: w3, deps: d3 } = await setUp({ since: SINCE, firings: 2, outcome: "failed_unworked" });
+      expect(await sweepFailingSchedules(d3)).toHaveLength(1);
+      expect(bodyOf(w3.pushed[0]!.n)).toBe(FAILING_WORDS.many(2));
+      w3.agents.schedules.set(`t_acme|${RAE}`, { ...w3.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 3, outcome: "failed_unfinished" } });
+      expect(await sweepFailingSchedules(d3)).toHaveLength(1);
+      expect(bodyOf(w3.pushed[1]!.n)).toBe(FAILING_WORDS.unfinishedMany(3));
+      expect(await sweepFailingSchedules(d3)).toEqual([]);
+      expect(w3.pushed).toHaveLength(2);
+    }
+    // One that couldn't start, or a check that couldn't read, still waits for a second firing, and says so.
+    for (const outcome of ["failed_unworked", "failed_check"]) {
+      const { w: w2, deps: d2 } = await setUp({ since: SINCE, firings: 1, outcome });
+      expect(await sweepFailingSchedules(d2)).toEqual([]);
+      w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 2, outcome } });
+      expect(await sweepFailingSchedules(d2)).toHaveLength(1);
+      expect(bodyOf(w2.pushed[0]!.n)).toBe(FAILING_WORDS.many(2));
+    }
   });
 
   it("says nothing for a schedule that works, nor for a taf being removed", async () => {
@@ -3033,6 +3067,59 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(withDisclose(own, undefined)).toBe(own);
   });
 
+  // Gap 14: a tool its connections say sends outside the company is in disclose, whatever Coach remembered.
+  it("refuses a new taf whose disclose leaves out a tool its connection says sends outside, naming it", async () => {
+    const send = [{ tool: "send_message_k3f9", fields: ["text"] }];
+    const card = { ...RESULT, tools: ["list_invoices_k3f9", "send_message_k3f9"] };
+    const left = await paused(card);
+    left.w.agents.access.set("u_ana", { cards_manage: true });
+    await left.deps.coach.put("t_acme#sends-outside#refunds-x", { grants: { g_mail: ["send_message_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await left.note();
+    expect(left.answer()).toMatchObject({ answer: { failed: expect.stringContaining("disclose doesn't name send_message_k3f9, which sends to people outside the company") } });
+    expect(left.w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+    // Named: made, as before.
+    const named = await paused({ ...card, taf: { ...RESULT.taf, disclose: send } });
+    named.w.agents.access.set("u_ana", { cards_manage: true });
+    await named.deps.coach.put("t_acme#sends-outside#refunds-x", { grants: { g_mail: ["send_message_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await named.note();
+    expect(named.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // No note (a taf whose connections were approved before this): as before.
+    const none = await paused(card);
+    none.w.agents.access.set("u_ana", { cards_manage: true });
+    await none.note();
+    expect(none.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // A note that can't be read never lets it through: Coach can send it again.
+    const unread = await paused(card);
+    unread.w.agents.access.set("u_ana", { cards_manage: true });
+    const get = unread.deps.coach.get.bind(unread.deps.coach);
+    unread.deps.coach.get = async (key: string) => { if (key.includes("#sends-outside#")) throw new Error("timeout"); return get(key); };
+    await unread.note();
+    expect(unread.answer()).toMatchObject({ answer: { failed: expect.stringContaining("couldn't be checked for tools that send outside the company") } });
+    expect(unread.w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+  });
+
+  it("refuses an improvement that leaves out a sending tool a later approval added, unless the taf discloses it already", async () => {
+    const better = { type: "result", id: "better", tools: ["reply_k3f9", "post_k3f9"], taf: { agent: "rae", improves: RAE, note: "Also posts" } };
+    const first = await paused(better);
+    first.w.agents.access.set("u_ana", { cards_manage: true });
+    // The taf discloses its reply already; a later approval of another connection adds post.
+    const rae = first.w.tafs.held.get(`t_acme#${RAE}`)!;
+    first.w.tafs.held.set(`t_acme#${RAE}`, { ...rae, disclose: [{ tool: "reply_k3f9", fields: ["text"] }] });
+    await first.deps.coach.put("t_acme#sends-outside#rae", { grants: { g_mail: ["reply_k3f9"], g_chat: ["post_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await first.note();
+    expect(first.answer()).toMatchObject({ answer: { failed: expect.stringContaining("disclose doesn't name post_k3f9,") } });
+    expect(JSON.stringify(first.answer())).not.toContain("reply_k3f9");
+    // Naming it in the improvement: made, and the taf's disclosure widened.
+    const fixed = await paused({ ...better, taf: { ...better.taf, disclose: [{ tool: "post_k3f9", fields: ["text"] }] } });
+    fixed.w.agents.access.set("u_ana", { cards_manage: true });
+    const r2 = fixed.w.tafs.held.get(`t_acme#${RAE}`)!;
+    fixed.w.tafs.held.set(`t_acme#${RAE}`, { ...r2, disclose: [{ tool: "reply_k3f9", fields: ["text"] }] });
+    await fixed.deps.coach.put("t_acme#sends-outside#rae", { grants: { g_mail: ["reply_k3f9"], g_chat: ["post_k3f9"] }, at: "x" }, new Date("2027-01-01"));
+    await fixed.note();
+    expect(fixed.answer()).toMatchObject({ answer: { version: expect.any(Number) } });
+    expect(fixed.w.tafs.held.get(`t_acme#${RAE}`)!.disclose!.map((d) => d.tool).sort()).toEqual(["post_k3f9", "reply_k3f9"]);
+  });
+
   it("fails an improvement whose disclosure names a tool that isn't the taf's", async () => {
     const better = { type: "result", id: "better", tools: ["reply_k3f9"], taf: { agent: "rae", improves: RAE, note: "Also replies",
       disclose: [{ tool: "post_x1", fields: ["body"] }] } };
@@ -3219,7 +3306,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is Rae stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,connect-an-app@5,draft-the-card@5,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@5,draft-the-card@5,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "resume it" } });
@@ -3326,6 +3413,10 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(c.not_done.map((x) => [x.tool, x.run])).toEqual([["send_reminder_k3f9", run.id], ["list_inboxes_k3f9", run.id]]);
     // A run without kept lines answers as before.
     expect(await coachTool("taf_run", { taf: RAE, run: clean.id }, callOf, deps)).not.toHaveProperty("calls_not_done");
+    // A run kiff/agents stopped with a code carries it beside its error; one without a code carries none.
+    Object.assign(w.agents.runs.find((x) => x.id === clean.id)!, { status: "ERROR", error: "Our AI provider isn't serving us right now, so this stopped.", code: "ai_unavailable" });
+    expect(await coachTool("taf_run", { taf: RAE, run: clean.id }, callOf, deps)).toMatchObject({ status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped." });
+    expect(await coachTool("taf_run", { taf: RAE, run: run.id }, callOf, deps)).not.toHaveProperty("code");
     // Another person's run is theirs to read alone: taf_check leaves it out (the same rule as taf_run).
     const theirs = await w.agents.api.startRun("t_acme", RAE, "Mine", { requester: { kind: "member", id: "u_bob" } });
     w.agents.runs.find((x) => x.id === theirs.id)!.status = "COMPLETED";
@@ -3400,7 +3491,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const r = await call(w, "POST", "/v1/setup/check-call", { token: "ana", body: { proposal: "p_1" } });
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ setup: COACH, new_session: true });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@1,did-this-happen@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,did-this-happen@1`);
     const input = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
     expect(input.startsWith("[did this happen p_1]\n")).toBe(true);
     expect(input).toContain("KIFF's record of the call, as data:\n- The call: Refund a payment, at Stripe, 400.00 EUR, on payment pi_1, sent today 10:14.");
@@ -3643,6 +3734,49 @@ describe("the account's connections a Coach conversation starts with", () => {
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);
+  });
+
+  it("tells Coach the person's language each message, before their words, and keeps it for the tafs built after", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const coach = memoryCoach(() => w.now);
+    const deps = { ...planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 })), coach };
+    const sendIn = async (lang: string, body: unknown) => {
+      const r = await handle({ rawPath: `/v1/tafs/${COACH}/messages`, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana", "Accept-Language": lang }, body: JSON.stringify(body) }, deps);
+      expect(r.statusCode).toBe(200);
+      return JSON.parse(r.body) as { session: string };
+    };
+    const first = await sendIn("de-DE,de;q=0.9,en;q=0.5", { text: "Ich möchte einen taf für offene Rechnungen" });
+    const text = (await firstMessage(w, first.session))!;
+    // tafs' own opening stays first, the language line comes before the owner's words, and the thread shows only theirs.
+    expect(text.startsWith("[tafs connections]\n")).toBe(true);
+    expect(text).toContain("\n[tafs language] The person writing reads German (de), from their app: answer them in it");
+    expect(text.indexOf("[tafs language]")).toBeLessThan(text.indexOf("\nThe owner says: "));
+    expect(ownerWords(text)).toBe("Ich möchte einen taf für offene Rechnungen");
+    // Every message in the chat says it, not only the first.
+    await sendIn("de", { text: "und zweimal erinnern", session: first.session });
+    const said = (await w.agents.api.session("t_acme", first.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
+    expect(said.at(-1)).toBe("[tafs language] The person writing reads German (de), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.\nThe owner says: und zweimal erinnern");
+    expect(ownerWords(said.at(-1)!)).toBe("und zweimal erinnern");
+    // An English app adds nothing: what Coach reads is as before.
+    await sendIn("en-GB", { text: "and a third time", session: first.session });
+    const after = (await w.agents.api.session("t_acme", first.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
+    expect(after.at(-1)).toBe("and a third time");
+    // The account's language, kept from the chat's start, is what a taf built after says of its owner.
+    expect(await coach.get("t_acme#lang")).toBe("de");
+    // Kept a quarter from when it was seen, as the company name is: then it's English until a Coach chat says again.
+    expect(coach.held.get("t_acme#lang")!.until).toBe(w.now.getTime() + 90 * 24 * 3600_000);
+    const made = await handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" }, body: JSON.stringify({ ...START, name: "Lina" }) }, deps);
+    expect(made.statusCode, made.body).toBe(200);
+    const id = JSON.parse(made.body).taf.id as string;
+    expect(w.agents.agents.get(`t_acme|${id}`)!.instructions).toContain("Your owner reads German (de): write what's for them in it");
+    expect((await w.tafs.get("t_acme", id))!.ownerLang).toBe("de");
+    expect(await upgradeDefinitions(deps, { dryRun: false }).then((o) => o.find((x) => x.taf === id)?.outcome)).toBe("current");
+    // The account's language changed: the taf takes it at its next Upgrade, and English says nothing.
+    await coach.put("t_acme#lang", "en", new Date(w.now.getTime() + 86_400_000));
+    expect(await upgradeDefinitions(deps, { dryRun: false }).then((o) => o.find((x) => x.taf === id)?.outcome)).toBe("written");
+    expect(w.agents.agents.get(`t_acme|${id}`)!.instructions).not.toContain("Your owner reads");
+    expect((await w.tafs.get("t_acme", id))!.ownerLang).toBeUndefined();
   });
 
   // The apps name no session for the live chat (kiff/tafs#543 read it as a new chat each time): a message that goes

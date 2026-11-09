@@ -1,4 +1,5 @@
 import { generateKeyPairSync, sign } from "node:crypto";
+import { wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it } from "vitest";
 import { OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
@@ -376,6 +377,21 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(w.agents.runs.find((r) => r.id === boRun.id)!.steering ?? []).toEqual([]);
     // Once ended, the ref is spent.
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref })).body).toEqual({ taken: false });
+  });
+
+  it("says a run kiff/agents stopped with a code in its own words, whole, and names the code for Coach", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: words, code: "ai_unavailable" });
+    await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "ERROR", ref });
+    const before = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
+    expect(before.body.coach_lines).toMatchObject([{ taf: "Refunds", said: wordsIn("en").code_ai_unavailable }]);
+    await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana");
+    const sent = w.agents.events.get(w.agents.runs[0]!.session)!.at(-1)!.body as { text: string };
+    // tafs cloud words a code it knows from its own catalog (docs/languages.md), whatever kiff/agents sent.
+    expect(sent.text).toContain(`ended: Refund order 42] It failed (ai_unavailable). error: ${JSON.stringify(wordsIn("en").code_ai_unavailable)}`);
   });
 
   it("with Coach's run over, the line waits for its next turn, shown in its chat meanwhile and never in the owner's words", async () => {

@@ -1296,8 +1296,9 @@ final class TafsCloud {
         case component
         /// The run stopped: its status, and why. A failed run also says what went through
         /// before it stopped (kiff/agents#249): each call that acted, by tool and what it
-        /// acted on.
-        case end(status: String, stop: String, done: [DoneCall] = [])
+        /// acted on. `code` and `words` are tafs cloud's, on a run that failed for a reason it
+        /// names (`ai_unavailable`): said as they are.
+        case end(status: String, stop: String, done: [DoneCall] = [], code: String? = nil, words: String? = nil)
         /// The stream broke on tafs cloud's side; the conversation has the rest.
         case broken
         /// The run read a message the owner wrote to it while it went (kiff/tafs#64).
@@ -1393,7 +1394,8 @@ final class TafsCloud {
             let done = (o["done"] as? [[String: Any]] ?? []).compactMap { c in
                 (c["tool"] as? String).map { DoneCall(tool: $0, resource: c["resource"] as? String, invocation: c["invocation"] as? String) }
             }
-            return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "", done: done)
+            let said = { (key: String) in (o[key] as? String).flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 } }
+            return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "", done: done, code: said("code"), words: said("words"))
         case "error": return .broken
         case "held": return .held(exception: o["exception"] as? String ?? "", invocation: o["invocation"] as? String ?? "")
         default: return nil

@@ -1,0 +1,10 @@
+{
+  "needs_you.approve_once": "Aprovar uma vez",
+  "needs_you.refuse": "Recusar",
+  "needs_you.title": "Precisa de si",
+  "record.title": "Registo",
+  "work.requests_need_you": {
+    "one": "{count} pedido precisa de si",
+    "other": "{count} pedidos precisam de si"
+  }
+}

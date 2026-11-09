@@ -7,6 +7,9 @@
  * The Card is enforced by KIFF, not by these prompts. The prompts tell the
  * taf how to work inside a Card: what to do when a call is held or refused.
  */
+
+import { type Lang, ownerLanguageLine } from "./cloud/words/index.js";
+
 export interface Job {
   id: string;
   name: string;
@@ -30,6 +33,8 @@ export interface Job {
    * said otherwise): its disclosure line names it (kiff/tafs#476, gaps 16 and 18).
    */
   writesFor?: string;
+  /** The owner's language (docs/languages.md), when it isn't English: what's for them is written in it. */
+  ownerLang?: Lang;
 }
 
 /**
@@ -402,5 +407,6 @@ export function writesForIn(line: string | undefined): string | undefined {
 
 export function systemPrompt(job: Job): string {
   const lines = Object.entries(disclosureLines(job)).map(([lang, line]) => `${lang} "${line}"`).join(", ");
-  return `${SHARED_INSTRUCTIONS}\n\nYour job: ${job.name}.\n\nYour disclosure line: "${disclosureLine(job)}"${lines ? `\nIn other languages: ${lines}` : ""}\n\n${job.instructions}`;
+  const owner = job.ownerLang ? ownerLanguageLine(job.ownerLang) : undefined;
+  return `${SHARED_INSTRUCTIONS}\n\nYour job: ${job.name}.\n\nYour disclosure line: "${disclosureLine(job)}"${lines ? `\nIn other languages: ${lines}` : ""}${owner ? `\n\n${owner}` : ""}\n\n${job.instructions}`;
 }

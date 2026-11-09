@@ -797,6 +797,35 @@ final class ChatTests: XCTestCase {
                        "Refunds stopped part-way, after these went through: create refund on ch_1, US$5; send email.")
     }
 
+    /// A run tafs cloud names why it failed (`ai_unavailable`) says its words as they are, with
+    /// Retry; what went through before it stopped still follows. As Android's ChatStreamTest.
+    func testARunTafsCloudNamesSaysItsWordsWithRetry() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        let words = "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later."
+        var why: String? = words
+        model.streamOpener = { _, _ in
+            let said = why
+            return AsyncThrowingStream { c in
+                c.yield(.session("sesn_9", newSession: false))
+                c.yield(.end(status: "ERROR", stop: "error", done: [], code: said == nil ? nil : "ai_unavailable", words: said))
+                c.finish()
+            }
+        }
+        await model.sendChat("Refund Ana", to: id)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(model.chatState(id).ended, .failed(retry: "Refund Ana"), "still with Retry")
+        XCTAssertEqual(model.failedWords(id, taf: "Refunds"), words)
+        // A retry that fails with no words says the app's own line again.
+        why = nil
+        await model.retryChatRun(id)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, before it finished.")
+        // What went through before it stopped still follows the words.
+        XCTAssertEqual(AppModel.failedWords(taf: "Refunds", done: [("create refund", "ch_1", nil)], why: words + " "),
+                       "\(words) This went through: create refund on ch_1.")
+    }
+
     /// A held call shows after the taf's words that ask for it (the 789 retest), and is the
     /// one the chat says needs the owner (#64).
     func testAHeldCallShowsWhereItWasHeld() async throws {

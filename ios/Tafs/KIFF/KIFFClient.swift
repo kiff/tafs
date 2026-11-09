@@ -1218,6 +1218,13 @@ final class KIFFClient {
     /// The languages to ask KIFF for, most preferred first, so KIFF writes what it says to the
     /// owner (a held call's reason, a Record line's) in the app's language at its source, never
     /// translated by the app (kiff/tafs#75). English is the last fallback.
+    /// The languages the app's own screens are written in, most preferred first: what it asks
+    /// the servers for, so their words always match the screen's (docs/languages.md). English
+    /// only until the app ships its other languages. `Bundle.main.preferredLocalizations` isn't
+    /// that yet: it answers Spanish or French on such a phone, because Siri's phrases
+    /// (`AppShortcuts.strings`) are in those two, while every screen is still in English.
+    static let screenLanguages = ["en"]
+
     static func acceptLanguage(_ preferred: [String]) -> String {
         var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
         if !tags.contains(where: { $0 == "en" || $0.hasPrefix("en-") }) { tags.append("en") }
@@ -1241,7 +1248,7 @@ final class KIFFClient {
         // The language the app shows, not the device's list: an English app on a Spanish iPad
         // read KIFF's reasons in Spanish (kiff/tafs#138, 21 Oct). When the app is translated,
         // KIFF follows it.
-        request.setValue(Self.acceptLanguage(Bundle.main.preferredLocalizations), forHTTPHeaderField: "Accept-Language")
+        request.setValue(Self.acceptLanguage(Self.screenLanguages), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try (body as? RawJSON)?.data ?? JSONEncoder().encode(body)

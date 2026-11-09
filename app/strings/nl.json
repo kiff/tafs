@@ -1,0 +1,10 @@
+{
+  "needs_you.approve_once": "Eenmalig goedkeuren",
+  "needs_you.refuse": "Weigeren",
+  "needs_you.title": "Wacht op jou",
+  "record.title": "Logboek",
+  "work.requests_need_you": {
+    "one": "{count} verzoek wacht op jou",
+    "other": "{count} verzoeken wachten op jou"
+  }
+}

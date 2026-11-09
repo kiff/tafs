@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { Notify } from "./agents.js";
 import { type Keys, PERMIT_HEADER, type Permit, PermitError, verifyPermit } from "./permit.js";
+import { type Lang, wordsIn } from "./words/index.js";
 
 /**
  * Coach's tools (kiff/tafs#206): one small MCP server, at POST /v1/mcp, that
@@ -232,8 +233,11 @@ export const REPLACES_LINE = "replaces the earlier connection";
  * so sending it again is safe. One in `replace` is marked so: KIFF replaces the account's control
  * server's own connection of that name, and its line says so.
  */
-export function coachConnect(missing: ToolDef[], mcp: string, replace: string[] = []): { body: { connections: unknown[] }; lines: string[] } {
+export function coachConnect(missing: ToolDef[], mcp: string, replace: string[] = [], lang: Lang = "en"): { body: { connections: unknown[] }; lines: string[] } {
   const replacing = new Set(replace);
+  // The lines the person reads, in their language; the body the phone signs is the same in every language.
+  const w = wordsIn(lang) as unknown as Record<string, string>;
+  const lineOf = (t: ToolDef) => w[`ct_${t.name}`] ?? t.line;
   return {
     body: {
       connections: missing.map((t) => ({
@@ -241,7 +245,7 @@ export function coachConnect(missing: ToolDef[], mcp: string, replace: string[] 
         idempotency_argument: OP_ARG, ...(t.read ? { read_only: true } : {}), ...(replacing.has(t.name) ? { replace: true } : {}),
       })),
     },
-    lines: missing.map((t) => (replacing.has(t.name) ? `${t.line} · ${REPLACES_LINE}` : t.line)),
+    lines: missing.map((t) => (replacing.has(t.name) ? `${lineOf(t)} · ${w.ct_replaces}` : lineOf(t))),
   };
 }
 

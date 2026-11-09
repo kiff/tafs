@@ -925,6 +925,7 @@
     <string name="needs_you_answer_in_kiff_until">Answering from the phone arrives once KIFF checks the phone\'s signature. Until then, answer in KIFF.</string>
     <string name="needs_you_answer_not_taken">KIFF doesn\'t take your answer to this one.</string>
     <string name="needs_you_approve_again">Approve again in your browser</string>
+    <string name="needs_you_approve_once">Approve once</string>
     <string name="needs_you_approve_once_with">Approve once with %1$s</string>
     <string name="needs_you_card_unit_changed">This request changed. Read it again before dismissing it.</string>
     <string name="needs_you_card_unit_dismiss_prompt">Dismiss %1$s</string>
@@ -1746,6 +1747,10 @@
     <string name="work_request_ask_coach">Ask Coach</string>
     <string name="work_request_try_reply_now">Try the reply now</string>
     <string name="work_request_what_happened">What happened</string>
+    <plurals name="work_requests_need_you">
+        <item quantity="one">%1$d request needs you</item>
+        <item quantity="other">%1$d requests need you</item>
+    </plurals>
     <string name="work_send_again">Send again</string>
     <string name="work_sending_again">Sending again…</string>
 </resources>

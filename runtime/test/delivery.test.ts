@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DELIVERY, DELIVERY_WORDS, deliveredLine, handoffOf } from "../src/cloud/delivery.js";
+import { DELIVERY, DELIVERY_WORDS, deliveredLine, deliveryViews, handoffOf, whyIn } from "../src/cloud/delivery.js";
 import { type Deps, handle, type HTTPEvent, sweepDeliveries, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -234,6 +234,23 @@ describe("a taf's results reach their destination, checked by tafs cloud (result
     const gone = await w.ran(RAE, "Refunded.\n\nHand-off\nOne more.", []);
     const after = await w.call("GET", `/v1/tafs/${RAE}/work`);
     expect(after.body.requests.find((r: { id: string }) => r.id === gone.id).deliveries[0]).toMatchObject({ state: "not_sent", line: `Not delivered to Invoices: ${DELIVERY_WORDS.tafGone}` });
+  });
+
+  it("says where a result went in the person's language, tafs cloud's whys in theirs and an app's own words as it gave them", () => {
+    const d = (state: "sent" | "handed" | "retrying" | "not_sent", name: string, why?: string) => ({ place: "action" as const, key: name, name, state, at: NOW.toISOString(), tries: 0, ...(why ? { why } : {}) });
+    const rd = { run: "r", taf: RAE, checked: "", places: [d("sent", "Sheets"), d("not_sent", "Slack", DELIVERY_WORDS.refused), d("not_sent", "Notion", "The page was archived.")] };
+    expect(deliveryViews(rd, "Rae", "UTC", NOW, "de").map((v) => v.line)).toEqual([
+      `Zugestellt an Sheets um ${NOW.toISOString().slice(11, 16)}`,
+      "Nicht an Slack zugestellt: die App hat es nicht angenommen",
+      "Nicht an Notion zugestellt: The page was archived.",
+    ]);
+    // Coach's words stay English: tafs cloud knows them to start Coach with its delivery skill, and Coach answers in the person's language.
+    expect(deliveryViews(rd, "Rae", "UTC", NOW, "de")[1]).toMatchObject({ coach_words: DELIVERY_WORDS.coach("Rae", "Slack", DELIVERY_WORDS.refused) });
+    expect(deliveredLine(rd, "fr")).toBe("Envoyé à Sheets. Non envoyé à Slack et Notion.");
+    expect(deliveredLine({ ...rd, places: [d("sent", "A"), d("handed", "B"), d("retrying", "C")] }, "pl")).toBe("Wysłano do: A i przekazano do: B. Nie wysłano do: C (ponowna próba w toku).");
+    expect(whyIn(DELIVERY_WORDS.noHandoff, "es")).toBe("el resultado no tiene una sección «Hand-off»");
+    expect(whyIn("the hand-over failed", "it")).toBe("il passaggio non è riuscito");
+    expect(whyIn(undefined, "nl")).toBeUndefined();
   });
 
   it("writes one line above the run's report in the thread: where its result went", () => {

@@ -154,9 +154,53 @@ enum DisconnectWords {
 
 /// The words of an app's connections grouped by taf, the same on both apps.
 enum ConnectionGroupWords {
-    /// The last group: connections with no taf this app can name. Never "removed": the app
-    /// can't tell a removed taf from one it doesn't see.
+    /// The last group: connections whose taf the app can't name and tafs cloud doesn't name as
+    /// removed. That may be a taf this person doesn't see, an agent that isn't a taf, or a taf
+    /// removed before tafs cloud named them, so the words claim none of them.
     static let others = "Other connections"
+
+    // The connections of tafs tafs cloud names as removed (`removed_tafs`), under their own
+    // heading, cleared at once.
+    static let fromRemoved = "From removed tafs"
+    static let clearRemoved = "Clear these connections"
+    static func clearTitle(_ n: Int) -> String { Words.Connect.ClearRemoved.title(count: n) }
+    static let clearBody = "Each is signed out at its vendor. One another taf's Card uses is kept."
+    static let clear = "Clear"
+
+    /// How clearing went: "Cleared 2. Kept 1 for Chargebacks, whose Card uses it.", and what
+    /// couldn't be, to try again. `kept` connections were kept for `keptFor`, the tafs whose
+    /// Cards use them, by tafs cloud's names.
+    static func cleared(done: Int, kept: Int, keptFor: [String], left: Int) -> String {
+        var parts: [String] = []
+        if done > 0 { parts.append("Cleared \(done).") }
+        if kept > 0 { parts.append(keptLine(kept, distinct(keptFor))) }
+        if left > 0 { parts.append("\(left) couldn't be cleared. Try again.") }
+        return parts.joined(separator: " ")
+    }
+
+    /// A connection a live taf's Card still uses, as tafs cloud says (`used_by`): kept, and for whom.
+    static func keptLine(_ kept: Int, _ names: [String]) -> String {
+        let who = names.isEmpty ? "another taf" : joined(names)
+        return "Kept \(kept) for \(who), whose Card\(names.count > 1 ? "s use" : " uses") \(kept == 1 ? "it" : "them")."
+    }
+
+    /// Under a removed taf's connection that Clear keeps: the tafs whose Cards still use it.
+    static func usedBy(_ names: [String]) -> String? {
+        let n = distinct(names)
+        guard !n.isEmpty else { return nil }
+        return "Kept: " + joined(n) + (n.count == 1 ? "'s Card uses it" : "'s Cards use it")
+    }
+
+    /// The names that aren't blank, each once, in order.
+    private static func distinct(_ names: [String]) -> [String] {
+        var seen = Set<String>()
+        return names.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty && seen.insert($0).inserted }
+    }
+
+    /// "A", "A and B", "A, B and C".
+    private static func joined(_ names: [String]) -> String {
+        names.count == 1 ? names[0] : names.dropLast().joined(separator: ", ") + " and " + (names.last ?? "")
+    }
 }
 
 /// A connected app's connections, grouped by the taf each was set up for (the owner's ask): a
@@ -174,9 +218,15 @@ struct AppConnectionsView: View {
     @State private var cancelling: PlanqueClient.Grant?
     /// The key-based connection taking a new key (gap 13), on the key sheet.
     @State private var replacing: PlanqueClient.Grant?
+    /// The removed tafs' connections whose Clear waits for the owner's yes.
+    @State private var clearing: [String]?
 
     var body: some View {
         let groups = model.connectionGroups(of: app)
+        // What tafs cloud says of each removed taf's connection: only one it lists with nobody
+        // using it is cleared. Not listed means no Clear.
+        let listed = model.removedListed
+        let clearable = groups.removed.filter { listed[$0.id]?.usedBy.isEmpty == true }.map(\.id)
         List {
             ForEach(groups.tafs) { group in
                 Section {
@@ -184,6 +234,26 @@ struct AppConnectionsView: View {
                 } header: {
                     Text(group.taf)
                 }
+            }
+            // Removed tafs' connections, as tafs cloud names them: no sign-in again and no
+            // Disconnect each, one action that clears them.
+            if !groups.removed.isEmpty {
+                Section {
+                    ForEach(groups.removed) { g in removedRow(g, usedBy: listed[g.id]?.usedBy) }
+                    if model.canManageCards, !clearable.isEmpty {
+                        Button(model.clearingRemoved ? "Clearing…" : ConnectionGroupWords.clearRemoved, role: .destructive) { clearing = clearable }
+                            .buttonStyle(.borderless)
+                            .confirming()
+                            .disabled(model.clearingRemoved || busy != nil)
+                            .accessibilityIdentifier("connect.clear-removed")
+                    }
+                } header: {
+                    Text(ConnectionGroupWords.fromRemoved)
+                }
+            }
+            if let note = model.clearNote {
+                Text(note).scaledFont(13).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("connect.clear-note")
             }
             if !groups.others.isEmpty {
                 Section {
@@ -212,6 +282,15 @@ struct AppConnectionsView: View {
             Button("Cancel", role: .cancel) { confirming = nil }
         } message: { g in
             Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g)))
+        }
+        // Clearing removed tafs' connections asks first, then one Face ID for all of them.
+        .confirmationDialog(ConnectionGroupWords.clearTitle(clearing?.count ?? 0),
+                            isPresented: Binding(get: { clearing != nil }, set: { if !$0 { clearing = nil } }),
+                            titleVisibility: .visible, presenting: clearing) { ids in
+            Button(ConnectionGroupWords.clear, role: .destructive) { clearRemoved(ids) }
+            Button("Cancel", role: .cancel) { clearing = nil }
+        } message: { _ in
+            Text(ConnectionGroupWords.clearBody)
         }
         .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0.vendor) } ?? "",
                             isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
@@ -276,6 +355,34 @@ struct AppConnectionsView: View {
         // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
         if let failed = model.lastFailure(g) {
             Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// A removed taf's connection: what it is, the removed taf it was made for by the name
+    /// planque keeps, planque's status words, and the tafs whose Cards still use it.
+    private func removedRow(_ g: PlanqueClient.Grant, usedBy: [TafsCloud.ConnectApps.UsedBy]?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(g.account.flatMap { $0.isEmpty ? nil : $0 } ?? app.title)
+                .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+            if let name = g.agentName, !name.trimmingCharacters(in: .whitespaces).isEmpty {
+                Text(name).scaledFont(13).foregroundColor(Theme.soft)
+            }
+            if let words = g.statusWords, !words.isEmpty {
+                Text(words).scaledFont(13).foregroundColor(Theme.dim)
+            }
+            if let kept = usedBy.flatMap({ ConnectionGroupWords.usedBy($0.map(\.name)) }) {
+                Text(kept).scaledFont(13).foregroundColor(Theme.soft)
+            }
+        }
+        .frame(minHeight: 44, alignment: .leading)
+    }
+
+    /// Clears the removed tafs' connections (one Face ID), then reads the list again.
+    private func clearRemoved(_ ids: [String]) {
+        clearing = nil
+        Task {
+            await model.clearRemovedConnections(ids)
+            await model.loadConnectApps()
         }
     }
 
