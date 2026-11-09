@@ -68,5 +68,9 @@ final class AcceptLanguageTests: XCTestCase {
         XCTAssertEqual(KIFFClient.acceptLanguage(["es-CO", "fr-FR"]), "es-CO, fr-FR;q=0.9, en;q=0.8")
         XCTAssertEqual(KIFFClient.acceptLanguage(["en-US"]), "en-US")
         XCTAssertEqual(KIFFClient.acceptLanguage([]), "en")
+        // Until the app ships its other languages its screens are English, so English is what it
+        // asks for, whatever the phone's language: Siri's Spanish and French phrases don't count.
+        XCTAssertEqual(KIFFClient.screenLanguages, ["en"])
+        XCTAssertEqual(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), "en")
     }
 }
