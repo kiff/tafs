@@ -1,0 +1,30 @@
+import type { Words } from "./en.js";
+
+/** Portuguese (European, você), in the glossary's terms (docs/languages.md). */
+export const pt: Words = {
+  work_working: "Em curso",
+  work_waiting_approval: "À espera da sua aprovação",
+  work_waiting_answer: "À espera de uma resposta",
+  work_waiting_event: (event) => `À espera do evento ${event} da app`,
+  work_done_at: (time) => `Concluído às ${time}`,
+  work_stopped: "Parado",
+  work_failed: "Falhou",
+  work_failed_because: (why) => `Falhou: ${why}`,
+  work_needs_you: "Precisa da sua atenção.",
+  work_retry_at: (time, of) => `Parou enquanto trabalhava. Nova tentativa às ${time}${of}.`,
+  work_retry_soon: (of) => `Parou enquanto trabalhava. Nova tentativa em breve${of}.`,
+  work_try_of: (n, of) => `, ${n} de ${of}`,
+  work_replied_at: (time) => `Respondido às ${time}`,
+  work_reply_not_sent: (why) => `Resposta não enviada: ${why}`,
+  work_provider_refused: "o fornecedor não a aceitou",
+  work_skipped_busy: (time) => `Execução das ${time} ignorada: a anterior ainda estava em curso`,
+  work_skipped_late: (time) => `Execução das ${time} ignorada: chegou tarde demais`,
+  work_halted: "Bloqueado · desbloqueie-o em Bloquear",
+  work_needs_you_count: (n, form) => (form === "one" ? `${n} pedido precisa de si` : `${n} pedidos precisam de si`),
+  work_paused: "Em pausa",
+  work_from_chat: "Trabalha a partir do seu chat",
+  work_next_run: (time) => `Próxima execução ${time}`,
+  work_last_done: (time) => `Última concluída às ${time}`,
+  work_nothing_yet: "Ainda nada",
+  code_ai_unavailable: "O nosso fornecedor de IA não nos está a servir neste momento, por isso isto parou e não usou nenhum dos seus créditos. O problema é nosso, não seu: tente novamente um pouco mais tarde.",
+};

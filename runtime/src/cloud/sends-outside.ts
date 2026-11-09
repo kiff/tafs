@@ -35,6 +35,9 @@ export function sendingOutside(profile: unknown): string[] {
 /** How long a note's write holds its claim, at most: a write that died lets the next one in after this. */
 export const NOTE_CLAIM_MS = 10_000;
 
+/** How much sooner than its expiry a write stops giving its claim back: the store's whole seconds, and room to spare. */
+export const NOTE_RELEASE_MARGIN_MS = 2_000;
+
 /** How many times a note's write waits for another's claim before it gives up, and how long each wait grows by. */
 const NOTE_TRIES = 6;
 const NOTE_WAIT_MS = 50;
@@ -54,8 +57,9 @@ export async function noteSendingOutside(store: CoachStore, tenant: string, agen
   const key = sendsOutsideKey(tenant, agent);
   const claim = `${key}#claim`;
   for (let i = 0; i < NOTE_TRIES; i++) {
-    if (await store.once(claim, new Date(now.getTime() + NOTE_CLAIM_MS))) {
-      const held = clock();
+    // The claim's life is counted from when it's taken, on the same clock as the release below (agentgabo on #608).
+    const held = clock();
+    if (await store.once(claim, new Date(held + NOTE_CLAIM_MS))) {
       try {
         const read = (await store.get(key)) as Note | undefined;
         const grants = { ...(read?.grants ?? {}), [grant]: sendingOutside(profile) };
@@ -63,7 +67,9 @@ export async function noteSendingOutside(store: CoachStore, tenant: string, agen
       } finally {
         // Given back only while it's still this write's: past its 10 seconds another write may hold it now, and the
         // store can't remove only its own, so it's left to expire (agentgabo on #607).
-        if (clock() - held < NOTE_CLAIM_MS) await store.remove(claim).catch(() => undefined);
+        // The store compares expiries in whole seconds, so a claim can be taken over up to a second early: the margin
+        // keeps a write that ran long from removing a claim that may be another's by then.
+        if (clock() - held < NOTE_CLAIM_MS - NOTE_RELEASE_MARGIN_MS) await store.remove(claim).catch(() => undefined);
       }
       return;
     }

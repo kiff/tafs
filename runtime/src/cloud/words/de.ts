@@ -1,0 +1,30 @@
+import type { Words } from "./en.js";
+
+/** German (du), in the glossary's terms (docs/languages.md). */
+export const de: Words = {
+  work_working: "Wird bearbeitet",
+  work_waiting_approval: "Wartet auf deine Genehmigung",
+  work_waiting_answer: "Wartet auf eine Antwort",
+  work_waiting_event: (event) => `Wartet auf das Ereignis ${event} der App`,
+  work_done_at: (time) => `Erledigt um ${time}`,
+  work_stopped: "Gestoppt",
+  work_failed: "Fehlgeschlagen",
+  work_failed_because: (why) => `Fehlgeschlagen: ${why}`,
+  work_needs_you: "Bitte sieh es dir an.",
+  work_retry_at: (time, of) => `Es wurde während der Arbeit unterbrochen. Neuer Versuch um ${time}${of}.`,
+  work_retry_soon: (of) => `Es wurde während der Arbeit unterbrochen. Neuer Versuch in Kürze${of}.`,
+  work_try_of: (n, of) => `, ${n} von ${of}`,
+  work_replied_at: (time) => `Beantwortet um ${time}`,
+  work_reply_not_sent: (why) => `Antwort nicht gesendet: ${why}`,
+  work_provider_refused: "der Anbieter hat sie nicht angenommen",
+  work_skipped_busy: (time) => `Lauf um ${time} übersprungen: der letzte lief noch`,
+  work_skipped_late: (time) => `Lauf um ${time} übersprungen: er kam zu spät`,
+  work_halted: "Angehalten · über „Anhalten“ fortsetzen",
+  work_needs_you_count: (n, form) => (form === "one" ? `${n} Anfrage braucht dich` : `${n} Anfragen brauchen dich`),
+  work_paused: "Pausiert",
+  work_from_chat: "Arbeitet über seinen Chat",
+  work_next_run: (time) => `Nächster Lauf ${time}`,
+  work_last_done: (time) => `Zuletzt erledigt um ${time}`,
+  work_nothing_yet: "Noch nichts",
+  code_ai_unavailable: "Unser KI-Anbieter steht uns gerade nicht zur Verfügung. Deshalb wurde das gestoppt, und keine deiner Credits wurden verbraucht. Das liegt an uns, nicht an dir: Versuch es etwas später noch einmal.",
+};

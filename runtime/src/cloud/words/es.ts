@@ -1,0 +1,30 @@
+import type { Words } from "./en.js";
+
+/** Spanish (tú), in the glossary's terms (docs/languages.md). */
+export const es: Words = {
+  work_working: "Trabajando en ello",
+  work_waiting_approval: "Esperando tu aprobación",
+  work_waiting_answer: "Esperando una respuesta",
+  work_waiting_event: (event) => `Esperando el evento ${event} de la app`,
+  work_done_at: (time) => `Hecho a las ${time}`,
+  work_stopped: "Detenido",
+  work_failed: "Falló",
+  work_failed_because: (why) => `Falló: ${why}`,
+  work_needs_you: "Necesita que lo revises.",
+  work_retry_at: (time, of) => `Se detuvo mientras trabajaba. Se reintentará a las ${time}${of}.`,
+  work_retry_soon: (of) => `Se detuvo mientras trabajaba. Se reintentará pronto${of}.`,
+  work_try_of: (n, of) => `, ${n} de ${of}`,
+  work_replied_at: (time) => `Respondido a las ${time}`,
+  work_reply_not_sent: (why) => `Respuesta no enviada: ${why}`,
+  work_provider_refused: "el proveedor no la aceptó",
+  work_skipped_busy: (time) => `Se omitió la ejecución de las ${time}: la anterior seguía en marcha`,
+  work_skipped_late: (time) => `Se omitió la ejecución de las ${time}: llegó demasiado tarde`,
+  work_halted: "Bloqueado · desbloquéalo desde Bloquear",
+  work_needs_you_count: (n, form) => (form === "one" ? `${n} solicitud te necesita` : `${n} solicitudes te necesitan`),
+  work_paused: "En pausa",
+  work_from_chat: "Trabaja desde su chat",
+  work_next_run: (time) => `Próxima ejecución ${time}`,
+  work_last_done: (time) => `Hecho por última vez a las ${time}`,
+  work_nothing_yet: "Nada todavía",
+  code_ai_unavailable: "Nuestro proveedor de IA no nos está atendiendo ahora mismo, así que esto se detuvo y no usó ninguno de tus créditos. Es cosa nuestra, no tuya: vuelve a intentarlo un poco más tarde.",
+};
