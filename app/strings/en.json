@@ -1,0 +1,8 @@
+{
+  "app.name": "tafs",
+  "export.not_exported": "Your chats weren't exported. {why}",
+  "export.not_offered": "The files couldn't be saved on this phone. Free up some space, then try again.",
+  "export.preparing": "Preparing your chats…",
+  "export.row": "Export my chats",
+  "export.try_again": "Try again"
+}
