@@ -92,7 +92,7 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
     case "waiting": steps.push({ label: view.line, state: "waiting", ...(view.waiting_for ? { waits_on: "app" as const } : {}) }); break;
     case "working": steps.push({ label: w.work_working, state: "next" }); break;
     case "done": steps.push({ label: w.step_done, line: at(r.updated), state: "done" }); break;
-    case "stopped": steps.push({ label: w.work_stopped, line: at(r.updated), state: "failed" }); break;
+    case "stopped": steps.push({ label: w.work_stopped, line: r.status === "COMPLETED" ? view.line : at(r.updated), state: "failed" }); break;
     case "failed": steps.push({ label: w.work_failed, line: view.code ? view.line : r.error ?? at(r.updated), state: "failed" }); break;
   }
   return { ...view, from, steps };
