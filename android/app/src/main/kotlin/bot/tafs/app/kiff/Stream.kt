@@ -40,7 +40,8 @@ sealed interface StreamEvent {
    */
   data class State(val state: String, val words: String?) : StreamEvent
   /** The run stopped: its status (COMPLETED, ERROR, CANCELLED…), why, and for a failed run what went through before it stopped. */
-  data class End(val status: String, val stop: String, val done: List<DoneCall> = emptyList()) : StreamEvent
+  /** [code] and [words]: tafs cloud's, on a run that failed for a reason it names (`ai_unavailable`), said as they are. */
+  data class End(val status: String, val stop: String, val done: List<DoneCall> = emptyList(), val code: String? = null, val words: String? = null) : StreamEvent
   /** The stream broke on tafs cloud's side; the thread has the rest. */
   data object Broken : StreamEvent
 
@@ -71,6 +72,8 @@ sealed interface StreamEvent {
             val tool = call["tool"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
             DoneCall(tool, call["resource"]?.jsonPrimitive?.contentOrNull, call["invocation"]?.jsonPrimitive?.contentOrNull)
           },
+          str("code")?.takeIf(String::isNotBlank),
+          str("words")?.takeIf(String::isNotBlank),
         )
         "state" -> str("state")?.let { State(it, str("words")?.takeIf(String::isNotBlank)) }
         "error" -> Broken

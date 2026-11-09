@@ -268,6 +268,9 @@ iOS drops its own queue the same way, with the same words.
   this went through: create refund on ch_3001, US$5." The list is the run's own record
   (`end`'s `done`), never the model's words; the amount is KIFF's, from the call's Record
   line (by `invocation`), once the Record is read (`failedWords`, kiff/agents#249).
+  When tafs cloud's `end` names why (`code` and `words`, such as `ai_unavailable`: the AI
+  provider isn't serving us, and no credits were used), the line is its words as they are,
+  then "This went through: …" when something did, still with Retry (Android; iPhone follows).
 
 ## Held calls in the chat
 

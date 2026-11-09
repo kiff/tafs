@@ -173,6 +173,23 @@ class ChatStreamTest {
     assertEquals("Refunds stopped part-way, after this went through: create refund on ch_1.", AppModel.failedWords("Refunds", listOf(DoneCall("create_refund", "ch_1"))))
   }
 
+  @Test fun aRunTafsCloudNamesSaysItsWordsWithRetry() = runTest {
+    reads()
+    val words = "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later."
+    transport.answer(stream, 200, sse(
+      "session" to """{"session":"s1","run":"run_1"}""",
+      "end" to """{"status":"ERROR","stop":"error","done":[],"code":"ai_unavailable","words":"$words"}""",
+    ))
+    val m = model()
+    m.deliverChat("Refund Ana", "refunds-1")
+    settle()
+    val end = m.state.value.chatEnded["refunds-1"] as ChatEnd.Failed
+    assertEquals(ChatEnd.Failed("Refund Ana", emptyList(), words), end)
+    assertEquals(words, AppModel.failedWords("Refunds", end.done, end.words))
+    // What went through before it stopped still follows the words.
+    assertEquals("$words This went through: create refund on ch_1.", AppModel.failedWords("Refunds", listOf(DoneCall("create_refund", "ch_1")), words))
+  }
+
   @Test fun aRunStoppedAtACapSaysWhy() = runTest {
     reads()
     transport.answer(stream, 200, sse("end" to """{"status":"COMPLETED","stop":"turn_cap"}"""))

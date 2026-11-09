@@ -4544,7 +4544,7 @@ class AppModel(
       _state.update { s ->
         val how = when {
           end == null -> null
-          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done)
+          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done, end.words)
           end.status == "CANCELLED" -> ChatEnd.Stopped
           end.stop in CAP_STOPS -> ChatEnd.Capped(end.stop)
           else -> null
@@ -6507,9 +6507,11 @@ class AppModel(
     }
 
     /** A run that failed part-way, with what went through before it stopped, from the run's own record. */
-    fun failedWords(taf: String, done: List<bot.tafs.app.kiff.DoneCall>): String {
-      if (done.isEmpty()) return "$taf stopped part-way. Nothing went through."
+    fun failedWords(taf: String, done: List<bot.tafs.app.kiff.DoneCall>, words: String? = null): String {
       val calls = done.joinToString("; ") { c -> KiffMapping.toolWords(c.tool) + (c.resource?.let { " on $it" } ?: "") }
+      // tafs cloud's words say why, as they are; what went through still follows, from the run's own record.
+      if (words != null) return if (done.isEmpty()) words else "${words.trim()} This went through: $calls."
+      if (done.isEmpty()) return "$taf stopped part-way. Nothing went through."
       return "$taf stopped part-way, after this went through: $calls."
     }
 

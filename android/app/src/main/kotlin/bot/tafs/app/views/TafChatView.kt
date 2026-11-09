@@ -561,7 +561,7 @@ private fun LiveWork(live: LiveAnswer) {
 @Composable
 private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
   val words = when (end) {
-    is ChatEnd.Failed -> AppModel.failedWords(taf, end.done)
+    is ChatEnd.Failed -> AppModel.failedWords(taf, end.done, end.words)
     ChatEnd.Stopped -> "You stopped $taf."
     is ChatEnd.Capped -> AppModel.capWords(end.stop, taf) ?: return
   }
