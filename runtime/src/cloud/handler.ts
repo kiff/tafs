@@ -663,7 +663,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // Removed tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
     // Only the tafs KIFF says the person may use or oversee are.
     const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
-    return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps))), removing: await deps.removals.list(me.tenantID) };
+    return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps, undefined, undefined, langOf(event)))), removing: await deps.removals.list(me.tenantID) };
   }
   if (parts.length === 2 && method === "POST") {
     need(me, "cards.manage");
@@ -717,7 +717,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await needTaf(event, me, taf, deps);
     const s = await pauseAll(me.tenantID, taf, action === "resume", deps);
     await tellChange(me.tenantID, "taf", taf.id, deps);
-    return { taf: await view(taf, me, deps, s) };
+    return { taf: await view(taf, me, deps, s, undefined, langOf(event)) };
   }
   if (parts.length === 4 && method === "GET" && action === "work") {
     // Where its work stands, for its page (docs/reliability.md): every line and time written here.
@@ -828,7 +828,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const updated = { ...taf, results: resultPlaces(parseBody(event).places) };
     await deps.tafs.put(me.tenantID, updated);
     await tellChange(me.tenantID, "taf", taf.id, deps);
-    return { taf: await view(updated, me, deps) };
+    return { taf: await view(updated, me, deps, undefined, undefined, langOf(event)) };
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
@@ -2089,7 +2089,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         continue;
       }
       if (e.kind === "component") {
-        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: withLine(e.body) });
+        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: withLine(e.body, lang) });
         continue;
       }
       if (e.kind === "answered") {
@@ -2262,18 +2262,18 @@ const UNMARKED_OWNER = new Set(["confirm", "questions", "approval", "sign_in", "
  * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
  * counting of its own. Any other component is as it came.
  */
-export function withLine(component: unknown): unknown {
+export function withLine(component: unknown, lang: Lang = "en"): unknown {
   const c = component as { type?: unknown; steps?: unknown; waits?: unknown } | null | undefined;
   // A card from before kiff/agents marked who it waits on gets the mark here, so an app reads `waits` on every card.
-  if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) });
+  if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) }, lang);
   if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
   const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
   const n = steps.length;
   const at = steps.findIndex((s) => s.status === "active");
   const next = at >= 0 ? at : steps.findIndex((s) => s.status !== "done" && s.status !== "skipped");
-  if (next < 0) return { ...c, line: `Done · ${n} of ${n}` };
+  if (next < 0) return { ...c, line: wordsIn(lang).steps_done(n) };
   const label = typeof steps[next]!.label === "string" ? (steps[next]!.label as string).trim() : "";
-  return { ...c, line: `Step ${next + 1} of ${n}${label ? ` · ${label}` : ""}` };
+  return { ...c, line: wordsIn(lang).steps_at(next + 1, n, label) };
 }
 
 /** The id of a run's first owner message: what `POST …/messages` answers, so the app matches its send to the thread. */
@@ -3030,7 +3030,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
 async function trialRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
   const sub = parts.length === 5 ? parts[4] : parts.length === 4 ? "" : undefined;
-  if (sub === "" && method === "GET") return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id)), deps) };
+  if (sub === "" && method === "GET") return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id)), deps, langOf(event)) };
   if (sub === undefined) throw new HTTPError(404, "not found");
   if (sub === "conversation" && method === "GET") {
     await needTaf(event, me, taf, deps);
@@ -3055,7 +3055,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await draftInfo(token, draft, deps.fetch, deps.kiffBase);
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(404, "no such draft for this taf");
     if (d.status !== "trying") throw new HTTPError(409, "start trying this version's Card in KIFF first");
-    return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft, member(me))), deps) };
+    return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft, member(me))), deps, langOf(event)) };
   }
   if (sub === "messages" && method === "POST") {
     const text = chatText(event);
@@ -3097,19 +3097,19 @@ const TRIAL_IDLE_MS = 7 * 24 * 3600_000;
  * its badge (label) and title, what the version changes, the task to try it
  * with, and when it ends unused.
  */
-export function trialView(t: Trial, taf: Taf, note: string | undefined): Trial & { label: string; title: string; changed?: string; try?: string; ends: string; idle_days: number } {
+export function trialView(t: Trial, taf: Taf, note: string | undefined, lang: Lang = "en"): Trial & { label: string; title: string; changed?: string; try?: string; ends: string; idle_days: number } {
   const tryWith = taf.tries?.[String(t.n)];
   // kiff/agents' own, when it says them; from before it did, the week it kept then.
   const ends = t.ends ?? new Date(Date.parse(t.used) + TRIAL_IDLE_MS).toISOString();
   const idle = t.idle_days ?? TRIAL_IDLE_MS / (24 * 3600_000);
-  return { ...t, label: "Trial", title: `Trying version ${t.n}`, ...(note ? { changed: note } : {}), ...(tryWith ? { try: tryWith } : {}), ends, idle_days: idle };
+  return { ...t, label: wordsIn(lang).trial_label, title: wordsIn(lang).trial_title(t.n), ...(note ? { changed: note } : {}), ...(tryWith ? { try: tryWith } : {}), ends, idle_days: idle };
 }
 
 /** The trial of a taf as the app shows it, or null: one read of its versions for the note. */
-async function trialFor(me: KIFFIdentity, taf: Taf, t: Trial | undefined, deps: Deps) {
+async function trialFor(me: KIFFIdentity, taf: Taf, t: Trial | undefined, deps: Deps, lang: Lang = "en") {
   if (!t) return null;
   const note = (await deps.agents.versions(me.tenantID, taf.id).catch(() => undefined))?.versions.find((v) => v.n === t.n)?.note;
-  return trialView(t, taf, note);
+  return trialView(t, taf, note, lang);
 }
 
 async function openTrialOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Trial> {
@@ -3296,7 +3296,7 @@ async function runsPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps
   const last = selected.at(-1);
   return conditionalPage(event, { ...workOf(selected, me.timeZone ?? "UTC", now, sent, again, undefined, langOf(event)),
     ...(remaining.length > limit && last ? { next_cursor: Buffer.from(JSON.stringify({ scope, at: last.created, id: last.id })).toString("base64url") } : {}),
-    title: "Its work", more_title: "Show all runs", ...(remaining.length <= limit ? { end_words: "Nothing older in the retained runs" } : {}) });
+    title: wordsIn(langOf(event)).runs_title, more_title: wordsIn(langOf(event)).runs_more, ...(remaining.length <= limit ? { end_words: wordsIn(langOf(event)).runs_end } : {}) });
 }
 
 /** Names, counts, limits and summaries are made here, never joined by a phone. */
@@ -3334,7 +3334,7 @@ async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
     // A taf's doors are for the people who manage it; someone it's only shared with sees none.
     manages
-      ? Promise.all([listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors),
+      ? Promise.all([listDoors({ ...doorContext(deps), lang: langOf(event) }, { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors),
         doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
         .then(([ds, lights]) => ds.map((d) => {
           const l = lights.find((x) => x.app === d.app);
@@ -4847,7 +4847,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
         if (d.kind === "thinking" && typeof d.text === "string") return sse("thinking", { text: d.text });
         if (d.kind === "tool_call" && typeof d.tool === "string") return call(d.tool, d.input, d.call_id);
-        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: withLine(d.component) });
+        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: withLine(d.component, lang) });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
         if (d.kind === "tool_result") return ended(d.call_id, (d.result ?? {}) as Record<string, unknown>, d.not_made === true);
         return undefined;
@@ -4859,7 +4859,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "tool_call" && typeof b.tool === "string") return call(b.tool, b.input, b.call_id);
         if (d.kind === "tool_result") return ended(b.call_id, b, b.not_made === true);
         if (d.kind === "agent_message" || d.kind === "report") return sse("said", {});
-        if (d.kind === "component") return sse("component", { component: withLine(d.body) });
+        if (d.kind === "component") return sse("component", { component: withLine(d.body, lang) });
         if (d.kind === "usage") {
           // The first turn after a pause starts a part: what came before it is in the
           // conversation, with its own work, and isn't shown as this part's (the 859 test).
@@ -5163,7 +5163,7 @@ async function forget(me: KIFFIdentity, taf: Taf, escapedName: string, deps: Dep
  * A taf as the app shows it: paused when its schedule is off, with its next and last runs. Its last run is any of its own,
  * scheduled or from its chat, never a trial's: a taf that works from its chat has run once it has.
  */
-async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule, read?: { runs: Run[] | undefined }) {
+async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule, read?: { runs: Run[] | undefined }, lang: Lang = "en") {
   // The taf's recent runs when the caller read them already (the home list): never read twice.
   const runs = read ? Promise.resolve(read.runs) : deps.agents.runs(me.tenantID, taf.id, false, LAST_RUN_LOOK).catch(() => undefined);
   let [s, last] = await Promise.all([
@@ -5192,10 +5192,10 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     /** Where its results go (docs/reliability.md). */
     results: placesOf(taf),
     time_zone: me.timeZone ?? "UTC",
-    time_zone_words: `Times in ${me.timeZone ?? "UTC"}`,
+    time_zone_words: wordsIn(lang).tz_words(me.timeZone ?? "UTC"),
     ...(s ? { schedule_time_zone: s.time_zone || "UTC" } : {}),
     ...(s && s.kind !== "once" && !s.follow_up && (s.time_zone || "UTC") !== (me.timeZone ?? "UTC")
-      ? { schedule_time_zone_words: `Its schedule still uses ${s.time_zone || "UTC"}. Apply the account's time zone again to update it.` } : {}),
+      ? { schedule_time_zone_words: wordsIn(lang).tz_schedule(s.time_zone || "UTC") } : {}),
   };
 }
 
@@ -5224,7 +5224,8 @@ async function calendar(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase), deps.agents.halted(me.tenantID).catch(() => undefined),
   ]);
   // Nothing runs while the account is halted (kiff/tafs#537): no work is to come until it's resumed.
-  if (account?.halted) return { time_zone: zone, from, to, events: [], days: [], more: false, halted: true, words: "Halted: nothing runs until it's resumed" };
+  const w = wordsIn(langOf(event));
+  if (account?.halted) return { time_zone: zone, from, to, events: [], days: [], more: false, halted: true, words: w.cal_halted };
   const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent))
     .sort((a, b) => a.created.localeCompare(b.created) || a.id.localeCompare(b.id));
   // A taf whose schedules or runs can't be read today shows none, never a guess; a halted taf shows none, as nothing of it runs.
@@ -5235,11 +5236,11 @@ async function calendar(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
       deps.agents.halted(me.tenantID, t.id).catch(() => undefined),
     ]);
     if (halt?.halted) return [];
-    return eventsOf({ id: t.id, name: t.name, color: t.color ?? 0 }, schedules, runs, from, to, zone, now);
+    return eventsOf({ id: t.id, name: t.name, color: t.color ?? 0 }, schedules, runs, from, to, zone, now, langOf(event));
   }));
   const { events, days, more } = calendarOf(each.flat());
   const count = events.reduce((n, e) => n + e.count, 0);
-  return { time_zone: zone, from, to, events, days, more, halted: false, words: count ? `${count} to come${more ? ", and more" : ""}` : "Nothing scheduled in these days" };
+  return { time_zone: zone, from, to, events, days, more, halted: false, words: count ? w.cal_to_come(count, more) : w.cal_nothing };
 }
 
 async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
@@ -5275,10 +5276,10 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // last run and its work line. A read that fails leaves both out.
   const now = deps.now?.() ?? new Date();
   const recent = await Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined)));
-  const views = await Promise.all(tafs.map((t, i) => view(t, me, deps, undefined, { runs: recent[i] })));
+  const views = await Promise.all(tafs.map((t, i) => view(t, me, deps, undefined, { runs: recent[i] }, langOf(event))));
   // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
   // be read leaves that entry out, never the list.
-  const trials = await Promise.all(tafs.map((t) => deps.agents.openedTrial(me.tenantID, t.id).then((tr) => trialFor(me, t, tr, deps)).catch(() => null)));
+  const trials = await Promise.all(tafs.map((t) => deps.agents.openedTrial(me.tenantID, t.id).then((tr) => trialFor(me, t, tr, deps, langOf(event))).catch(() => null)));
   // A halted taf reads halted everywhere (kiff/tafs#236, item 13): kiff/agents holds it, on
   // its own or with its account. A read that fails leaves its state as the rest says.
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
@@ -6540,7 +6541,7 @@ async function doorWebhook(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 
 /** The owner's door routes, under /v1/tafs/{id}/doors. Reading needs a session; changing, cards.manage. */
 async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
-  const ctx = doorContext(deps);
+  const ctx = { ...doorContext(deps), lang: langOf(event) };
   const owner: Owner = {
     tenant: me.tenantID,
     ...(me.email ? { email: me.email, subject: me.subject } : {}),

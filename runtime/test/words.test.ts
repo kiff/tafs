@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { jobById, systemPrompt } from "../src/jobs.js";
+import { doorView, offered } from "../src/cloud/doors/doors.js";
+import { APPS } from "../src/cloud/doors/apps.js";
+import { eventsOf } from "../src/cloud/calendar.js";
+import { trialView, withLine, type Taf } from "../src/cloud/handler.js";
 import { en } from "../src/cloud/words/en.js";
 import { requestOf, summaryOf, timeIn } from "../src/cloud/work.js";
 import type { Run } from "../src/cloud/agents.js";
@@ -142,5 +146,30 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(ownerLanguageIn(systemPrompt({ ...job, ownerLang: "pt" }))).toBe("pt");
     expect(ownerLanguageIn(systemPrompt(job))).toBeUndefined();
     expect(ownerLanguageLine("en")).toBeUndefined();
+  });
+
+  it("writes a door's page, the calendar, a trial and a card's steps in the language", () => {
+    const door = { id: "telegram", kind: "telegram" as const, app: "telegram", open: true, address: "@refunds_bot", route: "r", keys: [], created: "" };
+    const app = APPS.find((a) => a.id === "telegram")!;
+    const nl = doorView(door, app, { keys: 0, others: 0 }, "nl");
+    expect(nl.how).toBe("Telegram weet wie er schreef, via de Telegram-gebruiker");
+    expect(nl.words).toMatchObject({ state: "Open: berichten van jou en gekoppelde afzenders aan @refunds_bot starten werk.", tap: "Tik om de Telegram-deur te sluiten.",
+      pair_hint: "Hun Telegram-gebruikers-ID, een getal", pair_from_knock: "Vraag ze de bot te schrijven. Hun bericht klopt hier aan, en Koppelen maakt ze een sleutel." });
+    expect(doorView({ ...door, open: false }, app, undefined, "pl").words.state).toBe("Zamknięte: wiadomości do @refunds_bot niczego nie uruchamiają.");
+    expect(offered({ planqueHandoffSecret: "s" } as never, "fr").find((a) => a.id === "telegram")!.bot!.words.pick).toBe("Quel bot Telegram est-ce ? Quiconque lui écrit fera une demande d'accès.");
+    // English as before, from apps.ts itself.
+    expect(doorView(door, app).words.tap).toBe("Tap to close the telegram door.");
+    expect(doorView(door, app).how).toBe(app.how);
+    // The calendar's words: a schedule in the dial's words, a follow-up, a run's next try.
+    const now = new Date("2026-11-09T08:00:00Z");
+    const evs = eventsOf({ id: "t", name: "Rae", color: 0 },
+      [{ id: "s", agent: "t", cron: "0 9 * * *", time_zone: "UTC", input: "", enabled: true }, { id: "fu-1", agent: "t", cron: "0 12 10 11 *", time_zone: "UTC", input: "", enabled: true, follow_up: true, kind: "once", at: "2026-11-10T12:00:00Z" }],
+      [{ ...run({ id: "r2", status: "RUNNING" }), state: "retrying", try: 1, of: 3, next_at: "2026-11-09T10:00:00Z" }], "2026-11-09", "2026-11-10", "UTC", now, "de");
+    expect([...new Set(evs.map((e) => e.words))].sort()).toEqual(["Jeden Tag um 09:00", "Prüft erneut, wie selbst festgelegt", "Versuch 2 von 3"]);
+    // A trial's badge and title.
+    expect(trialView({ id: "tr", n: 4, draft: "d", started: "", used: "2026-11-09T08:00:00Z" } as never, { tries: {} } as unknown as Taf, undefined, "es")).toMatchObject({ label: "Prueba", title: "Probando la versión 4" });
+    // A card's steps line.
+    expect(withLine({ type: "steps", steps: [{ label: "Connect Stripe", status: "done" }, { label: "Draft its Card", status: "active" }] }, "fr")).toMatchObject({ line: "Étape 2 sur 2 · Draft its Card" });
+    expect(withLine({ type: "steps", steps: [{ label: "A", status: "done" }] }, "it")).toMatchObject({ line: "Fatto · 1 di 1" });
   });
 });

@@ -335,6 +335,41 @@ export const en = {
   dial_ask_coach_words: "Ask Coach to set what it does",
   dial_ask: "Ask",
   dial_step: (n: number) => `Step ${n}`,
+  // A door's page (doors.ts doorWords), and how each app knows who writes (apps.ts).
+  door_state_closed: (address: string) => `Closed: messages to ${address} start nothing.`,
+  door_state_resting: (n: number) => `Open, resting until tomorrow: ${n} of ${n} messages from you and paired senders today.`,
+  door_state_open: (address: string) => `Open: messages from you and paired senders to ${address} start work.`,
+  door_tap_close: (door: string) => `Tap to close the ${door} door.`,
+  door_tap_open: (door: string) => `Tap to open the ${door} door.`,
+  door_settings: "Paired senders and today's limits are below.",
+  door_how_email: "The email must pass the sender check",
+  door_how_whatsapp: "WhatsApp knows the phone number",
+  door_how_slack: "Slack knows who wrote, by their Slack user",
+  door_how_telegram: "Telegram knows who wrote, by their Telegram user",
+  door_hint_email: "Email address",
+  door_hint_whatsapp: "Phone number, with its country code",
+  door_hint_slack: "Their Slack member ID, such as U012AB3CD",
+  door_hint_telegram: "Their Telegram user id, a number",
+  door_from_knock_telegram: "Ask them to write to the bot. Their message knocks here, and Pair makes them a key.",
+  door_bot_none_telegram: "Connect the taf's Telegram bot first, in Settings › Connect apps, with the token BotFather gave you. Then add its door here.",
+  door_bot_pick_telegram: "Which Telegram bot is it? Anyone who writes to it will knock.",
+  // The calendar (calendar.ts and its route).
+  cal_halted: "Halted: nothing runs until it's resumed",
+  cal_to_come: (n: number, more: boolean) => `${n} to come${more ? ", and more" : ""}`,
+  cal_nothing: "Nothing scheduled in these days",
+  cal_follow_up: "Checks again, as it set itself",
+  // A trial, a taf's runs page, and the account's time zone.
+  trial_label: "Trial",
+  trial_title: (n: number) => `Trying version ${n}`,
+  runs_title: "Its work",
+  runs_more: "Show all runs",
+  runs_end: "Nothing older in the retained runs",
+  tz_words: (zone: string) => `Times in ${zone}`,
+  tz_schedule: (zone: string) => `Its schedule still uses ${zone}. Apply the account's time zone again to update it.`,
+  // A card's steps (handler.ts withLine): where they stand.
+  steps_done: (n: number) => `Done · ${n} of ${n}`,
+  steps_at: (i: number, n: number, label: string) => `Step ${i} of ${n}${label ? ` · ${label}` : ""}`,
+  cal_folded: (words: string, n: number, first: string, last: string) => `${words}: ${n} times from ${first} to ${last}`,
 };
 
 export type Words = typeof en;

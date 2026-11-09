@@ -51,6 +51,8 @@ export interface DoorsContext {
   push: PushStore;
   apns: Sender;
   now: Date;
+  /** The person's language, when a request names one (docs/languages.md): a door's page is written in it. */
+  lang?: Lang;
 }
 
 export class DoorError extends Error {
@@ -735,14 +737,14 @@ async function sendReply(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, ta
 /* ------------------------------------------------------------------ the owner */
 
 /** A door as the app shows it, with today's counts: from keys, and from everyone else. */
-export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }) {
+export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }, lang: Lang = "en") {
   return {
     id: d.id, app: d.app, kind: d.kind, label: app?.label ?? d.app, open: d.open, address: d.address,
-    proof: app?.proof ?? "none", how: app?.how ?? "",
+    proof: app?.proof ?? "none", how: app ? appWords(app, lang).how : "",
     keys: app?.proof === "proven" ? d.keys.map((k) => ({ id: k.id, ...(k.name ? { name: k.name } : {}), auto: k.auto === true })) : [],
     today: today.keys, limit: DOOR.keysPerDay, resting: today.keys >= DOOR.keysPerDay,
     others_today: today.others, others_limit: DOOR.othersPerDay,
-    words: doorWords(d, app, today),
+    words: doorWords(d, app, today, lang),
     // A Slack door names its connection, channel and planque subscription, for the app to undo it with the door.
     ...(d.kind === "slack" ? { grant: d.grant, channel: d.channel, ...(d.trigger ? { trigger: d.trigger } : {}) } : {}),
     // A Telegram door names its connection and planque subscription the same way.
@@ -754,19 +756,33 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
  * What the door's page says, in words the apps show as they are: where it stands, what a tap on
  * it does, and that its settings (keys and limits) are below. So neither app writes its own.
  */
-export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }): { state: string; tap: string; settings: string; pair_hint?: string; pair_from_knock?: string } {
-  const label = app?.label ?? d.app;
+export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }, lang: Lang = "en"): { state: string; tap: string; settings: string; pair_hint?: string; pair_from_knock?: string } {
+  const w = wordsIn(lang);
+  const name = w.door_name(app?.id ?? d.app, app?.label ?? d.app);
   const state = !d.open
-    ? `Closed: messages to ${d.address} start nothing.`
+    ? w.door_state_closed(d.address)
     : today.keys >= DOOR.keysPerDay
-      ? `Open, resting until tomorrow: ${DOOR.keysPerDay} of ${DOOR.keysPerDay} messages from you and paired senders today.`
-      : `Open: messages from you and paired senders to ${d.address} start work.`;
+      ? w.door_state_resting(DOOR.keysPerDay)
+      : w.door_state_open(d.address);
+  const said = app ? appWords(app, lang) : undefined;
   return {
     state,
-    tap: d.open ? `Tap to close the ${label.toLowerCase()} door.` : `Tap to open the ${label.toLowerCase()} door.`,
-    settings: "Paired senders and today's limits are below.",
-    ...(app?.proof === "proven" ? { pair_hint: app.pairHint } : {}),
-    ...(app?.proof === "proven" && app.pairFromKnock ? { pair_from_knock: app.pairFromKnock } : {}),
+    tap: d.open ? w.door_tap_close(name) : w.door_tap_open(name),
+    settings: w.door_settings,
+    ...(app?.proof === "proven" ? { pair_hint: said!.pairHint } : {}),
+    ...(app?.proof === "proven" && said?.pairFromKnock ? { pair_from_knock: said.pairFromKnock } : {}),
+  };
+}
+
+/** An app's own lines (apps.ts) in the person's language: how it knows who writes, its pairing hint, its bot's words. */
+export function appWords(app: DoorApp, lang: Lang = "en"): Pick<DoorApp, "how" | "pairHint" | "pairFromKnock" | "bot"> {
+  if (lang === "en") return app;
+  const w = wordsIn(lang) as unknown as Record<string, string>;
+  const word = (k: string, fallback: string | undefined) => (fallback === undefined ? undefined : w[`door_${k}_${app.id}`] ?? fallback);
+  return {
+    how: word("how", app.how)!, pairHint: word("hint", app.pairHint)!,
+    ...(app.pairFromKnock ? { pairFromKnock: word("from_knock", app.pairFromKnock)! } : {}),
+    ...(app.bot ? { bot: { provider: app.bot.provider, words: { none: word("bot_none", app.bot.words.none)!, pick: word("bot_pick", app.bot.words.pick)! } } } : {}),
   };
 }
 
@@ -777,9 +793,9 @@ async function todayOf(store: DoorStore, tenant: string, taf: string, door: stri
 }
 
 /** The apps a door can open on here: what the deployment set up. */
-export function offered(cfg: DoorsConfig): Array<{ id: string; label: string; kind: string; proof: string; how: string; bot?: { provider: string; words: { none: string; pick: string } } }> {
+export function offered(cfg: DoorsConfig, lang: Lang = "en"): Array<{ id: string; label: string; kind: string; proof: string; how: string; bot?: { provider: string; words: { none: string; pick: string } } }> {
   return APPS.filter((a) => (a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) : a.kind === "slack" || a.kind === "telegram" ? Boolean(cfg.planqueHandoffSecret) : Boolean(cfg.whatsapp)))
-    .map(({ id, label, kind, proof, how, bot }) => ({ id, label, kind, proof, how, ...(bot ? { bot } : {}) }));
+    .map((a) => ({ ...a, ...appWords(a, lang) })).map(({ id, label, kind, proof, how, bot }) => ({ id, label, kind, proof, how, ...(bot ? { bot } : {}) }));
 }
 
 export interface Owner {
@@ -802,8 +818,8 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   const counts = await Promise.all(doors.map((d) => todayOf(store, owner.tenant, taf.id, d.id, ctx.now)));
   const knocks = (await knocksOf(store, owner.tenant, taf.id)).filter((k) => k.state === "open");
   return {
-    doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i])),
-    apps: offered(cfg),
+    doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i], ctx.lang)),
+    apps: offered(cfg, ctx.lang),
     knocks,
   };
 }
@@ -887,7 +903,7 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
     await closeDoor(ctx, cfg, owner.tenant, door, { retire: false }).catch(() => undefined);
     throw err;
   }
-  return { door: doorView(door, app) };
+  return { door: doorView(door, app, undefined, ctx.lang) };
 }
 
 async function connectWhatsApp(ctx: DoorsContext, cfg: DoorsConfig, owner: Owner, taf: Taf, body: Record<string, unknown>, now: string): Promise<Door> {
@@ -927,7 +943,7 @@ async function withDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, c
 export async function setOpen(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, open: boolean) {
   const cfg = await ctx.doors.config();
   const d = await withDoor(ctx, owner, taf, id, (door, doors) => doors.map((x) => (x.id === door.id ? { ...x, open } : x)));
-  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
+  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now), ctx.lang) };
 }
 
 /** Pairs a sender with a door that can prove who writes. */
@@ -951,13 +967,13 @@ export async function pair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string
     const named = name && name.toLowerCase() !== key && name.replace(/\D/g, "") !== key ? name : "";
     return doors.map((x) => (x.id === door.id ? { ...x, keys: [...x.keys, { id: key, ...(named ? { name: named } : {}), added: ctx.now.toISOString() }] } : x));
   });
-  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
+  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now), ctx.lang) };
 }
 
 export async function unpair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, key: string) {
   const cfg = await ctx.doors.config();
   const d = await withDoor(ctx, owner, taf, id, (door, doors) => doors.map((x) => (x.id === door.id ? { ...x, keys: x.keys.filter((k) => k.id !== key.toLowerCase()) } : x)));
-  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
+  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now), ctx.lang) };
 }
 
 /** Removes a door: its address or number stops being the taf's. */
