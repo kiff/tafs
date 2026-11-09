@@ -236,6 +236,22 @@ describe("Activity in the person's language", () => {
     expect(plain.filters[2].title).toBe("Held");
     expect(plain.entries[0].detail).toBe("The connection refused it: the connection doesn't include this action. Nothing was sent.");
   });
+
+  it("keeps a Request's own headers when it adds the language to a call to KIFF", async () => {
+    const seen: Headers[] = [];
+    const deps = {
+      kiffBase: "https://kiff.test",
+      fetch: (async (_input: string | URL | Request, init?: RequestInit) => {
+        seen.push(new Headers(init?.headers));
+        return new Response(JSON.stringify({ tenant_id: "account-example", subject: "person-example", api_key: false, capabilities: ["read"] }));
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const { withKIFFLanguage } = await import("../src/cloud/handler.js");
+    const wrapped = withKIFFLanguage({ rawPath: "/", headers: { "accept-language": "pl" }, requestContext: { http: { method: "GET" } } }, deps).fetch!;
+    await wrapped(new Request("https://kiff.test/v1/me", { headers: { authorization: "Bearer synthetic-session" } }));
+    expect(seen[0]!.get("authorization")).toBe("Bearer synthetic-session");
+    expect(seen[0]!.get("accept-language")).toBe("pl");
+  });
 });
 
 describe("recent work pages", () => {

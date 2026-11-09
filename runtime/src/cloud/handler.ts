@@ -5506,7 +5506,7 @@ function minutes(field: string): number[] | undefined {
  * answer (held calls' reasons, warnings, the approval window) match the screen (docs/languages.md). Only when the
  * app sent one: an app that sends none leaves KIFF's own choice as it was. Resolved to one of the eight.
  */
-function withKIFFLanguage(event: HTTPEvent, deps: Deps): Deps {
+export function withKIFFLanguage(event: HTTPEvent, deps: Deps): Deps {
   if (!header(event, "accept-language")) return deps;
   const lang = langOf(event);
   const base = deps.kiffBase ?? KIFF_API;
@@ -5515,8 +5515,9 @@ function withKIFFLanguage(event: HTTPEvent, deps: Deps): Deps {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (url !== base && !url.startsWith(`${base}/`)) return inner(input, init);
     const given = init?.headers;
-    if (given instanceof Headers) {
-      const headers = new Headers(given);
+    // A Request carries its own headers (Authorization among them): init's would replace them, so start from them.
+    if (given instanceof Headers || (input instanceof Request && given === undefined)) {
+      const headers = new Headers(given ?? (input as Request).headers);
       if (!headers.has("accept-language")) headers.set("accept-language", lang);
       return inner(input, { ...init, headers });
     }
