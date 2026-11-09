@@ -49,18 +49,21 @@ const NOTE_WAIT_MS = 50;
  * strictly, never less, so an Approve the owner never completes costs nothing, and the report keeps no write.
  */
 export async function noteSendingOutside(store: CoachStore, tenant: string, agent: string, grant: string, profile: unknown, now: Date,
-  wait: (ms: number) => Promise<void> = (ms) => new Promise((done) => setTimeout(done, ms))): Promise<void> {
+  wait: (ms: number) => Promise<void> = (ms) => new Promise((done) => setTimeout(done, ms)), clock: () => number = Date.now): Promise<void> {
   if (!agent || !grant) return;
   const key = sendsOutsideKey(tenant, agent);
   const claim = `${key}#claim`;
   for (let i = 0; i < NOTE_TRIES; i++) {
     if (await store.once(claim, new Date(now.getTime() + NOTE_CLAIM_MS))) {
+      const held = clock();
       try {
         const read = (await store.get(key)) as Note | undefined;
         const grants = { ...(read?.grants ?? {}), [grant]: sendingOutside(profile) };
         await store.put(key, { grants, at: now.toISOString() } satisfies Note, new Date(now.getTime() + SENDS_OUTSIDE_KEPT_MS));
       } finally {
-        await store.remove(claim).catch(() => undefined);
+        // Given back only while it's still this write's: past its 10 seconds another write may hold it now, and the
+        // store can't remove only its own, so it's left to expire (agentgabo on #607).
+        if (clock() - held < NOTE_CLAIM_MS) await store.remove(claim).catch(() => undefined);
       }
       return;
     }
