@@ -27,6 +27,21 @@ describe("a request, step by step", () => {
     ]);
   });
 
+  it("is written in the person's language: the steps, the times and where it came from; KIFF's titles and the provider's words as they are", () => {
+    const events = [usage(1, "2026-11-02T22:41:20Z", [{ tool: "stripe_charge_k3f9" }, { tool: "unnamed_k3f9", is_error: true }])];
+    const titles = new Map([["stripe_charge_k3f9", "Look up a charge"]]);
+    const d = requestDetail(run, events, [{ run: "run_1", door: "d", app: "email", status: "not_sent", why: "the email provider was down", at: "2026-11-02T22:42:20Z" }], "Europe/Paris", now, titles, undefined, [], "de");
+    expect(d.steps.map((s) => [s.label, s.line])).toEqual([
+      ["Empfangen", "Per E-Mail, 23:41"],
+      ["Look up a charge", "23:41"],
+      ["Daran gearbeitet", "Nicht durchgegangen · 23:41"],
+      ["Antwort nicht zugestellt", "Antwort nicht gesendet: the email provider was down"],
+      ["Erledigt", "23:42"],
+    ]);
+    const retry = requestDetail({ ...run, status: "RUNNING", state: "retrying", try: 1, of: 3, next_at: "2026-11-03T08:15:00Z" }, [], [], "Europe/Paris", now, undefined, undefined, [], "pl");
+    expect(retry.steps.at(-1)).toEqual({ label: `Następna próba ${new Intl.DateTimeFormat("pl", { timeZone: "Europe/Paris", weekday: "short" }).format(new Date("2026-11-03T08:15:00Z"))} o 09:15`, line: "Próba 2 z 3", state: "next" });
+  });
+
   it("a retrying request says its next try, and that the last one needs you", () => {
     const d = requestDetail({ ...run, status: "RUNNING", state: "retrying", try: 3, of: 3, next_at: "2026-11-02T22:15:00Z" }, [], [], "Europe/Paris", now);
     expect(d.steps.at(-1)).toEqual({ label: "Next try 23:15", line: "If it fails again, this needs you", state: "next" });

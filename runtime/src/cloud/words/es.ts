@@ -164,4 +164,22 @@ export const es: Words = {
     if (not.length) parts.push(`No enviado a ${list(not.map((d) => `${d.name}${d.retrying ? " (se vuelve a intentar)" : ""}`))}`);
     return parts.join(". ") + ".";
   },
+  step_received: "Recibido",
+  step_worked: "Trabajó en ello",
+  step_not_made: (t) => `No realizada · ${t}`,
+  step_call_failed: (t) => `No se completó · ${t}`,
+  step_held: "Retenida para tu aprobación",
+  step_held_line: (t) => `Fuera de su Card · ${t}`,
+  step_replied: "Respondido",
+  step_reply_not_delivered: "Respuesta no entregada",
+  step_delivered: "Entregado",
+  step_handed: "Pasado",
+  step_delivering: "Entregando",
+  step_not_delivered: "No entregado",
+  step_next_try_at: (t) => `Próximo intento ${at(t)}`,
+  step_next_try_soon: "Próximo intento pronto",
+  step_last_try: "Si vuelve a fallar, te necesitará",
+  step_try: (n, of) => `Intento ${n}${of ? ` de ${of}` : ""}`,
+  step_needs_you: "Te necesita",
+  step_done: "Hecho",
 };

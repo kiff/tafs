@@ -174,6 +174,26 @@ export const en = {
     if (not.length) parts.push(`Not sent to ${not.map((d) => (d.retrying ? `${d.name} yet: trying again` : d.name)).join(" and ")}`);
     return parts.join(". ") + ".";
   },
+  // A request's steps (request.ts requestDetail): each step's label, and its line where it has one. A bare time is
+  // written as timeIn writes it ("14:20", "Fri 14:20"); a "next try" says it as the language says "at" a time.
+  step_received: "Received",
+  step_worked: "Worked on it",
+  step_not_made: (t: string) => `Not made · ${t}`,
+  step_call_failed: (t: string) => `Didn't go through · ${t}`,
+  step_held: "Held for your approval",
+  step_held_line: (t: string) => `Over its Card · ${t}`,
+  step_replied: "Replied",
+  step_reply_not_delivered: "Reply not delivered",
+  step_delivered: "Delivered",
+  step_handed: "Handed on",
+  step_delivering: "Delivering",
+  step_not_delivered: "Not delivered",
+  step_next_try_at: (t: When) => `Next try ${bare(t)}`,
+  step_next_try_soon: "Next try soon",
+  step_last_try: "If it fails again, this needs you",
+  step_try: (n: number, of?: number) => `Try ${n}${of ? ` of ${of}` : ""}`,
+  step_needs_you: "Needs you",
+  step_done: "Done",
 };
 
 export type Words = typeof en;

@@ -164,4 +164,22 @@ export const nl: Words = {
     if (not.length) parts.push(`Niet verzonden naar ${list(not.map((d) => `${d.name}${d.retrying ? " (wordt opnieuw geprobeerd)" : ""}`))}`);
     return parts.join(". ") + ".";
   },
+  step_received: "Ontvangen",
+  step_worked: "Eraan gewerkt",
+  step_not_made: (t) => `Niet uitgevoerd · ${t}`,
+  step_call_failed: (t) => `Niet gelukt · ${t}`,
+  step_held: "Vastgehouden voor je goedkeuring",
+  step_held_line: (t) => `Buiten zijn Card · ${t}`,
+  step_replied: "Beantwoord",
+  step_reply_not_delivered: "Antwoord niet afgeleverd",
+  step_delivered: "Afgeleverd",
+  step_handed: "Doorgegeven",
+  step_delivering: "Wordt afgeleverd",
+  step_not_delivered: "Niet afgeleverd",
+  step_next_try_at: (t) => `Volgende poging ${at(t)}`,
+  step_next_try_soon: "Volgende poging binnenkort",
+  step_last_try: "Als het weer mislukt, wacht dit op jou",
+  step_try: (n, of) => `Poging ${n}${of ? ` van ${of}` : ""}`,
+  step_needs_you: "Wacht op jou",
+  step_done: "Klaar",
 };
