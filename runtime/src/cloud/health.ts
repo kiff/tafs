@@ -43,14 +43,17 @@ const GOOD_FIRING = new Set(["run", "quiet", "skipped_too_large"]);
 /** A firing skipped because the taf couldn't keep up: it came too late, or its last run was still working. */
 const SKIPPED_FIRING = new Set(["skipped_missed", "skipped_busy"]);
 
-/** Whether a run ended as a failure: it failed, or a turn of it was declined. One waiting for the owner, one retrying, and one its owner stopped aren't. */
-function failed(r: Run): boolean {
-  if (r.state === "retrying" || r.state === "needs_you") return false;
-  return r.status === "ERROR" || (r.status === "COMPLETED" && r.stop === "refused");
-}
-
+/**
+ * Whether a run ended, for its health: it finished or it failed. One paused for its owner, one its owner
+ * stopped, and one tafs already shows as retrying or as needing them aren't counted at all.
+ */
 function ended(r: Run): boolean {
   return (r.status === "ERROR" || r.status === "COMPLETED") && r.state !== "retrying" && r.state !== "needs_you";
+}
+
+/** Whether a run that ended is a failure: it failed, or a turn of it was declined. */
+function failed(r: Run): boolean {
+  return r.status === "ERROR" || (r.status === "COMPLETED" && r.stop === "refused");
 }
 
 /**
@@ -66,11 +69,12 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   const firings = fired.filter((f) => new Date(f.due).getTime() >= since).slice(0, HEALTH_FIRINGS);
   const streak: Fired[] = [];
   let retrying = false;
-  for (const [i, f] of firings.entries()) {
+  for (const f of firings) {
     if (GOOD_FIRING.has(f.outcome)) break;
     if (FAILED_FIRING.has(f.outcome)) streak.push(f);
-    // The newest firing's run didn't finish and its work goes again: not a failure yet.
-    else if (f.outcome === "failed_retrying") { if (i === 0) retrying = true; else break; }
+    // A run that didn't finish, whose work goes to the next run: not a failure, and the failures before it
+    // are another spell. It's still waiting to go again when nothing has failed or worked since.
+    else if (f.outcome === "failed_retrying") { retrying = streak.length === 0; break; }
     // Anything else (a skip, an outcome not known here) neither fails nor recovers.
   }
   if (streak.length) {

@@ -69,6 +69,10 @@ describe("a taf's health", () => {
   it("says a run whose work goes to the next run, while that's the newest firing", () => {
     expect(healthOf([], firings("failed_retrying", "run"), NOW)).toMatchObject({ level: "at_risk", reasons: [{ code: "retrying" }] });
     expect(level([], firings("run", "failed_retrying", "run"))).toBe("healthy");
+    // A skip since doesn't change that: its work still waits for the next run.
+    expect(codes([], firings("skipped_halted", "failed_retrying", "run"))).toEqual(["retrying"]);
+    // A failure since does: that's what's said, and the failures before the retry are another spell.
+    expect(healthOf([], firings("failed_unworked", "failed_retrying", "failed_unworked", "failed_unworked", "run"), NOW)).toMatchObject({ level: "at_risk", reasons: [{ code: "streak_one", since: ago(15) }] });
   });
 
   it("never reads an empty queue as a problem: quiet firings are healthy, however many", () => {
@@ -118,6 +122,10 @@ describe("a taf's health", () => {
     const h = healthOf([capped(10), capped(11), bad(12), bad(13), ok(14)], firings("failed_unworked", "failed_unworked", "run"), NOW);
     expect(h.level).toBe("failing");
     expect(h.reasons.map((r) => r.code)).toEqual(["streak", "failed_some", "capped"]);
+    // Whatever order they're found in: skipped times are at risk, three failed runs in a row are failing.
+    const mixed = healthOf([bad(10), bad(11), bad(12)], firings("skipped_busy", "skipped_busy", "skipped_missed", "run"), NOW);
+    expect(mixed.reasons.map((r) => r.code)).toEqual(["all_failed", "skipped"]);
+    expect(healthView(mixed).lines[0]).toBe("Its last 3 runs failed. Open one to see why.");
   });
 
   it("says each reason in words: what happened, then what the owner can do", () => {
