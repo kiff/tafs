@@ -32,9 +32,10 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   const SAME_AS_ENGLISH: Record<string, string[]> = {
     // "Company" is a plan name, kept in every language (docs/languages.md); the seats around it are translated.
     all: ["cr_company"],
+    de: ["push_credits_title"], // "Credits" is the German term in the glossary
     fr: ["cr_actions"], // "action", "actions" are French words too
     it: ["cr_pct"], pt: ["cr_pct"], pl: ["cr_pct"], // "80%" is written alike
-    nl: ["cr_pct", "cr_credits", "cr_runs"], // "credit", "run" are the Dutch terms in the glossary
+    nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title"], // "credit", "run" are the Dutch terms in the glossary
   };
 
   it("isn't English in another language: a line copied over untranslated would read the same", () => {

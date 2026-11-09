@@ -5,7 +5,7 @@ import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsV
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -1094,7 +1094,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     // handed over now or, for a phone that registered before, the one kept.
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
-    await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, kinds: r.kinds ?? devices.find((d) => d.token === r.token && d.subject === me.subject)?.kinds, at });
+    await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, kinds: r.kinds ?? devices.find((d) => d.token === r.token && d.subject === me.subject)?.kinds, lang: langOf(event), at });
     return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0, ...(r.kinds ? { kinds: alertChoices(r.kinds) } : {}) };
   }
   if (method === "DELETE" && parts.length === 3) {
@@ -1156,7 +1156,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
       agentsCall(() => deps.agents.halt(me.tenantID, taf?.id))]);
     const view = haltView(kiff, runtime);
     // A halt interrupts (kiff/tafs#210): every phone that answers hears it, through a Focus.
-    await tellPhones(deps, me.tenantID, haltNotification(taf, view.state === "halted"));
+    await tellPhones(deps, me.tenantID, (lang) => haltNotification(taf, view.state === "halted", lang));
     await logEvent(deps.events, me.tenantID, { kind: "halted", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
     await tellChange(me.tenantID, "halted", taf?.id, deps);
     return { halt: view };
@@ -1170,7 +1170,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     if (kiff.state !== "running") throw new HTTPError(409, "resume it in KIFF first: the phone signs that with Face ID");
     const runtime = await agentsCall(() => deps.agents.resume(me.tenantID, taf?.id));
     // The halt's notification is replaced, quietly, so none says halted after a resume (kiff/tafs#236, item 21).
-    await tellPhones(deps, me.tenantID, resumeNotification(taf));
+    await tellPhones(deps, me.tenantID, (lang) => resumeNotification(taf, lang));
     await logEvent(deps.events, me.tenantID, { kind: "resumed", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
     await tellChange(me.tenantID, "resumed", taf?.id, deps);
     return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
@@ -1182,15 +1182,16 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
  * A halt, told to the account's phones: one per taf or for all, a later one replacing it.
  * A taf's opens its own halt, not every taf's (kiff/tafs#236, item 21).
  */
-function haltNotification(taf: Taf | undefined, halted: boolean): Notification {
+function haltNotification(taf: Taf | undefined, halted: boolean, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
   const name = taf?.name;
-  const who = name ?? "All your tafs";
+  const who = name ?? w.push_all_tafs;
   return {
     preference: "halted",
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: halted ? `${who} halted` : `Halting ${name ?? "all your tafs"}`, body: "Nothing new is sent until you resume in tafs." },
+        alert: { title: halted ? w.push_halted(who) : w.push_halting(name ?? w.push_all_tafs_object), body: w.push_halt_body },
         "thread-id": "halt",
         category: "halt",
         ...apsFor(levelOf("halt", false)),
@@ -1202,13 +1203,14 @@ function haltNotification(taf: Taf | undefined, halted: boolean): Notification {
 }
 
 /** A resume, in place of its halt's notification: quiet, since nothing needs the owner. */
-function resumeNotification(taf: Taf | undefined): Notification {
+function resumeNotification(taf: Taf | undefined, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
   return {
     preference: "halted",
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: `${taf?.name ?? "All your tafs"} resumed`, body: "It works again as it did before the halt." },
+        alert: { title: w.push_resumed(taf?.name ?? w.push_all_tafs), body: w.push_resume_body },
         "thread-id": "halt",
         ...apsFor("quiet"),
       },
@@ -5948,7 +5950,7 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await deps.coach.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, said, ...(level === "later" ? { away: true } : {}) },
       new Date(at.getTime() + TASK_KEPT_MS));
   }
-  if (level === "quiet") await tellPhones(deps, tenant, endedNotification(name, r));
+  if (level === "quiet") await tellPhones(deps, tenant, (lang) => endedNotification(name, r, lang));
   if (ended) await deps.coach.remove(key);
   return { taken: true };
 }
@@ -6086,7 +6088,7 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       if (s.kind === "once" && s.follow_up && s.waited && !s.enabled && now.getTime() - Date.parse(s.waited.due) < FAILING_KEPT_MS) {
         const taf = await deps.tafs.get(tenant, s.agent).catch(() => undefined);
         if (taf && !taf.removing && await store.once(`${tenant}#schedule-waited#${s.id}#${s.waited.due}`, new Date(now.getTime() + FAILING_KEPT_MS))) {
-          await tellPhones(deps, tenant, waitedNotification(taf, s));
+          await tellPhones(deps, tenant, (lang) => waitedNotification(taf, s, lang));
           told.push({ tenant, schedule: s.id });
         }
       }
@@ -6100,7 +6102,7 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       // Halted, or not known not to be: nothing is said now, and the next sweep asks again.
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
       if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
-      await tellPhones(deps, tenant, failingNotification(taf, s, f.firings));
+      await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f.firings, lang));
       told.push({ tenant, schedule: s.id });
     }
   }
@@ -6117,32 +6119,33 @@ const FAILING_KEPT_MS = 30 * 24 * 3600_000;
  * once schedule's says its work didn't run and won't by itself: a follow-up the taf set, or a one-time run.
  */
 export const FAILING_WORDS = {
-  one: "Its scheduled run couldn't start. It tries again at its next time. Open it to see why.",
-  many: (n: number) => `Its last ${n} scheduled runs couldn't start. It tries again at each scheduled time. Open it to see why.`,
-  followUp: "A follow-up it set for itself didn't run, and won't try again. Open it to see why.",
-  once: "Its one-time scheduled run couldn't start, and won't try again. Open it to see why.",
+  one: wordsIn("en").failing_one,
+  many: wordsIn("en").failing_many,
+  followUp: wordsIn("en").failing_follow_up,
+  once: wordsIn("en").failing_once,
 } as const;
 
-function failingWords(s: Schedule, firings: number): string {
-  if (s.kind === "once") return s.follow_up ? FAILING_WORDS.followUp : FAILING_WORDS.once;
-  return firings > 1 ? FAILING_WORDS.many(firings) : FAILING_WORDS.one;
+function failingWords(s: Schedule, firings: number, lang: Lang = "en"): string {
+  const w = wordsIn(lang);
+  if (s.kind === "once") return s.follow_up ? w.failing_follow_up : w.failing_once;
+  return firings > 1 ? w.failing_many(firings) : w.failing_one;
 }
 
 /** What a follow-up that waited for credits says: it didn't run, why, and where to look. */
-export const WAITED_WORDS = "A follow-up it set for itself didn't run: your tafs were waiting for credits. It won't try again. Open it to see more.";
+export const WAITED_WORDS = wordsIn("en").waited_follow_up;
 
-function waitedNotification(taf: Taf, s: Schedule): Notification {
+function waitedNotification(taf: Taf, s: Schedule, lang: Lang = "en"): Notification {
   return {
     kind: "alert",
-    payload: { aps: { alert: { title: taf.name, body: WAITED_WORDS }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    payload: { aps: { alert: { title: taf.name, body: wordsIn(lang).waited_follow_up }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
     collapseID: `waited-${s.id}`.slice(0, 64),
   };
 }
 
-function failingNotification(taf: Taf, s: Schedule, firings: number): Notification {
+function failingNotification(taf: Taf, s: Schedule, firings: number, lang: Lang = "en"): Notification {
   return {
     kind: "alert",
-    payload: { aps: { alert: { title: taf.name, body: failingWords(s, firings) }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    payload: { aps: { alert: { title: taf.name, body: failingWords(s, firings, lang) }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
     collapseID: `failing-${s.id}`.slice(0, 64),
   };
 }
@@ -6336,10 +6339,9 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
 }
 
 /** A Coach task's run ended, said quietly: no sound or banner. Only how it ended, never the taf's words. */
-function endedNotification(name: string, r: Run): Notification {
-  const body = r.status === "ERROR" ? "It failed. Open Coach mode to see why."
-    : r.status === "CANCELLED" ? "It was stopped."
-    : "It finished. Open Coach mode to read how it went.";
+function endedNotification(name: string, r: Run, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
+  const body = r.status === "ERROR" ? w.push_ended_failed : r.status === "CANCELLED" ? w.push_ended_stopped : w.push_ended_done;
   return {
     kind: "alert",
     payload: { aps: { alert: { title: name, body }, "thread-id": "coach", ...apsFor("quiet") }, open: "coach" },
@@ -6351,11 +6353,12 @@ function endedNotification(name: string, r: Run): Notification {
  * Tells the phones of the account's people who answer holds, best effort: a
  * phone Apple no longer knows is forgotten, and a failed push is only logged.
  */
-async function tellPhones(deps: Deps, tenant: string, n: Notification): Promise<void> {
+async function tellPhones(deps: Deps, tenant: string, n: Notification | ((lang: Lang) => Notification)): Promise<void> {
   try {
     const { devices } = await deps.push.get(tenant);
     await Promise.all(devices.filter((d) => d.answers).map(async (d) => {
-      const r = await sendNotification(deps.apns, d, n).catch(() => "failed" as const);
+      // Each phone in the language it registered with (docs/languages.md).
+      const r = await sendNotification(deps.apns, d, typeof n === "function" ? n(deviceLang(d)) : n).catch(() => "failed" as const);
       if (r === "gone") await deps.push.removeDevice(tenant, d.token);
     }));
   } catch (err) {
