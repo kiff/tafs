@@ -315,7 +315,7 @@ enum Words {
         static func notRestored(why: String) -> String { Words.line("billing.not_restored", why) }
         /// Not signed in.
         static var notSignedIn: String { Words.line("billing.not_signed_in") }
-        /// One person: tafs, and KIFF for your own agents, with credits included each period.
+        /// One person: tafs, with credits included each period.
         static var onePersonTafsKiffYour: String { Words.line("billing.one_person_tafs_kiff_your") }
         /// Only someone who manages the account's billing buys credits.
         static var onlySomeoneWhoManagesAccount: String { Words.line("billing.only_someone_who_manages_account") }
@@ -373,7 +373,7 @@ enum Words {
         static func soloSubscriptionOneChargedYour(period: String, price: String, period2: String) -> String { Words.line("billing.solo_subscription_one_charged_your", period, price, period2) }
         /// Starts with {trial} free.
         static func startsFree(trial: String) -> String { Words.line("billing.starts_free", trial) }
-        /// Tafs and KIFF for one person, every month.
+        /// Tafs for one person, every month.
         static var tafsKiffOnePersonEvery: String { Words.line("billing.tafs_kiff_one_person_every") }
         /// Terms of Use
         static var termsUse: String { Words.line("billing.terms_use") }

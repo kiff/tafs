@@ -76,6 +76,51 @@
       "productID": "bot.tafs.pack.maxi",
       "referenceName": "Maxi",
       "type": "Consumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6740000006",
+      "localizations": [
+        {
+          "description": "500 credits for your tafs. They never expire.",
+          "displayName": "500 credits",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.credits.500",
+      "referenceName": "500 credits",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "30.99",
+      "familyShareable": false,
+      "internalID": "6740000007",
+      "localizations": [
+        {
+          "description": "1,500 credits for your tafs. They never expire.",
+          "displayName": "1,500 credits",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.credits.1500",
+      "referenceName": "1,500 credits",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "104.99",
+      "familyShareable": false,
+      "internalID": "6740000008",
+      "localizations": [
+        {
+          "description": "5,000 credits for your tafs. They never expire.",
+          "displayName": "5,000 credits",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.credits.5000",
+      "referenceName": "5,000 credits",
+      "type": "Consumable"
     }
   ],
   "settings": {
@@ -97,15 +142,10 @@
           "familyShareable": false,
           "groupNumber": 1,
           "internalID": "6740000100",
-          "introductoryOffer": {
-            "internalID": "6740000101",
-            "numberOfPeriods": 1,
-            "paymentMode": "free",
-            "subscriptionPeriod": "P1W"
-          },
+          "introductoryOffer": null,
           "localizations": [
             {
-              "description": "Tafs and KIFF for one person, with tasks included each month.",
+              "description": "Tafs for one person, with credits included each month.",
               "displayName": "Solo",
               "locale": "en_US"
             }

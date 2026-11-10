@@ -150,6 +150,10 @@ the app in sample mode.
     **Home** (`PlanLine`) shows `home_line` when it's set. Both are read with each refresh.
   - **A chat, Coach or Run now refused for credits** (409 `credits_used_up`, `limit_reached` or
     `no_plan`) shows tafs cloud's `words`, with no Retry, and the message stays in the composer.
+  - **Run now that starts no run is no failure** (`runNowWords`): a taf that checks its work first
+    answers `session: null` with tafs cloud's `words` (nothing new since the last run, or why its
+    check ran nothing), shown as they are under Run now until the next one. The app writes no line
+    of its own, and an older tafs cloud's bare `null` shows nothing.
   - **Gone:** the tasks, packs of tasks and counted tasks, AI use and Go on, and the plan's
     trial.
 - **Record** (`RecordView`): chips for "All tafs" and each taf (its colour) above the type

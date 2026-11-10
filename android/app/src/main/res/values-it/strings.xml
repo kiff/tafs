@@ -159,7 +159,7 @@
     <string name="billing_not_bought">L\'acquisto non è andato a buon fine: %1$s</string>
     <string name="billing_not_restored">Non è stato possibile ripristinare gli acquisti: %1$s</string>
     <string name="billing_not_signed_in">Accesso non effettuato.</string>
-    <string name="billing_one_person_tafs_kiff_your">Una persona: tafs, e KIFF per i tuoi agenti, con crediti inclusi ogni periodo.</string>
+    <string name="billing_one_person_tafs_kiff_your">Una persona: tafs, con crediti inclusi ogni periodo.</string>
     <string name="billing_only_someone_who_manages_account">Solo chi gestisce la fatturazione dell\'account acquista crediti.</string>
     <string name="billing_open_tafs_to_buy">Apri tafs per acquistare.</string>
     <string name="billing_pack_adds_credits_once_never">Un pacchetto aggiunge crediti una volta sola, e non scadono mai. Prima si usano i crediti inclusi di ogni periodo, poi quelli dei pacchetti.</string>
@@ -186,7 +186,7 @@
     <string name="billing_solo_not_available_app_store">Solo non è disponibile nell\'App Store in questo momento.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo è un abbonamento a %2$s ogni %1$s, addebitato sul tuo account Apple. Si rinnova ogni %3$s finché non lo annulli.</string>
     <string name="billing_starts_free">Inizia con %1$s gratis.</string>
-    <string name="billing_tafs_kiff_one_person_every">Tafs e KIFF per una persona, ogni mese.</string>
+    <string name="billing_tafs_kiff_one_person_every">Tafs per una persona, ogni mese.</string>
     <string name="billing_terms_use">Condizioni d\'uso</string>
     <string name="billing_test_purchase_credits">Gli acquisti di prova non aggiungono crediti a questo account.</string>
     <string name="billing_try_free">Prova %1$s gratis</string>

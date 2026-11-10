@@ -702,7 +702,7 @@ final class AppModel: ObservableObject {
         forgetApprovalKey()
         kiff.token = token
         cloud.token = token
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []; runNowWords = [:]
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
@@ -1058,7 +1058,7 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]; halts = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []; runNowWords = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
@@ -1722,6 +1722,9 @@ final class AppModel: ObservableObject {
 
     /// The tafs whose Run now request is on its way, so a second tap starts nothing.
     @Published private(set) var runsInFlight: Set<String> = []
+    /// A Run now that started no run, by taf: tafs cloud's words for it (its check found nothing
+    /// new), shown under the button until the next one.
+    @Published private(set) var runNowWords: [String: String] = [:]
 
     /// Runs a taf now, outside its schedule. Returns the run's session; nil when it didn't
     /// start, or when a run request for it is already on its way.
@@ -2159,10 +2162,19 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Runs a taf now, outside its schedule. The run's session; nil when it didn't start, when a
+    /// Run now for it is on its way, or when its check started no run, which is no failure:
+    /// then `runNowWords` holds tafs cloud's words for it, and nothing is said wrong.
     func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {
         guard runsInFlight.insert(cloudTaf.id).inserted else { return nil }
         defer { runsInFlight.remove(cloudTaf.id) }
-        do { return try await cloud.runNow(cloudTaf.id) } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
+        runNowWords[cloudTaf.id] = nil
+        let gen = accountGeneration
+        do {
+            let run = try await cloud.runNow(cloudTaf.id)
+            if gen == accountGeneration, let words = run.words { runNowWords[cloudTaf.id] = words }
+            return run.session
+        } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
             lastError = Self.waitsForCredits(e)
             return nil
         } catch {

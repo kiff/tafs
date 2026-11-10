@@ -49,6 +49,31 @@ final class RunsTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/run"), 2, "once the first is done, another run can start")
     }
 
+    /// A taf that checks first and finds nothing new starts no run (docs/api.md): no session,
+    /// no error, and tafs cloud's words under Run now until the next one.
+    func testARunNowThatFindsNothingNewIsNoFailure() async {
+        let model = model()
+        StubProtocol.responses["POST /v1/tafs/depl_1/run"] = (200, #"{"session":null,"outcome":"quiet","words":"Nothing new since the last run."}"#)
+        let session = await model.runNow(rae)
+        XCTAssertNil(session)
+        XCTAssertNil(model.lastError, "nothing failed, so nothing is said wrong")
+        XCTAssertTrue(model.runsInFlight.isEmpty)
+        XCTAssertEqual(model.runNowWords["depl_1"], "Nothing new since the last run.")
+
+        // The next Run now clears them, and an older tafs cloud's bare null shows nothing.
+        StubProtocol.responses["POST /v1/tafs/depl_1/run"] = (200, #"{"session":null}"#)
+        let again = await model.runNow(rae)
+        XCTAssertNil(again)
+        XCTAssertNil(model.runNowWords["depl_1"])
+        XCTAssertNil(model.lastError)
+
+        // A run that started says nothing under the button, whatever words came with it.
+        StubProtocol.responses["POST /v1/tafs/depl_1/run"] = (200, #"{"session":"sesn_9","words":"ignored"}"#)
+        let started = await model.runNow(rae)
+        XCTAssertEqual(started, "sesn_9")
+        XCTAssertNil(model.runNowWords["depl_1"])
+    }
+
     func testLoadsTheLatestRunsReport() async {
         let model = model()
         StubProtocol.responses["GET /v1/tafs/depl_1/runs"] = (200, #"{"runs":[{"session":"sesn_9","at":"2026-10-14T09:00:00Z","error":null},{"session":"sesn_1","at":"2026-10-14T08:00:00Z","error":null}]}"#)
