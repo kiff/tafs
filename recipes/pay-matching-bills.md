@@ -2,6 +2,7 @@
 id: pay-matching-bills
 title: Pay bills that match a purchase order
 category: money
+order: 4
 line: Matches each vendor bill to its purchase order and what was received, and pays the exact matches within the Card.
 headline: Pay the right bills on time. Never the wrong ones.
 today: Bills get paid late, or paid without anyone checking them against the order.

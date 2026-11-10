@@ -2,6 +2,7 @@
 id: follow-up-new-leads
 title: Follow up new leads within the hour
 category: customers
+order: 2
 line: Turns each new form entry into a CRM deal and sends a first reply within the hour, so no lead waits a day.
 headline: Never lose a lead to a slow reply.
 today: A lead who waits a day for an answer may already have asked someone else.

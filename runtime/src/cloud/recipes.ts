@@ -139,6 +139,7 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
         connections: r.connections.map((g) => [...g]), card: { allows: [...w.card.allows], holds: [...w.card.holds], never: [...w.card.never] } };
     });
   const order = new Map<string, number>(CATEGORY_IDS.map((c, i) => [c, i]));
+  // RECIPES is in the apps' order already (category, then each recipe's `order`); a stable sort keeps it within a category.
   listed.sort((a, b) => (order.get(a.category) ?? 9) - (order.get(b.category) ?? 9));
   // Home leads with the recipes only when there's one to lead with: a catalog that connects none of them
   // leaves Home its empty line.
