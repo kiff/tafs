@@ -56,10 +56,9 @@ them do.
 
 ## How to get it
 
-tafs is in testing:
-
-- **Android:** a closed test on Google Play, for phones and tablets on Android 11 and later.
-- **iPhone and iPad:** TestFlight, on iOS 16 and later.
+- **Android:** on [Google Play](https://play.google.com/store/apps/details?id=dev.kiff.tafs), for
+  phones and tablets on Android 11 and later.
+- **iPhone and iPad:** in testing, on TestFlight, on iOS 16 and later.
 
 Both work signed in with KIFF, or with sample data on the phone. More screens, on each
 platform, light and dark: [docs/screenshots.md](docs/screenshots.md).
