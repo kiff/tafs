@@ -4517,6 +4517,17 @@ enum Words {
         return formatter.string(from: NSNumber(value: n)) ?? String(n)
     }
 
+    /// A name's possessive in the lines' language (app/strings/generate.py, POSSESSIVE): "Refunds'",
+    /// "Rae's". A language with no rule keeps the name: its lines word around it.
+    static func possessive(_ name: String) -> String {
+        guard let last = name.lowercased().last else { return name }
+        switch locale.language.languageCode?.identifier ?? "en" {
+        case "en": return name + ("s".contains(last) ? "'" : "'s")
+        case "de": return name + ("sßxz".contains(last) ? "'" : "s")
+        default: return name
+        }
+    }
+
     /// The plural form a number takes in the app's language: one, few, many, other…
     static func pluralForm(_ count: Int) -> String {
         let format = Bundle.main.localizedString(forKey: "_plural", value: nil, table: nil)

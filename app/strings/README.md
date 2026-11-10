@@ -35,6 +35,13 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
 
   Polish has `one`, `few`, `many` and `other`.
 
+- **A possessive** is `{name|possessive}`: `"Also on {taf|possessive} Card"`. The app passes
+  the name as it is, and the line gets its possessive by the rule of the language it's in
+  (`POSSESSIVE` in `generate.py`: "Refunds'", "Rae's"; German "Klaus'", "Raes"). Only
+  English and German have a rule. Any other language writes `{taf}` and words the line around
+  it ("la Carte de {taf}"); a test fails if it writes `|possessive`. Both apps give a line its
+  own values first, then each possessive (`possessives(key)`), in the same order everywhere.
+
 ## The generated files
 
 `python3 app/strings/generate.py` writes:

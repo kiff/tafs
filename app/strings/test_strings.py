@@ -94,11 +94,13 @@ class SharedWords(unittest.TestCase):
             for key, line in lines.items():
                 want = set(generate.placeholders(self.source[key]))
                 for text in generate.forms_of(line):
-                    got = set(generate.PLACEHOLDER.findall(text))
+                    got = set(generate.names_in(text))
                     # A count's form may leave the number out ("One request", "All of the Cards").
                     extra_ok = {"count"} if isinstance(line, dict) else set()
                     self.assertTrue(got <= want and want - got <= extra_ok, f"{lang} {key}: {sorted(got)} != {sorted(want)}")
                     self.assertNotRegex(generate.PLACEHOLDER.sub("", text), r"[{}]", f"{lang} {key} has a stray brace")
+                    if lang not in generate.POSSESSIVE:
+                        self.assertNotIn("|possessive}", text, f"{lang} {key}: {lang} has no possessive rule; word the line around the name")
 
     def test_a_shipped_language_isnt_left_in_english(self):
         for lang in self.langs["shipped"]:
@@ -230,6 +232,35 @@ class Generator(unittest.TestCase):
         self.assertEqual(generate.camel("default"), "`default`")
         self.assertEqual(generate.camel("approve_once"), "approveOnce")
         self.assertEqual(generate.camel("needs_you", upper=True), "NeedsYou")
+
+
+class Possessives(unittest.TestCase):
+    """`{name|possessive}`: the name's possessive by the line language's rule (generate.POSSESSIVE)."""
+
+    def test_the_rule_by_language(self):
+        self.assertEqual([generate.possessive(n, "en") for n in ["Refunds", "Rae", "Chargebacks", "BILLS"]], ["Refunds'", "Rae's", "Chargebacks'", "BILLS'"])
+        self.assertEqual([generate.possessive(n, "de") for n in ["Klaus", "Rae", "Fritz", "Max"]], ["Klaus'", "Raes", "Fritz'", "Max'"])
+        self.assertEqual(generate.possessive("Rae", "fr"), "Rae", "a language with no rule keeps the name")
+        self.assertEqual(sorted(generate.POSSESSIVE), ["de", "en"])
+
+    def test_a_possessive_is_a_value_after_the_lines_own(self):
+        source = {"a.also_on": "Also on {taf|possessive} Card, with {vendor}"}
+        lines = {"de": {"a.also_on": "Auch auf {taf|possessive} Karte, mit {vendor}"},
+                 "fr": {"a.also_on": "Aussi sur la Carte de {taf}, avec {vendor}"}}
+        self.assertEqual(generate.arguments("a.also_on", source), ["taf", "vendor"], "the accessor takes the name as it is")
+        self.assertEqual(generate.possessives("a.also_on", source, lines), ["taf"])
+        owned = generate.possessives("a.also_on", source, lines)
+        self.assertEqual(generate.ios_text(source["a.also_on"], "a.also_on", source, owned), "Also on %3$@ Card, with %2$@")
+        self.assertEqual(generate.ios_text(lines["de"]["a.also_on"], "a.also_on", source, owned), "Auch auf %3$@ Karte, mit %2$@")
+        self.assertEqual(generate.ios_text(lines["fr"]["a.also_on"], "a.also_on", source, owned), "Aussi sur la Carte de %1$@, avec %2$@")
+        swift = generate.ios_swift(source, lines)
+        self.assertIn('static func alsoOn(taf: String, vendor: String) -> String { Words.line("a.also_on", taf, vendor, Words.possessive(taf)) }', swift)
+
+    def test_ios_writes_the_rule_from_the_table(self):
+        swift = generate.ios_swift({"a.b": "x"})
+        self.assertIn('case "en": return name + ("s".contains(last) ? "\'" : "\'s")', swift)
+        self.assertIn('case "de": return name + ("sßxz".contains(last) ? "\'" : "s")', swift)
+        self.assertIn("switch locale.language.languageCode?.identifier", swift, "picked by the lines' language, never the device's")
 
 
 class IOSLiterals(unittest.TestCase):
