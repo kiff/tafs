@@ -82,7 +82,7 @@ final class Dictation: ObservableObject {
     }
 
     /// The line the system shows with its microphone and speech prompts (Info.plist).
-    static let purpose = "tafs turns your voice into text on this device. Your voice isn't sent anywhere."
+    static let purpose = Words.Voice.tafsTurnsYourVoiceInto
 
     @Published private(set) var state: State = .idle
     @Published private(set) var language: Language
@@ -169,7 +169,7 @@ final class Dictation: ObservableObject {
             state = .listening
         } catch {
             engine.stop()
-            state = .blocked("Dictation couldn't start: \(error.localizedDescription)")
+            state = .blocked(Words.Voice.dictationCouldNotStart(why: "\(error.localizedDescription)"))
         }
     }
 
@@ -257,7 +257,7 @@ final class Dictation: ObservableObject {
             } catch {
                 engine.stop()
                 write = nil
-                state = .blocked("Dictation stopped: \(error.localizedDescription) Tap the mic to start again.")
+                state = .blocked(Words.Voice.dictationStoppedTapMicStart(why: "\(error.localizedDescription)"))
                 return
             }
         }
@@ -357,10 +357,10 @@ final class DeviceSpeech: SpeechEngine {
     func authorize() async -> String? {
         switch await Self.speechPermission() {
         case .authorized: break
-        case .restricted: return "Speech recognition is restricted on this device, so dictation can't run."
-        default: return "Speech recognition is off for tafs. Turn it on in Settings › Privacy & Security › Speech Recognition."
+        case .restricted: return Words.Voice.speechRecognitionRestrictedDeviceDictation
+        default: return Words.Voice.speechRecognitionOffTafsTurn
         }
-        return await Self.microphonePermission() ? nil : "The microphone is off for tafs. Turn it on in Settings › tafs › Microphone."
+        return await Self.microphonePermission() ? nil : Words.Voice.microphoneOffTafsTurnSettings
     }
 
     /// The device's on-device languages, read once: asking each recognizer takes a moment.
@@ -373,12 +373,12 @@ final class DeviceSpeech: SpeechEngine {
     func languages() -> [Dictation.Language] { have }
 
     var noLanguage: String {
-        "Dictation isn't on this \(Self.device) yet. Add a keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for its language to download, then try again."
+        Words.Voice.dictationNotAddKeyboardDictation(device: "\(Self.device)")
     }
 
     func unavailable(_ language: Dictation.Language) -> String? {
         guard let recognizer = Self.recognizer(for: language) else { return noLanguage }
-        return recognizer.isAvailable ? nil : "Dictation isn't available right now. Try again in a moment."
+        return recognizer.isAvailable ? nil : Words.Voice.dictationNotAvailableRightTry
     }
 
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
@@ -472,5 +472,5 @@ extension Dictation {
 
 enum DictationError: LocalizedError {
     case unavailable
-    var errorDescription: String? { "Speech recognition isn't available for this language." }
+    var errorDescription: String? { Words.Voice.speechRecognitionNotAvailableLanguage }
 }

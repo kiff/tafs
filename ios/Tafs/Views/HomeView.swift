@@ -42,7 +42,7 @@ struct HomeView: View {
                 }
                 if !sections.shared.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow(text: "Shared with you")
+                        Eyebrow(text: Words.Home.sharedYou)
                         ForEach(sections.shared) { taf in tafLinks(taf) }
                     }
                 }
@@ -66,8 +66,8 @@ struct HomeView: View {
                             Image(systemName: "plus").scaledFont(16, weight: .bold).foregroundColor(.white)
                                 .frame(width: 36, height: 36).background(Theme.brand).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Connect a tool").scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                                Text("You sign in and approve each step").scaledFont(13).foregroundColor(Theme.dim)
+                                Text(Words.Home.connectTool).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                                Text(Words.Home.signApproveEachStep).scaledFont(13).foregroundColor(Theme.dim)
                             }
                             Spacer()
                             Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
@@ -87,8 +87,8 @@ struct HomeView: View {
 
                 ForEach(model.unfinishedRemovals) { r in
                     Panel {
-                        Text("\(r.name) isn't fully removed yet.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                        Text("It no longer runs. tafs deletes what's left each time it refreshes.")
+                        Text(Words.Home.notFullyRemoved(name: "\(r.name)")).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                        Text(Words.Home.noLongerRunsTafsDeletes)
                             .scaledFont(14).foregroundColor(Theme.soft)
                     }
                 }
@@ -158,7 +158,7 @@ struct HomeView: View {
                             .background(Theme.brand)
                             .clipShape(Circle())
                     }
-                    .accessibilityLabel("Start a new taf")
+                    .accessibilityLabel(Words.Home.startNewTaf)
                 }
             }
         }
@@ -227,7 +227,7 @@ struct HomeView: View {
                     .scaledFont(14, weight: .semibold)
                     .foregroundColor(Theme.ink)
                     .oneLineUnlessLarge()
-                Text("\(call.reason) · answer by \(call.expiresAt.zonedShortTime)")
+                Text(Words.Home.reasonAnswerBy(why: "\(call.reason)", time: "\(call.expiresAt.zonedShortTime)"))
                     .scaledFont(13)
                     .foregroundColor(Theme.soft)
             }
@@ -274,7 +274,7 @@ struct TafRow: View {
                     // Its own tap, over the row's: a borderless button takes it inside the link.
                     Button(action: onHalted) { StateChip(state: taf.state) }
                         .buttonStyle(.borderless)
-                        .accessibilityLabel("Halted. Open Halt")
+                        .accessibilityLabel(Words.Home.haltedOpenHalt)
                         .accessibilityIdentifier("taf.halted.\(taf.name)")
                 } else {
                     StateChip(state: taf.state)

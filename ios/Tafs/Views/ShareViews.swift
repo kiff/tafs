@@ -44,7 +44,7 @@ struct ShareLine: View {
         let names = shares.compactMap { s in
             s.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? s.subject.map { model.person($0)?.label ?? $0 }
         }
-        return names.isEmpty ? Words.People.notShared : "Shared with " + ListFormatter.localizedString(byJoining: names)
+        return names.isEmpty ? Words.People.notShared : Words.People.sharedWithPrefix + ListFormatter.localizedString(byJoining: names)
     }
 }
 
@@ -97,7 +97,7 @@ struct ShareTafSheet: View {
     @ViewBuilder private var whoUses: some View {
         Section {
             Text(Words.People.Share.step1).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
-            Text("Who uses \(taf.name)?").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
+            Text(Words.People.Share.whoUses(taf: "\(taf.name)")).scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
         }
         .listRowBackground(Color.clear)
         if !model.groups.isEmpty {
@@ -121,14 +121,14 @@ struct ShareTafSheet: View {
                     }
                 }
             }
-        } header: { Text("One person") } footer: { Text(Words.People.Share.chooseSomeone) }
+        } header: { Text(Words.People.onePerson) } footer: { Text(Words.People.Share.chooseSomeone) }
     }
 
     // Step 2 of 2: what sharing means for them.
     @ViewBuilder private var whatItMeans: some View {
         Section {
             Text(Words.People.Share.step2).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
-            Text(chosen.isEmpty ? Words.People.Share.notShared(taf: "\(taf.name)") : "Who gets \(taf.name)").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
+            Text(chosen.isEmpty ? Words.People.Share.notShared(taf: "\(taf.name)") : Words.People.Share.whoGets(taf: "\(taf.name)")).scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
         }
         .listRowBackground(Color.clear)
         Section {
@@ -299,7 +299,7 @@ struct OverviewView: View {
             }
             .buttonStyle(.drivablePlain)
             .accessibilityLabel([taf.name, taf.now, Self.cardLine(taf), lastResult(taf)].compactMap { $0 }.joined(separator: ", "))
-            .accessibilityHint("Opens the taf")
+            .accessibilityHint(Words.People.opensTaf)
             Group {
                 Text(taf.now).scaledFont(13).foregroundColor(Theme.ink)
                 Text(Self.cardLine(taf) ?? "–").scaledFont(13).foregroundColor(Theme.ink)
@@ -353,7 +353,7 @@ struct OverviewView: View {
             if let first { return first.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "#", with: "").trimmingCharacters(in: .whitespaces) }
             if let error = report.error { return error }
         }
-        return cloud.lastRun.map { "Last ran at \($0.shortTime)" } ?? Words.Overview.nothingYet
+        return cloud.lastRun.map { Words.People.lastRan(time: "\($0.shortTime)") } ?? Words.Overview.nothingYet
     }
 }
 

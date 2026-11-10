@@ -76,7 +76,7 @@ final class DoorsModel: ObservableObject {
             guard let page = cloud.whatsappSignupURL(tafID) else { return nil }
             let back = try await self.signIn.signIn(at: page)
             let q = Self.query(back)
-            guard let code = q["code"], !code.isEmpty else { throw DoorsError("WhatsApp's signup didn't finish.") }
+            guard let code = q["code"], !code.isEmpty else { throw DoorsError(Words.Door.whatsappSignupDidNotFinish) }
             return try await cloud.addDoor(tafID, app: app.id, extra: [
                 "code": code, "phone_number_id": q["phone_number_id"] ?? "", "waba_id": q["waba_id"] ?? "",
             ])
@@ -163,12 +163,12 @@ extension DoorsModel {
     static let sample = TafsCloud.Doors(
         doors: [TafsCloud.Door(id: "door_sample", app: "email", kind: "email", label: Words.Sample.Tool.email, open: true,
                                address: "refunds@tafs.example", proof: "proven",
-                               how: "It checks the sender's server signed the message",
+                               how: Words.Door.checksSenderServerSignedMessage,
                                keys: [.init(id: "you@company.example", name: Words.Door.Key.you, auto: true), .init(id: "ana@company.example", name: "Ana")],
                                today: 3, limit: 20, resting: false, othersToday: 1, othersLimit: 10)],
         apps: [TafsCloud.DoorApp(id: "email", label: Words.Sample.Tool.email, kind: "email", proof: "proven", how: "It checks the sender's server signed the message")],
         knocks: [TafsCloud.Knock(id: "knock_sample", door: "door_sample", app: "email", from: "mara@customer.example", name: "Mara",
-                                 proof: "pass", subject: "Refund request", text: "Hi, I'd like $15 back on order T-3001.",
+                                 proof: "pass", subject: Words.Door.refundRequest, text: Words.Door.hiLikeBackOrder,
                                  at: Date().addingTimeInterval(-600))])
 }
 

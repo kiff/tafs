@@ -17,8 +17,8 @@ enum CardCheck {
         guard let rule = taf.card.rules.first(where: { $0.action == proposed.action }) else {
             return .refused(reason: Words.Card.Check.notOnCard)
         }
-        if rule.never { return .refused(reason: "\(rule.label): never allowed") }
-        if rule.alwaysAsk { return .held(reason: "\(rule.label): always asks you") }
+        if rule.never { return .refused(reason: Words.Card.Check.neverAllowed(rule: "\(rule.label)")) }
+        if rule.alwaysAsk { return .held(reason: Words.Card.Check.alwaysAsks(rule: "\(rule.label)")) }
 
         var breaches: [String] = []
         if let perAction = rule.perAction, let amount = proposed.amount, amount > perAction {

@@ -157,7 +157,7 @@ struct CardRule: Identifiable, Hashable, Codable {
     /// room ends on a later day, as a week's or a month's does.
     var roomWords: String? {
         guard let extraRoom, baseLimit != nil else { return nil }
-        return "+\(extraRoom.formatted) extra room " + (roomEnds.map { "until \($0.endsWords)" } ?? window.current)
+        return Words.Card.extraRoomPrefix(formatted: "\(extraRoom.formatted)") + (roomEnds.map { "until \($0.endsWords)" } ?? window.current)
     }
 
     /// What's left of its total this window ("€800 left today"), given what it has used,
@@ -176,7 +176,7 @@ struct CardRule: Identifiable, Hashable, Codable {
             // Past a limit the call asks the owner, in the words KIFF's Cards use, the same on
             // both apps: "up to $40 each; more asks you first".
             if let perAction { parts.append(Words.Card.Rule.upToEach(amount: "\(perAction.formatted)")) }
-            if let own = ownTotal { parts.append("\(own.formatted) \(window.sumLabel), then it asks you") }
+            if let own = ownTotal { parts.append(Words.Card.asksYou(formatted: "\(own.formatted)", sumLabel: "\(window.sumLabel)")) }
             if let roomWords { parts.append(roomWords) }
             if let countPerWindow {
                 parts.append(countPerWindow == 0 ? "Each call asks you first"
@@ -267,18 +267,18 @@ struct TafCard: Identifiable, Hashable, Codable {
             // bare beside it: "30 000 left today of 30 000 · no currency" (kiff/tafs#309).
             let unitless = !t.limit.hasUnit
             let shown = { (m: Money) in unitless ? m.figure : m.formatted }
-            let note = unitless ? " · no currency" : ""
+            let note = unitless ? Words.Card.Hero.noCurrencySuffix : ""
             if let used = t.used, used.currency == t.limit.currency, used.scale == t.limit.scale {
                 let left = Money(minor: max(0, t.limit.minor - used.minor), currency: t.limit.currency, scale: t.limit.scale)
                 // The Card's own total and the extra room apart, as KIFF says them (the 755 retest):
                 // "of 300 US$ + 30 US$ extra room until 00:00".
                 if let extra = t.extra, let own = t.base {
                     let until = t.roomEnds.map { " until \($0.endsWords)" } ?? ""
-                    return (shown(left), "left \(t.window.current) of \(shown(own)) + \(shown(extra)) extra room\(until)\(note)")
+                    return (shown(left), Words.Card.leftExtraRoom(current: "\(t.window.current)", own: "\(shown(own))", extra: "\(shown(extra))", until: "\(until)", note: "\(note)"))
                 }
                 return (shown(left), "left \(t.window.current) of \(shown(t.limit))\(note)")
             }
-            return (shown(t.limit), "\(t.window.label) · use unavailable\(note)")
+            return (shown(t.limit), Words.Card.Hero.useUnavailableNote(label: "\(t.window.label)", note: "\(note)"))
         }
         if let c = calls {
             guard let used = c.used else { return ("\(c.limit)", Words.Card.Hero.callsUseUnavailable(window: "\(c.window.label)")) }

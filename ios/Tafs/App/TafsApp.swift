@@ -203,14 +203,14 @@ struct RootView: View {
         .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
         .onAppear { showRequestedTab(model.requestedTab) }
         // The device's time zone, asked once (kiff/tafs#206 6.11).
-        .alert("Use \(model.timeZoneOffer ?? "") for times in tafs?", isPresented: Binding(
+        .alert(Words.Settings.TimeZoneOffer.title(zone: model.timeZoneOffer ?? ""), isPresented: Binding(
             get: { model.timeZoneOffer != nil && model.lastError == nil },
             set: { _ in }
         )) {
             Button("Use \(model.timeZoneOffer ?? "")") { Task { await model.answerTimeZoneOffer(use: true) } }
             Button(Words.Common.notNow, role: .cancel) { Task { await model.answerTimeZoneOffer(use: false) } }
         } message: {
-            Text("Holds' deadlines, Activity, the Record and what your tafs write would use this \(ThisDevice.kind)'s time zone. Your account uses \(model.kiffAccount?.timeZone ?? "UTC") now.")
+            Text(Words.Settings.TimeZoneOffer.textDevice(device: ThisDevice.kind, zone: model.kiffAccount?.timeZone ?? "UTC"))
         }
         .alert(Words.Common.notDone, isPresented: Binding(
             get: { model.lastError != nil },

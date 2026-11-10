@@ -33,9 +33,9 @@ struct ProfileWords: Equatable {
 
         var errorDescription: String? {
             switch self {
-            case .notWords: return "KIFF's words for this connection couldn't be read. Nothing was approved."
-            case .otherProfile: return "These words are for another connection than the one shown. Nothing can be approved."
-            case .wordsChanged: return "KIFF's words don't match their check. Nothing can be approved."
+            case .notWords: return Words.Connect.kiffWordsConnectionCouldNot
+            case .otherProfile: return Words.Connect.wordsAnotherConnectionThanOne
+            case .wordsChanged: return Words.Kiff.kiffWordsDoNotMatch
             }
         }
     }

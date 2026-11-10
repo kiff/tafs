@@ -16,7 +16,7 @@ struct TrialStartSheet: View {
         NavStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Try version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
+                    Text(version.note.map { Words.Version.tryNumberNote(version: "\(version.n)", note: $0) } ?? Words.Version.tryNumber(version: "\(version.n)"))
                         .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Panel {
@@ -124,7 +124,7 @@ struct TrialScreen: View {
                 if model.chatItems(chatID).isEmpty { guide(trial, name: taf.name) }
                 TafChatView(tafID: chatID)
             } else {
-                LateNote(text: "This trial has ended.")
+                LateNote(text: Words.Version.trialHasEnded)
             }
         }
         .screenBackground()

@@ -22,7 +22,7 @@ struct ConnectAppsView: View {
             if let apps = model.connectApps {
                 ForEach(apps.apps) { app in row(app) }
                 if apps.nextCursor != nil {
-                    Button(loadingMore ? "Loading…" : "More apps") {
+                    Button(loadingMore ? "Loading…" : Words.Connect.moreApps) {
                         loadingMore = true
                         Task { await model.loadMoreConnectApps(); loadingMore = false }
                     }
@@ -37,7 +37,7 @@ struct ConnectAppsView: View {
                 ProgressView().frame(maxWidth: .infinity)
             }
             if model.connectApps != nil, taf == nil, model.connectableTafs.isEmpty {
-                Text("Apps connect for a taf. Make one first, then connect its apps here.")
+                Text(Words.Connect.appsConnectTafMakeOne)
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
         }
@@ -142,13 +142,13 @@ enum DisconnectWords {
         let others: String
         switch alsoStops.count {
         case 0: others = ""
-        case 1: others = " \(possessive(alsoStops[0])) Card also uses these tools, so it stops too."
-        default: others = " The Cards of \(alsoStops.joined(separator: " and ")) also use these tools, so they stop too."
+        case 1: others = " " + Words.Connect.Disconnect.alsoCard(owner: possessive(alsoStops[0]))
+        default: others = " " + Words.Connect.Disconnect.alsoCards(names: alsoStops.joined(separator: " and "))
         }
         return (taf.map { Words.Connect.Disconnect.toolsStop(owner: "\(possessive($0))", vendor: "\(vendor)") } ?? Words.Connect.Disconnect.noTafUses(vendor: "\(vendor)"))
             + others
-            + " Other connections to \(vendor) stay connected. If no other connection uses this sign-in, it's revoked at \(vendor)."
-            + " Connecting again asks you to approve and sign in again."
+            + Words.Connect.otherConnectionsStayConnectedNo(vendor: "\(vendor)", vendor2: "\(vendor)")
+            + Words.Connect.connectingAgainAsksYouApprove
     }
 }
 
@@ -174,7 +174,7 @@ enum ConnectionGroupWords {
         var parts: [String] = []
         if done > 0 { parts.append("Cleared \(done).") }
         if kept > 0 { parts.append(keptLine(kept, distinct(keptFor))) }
-        if left > 0 { parts.append("\(left) couldn't be cleared. Try again.") }
+        if left > 0 { parts.append(Words.Connect.couldNotClearedTryAgain(left: "\(left)")) }
         return parts.joined(separator: " ")
     }
 
@@ -421,7 +421,7 @@ struct ConnectApprovalSheet: View {
                                 .task(id: grant.digest) { await model.loadProfileWords(for: grant) }
                         }
                         if !grant.digestMatches {
-                            Text("This request doesn't match what it shows, so it can't be approved.")
+                            Text(Words.Connect.requestDoesNotMatchWhat)
                                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         }
                         if start.needsKey {
@@ -441,7 +441,7 @@ struct ConnectApprovalSheet: View {
                             .disabled(busy || !ready(grant))
                         }
                     } else {
-                        Text("Reading the request…").scaledFont(14).foregroundColor(Theme.dim)
+                        Text(Words.Connect.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
                     }
                 }
                 .padding(20)

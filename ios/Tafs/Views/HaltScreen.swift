@@ -108,15 +108,15 @@ struct HaltScreen: View {
     }
 
     static func explanation(_ h: TafsCloud.Halt, all: Bool) -> String {
-        let who = all ? "your tafs" : Words.Record.On.it
+        let who = all ? Words.Halt.yourTafsLower : Words.Record.On.it
         switch h.state {
         case .running:
-            return "Halting stops \(who): no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
+            return Words.Halt.haltingStopsNoRunStarts(who: "\(who)")
         case .halting:
             return Words.Halt.Explain.halting
         case .halted:
             let since = h.haltedAt.map { " since \($0.shortTime)" } ?? ""
-            return "Halted\(since). Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
+            return Words.Halt.haltedNothingReachesYourTools(since: "\(since)")
         }
     }
 }

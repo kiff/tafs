@@ -42,7 +42,7 @@ struct NeedsYouView: View {
                             }
                         }
                         .buttonStyle(.drivablePlain)
-                        .accessibilityHint("Opens \(taf.name), where you answer it")
+                        .accessibilityHint(Words.NeedsYou.opensWhereYouAnswer(taf: "\(taf.name)"))
                     }
                 }
             }
@@ -104,7 +104,7 @@ struct DidThisHappenCard: View {
                         }
                     }
                     .disabled(sending)
-                    Text("No gives its Card the room back. Answering asks for \(Biometry.name).")
+                    Text(Words.NeedsYou.noGivesCardRoomBack(biometry: "\(Biometry.name)"))
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 }
             }
@@ -318,7 +318,7 @@ struct HeldCallCard: View {
     /// It lapses at 14:05. Nothing is sent until you approve."
     static func sentence(_ call: HeldCall, taf: String?) -> String {
         let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
-        return "\(taf ?? "A taf") asks: \(what). \(call.reason). It lapses at \(call.expiresAt.shortTime). \(nothingSent)"
+        return Words.NeedsYou.asksLapses(taf: taf ?? Words.NeedsYou.aTaf, what: what, reason: call.reason, time: call.expiresAt.shortTime, nothingSent: nothingSent)
     }
 
     private func takeRequest() {
@@ -373,10 +373,10 @@ struct AlertsCard: View {
 
     var body: some View {
         Panel {
-            Text("Know the moment a taf needs you").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-            Text("Get an alert when a call waits for your answer, even with tafs closed.")
+            Text(Words.NeedsYou.knowMomentTafNeedsYou).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+            Text(Words.NeedsYou.getAlertWhenCallWaits)
                 .scaledFont(14).foregroundColor(Theme.soft)
-            Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
+            Button(model.turningOnAlerts ? Words.NeedsYou.turningOn : Words.NeedsYou.turnAlerts) {
                 Task { await model.turnOnAlerts() }
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -394,15 +394,15 @@ struct AlertsOfferSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: "bell.badge").scaledFont(40, weight: .semibold).foregroundColor(Theme.amber)
                 .accessibilityHidden(true)
-            Text("Alerts are off on this \(ThisDevice.kind)").scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
-            Text("When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this \(ThisDevice.kind) and its lock screen, even with tafs closed.")
+            Text(Words.Settings.AlertsOff.titleDevice(device: "\(ThisDevice.kind)")).scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
+            Text(Words.NeedsYou.whenTafAsksSomethingOutside(device: "\(ThisDevice.kind)"))
                 .scaledFont(16).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            Text("iOS asks next. Confirming with \(Biometry.name) sets them up for your account.")
+            Text(Words.NeedsYou.iosAsksNextConfirmingSets(biometry: "\(Biometry.name)"))
                 .scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
             if let error = model.lastError, !model.turningOnAlerts {
                 Text(error).scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
-            Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
+            Button(model.turningOnAlerts ? Words.NeedsYou.turningOn : Words.NeedsYou.turnAlerts) {
                 Task { if await model.turnOnAlerts() { model.answerAlertsOffer() } }
             }
             .buttonStyle(PrimaryButtonStyle())

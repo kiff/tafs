@@ -83,7 +83,7 @@ struct TafsBar: View {
     private func label(_ item: Item, count: Int) -> String {
         switch item.tab {
         case .account: return model.accountLabel.map { "Account, \($0)" } ?? Words.Settings.title
-        case .needsYou where count > 0: return "Needs you, \(count)"
+        case .needsYou where count > 0: return Words.NeedsYou.tabLabel(n: "\(count)")
         default: return item.title
         }
     }
@@ -110,7 +110,7 @@ struct TafsBar: View {
         .buttonStyle(.plain)
         // In the drive's registry with no action: Coach can't use it, and the person's tap on it stops the drive.
         .drivable(Words.Coach.title, id: DriveSession.coachButtonID)
-        .accessibilityLabel("Coach mode")
+        .accessibilityLabel(Words.Coach.coachMode)
         .accessibilityIdentifier("bar.Coach")
     }
 }

@@ -18,7 +18,7 @@ enum AlertAnswers {
 
     /// The actions on tafs' notifications, registered at launch.
     static func categories() -> Set<UNNotificationCategory> {
-        let approve = UNNotificationAction(identifier: approve, title: "Approve once…", options: [.authenticationRequired, .foreground])
+        let approve = UNNotificationAction(identifier: approve, title: Words.Alert.approveOnce, options: [.authenticationRequired, .foreground])
         let refuse = UNNotificationAction(identifier: refuse, title: "Refuse", options: [.authenticationRequired, .destructive])
         let hold = UNNotificationCategory(identifier: holdCategory, actions: [approve, refuse], intentIdentifiers: [],
                                           hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
@@ -54,15 +54,15 @@ enum NotificationRefuse {
 
     static func refuse(hold: String, kiff: KIFFClient, signer: ApprovalSigning, tenant: String?, keyed: Bool, now: Date) async -> Outcome {
         guard kiff.token != nil, let tenant, keyed, kiff.serverVerifiesSignatures else {
-            return .needsApp("Open tafs to answer it: this phone can't sign it from the notification.")
+            return .needsApp(Words.Alert.openTafsAnswerPhoneCan)
         }
         let held: [KIFFClient.CardException]
         do { held = try await kiff.heldCalls() } catch {
-            return .needsApp("tafs couldn't reach KIFF to refuse it. Open tafs to answer it.")
+            return .needsApp(Words.Alert.tafsCouldNotReachKiff)
         }
         guard let call = held.first(where: { $0.id == hold }) else { return .gone }
         guard let version = call.accountingVersion else {
-            return .needsApp("Open tafs to answer it: KIFF didn't say which version of it you saw.")
+            return .needsApp(Words.Alert.openTafsAnswerKiffDid)
         }
         // KIFF's message, as the app signs it: this hold, refused, the version shown, now.
         let signedAt = ISO8601DateFormatter().string(from: now)
@@ -72,7 +72,7 @@ enum NotificationRefuse {
             let value = try signer.signConfirmed(message)
             try await kiff.reject(hold, signature: KIFFClient.AnswerSignature(signedAt: signedAt, value: value))
         } catch {
-            return .needsApp("KIFF didn't take the refusal. Open tafs to answer it.")
+            return .needsApp(Words.Alert.kiffDidNotTakeRefusal)
         }
         return .refused(left: held.count - 1)
     }
@@ -95,7 +95,7 @@ enum NotificationRefuse {
             PushDelegate.removeAlerts(forHold: hold)
         case .needsApp(let why):
             let content = UNMutableNotificationContent()
-            content.title = "Not refused"
+            content.title = Words.Alert.notRefused
             content.body = why
             content.categoryIdentifier = AlertAnswers.holdCategory
             content.interruptionLevel = .timeSensitive

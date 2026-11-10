@@ -77,19 +77,19 @@ struct ReportAnswerSheet: View {
                     .accessibilityAddTraits(reason == r ? .isSelected : [])
                 }
             } header: {
-                Text("What's wrong with it?")
+                Text(Words.Report.whatWrong)
             }
             Section {
                 ChatField(title: Words.Report.noteHint, text: $note)
                     .accessibilityIdentifier("report-note")
                 if note.count > Self.noteLimit {
-                    Text("A note is at most 1,000 characters.").scaledFont(13).foregroundColor(Theme.no)
+                    Text(Words.Report.noteMostCharacters).scaledFont(13).foregroundColor(Theme.no)
                 }
             } footer: {
-                Text("A person at KIFF reads your report, with the answer as it was written.")
+                Text(Words.Report.personKiffReadsYourReport)
             }
             if let failed {
-                Text("Not sent: \(failed)")
+                Text(Words.Report.notSentWhy(failed: "\(failed)"))
                     .scaledFont(14).foregroundColor(Theme.no)
                     .accessibilityIdentifier("report-failed")
             }

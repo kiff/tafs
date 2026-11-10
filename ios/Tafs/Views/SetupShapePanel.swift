@@ -11,13 +11,13 @@ struct SetupShapePanel: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow(text: "Taking shape")
+                    Eyebrow(text: Words.Coach.Shape.takingShape)
                     if let heading = shape.name ?? shape.title {
                         Text(heading).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if shape.isEmpty {
-                        Text("As the conversation goes, the plan, the tools being connected and the taf's Card show here.")
+                        Text(Words.Billing.conversationGoesPlanToolsBeing)
                             .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -89,7 +89,7 @@ struct SetupShapePanel: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .accessibilityElement(children: .combine)
             }
-            Text("Sign-ins are kept sealed: no taf ever sees them.")
+            Text(Words.Connect.signInsKeptSealedNo)
                 .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
         }
     }
@@ -99,13 +99,13 @@ struct SetupShapePanel: View {
         case .connected: return (Words.Connect.Status.connected, Theme.ok)
         case .signedIn: return (Words.Coach.Answer.signedIn, Theme.amberText)
         case .waiting: return (Words.Chat.waitingForYou, Theme.amberText)
-        case .failed: return ("Not connected", Theme.no)
+        case .failed: return (Words.Coach.Shape.notConnected, Theme.no)
         }
     }
 
     private func card(_ card: SetupShape.Card) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: card.confirmed ? "Card · confirmed by KIFF" : "Card · draft · by KIFF")
+            Eyebrow(text: card.confirmed ? Words.Card.cardConfirmedKiff : Words.Card.cardDraftKiff)
             VStack(alignment: .leading, spacing: 6) {
                 Text(card.title).scaledFont(13, weight: .semibold, design: .monospaced, relativeTo: .caption)
                 ForEach(Array(card.lines.enumerated()), id: \.offset) { _, line in
@@ -122,7 +122,7 @@ struct SetupShapePanel: View {
                 .stroke(card.confirmed ? Theme.ok : Theme.ink.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: card.confirmed ? [] : [5, 4])))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             if !card.confirmed {
-                Text("A draft until you approve it in the conversation.")
+                Text(Words.Coach.Shape.draftUntilApproved)
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             }
         }

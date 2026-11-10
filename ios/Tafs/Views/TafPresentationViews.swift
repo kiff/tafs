@@ -255,7 +255,7 @@ private struct SourceActivityRow: View {
                         if let amount = entry.amount_text { Text(amount).scaledFont(13, weight: .semibold).foregroundColor(Theme.ink) }
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5).contentShape(Rectangle())
-            }.buttonStyle(.drivablePlain).accessibilityHint("Shows the receipt")
+            }.buttonStyle(.drivablePlain).accessibilityHint(Words.Record.showsReceipt)
             if let next = entry.next { NextStepRow(tafID: tafID, entry: entry, next: next) }
         }
         .sheet(isPresented: $receipt) { if let evidence { ReceiptView(entry: evidence).environmentObject(model) } }

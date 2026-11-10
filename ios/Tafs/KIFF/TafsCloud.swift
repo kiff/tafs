@@ -1213,7 +1213,7 @@ final class TafsCloud {
     /// Splits tafs cloud's export into its two files.
     static func splitExport(_ data: Data) throws -> (json: Data, text: String) {
         guard var body = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw CloudError(status: 0, message: "The export isn't what tafs cloud sends.")
+            throw CloudError(status: 0, message: Words.Chat.exportNotWhatTafsCloud)
         }
         let text = body.removeValue(forKey: "readable") as? String ?? ""
         let json = try JSONSerialization.data(withJSONObject: body, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])

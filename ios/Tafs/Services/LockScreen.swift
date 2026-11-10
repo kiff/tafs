@@ -36,7 +36,7 @@ final class LockScreen {
             for call in fresh {
                 let content = UNMutableNotificationContent()
                 let name = tafs.first { $0.id == call.tafID }?.name ?? names[call.tafID] ?? "A taf"
-                content.title = "\(name) needs you"
+                content.title = Words.Alert.tafNeedsYou(taf: "\(name)")
                 content.body = [call.proposed.amount?.formatted, call.proposed.summary, "·", call.reason]
                     .compactMap { $0 }.joined(separator: " ")
                 content.sound = .default

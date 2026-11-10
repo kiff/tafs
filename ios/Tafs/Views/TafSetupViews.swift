@@ -40,7 +40,7 @@ struct StartsWhenView: View {
                     }
                     pause(knob, manages: manages)
                 } else {
-                    Text("Reading what starts it…").scaledFont(15).foregroundColor(Theme.dim)
+                    Text(Words.Setup.readingStarts).scaledFont(15).foregroundColor(Theme.dim)
                 }
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
@@ -80,13 +80,13 @@ struct StartsWhenView: View {
                 }
             }
             if let next = cloud?.nextRun, cloud?.paused != true {
-                Text("Next run at \(next.zonedShortTime) · \(model.kiffAccount?.timeZone ?? "UTC")")
+                Text(Words.Setup.nextRun(time: next.zonedShortTime) + " · " + (model.kiffAccount?.timeZone ?? "UTC"))
                     .scaledFont(13).foregroundColor(Theme.dim)
             }
             if !schedules.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(Words.Setup.ifBusy).scaledFont(13).foregroundColor(Theme.soft)
-                    Picker("If it is still working", selection: Binding(
+                    Picker(Words.Setup.ifStillWorking, selection: Binding(
                         get: { knob.setting?.busy ?? "skip" },
                         set: { value in change { $0.busy = value } })) {
                         Text(Words.Setup.skipIt).tag("skip")
@@ -314,7 +314,7 @@ struct ResultsGoToView: View {
     private var builtIns: [BuiltIn] {
         [BuiltIn(place: "door_reply", title: Words.Setup.Place.replyTitle, line: Words.Setup.Place.replyWords),
          BuiltIn(place: "app", title: Words.Setup.Place.appTitle, line: Words.Setup.Place.appWords),
-         BuiltIn(place: "owner_email", title: Words.Setup.Place.emailTitle, line: "Its answer to \(model.kiffAccount?.email ?? "your email"); not when you wrote the message")]
+         BuiltIn(place: "owner_email", title: Words.Setup.Place.emailTitle, line: model.kiffAccount?.email.map { Words.Setup.Place.emailWords(email: $0) } ?? Words.Setup.Place.emailWordsYours)]
     }
 
     private static let builtInPlaces: Set<String> = ["door_reply", "app", "owner_email"]
@@ -377,7 +377,7 @@ struct ResultsGoToView: View {
                     }
                     notSent(manages: manages)
                 } else {
-                    Text("Reading where its results go…").scaledFont(15).foregroundColor(Theme.dim)
+                    Text(Words.Setup.readingResults).scaledFont(15).foregroundColor(Theme.dim)
                 }
             }
             .padding(.horizontal, 16).padding(.vertical, 12)

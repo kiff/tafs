@@ -161,8 +161,8 @@ struct SettingsView: View {
                     }
                     ExportChatsSection()
                 }
-                Section("How it works") {
-                    Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this \(ThisDevice.kind).")
+                Section(Words.SignIn.howWorks) {
+                    Text(Words.SignIn.everyActionTafTakesGoes(device: "\(ThisDevice.kind)"))
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 Section(Words.Settings.legal) {
@@ -259,7 +259,7 @@ struct AccountView: View {
                 // (kiff/tafs#96, #206 6.11); set from the device as a signed setup call.
                 NavigationLink { TimeZonePicker() } label: { LabeledContent(Words.Settings.timeZoneTitle, value: zone) }
                 if zone != TimeZone.current.identifier {
-                    Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") {
+                    Button(Words.Settings.useDeviceZone(device: "\(ThisDevice.kind)", identifier: "\(TimeZone.current.identifier)")) {
                         Task { await model.useThisDevicesTimeZone() }
                     }
                 }
@@ -267,14 +267,14 @@ struct AccountView: View {
                     Text(why).scaledFont(13).foregroundColor(Theme.no)
                 }
             } footer: {
-                Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.")
+                Text(Words.Settings.TimeZone.usesThis)
             }
             // Their own copy, for their rights of access and portability (kiff/tafs#424).
             ExportChatsSection()
             if model.mayDeleteAccount { Section {
                 Button(Words.Settings.DeleteAccount.row, role: .destructive) { deletingAccount = true }.confirming()
             } footer: {
-                Text("Deletes every taf, its runs, chats and notes, your Cards and your connections. It can't be undone.")
+                Text(Words.SignIn.deletesEveryTafRunsChats)
             } }
         }
         .scrollContentBackground(.hidden)

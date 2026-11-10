@@ -24,6 +24,17 @@
         }
       }
     },
+    "alert.alerts_almost_tafs_cloud_did": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts are almost on: tafs cloud didn't answer (%1$@). Tap Turn on alerts again."
+          }
+        }
+      }
+    },
     "alert.all_halted": {
       "extractionState": "manual",
       "localizations": {
@@ -57,6 +68,17 @@
         }
       }
     },
+    "alert.answer_nothing_sent_until_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@. Answer by %3$@. Nothing is sent until you approve."
+          }
+        }
+      }
+    },
     "alert.answered": {
       "extractionState": "manual",
       "localizations": {
@@ -64,6 +86,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "A taf answered someone"
+          }
+        }
+      }
+    },
+    "alert.approve_once": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve once…"
+          }
+        }
+      }
+    },
+    "alert.by_email": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By email"
           }
         }
       }
@@ -86,6 +130,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "When a taf needs you, this phone tells you even with tafs closed. Nothing is sent until you approve."
+          }
+        }
+      }
+    },
+    "alert.foot.tells_you_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a taf needs you, this %1$@ tells you even with tafs closed. Nothing is sent until you approve."
+          }
+        }
+      }
+    },
+    "alert.kiff_did_not_take_refusal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF didn't take the refusal. Open tafs to answer it."
           }
         }
       }
@@ -134,6 +200,17 @@
         }
       }
     },
+    "alert.no_push_token_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ didn't give tafs a push token. Try again in a moment."
+          }
+        }
+      }
+    },
     "alert.not_in_build": {
       "extractionState": "manual",
       "localizations": {
@@ -167,6 +244,17 @@
         }
       }
     },
+    "alert.not_refused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not refused"
+          }
+        }
+      }
+    },
     "alert.not_sent": {
       "extractionState": "manual",
       "localizations": {
@@ -178,6 +266,17 @@
         }
       }
     },
+    "alert.on_this_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts on this %1$@"
+          }
+        }
+      }
+    },
     "alert.on_this_phone": {
       "extractionState": "manual",
       "localizations": {
@@ -185,6 +284,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alerts on this phone"
+          }
+        }
+      }
+    },
+    "alert.open_tafs_answer_kiff_did": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tafs to answer it: KIFF didn't say which version of it you saw."
+          }
+        }
+      }
+    },
+    "alert.open_tafs_answer_phone_can": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tafs to answer it: this phone can't sign it from the notification."
           }
         }
       }
@@ -299,6 +420,28 @@
         }
       }
     },
+    "alert.taf_needs_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ needs you"
+          }
+        }
+      }
+    },
+    "alert.tafs_could_not_reach_kiff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs couldn't reach KIFF to refuse it. Open tafs to answer it."
+          }
+        }
+      }
+    },
     "alert.tafs|one": {
       "extractionState": "manual",
       "localizations": {
@@ -354,6 +497,28 @@
         }
       }
     },
+    "approval.add_face_id_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Face ID or a fingerprint in Settings first: this %1$@ approves with one."
+          }
+        }
+      }
+    },
+    "approval.adding_face_fingerprint_later_ends": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adding a face or fingerprint later ends this device's approval key, so you approve this device again then."
+          }
+        }
+      }
+    },
     "approval.approve": {
       "extractionState": "manual",
       "localizations": {
@@ -361,6 +526,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Approve"
+          }
+        }
+      }
+    },
+    "approval.approve_again_on_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve with this %1$@ again"
           }
         }
       }
@@ -383,6 +559,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Approving…"
+          }
+        }
+      }
+    },
+    "approval.approving_asks_none_set_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approving asks for %1$@, and none is set up on this %2$@ yet. Set it up in %3$@, then come back."
+          }
+        }
+      }
+    },
+    "approval.approving_needs_none_set_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approving needs %1$@, and none is set up. Set it up in %2$@."
+          }
+        }
+      }
+    },
+    "approval.approving_needs_passcode_set_passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approving needs a passcode and %1$@. Set a passcode in %2$@, then add %3$@."
           }
         }
       }
@@ -416,6 +625,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "your screen lock"
+          }
+        }
+      }
+    },
+    "approval.can_not_used_right_try": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ can't be used right now. Try again in a moment."
+          }
+        }
+      }
+    },
+    "approval.cancelled_nothing_approved_request_kept": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled, so nothing was approved. The request is kept: approve again when you're ready."
           }
         }
       }
@@ -486,6 +717,50 @@
         }
       }
     },
+    "approval.device_can_not_approve_approve": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device can't approve. Approve on another device signed in to your account."
+          }
+        }
+      }
+    },
+    "approval.did_not_recognise_you_nothing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ didn't recognise you, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        }
+      }
+    },
+    "approval.face_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID"
+          }
+        }
+      }
+    },
+    "approval.face_id_touch_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID or Touch ID"
+          }
+        }
+      }
+    },
     "approval.first_taf": {
       "extractionState": "manual",
       "localizations": {
@@ -493,6 +768,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Setting up a taf needs approvals: Coach asks you to approve its tools and the taf's Card."
+          }
+        }
+      }
+    },
+    "approval.has_no_face_id_touch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ has no Face ID or Touch ID, so it can't approve. Approve on another iPhone, iPad or Android phone signed in to your account."
+          }
+        }
+      }
+    },
+    "approval.has_no_passcode_needs_one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ has no passcode, and %2$@ needs one. Set a passcode in %3$@, then add %4$@, then come back."
           }
         }
       }
@@ -530,6 +827,17 @@
         }
       }
     },
+    "approval.key_gone_face_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you approve it again in your browser."
+          }
+        }
+      }
+    },
     "approval.key_gone_sign_in": {
       "extractionState": "manual",
       "localizations": {
@@ -548,6 +856,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sign in with KIFF again to approve from this phone."
+          }
+        }
+      }
+    },
+    "approval.locked_after_too_many_tries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is locked after too many tries. Lock this %2$@, unlock it with its passcode, then check again."
+          }
+        }
+      }
+    },
+    "approval.locked_unlock_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is locked after too many tries. Unlock this device with its passcode, then try again."
           }
         }
       }
@@ -607,6 +937,28 @@
         }
       }
     },
+    "approval.not_recognized_face_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again, or sign in again if your Face ID or fingerprints changed."
+          }
+        }
+      }
+    },
+    "approval.nothing_approved_request_kept_approve": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was approved. The request is kept: approve again when you're ready."
+          }
+        }
+      }
+    },
     "approval.open_settings": {
       "extractionState": "manual",
       "localizations": {
@@ -629,6 +981,28 @@
         }
       }
     },
+    "approval.ready_approve": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ is ready to approve with %2$@."
+          }
+        }
+      }
+    },
+    "approval.request_kept": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " The request is kept."
+          }
+        }
+      }
+    },
     "approval.set_a_screen_lock": {
       "extractionState": "manual",
       "localizations": {
@@ -636,6 +1010,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Set a screen lock on this phone to approve"
+          }
+        }
+      }
+    },
+    "approval.settings_face_id_passcode_touch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings → Face ID & Passcode (Touch ID & Passcode on a device with Touch ID)"
           }
         }
       }
@@ -684,6 +1069,17 @@
         }
       }
     },
+    "approval.taf_asks_before_does_anything": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A taf asks before it does anything outside its Card, and Coach asks before it connects a tool or issues a Card. You approve on this device, and that needs Face ID or Touch ID."
+          }
+        }
+      }
+    },
     "approval.title": {
       "extractionState": "manual",
       "localizations": {
@@ -691,6 +1087,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Set up approvals on this device"
+          }
+        }
+      }
+    },
+    "approval.touch_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch ID"
+          }
+        }
+      }
+    },
+    "approval.turned_off_tafs_open_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is turned off for tafs. Open Settings and turn on %2$@ for tafs."
+          }
+        }
+      }
+    },
+    "approval.turned_off_tafs_turn_tafs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is turned off for tafs. Turn it on in tafs' settings to approve."
           }
         }
       }
@@ -713,6 +1142,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Without approvals you can still sign in, review, refuse and halt."
+          }
+        }
+      }
+    },
+    "approval.your_passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your passcode"
           }
         }
       }
@@ -761,6 +1201,17 @@
         }
       }
     },
+    "attachment.photo_could_not_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That photo couldn't be read."
+          }
+        }
+      }
+    },
     "attachment.too_large": {
       "extractionState": "manual",
       "localizations": {
@@ -801,6 +1252,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "This purchase belongs to another tafs account on this Google account, so nothing was added here."
+          }
+        }
+      }
+    },
+    "billing.another_account_apple_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This purchase belongs to another tafs account on this Apple ID, so nothing was added here."
+          }
+        }
+      }
+    },
+    "billing.app_store_could_not_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The App Store couldn't confirm the purchase."
           }
         }
       }
@@ -981,6 +1454,17 @@
         }
       }
     },
+    "billing.cancel_any_time_least_day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel any time, at least a day before it renews, in your Apple account's Subscriptions."
+          }
+        }
+      }
+    },
     "billing.contact_support": {
       "extractionState": "manual",
       "localizations": {
@@ -988,6 +1472,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out."
+          }
+        }
+      }
+    },
+    "billing.conversation_goes_plan_tools_being": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As the conversation goes, the plan, the tools being connected and the taf's Card show here."
           }
         }
       }
@@ -1113,6 +1608,28 @@
         }
       }
     },
+    "billing.one_person_tafs_kiff_your": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One person: tafs, and KIFF for your own agents, with credits included each period."
+          }
+        }
+      }
+    },
+    "billing.only_someone_who_manages_account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only someone who manages the account's billing buys credits."
+          }
+        }
+      }
+    },
     "billing.open_tafs_to_buy": {
       "extractionState": "manual",
       "localizations": {
@@ -1124,6 +1641,17 @@
         }
       }
     },
+    "billing.pack_adds_credits_once_never": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pack adds credits once, and they never expire. Each period's included credits are used first, then the packs'."
+          }
+        }
+      }
+    },
     "billing.pending": {
       "extractionState": "manual",
       "localizations": {
@@ -1131,6 +1659,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "The purchase is waiting for approval. Your tasks are added once it's done."
+          }
+        }
+      }
+    },
+    "billing.pending_credits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchase is waiting for approval. Your credits are added once it's done."
+          }
+        }
+      }
+    },
+    "billing.plan_could_not_read_kiff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan couldn't be read from KIFF: %1$@"
           }
         }
       }
@@ -1278,6 +1828,83 @@
         }
       }
     },
+    "billing.solo.free_then": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free for %1$@, then %2$@ a %3$@."
+          }
+        }
+      }
+    },
+    "billing.solo.subscribe_for": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscribe for %1$@"
+          }
+        }
+      }
+    },
+    "billing.solo_not_available_app_store": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo isn't available from the App Store right now."
+          }
+        }
+      }
+    },
+    "billing.solo_subscription_one_charged_your": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo is a subscription of one %1$@ at %2$@, charged to your Apple account. It renews every %3$@ until you cancel."
+          }
+        }
+      }
+    },
+    "billing.starts_free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts with %1$@ free."
+          }
+        }
+      }
+    },
+    "billing.tafs_kiff_one_person_every": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tafs and KIFF for one person, every month."
+          }
+        }
+      }
+    },
+    "billing.terms_use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
+          }
+        }
+      }
+    },
     "billing.test_purchase": {
       "extractionState": "manual",
       "localizations": {
@@ -1285,6 +1912,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Test purchases don't add tasks to this account."
+          }
+        }
+      }
+    },
+    "billing.test_purchase_credits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test purchases don't add credits to this account."
+          }
+        }
+      }
+    },
+    "billing.what_credits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the credits are for"
           }
         }
       }
@@ -1883,6 +2532,17 @@
         }
       }
     },
+    "card.asks_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@, then it asks you"
+          }
+        }
+      }
+    },
     "card.calls_left|one": {
       "extractionState": "manual",
       "localizations": {
@@ -1945,6 +2605,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ calls %2$@"
+          }
+        }
+      }
+    },
+    "card.card_confirmed_kiff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card · confirmed by KIFF"
+          }
+        }
+      }
+    },
+    "card.card_draft_kiff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card · draft · by KIFF"
+          }
+        }
+      }
+    },
+    "card.card_got_room_call_needed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its Card got the room this call needed, until that total resets"
+          }
+        }
+      }
+    },
+    "card.card_not_issued": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Card was not issued. "
           }
         }
       }
@@ -2103,6 +2807,17 @@
         }
       }
     },
+    "card.extra_room_prefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%1$@ extra room "
+          }
+        }
+      }
+    },
     "card.extra_room_until": {
       "extractionState": "manual",
       "localizations": {
@@ -2187,6 +2902,17 @@
           "stringUnit": {
             "state": "translated",
             "value": " for each %1$@"
+          }
+        }
+      }
+    },
+    "card.held.for_each_join": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " for each "
           }
         }
       }
@@ -2323,6 +3049,17 @@
         }
       }
     },
+    "card.hero.no_currency_suffix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · no currency"
+          }
+        }
+      }
+    },
     "card.hero.use_unavailable": {
       "extractionState": "manual",
       "localizations": {
@@ -2330,6 +3067,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ · use unavailable"
+          }
+        }
+      }
+    },
+    "card.hero.use_unavailable_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · use unavailable%2$@"
           }
         }
       }
@@ -2389,6 +3137,17 @@
         }
       }
     },
+    "card.kiff_did_not_revoke_cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF didn't revoke %1$@ of its Cards: revoke them in KIFF."
+          }
+        }
+      }
+    },
     "card.left": {
       "extractionState": "manual",
       "localizations": {
@@ -2396,6 +3155,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ left %2$@"
+          }
+        }
+      }
+    },
+    "card.left_extra_room": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "left %1$@ of %2$@ + %3$@ extra room%4$@%5$@"
+          }
+        }
+      }
+    },
+    "card.limit_can_not_raised_right": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The limit can't be raised from here right now."
+          }
+        }
+      }
+    },
+    "card.limit_raised_read_balance_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The limit was raised. Read the balance again before raising it once more."
           }
         }
       }
@@ -2594,6 +3386,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Outside: refused"
+          }
+        }
+      }
+    },
+    "card.over_limit_calls_would": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over its limit of %1$@ calls: this would be the %2$@"
           }
         }
       }
@@ -3016,6 +3819,17 @@
         }
       }
     },
+    "card.within_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "within the Card"
+          }
+        }
+      }
+    },
     "chat.answer.copied": {
       "extractionState": "manual",
       "localizations": {
@@ -3148,6 +3962,28 @@
         }
       }
     },
+    "chat.chats_tafs_exported": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your chats in tafs, exported %1$@.\n\n"
+          }
+        }
+      }
+    },
+    "chat.chats_were_not_exported_could": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your chats weren't exported: this %1$@ couldn't save the files."
+          }
+        }
+      }
+    },
     "chat.delete": {
       "extractionState": "manual",
       "localizations": {
@@ -3203,6 +4039,17 @@
         }
       }
     },
+    "chat.export_not_what_tafs_cloud": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The export isn't what tafs cloud sends."
+          }
+        }
+      }
+    },
     "chat.failed.after": {
       "extractionState": "manual",
       "localizations": {
@@ -3210,6 +4057,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ stopped part-way, after this went through: %2$@."
+          }
+        }
+      }
+    },
+    "chat.failed.after_several": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ stopped part-way, after these went through: %2$@."
           }
         }
       }
@@ -3456,6 +4314,28 @@
         }
       }
     },
+    "chat.it_lower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it"
+          }
+        }
+      }
+    },
+    "chat.jump_latest_something_new": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jump to the latest, something new"
+          }
+        }
+      }
+    },
     "chat.jump_to_latest": {
       "extractionState": "manual",
       "localizations": {
@@ -3463,6 +4343,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jump to the latest"
+          }
+        }
+      }
+    },
+    "chat.message_carries_most_files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A message carries at most %1$@ files."
           }
         }
       }
@@ -3485,6 +4376,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Message your taf"
+          }
+        }
+      }
+    },
+    "chat.needs_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you · "
+          }
+        }
+      }
+    },
+    "chat.no_chats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: no chats yet."
           }
         }
       }
@@ -3621,6 +4534,17 @@
         }
       }
     },
+    "chat.run_started_with": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run started %1$@ · %2$@"
+          }
+        }
+      }
+    },
     "chat.seconds": {
       "extractionState": "manual",
       "localizations": {
@@ -3643,6 +4567,39 @@
         }
       }
     },
+    "chat.send_files_once_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send files once %1$@ is done"
+          }
+        }
+      }
+    },
+    "chat.send_once_files_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send once the files are up"
+          }
+        }
+      }
+    },
+    "chat.send_while_works": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to %1$@ while it works"
+          }
+        }
+      }
+    },
     "chat.stop": {
       "extractionState": "manual",
       "localizations": {
@@ -3650,6 +4607,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stop"
+          }
+        }
+      }
+    },
+    "chat.taf_is_answering": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is answering"
+          }
+        }
+      }
+    },
+    "chat.the_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The taf"
           }
         }
       }
@@ -3716,6 +4695,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for you"
+          }
+        }
+      }
+    },
+    "chat.work.hides_steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hides the steps"
+          }
+        }
+      }
+    },
+    "chat.work.not_made_read_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not made · read first"
+          }
+        }
+      }
+    },
+    "chat.work.shows_steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the steps"
+          }
+        }
+      }
+    },
+    "chat.work.worked_for": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worked for %1$@"
           }
         }
       }
@@ -3819,6 +4842,17 @@
         }
       }
     },
+    "chat.your_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your taf"
+          }
+        }
+      }
+    },
     "coach.already_approved": {
       "extractionState": "manual",
       "localizations": {
@@ -3874,6 +4908,39 @@
         }
       }
     },
+    "coach.answer.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It didn't go through."
+          }
+        }
+      }
+    },
+    "coach.answer.failed_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Didn't go through"
+          }
+        }
+      }
+    },
+    "coach.answer.failed_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It didn't go through: %1$@"
+          }
+        }
+      }
+    },
     "coach.answer.in_your_words": {
       "extractionState": "manual",
       "localizations": {
@@ -3892,6 +4959,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "It stopped waiting, with no answer."
+          }
+        }
+      }
+    },
+    "coach.answer.not_now_lower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not now"
           }
         }
       }
@@ -3918,6 +4996,28 @@
         }
       }
     },
+    "coach.answer.signed_in_at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in at %1$@"
+          }
+        }
+      }
+    },
+    "coach.answer.signed_in_lower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "signed in"
+          }
+        }
+      }
+    },
     "coach.answer.wrote": {
       "extractionState": "manual",
       "localizations": {
@@ -3925,6 +5025,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "You answered in your own words."
+          }
+        }
+      }
+    },
+    "coach.answer_did_not_reach_setup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answer didn't reach Setup. Tap it again."
           }
         }
       }
@@ -3984,6 +5095,39 @@
         }
       }
     },
+    "coach.approved_signed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved · signed in to %1$@"
+          }
+        }
+      }
+    },
+    "coach.approving_asks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approving asks for %1$@."
+          }
+        }
+      }
+    },
+    "coach.approving_needed_finish_your_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approving is needed to finish your first taf: Coach asks you to approve the tool it connects and the taf's Card on this device."
+          }
+        }
+      }
+    },
     "coach.ask": {
       "extractionState": "manual",
       "localizations": {
@@ -4035,6 +5179,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "While you were away"
+          }
+        }
+      }
+    },
+    "coach.back_width": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to its width"
           }
         }
       }
@@ -4182,6 +5337,17 @@
         }
       }
     },
+    "coach.close_coach_mode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Coach mode"
+          }
+        }
+      }
+    },
     "coach.coach_knows": {
       "extractionState": "manual",
       "localizations": {
@@ -4189,6 +5355,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coach knows, and hands it over again."
+          }
+        }
+      }
+    },
+    "coach.coach_mode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach mode"
+          }
+        }
+      }
+    },
+    "coach.coach_mode_has_change_request": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach mode has to change this request before you can approve it."
+          }
+        }
+      }
+    },
+    "coach.coach_mode_width": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach mode's width"
           }
         }
       }
@@ -4226,6 +5425,17 @@
         }
       }
     },
+    "coach.connected_keys_kept_sealed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is connected · keys kept sealed"
+          }
+        }
+      }
+    },
     "coach.connecting_failed": {
       "extractionState": "manual",
       "localizations": {
@@ -4244,6 +5454,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Connecting tools isn't set up. %1$@"
+          }
+        }
+      }
+    },
+    "coach.conversation_not_loaded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The conversation couldn't be loaded: %1$@"
           }
         }
       }
@@ -4292,6 +5513,28 @@
         }
       }
     },
+    "coach.did_not_go_through_nothing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It didn't go through. Nothing was connected."
+          }
+        }
+      }
+    },
+    "coach.did_not_go_through_sign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Didn't go through · sign in"
+          }
+        }
+      }
+    },
     "coach.didnt_start": {
       "extractionState": "manual",
       "localizations": {
@@ -4310,6 +5553,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "This request doesn't match what it asks for, so it can't be approved. Ask Coach to propose it again."
+          }
+        }
+      }
+    },
+    "coach.drag_make_wider_narrower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to make it wider or narrower"
           }
         }
       }
@@ -4343,6 +5597,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Each connection and each Card waits for %1$@."
+          }
+        }
+      }
+    },
+    "coach.earlier_request": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier request"
+          }
+        }
+      }
+    },
+    "coach.folds_plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folds the plan"
+          }
+        }
+      }
+    },
+    "coach.full_screen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full screen"
           }
         }
       }
@@ -4413,6 +5700,28 @@
         }
       }
     },
+    "coach.jump_latest_something_new": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jump to the latest, something new"
+          }
+        }
+      }
+    },
+    "coach.kiff_counts_way": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF counts it this way"
+          }
+        }
+      }
+    },
     "coach.making_live": {
       "extractionState": "manual",
       "localizations": {
@@ -4435,6 +5744,50 @@
         }
       }
     },
+    "coach.name_tool_taf_should_work": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for %1$@."
+          }
+        }
+      }
+    },
+    "coach.needs_you_approve": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you · approve"
+          }
+        }
+      }
+    },
+    "coach.needs_you_let_coach_drive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you · let Coach drive"
+          }
+        }
+      }
+    },
+    "coach.needs_you_question": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you · a question"
+          }
+        }
+      }
+    },
     "coach.new_conversation": {
       "extractionState": "manual",
       "localizations": {
@@ -4446,6 +5799,28 @@
         }
       }
     },
+    "coach.newer_request_connection_below": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A newer request for this connection is below."
+          }
+        }
+      }
+    },
+    "coach.no_draft_named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs cloud named no draft to confirm"
+          }
+        }
+      }
+    },
     "coach.not_allowed": {
       "extractionState": "manual",
       "localizations": {
@@ -4453,6 +5828,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coach is for the people KIFF lets use it, by default the account's admins."
+          }
+        }
+      }
+    },
+    "coach.not_archived_try_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not archived. Try again."
           }
         }
       }
@@ -4490,6 +5876,17 @@
         }
       }
     },
+    "coach.not_no_sign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now: no sign-in at %1$@"
+          }
+        }
+      }
+    },
     "coach.not_now": {
       "extractionState": "manual",
       "localizations": {
@@ -4497,6 +5894,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not now"
+          }
+        }
+      }
+    },
+    "coach.not_put_back_try_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not put back. Try again."
           }
         }
       }
@@ -4534,6 +5942,17 @@
         }
       }
     },
+    "coach.nothing_reaches_until_you_resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing reaches it until you resume it. Then send this again."
+          }
+        }
+      }
+    },
     "coach.nothing_to_approve": {
       "extractionState": "manual",
       "localizations": {
@@ -4541,6 +5960,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ is already connected. There's nothing new to approve, so nothing was approved."
+          }
+        }
+      }
+    },
+    "coach.own_answer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own answer"
           }
         }
       }
@@ -4611,6 +6041,17 @@
         }
       }
     },
+    "coach.puts_words_message_box": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puts its words in the message box"
+          }
+        }
+      }
+    },
     "coach.questions.chat_about": {
       "extractionState": "manual",
       "localizations": {
@@ -4629,6 +6070,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "In your words"
+          }
+        }
+      }
+    },
+    "coach.questions.own_answer_to": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own answer to: %1$@"
           }
         }
       }
@@ -4677,6 +6129,28 @@
         }
       }
     },
+    "coach.questions.the_question": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The question"
+          }
+        }
+      }
+    },
+    "coach.questions.your_answers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answers · "
+          }
+        }
+      }
+    },
     "coach.reading_kiff_words": {
       "extractionState": "manual",
       "localizations": {
@@ -4684,6 +6158,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading KIFF's words for this connection…"
+          }
+        }
+      }
+    },
+    "coach.reading_kiff_words_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading KIFF's words…"
+          }
+        }
+      }
+    },
+    "coach.reading_request": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the request…"
+          }
+        }
+      }
+    },
+    "coach.request_does_not_match_what": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This request doesn't match what it shows, so it can't be approved."
           }
         }
       }
@@ -4765,6 +6272,28 @@
         }
       }
     },
+    "coach.send_once_files_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send once the files are up"
+          }
+        }
+      }
+    },
+    "coach.send_when_answer_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send when this answer is done"
+          }
+        }
+      }
+    },
     "coach.setting_up": {
       "extractionState": "manual",
       "localizations": {
@@ -4772,6 +6301,127 @@
           "stringUnit": {
             "state": "translated",
             "value": "Setting up %1$@…"
+          }
+        }
+      }
+    },
+    "coach.setup_changed_request_see_below": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup changed this request: see below"
+          }
+        }
+      }
+    },
+    "coach.setup_needs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup needs"
+          }
+        }
+      }
+    },
+    "coach.shape.draft_until_approved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A draft until you approve it in the conversation."
+          }
+        }
+      }
+    },
+    "coach.shape.not_connected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not connected"
+          }
+        }
+      }
+    },
+    "coach.shape.sign_in_at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in at "
+          }
+        }
+      }
+    },
+    "coach.shape.taking_shape": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taking shape"
+          }
+        }
+      }
+    },
+    "coach.shape.the_connection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the connection"
+          }
+        }
+      }
+    },
+    "coach.shows_approval": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the approval"
+          }
+        }
+      }
+    },
+    "coach.shows_earlier_request": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the earlier request"
+          }
+        }
+      }
+    },
+    "coach.shows_it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows it"
+          }
+        }
+      }
+    },
+    "coach.shows_whole_plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the whole plan"
           }
         }
       }
@@ -4853,6 +6503,17 @@
         }
       }
     },
+    "coach.signed_reading_what_offers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in at %1$@ · reading what it offers"
+          }
+        }
+      }
+    },
     "coach.start": {
       "extractionState": "manual",
       "localizations": {
@@ -4875,6 +6536,28 @@
         }
       }
     },
+    "coach.stopped_part_way_before_finished": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This stopped part-way, before it finished."
+          }
+        }
+      }
+    },
+    "coach.taf_halted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is halted"
+          }
+        }
+      }
+    },
     "coach.taken.named": {
       "extractionState": "manual",
       "localizations": {
@@ -4893,6 +6576,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coach can't have its tools yet: another tool in KIFF is named as one of them. Rename or remove it in KIFF."
+          }
+        }
+      }
+    },
+    "coach.the_vendor": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the vendor"
           }
         }
       }
@@ -4992,6 +6686,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "If the vendor's sign-in page opened, finish it there and come back."
+          }
+        }
+      }
+    },
+    "coach.what_conversation_about": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What this conversation is about"
+          }
+        }
+      }
+    },
+    "coach.will_work_like": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " will work like this"
           }
         }
       }
@@ -5113,6 +6829,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copy"
+          }
+        }
+      }
+    },
+    "common.could_not_read_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ couldn't be read: %2$@"
           }
         }
       }
@@ -5381,6 +7108,17 @@
         }
       }
     },
+    "connect.app_store_does_not_offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The App Store doesn't offer this right now."
+          }
+        }
+      }
+    },
     "connect.approve_not_read": {
       "extractionState": "manual",
       "localizations": {
@@ -5557,6 +7295,17 @@
         }
       }
     },
+    "connect.apps_connect_taf_make_one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps connect for a taf. Make one first, then connect its apps here."
+          }
+        }
+      }
+    },
     "connect.apps_not_read": {
       "extractionState": "manual",
       "localizations": {
@@ -5630,6 +7379,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "KIFF didn't issue the taf's Cards. %1$@"
+          }
+        }
+      }
+    },
+    "connect.chats_were_not_exported_check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your chats weren't exported. Check your connection and try again."
           }
         }
       }
@@ -5788,6 +7548,17 @@
         }
       }
     },
+    "connect.connecting_again_asks_you_approve": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Connecting again asks you to approve and sign in again."
+          }
+        }
+      }
+    },
     "connect.connection_is": {
       "extractionState": "manual",
       "localizations": {
@@ -5806,6 +7577,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "This connection is %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "connect.connections_could_not_disconnected_disconnect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " %1$@ of its connections couldn't be disconnected: disconnect them in Connect apps."
+          }
+        }
+      }
+    },
+    "connect.connections_disconnected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Its connections are disconnected."
+          }
+        }
+      }
+    },
+    "connect.could_not_cleared_try_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ couldn't be cleared. Try again."
+          }
+        }
+      }
+    },
+    "connect.could_not_connected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ couldn't be connected: %2$@"
           }
         }
       }
@@ -5942,6 +7757,17 @@
         }
       }
     },
+    "connect.drive_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive the app"
+          }
+        }
+      }
+    },
     "connect.from_removed": {
       "extractionState": "manual",
       "localizations": {
@@ -6074,6 +7900,17 @@
         }
       }
     },
+    "connect.kiff_words_connection_could_not": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF's words for this connection couldn't be read. Nothing was approved."
+          }
+        }
+      }
+    },
     "connect.last_failed": {
       "extractionState": "manual",
       "localizations": {
@@ -6081,6 +7918,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last failed: %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "connect.more_apps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More apps"
+          }
+        }
+      }
+    },
+    "connect.more_apps_could_not_listed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More apps couldn't be listed: %1$@"
           }
         }
       }
@@ -6173,6 +8032,17 @@
         }
       }
     },
+    "connect.nothing_signed_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was signed in. Try again."
+          }
+        }
+      }
+    },
     "connect.one_taf": {
       "extractionState": "manual",
       "localizations": {
@@ -6202,6 +8072,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Other connections"
+          }
+        }
+      }
+    },
+    "connect.other_connections_stay_connected_no": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Other connections to %1$@ stay connected. If no other connection uses this sign-in, it's revoked at %2$@."
           }
         }
       }
@@ -6272,6 +8153,17 @@
         }
       }
     },
+    "connect.reading_request": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the request…"
+          }
+        }
+      }
+    },
     "connect.reconnect_in_coach": {
       "extractionState": "manual",
       "localizations": {
@@ -6290,6 +8182,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Replace the key"
+          }
+        }
+      }
+    },
+    "connect.request_does_not_match_what": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This request doesn't match what it shows, so it can't be approved."
+          }
+        }
+      }
+    },
+    "connect.schedule_chats_run_reports_memory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ Its schedule, chats, run reports, memory and key are deleted, and the name %2$@ is free. KIFF's receipts stay."
+          }
+        }
+      }
+    },
+    "connect.sign_came_back_connection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the sign-in came back, but the connection is %1$@"
           }
         }
       }
@@ -6349,6 +8274,17 @@
         }
       }
     },
+    "connect.sign_ins_kept_sealed_no": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-ins are kept sealed: no taf ever sees them."
+          }
+        }
+      }
+    },
     "connect.signed_in": {
       "extractionState": "manual",
       "localizations": {
@@ -6378,6 +8314,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signed in · choose its actions"
+          }
+        }
+      }
+    },
+    "connect.start_connected_tools_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start from Connected tools on this %1$@ first."
+          }
+        }
+      }
+    },
+    "connect.start_connected_tools_iphone_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start from Connected tools on this iPhone first."
           }
         }
       }
@@ -6422,6 +8380,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for the sign-in at %1$@"
+          }
+        }
+      }
+    },
+    "connect.taf_not_tafs_cloud_apps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This taf isn't on tafs cloud yet, so apps can't be connected for it."
+          }
+        }
+      }
+    },
+    "connect.tafs_cloud_named_no_connection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs cloud named no connection to approve"
           }
         }
       }
@@ -6481,6 +8461,17 @@
         }
       }
     },
+    "connect.words_another_connection_than_one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These words are for another connection than the one shown. Nothing can be approved."
+          }
+        }
+      }
+    },
     "connect.words_mismatch": {
       "extractionState": "manual",
       "localizations": {
@@ -6514,6 +8505,17 @@
         }
       }
     },
+    "door.anyone_else_today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ from anyone else today."
+          }
+        }
+      }
+    },
     "door.app.email": {
       "extractionState": "manual",
       "localizations": {
@@ -6532,6 +8534,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "The bot still listens, so the door stays. %1$@"
+          }
+        }
+      }
+    },
+    "door.checks_sender_server_signed_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It checks the sender's server signed the message"
           }
         }
       }
@@ -6613,6 +8626,28 @@
         }
       }
     },
+    "door.dial.add_position": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a door, %1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "door.dial.add_stamp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD A DOOR"
+          }
+        }
+      }
+    },
     "door.do_it.default": {
       "extractionState": "manual",
       "localizations": {
@@ -6679,6 +8714,39 @@
         }
       }
     },
+    "door.door_dial": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Door dial"
+          }
+        }
+      }
+    },
+    "door.door_removed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This door was removed."
+          }
+        }
+      }
+    },
+    "door.doors_turn_pick_press_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doors · turn to pick, press to open"
+          }
+        }
+      }
+    },
     "door.footer": {
       "extractionState": "manual",
       "localizations": {
@@ -6686,6 +8754,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anyone can write to a door. Only people you pair can give %1$@ work, and its Card decides the rest."
+          }
+        }
+      }
+    },
+    "door.hi_like_back_order": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hi, I'd like $15 back on order T-3001."
           }
         }
       }
@@ -6987,6 +9066,17 @@
         }
       }
     },
+    "door.no_app_called": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No app called \"%1$@\" here yet."
+          }
+        }
+      }
+    },
     "door.no_door_yet": {
       "extractionState": "manual",
       "localizations": {
@@ -7016,6 +9106,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not added: it wasn't confirmed."
+          }
+        }
+      }
+    },
+    "door.not_closed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The door didn't close. %1$@"
+          }
+        }
+      }
+    },
+    "door.not_opened": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The door didn't open. %1$@"
           }
         }
       }
@@ -7108,6 +9220,39 @@
         }
       }
     },
+    "door.paired_senders_today_more_dropped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ from you and paired senders today. More are dropped until tomorrow."
+          }
+        }
+      }
+    },
+    "door.paired_senders_today_text_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ from you and paired senders today. Text only: attachments aren't opened, and the reply says so."
+          }
+        }
+      }
+    },
+    "door.press_add_door": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press %1$@ to add a door"
+          }
+        }
+      }
+    },
     "door.proven_section": {
       "extractionState": "manual",
       "localizations": {
@@ -7126,6 +9271,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading its channels…"
+          }
+        }
+      }
+    },
+    "door.refund_request": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refund request"
           }
         }
       }
@@ -7218,6 +9374,28 @@
         }
       }
     },
+    "door.slack.connect_first_in_connect_apps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect the Slack bot for %1$@ first, in Connect apps. Then add its door here."
+          }
+        }
+      }
+    },
+    "door.slack.let_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let %1$@ read what's written in %2$@"
+          }
+        }
+      }
+    },
     "door.slack.no_account": {
       "extractionState": "manual",
       "localizations": {
@@ -7251,6 +9429,28 @@
         }
       }
     },
+    "door.slack.the_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the taf"
+          }
+        }
+      }
+    },
+    "door.slack.this_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this taf"
+          }
+        }
+      }
+    },
     "door.slack.which_bot": {
       "extractionState": "manual",
       "localizations": {
@@ -7273,6 +9473,17 @@
         }
       }
     },
+    "door.slack_bot_sees_no_channel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Slack bot sees no channel yet. Invite it to one in Slack, then come back."
+          }
+        }
+      }
+    },
     "door.slack_cant_listen": {
       "extractionState": "manual",
       "localizations": {
@@ -7280,6 +9491,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Slack bot couldn't listen to that channel. %1$@"
+          }
+        }
+      }
+    },
+    "door.slack_channels_could_not_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack's channels couldn't be read: %1$@"
+          }
+        }
+      }
+    },
+    "door.slack_did_not_subscribe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack didn't subscribe %1$@: %2$@"
           }
         }
       }
@@ -7313,6 +9546,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Slack bot still listens to that channel, so the door stays. %1$@"
+          }
+        }
+      }
+    },
+    "door.slack_subscription_not_stopped_door": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack's subscription wasn't stopped, so the door stays: %1$@"
+          }
+        }
+      }
+    },
+    "door.slack_workspace": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack workspace"
           }
         }
       }
@@ -7361,6 +9616,17 @@
         }
       }
     },
+    "door.start_connected_tools_first_slack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start from Connected tools on this %1$@ first. Slack's subscription must be stopped before removing its door."
+          }
+        }
+      }
+    },
     "door.status.closed": {
       "extractionState": "manual",
       "localizations": {
@@ -7394,6 +9660,17 @@
         }
       }
     },
+    "door.swipe_up_down_pick_door": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe up or down to pick a door. Double-tap to open or close it."
+          }
+        }
+      }
+    },
     "door.unpair": {
       "extractionState": "manual",
       "localizations": {
@@ -7412,6 +9689,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Can't prove who's writing · knocks only"
+          }
+        }
+      }
+    },
+    "door.what_do": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What to do"
           }
         }
       }
@@ -7445,6 +9733,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "WhatsApp doors are added from tafs on an iPhone for now; once added, they show here."
+          }
+        }
+      }
+    },
+    "door.whatsapp_signup_did_not_finish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhatsApp's signup didn't finish."
           }
         }
       }
@@ -7526,6 +9825,17 @@
         }
       }
     },
+    "drive.card_note_scrolls": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app or tap Stop to take it back."
+          }
+        }
+      }
+    },
     "drive.card_title": {
       "extractionState": "manual",
       "localizations": {
@@ -7537,6 +9847,17 @@
         }
       }
     },
+    "drive.coach_drove_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach drove the app · %1$@"
+          }
+        }
+      }
+    },
     "drive.done": {
       "extractionState": "manual",
       "localizations": {
@@ -7544,6 +9865,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done"
+          }
+        }
+      }
+    },
+    "drive.drive_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive the app"
           }
         }
       }
@@ -7713,6 +10045,17 @@
         }
       }
     },
+    "drive.needs_you_let_coach_drive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you · let Coach drive"
+          }
+        }
+      }
+    },
     "drive.no_field": {
       "extractionState": "manual",
       "localizations": {
@@ -7720,6 +10063,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "No field is focused"
+          }
+        }
+      }
+    },
+    "drive.no_step_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No step was done."
           }
         }
       }
@@ -8164,6 +10518,17 @@
         }
       }
     },
+    "error.sign_in_first_on_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with KIFF on this %1$@ first."
+          }
+        }
+      }
+    },
     "error.sign_in_pending": {
       "extractionState": "manual",
       "localizations": {
@@ -8230,6 +10595,17 @@
         }
       }
     },
+    "export.own_chats_each_taf_coach": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own chats with each taf, Coach's included, the names of the files you attached, and your notes, as a readable file and as JSON. Only you can export them."
+          }
+        }
+      }
+    },
     "export.preparing": {
       "extractionState": "manual",
       "localizations": {
@@ -8237,6 +10613,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preparing your chats…"
+          }
+        }
+      }
+    },
+    "export.ready_share_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready: %1$@. Share again"
           }
         }
       }
@@ -8340,6 +10727,28 @@
         }
       }
     },
+    "halt.halted_nothing_reaches_your_tools": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halted%1$@. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
+          }
+        }
+      }
+    },
+    "halt.halting_stops_no_run_starts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halting stops %1$@: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
+          }
+        }
+      }
+    },
     "halt.headline.halted": {
       "extractionState": "manual",
       "localizations": {
@@ -8395,6 +10804,17 @@
         }
       }
     },
+    "halt.your_tafs_lower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your tafs"
+          }
+        }
+      }
+    },
     "home.calendar_not_read": {
       "extractionState": "manual",
       "localizations": {
@@ -8413,6 +10833,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Can't reach KIFF"
+          }
+        }
+      }
+    },
+    "home.choose_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a taf."
+          }
+        }
+      }
+    },
+    "home.connect_tool": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a tool"
+          }
+        }
+      }
+    },
+    "home.connect_tool_set_up_your": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a tool to set up your first taf."
           }
         }
       }
@@ -8472,6 +10925,17 @@
         }
       }
     },
+    "home.halted_open_halt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halted. Open Halt"
+          }
+        }
+      }
+    },
     "home.loading": {
       "extractionState": "manual",
       "localizations": {
@@ -8483,6 +10947,28 @@
         }
       }
     },
+    "home.new_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New taf"
+          }
+        }
+      }
+    },
+    "home.no_longer_runs_tafs_deletes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It no longer runs. tafs deletes what's left each time it refreshes."
+          }
+        }
+      }
+    },
     "home.no_tafs": {
       "extractionState": "manual",
       "localizations": {
@@ -8490,6 +10976,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "No tafs yet."
+          }
+        }
+      }
+    },
+    "home.not_fully_removed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ isn't fully removed yet."
           }
         }
       }
@@ -8615,6 +11112,17 @@
         }
       }
     },
+    "home.reason_answer_by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · answer by %2$@"
+          }
+        }
+      }
+    },
     "home.sample_foot": {
       "extractionState": "manual",
       "localizations": {
@@ -8622,6 +11130,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach."
+          }
+        }
+      }
+    },
+    "home.shared_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared with you"
+          }
+        }
+      }
+    },
+    "home.sign_approve_each_step": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You sign in and approve each step"
+          }
+        }
+      }
+    },
+    "home.start_new_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new taf"
           }
         }
       }
@@ -8655,6 +11196,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tafs"
+          }
+        }
+      }
+    },
+    "home.tafs_shared_you_show": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tafs shared with you show here."
           }
         }
       }
@@ -8703,6 +11255,72 @@
         }
       }
     },
+    "home.your_tafs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your tafs"
+          }
+        }
+      }
+    },
+    "kiff.asking_kiff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asking KIFF: %1$@…"
+          }
+        }
+      }
+    },
+    "kiff.did_not_reach_kiff_try": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It didn't reach KIFF. Try again."
+          }
+        }
+      }
+    },
+    "kiff.kiff_can_not_do_sign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF can't do this yet: sign in again from Settings to approve from this %1$@."
+          }
+        }
+      }
+    },
+    "kiff.kiff_did_not_answer_expected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF didn't answer as expected. Try again."
+          }
+        }
+      }
+    },
+    "kiff.kiff_words_do_not_match": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF's words don't match their check. Nothing can be approved."
+          }
+        }
+      }
+    },
     "knob.all_services": {
       "extractionState": "manual",
       "localizations": {
@@ -8710,6 +11328,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "All services"
+          }
+        }
+      }
+    },
+    "knob.approve_event": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve event"
           }
         }
       }
@@ -8813,6 +11442,39 @@
         }
       }
     },
+    "knob.dial_could_not_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The dial couldn't be read: %1$@"
+          }
+        }
+      }
+    },
+    "knob.dial_did_not_change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The dial didn't change: %1$@"
+          }
+        }
+      }
+    },
+    "knob.done_today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ done today"
+          }
+        }
+      }
+    },
     "knob.draft": {
       "extractionState": "manual",
       "localizations": {
@@ -8846,6 +11508,17 @@
         }
       }
     },
+    "knob.event_changed_read_dial_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This event changed. Read the dial again before approving it."
+          }
+        }
+      }
+    },
     "knob.event_filters": {
       "extractionState": "manual",
       "localizations": {
@@ -8853,6 +11526,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "It listens for"
+          }
+        }
+      }
+    },
+    "knob.follow_up_not_removed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The follow-up wasn't removed: %1$@"
+          }
+        }
+      }
+    },
+    "knob.listen_only_events_matching_filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen only for events matching these filters."
           }
         }
       }
@@ -8908,6 +11603,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Next"
+          }
+        }
+      }
+    },
+    "knob.no_requests": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No requests yet."
+          }
+        }
+      }
+    },
+    "knob.no_stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", no stops"
           }
         }
       }
@@ -9066,6 +11783,17 @@
         }
       }
     },
+    "knob.subscription_made_dial_has_not": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The subscription was made, but the dial hasn't recorded it yet. Try again."
+          }
+        }
+      }
+    },
     "knob.tap_a_ring": {
       "extractionState": "manual",
       "localizations": {
@@ -9165,6 +11893,17 @@
         }
       }
     },
+    "needs_you.answer_gone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This answer isn't on tafs cloud any more."
+          }
+        }
+      }
+    },
     "needs_you.answer_in_kiff": {
       "extractionState": "manual",
       "localizations": {
@@ -9194,6 +11933,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Answering from the phone arrives once KIFF checks the phone's signature. Until then, answer in KIFF."
+          }
+        }
+      }
+    },
+    "needs_you.answer_names_each": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "so the answer names each one."
           }
         }
       }
@@ -9238,6 +11988,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Approve once with %1$@"
+          }
+        }
+      }
+    },
+    "needs_you.asks_lapses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ asks: %2$@. %3$@. It lapses at %4$@. %5$@"
           }
         }
       }
@@ -9396,6 +12157,17 @@
         }
       }
     },
+    "needs_you.get_alert_when_call_waits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get an alert when a call waits for your answer, even with tafs closed."
+          }
+        }
+      }
+    },
     "needs_you.install_from_card": {
       "extractionState": "manual",
       "localizations": {
@@ -9407,6 +12179,28 @@
         }
       }
     },
+    "needs_you.ios_asks_next_confirming_sets": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS asks next. Confirming with %1$@ sets them up for your account."
+          }
+        }
+      }
+    },
+    "needs_you.know_moment_taf_needs_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Know the moment a taf needs you"
+          }
+        }
+      }
+    },
     "needs_you.left": {
       "extractionState": "manual",
       "localizations": {
@@ -9414,6 +12208,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ left"
+          }
+        }
+      }
+    },
+    "needs_you.no_gives_card_room_back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No gives its Card the room back. Answering asks for %1$@."
           }
         }
       }
@@ -9451,6 +12256,17 @@
         }
       }
     },
+    "needs_you.opens_where_you_answer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens %1$@, where you answer it"
+          }
+        }
+      }
+    },
     "needs_you.over_total": {
       "extractionState": "manual",
       "localizations": {
@@ -9480,6 +12296,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Answer %1$@"
+          }
+        }
+      }
+    },
+    "needs_you.prompt.did_not_happen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say it didn't happen: %1$@"
+          }
+        }
+      }
+    },
+    "needs_you.prompt.happened": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say it happened: %1$@"
           }
         }
       }
@@ -9638,6 +12476,17 @@
         }
       }
     },
+    "needs_you.tab_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you, %1$@"
+          }
+        }
+      }
+    },
     "needs_you.title": {
       "extractionState": "manual",
       "localizations": {
@@ -9645,6 +12494,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Needs you"
+          }
+        }
+      }
+    },
+    "needs_you.turn_alerts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on alerts"
+          }
+        }
+      }
+    },
+    "needs_you.turning_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning on…"
           }
         }
       }
@@ -9682,6 +12553,17 @@
         }
       }
     },
+    "needs_you.when_taf_asks_something_outside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this %1$@ and its lock screen, even with tafs closed."
+          }
+        }
+      }
+    },
     "overview.hero": {
       "extractionState": "manual",
       "localizations": {
@@ -9715,6 +12597,17 @@
         }
       }
     },
+    "people.account_people_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The account's people"
+          }
+        }
+      }
+    },
     "people.add_group": {
       "extractionState": "manual",
       "localizations": {
@@ -9733,6 +12626,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "+ Add someone to %1$@"
+          }
+        }
+      }
+    },
+    "people.add_someone_to": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add someone to %1$@"
           }
         }
       }
@@ -9913,6 +12817,17 @@
         }
       }
     },
+    "people.last_ran": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last ran at %1$@"
+          }
+        }
+      }
+    },
     "people.make_manager": {
       "extractionState": "manual",
       "localizations": {
@@ -10052,6 +12967,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not shared"
+          }
+        }
+      }
+    },
+    "people.one_person": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One person"
+          }
+        }
+      }
+    },
+    "people.opens_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the taf"
           }
         }
       }
@@ -10265,6 +13202,17 @@
         }
       }
     },
+    "people.shared_with_prefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared with "
+          }
+        }
+      }
+    },
     "people.sharing": {
       "extractionState": "manual",
       "localizations": {
@@ -10408,6 +13356,17 @@
         }
       }
     },
+    "receipt.approved_once_by_lower": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "approved once by %1$@"
+          }
+        }
+      }
+    },
     "receipt.changed": {
       "extractionState": "manual",
       "localizations": {
@@ -10540,6 +13499,17 @@
         }
       }
     },
+    "receipt.checked_on_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF's receipt · checked on this %1$@"
+          }
+        }
+      }
+    },
     "receipt.checked_why": {
       "extractionState": "manual",
       "localizations": {
@@ -10558,6 +13528,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checking KIFF's receipt on this phone…"
+          }
+        }
+      }
+    },
+    "receipt.checking_on_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking KIFF's receipt on this %1$@…"
           }
         }
       }
@@ -11053,6 +14034,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show the full receipt"
+          }
+        }
+      }
+    },
+    "receipt.signed_on_device_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answer was signed with a key that never leaves this device, after %1$@."
           }
         }
       }
@@ -11585,6 +14577,17 @@
         }
       }
     },
+    "record.kiff_receipt_does_not_check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF's receipt doesn't check out"
+          }
+        }
+      }
+    },
     "record.lead": {
       "extractionState": "manual",
       "localizations": {
@@ -11651,6 +14654,17 @@
         }
       }
     },
+    "record.not_sent_nothing_reached_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, but it couldn't be sent: nothing reached the tool%2$@"
+          }
+        }
+      }
+    },
     "record.nothing_here": {
       "extractionState": "manual",
       "localizations": {
@@ -11702,6 +14716,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "record.open_taf_chat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in the taf's chat"
           }
         }
       }
@@ -11937,6 +14962,28 @@
         }
       }
     },
+    "record.shows_receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the receipt"
+          }
+        }
+      }
+    },
+    "record.signed_on_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed on this %1$@"
+          }
+        }
+      }
+    },
     "record.signed_on_phone": {
       "extractionState": "manual",
       "localizations": {
@@ -12010,6 +15057,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ refused it, and it still counts toward today's limits"
+          }
+        }
+      }
+    },
+    "record.tool_refused_counts_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ refused it, and it still counts toward today's limits%2$@"
           }
         }
       }
@@ -12091,6 +15149,17 @@
         }
       }
     },
+    "report.not_sent_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sent: %1$@"
+          }
+        }
+      }
+    },
     "report.note_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -12098,6 +15167,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add a note (optional)"
+          }
+        }
+      }
+    },
+    "report.note_most_characters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A note is at most 1,000 characters."
+          }
+        }
+      }
+    },
+    "report.person_kiff_reads_your_report": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A person at KIFF reads your report, with the answer as it was written."
           }
         }
       }
@@ -12164,6 +15255,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thanks. Someone at KIFF will read your report."
+          }
+        }
+      }
+    },
+    "report.what_wrong": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's wrong with it?"
           }
         }
       }
@@ -12872,6 +15974,28 @@
         }
       }
     },
+    "sample.list_charges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List charges"
+          }
+        }
+      }
+    },
+    "sample.look_up_charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look up a charge"
+          }
+        }
+      }
+    },
     "sample.memory.ask_first": {
       "extractionState": "manual",
       "localizations": {
@@ -13059,6 +16183,17 @@
         }
       }
     },
+    "sample.refunds_stripe_test": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refunds · Stripe test"
+          }
+        }
+      }
+    },
     "sample.reply.back_to_work": {
       "extractionState": "manual",
       "localizations": {
@@ -13088,6 +16223,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lately:\n%1$@"
+          }
+        }
+      }
+    },
+    "sample.reply.looking_lately": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking at what I did lately, "
           }
         }
       }
@@ -13290,6 +16436,17 @@
         }
       }
     },
+    "settings.account_zone_changed_schedules_could": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The account's zone changed. Its schedules couldn't be updated yet: %1$@"
+          }
+        }
+      }
+    },
     "settings.alerts": {
       "extractionState": "manual",
       "localizations": {
@@ -13323,6 +16480,17 @@
         }
       }
     },
+    "settings.alerts_off.title_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts are off on this %1$@"
+          }
+        }
+      }
+    },
     "settings.alerts_off.turn_on": {
       "extractionState": "manual",
       "localizations": {
@@ -13330,6 +16498,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Turn on"
+          }
+        }
+      }
+    },
+    "settings.chargebacks_needs_you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chargebacks needs you"
           }
         }
       }
@@ -13576,6 +16755,17 @@
         }
       }
     },
+    "settings.devices.note_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing a device out ends its sign-in on this account at once. To sign out this %1$@, use Sign out of KIFF."
+          }
+        }
+      }
+    },
     "settings.devices.sign_out": {
       "extractionState": "manual",
       "localizations": {
@@ -13631,6 +16821,17 @@
         }
       }
     },
+    "settings.devices.this_device_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs on %1$@"
+          }
+        }
+      }
+    },
     "settings.devices.this_device_title": {
       "extractionState": "manual",
       "localizations": {
@@ -13675,6 +16876,39 @@
         }
       }
     },
+    "settings.dispute_over_limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispute #4825 · €640 is over its limit"
+          }
+        }
+      }
+    },
+    "settings.each_sends_who_answered_through": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each sends who was answered and through which door, never its words. Turn it off in the taf's Setup › Results go to."
+          }
+        }
+      }
+    },
+    "settings.find_time_zone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a time zone"
+          }
+        }
+      }
+    },
     "settings.kiff_account": {
       "extractionState": "manual",
       "localizations": {
@@ -13693,6 +16927,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Legal"
+          }
+        }
+      }
+    },
+    "settings.light_taps_when_you_send": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The light taps when you send or answer."
           }
         }
       }
@@ -13741,6 +16986,17 @@
         }
       }
     },
+    "settings.no_taf_alerts_phones_when": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No taf alerts the phones when it answers."
+          }
+        }
+      }
+    },
     "settings.people_apps": {
       "extractionState": "manual",
       "localizations": {
@@ -13785,6 +17041,17 @@
         }
       }
     },
+    "settings.refunds_answered_maria": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refunds answered maria@…"
+          }
+        }
+      }
+    },
     "settings.search_time_zones": {
       "extractionState": "manual",
       "localizations": {
@@ -13825,6 +17092,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "This phone signs out of KIFF first, then you sign in again in your browser."
+          }
+        }
+      }
+    },
+    "settings.sign_in_again_confirm.body_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ signs out of KIFF first, then you sign in again in your browser."
           }
         }
       }
@@ -13880,6 +17158,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "This phone stops working for your account until you sign in again. Your tafs keep working."
+          }
+        }
+      }
+    },
+    "settings.sign_out_of_kiff.body_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ stops working for your account until you sign in again. Your tafs keep working."
           }
         }
       }
@@ -13994,6 +17283,17 @@
         }
       }
     },
+    "settings.time_zone.uses_this": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Holds' deadlines, Activity, the Record and what your tafs write use this time zone."
+          }
+        }
+      }
+    },
     "settings.time_zone_offer.text": {
       "extractionState": "manual",
       "localizations": {
@@ -14001,6 +17301,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Holds' deadlines, Activity, the Record and what your tafs write would use this phone's time zone. Your account uses %1$@ now."
+          }
+        }
+      }
+    },
+    "settings.time_zone_offer.text_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Holds' deadlines, Activity, the Record and what your tafs write would use this %1$@'s time zone. Your account uses %2$@ now."
           }
         }
       }
@@ -14045,6 +17356,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Account"
+          }
+        }
+      }
+    },
+    "settings.use_device_zone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this %1$@'s: %2$@"
           }
         }
       }
@@ -14254,6 +17576,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "If it is still working when the next start comes"
+          }
+        }
+      }
+    },
+    "setup.if_still_working": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If it is still working"
           }
         }
       }
@@ -14522,6 +17855,28 @@
         }
       }
     },
+    "setup.reading_results": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading where its results go…"
+          }
+        }
+      }
+    },
+    "setup.reading_starts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading what starts it…"
+          }
+        }
+      }
+    },
     "setup.remove": {
       "extractionState": "manual",
       "localizations": {
@@ -14551,6 +17906,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Results go to"
+          }
+        }
+      }
+    },
+    "setup.results_not_changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where its results go didn't change: %1$@"
           }
         }
       }
@@ -14665,6 +18031,17 @@
         }
       }
     },
+    "sign_in.again_to_sign_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with KIFF again: this sign-in can't sign for the %1$@."
+          }
+        }
+      }
+    },
     "sign_in.agree": {
       "extractionState": "manual",
       "localizations": {
@@ -14687,6 +18064,39 @@
         }
       }
     },
+    "sign_in.could_not_finish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't finish: %1$@. Try again."
+          }
+        }
+      }
+    },
+    "sign_in.could_not_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't start: %1$@. Try again."
+          }
+        }
+      }
+    },
+    "sign_in.deletes_every_taf_runs_chats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletes every taf, its runs, chats and notes, your Cards and your connections. It can't be undone."
+          }
+        }
+      }
+    },
     "sign_in.didnt_work": {
       "extractionState": "manual",
       "localizations": {
@@ -14694,6 +18104,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signing in didn't work."
+          }
+        }
+      }
+    },
+    "sign_in.every_action_taf_takes_goes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this %1$@."
+          }
+        }
+      }
+    },
+    "sign_in.how_works": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How it works"
+          }
+        }
+      }
+    },
+    "sign_in.ios_did_not_open_sign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS didn't open the sign-in page (error %1$@; %2$@). Try again with tafs open."
           }
         }
       }
@@ -14716,6 +18159,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices."
+          }
+        }
+      }
+    },
+    "sign_in.not_signed_out_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not signed out at KIFF yet: %1$@. Try again, or sign this %2$@ out from another device's Devices."
           }
         }
       }
@@ -14830,6 +18284,17 @@
         }
       }
     },
+    "sign_in.sign_did_not_come_back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sign-in didn't come back to tafs."
+          }
+        }
+      }
+    },
     "sign_in.signed_out_of_kiff": {
       "extractionState": "manual",
       "localizations": {
@@ -14841,6 +18306,17 @@
         }
       }
     },
+    "sign_in.tafs_had_no_window_screen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs had no window on screen to open the sign-in over. Open tafs and try again."
+          }
+        }
+      }
+    },
     "sign_in.waiting": {
       "extractionState": "manual",
       "localizations": {
@@ -14848,6 +18324,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for your approval…"
+          }
+        }
+      }
+    },
+    "sign_in.waiting_for_browser": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for your browser… Check that it shows %1$@, and approve only with this %2$@ in your hands."
           }
         }
       }
@@ -15270,6 +18757,17 @@
         }
       }
     },
+    "taf.keys_kept_sealed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keys kept sealed"
+          }
+        }
+      }
+    },
     "taf.last_run": {
       "extractionState": "manual",
       "localizations": {
@@ -15398,6 +18896,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not archived. %1$@"
+          }
+        }
+      }
+    },
+    "taf.not_live_version_card_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not on the live version's Card: the taf doesn't use it now. Going back to an older version may need it."
           }
         }
       }
@@ -15666,6 +19175,17 @@
         }
       }
     },
+    "taf.remove.cloud_did_not_answer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs cloud didn't answer (%2$@). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again."
+          }
+        }
+      }
+    },
     "taf.remove.connections_disconnected": {
       "extractionState": "manual",
       "localizations": {
@@ -15728,6 +19248,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not finished: its %1$@ couldn't be removed. tafs tries again each time it refreshes."
+          }
+        }
+      }
+    },
+    "taf.remove.not_finished_after": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ Not finished: its %2$@ couldn't be removed. tafs tries again each time it refreshes."
           }
         }
       }
@@ -16007,6 +19538,50 @@
         }
       }
     },
+    "taf.show_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. Show this Card"
+          }
+        }
+      }
+    },
+    "taf.shows_cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the Cards"
+          }
+        }
+      }
+    },
+    "taf.signed_tools_being_chosen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in · the tools are being chosen"
+          }
+        }
+      }
+    },
+    "taf.signed_tools_waiting_your_approval": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in · tools waiting for your approval"
+          }
+        }
+      }
+    },
     "taf.starting_run": {
       "extractionState": "manual",
       "localizations": {
@@ -16080,6 +19655,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Working"
+          }
+        }
+      }
+    },
+    "taf.try_version_first_you_chat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a version first: you chat with it under a Card of its own, while the live version keeps working. Installing one makes it the live version."
+          }
+        }
+      }
+    },
+    "taf.trying_resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trying v%1$@ · Resume"
+          }
+        }
+      }
+    },
+    "taf.unless_you_approve_tools_sign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unless you approve its tools, the sign-in is revoked %1$@."
           }
         }
       }
@@ -16172,6 +19780,17 @@
         }
       }
     },
+    "usage.admin_answers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ An admin answers."
+          }
+        }
+      }
+    },
     "usage.balance": {
       "extractionState": "manual",
       "localizations": {
@@ -16212,6 +19831,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buying…"
+          }
+        }
+      }
+    },
+    "usage.cancel_solo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Solo"
+          }
+        }
+      }
+    },
+    "usage.company_billed_kiff_solo_bought": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Company is billed by KIFF now. The Solo bought in the App Store renews on %1$@ unless it's cancelled, from the Apple account that bought it."
           }
         }
       }
@@ -16278,6 +19919,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Last period"
+          }
+        }
+      }
+    },
+    "usage.last_period_credits_could_not": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last period's credits couldn't be read. Choose it again to try again."
           }
         }
       }
@@ -16355,6 +20007,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Usage couldn't be read. %1$@"
+          }
+        }
+      }
+    },
+    "usage.pack_credits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a pack of credits"
           }
         }
       }
@@ -16634,6 +20297,17 @@
         }
       }
     },
+    "usage.runs_could_not_read_pull": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These runs couldn't be read. Pull to try again."
+          }
+        }
+      }
+    },
     "usage.solo": {
       "extractionState": "manual",
       "localizations": {
@@ -16729,6 +20403,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ tasks"
+          }
+        }
+      }
+    },
+    "usage.the_balance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The balance"
           }
         }
       }
@@ -16832,6 +20517,17 @@
         }
       }
     },
+    "version.card_note.issues_biometry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While it switches, your taf doesn't run. Confirming with %1$@ once issues these Cards in KIFF, then this version goes live."
+          }
+        }
+      }
+    },
     "version.card_note.removes": {
       "extractionState": "manual",
       "localizations": {
@@ -16839,6 +20535,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "While it switches, your taf doesn't run. Confirming once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
+          }
+        }
+      }
+    },
+    "version.card_note.removes_biometry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While it switches, your taf doesn't run. Confirming with %1$@ once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
           }
         }
       }
@@ -17393,6 +21100,17 @@
         }
       }
     },
+    "version.that_taf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That taf"
+          }
+        }
+      }
+    },
     "version.title": {
       "extractionState": "manual",
       "localizations": {
@@ -17543,6 +21261,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "This trial's Card couldn't be read."
+          }
+        }
+      }
+    },
+    "version.trial_has_ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This trial has ended."
           }
         }
       }
@@ -17811,6 +21540,17 @@
         }
       }
     },
+    "voice.cancel_dictating": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel dictating"
+          }
+        }
+      }
+    },
     "voice.cannot": {
       "extractionState": "manual",
       "localizations": {
@@ -17833,6 +21573,17 @@
         }
       }
     },
+    "voice.dictation_could_not_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation couldn't start: %1$@"
+          }
+        }
+      }
+    },
     "voice.dictation_in": {
       "extractionState": "manual",
       "localizations": {
@@ -17844,6 +21595,39 @@
         }
       }
     },
+    "voice.dictation_not_add_keyboard_dictation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation isn't on this %1$@ yet. Add a keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for its language to download, then try again."
+          }
+        }
+      }
+    },
+    "voice.dictation_not_available_right_try": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation isn't available right now. Try again in a moment."
+          }
+        }
+      }
+    },
+    "voice.dictation_stopped_tap_mic_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation stopped: %1$@ Tap the mic to start again."
+          }
+        }
+      }
+    },
     "voice.downloading": {
       "extractionState": "manual",
       "localizations": {
@@ -17851,6 +21635,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "This phone is getting %1$@ for dictation. The mic works once it's ready, in a minute or two."
+          }
+        }
+      }
+    },
+    "voice.listening_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening in %1$@"
+          }
+        }
+      }
+    },
+    "voice.microphone_off_tafs_turn_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone is off for tafs. Turn it on in Settings › tafs › Microphone."
           }
         }
       }
@@ -17888,6 +21694,50 @@
         }
       }
     },
+    "voice.puts_message_box_back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puts the message box back as it was."
+          }
+        }
+      }
+    },
+    "voice.speech_recognition_not_available_language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition isn't available for this language."
+          }
+        }
+      }
+    },
+    "voice.speech_recognition_off_tafs_turn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition is off for tafs. Turn it on in Settings › Privacy & Security › Speech Recognition."
+          }
+        }
+      }
+    },
+    "voice.speech_recognition_restricted_device_dictation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition is restricted on this device, so dictation can't run."
+          }
+        }
+      }
+    },
     "voice.stop": {
       "extractionState": "manual",
       "localizations": {
@@ -17910,6 +21760,17 @@
         }
       }
     },
+    "voice.tafs_turns_your_voice_into": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs turns your voice into text on this device. Your voice isn't sent anywhere."
+          }
+        }
+      }
+    },
     "voice.title": {
       "extractionState": "manual",
       "localizations": {
@@ -17917,6 +21778,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dictation"
+          }
+        }
+      }
+    },
+    "voice.voice_becomes_text_device_not": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your voice becomes text on this device. It isn't sent until you send it."
+          }
+        }
+      }
+    },
+    "voice.what_you_said_stays_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you said stays in the message box, unsent."
+          }
+        }
+      }
+    },
+    "work.asking_kiff_run": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asking KIFF to run %1$@…"
+          }
+        }
+      }
+    },
+    "work.did_not_stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It didn't stop: %1$@"
+          }
+        }
+      }
+    },
+    "work.its_runs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its runs"
           }
         }
       }
@@ -18016,6 +21932,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sending again…"
+          }
+        }
+      }
+    },
+    "work.stop_run": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop the run"
+          }
+        }
+      }
+    },
+    "work.stopped_part_way_before_finished": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ stopped part-way, before it finished."
           }
         }
       }

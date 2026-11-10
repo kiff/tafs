@@ -10,7 +10,7 @@ struct OnboardingView: View {
             Mascot(size: 96)
 
             VStack(alignment: .leading, spacing: 12) {
-                Text("They taf.\nYou kiff.")
+                Text(Words.SignIn.Welcome.title)
                     .scaledFont(48, weight: .bold, design: .rounded, relativeTo: .title)
                     .foregroundColor(Theme.ink)
                 Text(Words.SignIn.Welcome.lead)
