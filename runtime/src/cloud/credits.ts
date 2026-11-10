@@ -188,7 +188,7 @@ export interface CreditsView {
 /**
  * The period, in words: each taf that used credits, most first, as the person may see it; the
  * rest (tafs removed since, and those the person doesn't use or oversee) on one row that doesn't
- * open; Coach's row past its fair use; and what wasn't counted, and why.
+ * open; Coach's row past what the plan includes; and what wasn't counted, and why.
  */
 export function creditsView(k: KIFFCredits, tafs: CreditsTaf[], lang: Lang = "en"): CreditsView {
   const w = wordsIn(lang);
