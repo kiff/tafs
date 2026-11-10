@@ -520,6 +520,34 @@ describe("KIFF's alerts", () => {
     expect(apns.sent).toHaveLength(2);
   });
 
+  it("tells the people who answer when a taf's refund failed or its charge was also refunded outside KIFF, once each, and opens that taf", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const forward = fakeForward();
+    const slots = memorySlots();
+    const notice = (event: string, kind: string, agent = "refunds-1", call = "tc-1") => JSON.stringify({
+      schema_version: "1", type: "kiff.decision", tenant_id: "t_acme", action: "issue_refund", outcome: "refund_notice",
+      entity_type: "ToolCall", entity_id: call, reasons: [kind, agent], decided_at: "2026-11-12T09:00:00Z", event_id: event,
+    });
+    const tafs = [{ id: "taf_1", name: "Refunds", kiffAgent: "refunds-1" }];
+    const post = (body: string) => call("POST", "/v1/kiff/alerts", { body, headers: { "KIFF-Signature": sig(body) }, push, apns, slots, forward: forward.forward, tafs });
+    expect((await post(notice("evt_f", "refund_failed"))).body).toEqual({ sent: 2 });
+    expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { aps: { alert: { title: "A refund",
+      body: "A refund Refunds sent failed at the payment processor. Its room on the Card came back." }, sound: "default" }, open: "taf", taf_id: "taf_1" },
+      collapseID: "refund-f-tc-1" });
+    expect((await post(notice("evt_t", "refunded_twice"))).body).toEqual({ sent: 2 });
+    expect(apns.sent[2]!.n.payload.aps.alert.body).toBe("A charge Refunds refunded was also refunded outside KIFF. Check it before anything more is refunded.");
+    // No run waits on it, so kiff/agents never hears of it.
+    expect(forward.tries).toBe(0);
+    // KIFF's resend of the same event tells nobody again.
+    expect((await post(notice("evt_f", "refund_failed"))).body).toEqual({ duplicate: true });
+    // An agent no taf runs: nobody to tell. An unknown kind, or no agent: refused.
+    expect((await post(notice("evt_g", "refund_failed", "gone-1"))).body).toEqual({ ignored: "refund_notice: no taf runs gone-1" });
+    expect((await post(notice("evt_x", "refund_maybe"))).status).toBe(400);
+    expect((await post(notice("evt_y", "refund_failed", ""))).status).toBe(400);
+    expect(apns.sent).toHaveLength(4);
+  });
+
   it("tells only the member who asked when their request is answered, and nobody when it was withdrawn", async () => {
     const push = account();
     const apns = fakeAPNs();

@@ -150,6 +150,12 @@ export const PACK_REQUEST_ANSWERED = "pack_request_answered";
 export const CONNECTION_SIGNED_OUT = "connection_signed_out";
 /** The account's tafs used 80% of what the period has, or all of it and wait: once each a period. */
 export const CREDITS_WARNING = "credits_warning";
+/**
+ * A refund a taf sent failed at the payment processor (its Card's room came back), or a charge it
+ * refunded was also refunded outside KIFF: the kind, then the taf's agent, in `reasons`.
+ */
+export const REFUND_NOTICE = "refund_notice";
+const REFUND_KINDS = ["refund_failed", "refunded_twice"] as const;
 
 /**
  * Checks `KIFF-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>`
@@ -232,7 +238,7 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
 
   const outcome = typeof body.outcome === "string" ? body.outcome : "";
   if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED && outcome !== PACK_REQUEST_ANSWERED && outcome !== CONNECTION_SIGNED_OUT &&
-    outcome !== CREDITS_WARNING) return { ignored: outcome };
+    outcome !== CREDITS_WARNING && outcome !== REFUND_NOTICE) return { ignored: outcome };
   const eventID = typeof body.event_id === "string" ? body.event_id : "";
   // Built per language, once each: every phone hears it in its own (docs/languages.md).
   let build: (lang: Lang) => Notification | undefined;
@@ -254,6 +260,19 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
     if (!taf) return { ignored: `${outcome}: no taf runs ${agent}` };
     build = (lang) => signedOutNotification(taf, typeof c?.vendor === "string" ? c.vendor : "", grant, lang);
     // The people who may answer for the account's tafs: they sign in again.
+    to = (d) => d.answers;
+  } else if (outcome === REFUND_NOTICE) {
+    const reasons = Array.isArray(body.reasons) ? body.reasons.filter((r: unknown): r is string => typeof r === "string") : [];
+    const kind = reasons[0] ?? "", agent = reasons[1] ?? "";
+    const call = typeof body.entity_id === "string" ? body.entity_id : "";
+    if (!eventID || !call || !agent || !(REFUND_KINDS as readonly string[]).includes(kind)) {
+      throw new PushError(400, "a refund notice names its event, its call, its kind and its agent");
+    }
+    const taf = deps.tafOf ? await deps.tafOf(tenant, agent) : undefined;
+    // An agent that no taf runs (removed since): nobody to tell.
+    if (!taf) return { ignored: `${outcome}: no taf runs ${agent}` };
+    build = (lang) => refundNotification(taf, kind as (typeof REFUND_KINDS)[number], call, lang);
+    // The people who may answer for the account's tafs: the money is theirs to check.
     to = (d) => d.answers;
   } else if (outcome === PACK_REQUEST_ANSWERED) {
     const r = body.request;
@@ -361,6 +380,26 @@ function signedOutNotification(taf: { id: string; name: string }, vendor: string
     },
     // One alert per connection: a later sign-out of the same one replaces it.
     collapseID: `out-${grant}`.slice(0, 64),
+  };
+}
+
+function refundNotification(taf: { id: string; name: string }, kind: (typeof REFUND_KINDS)[number], call: string, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
+  const name = taf.name.replace(/\s+/g, " ").trim();
+  const clipped = name.length > MAX_NAME ? name.slice(0, MAX_NAME - 1) + "…" : name;
+  return {
+    kind: "alert",
+    payload: {
+      aps: {
+        alert: { title: w.push_refund_title, body: kind === "refund_failed" ? w.push_refund_failed(clipped) : w.push_refunded_twice(clipped) },
+        "thread-id": "refunds",
+        sound: "default",
+      },
+      open: "taf",
+      taf_id: taf.id,
+    },
+    // One alert per call and kind: KIFF's resend replaces it.
+    collapseID: `refund-${kind === "refund_failed" ? "f" : "t"}-${call}`.slice(0, 64),
   };
 }
 
