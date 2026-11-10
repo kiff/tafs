@@ -5,6 +5,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **tafs cloud's words and the apps' words say the same things the same way (tafs cloud).**
+  - **English:** a run cut off by its limit says "its limit of steps for one run", as the apps say "steps". An answer to a request for a pack or a higher limit reads "An admin raised the spend limit." (an account can have several admins). "Part-way" is spelled as the apps spell it.
+  - **One word for one thing in each language:** a version's trial is "Experiência", "Proef" and "Próba" in Portuguese, Dutch and Polish, on its badge as in the credits lines. An app check is "revisión" in Spanish everywhere. A step is "passo" in Italian. Dutch "retrying" no longer reads as "retried", and Polish says "odrzucił" for declined in both lines.
+  - **The glossary has five more terms:** trial, paired senders, key, scheduled run and Coach mode (`docs/languages.md`), held by the same test. `docs/glossary.sha256` changes with them, so KIFF's copy follows.
 - **Each taf has a health: healthy, at risk or failing (tafs cloud).**
   - **What it reads:** the taf's last runs and its schedule's last times, from kiff/agents, over 7 days. Runs that couldn't start, checks that couldn't read the app, work a run dropped, runs that failed or were cut short by a limit, and times skipped as late or busy.
   - **Where it shows:** `health: {level, lines}` on the list and on the taf's page, each line saying what happened and what to do, in all 8 languages. When the taf is otherwise idle, its line says the first reason where it said the next run, so both apps show it today with no app change.

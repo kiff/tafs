@@ -169,7 +169,7 @@ describe("a taf's health", () => {
     expect(view([], firings("failed_unworked", "run"))).toEqual(["Its last scheduled run couldn't start. It tries again at its next time."]);
     expect(view([], firings("failed_check", "failed_check", "run"))).toEqual(["Its check couldn't read the app 2 times in a row. Check the app's connection."]);
     expect(view([], firings("failed_check", "run"))).toEqual(["Its last check couldn't read the app. It tries again at its next time."]);
-    expect(view([], firings("failed_unfinished", "run"))).toEqual(["A scheduled run stopped partway, and what it was working on won't be tried again. Open that run to see what it did."]);
+    expect(view([], firings("failed_unfinished", "run"))).toEqual(["A scheduled run stopped part-way, and what it was working on won't be tried again. Open that run to see what it did."]);
     expect(view([bad(10), bad(15), bad(18)])).toEqual(["Its last 3 runs failed. Open one to see why."]);
     expect(view([bad(10), ok(12), bad(18), ...eight])).toEqual(["2 of its last 10 runs failed. Open one to see why."]);
     expect(view([capped(10), capped(20), ...eight])).toEqual(["2 of its last 10 runs were cut short by a limit. Open one to see which limit stopped it."]);

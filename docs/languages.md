@@ -81,8 +81,10 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | Disconnect | Trennen | Déconnecter | Desconectar | Scollega | Desligar | Ontkoppelen | Rozłącz |
 | Try again | Erneut versuchen | Réessayer | Reintentar | Riprova | Tentar novamente | Opnieuw proberen | Spróbuj ponownie |
 | Ask Coach | Coach fragen | Demander à Coach | Preguntar a Coach | Chiedi a Coach | Perguntar ao Coach | Coach vragen | Zapytaj Coacha |
+| Coach mode | Coach-Modus | mode Coach | modo Coach | modalità Coach | modo Coach | Coach-modus | tryb Coach |
 | run (one piece of a taf's work) | Lauf | exécution | ejecución | esecuzione | execução | run | uruchomienie |
 | request (what a taf was asked to do) | Anfrage | demande | solicitud | richiesta | pedido | verzoek | prośba |
+| scheduled run | geplanter Lauf | exécution planifiée | ejecución programada | esecuzione pianificata | execução agendada | geplande run | zaplanowane uruchomienie |
 | schedule | Zeitplan | planning | programación | pianificazione | agendamento | planning | harmonogram |
 | follow-up (one a taf set for itself) | Nachfassen | relance | seguimiento | promemoria | acompanhamento | opvolging | przypomnienie |
 | Working on it | Wird bearbeitet | En cours | Trabajando en ello | In corso | Em curso | Bezig | W toku |
@@ -102,10 +104,13 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | approver (a role on the account) | Genehmiger | approbateur | aprobador | approvatore | aprovador | goedkeurder | zatwierdzający |
 | viewer (a role on the account) | Betrachter | lecteur | lector | visualizzatore | leitor | kijker | przeglądający |
 | version | Version | version | versión | versione | versão | versie | wersja |
+| trial (a version tried before it goes live) | Test | essai | prueba | prova | experiência | proef | próba |
 | Make it live | Live schalten | Mettre en service | Activar | Rendi attiva | Pôr em produção | Live zetten | Uruchom na żywo |
 | Try it | Ausprobieren | Essayer | Probar | Prova | Experimentar | Uitproberen | Wypróbuj |
 | knock (a message from someone not paired) | Klopfen | demande d'accès | llamada | bussata | pedido de contacto | klop | pukanie |
 | Pair (a sender with a door) | Koppeln | Associer | Vincular | Associa | Associar | Koppelen | Powiąż |
+| paired senders (the people a door takes work from) | gekoppelte Absender | expéditeurs associés | remitentes vinculados | mittenti associati | remetentes associados | gekoppelde afzenders | powiązani nadawcy |
+| key (a paired sender, on a door's page) | Schlüssel | clé | llave | chiave | chave | sleutel | klucz |
 | Send again | Erneut senden | Renvoyer | Volver a enviar | Invia di nuovo | Enviar novamente | Opnieuw verzenden | Wyślij ponownie |
 | Not sent | Nicht gesendet | Non envoyé | No enviado | Non inviato | Não enviado | Niet verzonden | Nie wysłano |
 | Activity | Aktivität | Activité | Actividad | Attività | Atividade | Activiteit | Aktywność |
