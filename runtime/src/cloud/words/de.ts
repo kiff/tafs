@@ -131,7 +131,7 @@ export const de: Words = {
   push_signed_out: (who, taf) => `${who} hat ${taf} abgemeldet · erneut anmelden`,
   push_a_provider: "Ein Anbieter",
   push_refund_title: "Eine Erstattung",
-  push_refund_failed: (taf) => `Eine Erstattung von ${taf} ist beim Zahlungsanbieter fehlgeschlagen. Ihr Spielraum auf der Card ist wieder frei.`,
+  push_refund_failed: (taf) => `Eine Erstattung von ${taf} ist beim Zahlungsanbieter fehlgeschlagen. Der Spielraum dafür auf der Card ist wieder frei.`,
   push_refunded_twice: (taf) => `Eine Zahlung, die ${taf} erstattet hat, wurde auch außerhalb von KIFF erstattet. Prüfe sie, bevor weiter erstattet wird.`,
   push_raise_title: "Erhöhung angefragt",
   push_raise_body: "Jemand in deinem Konto bittet dich, das Ausgabenlimit zu erhöhen. Öffne Tarif & Nutzung, um zu antworten.",
