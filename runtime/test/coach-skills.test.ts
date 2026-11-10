@@ -41,7 +41,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@5", "did-this-happen@1", "draft-the-card@5", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@3", "the-dial@1", "the-tafs@2", "usage-and-plans@1"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@5", "did-this-happen@1", "draft-the-card@6", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@3", "the-dial@1", "the-tafs@2", "usage-and-plans@1"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -116,6 +116,13 @@ describe("Coach's core", () => {
     expect(body).not.toContain("an app the account connects comes first");
   });
 
+  // Eval 42781271564: Setup named a read for the currency check and left it off the Card.
+  it("covers every tool the taf gets, the currency check's read included", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("Every tool the taf gets goes on its Card, the read tools too");
+    expect(body).toContain("That includes the read a money tool's unit_lookup names (the read that says the payment's currency): KIFF makes that read as the taf, so its Card covers it like any other.");
+  });
+
   it("has no skill that states a mode or no real money as fact", () => {
     for (const s of COACH_SKILLS) {
       expect(s.body, s.name).not.toContain("no real money");
@@ -156,8 +163,8 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@5", "draft-the-card@5", "halting@1", "name-the-tools@5", "set-up-a-taf@3", "usage-and-plans@1"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@5", "draft-the-card@5", "improve-a-taf@1", "name-the-tools@5"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@5", "draft-the-card@6", "halting@1", "name-the-tools@5", "set-up-a-taf@3", "usage-and-plans@1"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@5", "draft-the-card@6", "improve-a-taf@1", "name-the-tools@5"]);
   });
 
   it("loads a skill by the tool whose procedure it is, and nothing for a vendor's tool or a tool with none", () => {

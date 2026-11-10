@@ -51,7 +51,10 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
   new approval with the grant and the draft. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers, so a read
-  tool left off can't be used at all. A read tool's line has no amount limit,
+  tool left off can't be used at all. That includes the read a money tool's
+  unit_lookup names (the read that says the payment's currency): KIFF makes that
+  read as the taf, so its Card covers it like any other. A draft that leaves
+  one of the connection's tools uncovered isn't submitted, and isn't signed. A read tool's line has no amount limit,
   only a call count generous enough never to get in the way, and you don't ask
   the owner to set it. KIFF takes a Card only for a tool
   that is connected, so the draft always comes after the connection. Name the
