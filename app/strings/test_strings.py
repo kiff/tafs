@@ -19,6 +19,10 @@ NEEDS = {lang: set(forms) for lang, forms in generate.PLURALS.items()}
 # Lines that read the same in English and another language, on purpose: by language, the keys.
 SAME_AS_ENGLISH = {}
 
+# A line that is exactly a glossary term but names a group, where the language says the term in the plural:
+# the Record's "Done" filter sits beside "Held" and "Refused", plural as tafs cloud's filters are.
+TERM_AS_PLURAL = {"record.filter.done": {"fr": "terminés", "es": "hechas", "it": "fatte", "pt": "concluídas"}}
+
 
 def glossary():
     """The glossary's Terms table (docs/languages.md), read as it is: English term to its word in
@@ -119,7 +123,8 @@ class SharedWords(unittest.TestCase):
                 continue
             for lang, lines in self.lines.items():
                 if key in lines:
-                    self.assertEqual(lines[key].lower(), terms[english][lang].lower(), f"{lang} {key}")
+                    want = TERM_AS_PLURAL.get(key, {}).get(lang, terms[english][lang])
+                    self.assertEqual(lines[key].lower(), want.lower(), f"{lang} {key}")
 
     def test_the_generated_files_are_what_the_generator_writes(self):
         for path, text in generate.generated().items():
