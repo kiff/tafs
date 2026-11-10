@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
 import bot.tafs.app.kiff.ConnectApps
@@ -98,7 +99,7 @@ class ConnectAppsByTafTest {
     assertEquals("Cleared 2. Kept 1 for Chargebacks, whose Card uses it.", ConnectionWords.cleared(2, 1, listOf("Chargebacks"), 0))
     assertEquals("Cleared 1. 1 couldn't be cleared. Try again.", ConnectionWords.cleared(1, 0, emptyList(), 1))
     assertEquals("Kept 2 for Chargebacks and Refunds, whose Cards use them.", ConnectionWords.cleared(0, 2, listOf("Chargebacks", "Refunds"), 0))
-    assertEquals("Kept: Chargebacks's Card uses it", ConnectionWords.usedBy(listOf("Chargebacks")))
+    assertEquals("Kept: Chargebacks' Card uses it", ConnectionWords.usedBy(listOf("Chargebacks")))
     assertNull(ConnectionWords.usedBy(emptyList()))
   }
 

@@ -111,7 +111,7 @@ asks for one approval, then the app's own page.
 In Connect apps, an app you've connected (“Connected ✓”) opens its connections, one section
 per taf. The tafs with a connection that needs you come first: a sign-in still waiting, an app
 that signed you out, or a last call that failed. Each row says whose account it is and how
-it's doing, and “Also on Chargebacks's Card” when another taf's Card uses it. If you manage
+it's doing, and “Also on Chargebacks' Card” when another taf's Card uses it. If you manage
 the account's Cards, a row has **Sign in again** and **Disconnect**, or **Cancel** on a
 sign-in that never came back. Disconnect also names any other taf whose Card draws on that
 connection, which stops too (“Chargebacks stops too.”).
@@ -128,7 +128,7 @@ here.
 Connections left by a taf that was removed earlier show under **From removed tafs**, with
 that taf's name. **Clear these connections** ends the ones no live taf uses, after one
 question (“Clear 2 connections from removed tafs?”) and one Face ID or fingerprint. A
-connection another taf's Card still uses is kept, and says so (“Kept: Chargebacks's Card
+connection another taf's Card still uses is kept, and says so (“Kept: Chargebacks' Card
 uses it”). The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose
 Card uses it.”). When tafs can't tell which ones are still used, there's no Clear.
 

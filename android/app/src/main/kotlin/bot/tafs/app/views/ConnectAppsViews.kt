@@ -72,7 +72,7 @@ object ConnectAppsWords {
   /** The other tafs whose live Card has a rule on one of its tools, as a warning above Disconnect; null when none. */
   fun alsoOnCards(state: AppState, grant: bot.tafs.app.kiff.Grant): String? =
     state.tafsUsing(grant, except = grant.request.agent).map { it.name }.takeIf { it.isNotEmpty() }
-      ?.let { if (it.size == 1) Words.Connect.Apps.alsoOnOne(bot.tafs.app.model.ConnectionWords.possessive(it[0])) else Words.Connect.Apps.alsoOnMany(bot.tafs.app.model.Res.list(it)) }
+      ?.let { if (it.size == 1) Words.Connect.Apps.alsoOnOne(it[0]) else Words.Connect.Apps.alsoOnMany(bot.tafs.app.model.Res.list(it)) }
 
   /** The other tafs whose Card draws on a connection's tools: disconnecting it stops them too. */
   fun alsoStops(state: AppState, grant: bot.tafs.app.kiff.Grant): List<String> =
