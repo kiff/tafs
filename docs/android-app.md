@@ -103,6 +103,11 @@ Solo and packs of credits, which never expire, at Play's prices, where the balan
 them to this person, and only once KIFF's usage names their Play products and the account's token.
 KIFF records each purchase before Play is told it's done, and Restore purchases sends again what
 wasn't.
+- **The First month pack** (`bot.tafs.credits.firstmonth`, KIFF's pack with `"once": true`) shows
+  right under Solo, where the balance's `buy.first_month` is set, and never with the other packs
+  (`UsageStore.firstMonthPack`, `repeatPacks`). With `buy.first_month.ready` true, its price is its
+  button. With `ready` false, before Solo starts, it shows its price and tafs cloud's `words`, with
+  no button. KIFF leaves it out once the account has bought it (`PlayOffersTest`).
 - **Play's offers are read again** each time Usage shows, after every purchase and restore, and
   just before Play's sheet opens (`Purchases.load`, `PlayBillingStore.purchase`), never kept
   from an earlier read. Solo has no free trial; the trial's words show only if Play ever lists a

@@ -88,6 +88,34 @@ class BalanceTest {
     assertFalse(offers("""{"solo":null}""").offers("solo"))
   }
 
+  @Test fun theFirstMonthPackIsReadyWhenOfferedAndWaitsWithTafsCloudsWords() {
+    fun offers(buy: String) = KiffClient.json.decodeFromString(BalanceNow.serializer(), """{"words":"x","buy":$buy}""")
+    assertEquals(BalanceNow.FirstMonth(ready = true, words = null), offers("""{"solo":false,"packs":true,"first_month":{"ready":true,"words":null}}""").firstMonth)
+    assertEquals(
+      BalanceNow.FirstMonth(ready = false, words = "Add it once Solo starts."),
+      offers("""{"solo":true,"packs":false,"first_month":{"ready":false,"words":"Add it once Solo starts."}}""").firstMonth,
+    )
+    // Not ready unless tafs cloud says so.
+    assertEquals(BalanceNow.FirstMonth(ready = false, words = null), offers("""{"solo":true,"first_month":{}}""").firstMonth)
+    assertNull(offers("""{"solo":true,"packs":false}""").firstMonth)
+    assertNull(offers("""{"solo":true,"first_month":false}""").firstMonth)
+    assertNull(offers("""{"solo":true,"first_month":null}""").firstMonth)
+    assertNull(offers("null").firstMonth)
+  }
+
+  @Test fun theFirstMonthPackIsNeverOneOfThePacks() {
+    val store = KiffClient.json.decodeFromString(
+      bot.tafs.app.kiff.UsageStore.serializer(),
+      """{"packs":[{"id":"rayo","name":"Rayo","google_product":"pack_rayo"},{"id":"credits-firstmonth","name":"First month pack","once":true,"google_product":"bot.tafs.credits.firstmonth"}]}""",
+    )
+    assertEquals(listOf("rayo"), store.repeatPacks.map { it.id })
+    assertEquals("credits-firstmonth", store.firstMonthPack?.id)
+    // Play's product is read for it too, so its price shows.
+    assertTrue("bot.tafs.credits.firstmonth" in store.googleProducts)
+    // KIFF drops it once bought: then there's none.
+    assertNull(KiffClient.json.decodeFromString(bot.tafs.app.kiff.UsageStore.serializer(), """{"packs":[{"id":"rayo","name":"Rayo"}]}""").firstMonthPack)
+  }
+
   @Test fun withNoPlanTheBalanceSaysToChooseOneAndHasNoBar() = runTest {
     val m = model(200 to noPlan)
     m.refreshUsage()

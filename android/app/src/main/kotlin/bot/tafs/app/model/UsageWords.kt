@@ -86,7 +86,7 @@ object UsageWords {
   /** What's asked of an admin on this plan: a raise of the spend limit on Company (KIFF's `team`), a pack on Solo; nothing on others. */
   fun asks(u: Usage): String? = when (u.plan) {
     "team" -> PackRequest.RAISE
-    "solo" -> if (u.store?.packs.isNullOrEmpty()) null else PackRequest.PACK
+    "solo" -> if (u.store?.repeatPacks.isNullOrEmpty()) null else PackRequest.PACK
     else -> null
   }
 

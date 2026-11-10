@@ -25,6 +25,8 @@ data class StorePack(
   @SerialName("apple_product") val appleProduct: String? = null,
   /** Google Play's product; absent until KIFF records Play purchases, and then nothing is offered on Android. */
   @SerialName("google_product") val googleProduct: String? = null,
+  /** Bought once per account (the First month pack): shown beside Solo where `buy.first_month` says, never with the packs. */
+  val once: Boolean = false,
 )
 
 /**
@@ -40,6 +42,12 @@ data class UsageStore(
 ) {
   /** The Play products KIFF names: none until KIFF records Play purchases. */
   val googleProducts: List<String> get() = listOfNotNull(googleSoloProduct) + packs.mapNotNull { it.googleProduct }
+
+  /** The packs any time Solo runs, which never include the one bought once. */
+  val repeatPacks: List<StorePack> get() = packs.filterNot { it.once }
+
+  /** The First month pack, as KIFF lists it: absent once the account has bought it. */
+  val firstMonthPack: StorePack? get() = packs.firstOrNull { it.once && it.googleProduct != null }
 }
 
 /** Who bills the plan: "apple", "google", "stripe" (KIFF), "contract", or empty when none does. */

@@ -96,10 +96,27 @@ data class BalanceNow(
     return (offer as? kotlinx.serialization.json.JsonPrimitive)?.let { it.isString || it.content == "true" } ?: true
   }
 
+  /**
+   * The First month pack (`buy.first_month`, `{ready, words}`): null when not offered, else its state. `ready` true: it can be
+   * bought. `ready` false: the pack shows with tafs cloud's `words` for why it waits, and no button.
+   */
+  val firstMonth: FirstMonth?
+    get() {
+      if (!offers(FIRST_MONTH)) return null
+      val offer = (buy as? kotlinx.serialization.json.JsonObject)?.get(FIRST_MONTH) as? kotlinx.serialization.json.JsonObject
+        ?: return FirstMonth(ready = true, words = null)
+      val words = (offer["words"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() }
+      val ready = (offer["ready"] as? kotlinx.serialization.json.JsonPrimitive)?.content == "true"
+      return FirstMonth(ready = ready, words = words)
+    }
+
+  data class FirstMonth(val ready: Boolean, val words: String?)
+
   companion object {
     const val OK = "ok"
     const val WARNING = "warning"
     const val WAITING = "waiting"
+    const val FIRST_MONTH = "first_month"
   }
 }
 

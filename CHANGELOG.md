@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **The First month pack beside Solo (Android).** Plan & usage shows the First month pack, 7,000 credits once per account, right under Solo, at Play's price, where tafs cloud's balance offers it (`buy.first_month`). Before Solo starts, the row shows its price and tafs cloud's words for why it waits, with no button. Once Solo is recorded, its price is its button. It's never listed with the other packs, and it's gone once bought. iOS follows once the App Store has the product (docs/accounts.md).
 - **Run now that finds nothing new says so, not "The run didn't start" (Android).** A taf that checks first and finds nothing new answers with no session; Android takes that as a success and shows tafs cloud's words for it under Run now. Before, it read as a failure.
 - **Halted shows sooner, and Tafs goes back to the list (Android).** The Halt screen no longer waits for the home list before it shows where the halt stands, and reads it again after half a second and a second before every 2 seconds, so "Halting…" lasts only as long as the halt does. Tapping Tafs on a taf's screen goes back to the list.
 - **Links open in the app's language (Android).** Terms and Privacy policy open kiff.dev's page in the language the app shows (`/de/terms#tafs`), English keeping its own path. KIFF's held-call page and its device-approval page carry the app's language (`lang`), so they speak it whatever the browser's.
