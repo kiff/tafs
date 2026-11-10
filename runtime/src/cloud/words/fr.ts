@@ -116,6 +116,7 @@ export const fr: Words = {
   cr_no_plan_line: "Aucun forfait · choisissez-en un pour commencer",
   cr_w_again: (day) => `ils reprennent au début de la prochaine période, le ${day}`,
   cr_w_no_plan: "Choisissez un forfait pour lancer vos tafs.",
+  cr_first_month_wait: "Ajoutez-le une fois Solo lancé.",
   cr_w_limit_raise: (again) => `Vos tafs attendent : le plafond de dépenses est atteint. Relevez-le pour qu'ils continuent, sinon ${again}.`,
   cr_w_limit_ceiling: (again) => `Vos tafs attendent : le plafond de dépenses est atteint et ne peut plus être relevé depuis l'app. Contactez KIFF pour aller au-delà, sinon ${again}.`,
   cr_w_limit_admin: "Vos tafs attendent : le plafond de dépenses est atteint. Un administrateur de ce compte peut le relever.",

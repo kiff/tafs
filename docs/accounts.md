@@ -335,9 +335,15 @@ the spend limit, which the samples here leave out:
   change it.
 - `raise` is `{words, from_cents}` only for someone who may raise the spend limit (Company,
   `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back.
-- `buy` is `null`, or two booleans, `{solo, packs}`: what the app may offer this person
+- `buy` is `null`, or `{solo, packs, first_month}`: what the app may offer this person
   (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
   while Solo runs. The products and their store ids come from KIFF's usage read (`store`).
+  - `first_month` is the First month pack, which an account buys once: `null` when it isn't
+    offered (bought already, or KIFF lists none), else `{ready, words}`. Before a plan, `ready` is
+    false and `words` say why ("Add it once Solo starts."), in the person's language: the app
+    shows the pack's row with its price beside Solo, and no button. While Solo runs, `ready` is
+    true and `words` is `null`: the row has its button. Its row is the entry of KIFF's
+    `store.packs[]` marked `once`, which KIFF drops once the account has bought it.
 - `plan_line` is Settings' Plan card, such as "Solo · 83% of this period's credits used",
   "Company · 4 seats · 62% of the included credits used", "Company · waiting: the spend limit is
   reached", or "No plan · choose one to start". `plan_tone` is `ok`, `warning` or `waiting`, for
@@ -409,6 +415,8 @@ above. The app shows the words. Builds from before this show `words` as for any 
   price and every term: the period, that it renews until cancelled, how to cancel, and the Terms
   and Privacy Policy.
 - **Packs of credits**, which never expire, offered where `buy.packs` is set.
+- **The First month pack**, bought once per account, shown beside Solo where `buy.first_month` is
+  set, and bought once Solo runs (`ready`).
 - **The products and their store ids** come from KIFF's usage read (`store`), with each pack's
   `credits`.
 - **Each purchase goes to KIFF** for this account (Apple's signed transaction, or Google's purchase
