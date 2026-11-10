@@ -877,8 +877,12 @@ class AppModel(
    * Starts signing in with this phone's signing key, so KIFF accepts its answers only with that key's
    * signature. A connection dropped while the app was away is tried again before it counts as a failure.
    */
-  suspend fun startSignIn(): DeviceStart {
+  suspend fun startSignIn(fresh: Boolean = false): DeviceStart {
     signInNudged = false
+    // A sign-in under way goes on with its code: the screen, or the whole app, may have been recreated while the person
+    // approved it in the browser, and a new code would never be approved.
+    if (!fresh) pendingSignIn()?.let { return it.start }
+    endSignIn()
     var tries = 0
     while (true) {
       try {
@@ -890,7 +894,7 @@ class AppModel(
           deviceName = deviceName,
           // KIFF's device list names the platform; it takes one only with a key.
           platform = if (key.isEmpty()) null else PLATFORM,
-        )
+        ).also { keepSignIn(it) }
       } catch (e: Exception) {
         if (e is CancellationException || !transient(e) || tries >= 2) throw e
         tries += 1
@@ -915,19 +919,60 @@ class AppModel(
     signInNudged = true
   }
 
-  /** Polls until the person approves the code in KIFF, then loads their account. */
+  /**
+   * Polls until the person approves the code in KIFF, then loads their account. The code is kept until it's approved, refused
+   * or expired; a poll stopped because the screen went away keeps it, so the sign-in goes on with the same code.
+   */
   suspend fun finishSignIn(start: DeviceStart) {
-    val token = untilApproved(start) { kiff.pollDeviceToken(start.deviceCode) }
+    val deadline = pendingSignIn()?.takeIf { it.start.deviceCode == start.deviceCode }?.until ?: clock().plusSeconds(start.expiresIn.toLong())
+    val token = try {
+      untilApproved(start, deadline) { kiff.pollDeviceToken(start.deviceCode) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      endSignIn()
+      throw e
+    }
+    endSignIn()
     useSession(token.accessToken, token.tenant)
+  }
+
+  /** A sign-in's code and when it expires, kept with the phone's secrets until it's done. */
+  @Serializable
+  private data class PendingSignIn(val start: DeviceStart, @Serializable(with = bot.tafs.app.model.InstantAsString::class) val until: Instant)
+
+  private var pendingSignIn: PendingSignIn? = null
+
+  private fun keepSignIn(start: DeviceStart) {
+    val pending = PendingSignIn(start, clock().plusSeconds(start.expiresIn.toLong()))
+    pendingSignIn = pending
+    secrets.save(KiffClient.json.encodeToString(PendingSignIn.serializer(), pending), PENDING_SIGN_IN)
+  }
+
+  /** The sign-in under way, while its code hasn't expired: from memory, or from the secrets after the app was restarted. */
+  private fun pendingSignIn(): PendingSignIn? {
+    val pending = pendingSignIn
+      ?: secrets.load(PENDING_SIGN_IN)?.let { runCatching { KiffClient.json.decodeFromString(PendingSignIn.serializer(), it) }.getOrNull() }
+    if (pending == null || clock() >= pending.until) {
+      if (pending != null) endSignIn()
+      return null
+    }
+    pendingSignIn = pending
+    return pending
+  }
+
+  /** The sign-in is over, done, refused, expired or cancelled: its code is forgotten. */
+  fun endSignIn() {
+    pendingSignIn = null
+    secrets.delete(PENDING_SIGN_IN)
   }
 
   /**
    * Asks KIFF with [poll] until the person approves [start]'s code in their browser. It keeps asking through a dropped
    * connection or a KIFF error until the code expires.
    */
-  private suspend fun <T> untilApproved(start: DeviceStart, poll: suspend () -> T): T {
+  private suspend fun <T> untilApproved(start: DeviceStart, deadline: Instant = clock().plusSeconds(start.expiresIn.toLong()), poll: suspend () -> T): T {
     var intervalMs = maxOf(start.interval, signInMinimumIntervalSeconds) * 1000L
-    val deadline = clock().plusSeconds(start.expiresIn.toLong())
     while (clock() < deadline) {
       var waited = 0L
       while (waited < intervalMs && !signInNudged) {
@@ -6537,6 +6582,8 @@ class AppModel(
 
     // What the session is kept under, as iOS's Keychain accounts.
     const val TOKEN = "kiff.session"
+    /** A sign-in's code while the person approves it in the browser. */
+    const val PENDING_SIGN_IN = "kiff.sign-in-pending"
     const val TENANT = "kiff.tenant"
     const val KEYED = "kiff.session-keyed"
     const val APPROVAL_KEYED = "kiff.session-approval-keyed"

@@ -62,6 +62,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInSheet(model: AppModel, onClose: () -> Unit) {
+  // Closed by the person: the code is forgotten. A screen recreated meanwhile isn't closed, and goes on with the same code.
+  val close = { model.endSignIn(); onClose() }
   var start by remember { mutableStateOf<DeviceStart?>(null) }
   var problem by remember { mutableStateOf<String?>(null) }
   var copied by remember { mutableStateOf(false) }
@@ -79,10 +81,11 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     start = null
     copied = false
     try {
-      val s = model.startSignIn()
+      // "Try again" starts over with a new code; otherwise a sign-in under way goes on with its own.
+      val s = model.startSignIn(fresh = attempt > 0)
       start = s
       model.finishSignIn(s)
-      onClose()
+      close()
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -91,7 +94,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
   }
 
   DriveSheet(
-    onDismissRequest = onClose,
+    onDismissRequest = close,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
   ) {
@@ -99,7 +102,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
       Text(
         Words.Common.cancel,
         style = scaled(17, color = Theme.amber),
-        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp),
+        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).clickable(onClick = close).padding(top = 8.dp),
       )
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(24.dp),
