@@ -80,7 +80,7 @@ struct TafDialPanel<Details: View>: View {
             }
             Button { requests = true } label: {
                 HStack(spacing: 4) {
-                    Text(knob.rim.line ?? "\(knob.rim.done) done today").scaledFont(12)
+                    Text(knob.rim.line ?? Words.Knob.doneToday(done: "\(knob.rim.done)")).scaledFont(12)
                     Image(systemName: "chevron.right").font(.caption2)
                 }.foregroundColor(Theme.dim).frame(minHeight: 44)
             }
@@ -151,7 +151,7 @@ struct KnobRequestsSheet: View {
                     }
                 }
                 if let work = model.works[tafID], work.requests.isEmpty {
-                    Text("No requests yet.").foregroundColor(Theme.dim)
+                    Text(Words.Knob.noRequests).foregroundColor(Theme.dim)
                 }
             }
             .navigationTitle(Words.Taf.itsWork).navigationBarTitleDisplayMode(.inline)

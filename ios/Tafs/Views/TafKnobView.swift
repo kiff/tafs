@@ -194,7 +194,7 @@ struct TafKnobView: View {
                 .frame(width: mid * 2 * k, height: mid * 2 * k)
             if items.isEmpty {
                 Text("—").foregroundColor(Self.color(ring).opacity(0.4)).offset(y: -mid * k)
-                    .accessibilityLabel(knob.title(ring) + ", no stops")
+                    .accessibilityLabel(knob.title(ring) + Words.Knob.noStops)
             }
             ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                 stop(item, ring: ring, index: i, count: items.count, k: k)

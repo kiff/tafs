@@ -44,7 +44,7 @@ struct AttachButton: View {
             for (n, item) in picked.enumerated() {
                 Task {
                     guard let data = try? await item.loadTransferable(type: Data.self) else {
-                        model.refuseFile(FileProblem(message: "That photo couldn't be read."), in: key)
+                        model.refuseFile(FileProblem(message: Words.Attachment.photoCouldNotRead), in: key)
                         return
                     }
                     await add { try FilePrep.photo(data, name: "Photo \(n + 1)") }

@@ -24,7 +24,7 @@ final class PlanqueClient {
             case .notSigning: return Words.Error.needsConfirmationFirst
             case .noDevice: return Words.Error.noDeviceName
             case .digestMismatch: return Words.Error.requestMismatch
-            case .wordsUnread: return "KIFF's words for this connection aren't shown yet. Nothing was approved."
+            case .wordsUnread: return Words.Connect.profileWordsUnread
             case .server(_, let message): return message
             }
         }
@@ -332,7 +332,7 @@ final class PlanqueClient {
             var id: String?
         }
         let r: Response = try await send("POST", "grants/\(escaped(grantID))/triggers", body: Body(account: account, slug: slug, channels: channels))
-        guard let id = r.id ?? r.trigger else { throw PlanqueError.server(status: 502, message: "The connection didn't say which subscription it made") }
+        guard let id = r.id ?? r.trigger else { throw PlanqueError.server(status: 502, message: Words.Setup.Knob.noSubscription) }
         return id
     }
 
@@ -346,7 +346,7 @@ final class PlanqueClient {
         let data = try await raw("POST", "grants/\(escaped(grantID))/triggers", body: body, signer: signedBy)
         let response = try KIFFClient.decoder.decode(Response.self, from: data)
         guard let id = response.id ?? response.trigger, !id.isEmpty else {
-            throw PlanqueError.server(status: 502, message: "The connection didn't say which subscription it made.")
+            throw PlanqueError.server(status: 502, message: Words.Setup.Knob.noSubscription)
         }
         return id
     }

@@ -84,7 +84,7 @@ struct DoorsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         Panel {
-                            Eyebrow(text: "Doors · turn to pick, press to open")
+                            Eyebrow(text: Words.Door.doorsTurnPickPressOpen)
                             DoorDial(taf: taf, doors: doors.doors, knocks: doors.openKnocks, selected: $selected,
                                      press: { press() })
                                 .frame(height: 300)
@@ -111,7 +111,7 @@ struct DoorsView: View {
         }
         .sheet(isPresented: $adding) { AddDoorSheet(doors: doors, addSlack: addSlack) { added in if added { selected = doors.doors.count - 1 } } }
         .sheet(item: $pairing) { PairSheet(door: $0, doors: doors) }
-        .confirmationDialog("Remove the \(confirmRemove?.label.lowercased() ?? "") door?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
+        .confirmationDialog(Words.Door.removeTitle(door: confirmRemove?.label.lowercased() ?? ""), isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
             Button(Words.Door.remove, role: .destructive) {
                 if let d = confirmRemove {
                     Task {
@@ -132,7 +132,7 @@ struct DoorsView: View {
                     .frame(maxWidth: .infinity)
             }
             if let door { panel(door) } else if focus != nil {
-                Text("This door was removed.").scaledFont(15).foregroundColor(Theme.soft)
+                Text(Words.Door.doorRemoved).scaledFont(15).foregroundColor(Theme.soft)
             } else if manages, knob == nil { addPanel } else if !manages {
                 Text(Words.Door.noDoorYet(taf: "\(taf.name)"))
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -162,7 +162,7 @@ struct DoorsView: View {
     }
 
     private var hint: String {
-        guard let door else { return "Press \(taf.name) to add a door" }
+        guard let door else { return Words.Door.pressAddDoor(taf: "\(taf.name)") }
         if let tap = door.words?.tap { return tap }
         return "Press \(taf.name) to \(door.open ? "close" : "open") \(door.label)"
     }
@@ -213,11 +213,11 @@ struct DoorsView: View {
                     .buttonStyle(OutlineButtonStyle())
                 }
                 Meter(fraction: Double(door.today) / Double(max(door.limit, 1)), color: door.resting ? Theme.dim : Theme.tafColor(taf.colorIndex))
-                Text(door.resting ? "\(door.limit) of \(door.limit) from you and paired senders today. More are dropped until tomorrow."
-                     : "\(door.today) of \(door.limit) from you and paired senders today. Text only: attachments aren't opened, and the reply says so.")
+                Text(door.resting ? Words.Door.pairedSendersTodayMoreDropped(limit: "\(door.limit)", limit2: "\(door.limit)")
+                     : Words.Door.pairedSendersTodayTextOnly(today: "\(door.today)", limit: "\(door.limit)"))
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 if let others = door.othersToday, let cap = door.othersLimit {
-                    Text("\(others) of \(cap) from anyone else today.")
+                    Text(Words.Door.anyoneElseToday(others: "\(others)", cap: "\(cap)"))
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 }
             }
@@ -330,9 +330,9 @@ struct DoorDial: View {
         }
         .onChange(of: stops) { _ in snap(to: min(selected, stops - 1)) }
         .accessibilityElement()
-        .accessibilityLabel("Door dial")
+        .accessibilityLabel(Words.Door.doorDial)
         .accessibilityValue(accessibilityValue)
-        .accessibilityHint("Swipe up or down to pick a door. Double-tap to open or close it.")
+        .accessibilityHint(Words.Door.swipeUpDownPickDoor)
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment: snap(to: Int((rotation / step).rounded()) + 1)
@@ -346,13 +346,13 @@ struct DoorDial: View {
     private var anyOpen: Bool { doors.contains { $0.open } }
 
     private var accessibilityValue: String {
-        guard selected < doors.count else { return "Add a door, \(stops) of \(stops)" }
+        guard selected < doors.count else { return Words.Door.Dial.addPosition(stops: "\(stops)", stops2: "\(stops)") }
         let d = doors[selected]
         return "\(d.label) door, \(d.open ? "open" : "closed"), \(selected + 1) of \(stops)"
     }
 
     private var centerLine: String {
-        guard selected < doors.count else { return "ADD A DOOR" }
+        guard selected < doors.count else { return Words.Door.Dial.addStamp }
         return "\(doors[selected].label.uppercased()) · \(doors[selected].open ? "OPEN" : "CLOSED")"
     }
 
@@ -548,7 +548,7 @@ struct AddDoorSheet: View {
                     section("Knows who's writing · can hold keys", doors.addable.filter { $0.proof == "proven" && matches($0) })
                     section("Can't prove who's writing · knocks only", doors.addable.filter { $0.proof != "proven" && matches($0) })
                     if doors.addable.filter(matches).isEmpty {
-                        Text(query.isEmpty ? Words.Door.noMore : "No app called \"\(query)\" here yet.")
+                        Text(query.isEmpty ? Words.Door.noMore : Words.Door.noAppCalled(query: "\(query)"))
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                     }
                     Text(Words.Door.repliesOnly)
@@ -658,7 +658,7 @@ struct KnockCard: View {
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Button(Words.Common.ok) { Task { await doors.answer(knock, "ignore") } }.buttonStyle(OutlineButtonStyle())
             } else {
-                Text("\(knock.who) wrote\(knock.subject.map { " about \"\($0)\"" } ?? ""). Nothing was done.")
+                Text(knock.subject.map { Words.Door.Knock.wroteAbout(who: knock.who, subject: $0) } ?? Words.Door.Knock.wrote(who: knock.who))
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Text(knock.text).scaledFont(14).foregroundColor(Theme.soft).lineLimit(compact ? 3 : 8).textSelection(.enabled)
                 if knock.attachments > 0 {
@@ -718,10 +718,10 @@ struct DoItSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Tell \(taf?.name ?? "your taf") what to do").scaledFont(22, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-            Text("\(knock.who)'s message goes with your words, as information. \(taf?.name ?? "It") acts on what you say, within its Card, and doesn't write back to them unless you ask.")
+            Text(Words.Door.DoIt.title(taf: taf?.name ?? Words.Chat.yourTaf)).scaledFont(22, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+            Text(Words.Door.DoIt.intro(who: knock.who, taf: taf?.name ?? Words.Chat.itFallback))
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            DriveField("What to do", text: $say, kind: .editor)
+            DriveField(Words.Door.whatDo, text: $say, kind: .editor)
                 .scaledFont(15)
                 .frame(minHeight: 110)
                 .padding(6)
@@ -734,7 +734,7 @@ struct DoItSheet: View {
                     .scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Button(doors.busy ? Words.Common.sending : "Send to \(taf?.name ?? "your taf")") {
+            Button(doors.busy ? Words.Common.sending : Words.Door.sendTo(taf: taf?.name ?? Words.Chat.yourTaf)) {
                 Task {
                     await doors.answer(knock, "do", say: say.trimmingCharacters(in: .whitespacesAndNewlines))
                     if doors.error == nil { dismiss() }
@@ -771,7 +771,7 @@ struct DoorStamp: View {
         }
         switch mark.reply {
         case "sent": return "↩ SENT BACK BY \(label.uppercased()) · SAME THREAD"
-        case "not_sent": return "NOT SENT BACK\(mark.why.map { " · \($0)" } ?? "")"
+        case "not_sent": return mark.why.map { Words.Door.Stamp.notSentBack + " · " + $0 } ?? Words.Door.Stamp.notSentBack
         default: return Words.Door.Stamp.goesBack(app: "\(label.uppercased())")
         }
     }
@@ -852,10 +852,10 @@ struct SlackDoorSheet: View {
             List {
                 let bots = model.slackBots(for: tafID)
                 if bots.isEmpty {
-                    Text("Connect the Slack bot for \(model.taf(tafID)?.name ?? "this taf") first, in Connect apps. Then add its door here.")
+                    Text(Words.Door.Slack.connectFirstInConnectApps(taf: model.taf(tafID)?.name ?? Words.Door.Slack.thisTaf))
                         .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Section("Slack workspace") {
+                    Section(Words.Door.slackWorkspace) {
                         ForEach(bots) { bot in
                             Button {
                                 grant = bot
@@ -874,7 +874,7 @@ struct SlackDoorSheet: View {
                         Section("Channel") {
                             if let channels {
                                 if channels.isEmpty {
-                                    Text("The Slack bot sees no channel yet. Invite it to one in Slack, then come back.")
+                                    Text(Words.Door.slackBotSeesNoChannel)
                                         .scaledFont(14).foregroundColor(Theme.dim)
                                 }
                                 ForEach(channels) { channel in

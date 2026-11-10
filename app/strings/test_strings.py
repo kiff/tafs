@@ -197,6 +197,11 @@ class Generator(unittest.TestCase):
         self.assertEqual(sorted(plural["pl"]["variations"]["plural"]), ["few", "many", "one", "other"])
         self.assertEqual(plural["pl"]["variations"]["plural"]["few"]["stringUnit"]["value"], "%lld|few")
 
+    def test_ios_catalog_names_the_language_of_its_lines(self):
+        language = json.loads(self.files["ios/Tafs/Localizable.xcstrings"])["strings"]["_language"]["localizations"]
+        self.assertEqual({lang: v["stringUnit"]["value"] for lang, v in language.items()}, {lang: lang for lang in language})
+        self.assertIn("en", language)
+
     def test_ios_gets_a_typed_accessor_for_each_key(self):
         swift = self.files["ios/Tafs/Design/Words.swift"]
         self.assertIn('static var title: String { Words.line("home.title") }', swift)
@@ -204,6 +209,13 @@ class Generator(unittest.TestCase):
         self.assertIn('static func keptFor(count: Int, name: String) -> String { Words.count("chat.kept_for", count, name) }', swift)
         # A count always takes its number, to pick the form, even when its words don't show it.
         self.assertIn('static func allOf(count: Int) -> String { Words.count("home.all_of", count) }', swift)
+        # A count's number is written as the app's language writes it, never as plain digits.
+        self.assertIn("[number(count)] + values", swift)
+        # In the language of the lines, as the catalog names it, never the device's region.
+        self.assertIn('Bundle.main.localizedString(forKey: "_language", value: "en", table: nil)', swift)
+        self.assertIn("formatter.locale = locale", swift)
+        self.assertNotIn("Locale.current", swift)
+        self.assertNotIn("String(count)", swift)
         self.assertIn("enum Chat {", swift)
 
     def test_a_counts_number_always_comes_first(self):

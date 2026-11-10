@@ -12,18 +12,18 @@ enum HoldNotification {
     /// The Keychain item holding the KIFF session, as the app keeps it (`AppModel.tokenAccount`).
     static let sessionAccount = "kiff.session"
 
-    struct Words: Equatable {
+    struct Lines: Equatable {
         let title: String
         let body: String
     }
 
     /// "Rae needs you" / "Refund order 42, €150.00 · Over €50 each. Answer by 14:05. Nothing is
     /// sent until you approve."
-    static func words(_ hold: KIFFClient.CardException, taf: String?, zone: TimeZone) -> Words {
+    static func words(_ hold: KIFFClient.CardException, taf: String?, zone: TimeZone) -> Lines {
         let call = KIFFMapping.held(hold, tafID: UUID())
         let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
-        return Words(title: "\(taf ?? "A taf") needs you",
-                     body: "\(what) · \(call.reason). Answer by \(time(call.expiresAt, in: zone)). Nothing is sent until you approve.")
+        return Lines(title: taf.map { Words.Alert.tafNeedsYou(taf: $0) } ?? Words.Push.aTafNeedsYou,
+                     body: Words.Alert.answerNothingSentUntilYou(what: "\(what)", why: "\(call.reason)", zone: "\(time(call.expiresAt, in: zone))"))
     }
 
     /// A deadline in the account's zone, with the zone's short name when its clock isn't

@@ -32,7 +32,7 @@ struct DevicesView: View {
                     .accessibilityElement(children: .combine)
                 }
             } footer: {
-                Text("Signing a device out ends its sign-in on this account at once. To sign out this \(ThisDevice.kind), use Sign out of KIFF.")
+                Text(Words.Settings.Devices.noteDevice(device: "\(ThisDevice.kind)"))
             }
         }
         .scrollContentBackground(.hidden)

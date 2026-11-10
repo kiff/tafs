@@ -15,7 +15,7 @@ struct TimeZonePicker: View {
     var body: some View {
         List {
             Section {
-                Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") { Task { await model.useThisDevicesTimeZone() } }
+                Button(Words.Settings.useDeviceZone(device: "\(ThisDevice.kind)", identifier: "\(TimeZone.current.identifier)")) { Task { await model.useThisDevicesTimeZone() } }
                 if let error = model.timeZoneError { Text(error).foregroundColor(Theme.no) }
             }
             Section {
@@ -26,7 +26,7 @@ struct TimeZonePicker: View {
                 }
             }
         }
-        .searchable(text: $query, prompt: "Find a time zone")
+        .searchable(text: $query, prompt: Words.Settings.findTimeZone)
         .task(id: query) {
             do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return }
             await model.loadTimeZones(query)

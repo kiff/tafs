@@ -42,7 +42,7 @@ struct ApprovalSetupView: View {
                     .scaledFont(28, weight: .bold, design: .rounded, relativeTo: .title)
                     .foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("A taf asks before it does anything outside its Card, and Coach asks before it connects a tool or issues a Card. You approve on this device, and that needs Face ID or Touch ID.")
+                Text(Words.Approval.tafAsksBeforeDoesAnything)
                     .scaledFont(16).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(readiness.words(device: ThisDevice.kind, kind: Biometry.kind))

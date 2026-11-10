@@ -58,7 +58,7 @@ struct UsageView: View {
             if let mine = Self.waiting(u) {
                 Panel {
                     Eyebrow(text: Words.Usage.Requests.waiting)
-                    Text("\(Self.askedLine(mine, in: u)) An admin answers.").scaledFont(15).foregroundColor(Theme.ink)
+                    Text(Words.Usage.adminAnswers(detail: "\(Self.askedLine(mine, in: u))")).scaledFont(15).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Button(Words.Usage.Requests.withdraw) { Task { await model.withdrawRequest(mine) } }.buttonStyle(OutlineButtonStyle())
                 }
@@ -137,7 +137,7 @@ struct UsageView: View {
                             Text(renews).scaledFont(14).foregroundColor(Theme.soft)
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: 8)
-                            Button("Cancel Solo") { Task { await Purchases.manageSubscriptions() } }
+                            Button(Words.Usage.cancelSolo) { Task { await Purchases.manageSubscriptions() } }
                                 .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                         }
                     }
@@ -164,7 +164,7 @@ struct UsageView: View {
     /// otherwise. It doesn't say "your": the person reading may not be the one who bought it.
     static func soloStillRenews(_ u: KIFFClient.Usage) -> String? {
         guard u.billing?.source == "stripe", let until = u.billing?.appleSoloUntil else { return nil }
-        return "Company is billed by KIFF now. The Solo bought in the App Store renews on \(until.shown(date: .long, time: .omitted)) unless it's cancelled, from the Apple account that bought it."
+        return Words.Usage.companyBilledKiffSoloBought(time: "\(until.shown(date: .long, time: .omitted))")
     }
 
     /// One line on who bills the plan; nil when no plan is billed.
@@ -230,7 +230,7 @@ struct UsageView: View {
 
     /// A pack's line, as KIFF sells it; "a pack" when it isn't on sale.
     static func packLine(_ id: String?, in u: KIFFClient.Usage?) -> String {
-        guard let id else { return "a pack of credits" }
+        guard let id else { return Words.Usage.packCredits }
         return u?.store?.packs.first { $0.id == id }?.line ?? id.capitalized
     }
 }

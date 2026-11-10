@@ -161,7 +161,7 @@ enum KIFFMapping {
                 kind = .held; detail = Words.Record.waitingForYou
             default:
                 // KIFF's own words for why, when it has them (kiff/tafs#138).
-                kind = .refused; detail = c.reason.map { "Not sent · \($0)" } ?? Words.Record.notSent
+                kind = .refused; detail = c.reason.map { Words.Record.notSentBecause(reason: "\($0)") } ?? Words.Record.notSent
             }
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
@@ -218,10 +218,10 @@ enum KIFFMapping {
             switch counts {
             case .money: return (.notDone, Words.Record.toolRefusedMoney(who: "\(who)"))
             case .amount: return (.notDone, Words.Record.toolRefusedAmount(who: "\(who)"))
-            case .nothing: return (.notDone, "\(who) refused it, and it still counts toward today's limits\(why)")
+            case .nothing: return (.notDone, Words.Record.toolRefusedCountsWhy(who: "\(who)", why: "\(why)"))
             }
         case "not_sent"?:
-            return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
+            return (.notDone, Words.Record.notSentNothingReachedWhy(allowed: "\(allowed)", why: "\(why)"))
         case "sending"?:
             return (.sending, Words.Record.sentWaiting(allowed: "\(allowed)"))
         case "unknown"?:
@@ -315,9 +315,9 @@ enum KIFFMapping {
         guard let b = reasonBreach(e), b.outcome == "limit_reached", b.quantity == "count", let limit = b.limit else { return nil }
         if limit == 0 { return "Each call asks you first" }
         let nth = ordinal((b.used ?? limit) + (b.draw ?? 1))
-        guard let raw = b.window else { return "Over its limit of \(limit) calls: this would be the \(nth)" }
+        guard let raw = b.window else { return Words.Card.overLimitCallsWould(limit: "\(limit)", nth: "\(nth)") }
         // A total for each item apart says so, and which item: "… for each invoice id: this would be the 2nd for in_42".
-        let each = b.per.flatMap { $0.isEmpty ? nil : " for each " + $0.lowercased().replacingOccurrences(of: "_", with: " ") } ?? ""
+        let each = b.per.flatMap { $0.isEmpty ? nil : Words.Card.Held.forEachJoin + $0.lowercased().replacingOccurrences(of: "_", with: " ") } ?? ""
         let item = each.isEmpty ? "" : b.value.flatMap { $0.isEmpty ? nil : " for \($0)" } ?? ""
         return "\(limit) \(limit == 1 ? "call" : "calls") \(Window(raw).label)\(each): this would be the \(nth)\(item)"
     }

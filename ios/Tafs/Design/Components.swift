@@ -299,8 +299,8 @@ enum SignOutWay {
 
     var message: String {
         switch self {
-        case .signOut: return "This \(ThisDevice.kind) stops working for your account until you sign in again. Your tafs keep working."
-        case .signInAgain: return "This \(ThisDevice.kind) signs out of KIFF first, then you sign in again in your browser."
+        case .signOut: return Words.Settings.SignOutOfKiff.bodyDevice(device: "\(ThisDevice.kind)")
+        case .signInAgain: return Words.Settings.SignInAgainConfirm.bodyDevice(device: "\(ThisDevice.kind)")
         }
     }
 
@@ -366,7 +366,7 @@ struct ApprovalKeyLostLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let relink = model.relink {
-                Text("Waiting for your browser… Check that it shows \(relink.userCode), and approve only with this \(ThisDevice.kind) in your hands.")
+                Text(Words.SignIn.waitingForBrowser(userCode: "\(relink.userCode)", device: "\(ThisDevice.kind)"))
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {

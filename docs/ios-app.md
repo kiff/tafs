@@ -268,7 +268,10 @@ Android reads; the servers' own lines stay theirs ([languages.md](languages.md))
 writes `Localizable.xcstrings` and `Design/Words.swift`, a typed accessor per key (`Words.NeedsYou.approveOnce`,
 `Words.Connect.Disconnect.title(vendor:)`), so a missing key or a wrong value doesn't compile. Nobody edits those
 two files by hand: change the JSON and run the generator, and `--check` fails CI when they differ. A count picks
-its plural form from the catalog's `_plural` entry, in the app's language; its number is always the first value.
+its plural form from the catalog's `_plural` entry, in the app's language; its number is always the first value,
+written as that language writes it (1,000 in English). The catalog's `_language` entry names the language its lines
+are in, and `Words` writes numbers in it, never in the device's region: an English line on a German-region iPhone
+reads "1,000 runs", not "1.000 runs".
 The notification extension compiles Model and KIFF, so it has `Words.swift` and the catalog too.
 
 What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, URL
@@ -279,8 +282,10 @@ error the screen shows only for itself carries where it came from (`AppModel.fai
 tests read a `Words` accessor in the sources as the English it says (`DriveTests.readable`), so a confirming
 control is still found by its words.
 
-Lines iOS writes that Android has no key for still sit in the code, in English; they move with the next iOS
-strings PR, before any language ships (`languages.json`'s `shipped` is English only).
+A line that differs by platform keeps a key of its own: the device's name (`{device}`, iPhone or iPad), Face ID and
+Touch ID, the App Store and Apple ID, iOS's Settings paths. A few lines stay in code on purpose: the words the app
+reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's Terms line, whose markdown link
+`Text` renders only from a literal.
 
 ## Conventions
 

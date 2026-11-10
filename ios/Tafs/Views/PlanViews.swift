@@ -11,7 +11,7 @@ struct BuyCreditsView: View {
     }
 
     static let title = Words.Usage.buy
-    static let explain = "A pack adds credits once, and they never expire. Each period's included credits are used first, then the packs'."
+    static let explain = Words.Billing.packAddsCreditsOnceNever
 }
 
 private struct BuyCreditsContent: View {
@@ -98,7 +98,7 @@ struct AskAdminView: View {
                     }
                     Panel {
                         Eyebrow(text: Words.Usage.Requests.whyOptional)
-                        DriveField("What the credits are for", text: $reason)
+                        DriveField(Words.Billing.whatCredits, text: $reason)
                             .scaledFont(15)
                     }
                     if let message = model.planMessage {
@@ -203,7 +203,7 @@ private struct SoloContent: View {
                         Eyebrow(text: Words.Usage.solo)
                         Text(SoloView.price(product)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                         if let trial = product.subscription?.freeTrial {
-                            Text("Starts with \(trial) free.").scaledFont(15).foregroundColor(Theme.ok)
+                            Text(Words.Billing.startsFree(trial: "\(trial)")).scaledFont(15).foregroundColor(Theme.ok)
                         }
                         Text(SoloView.about)
                             .scaledFont(15).foregroundColor(Theme.soft)
@@ -216,13 +216,13 @@ private struct SoloContent: View {
                     Text(SoloView.terms(product)).scaledFont(13).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 16) {
-                        Link("Terms of Use", destination: Legal.terms)
-                        Link("Privacy Policy", destination: Legal.privacy)
+                        Link(Words.Billing.termsUse, destination: Legal.terms)
+                        Link(Words.Settings.privacyPolicy, destination: Legal.privacy)
                     }
                     .scaledFont(13)
                     .foregroundColor(Theme.soft)
                 } else {
-                    Panel { Text("Solo isn't available from the App Store right now.").scaledFont(15).foregroundColor(Theme.soft) }
+                    Panel { Text(Words.Billing.soloNotAvailableAppStore).scaledFont(15).foregroundColor(Theme.soft) }
                 }
                 if let message = model.planMessage {
                     Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -240,8 +240,8 @@ private struct SoloContent: View {
 
 extension SoloView {
     /// Under Solo's row in Plan & usage.
-    static let line = "Tafs and KIFF for one person, every month."
-    static let about = "One person: tafs, and KIFF for your own agents, with credits included each period."
+    static let line = Words.Billing.tafsKiffOnePersonEvery
+    static let about = Words.Billing.onePersonTafsKiffYour
 
     /// "$9.99 a month".
     static func price(_ p: StoreProduct) -> String {
@@ -251,7 +251,7 @@ extension SoloView {
     /// The button: the free trial when this person can have it.
     static func action(_ p: StoreProduct) -> String {
         if let trial = p.subscription?.freeTrial { return "Try \(trial) free" }
-        return "Subscribe for \(price(p))"
+        return Words.Billing.Solo.subscribeFor(price: "\(price(p))")
     }
 
     /// The subscription's terms, shown with every offer.
@@ -259,10 +259,10 @@ extension SoloView {
         let period = p.subscription?.period ?? Words.Usage.month
         var lines: [String] = []
         if let trial = p.subscription?.freeTrial {
-            lines.append("Free for \(trial), then \(p.displayPrice) a \(period).")
+            lines.append(Words.Billing.Solo.freeThen(trial: "\(trial)", price: "\(p.displayPrice)", period: "\(period)"))
         }
-        lines.append("Solo is a subscription of one \(period) at \(p.displayPrice), charged to your Apple account. It renews every \(period) until you cancel.")
-        lines.append("Cancel any time, at least a day before it renews, in your Apple account's Subscriptions.")
+        lines.append(Words.Billing.soloSubscriptionOneChargedYour(period: "\(period)", price: "\(p.displayPrice)", period2: "\(period)"))
+        lines.append(Words.Billing.cancelAnyTimeLeastDay)
         return lines.joined(separator: " ")
     }
 }

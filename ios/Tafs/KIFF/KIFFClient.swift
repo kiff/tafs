@@ -163,9 +163,9 @@ final class KIFFClient {
     }
 
     /// What the person reads when this phone can't approve until they sign in again.
-    nonisolated static let approvalKeyLost = "Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you approve it again in your browser."
+    nonisolated static let approvalKeyLost = Words.Approval.keyGoneFaceId
     /// What they read when an approval's prompt closed unrecognized while the key is still good.
-    nonisolated static let notRecognized = "Try again, or sign in again if your Face ID or fingerprints changed."
+    nonisolated static let notRecognized = Words.Approval.notRecognizedFaceId
 
     /// A key's fingerprint as KIFF shows it: the first 8 bytes of the SHA-256 of its SPKI
     /// DER, in hex, in groups of four ("ab12 cd34 ef56 7890").
@@ -1289,7 +1289,7 @@ final class KIFFClient {
             if status == 409, base == nil, path == "/v1/me/device/approval-key" {
                 throw KIFFError.approvalKeyExists(fingerprint: body?["fingerprint"])
             }
-            throw KIFFError.server(status: status, message: body?["error"] ?? "KIFF answered \(status)", reason: body?["reason"])
+            throw KIFFError.server(status: status, message: body?["error"] ?? Words.Error.kiffAnswered(status: "\(status)"), reason: body?["reason"])
         }
         if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }

@@ -184,9 +184,9 @@ final class Purchases: ObservableObject {
     }
 
     /// What the person reads when KIFF refused a test purchase.
-    static let testPurchase = "Test purchases don't add credits to this account."
+    static let testPurchase = Words.Billing.testPurchaseCredits
     /// What the person reads when the purchase is another tafs account's.
-    static let anotherAccount = "This purchase belongs to another tafs account on this Apple ID, so nothing was added here."
+    static let anotherAccount = Words.Billing.anotherAccountAppleId
     /// What the person reads when KIFF can't add what they paid for.
     static let contactSupport = Words.Billing.contactSupport
 
@@ -294,8 +294,8 @@ final class AppStoreFront: StoreFront {
         case unavailable, unverified
         var errorDescription: String? {
             switch self {
-            case .unavailable: return "The App Store doesn't offer this right now."
-            case .unverified: return "The App Store couldn't confirm the purchase."
+            case .unavailable: return Words.Connect.appStoreDoesNotOffer
+            case .unverified: return Words.Billing.appStoreCouldNotConfirm
             }
         }
     }

@@ -22,7 +22,7 @@ struct AppEventApprovalSheet: View {
                     Text(item.label).scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
                     Text(item.words).scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("Listen only for events matching these filters.")
+                    Text(Words.Knob.listenOnlyEventsMatchingFilters)
                         .scaledFont(14).foregroundColor(Theme.ink)
                     Text(filters).scaledFont(13, design: .monospaced).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
@@ -46,7 +46,7 @@ struct AppEventApprovalSheet: View {
                     }
                 }.padding(20)
             }
-            .navigationTitle("Approve event").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(Words.Knob.approveEvent).navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() }.disabled(busy) } }
         }
         .interactiveDismissDisabled(busy)

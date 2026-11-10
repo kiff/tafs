@@ -31,7 +31,7 @@ struct PeopleGroupsView: View {
                     }
                     if model.managesGroup(group) {
                         Button { adding = group } label: {
-                            Label("Add someone to \(group.name)", systemImage: "plus").scaledFont(15)
+                            Label(Words.People.addSomeoneTo(name: "\(group.name)"), systemImage: "plus").scaledFont(15)
                         }
                     }
                 } header: {
@@ -248,14 +248,14 @@ struct AddToGroupSheet: View {
                         Text(Words.People.everyoneIn(group: "\(group.name)"))
                             .scaledFont(14).foregroundColor(Theme.dim)
                     }
-                } header: { Text("The account's people") }
+                } header: { Text(Words.People.accountPeopleTitle) }
                 if let error = model.peopleError {
                     Section { Text(error).scaledFont(14).foregroundColor(Theme.no) }
                 }
             }
             .scrollContentBackground(.hidden)
             .screenBackground()
-            .navigationTitle("Add to \(group.name)")
+            .navigationTitle(Words.People.addTo(group: "\(group.name)"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } } }
         }

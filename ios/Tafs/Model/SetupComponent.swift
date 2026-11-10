@@ -366,7 +366,7 @@ struct SetupThread: Equatable {
     /// "Refunds' new version wasn't made: why."
     static func notImproved(_ name: String, _ why: String) -> String {
         let whose = name.hasSuffix("s") ? "\(name)'" : "\(name)'s"
-        return "\(whose) new version wasn't made: \(why.trimmingCharacters(in: CharacterSet(charactersIn: ". ")))."
+        return Words.Coach.notImproved(owner: whose, why: why.trimmingCharacters(in: CharacterSet(charactersIn: ". ")))
     }
 
     /// The components that ask the owner to act, in the thread's order: an approval, a

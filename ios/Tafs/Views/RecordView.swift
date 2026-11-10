@@ -245,7 +245,7 @@ struct RecordRow: View {
             Button { showingReceipt = true } label: { row }
                 .buttonStyle(.drivablePlain)
                 .sheet(isPresented: $showingReceipt) { ReceiptView(entry: entry).environmentObject(model) }
-                .accessibilityHint("Shows the receipt")
+                .accessibilityHint(Words.Record.showsReceipt)
         }
     }
 
@@ -272,7 +272,7 @@ struct RecordRow: View {
                     Label(Words.Receipt.kiffReceipt, systemImage: "doc.text")
                         .scaledFont(12).foregroundColor(Theme.ok)
                 } else if entry.signature != nil {
-                    Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal")
+                    Label(Words.Record.signedOnDevice(device: "\(ThisDevice.kind)"), systemImage: "checkmark.seal")
                         .scaledFont(12).foregroundColor(Theme.ok)
                 }
             }
@@ -367,9 +367,9 @@ struct ReceiptView: View {
                     }
                     if let signature = entry.signature {
                         Panel(stroke: Theme.ok.opacity(0.4)) {
-                            Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
+                            Label(Words.Record.signedOnDevice(device: "\(ThisDevice.kind)"), systemImage: "checkmark.seal.fill")
                                 .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
-                            Text("Your answer was signed with a key that never leaves this device, after \(Biometry.name).")
+                            Text(Words.Receipt.signedOnDeviceWhy(biometry: "\(Biometry.name)"))
                                 .scaledFont(13).foregroundColor(Theme.soft)
                             Text(signature)
                                 .scaledFont(11, design: .monospaced).foregroundColor(Theme.dim)
@@ -381,7 +381,7 @@ struct ReceiptView: View {
                         model.requestedTaf = entry.tafID
                         dismiss()
                     } label: {
-                        Text("Open in the taf's chat").frame(maxWidth: .infinity)
+                        Text(Words.Record.openTafChat).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 }
@@ -400,7 +400,7 @@ struct ReceiptView: View {
             raw = data
             check = ReceiptCheck.check(data)
         } catch {
-            loadProblem = "KIFF's receipt couldn't be loaded: \(error.localizedDescription)"
+            loadProblem = Words.Receipt.notLoaded(why: "\(error.localizedDescription)")
         }
     }
 
@@ -416,7 +416,7 @@ struct ReceiptView: View {
             failedPanel(Words.Receipt.Check.answerMismatch)
         case .verified(let signer)?:
             Panel(stroke: Theme.ok.opacity(0.4)) {
-                Label("KIFF's receipt · checked on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
+                Label(Words.Receipt.checkedOnDevice(device: "\(ThisDevice.kind)"), systemImage: "checkmark.seal.fill")
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
                 Text(Words.Receipt.checkedWhy)
                     .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -447,7 +447,7 @@ struct ReceiptView: View {
                 } else {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
-                        Text("Checking KIFF's receipt on this \(ThisDevice.kind)…").scaledFont(13).foregroundColor(Theme.soft)
+                        Text(Words.Receipt.checkingOnDevice(device: "\(ThisDevice.kind)")).scaledFont(13).foregroundColor(Theme.soft)
                     }
                 }
             }
@@ -456,7 +456,7 @@ struct ReceiptView: View {
 
     private func failedPanel(_ why: String) -> some View {
         Panel(stroke: Theme.no.opacity(0.5)) {
-            Label("KIFF's receipt doesn't check out", systemImage: "xmark.seal.fill")
+            Label(Words.Record.kiffReceiptDoesNotCheck, systemImage: "xmark.seal.fill")
                 .scaledFont(14, weight: .semibold).foregroundColor(Theme.no)
             Text(why).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             receiptFacts(signer: nil)

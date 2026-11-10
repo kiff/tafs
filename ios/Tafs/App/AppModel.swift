@@ -308,7 +308,7 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
         } catch {
             guard gen == accountGeneration else { return }
-            timeZoneError = confirmed ? "The account's zone changed. Its schedules couldn't be updated yet: \(error.localizedDescription)" : "The time zone didn't change: \(error.localizedDescription)"
+            timeZoneError = confirmed ? Words.Settings.accountZoneChangedSchedulesCould(why: "\(error.localizedDescription)") : Words.Settings.TimeZone.notChanged(why: "\(error.localizedDescription)")
         }
         if confirmed, gen == accountGeneration {
             await refresh()
@@ -626,7 +626,7 @@ final class AppModel: ObservableObject {
                 let approvalKey = signer.approvalPublicKeyDER
                 return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
                                                         approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
-                                                        deviceName: "tafs on \(ThisDevice.kind)",
+                                                        deviceName: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
                                                         platform: key.isEmpty ? nil : ThisDevice.platform)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
@@ -801,7 +801,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, approvalKeyLost, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
         let key = signer.approvalPublicKeyDER
         guard !key.isEmpty else {
-            lastError = "Add Face ID or a fingerprint in Settings first: this \(ThisDevice.kind) approves with one."
+            lastError = Words.Approval.addFaceIdFirst(device: "\(ThisDevice.kind)")
             return nil
         }
         let gen = accountGeneration
@@ -809,7 +809,7 @@ final class AppModel: ObservableObject {
         let message = KIFFClient.relinkMessage(tenant: tenant, deviceKey: signer.publicKeyDER, newKey: key, signedAt: signedAt)
         let proof: String
         do {
-            proof = try await signer.signApproval(message, reason: "Approve with this \(ThisDevice.kind) again")
+            proof = try await signer.signApproval(message, reason: Words.Approval.approveAgainOnDevice(device: "\(ThisDevice.kind)"))
         } catch {
             lastError = KIFFClient.notRecognized
             return nil
@@ -822,10 +822,10 @@ final class AppModel: ObservableObject {
             start = try await kiff.startRelink(approvalPublicKey: key, signedAt: signedAt, signature: proof,
                                                signer: { try signer.signConfirmed($0) })
         } catch KIFFClient.KIFFError.server(404, _, _) {
-            lastError = "KIFF can't do this yet: sign in again from Settings to approve from this \(ThisDevice.kind)."
+            lastError = Words.Kiff.kiffCanNotDoSign(device: "\(ThisDevice.kind)")
             return nil
         } catch {
-            lastError = "Couldn't start: \(error.localizedDescription). Try again."
+            lastError = Words.SignIn.couldNotStart(why: "\(error.localizedDescription)")
             return nil
         }
         guard gen == accountGeneration, let url = URL(string: start.verificationURIComplete) else { return nil }
@@ -867,7 +867,7 @@ final class AppModel: ObservableObject {
             } catch where Self.transient(error) {
                 continue
             } catch {
-                lastError = "Couldn't finish: \(error.localizedDescription). Try again."
+                lastError = Words.SignIn.couldNotFinish(why: "\(error.localizedDescription)")
                 return
             }
         }
@@ -941,7 +941,7 @@ final class AppModel: ObservableObject {
             peopleError = nil
         } catch {
             guard gen == accountGeneration else { return }
-            peopleError = "People and groups couldn't be read: \(error.localizedDescription)"
+            peopleError = Words.People.notRead(why: "\(error.localizedDescription)")
         }
     }
 
@@ -962,7 +962,7 @@ final class AppModel: ObservableObject {
             devicesError = nil
         } catch {
             guard gen == accountGeneration else { return }
-            devicesError = "Couldn't load your devices: \(error.localizedDescription)"
+            devicesError = Words.Settings.Devices.notLoaded(why: "\(error.localizedDescription)")
         }
     }
 
@@ -972,7 +972,7 @@ final class AppModel: ObservableObject {
     func removeDevice(_ device: KIFFClient.Device) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, !device.thisDevice else { return false }
         let gen = accountGeneration
-        let what = "Sign \(device.name ?? "this device") out of your account"
+        let what = Words.Settings.Devices.signOutPrompt(device: device.name ?? Words.Settings.Devices.thisDevice)
         do { _ = try await signer.sign(Data("tafs.devices.v1|\(tenant)|\(device.id)".utf8), reason: what) } catch { return false }
         guard gen == accountGeneration else { return false }
         kiff.tenant = tenant
@@ -980,7 +980,7 @@ final class AppModel: ObservableObject {
             try await kiff.removeDevice(device.id)
         } catch {
             guard gen == accountGeneration else { return false }
-            devicesError = "\(what) didn't go through: \(error.localizedDescription)"
+            devicesError = Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
             return false
         }
         await refreshDevices()
@@ -1008,7 +1008,7 @@ final class AppModel: ObservableObject {
             // after it, or the owner never sees why the change failed.
             await refreshPeople()
             guard gen == accountGeneration else { return false }
-            peopleError = "\(what) didn't go through: \(error.localizedDescription)"
+            peopleError = Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
             return false
         }
         await refreshPeople()
@@ -1035,7 +1035,7 @@ final class AppModel: ObservableObject {
             } catch KIFFClient.KIFFError.unauthorized {
                 // KIFF had already ended it.
             } catch {
-                signOutError = "Not signed out at KIFF yet: \(error.localizedDescription). Try again, or sign this \(ThisDevice.kind) out from another device's Devices."
+                signOutError = Words.SignIn.notSignedOutDevice(why: "\(error.localizedDescription)", device: "\(ThisDevice.kind)")
                 await syncPush()
                 return false
             }
@@ -1317,7 +1317,7 @@ final class AppModel: ObservableObject {
         if pushToken == nil { requestPushToken?() }
         for _ in 0..<40 where pushToken == nil { try? await Task.sleep(nanoseconds: 250_000_000) }
         guard let token = pushToken else {
-            lastError = "This \(ThisDevice.kind) didn't give tafs a push token. Try again in a moment."
+            lastError = Words.Alert.noPushTokenDevice(device: "\(ThisDevice.kind)")
             return false
         }
 
@@ -1343,7 +1343,7 @@ final class AppModel: ObservableObject {
                     : Words.Alert.roleCant
                 return false
             } catch {
-                lastError = "Alerts aren't on: \(error.localizedDescription)"
+                lastError = Words.Alert.notOn(why: "\(error.localizedDescription)")
                 return false
             }
         }
@@ -1356,7 +1356,7 @@ final class AppModel: ObservableObject {
             await loadPhoneAlerts()
             return status.alerts
         } catch {
-            lastError = "Alerts are almost on: tafs cloud didn't answer (\(error.localizedDescription)). Tap Turn on alerts again."
+            lastError = Words.Alert.alertsAlmostTafsCloudDid(why: "\(error.localizedDescription)")
             alertsReady = false
             return false
         }
@@ -1700,7 +1700,7 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await signer.sign(answer: .approveOnce, heldID: "card-\(UUID().uuidString)", reason: "Issue \(draft.name)'s Card")
             } catch {
-                lastError = "The Card was not issued. " + ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                lastError = Words.Card.cardNotIssued + ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                 return nil
             }
         }
@@ -1751,7 +1751,7 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         do {
             _ = try await signer.sign(Data("tafs.happened.v1|\(tenant)|\(call.proposal)|\(happened ? "yes" : "no")".utf8),
-                                      reason: happened ? "Say it happened: \(call.title)" : "Say it didn't happen: \(call.title)", grants: true)
+                                      reason: happened ? Words.NeedsYou.Prompt.happened(title: "\(call.title)") : Words.NeedsYou.Prompt.didNotHappen(title: "\(call.title)"), grants: true)
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
@@ -1806,7 +1806,7 @@ final class AppModel: ObservableObject {
             connectApps = page
         } catch {
             guard gen == accountGeneration, request == connectAppsRequest, !Task.isCancelled else { return }
-            lastError = "The apps couldn't be listed: \(error.localizedDescription)"
+            lastError = Words.Connect.appsNotRead(why: "\(error.localizedDescription)")
         }
     }
 
@@ -1829,7 +1829,7 @@ final class AppModel: ObservableObject {
             connectApps = merged
         } catch {
             guard gen == accountGeneration, request == connectAppsRequest else { return }
-            lastError = "More apps couldn't be listed: \(error.localizedDescription)"
+            lastError = Words.Connect.moreAppsCouldNotListed(why: "\(error.localizedDescription)")
         }
     }
 
@@ -1842,7 +1842,7 @@ final class AppModel: ObservableObject {
     /// the list.
     func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) async {
         guard let c = cloudTaf(for: tafID) else {
-            lastError = "This taf isn't on tafs cloud yet, so apps can't be connected for it."
+            lastError = Words.Connect.tafNotTafsCloudApps
             return
         }
         let gen = accountGeneration
@@ -1854,7 +1854,7 @@ final class AppModel: ObservableObject {
             connectStart = start
         } catch {
             guard gen == accountGeneration else { return }
-            lastError = "\(app.vendor.isEmpty ? app.title : app.vendor) couldn't be connected: \(error.localizedDescription)"
+            lastError = Words.Connect.couldNotConnected(vendor: "\(app.vendor.isEmpty ? app.title : app.vendor)", why: "\(error.localizedDescription)")
         }
     }
 
@@ -1873,7 +1873,7 @@ final class AppModel: ObservableObject {
         let signer = self.signer
         planque.tenant = tenant
         do { return try await planque.channels(grantID: grantID, signedBy: { try signer.signConfirmed($0) }) } catch {
-            lastError = "Slack's channels couldn't be read: \(error.localizedDescription)"
+            lastError = Words.Door.slackChannelsCouldNotRead(why: "\(error.localizedDescription)")
             return nil
         }
     }
@@ -1883,13 +1883,13 @@ final class AppModel: ObservableObject {
     /// the subscription back, so nothing listens without a door.
     func addSlackDoor(_ tafID: UUID, doors: DoorsModel, app: TafsCloud.DoorApp, grant: PlanqueClient.Grant, channel: PlanqueClient.Channel) async -> Bool {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant, let account = grant.account else {
-            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
+            lastError = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")
             return false
         }
         let where_ = channel.name.isEmpty ? channel.id : "#" + channel.name
         do {
             _ = try await signer.sign(Data("tafs.door.v1|\(tenant)|\(grant.id)|\(channel.id)".utf8),
-                                      reason: "Let \(taf(tafID)?.name ?? "the taf") read what's written in \(where_)", grants: true)
+                                      reason: Words.Door.Slack.letRead(taf: taf(tafID)?.name ?? Words.Door.Slack.theTaf, place: where_), grants: true)
         } catch {
             quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return false
@@ -1902,7 +1902,7 @@ final class AppModel: ObservableObject {
         do {
             trigger = try await planque.subscribe(grantID: grant.id, account: account, slug: PlanqueClient.slackMessageTrigger, channels: [channel.id])
         } catch {
-            lastError = "Slack didn't subscribe \(where_): \(error.localizedDescription)"
+            lastError = Words.Door.slackDidNotSubscribe(`where`: "\(where_)", why: "\(error.localizedDescription)")
             return false
         }
         if await doors.addSlack(app, grant: grant.id, channel: channel.id, trigger: trigger) != nil { return true }
@@ -1915,7 +1915,7 @@ final class AppModel: ObservableObject {
     func removeSlackDoor(_ door: TafsCloud.Door, doors: DoorsModel) async {
         if let grant = door.grant, let trigger = door.trigger {
             guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
-                lastError = "Start from Connected tools on this \(ThisDevice.kind) first. Slack's subscription must be stopped before removing its door."
+                lastError = Words.Door.startConnectedToolsFirstSlack(device: "\(ThisDevice.kind)")
                 return
             }
             let signer = self.signer
@@ -1923,7 +1923,7 @@ final class AppModel: ObservableObject {
             planque.signer = { try signer.signConfirmed($0) }
             defer { planque.signer = nil }
             do { try await planque.unsubscribe(grantID: grant, trigger: trigger) } catch {
-                lastError = "Slack's subscription wasn't stopped, so the door stays: \(error.localizedDescription)"
+                lastError = Words.Door.slackSubscriptionNotStoppedDoor(why: "\(error.localizedDescription)")
                 return
             }
         }
@@ -1934,7 +1934,7 @@ final class AppModel: ObservableObject {
     /// KIFF's words for it shown, as approving does.
     func giveKey(grantID: String, shown: String?, key: String) async -> Bool {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
+            lastError = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")
             return false
         }
         guard let grant = grants.first(where: { $0.id == grantID }), grant.digestMatches, grant.digest == shown else {
@@ -1949,7 +1949,7 @@ final class AppModel: ObservableObject {
         guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: "Give \(grant.vendor) its key for \(grant.request.agent)", grants: true)
+                                      reason: Words.Connect.Prompt.giveKey(vendor: "\(grant.vendor)", agent: "\(grant.request.agent)"), grants: true)
         } catch {
             quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return false
@@ -1961,7 +1961,7 @@ final class AppModel: ObservableObject {
         do {
             _ = try await planque.giveKey(grant, key: key, words: words)
         } catch {
-            lastError = "The key wasn't given: \(error.localizedDescription)"
+            lastError = Words.Connect.keyNotGiven(why: "\(error.localizedDescription)")
             return false
         }
         await refreshConnections()
@@ -1992,7 +1992,7 @@ final class AppModel: ObservableObject {
             if let made = knobChanges[tafID], let live = knob.version, live >= made.version { knobChanges[tafID] = nil }
         } catch {
             guard gen == accountGeneration, presentation == presentationGeneration else { return }
-            fail("The dial couldn't be read: \(error.localizedDescription)", from: .knob)
+            fail(Words.Knob.dialCouldNotRead(why: "\(error.localizedDescription)"), from: .knob)
         }
     }
 
@@ -2006,13 +2006,13 @@ final class AppModel: ObservableObject {
             return
         } else if item.ok == "door", let door = item.door {
             do { _ = try await cloud.setDoorOpen(c.id, door: door, open: !item.on) } catch {
-                lastError = "The door didn't \(item.on ? "close" : "open"): \(error.localizedDescription)"
+                lastError = item.on ? Words.Door.notClosed(why: error.localizedDescription) : Words.Door.notOpened(why: error.localizedDescription)
             }
         } else if item.ok == "run" {
             _ = await runNow(c)
         } else if item.ok == "remove_follow_up", let followUp = item.followUp {
             do { try await cloud.removeFollowUp(c.id, followUp: followUp) }
-            catch { lastError = "The follow-up wasn't removed: \(error.localizedDescription)" }
+            catch { lastError = Words.Knob.followUpNotRemoved(why: "\(error.localizedDescription)") }
         } else {
             return
         }
@@ -2050,7 +2050,7 @@ final class AppModel: ObservableObject {
                   let currentApproval = current.approval,
                   currentApproval.grant == approval.grant, currentApproval.event == approval.event,
                   currentApproval.config == approval.config else {
-                lastError = "This event changed. Read the dial again before approving it."
+                lastError = Words.Knob.eventChangedReadDialAgain
                 return false
             }
             if currentApproval.state == "approved" {
@@ -2103,7 +2103,7 @@ final class AppModel: ObservableObject {
             knobs[tafID] = updated
             guard updated.wakes.first(where: { $0.id == item.id })?.approval?.subscription == receipt.subscription,
                   updated.wakes.first(where: { $0.id == item.id })?.approval?.state == "approved" else {
-                lastError = "The subscription was made, but the dial hasn't recorded it yet. Try again."
+                lastError = Words.Knob.subscriptionMadeDialHasNot
                 return false
             }
             eventSubscriptionReceipts[tafID]?[item.id] = nil
@@ -2154,7 +2154,7 @@ final class AppModel: ObservableObject {
             return true
         } catch {
             guard gen == accountGeneration else { return false }
-            lastError = "The dial didn't change: \(error.localizedDescription)"
+            lastError = Words.Knob.dialDidNotChange(why: "\(error.localizedDescription)")
             return false
         }
     }
@@ -2166,7 +2166,7 @@ final class AppModel: ObservableObject {
             lastError = Self.waitsForCredits(e)
             return nil
         } catch {
-            lastError = "The run didn't start: \(error.localizedDescription)"
+            lastError = Words.Taf.runNotStarted(why: "\(error.localizedDescription)")
             return nil
         }
     }
@@ -2196,7 +2196,7 @@ final class AppModel: ObservableObject {
             reports[cloudTaf.id] = RunReport(session: session, at: latest.at, status: r.status, text: r.text)
         } catch {
             var r = reports[cloudTaf.id] ?? RunReport()
-            r.error = "Its runs couldn't be loaded: \(error.localizedDescription)"
+            r.error = Words.Report.runsNotLoaded(why: "\(error.localizedDescription)")
             reports[cloudTaf.id] = r
         }
     }
@@ -2253,7 +2253,7 @@ final class AppModel: ObservableObject {
             CardCheck.draw(proposed, on: &tafs[i])
             tafs[i].state = .working
             tafs[i].now = proposed.summary
-            log(tafID, .done, proposed.summary, amountLine(proposed, "within the Card"))
+            log(tafID, .done, proposed.summary, amountLine(proposed, Words.Card.withinCard))
         case .held(let reason):
             let now = clock()
             var call = HeldCall(tafID: tafID, proposed: proposed, reason: reason, heldAt: now,
@@ -2460,7 +2460,7 @@ final class AppModel: ObservableObject {
         case .approveOnce:
             if call.kiffID == nil, let i { CardCheck.draw(call.proposed, on: &tafs[i]) }
             decide(call, .approved, Words.Record.approvedOnce(at: "\(when)", summary: "\(call.proposed.summary)"),
-                   amountLine(call.proposed, "approved once by \(ownerName)"), signature: signature)
+                   amountLine(call.proposed, Words.Receipt.approvedOnceByLower(owner: "\(ownerName)")), signature: signature)
             if let i { tafs[i].now = call.proposed.summary }
         case .nextStep(let step):
             decide(call, .refused, Words.Record.refusedNextStep(at: "\(when)", summary: "\(call.proposed.summary)"),
@@ -2468,7 +2468,7 @@ final class AppModel: ObservableObject {
             if let i { tafs[i].now = step }
         case .extraRoom:
             decide(call, .approved, Words.Record.extraRoom(at: "\(when)", summary: "\(call.proposed.summary)"),
-                   "Its Card got the room this call needed, until that total resets", signature: signature)
+                   Words.Card.cardGotRoomCallNeeded, signature: signature)
             if let i { tafs[i].now = call.proposed.summary }
         case .refuse:
             decide(call, .refused, Words.Record.refusedByYou(at: "\(when)", summary: "\(call.proposed.summary)"), call.reason, signature: signature)
@@ -2488,7 +2488,7 @@ final class AppModel: ObservableObject {
             do {
                 for cardID in tafs[i].kiffCardIDs { try await kiff.revoke(cardID: cardID) }
             } catch {
-                lastError = "KIFF didn't revoke the Card: \(error.localizedDescription)"
+                lastError = Words.Card.revokeFailed(why: "\(error.localizedDescription)")
                 return
             }
         }
@@ -2498,7 +2498,7 @@ final class AppModel: ObservableObject {
         tafs[j].now = Words.Taf.Now.cardRevoked
         let dropped = held.filter { $0.tafID == tafID }
         held.removeAll { $0.tafID == tafID }
-        let detail = dropped.isEmpty ? Words.Record.Revoked.noNewAction : "No new action goes through. \(dropped.count) waiting action(s) refused."
+        let detail = dropped.isEmpty ? Words.Record.Revoked.noNewAction : Words.Record.Revoked.refusedWaiting(count: dropped.count)
         log(tafID, .revoked, Words.Record.Revoked.title(taf: "\(tafs[j].name)"), detail)
         notifyHeld()
         save()
@@ -2534,15 +2534,15 @@ final class AppModel: ObservableObject {
         guard let connections = await disconnectGrants(of: c.kiffAgent ?? "", gen: gen) else { return nil }
         let cards = (cardsLeft == 0
             ? Words.Taf.Remove.cardsRevoked
-            : "KIFF didn't revoke \(cardsLeft) of its Cards: revoke them in KIFF.")
-            + (connections.left > 0 ? " \(connections.left) of its connections couldn't be disconnected: disconnect them in Connect apps."
-               : connections.done > 0 ? " Its connections are disconnected." : "")
+            : Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(cardsLeft)"))
+            + (connections.left > 0 ? Words.Connect.connectionsCouldNotDisconnectedDisconnect(left: "\(connections.left)")
+               : connections.done > 0 ? Words.Connect.connectionsDisconnected : "")
             + connections.kept.map { " " + $0 }.joined()
 
         let removal: TafsCloud.Removal
         do { removal = try await cloud.remove(c.id) } catch {
             guard gen == accountGeneration else { return nil }
-            return "\(cards) tafs cloud didn't answer (\(error.localizedDescription)). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again."
+            return Words.Taf.Remove.cloudDidNotAnswer(cards: "\(cards)", why: "\(error.localizedDescription)")
         }
         guard gen == accountGeneration else { return nil }
         if cardsLeft == 0, let i = tafs.firstIndex(where: { $0.id == tafID }) {
@@ -2552,12 +2552,12 @@ final class AppModel: ObservableObject {
         }
         guard removal.done else {
             let failed = removal.failed.map(Self.removalStep).joined(separator: ", ")
-            return "\(cards) Not finished: its \(failed) couldn't be removed. tafs tries again each time it refreshes."
+            return Words.Taf.Remove.notFinishedAfter(cards: "\(cards)", failed: "\(failed)")
         }
         if let agent = holderIDs.first(where: { $0.value == tafID })?.key { cloudTafs[agent] = nil }
         log(tafID, .revoked, Words.Record.Removed.title(taf: "\(taf.name)"), Words.Record.Removed.detail)
         save()
-        return "\(cards) Its schedule, chats, run reports, memory and key are deleted, and the name \(taf.name) is free. KIFF's receipts stay."
+        return Words.Connect.scheduleChatsRunReportsMemory(cards: "\(cards)", taf: "\(taf.name)")
     }
 
     /// Finishes removals tafs cloud lists as begun. They were confirmed with Face ID when
@@ -2595,7 +2595,7 @@ final class AppModel: ObservableObject {
             cloudTafs[agent] = updated
             if let i = tafs.firstIndex(where: { $0.id == tafID }), tafs[i].state != .waiting, tafs[i].state != .revoked {
                 tafs[i].state = updated.paused ? .paused : .working
-                tafs[i].now = updated.paused ? Words.Taf.Now.pausedByYou : updated.nextRun.map { "Next run \($0.shortTime)" } ?? Words.Taf.Now.backToWork
+                tafs[i].now = updated.paused ? Words.Taf.Now.pausedByYou : updated.nextRun.map { Words.Taf.Now.nextRun(time: "\($0.shortTime)") } ?? Words.Taf.Now.backToWork
             }
         } catch let error as TafsCloud.CloudError where error.status == 502 && paused {
             // Its own schedule is paused, but a start may still come: say so plainly.
@@ -2606,7 +2606,7 @@ final class AppModel: ObservableObject {
             lastError = error.words ?? error.message
         } catch {
             guard gen == accountGeneration else { return }
-            lastError = "tafs cloud didn't \(paused ? "pause" : "resume") it: \(error.localizedDescription)"
+            lastError = paused ? Words.Taf.Schedule.notPaused(why: error.localizedDescription) : Words.Taf.Schedule.notResumed(why: error.localizedDescription)
         }
     }
 
@@ -2626,7 +2626,7 @@ final class AppModel: ObservableObject {
             return true
         } catch {
             guard gen == accountGeneration else { return false }
-            lastError = "Where its results go didn't change: \(error.localizedDescription)"
+            lastError = Words.Setup.resultsNotChanged(why: "\(error.localizedDescription)")
             return false
         }
     }
@@ -2635,7 +2635,7 @@ final class AppModel: ObservableObject {
     func removeFollowUp(_ tafID: UUID, _ followUp: String) async {
         guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID) else { return }
         do { try await cloud.removeFollowUp(c.id, followUp: followUp) }
-        catch { lastError = "The follow-up wasn't removed: \(error.localizedDescription)" }
+        catch { lastError = Words.Knob.followUpNotRemoved(why: "\(error.localizedDescription)") }
         await loadKnob(tafID)
     }
 
@@ -2723,7 +2723,7 @@ final class AppModel: ObservableObject {
                 usage = read; usageError = nil
                 if let store = read.store { await purchases.load(store.products) }
             case .failure(let error):
-                usageError = "The plan couldn't be read from KIFF: \(error.localizedDescription)"
+                usageError = Words.Billing.planCouldNotReadKiff(why: "\(error.localizedDescription)")
             }
         }
     }
@@ -2771,7 +2771,7 @@ final class AppModel: ObservableObject {
 
     /// Why credits couldn't be read: tafs cloud's words when it gives them.
     static func creditsWords(_ e: Error, what: String = Words.Usage.credits) -> String {
-        (e as? TafsCloud.CloudError)?.words ?? "\(what) couldn't be read: \(e.localizedDescription)"
+        (e as? TafsCloud.CloudError)?.words ?? Words.Common.couldNotReadWhy(what: "\(what)", why: "\(e.localizedDescription)")
     }
 
     /// Reads one taf's credits and its newest runs in a period; with `more`, the next page,
@@ -2792,7 +2792,7 @@ final class AppModel: ObservableObject {
             read = got
         } catch {
             guard gen == accountGeneration else { return }
-            tafCreditsError[key] = Self.creditsWords(error, what: more ? Words.Usage.moreRuns : "Its runs")
+            tafCreditsError[key] = Self.creditsWords(error, what: more ? Words.Usage.moreRuns : Words.Work.itsRuns)
             return
         }
         guard gen == accountGeneration else { return }
@@ -2844,7 +2844,7 @@ final class AppModel: ObservableObject {
     private func applyBalance(_ read: Result<TafsCloud.Balance?, Error>) {
         switch read {
         case .success(let b): balance = b; balanceError = nil; balanceStale = false
-        case .failure(let e): balanceError = Self.creditsWords(e, what: "The balance")
+        case .failure(let e): balanceError = Self.creditsWords(e, what: Words.Usage.theBalance)
         }
     }
 
@@ -2891,13 +2891,13 @@ final class AppModel: ObservableObject {
     private func buy(_ product: String, request: KIFFClient.PackRequest?) async {
         planMessage = nil
         guard mode == .kiff, let token = usage?.store?.appAccountToken else {
-            planMessage = "Only someone who manages the account's billing buys credits."
+            planMessage = Words.Billing.onlySomeoneWhoManagesAccount
             return
         }
         switch await purchases.buy(product, accountToken: token, requestID: request?.id) {
         case .done: planMessage = nil
         case .cancelled: break
-        case .pending: planMessage = "The purchase is waiting for approval. Your credits are added once it's done."
+        case .pending: planMessage = Words.Billing.pendingCredits
         case .notRecorded: planMessage = Words.Billing.boughtNotRecorded
         case .notAdded(let why), .needsSupport(let why): planMessage = why
         case .failed(let why): planMessage = Words.Billing.notBought(why: "\(why)")
@@ -2929,7 +2929,7 @@ final class AppModel: ObservableObject {
             await refreshUsage()
             return true
         } catch {
-            planMessage = "The request didn't go: \(error.localizedDescription)"
+            planMessage = Words.Billing.Request.notSent(why: "\(error.localizedDescription)")
             return false
         }
     }
@@ -2941,7 +2941,7 @@ final class AppModel: ObservableObject {
         do {
             _ = try await kiff.withdrawRequest(request.id)
         } catch {
-            planMessage = "The request wasn't withdrawn: \(error.localizedDescription)"
+            planMessage = Words.Billing.Request.notWithdrawn(why: "\(error.localizedDescription)")
         }
         await refreshUsage()
     }
@@ -2952,7 +2952,7 @@ final class AppModel: ObservableObject {
     /// it is now. Nil once raised; else why not, empty when the prompt was closed.
     func raiseLimit() async -> String? {
         guard mode == .kiff, let tenant = kiffTenant else { return "Sign in with KIFF to raise the limit." }
-        guard sessionHasKey else { return "Sign in with KIFF again: this sign-in can't sign for the \(ThisDevice.kind)." }
+        guard sessionHasKey else { return Words.SignIn.againToSignDevice(device: "\(ThisDevice.kind)") }
         // The last raise went through, and the balance it changed hasn't been read since:
         // another tap would raise it again for a balance the screen no longer shows.
         guard !balanceStale else { return Self.readBalanceFirst }
@@ -2981,7 +2981,7 @@ final class AppModel: ObservableObject {
             return Self.limitCeiling
         } catch {
             guard gen == accountGeneration else { return "" }
-            return "The limit wasn't raised: \(error.localizedDescription)"
+            return Words.Usage.RaiseLimit.notRaised(why: "\(error.localizedDescription)")
         }
         // A switch while the PUT was out: its answer is the old account's, and changes nothing here.
         guard gen == accountGeneration else { return "" }
@@ -2992,8 +2992,8 @@ final class AppModel: ObservableObject {
         return nil
     }
 
-    static let readBalanceFirst = "The limit was raised. Read the balance again before raising it once more."
-    static let noRaise = "The limit can't be raised from here right now."
+    static let readBalanceFirst = Words.Card.limitRaisedReadBalanceAgain
+    static let noRaise = Words.Card.limitCanNotRaisedRight
     static let limitChanged = Words.Usage.limitChanged
     static let limitCeiling = Words.Usage.limitCeiling
 
@@ -3029,7 +3029,7 @@ final class AppModel: ObservableObject {
             _ = try await kiff.declineRequest(request.id, note: note.trimmingCharacters(in: .whitespacesAndNewlines))
         } catch {
             guard gen == accountGeneration else { return false }
-            planMessage = "The request wasn't declined: \(error.localizedDescription)"
+            planMessage = Words.Billing.Request.notDeclined(why: "\(error.localizedDescription)")
             await refreshUsage()
             return false
         }
@@ -3147,7 +3147,7 @@ final class AppModel: ObservableObject {
             deleteAccountError = Words.Settings.DeleteAccount.ownerOnly
             return false
         } catch {
-            deleteAccountError = "tafs couldn't erase your tafs: \(error.localizedDescription). Your KIFF account isn't deleted. Try again."
+            deleteAccountError = Words.Settings.DeleteAccount.notErased(why: "\(error.localizedDescription)")
             return false
         }
         let signer = self.signer
@@ -3160,13 +3160,13 @@ final class AppModel: ObservableObject {
         do {
             try await planque.eraseAccount()
         } catch {
-            deleteAccountError = "Your tafs are erased, but your connections aren't yet: \(error.localizedDescription). Try again."
+            deleteAccountError = Words.Settings.DeleteAccount.connectionsLeft(why: "\(error.localizedDescription)")
             return false
         }
         do {
             try await kiff.deleteAccount()
         } catch {
-            deleteAccountError = "Your tafs and connections are erased, but KIFF didn't delete the account: \(error.localizedDescription). Try again."
+            deleteAccountError = Words.Settings.DeleteAccount.kiffNotDeleted(why: "\(error.localizedDescription)")
             return false
         }
         // KIFF deleted the account, and its sessions with it.
@@ -3194,7 +3194,7 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration, mode == .kiff else { return }
         switch result {
         case .success(let notes): memories[tafID] = notes; memoryErrors[tafID] = nil
-        case .failure(let error): memoryErrors[tafID] = "Its notes couldn't be loaded: \(error.localizedDescription)"
+        case .failure(let error): memoryErrors[tafID] = Words.Taf.Memory.notLoaded(why: "\(error.localizedDescription)")
         }
     }
 
@@ -3217,7 +3217,7 @@ final class AppModel: ObservableObject {
         } catch {
             guard gen == accountGeneration else { return false }
             putBack(note, in: tafID)
-            memoryErrors[tafID] = "It wasn't forgotten: \(error.localizedDescription)"
+            memoryErrors[tafID] = Words.Taf.Memory.notForgotten(why: "\(error.localizedDescription)")
             return false
         }
     }
@@ -3268,7 +3268,7 @@ final class AppModel: ObservableObject {
             versions[tafID] = state.versions
             switches[tafID] = state.switching
             versionErrors[tafID] = nil
-        case .failure(let error): versionErrors[tafID] = "Its versions couldn't be loaded: \(error.localizedDescription)"
+        case .failure(let error): versionErrors[tafID] = Words.Version.notLoaded(why: "\(error.localizedDescription)")
         }
     }
 
@@ -3292,7 +3292,7 @@ final class AppModel: ObservableObject {
             return gen == accountGeneration ? draft : nil
         } catch {
             guard gen == accountGeneration else { return nil }
-            versionErrors[tafID] = "Couldn't read this version's Card: \(error.localizedDescription)"
+            versionErrors[tafID] = Words.Version.cardNotRead(why: "\(error.localizedDescription)")
             return nil
         }
     }
@@ -3326,11 +3326,11 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return nil }
             // Named, in tafs cloud's words, with the one step that clears it (kiff/tafs#206).
             blockedInstalls[tafID] = version.n
-            versionErrors[tafID] = error.words ?? "Version \(version.n) can't go live now: \(error.message)"
+            versionErrors[tafID] = error.words ?? Words.Version.cantGoLive(n: "\(version.n)", why: "\(error.message)")
             return nil
         } catch {
             guard gen == accountGeneration else { return nil }
-            versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
+            versionErrors[tafID] = Words.Version.cantGoLive(n: "\(version.n)", why: "\(error.localizedDescription)")
             return nil
         }
     }
@@ -3357,7 +3357,7 @@ final class AppModel: ObservableObject {
         }
         await loadVersions(tafID)
         guard let version = versions[tafID]?.first(where: { $0.n == ask.n }) else {
-            lastError = "\(match?.value.name ?? "That taf") has no version \(ask.n)."
+            lastError = Words.Version.noSuch(taf: match?.value.name ?? Words.Version.thatTaf, n: "\(ask.n)")
             return nil
         }
         if version.live {
@@ -3400,7 +3400,7 @@ final class AppModel: ObservableObject {
         let sw: TafsCloud.Switching
         do { sw = try await cloud.beginSwitch(c.id, version: version.n, stopBlocking: approving != nil) } catch {
             guard gen == accountGeneration else { return false }
-            versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
+            versionErrors[tafID] = Words.Version.cantGoLive(n: "\(version.n)", why: "\(error.localizedDescription)")
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -3409,12 +3409,12 @@ final class AppModel: ObservableObject {
             // Nothing shown, nothing signed.
             guard shownDraft != nil else { return false }
             guard sessionHasKey else {
-                versionErrors[tafID] = "Start from Connected tools on this \(ThisDevice.kind) first."
+                versionErrors[tafID] = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")
                 return false
             }
             do { draft = try await kiff.draft(id: id) } catch {
                 guard gen == accountGeneration else { return false }
-                versionErrors[tafID] = "Couldn't read this version's Card: \(error.localizedDescription)"
+                versionErrors[tafID] = Words.Version.cardNotRead(why: "\(error.localizedDescription)")
                 return false
             }
         }
@@ -3431,7 +3431,7 @@ final class AppModel: ObservableObject {
         if let draft, !draft.confirmed, draft.status != "claimed" {
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                          reason: "Use version \(version.n) of \(taf.name), with its Card", grants: true)
+                                          reason: Words.Version.Prompt.useWithCard(n: "\(version.n)", taf: "\(taf.name)"), grants: true)
             } catch {
                 // The owner backed out before the Card changed: the taf runs again as it was.
                 guard gen == accountGeneration else { return false }
@@ -3450,7 +3450,7 @@ final class AppModel: ObservableObject {
                     staleVersionCards[tafID] = version.n
                     versionErrors[tafID] = Words.Version.cardOutOfDate(n: "\(version.n)")
                 } else {
-                    versionErrors[tafID] = "Installing version \(version.n) didn't finish: KIFF didn't confirm its Card (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
+                    versionErrors[tafID] = Words.Version.installUnconfirmed(n: "\(version.n)", why: "\(error.localizedDescription)")
                 }
                 return false
             }
@@ -3459,7 +3459,7 @@ final class AppModel: ObservableObject {
         } else {
             do {
                 _ = try await signer.sign(Data("tafs.version.v1|\(tenant)|\(c.id)|\(version.n)".utf8),
-                                          reason: "Use version \(version.n) of \(taf.name)")
+                                          reason: Words.Version.Prompt.use(n: "\(version.n)", taf: "\(taf.name)"))
             } catch {
                 // Backed out: the switch it began is dropped, and the taf runs again as it was.
                 guard gen == accountGeneration else { return false }
@@ -3474,7 +3474,7 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return false }
             versionErrors[tafID] = sw.draft == nil
                 ? "Version \(version.n) isn't live: \(error.localizedDescription)"
-                : "Installing version \(version.n) didn't finish (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
+                : Words.Version.installUnfinished(n: "\(version.n)", why: "\(error.localizedDescription)")
             return false
         }
         await loadVersions(tafID)
@@ -3498,7 +3498,7 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         do { try await cloud.cancelSwitch(c.id) } catch {
             guard gen == accountGeneration else { return }
-            versionErrors[tafID] = "The switch wasn't cancelled: \(error.localizedDescription)"
+            versionErrors[tafID] = Words.Version.switchNotCancelled(why: "\(error.localizedDescription)")
         }
         await loadVersions(tafID)
     }
@@ -3551,7 +3551,7 @@ final class AppModel: ObservableObject {
             setTrial(open, of: tafID)
         } catch {
             guard gen == accountGeneration, !Self.cancelled(error) else { return }
-            trialErrors[tafID] = "The trial couldn't be read: \(error.localizedDescription)"
+            trialErrors[tafID] = Words.Version.Trial.notRead(why: "\(error.localizedDescription)")
         }
     }
 
@@ -3578,7 +3578,7 @@ final class AppModel: ObservableObject {
             return gen == accountGeneration ? draft : nil
         } catch {
             guard gen == accountGeneration else { return nil }
-            trialErrors[tafID] = "Version \(version.n)'s trial Card couldn't be read: \(error.localizedDescription)"
+            trialErrors[tafID] = Words.Version.Trial.cardNotRead(n: "\(version.n)", why: "\(error.localizedDescription)")
             return nil
         }
     }
@@ -3592,7 +3592,7 @@ final class AppModel: ObservableObject {
         defer { trialBusy.remove(tafID) }
         trialErrors[tafID] = nil
         guard sessionHasKey else {
-            trialErrors[tafID] = "Start from Connected tools on this iPhone first."
+            trialErrors[tafID] = Words.Connect.startConnectedToolsIphoneFirst
             return nil
         }
         let gen = accountGeneration
@@ -3605,7 +3605,7 @@ final class AppModel: ObservableObject {
             draft = try await kiff.draft(id: id)
         } catch {
             guard gen == accountGeneration else { return nil }
-            trialErrors[tafID] = "Version \(version.n) can't be tried now: \(error.localizedDescription)"
+            trialErrors[tafID] = Words.Version.Trial.cantTry(n: "\(version.n)", why: "\(error.localizedDescription)")
             return nil
         }
         guard gen == accountGeneration else { return nil }
@@ -3617,7 +3617,7 @@ final class AppModel: ObservableObject {
         }
         do {
             _ = try await signer.sign(Data("tafs.trial.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                      reason: "Try version \(version.n) of \(taf.name), with its own Card", grants: true)
+                                      reason: Words.Version.Trial.prompt(n: "\(version.n)", taf: "\(taf.name)"), grants: true)
         } catch { return nil }
         guard gen == accountGeneration else { return nil }
         kiff.setupSigner = { try signer.signConfirmed($0) }
@@ -3639,7 +3639,7 @@ final class AppModel: ObservableObject {
             return trialChat(of: tafID)
         } catch {
             guard gen == accountGeneration else { return nil }
-            trialErrors[tafID] = "Trying version \(version.n) didn't start: \(error.localizedDescription)"
+            trialErrors[tafID] = Words.Version.Trial.notStarted(n: "\(version.n)", why: "\(error.localizedDescription)")
             return nil
         }
     }
@@ -3663,7 +3663,7 @@ final class AppModel: ObservableObject {
             if !draft.confirmed {
                 do {
                     _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                              reason: "Install version \(open.n) of \(taf.name), with its Card", grants: true)
+                                              reason: Words.Version.Prompt.install(n: "\(open.n)", taf: "\(taf.name)"), grants: true)
                 } catch { return false }
                 guard gen == accountGeneration else { return false }
                 kiff.setupSigner = { try signer.signConfirmed($0) }
@@ -3672,7 +3672,7 @@ final class AppModel: ObservableObject {
             _ = try await cloud.installTrial(c.id)
         } catch {
             guard gen == accountGeneration else { return false }
-            trialErrors[tafID] = "Installing version \(open.n) didn't finish: \(error.localizedDescription)"
+            trialErrors[tafID] = Words.Version.Trial.installUnfinished(n: "\(open.n)", why: "\(error.localizedDescription)")
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -3700,7 +3700,7 @@ final class AppModel: ObservableObject {
             _ = try await cloud.endTrial(c.id)
         } catch {
             guard gen == accountGeneration else { return false }
-            trialErrors[tafID] = "The trial didn't end: \(error.localizedDescription)"
+            trialErrors[tafID] = Words.Version.Trial.notEnded(why: "\(error.localizedDescription)")
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -3761,7 +3761,7 @@ final class AppModel: ObservableObject {
             settleChatAwaiting(tafID)
             settleSteering(tafID)
         case .failure(let error):
-            chatErrors[tafID] = "The thread couldn't be loaded: \(error.localizedDescription)"
+            chatErrors[tafID] = Words.Chat.threadNotLoaded(why: "\(error.localizedDescription)")
             return
         }
     }
@@ -3777,7 +3777,7 @@ final class AppModel: ObservableObject {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !files.isEmpty else { return .notTried }
         guard text.count <= Self.chatLimit else {
-            chatErrors[tafID] = "That's longer than \(Self.chatLimit) characters. Say it in fewer words."
+            chatErrors[tafID] = Words.Chat.tooLong(count: Self.chatLimit)
             return .notTried
         }
         guard chatSending.insert(tafID).inserted else { return .notTried }
@@ -3804,7 +3804,7 @@ final class AppModel: ObservableObject {
             }
             chatStates[tafID, default: ChatState()].live = LiveAnswer(started: started)
             if beat > 0 {
-                for line in ["Looking at what I did lately, ", "so the answer names each one."] {
+                for line in [Words.Sample.Reply.lookingLately, Words.NeedsYou.answerNamesEach] {
                     guard await wait() else { return .notTried }
                     chatStates[tafID]?.live?.thinking += line
                 }
@@ -3942,7 +3942,7 @@ final class AppModel: ObservableObject {
         guard let target = filesTarget(key) else { return }
         fileNotices[key] = nil
         guard files(key).count < FilePrep.perMessage else {
-            fileNotices[key] = "A message carries at most \(FilePrep.perMessage) files."
+            fileNotices[key] = Words.Chat.messageCarriesMostFiles(perMessage: "\(FilePrep.perMessage)")
             return
         }
         let pending = PendingFile(id: UUID(), name: file.name, mediaType: file.mediaType, thumbnail: file.thumbnail, state: .uploading)
@@ -4023,7 +4023,7 @@ final class AppModel: ObservableObject {
             try data.write(to: url, options: .atomic)
             return url
         } catch {
-            fileNotices[key] = "\(ref.name) couldn't be opened: \(error.localizedDescription)"
+            fileNotices[key] = Words.Chat.File.notOpened(file: "\(ref.name)", why: "\(error.localizedDescription)")
             return nil
         }
     }
@@ -4217,7 +4217,7 @@ final class AppModel: ObservableObject {
     /// connection gives it ("Reading List payments (charges)…"), never its name in KIFF,
     /// which ends in four letters of its grant (kiff/tafs#236, item 7).
     func tafActivityWords(_ tool: String) -> String? {
-        if let title = toolTitle(tool) { return "Asking KIFF: \(title)…" }
+        if let title = toolTitle(tool) { return Words.Kiff.askingKiff(title: "\(title)") }
         return Self.tafActivityWords(tool)
     }
 
@@ -4235,7 +4235,7 @@ final class AppModel: ObservableObject {
         case "kiff_pending": return "Checking what waits for you…"
         default:
             // The tool's own name in words, past any prefix (kiff/tafs#138, item 52).
-            return "Asking KIFF to run \(KIFFMapping.toolWords(tool))…"
+            return Words.Work.askingKiffRun(tool: "\(KIFFMapping.toolWords(tool))")
         }
     }
 
@@ -4369,13 +4369,16 @@ final class AppModel: ObservableObject {
     }
 
     /// The stops at a cap of the run's own: it ends with no words for it.
-    nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap"]
+    nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap", "max_token", "refused"]
 
     /// What the chat says when its latest run stopped at a cap, never "…" (the 793 retest).
     nonisolated static func capWords(_ stop: String, taf: String) -> String? {
         switch stop {
-        case "cost_cap": return "\(taf) stopped: this task would cost more than its limit for one task. Ask for something narrower, or someone who manages \(taf) can raise the limit."
-        case "turn_cap": return "\(taf) stopped: this task took more steps than its limit for one task. Ask for something narrower."
+        case "cost_cap": return Words.Chat.Cap.cost(taf: taf)
+        case "turn_cap": return Words.Chat.Cap.turns(taf: taf)
+        // A reply cut off at its length limit, and the AI declining to go on (docs/chat.md).
+        case "max_token": return Words.Chat.Stopped.outOfRoom(taf: taf)
+        case "refused": return Words.Chat.Stopped.declined(taf: taf)
         default: return nil
         }
     }
@@ -4398,11 +4401,11 @@ final class AppModel: ObservableObject {
             return c.amount.map { "\(on), \($0)" } ?? on
         }
         if let why {
-            return done.isEmpty ? why : "\(why.trimmingCharacters(in: .whitespacesAndNewlines)) This went through: \(calls.joined(separator: "; "))."
+            return done.isEmpty ? why : Words.Chat.Failed.withWords(words: why.trimmingCharacters(in: .whitespacesAndNewlines), calls: calls.joined(separator: "; "))
         }
-        guard !done.isEmpty else { return "\(taf) stopped part-way, before it finished." }
-        let these = calls.count == 1 ? "this went through" : "these went through"
-        return "\(taf) stopped part-way, after \(these): \(calls.joined(separator: "; "))."
+        guard !done.isEmpty else { return Words.Work.stoppedPartWayBeforeFinished(taf: "\(taf)") }
+        let list = calls.joined(separator: "; ")
+        return calls.count == 1 ? Words.Chat.Failed.after(taf: "\(taf)", calls: list) : Words.Chat.Failed.afterSeveral(taf: "\(taf)", calls: list)
     }
 
     /// Retry on a run that failed part-way: its message is sent again.
@@ -4788,10 +4791,10 @@ final class AppModel: ObservableObject {
         } catch let e as TafsCloud.CloudError where e.words != nil {
             return .failed(e.words!)
         } catch let e as TafsCloud.CloudError where e.status == 404 {
-            return .failed("This answer isn't on tafs cloud any more.")
+            return .failed(Words.NeedsYou.answerGone)
         } catch {
             // tafs cloud's own wording is for developers: the app says it in its words.
-            return .failed("It didn't reach KIFF. Try again.")
+            return .failed(Words.Kiff.didNotReachKiffTry)
         }
     }
 
@@ -4810,7 +4813,7 @@ final class AppModel: ObservableObject {
                 export = try await cloud.exportChats()
             }
         } catch {
-            return (nil, "Your chats weren't exported. Check your connection and try again.")
+            return (nil, Words.Connect.chatsWereNotExportedCheck)
         }
         do {
             let dir = Self.exportedFiles
@@ -4821,7 +4824,7 @@ final class AppModel: ObservableObject {
             try Data(export.text.utf8).write(to: text, options: .completeFileProtection)
             return ([json, text], nil)
         } catch {
-            return (nil, "Your chats weren't exported: this \(ThisDevice.kind) couldn't save the files.")
+            return (nil, Words.Chat.chatsWereNotExportedCould(device: "\(ThisDevice.kind)"))
         }
     }
 
@@ -4831,7 +4834,7 @@ final class AppModel: ObservableObject {
         let body: [String: Any] = [
             "exported_at": at, "account": "sample", "person": "sample",
             "tafs": tafs.map { ["id": $0.id.uuidString, "name": $0.name, "chats": [], "notes": []] },
-            "readable": "Your chats in tafs, exported \(at).\n\n" + tafs.map { "\($0.name): no chats yet." }.joined(separator: "\n"),
+            "readable": Words.Chat.chatsTafsExported(at: "\(at)") + tafs.map { Words.Chat.noChats(name: "\($0.name)") }.joined(separator: "\n"),
         ]
         return (try? JSONSerialization.data(withJSONObject: body)) ?? Data("{}".utf8)
     }
@@ -5067,7 +5070,7 @@ final class AppModel: ObservableObject {
         } catch let error as URLError where error.code == .cancelled {
         } catch {
             guard gen == accountGeneration, presentation == presentationGeneration else { return }
-            workErrors[tafID] = "Its work couldn't be read: \(error.localizedDescription)"
+            workErrors[tafID] = Words.Work.notRead(why: "\(error.localizedDescription)")
         }
     }
 
@@ -5081,7 +5084,7 @@ final class AppModel: ObservableObject {
         do {
             try await cloud.sendAgain(c.id, run: run)
         } catch {
-            failed = "It wasn't sent again: \(error.localizedDescription)"
+            failed = Words.Work.notSentAgain(why: "\(error.localizedDescription)")
         }
         sendingAgain.remove(run)
         guard gen == accountGeneration else { return }
@@ -5213,7 +5216,7 @@ final class AppModel: ObservableObject {
         }
         let done = await connect(grantID: grant.id, shown: grant.digest, again: true)
         if done?.connected != true {
-            reconnectErrors[grant.id] = lastError ?? quietStop ?? "Nothing was signed in. Try again."
+            reconnectErrors[grant.id] = lastError ?? quietStop ?? Words.Connect.nothingSignedIn
             lastError = nil
         }
     }
@@ -5308,7 +5311,7 @@ final class AppModel: ObservableObject {
             lastError = Words.Coach.connectOtherDevice
             return false
         } catch {
-            lastError = "Connecting tools isn't set up: \(error.localizedDescription)"
+            lastError = Words.Coach.connectingNotSetUp(why: "\(error.localizedDescription)")
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -5330,7 +5333,7 @@ final class AppModel: ObservableObject {
     /// kept apart by planque until this phone confirms it.
     func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil, again: Bool = false) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
+            lastError = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")
             return nil
         }
         quietStop = nil
@@ -5360,7 +5363,7 @@ final class AppModel: ObservableObject {
             grant = found
             if let draftID, found.connected { draft = try await kiff.draft(id: draftID) }
         } catch {
-            lastError = "Couldn't read what to approve: \(error.localizedDescription)"
+            lastError = Words.Connect.approveNotRead(why: "\(error.localizedDescription)")
             return nil
         }
         if grant.connected, !again {
@@ -5379,7 +5382,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                          reason: "Give \(draft.agentID) its Card", grants: true)
+                                          reason: Words.Connect.Prompt.giveCard(agent: "\(draft.agentID)"), grants: true)
             } catch {
                 quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                 return nil
@@ -5389,7 +5392,7 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
             } catch {
-                lastError = "KIFF didn't issue the taf's Cards: \(error.localizedDescription)"
+                lastError = Words.Connect.cardsNotIssued(why: "\(error.localizedDescription)")
                 return nil
             }
             await keepKIFFAlerts(tenant: tenant, gen: gen)
@@ -5401,7 +5404,8 @@ final class AppModel: ObservableObject {
         // this phone confirms the new one.
         guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
-            lastError = "This connection is \(grant.status.replacingOccurrences(of: "_", with: " "))\(grant.reason.map { ": \($0)" } ?? ".")"
+            lastError = grant.reason.map { Words.Connect.connectionIsBecause(status: grant.status.replacingOccurrences(of: "_", with: " "), reason: $0) }
+                ?? Words.Connect.connectionIs(status: grant.status.replacingOccurrences(of: "_", with: " "))
             return nil
         }
         guard grant.digestMatches else {
@@ -5468,14 +5472,14 @@ final class AppModel: ObservableObject {
             await refreshConnections()
             return nil
         } catch {
-            lastError = "Not connected: \(error.localizedDescription)"
+            lastError = Words.Connect.notConnected(why: "\(error.localizedDescription)")
             failureIsTheRequests = Self.refusesTheRequest(error)
             await refreshConnections()
             return nil
         }
         await refreshConnections()
         guard connected.connected || connected.listed else {
-            lastError = "The sign-in at \(grant.vendor) didn't connect: the connection is \(connected.status.replacingOccurrences(of: "_", with: " ")). Nothing was connected. Try signing in again."
+            lastError = Words.Coach.notConnected(vendor: grant.vendor, status: connected.status.replacingOccurrences(of: "_", with: " "))
             return nil
         }
         return connected
@@ -5683,7 +5687,7 @@ final class AppModel: ObservableObject {
         do {
             _ = try await planque.disconnect(grantID: grantID)
         } catch {
-            fail("Not disconnected: \(error.localizedDescription)", from: .disconnect)
+            fail(Words.Connect.notDisconnected(why: "\(error.localizedDescription)"), from: .disconnect)
             return false
         }
         await refreshConnections()
@@ -5958,7 +5962,7 @@ final class AppModel: ObservableObject {
             try await cloud.archiveChat(s.id, session: session)
         } catch {
             guard gen == accountGeneration else { return false }
-            lastError = "Not archived: \(error.localizedDescription)"
+            lastError = Words.Taf.notArchived(why: "\(error.localizedDescription)")
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -5985,7 +5989,7 @@ final class AppModel: ObservableObject {
             try await cloud.unarchiveChat(s.id, session: session)
         } catch {
             guard gen == accountGeneration else { return false }
-            lastError = "Not put back: \(error.localizedDescription)"
+            lastError = Words.Taf.notPutBack(why: "\(error.localizedDescription)")
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -6087,7 +6091,7 @@ final class AppModel: ObservableObject {
             }
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
-            setupError = "The conversation couldn't be loaded: \(error.localizedDescription)"
+            setupError = Words.Coach.conversationNotLoaded(why: "\(error.localizedDescription)")
             return
         }
         // What an approval needs to be shown: planque's grant and KIFF's draft.
@@ -6150,7 +6154,7 @@ final class AppModel: ObservableObject {
                 } else {
                     let draft = try await kiff.submitNoToolsDraft(agentID: Self.setupAgent, label: "Setup")
                     guard gen == accountGeneration, let secret = draft.claimSecret else {
-                        setupError = "KIFF didn't answer as expected. Try again."
+                        setupError = Words.Kiff.kiffDidNotAnswerExpected
                         return false
                     }
                     setupTaf = try await cloud.startSetup(draftID: draft.id, claimSecret: secret)
@@ -6663,7 +6667,7 @@ final class AppModel: ObservableObject {
             try await cloud.stop(s.id, session: session)
             setupEnded = .stopped
         } catch {
-            setupError = "It didn't stop: \(error.localizedDescription)"
+            setupError = Words.Work.didNotStop(why: "\(error.localizedDescription)")
         }
         await loadSetupThread()
     }
@@ -6767,7 +6771,7 @@ final class AppModel: ObservableObject {
         } catch {
             guard gen == accountGeneration else { return }
             answered.remove(ref)
-            cardNotes[component.id] = "Your answer didn't reach Setup. Tap it again."
+            cardNotes[component.id] = Words.Coach.answerDidNotReachSetup
         }
     }
 
@@ -6829,7 +6833,7 @@ final class AppModel: ObservableObject {
         shownTermsChanged = false
         cardNotes[component.id] = nil
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
-            cardNotes[component.id] = "Start from Connected tools on this \(ThisDevice.kind) first."
+            cardNotes[component.id] = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")
             return
         }
         guard connecting == nil else {
@@ -6909,19 +6913,19 @@ final class AppModel: ObservableObject {
     func approveDrive(_ component: SetupComponent) async {
         cardNotes[component.id] = nil
         guard mode == .kiff, let tenant = kiffTenant else {
-            cardNotes[component.id] = "Sign in with KIFF on this \(ThisDevice.kind) first."
+            cardNotes[component.id] = Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)")
             return
         }
         let ref = cardRef(component.id)
         guard let session = setupThread.components.last(where: { $0.ref == ref })?.session ?? setupChat else { return }
-        let task = component.text ?? component.title ?? "Drive the app"
+        let task = component.text ?? component.title ?? Words.Connect.driveApp
         let body = TafsCloud.driveStartBody(session: session, task: task, component: component.id)
         let signedAt = SigningTime.next()
         let message = KIFFClient.requestMessage(tenant: tenant, method: "POST", uri: TafsCloud.drivePath, body: body, signedAt: signedAt)
         let gen = accountGeneration
         let signature: String
         do {
-            signature = try await signer.signApproval(message, reason: "Let Coach drive the app: \(task)")
+            signature = try await signer.signApproval(message, reason: Words.Drive.approval(task: "\(task)"))
         } catch {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
@@ -6946,7 +6950,7 @@ final class AppModel: ObservableObject {
         } catch {
             guard gen == accountGeneration else { return }
             // tafs cloud's words: the approval key is needed, or the card isn't there any more.
-            cardNotes[component.id] = (error as? TafsCloud.CloudError)?.errorDescription ?? "Coach can't drive the app: \(error.localizedDescription)"
+            cardNotes[component.id] = (error as? TafsCloud.CloudError)?.errorDescription ?? Words.Coach.Drive.cant(why: "\(error.localizedDescription)")
         }
     }
 
@@ -6991,13 +6995,13 @@ final class AppModel: ObservableObject {
     private func makeAskedCall(_ ask: TafsCloud.ApprovalDecision.Ask, tenant: String, gen: Int) async -> Came {
         do {
             if ask.step == "cards" {
-                guard let k = ask.kiff else { return Came(result: "failed", why: "tafs cloud named no draft to confirm") }
+                guard let k = ask.kiff else { return Came(result: "failed", why: Words.Coach.noDraftNamed) }
                 _ = try await kiff.confirmDraft(id: k.draft, version: k.version)
                 await keepKIFFAlerts(tenant: tenant, gen: gen)
                 await keepCoachTools(tenant: tenant, gen: gen)
                 return Came(result: "confirmed")
             }
-            guard let p = ask.planque else { return Came(result: "failed", why: "tafs cloud named no connection to approve") }
+            guard let p = ask.planque else { return Came(result: "failed", why: Words.Connect.tafsCloudNamedNoConnection) }
             let approved = try await planque.approve(grantID: p.grant, body: p.body)
             guard let signInURL = approved.signInURL else {
                 // planque already holds the sign-in: approving connected it, with no second sign-in.
@@ -7009,7 +7013,7 @@ final class AppModel: ObservableObject {
             // Back from the vendor: connected only once planque says so, never because the page closed.
             connectStep = Words.Coach.checkingSignIn
             let connected = try await planque.confirm(grantID: p.grant, code: signedIn.code)
-            return connected.connected || connected.listed ? Came(result: "connected") : Came(result: "failed", why: "the sign-in came back, but the connection is \(connected.status)")
+            return connected.connected || connected.listed ? Came(result: "connected") : Came(result: "failed", why: Words.Connect.signCameBackConnection(status: "\(connected.status)"))
         } catch VendorSignIn.SignInError.cancelled {
             return Came(result: "sign_in_closed")
         } catch {
@@ -7067,11 +7071,11 @@ final class AppModel: ObservableObject {
             return
         }
         if let done, done.connected || done.listed {
-            await answer(component, "signed in")
+            await answer(component, Words.Coach.Answer.signedInLower)
         } else if let e = lastError {
             await answer(component, "failed: \(e)")
         } else if done == nil {
-            cardNotes[component.id] = quietStop ?? "Nothing was signed in. Try again."
+            cardNotes[component.id] = quietStop ?? Words.Connect.nothingSignedIn
         }
     }
 
@@ -7199,12 +7203,12 @@ enum Screenshots {
         let refunds = TafCard(id: "sample-refunds", title: "Refunds · Stripe", rules: Array(taf.card.rules.prefix(2)),
                               total: CardTotal(limit: .eur(2_000), used: .eur(480), window: .day))
         let reads = TafCard(id: "sample-reads", title: "Read Stripe",
-                            rules: [CardRule(action: "list_charges", label: "List charges", countPerWindow: 200),
-                                    CardRule(action: "get_charge", label: "Look up a charge")],
+                            rules: [CardRule(action: "list_charges", label: Words.Sample.listCharges, countPerWindow: 200),
+                                    CardRule(action: "get_charge", label: Words.Sample.lookUpCharge)],
                             calls: CardTotal(limit: 200, used: 20, window: .day))
         var test = refunds
         test.id = "sample-test"
-        test.title = "Refunds · Stripe test"
+        test.title = Words.Sample.refundsStripeTest
         test.environment = "test"
         test.live = false
         return [refunds, reads, test]

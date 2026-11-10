@@ -15,10 +15,10 @@ struct QuestionsCard: View {
 
     var body: some View {
         if let answer = model.setupThread.answer(to: component.id) {
-            OutcomeLine(text: "Your answers · " + (answer.words ?? QuestionAnswers.words(answer.text, questions: questions) ?? answer.text), tone: Theme.ok)
+            OutcomeLine(text: Words.Coach.Questions.yourAnswers + (answer.words ?? QuestionAnswers.words(answer.text, questions: questions) ?? answer.text), tone: Theme.ok)
         } else if chatting {
             HStack(spacing: 8) {
-                Text("You're talking these questions through with Setup.").scaledFont(13).foregroundColor(Theme.soft)
+                Text(Words.Coach.Questions.talking).scaledFont(13).foregroundColor(Theme.soft)
                 Button(Words.Coach.Questions.showAgain) { chatting = false }.scaledFont(13, weight: .semibold).foregroundColor(Theme.coach)
             }
         } else {
@@ -27,7 +27,7 @@ struct QuestionsCard: View {
                     Text(text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 }
                 HStack {
-                    Eyebrow(text: component.title ?? "Setup needs")
+                    Eyebrow(text: component.title ?? Words.Coach.setupNeeds)
                     Spacer()
                     Text("\(answeredCount) of \(questions.count) answered").scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
@@ -68,12 +68,12 @@ struct QuestionsCard: View {
                 choice("Something else…", detail: nil, on: selection.ownOpen.contains(q.id)) { selection.toggleOwn(q) }
             }
             if selection.ownOpen.contains(q.id) {
-                DriveField("Your own answer", text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))
+                DriveField(Words.Coach.ownAnswer, text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))
                     .scaledFont(15)
                     .padding(.horizontal, 14).padding(.vertical, 12)
                     .background(Theme.panel)
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.coach))
-                    .accessibilityLabel("Your own answer to: \(q.text)")
+                    .accessibilityLabel(Words.Coach.Questions.ownAnswerTo(text: "\(q.text)"))
             }
             if let note = q.note, !note.isEmpty {
                 Text(note).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)

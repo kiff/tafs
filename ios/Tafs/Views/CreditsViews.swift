@@ -93,7 +93,7 @@ struct CreditsPanel: View {
     static let title = Words.Usage.credits
     static let thisPeriod = Words.Usage.thisPeriod
     static let lastPeriod = Words.Usage.lastPeriod
-    static let unread = "The last period's credits couldn't be read. Choose it again to try again."
+    static let unread = Words.Usage.lastPeriodCreditsCouldNot
 }
 
 /// One taf's credits in a period, with its runs, newest first: each in tafs cloud's words, and
@@ -145,7 +145,7 @@ struct TafCreditsView: View {
     }
 
     static let more = Words.Usage.moreRuns
-    static let unread = "These runs couldn't be read. Pull to try again."
+    static let unread = Words.Usage.runsCouldNotReadPull
 }
 
 /// One run: tafs cloud's words and when; it opens the run's request while `opens` says so.

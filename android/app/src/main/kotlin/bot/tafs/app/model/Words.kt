@@ -8,23 +8,34 @@ import bot.tafs.app.R
 /** Every line the app shows, by its shared key (docs/languages.md), in the app's language through [Res]. */
 object Words {
   object Alert {
+    fun alertsAlmostTafsCloudDid(why: String): String = Res.s(R.string.alert_alerts_almost_tafs_cloud_did, why)
     val allHalted: String get() = Res.s(R.string.alert_all_halted)
     val allowNotifications: String get() = Res.s(R.string.alert_allow_notifications)
     val always: String get() = Res.s(R.string.alert_always)
+    fun answerNothingSentUntilYou(what: String, why: String, zone: String): String = Res.s(R.string.alert_answer_nothing_sent_until_you, what, why, zone)
     val answered: String get() = Res.s(R.string.alert_answered)
+    val approveOnce: String get() = Res.s(R.string.alert_approve_once)
+    val byEmail: String get() = Res.s(R.string.alert_by_email)
     object Foot {
       val cantAnswerHolds: String get() = Res.s(R.string.alert_foot_cant_answer_holds)
       val tellsYou: String get() = Res.s(R.string.alert_foot_tells_you)
+      fun tellsYouDevice(device: String): String = Res.s(R.string.alert_foot_tells_you_device, device)
     }
+    val kiffDidNotTakeRefusal: String get() = Res.s(R.string.alert_kiff_did_not_take_refusal)
     val kiffDoesntSend: String get() = Res.s(R.string.alert_kiff_doesnt_send)
     val loudExample: String get() = Res.s(R.string.alert_loud_example)
     val needsYou: String get() = Res.s(R.string.alert_needs_you)
     val noPushToken: String get() = Res.s(R.string.alert_no_push_token)
+    fun noPushTokenDevice(device: String): String = Res.s(R.string.alert_no_push_token_device, device)
     val notInBuild: String get() = Res.s(R.string.alert_not_in_build)
     fun notOn(why: String): String = Res.s(R.string.alert_not_on, why)
     fun notOnForPhone(why: String): String = Res.s(R.string.alert_not_on_for_phone, why)
+    val notRefused: String get() = Res.s(R.string.alert_not_refused)
     val notSent: String get() = Res.s(R.string.alert_not_sent)
+    fun onThisDevice(device: String): String = Res.s(R.string.alert_on_this_device, device)
     val onThisPhone: String get() = Res.s(R.string.alert_on_this_phone)
+    val openTafsAnswerKiffDid: String get() = Res.s(R.string.alert_open_tafs_answer_kiff_did)
+    val openTafsAnswerPhoneCan: String get() = Res.s(R.string.alert_open_tafs_answer_phone_can)
     val prompt: String get() = Res.s(R.string.alert_prompt)
     val roleCant: String get() = Res.s(R.string.alert_role_cant)
     val signInAgain: String get() = Res.s(R.string.alert_sign_in_again)
@@ -37,7 +48,9 @@ object Words {
       val off: String get() = Res.s(R.string.alert_status_off)
       val on: String get() = Res.s(R.string.alert_status_on)
     }
+    fun tafNeedsYou(taf: String): String = Res.s(R.string.alert_taf_needs_you, taf)
     fun tafs(count: Int): String = Res.p(R.plurals.alert_tafs, count, count)
+    val tafsCouldNotReachKiff: String get() = Res.s(R.string.alert_tafs_could_not_reach_kiff)
     val whatAlerts: String get() = Res.s(R.string.alert_what_alerts)
     val withSound: String get() = Res.s(R.string.alert_with_sound)
   }
@@ -45,14 +58,22 @@ object Words {
     val name: String get() = Res.s(R.string.app_name)
   }
   object Approval {
+    fun addFaceIdFirst(device: String): String = Res.s(R.string.approval_add_face_id_first, device)
+    val addingFaceFingerprintLaterEnds: String get() = Res.s(R.string.approval_adding_face_fingerprint_later_ends)
     val approve: String get() = Res.s(R.string.approval_approve)
+    fun approveAgainOnDevice(device: String): String = Res.s(R.string.approval_approve_again_on_device, device)
     fun approveWith(biometry: String): String = Res.s(R.string.approval_approve_with, biometry)
     val approving: String get() = Res.s(R.string.approval_approving)
+    fun approvingAsksNoneSetUp(either: String, device: String, kind: String): String = Res.s(R.string.approval_approving_asks_none_set_up, either, device, kind)
+    fun approvingNeedsNoneSetUp(either: String, kind: String): String = Res.s(R.string.approval_approving_needs_none_set_up, either, kind)
+    fun approvingNeedsPasscodeSetPasscode(either: String, kind: String, either2: String): String = Res.s(R.string.approval_approving_needs_passcode_set_passcode, either, kind, either2)
     object Biometry {
       val face: String get() = Res.s(R.string.approval_biometry_face)
       val fingerprint: String get() = Res.s(R.string.approval_biometry_fingerprint)
       val screenLock: String get() = Res.s(R.string.approval_biometry_screen_lock)
     }
+    fun canNotUsedRightTry(either: String): String = Res.s(R.string.approval_can_not_used_right_try, either)
+    val cancelledNothingApprovedRequestKept: String get() = Res.s(R.string.approval_cancelled_nothing_approved_request_kept)
     object CantApprove {
       val noneEnrolled: String get() = Res.s(R.string.approval_cant_approve_none_enrolled)
       val temporarilyUnavailable: String get() = Res.s(R.string.approval_cant_approve_temporarily_unavailable)
@@ -61,43 +82,65 @@ object Words {
     val checkAgain: String get() = Res.s(R.string.approval_check_again)
     val checkTimedOut: String get() = Res.s(R.string.approval_check_timed_out)
     val continueWithout: String get() = Res.s(R.string.approval_continue_without)
+    val deviceCanNotApproveApprove: String get() = Res.s(R.string.approval_device_can_not_approve_approve)
+    fun didNotRecogniseYouNothing(either: String): String = Res.s(R.string.approval_did_not_recognise_you_nothing, either)
+    val faceId: String get() = Res.s(R.string.approval_face_id)
+    val faceIdTouchId: String get() = Res.s(R.string.approval_face_id_touch_id)
     val firstTaf: String get() = Res.s(R.string.approval_first_taf)
+    fun hasNoFaceIdTouch(device: String): String = Res.s(R.string.approval_has_no_face_id_touch, device)
+    fun hasNoPasscodeNeedsOne(device: String, either: String, kind: String, either2: String): String = Res.s(R.string.approval_has_no_passcode_needs_one, device, either, kind, either2)
     val kept: String get() = Res.s(R.string.approval_kept)
     val keyCouldNotSign: String get() = Res.s(R.string.approval_key_could_not_sign)
     val keyGoneApproveAgain: String get() = Res.s(R.string.approval_key_gone_approve_again)
+    val keyGoneFaceId: String get() = Res.s(R.string.approval_key_gone_face_id)
     val keyGoneSignIn: String get() = Res.s(R.string.approval_key_gone_sign_in)
     val keyLost: String get() = Res.s(R.string.approval_key_lost)
+    fun lockedAfterTooManyTries(either: String, device: String): String = Res.s(R.string.approval_locked_after_too_many_tries, either, device)
+    fun lockedUnlockDevice(either: String): String = Res.s(R.string.approval_locked_unlock_device, either)
     val newFingerprint: String get() = Res.s(R.string.approval_new_fingerprint)
     val noFingerprint: String get() = Res.s(R.string.approval_no_fingerprint)
     val noKey: String get() = Res.s(R.string.approval_no_key)
     val notConfirmed: String get() = Res.s(R.string.approval_not_confirmed)
     val notRecognized: String get() = Res.s(R.string.approval_not_recognized)
+    val notRecognizedFaceId: String get() = Res.s(R.string.approval_not_recognized_face_id)
+    val nothingApprovedRequestKeptApprove: String get() = Res.s(R.string.approval_nothing_approved_request_kept_approve)
     val openSettings: String get() = Res.s(R.string.approval_open_settings)
     object Prompt {
       val approveOnKiff: String get() = Res.s(R.string.approval_prompt_approve_on_kiff)
     }
+    fun readyApprove(device: String, either: String): String = Res.s(R.string.approval_ready_approve, device, either)
+    val requestKept: String get() = Res.s(R.string.approval_request_kept)
     val setAScreenLock: String get() = Res.s(R.string.approval_set_a_screen_lock)
+    val settingsFaceIdPasscodeTouch: String get() = Res.s(R.string.approval_settings_face_id_passcode_touch)
     object State {
       val noneEnrolled: String get() = Res.s(R.string.approval_state_none_enrolled)
       val ready: String get() = Res.s(R.string.approval_state_ready)
       val temporarilyUnavailable: String get() = Res.s(R.string.approval_state_temporarily_unavailable)
       val unsupported: String get() = Res.s(R.string.approval_state_unsupported)
     }
+    val tafAsksBeforeDoesAnything: String get() = Res.s(R.string.approval_taf_asks_before_does_anything)
     val title: String get() = Res.s(R.string.approval_title)
+    val touchId: String get() = Res.s(R.string.approval_touch_id)
+    fun turnedOffTafsOpenSettings(either: String, either2: String): String = Res.s(R.string.approval_turned_off_tafs_open_settings, either, either2)
+    fun turnedOffTafsTurnTafs(either: String): String = Res.s(R.string.approval_turned_off_tafs_turn_tafs, either)
     val why: String get() = Res.s(R.string.approval_why)
     val withoutAllows: String get() = Res.s(R.string.approval_without_allows)
+    val yourPasscode: String get() = Res.s(R.string.approval_your_passcode)
   }
   object Attachment {
     fun cantAttach(name: String): String = Res.s(R.string.attachment_cant_attach, name)
     fun kilobytes(size: String): String = Res.s(R.string.attachment_kilobytes, size)
     fun megabytes(size: String): String = Res.s(R.string.attachment_megabytes, size)
     val notTaken: String get() = Res.s(R.string.attachment_not_taken)
+    val photoCouldNotRead: String get() = Res.s(R.string.attachment_photo_could_not_read)
     fun tooLarge(name: String, size: String, limit: String): String = Res.s(R.string.attachment_too_large, name, size, limit)
     fun wrongKind(name: String): String = Res.s(R.string.attachment_wrong_kind, name)
   }
   object Billing {
     val adminAddsTasks: String get() = Res.s(R.string.billing_admin_adds_tasks)
     val anotherAccount: String get() = Res.s(R.string.billing_another_account)
+    val anotherAccountAppleId: String get() = Res.s(R.string.billing_another_account_apple_id)
+    val appStoreCouldNotConfirm: String get() = Res.s(R.string.billing_app_store_could_not_confirm)
     object Ask {
       val addedPack: String get() = Res.s(R.string.billing_ask_added_pack)
       val askedPack: String get() = Res.s(R.string.billing_ask_asked_pack)
@@ -116,7 +159,9 @@ object Words {
     val byApple: String get() = Res.s(R.string.billing_by_apple)
     val byGooglePlay: String get() = Res.s(R.string.billing_by_google_play)
     val byKiff: String get() = Res.s(R.string.billing_by_kiff)
+    val cancelAnyTimeLeastDay: String get() = Res.s(R.string.billing_cancel_any_time_least_day)
     val contactSupport: String get() = Res.s(R.string.billing_contact_support)
+    val conversationGoesPlanToolsBeing: String get() = Res.s(R.string.billing_conversation_goes_plan_tools_being)
     object Length {
       fun days(count: Int): String = Res.p(R.plurals.billing_length_days, count, count)
       fun months(count: Int): String = Res.p(R.plurals.billing_length_months, count, count)
@@ -126,8 +171,13 @@ object Words {
     fun notBought(why: String): String = Res.s(R.string.billing_not_bought, why)
     fun notRestored(why: String): String = Res.s(R.string.billing_not_restored, why)
     val notSignedIn: String get() = Res.s(R.string.billing_not_signed_in)
+    val onePersonTafsKiffYour: String get() = Res.s(R.string.billing_one_person_tafs_kiff_your)
+    val onlySomeoneWhoManagesAccount: String get() = Res.s(R.string.billing_only_someone_who_manages_account)
     val openTafsToBuy: String get() = Res.s(R.string.billing_open_tafs_to_buy)
+    val packAddsCreditsOnceNever: String get() = Res.s(R.string.billing_pack_adds_credits_once_never)
     val pending: String get() = Res.s(R.string.billing_pending)
+    val pendingCredits: String get() = Res.s(R.string.billing_pending_credits)
+    fun planCouldNotReadKiff(why: String): String = Res.s(R.string.billing_plan_could_not_read_kiff, why)
     val playCantSell: String get() = Res.s(R.string.billing_play_cant_sell)
     val playCouldntOpen: String get() = Res.s(R.string.billing_play_couldnt_open)
     val playCouldntRead: String get() = Res.s(R.string.billing_play_couldnt_read)
@@ -143,7 +193,18 @@ object Words {
     }
     val restored: String get() = Res.s(R.string.billing_restored)
     val restoredNotRecorded: String get() = Res.s(R.string.billing_restored_not_recorded)
+    object Solo {
+      fun freeThen(trial: String, price: String, period: String): String = Res.s(R.string.billing_solo_free_then, trial, price, period)
+      fun subscribeFor(price: String): String = Res.s(R.string.billing_solo_subscribe_for, price)
+    }
+    val soloNotAvailableAppStore: String get() = Res.s(R.string.billing_solo_not_available_app_store)
+    fun soloSubscriptionOneChargedYour(period: String, price: String, period2: String): String = Res.s(R.string.billing_solo_subscription_one_charged_your, period, price, period2)
+    fun startsFree(trial: String): String = Res.s(R.string.billing_starts_free, trial)
+    val tafsKiffOnePersonEvery: String get() = Res.s(R.string.billing_tafs_kiff_one_person_every)
+    val termsUse: String get() = Res.s(R.string.billing_terms_use)
     val testPurchase: String get() = Res.s(R.string.billing_test_purchase)
+    val testPurchaseCredits: String get() = Res.s(R.string.billing_test_purchase_credits)
+    val whatCredits: String get() = Res.s(R.string.billing_what_credits)
   }
   object Calendar {
     val agenda: String get() = Res.s(R.string.calendar_agenda)
@@ -206,9 +267,14 @@ object Words {
   object Card {
     fun allOf(count: Int): String = Res.p(R.plurals.card_all_of, count, count)
     fun amountWindow(amount: String, window: String): String = Res.s(R.string.card_amount_window, amount, window)
+    fun asksYou(formatted: String, sumLabel: String): String = Res.s(R.string.card_asks_you, formatted, sumLabel)
     fun callsLeft(count: Int): String = Res.p(R.plurals.card_calls_left, count, count)
     fun callsUsedOf(count: Int, used: String, window: String): String = Res.p(R.plurals.card_calls_used_of, count, count, used, window)
     fun callsWindow(count: Int, window: String): String = Res.p(R.plurals.card_calls_window, count, count, window)
+    val cardConfirmedKiff: String get() = Res.s(R.string.card_card_confirmed_kiff)
+    val cardDraftKiff: String get() = Res.s(R.string.card_card_draft_kiff)
+    val cardGotRoomCallNeeded: String get() = Res.s(R.string.card_card_got_room_call_needed)
+    val cardNotIssued: String get() = Res.s(R.string.card_card_not_issued)
     val cardRevoked: String get() = Res.s(R.string.card_card_revoked)
     object Check {
       fun alwaysAsks(rule: String): String = Res.s(R.string.card_check_always_asks, rule)
@@ -223,6 +289,7 @@ object Words {
     fun endedOn(date: String): String = Res.s(R.string.card_ended_on, date)
     val ends: String get() = Res.s(R.string.card_ends)
     fun extraRoom(extra: String, window: String): String = Res.s(R.string.card_extra_room, extra, window)
+    fun extraRoomPrefix(formatted: String): String = Res.s(R.string.card_extra_room_prefix, formatted)
     fun extraRoomUntil(extra: String, ends: String): String = Res.s(R.string.card_extra_room_until, extra, ends)
     fun figureLeft(figure: String): String = Res.s(R.string.card_figure_left, figure)
     fun heading(count: Int): String = Res.p(R.plurals.card_heading, count, count)
@@ -230,6 +297,7 @@ object Words {
       fun countInWindow(count: Int, window: String, each: String, nth: String, item: String): String = Res.p(R.plurals.card_held_count_in_window, count, count, window, each, nth, item)
       val eachCallAsks: String get() = Res.s(R.string.card_held_each_call_asks)
       fun forEach(name: String): String = Res.s(R.string.card_held_for_each, name)
+      val forEachJoin: String get() = Res.s(R.string.card_held_for_each_join)
       fun forItem(item: String): String = Res.s(R.string.card_held_for_item, item)
       fun overCount(count: Int, nth: String): String = Res.p(R.plurals.card_held_over_count, count, count, nth)
       fun overOneCall(amount: String, cap: String): String = Res.s(R.string.card_held_over_one_call, amount, cap)
@@ -242,14 +310,20 @@ object Words {
       fun leftOfExtra(window: String, base: String, extra: String): String = Res.s(R.string.card_hero_left_of_extra, window, base, extra)
       fun leftOfExtraUntil(window: String, base: String, extra: String, ends: String): String = Res.s(R.string.card_hero_left_of_extra_until, window, base, extra, ends)
       val noCurrency: String get() = Res.s(R.string.card_hero_no_currency)
+      val noCurrencySuffix: String get() = Res.s(R.string.card_hero_no_currency_suffix)
       fun useUnavailable(window: String): String = Res.s(R.string.card_hero_use_unavailable, window)
+      fun useUnavailableNote(label: String, note: String): String = Res.s(R.string.card_hero_use_unavailable_note, label, note)
     }
     val howCounted: String get() = Res.s(R.string.card_how_counted)
     val issuedBy: String get() = Res.s(R.string.card_issued_by)
     val issuedByAccount: String get() = Res.s(R.string.card_issued_by_account)
     fun issuedByNamed(who: String): String = Res.s(R.string.card_issued_by_named, who)
     val itsCard: String get() = Res.s(R.string.card_its_card)
+    fun kiffDidNotRevokeCards(cardsLeft: String): String = Res.s(R.string.card_kiff_did_not_revoke_cards, cardsLeft)
     fun left(amount: String, window: String): String = Res.s(R.string.card_left, amount, window)
+    fun leftExtraRoom(current: String, own: String, extra: String, until: String, note: String): String = Res.s(R.string.card_left_extra_room, current, own, extra, until, note)
+    val limitCanNotRaisedRight: String get() = Res.s(R.string.card_limit_can_not_raised_right)
+    val limitRaisedReadBalanceAgain: String get() = Res.s(R.string.card_limit_raised_read_balance_again)
     object Line {
       fun callsInWindow(count: Int, window: String, then: String): String = Res.p(R.plurals.card_line_calls_in_window, count, count, window, then)
       val moreAsks: String get() = Res.s(R.string.card_line_more_asks)
@@ -270,6 +344,7 @@ object Words {
     }
     val outsideHeld: String get() = Res.s(R.string.card_outside_held)
     val outsideRefused: String get() = Res.s(R.string.card_outside_refused)
+    fun overLimitCallsWould(limit: String, nth: String): String = Res.s(R.string.card_over_limit_calls_would, limit, nth)
     fun revokeFailed(why: String): String = Res.s(R.string.card_revoke_failed, why)
     val revoked: String get() = Res.s(R.string.card_revoked)
     object Rule {
@@ -309,6 +384,7 @@ object Words {
       val today: String get() = Res.s(R.string.card_window_today)
       val total: String get() = Res.s(R.string.card_window_total)
     }
+    val withinCard: String get() = Res.s(R.string.card_within_card)
   }
   object Chat {
     object Answer {
@@ -329,13 +405,17 @@ object Words {
       fun cost(taf: String): String = Res.s(R.string.chat_cap_cost, taf)
       fun turns(taf: String): String = Res.s(R.string.chat_cap_turns, taf)
     }
+    fun chatsTafsExported(at: String): String = Res.s(R.string.chat_chats_tafs_exported, at)
+    fun chatsWereNotExportedCould(device: String): String = Res.s(R.string.chat_chats_were_not_exported_could, device)
     val delete: String get() = Res.s(R.string.chat_delete)
     val edit: String get() = Res.s(R.string.chat_edit)
     val editAndSend: String get() = Res.s(R.string.chat_edit_and_send)
     fun emptyNamed(taf: String): String = Res.s(R.string.chat_empty_named, taf)
     val emptyUnnamed: String get() = Res.s(R.string.chat_empty_unnamed)
+    val exportNotWhatTafsCloud: String get() = Res.s(R.string.chat_export_not_what_tafs_cloud)
     object Failed {
       fun after(taf: String, calls: String): String = Res.s(R.string.chat_failed_after, taf, calls)
+      fun afterSeveral(taf: String, calls: String): String = Res.s(R.string.chat_failed_after_several, taf, calls)
       fun nothing(taf: String): String = Res.s(R.string.chat_failed_nothing, taf)
       fun withWords(words: String, calls: String): String = Res.s(R.string.chat_failed_with_words, words, calls)
     }
@@ -359,9 +439,14 @@ object Words {
     }
     val held: String get() = Res.s(R.string.chat_held)
     val itFallback: String get() = Res.s(R.string.chat_it_fallback)
+    val itLower: String get() = Res.s(R.string.chat_it_lower)
+    val jumpLatestSomethingNew: String get() = Res.s(R.string.chat_jump_latest_something_new)
     val jumpToLatest: String get() = Res.s(R.string.chat_jump_to_latest)
+    fun messageCarriesMostFiles(perMessage: String): String = Res.s(R.string.chat_message_carries_most_files, perMessage)
     fun messageTaf(taf: String): String = Res.s(R.string.chat_message_taf, taf)
     val messageYourTaf: String get() = Res.s(R.string.chat_message_your_taf)
+    val needsYou: String get() = Res.s(R.string.chat_needs_you)
+    fun noChats(name: String): String = Res.s(R.string.chat_no_chats, name)
     val notMade: String get() = Res.s(R.string.chat_not_made)
     val notOnCloud: String get() = Res.s(R.string.chat_not_on_cloud)
     fun notSent(why: String): String = Res.s(R.string.chat_not_sent, why)
@@ -369,6 +454,7 @@ object Words {
     fun notStopped(why: String): String = Res.s(R.string.chat_not_stopped, why)
     object Outcome {
       fun approved(title: String): String = Res.s(R.string.chat_outcome_approved, title)
+      fun approvedDone(title: String): String = Res.s(R.string.chat_outcome_approved_done, title)
       fun notDone(title: String, detail: String): String = Res.s(R.string.chat_outcome_not_done, title, detail)
       fun refused(title: String): String = Res.s(R.string.chat_outcome_refused, title)
       fun sending(title: String): String = Res.s(R.string.chat_outcome_sending, title)
@@ -376,14 +462,30 @@ object Words {
     }
     val retry: String get() = Res.s(R.string.chat_retry)
     fun runStarted(time: String): String = Res.s(R.string.chat_run_started, time)
+    fun runStartedWith(time: String, text: String): String = Res.s(R.string.chat_run_started_with, time, text)
     fun seconds(seconds: String): String = Res.s(R.string.chat_seconds, seconds)
     val sendAgain: String get() = Res.s(R.string.chat_send_again)
+    fun sendFilesOnceDone(taf: String): String = Res.s(R.string.chat_send_files_once_done, taf)
+    val sendOnceFilesUp: String get() = Res.s(R.string.chat_send_once_files_up)
+    fun sendWhileWorks(taf: String): String = Res.s(R.string.chat_send_while_works, taf)
     val stop: String get() = Res.s(R.string.chat_stop)
+    object Stopped {
+      fun declined(taf: String): String = Res.s(R.string.chat_stopped_declined, taf)
+      fun outOfRoom(taf: String): String = Res.s(R.string.chat_stopped_out_of_room, taf)
+    }
+    fun tafIsAnswering(taf: String): String = Res.s(R.string.chat_taf_is_answering, taf)
+    val theTaf: String get() = Res.s(R.string.chat_the_taf)
     val thinking: String get() = Res.s(R.string.chat_thinking)
     fun threadNotLoaded(why: String): String = Res.s(R.string.chat_thread_not_loaded, why)
     fun tooLong(count: Int): String = Res.p(R.plurals.chat_too_long, count, count)
     fun tooMany(taf: String): String = Res.s(R.string.chat_too_many, taf)
     val waitingForYou: String get() = Res.s(R.string.chat_waiting_for_you)
+    object Work {
+      val hidesSteps: String get() = Res.s(R.string.chat_work_hides_steps)
+      val notMadeReadFirst: String get() = Res.s(R.string.chat_work_not_made_read_first)
+      val showsSteps: String get() = Res.s(R.string.chat_work_shows_steps)
+      fun workedFor(ms: String): String = Res.s(R.string.chat_work_worked_for, ms)
+    }
     fun worked(took: String): String = Res.s(R.string.chat_worked, took)
     fun workedSteps(count: Int, took: String): String = Res.p(R.plurals.chat_worked_steps, count, count, took)
     fun workedStepsFailed(count: Int, took: String, failed: String): String = Res.p(R.plurals.chat_worked_steps_failed, count, count, took, failed)
@@ -391,6 +493,7 @@ object Words {
     fun workingOn(step: String): String = Res.s(R.string.chat_working_on, step)
     val writeNext: String get() = Res.s(R.string.chat_write_next)
     fun youStopped(taf: String): String = Res.s(R.string.chat_you_stopped, taf)
+    val yourTaf: String get() = Res.s(R.string.chat_your_taf)
   }
   object Coach {
     val alreadyApproved: String get() = Res.s(R.string.coach_already_approved)
@@ -399,12 +502,19 @@ object Words {
       val approve: String get() = Res.s(R.string.coach_answer_approve)
       val approveFailed: String get() = Res.s(R.string.coach_answer_approve_failed)
       val decline: String get() = Res.s(R.string.coach_answer_decline)
+      val failed: String get() = Res.s(R.string.coach_answer_failed)
+      val failedShort: String get() = Res.s(R.string.coach_answer_failed_short)
+      fun failedWhy(value: String): String = Res.s(R.string.coach_answer_failed_why, value)
       fun inYourWords(text: String): String = Res.s(R.string.coach_answer_in_your_words, text)
       val noAnswer: String get() = Res.s(R.string.coach_answer_no_answer)
+      val notNowLower: String get() = Res.s(R.string.coach_answer_not_now_lower)
       val signInFailed: String get() = Res.s(R.string.coach_answer_sign_in_failed)
       val signedIn: String get() = Res.s(R.string.coach_answer_signed_in)
+      fun signedInAt(vendor: String): String = Res.s(R.string.coach_answer_signed_in_at, vendor)
+      val signedInLower: String get() = Res.s(R.string.coach_answer_signed_in_lower)
       val wrote: String get() = Res.s(R.string.coach_answer_wrote)
     }
+    val answerDidNotReachSetup: String get() = Res.s(R.string.coach_answer_did_not_reach_setup)
     fun answerNotReached(why: String): String = Res.s(R.string.coach_answer_not_reached, why)
     val answered: String get() = Res.s(R.string.coach_answered)
     val answering: String get() = Res.s(R.string.coach_answering)
@@ -412,11 +522,15 @@ object Words {
       val decline: String get() = Res.s(R.string.coach_approval_decline)
       val title: String get() = Res.s(R.string.coach_approval_title)
     }
+    fun approvedSigned(vendor: String): String = Res.s(R.string.coach_approved_signed, vendor)
+    fun approvingAsks(biometry: String): String = Res.s(R.string.coach_approving_asks, biometry)
+    val approvingNeededFinishYourFirst: String get() = Res.s(R.string.coach_approving_needed_finish_your_first)
     val ask: String get() = Res.s(R.string.coach_ask)
     val askAnything: String get() = Res.s(R.string.coach_ask_anything)
     val askAnythingLine: String get() = Res.s(R.string.coach_ask_anything_line)
     val askNotThisCards: String get() = Res.s(R.string.coach_ask_not_this_cards)
     val away: String get() = Res.s(R.string.coach_away)
+    val backWidth: String get() = Res.s(R.string.coach_back_width)
     fun cardAnswerNotSent(why: String): String = Res.s(R.string.coach_card_answer_not_sent, why)
     fun cardOf(owner: String): String = Res.s(R.string.coach_card_of, owner)
     object Chats {
@@ -432,23 +546,35 @@ object Words {
       val untitled: String get() = Res.s(R.string.coach_chats_untitled)
     }
     val checkingSignIn: String get() = Res.s(R.string.coach_checking_sign_in)
+    val closeCoachMode: String get() = Res.s(R.string.coach_close_coach_mode)
     val coachKnows: String get() = Res.s(R.string.coach_coach_knows)
+    val coachMode: String get() = Res.s(R.string.coach_coach_mode)
+    val coachModeHasChangeRequest: String get() = Res.s(R.string.coach_coach_mode_has_change_request)
+    val coachModeWidth: String get() = Res.s(R.string.coach_coach_mode_width)
     val connectAdminOnly: String get() = Res.s(R.string.coach_connect_admin_only)
     val connectOtherDevice: String get() = Res.s(R.string.coach_connect_other_device)
     fun connectService(service: String): String = Res.s(R.string.coach_connect_service, service)
+    fun connectedKeysKeptSealed(vendor: String): String = Res.s(R.string.coach_connected_keys_kept_sealed, vendor)
     val connectingFailed: String get() = Res.s(R.string.coach_connecting_failed)
     fun connectingNotSetUp(why: String): String = Res.s(R.string.coach_connecting_not_set_up, why)
+    fun conversationNotLoaded(why: String): String = Res.s(R.string.coach_conversation_not_loaded, why)
     val conversations: String get() = Res.s(R.string.coach_conversations)
     fun couldntStart(why: String): String = Res.s(R.string.coach_couldnt_start, why)
     val detailsClosed: String get() = Res.s(R.string.coach_details_closed)
     val detailsOpen: String get() = Res.s(R.string.coach_details_open)
+    val didNotGoThroughNothing: String get() = Res.s(R.string.coach_did_not_go_through_nothing)
+    val didNotGoThroughSign: String get() = Res.s(R.string.coach_did_not_go_through_sign)
     fun didntStart(why: String): String = Res.s(R.string.coach_didnt_start, why)
     val digestMismatch: String get() = Res.s(R.string.coach_digest_mismatch)
+    val dragMakeWiderNarrower: String get() = Res.s(R.string.coach_drag_make_wider_narrower)
     object Drive {
       fun cant(why: String): String = Res.s(R.string.coach_drive_cant, why)
       val notStartedUnconfirmed: String get() = Res.s(R.string.coach_drive_not_started_unconfirmed)
     }
     fun eachWaits(biometry: String): String = Res.s(R.string.coach_each_waits, biometry)
+    val earlierRequest: String get() = Res.s(R.string.coach_earlier_request)
+    val foldsPlan: String get() = Res.s(R.string.coach_folds_plan)
+    val fullScreen: String get() = Res.s(R.string.coach_full_screen)
     object Improve {
       val cantFindWork: String get() = Res.s(R.string.coach_improve_cant_find_work)
       val howIsItGoing: String get() = Res.s(R.string.coach_improve_how_is_it_going)
@@ -457,18 +583,31 @@ object Words {
     fun improveLine(name: String): String = Res.s(R.string.coach_improve_line, name)
     fun improveTaf(taf: String): String = Res.s(R.string.coach_improve_taf, taf)
     val intro: String get() = Res.s(R.string.coach_intro)
+    val jumpLatestSomethingNew: String get() = Res.s(R.string.coach_jump_latest_something_new)
+    val kiffCountsWay: String get() = Res.s(R.string.coach_kiff_counts_way)
     val makingLive: String get() = Res.s(R.string.coach_making_live)
     val name: String get() = Res.s(R.string.coach_name)
+    fun nameToolTafShouldWork(biometry: String): String = Res.s(R.string.coach_name_tool_taf_should_work, biometry)
+    val needsYouApprove: String get() = Res.s(R.string.coach_needs_you_approve)
+    val needsYouLetCoachDrive: String get() = Res.s(R.string.coach_needs_you_let_coach_drive)
+    val needsYouQuestion: String get() = Res.s(R.string.coach_needs_you_question)
     val newConversation: String get() = Res.s(R.string.coach_new_conversation)
+    val newerRequestConnectionBelow: String get() = Res.s(R.string.coach_newer_request_connection_below)
+    val noDraftNamed: String get() = Res.s(R.string.coach_no_draft_named)
     val notAllowed: String get() = Res.s(R.string.coach_not_allowed)
+    val notArchivedTryAgain: String get() = Res.s(R.string.coach_not_archived_try_again)
     val notConnectable: String get() = Res.s(R.string.coach_not_connectable)
     fun notConnected(vendor: String, status: String): String = Res.s(R.string.coach_not_connected, vendor, status)
     fun notImproved(owner: String, why: String): String = Res.s(R.string.coach_not_improved, owner, why)
+    fun notNoSign(vendor: String): String = Res.s(R.string.coach_not_no_sign, vendor)
     val notNow: String get() = Res.s(R.string.coach_not_now)
+    val notPutBackTryAgain: String get() = Res.s(R.string.coach_not_put_back_try_again)
     fun notReached(why: String): String = Res.s(R.string.coach_not_reached, why)
     fun notSetUp(name: String, why: String): String = Res.s(R.string.coach_not_set_up, name, why)
     val notSetUpHere: String get() = Res.s(R.string.coach_not_set_up_here)
+    val nothingReachesUntilYouResume: String get() = Res.s(R.string.coach_nothing_reaches_until_you_resume)
     fun nothingToApprove(vendor: String): String = Res.s(R.string.coach_nothing_to_approve, vendor)
+    val ownAnswer: String get() = Res.s(R.string.coach_own_answer)
     object Plan {
       val fold: String get() = Res.s(R.string.coach_plan_fold)
       val show: String get() = Res.s(R.string.coach_plan_show)
@@ -479,15 +618,22 @@ object Words {
       val giveCard: String get() = Res.s(R.string.coach_prompt_give_card)
       val start: String get() = Res.s(R.string.coach_prompt_start)
     }
+    val putsWordsMessageBox: String get() = Res.s(R.string.coach_puts_words_message_box)
     object Questions {
       val chatAbout: String get() = Res.s(R.string.coach_questions_chat_about)
       val inYourWords: String get() = Res.s(R.string.coach_questions_in_your_words)
+      fun ownAnswerTo(text: String): String = Res.s(R.string.coach_questions_own_answer_to, text)
       val send: String get() = Res.s(R.string.coach_questions_send)
       val showAgain: String get() = Res.s(R.string.coach_questions_show_again)
       val somethingElse: String get() = Res.s(R.string.coach_questions_something_else)
       val talking: String get() = Res.s(R.string.coach_questions_talking)
+      val theQuestion: String get() = Res.s(R.string.coach_questions_the_question)
+      val yourAnswers: String get() = Res.s(R.string.coach_questions_your_answers)
     }
     val readingKiffWords: String get() = Res.s(R.string.coach_reading_kiff_words)
+    val readingKiffWordsShort: String get() = Res.s(R.string.coach_reading_kiff_words_short)
+    val readingRequest: String get() = Res.s(R.string.coach_reading_request)
+    val requestDoesNotMatchWhat: String get() = Res.s(R.string.coach_request_does_not_match_what)
     object Result {
       fun newVersion(taf: String): String = Res.s(R.string.coach_result_new_version, taf)
       fun open(taf: String): String = Res.s(R.string.coach_result_open, taf)
@@ -497,7 +643,22 @@ object Words {
       fun setUp(taf: String): String = Res.s(R.string.coach_result_set_up, taf)
       fun versionMade(version: String): String = Res.s(R.string.coach_result_version_made, version)
     }
+    val sendOnceFilesUp: String get() = Res.s(R.string.coach_send_once_files_up)
+    val sendWhenAnswerDone: String get() = Res.s(R.string.coach_send_when_answer_done)
     fun settingUp(name: String): String = Res.s(R.string.coach_setting_up, name)
+    val setupChangedRequestSeeBelow: String get() = Res.s(R.string.coach_setup_changed_request_see_below)
+    val setupNeeds: String get() = Res.s(R.string.coach_setup_needs)
+    object Shape {
+      val draftUntilApproved: String get() = Res.s(R.string.coach_shape_draft_until_approved)
+      val notConnected: String get() = Res.s(R.string.coach_shape_not_connected)
+      val signInAt: String get() = Res.s(R.string.coach_shape_sign_in_at)
+      val takingShape: String get() = Res.s(R.string.coach_shape_taking_shape)
+      val theConnection: String get() = Res.s(R.string.coach_shape_the_connection)
+    }
+    val showsApproval: String get() = Res.s(R.string.coach_shows_approval)
+    val showsEarlierRequest: String get() = Res.s(R.string.coach_shows_earlier_request)
+    val showsIt: String get() = Res.s(R.string.coach_shows_it)
+    val showsWholePlan: String get() = Res.s(R.string.coach_shows_whole_plan)
     object SignIn {
       fun at(vendor: String): String = Res.s(R.string.coach_sign_in_at, vendor)
       val atVendor: String get() = Res.s(R.string.coach_sign_in_at_vendor)
@@ -507,12 +668,16 @@ object Words {
       fun opens(destination: String): String = Res.s(R.string.coach_sign_in_opens, destination)
     }
     val signInNote: String get() = Res.s(R.string.coach_sign_in_note)
+    fun signedReadingWhatOffers(vendor: String): String = Res.s(R.string.coach_signed_reading_what_offers, vendor)
     val start: String get() = Res.s(R.string.coach_start)
     fun startingAsks(biometry: String): String = Res.s(R.string.coach_starting_asks, biometry)
+    val stoppedPartWayBeforeFinished: String get() = Res.s(R.string.coach_stopped_part_way_before_finished)
+    fun tafHalted(taf: String): String = Res.s(R.string.coach_taf_halted, taf)
     object Taken {
       fun named(name: String): String = Res.s(R.string.coach_taken_named, name)
       val unnamed: String get() = Res.s(R.string.coach_taken_unnamed)
     }
+    val theVendor: String get() = Res.s(R.string.coach_the_vendor)
     val title: String get() = Res.s(R.string.coach_title)
     object Tools {
       val give: String get() = Res.s(R.string.coach_tools_give)
@@ -524,6 +689,8 @@ object Words {
     val toolsUnknown: String get() = Res.s(R.string.coach_tools_unknown)
     val unknownAnswer: String get() = Res.s(R.string.coach_unknown_answer)
     val waitingForVendor: String get() = Res.s(R.string.coach_waiting_for_vendor)
+    val whatConversationAbout: String get() = Res.s(R.string.coach_what_conversation_about)
+    val willWorkLike: String get() = Res.s(R.string.coach_will_work_like)
   }
   object Common {
     fun a(thing: String): String = Res.s(R.string.common_a, thing)
@@ -537,6 +704,7 @@ object Words {
     val `continue`: String get() = Res.s(R.string.common_continue)
     val copied: String get() = Res.s(R.string.common_copied)
     val copy: String get() = Res.s(R.string.common_copy)
+    fun couldNotReadWhy(what: String, why: String): String = Res.s(R.string.common_could_not_read_why, what, why)
     fun didntGoThrough(what: String, why: String): String = Res.s(R.string.common_didnt_go_through, what, why)
     fun didntGoThroughUnconfirmed(what: String): String = Res.s(R.string.common_didnt_go_through_unconfirmed, what)
     val done: String get() = Res.s(R.string.common_done)
@@ -563,6 +731,7 @@ object Words {
   object Connect {
     val anotherApproval: String get() = Res.s(R.string.connect_another_approval)
     fun appNotStarted(app: String, why: String): String = Res.s(R.string.connect_app_not_started, app, why)
+    val appStoreDoesNotOffer: String get() = Res.s(R.string.connect_app_store_does_not_offer)
     fun approveNotRead(why: String): String = Res.s(R.string.connect_approve_not_read, why)
     val approveTitle: String get() = Res.s(R.string.connect_approve_title)
     object Apps {
@@ -581,6 +750,7 @@ object Words {
       val title: String get() = Res.s(R.string.connect_apps_title)
       fun yourConnections(app: String): String = Res.s(R.string.connect_apps_your_connections, app)
     }
+    val appsConnectTafMakeOne: String get() = Res.s(R.string.connect_apps_connect_taf_make_one)
     fun appsNotRead(why: String): String = Res.s(R.string.connect_apps_not_read, why)
     object CancelSignIn {
       fun body(vendor: String): String = Res.s(R.string.connect_cancel_sign_in_body, vendor)
@@ -590,6 +760,7 @@ object Words {
     }
     val cancelSignInConfirm: String get() = Res.s(R.string.connect_cancel_sign_in_confirm)
     fun cardsNotIssued(why: String): String = Res.s(R.string.connect_cards_not_issued, why)
+    val chatsWereNotExportedCheck: String get() = Res.s(R.string.connect_chats_were_not_exported_check)
     val chooseActions: String get() = Res.s(R.string.connect_choose_actions)
     object ClearRemoved {
       val body: String get() = Res.s(R.string.connect_clear_removed_body)
@@ -603,8 +774,13 @@ object Words {
     fun connectedApp(app: String): String = Res.s(R.string.connect_connected_app, app)
     fun connectedAppFor(app: String, taf: String): String = Res.s(R.string.connect_connected_app_for, app, taf)
     val connectedTools: String get() = Res.s(R.string.connect_connected_tools)
+    val connectingAgainAsksYouApprove: String get() = Res.s(R.string.connect_connecting_again_asks_you_approve)
     fun connectionIs(status: String): String = Res.s(R.string.connect_connection_is, status)
     fun connectionIsBecause(status: String, reason: String): String = Res.s(R.string.connect_connection_is_because, status, reason)
+    fun connectionsCouldNotDisconnectedDisconnect(left: String): String = Res.s(R.string.connect_connections_could_not_disconnected_disconnect, left)
+    val connectionsDisconnected: String get() = Res.s(R.string.connect_connections_disconnected)
+    fun couldNotClearedTryAgain(left: String): String = Res.s(R.string.connect_could_not_cleared_try_again, left)
+    fun couldNotConnected(vendor: String, why: String): String = Res.s(R.string.connect_could_not_connected, vendor, why)
     object Disconnect {
       fun alsoCard(owner: String): String = Res.s(R.string.connect_disconnect_also_card, owner)
       fun alsoCards(names: String): String = Res.s(R.string.connect_disconnect_also_cards, names)
@@ -618,6 +794,7 @@ object Words {
     fun disconnectAppQuestion(app: String): String = Res.s(R.string.connect_disconnect_app_question, app)
     val disconnectBody: String get() = Res.s(R.string.connect_disconnect_body)
     val disconnectButton: String get() = Res.s(R.string.connect_disconnect_button)
+    val driveApp: String get() = Res.s(R.string.connect_drive_app)
     val fromRemoved: String get() = Res.s(R.string.connect_from_removed)
     fun giveKeyWith(biometry: String): String = Res.s(R.string.connect_give_key_with, biometry)
     val keepWaiting: String get() = Res.s(R.string.connect_keep_waiting)
@@ -629,7 +806,10 @@ object Words {
     fun keptConnection(count: Int, vendor: String, names: String): String = Res.p(R.plurals.connect_kept_connection, count, count, vendor, names)
     val key: String get() = Res.s(R.string.connect_key)
     fun keyNotGiven(why: String): String = Res.s(R.string.connect_key_not_given, why)
+    val kiffWordsConnectionCouldNot: String get() = Res.s(R.string.connect_kiff_words_connection_could_not)
     fun lastFailed(title: String, detail: String): String = Res.s(R.string.connect_last_failed, title, detail)
+    val moreApps: String get() = Res.s(R.string.connect_more_apps)
+    fun moreAppsCouldNotListed(why: String): String = Res.s(R.string.connect_more_apps_could_not_listed, why)
     fun noConfirmationCode(vendor: String): String = Res.s(R.string.connect_no_confirmation_code, vendor)
     fun noSignInLink(status: String): String = Res.s(R.string.connect_no_sign_in_link, status)
     val noSuchConnection: String get() = Res.s(R.string.connect_no_such_connection)
@@ -638,9 +818,11 @@ object Words {
     fun notDisconnected(why: String): String = Res.s(R.string.connect_not_disconnected, why)
     val notSetUpHere: String get() = Res.s(R.string.connect_not_set_up_here)
     val notSetUpHereIphone: String get() = Res.s(R.string.connect_not_set_up_here_iphone)
+    val nothingSignedIn: String get() = Res.s(R.string.connect_nothing_signed_in)
     fun oneTaf(app: String): String = Res.s(R.string.connect_one_taf, app)
     val openingSignIn: String get() = Res.s(R.string.connect_opening_sign_in)
     val otherConnections: String get() = Res.s(R.string.connect_other_connections)
+    fun otherConnectionsStayConnectedNo(vendor: String, vendor2: String): String = Res.s(R.string.connect_other_connections_stay_connected_no, vendor, vendor2)
     fun profileWordsNotRead(why: String): String = Res.s(R.string.connect_profile_words_not_read, why)
     val profileWordsUnread: String get() = Res.s(R.string.connect_profile_words_unread)
     object Prompt {
@@ -649,8 +831,12 @@ object Words {
       fun giveKey(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_give_key, vendor, agent)
     }
     val readingAsks: String get() = Res.s(R.string.connect_reading_asks)
+    val readingRequest: String get() = Res.s(R.string.connect_reading_request)
     val reconnectInCoach: String get() = Res.s(R.string.connect_reconnect_in_coach)
     val replaceKey: String get() = Res.s(R.string.connect_replace_key)
+    val requestDoesNotMatchWhat: String get() = Res.s(R.string.connect_request_does_not_match_what)
+    fun scheduleChatsRunReportsMemory(cards: String, taf: String): String = Res.s(R.string.connect_schedule_chats_run_reports_memory, cards, taf)
+    fun signCameBackConnection(status: String): String = Res.s(R.string.connect_sign_came_back_connection, status)
     val signInAgain: String get() = Res.s(R.string.connect_sign_in_again)
     val signInClosed: String get() = Res.s(R.string.connect_sign_in_closed)
     val signInClosedNothingConnected: String get() = Res.s(R.string.connect_sign_in_closed_nothing_connected)
@@ -658,15 +844,20 @@ object Words {
       fun notOpened(why: String): String = Res.s(R.string.connect_sign_in_view_not_opened, why)
       val wrongAddress: String get() = Res.s(R.string.connect_sign_in_view_wrong_address)
     }
+    val signInsKeptSealedNo: String get() = Res.s(R.string.connect_sign_ins_kept_sealed_no)
     fun signedIn(app: String): String = Res.s(R.string.connect_signed_in, app)
     fun signedInFor(app: String, taf: String): String = Res.s(R.string.connect_signed_in_for, app, taf)
     val signedInRow: String get() = Res.s(R.string.connect_signed_in_row)
+    fun startConnectedToolsFirst(device: String): String = Res.s(R.string.connect_start_connected_tools_first, device)
+    val startConnectedToolsIphoneFirst: String get() = Res.s(R.string.connect_start_connected_tools_iphone_first)
     object Status {
       val choosingTools: String get() = Res.s(R.string.connect_status_choosing_tools)
       val connected: String get() = Res.s(R.string.connect_status_connected)
       fun signedOut(vendor: String): String = Res.s(R.string.connect_status_signed_out, vendor)
       fun waitingSignIn(vendor: String): String = Res.s(R.string.connect_status_waiting_sign_in, vendor)
     }
+    val tafNotTafsCloudApps: String get() = Res.s(R.string.connect_taf_not_tafs_cloud_apps)
+    val tafsCloudNamedNoConnection: String get() = Res.s(R.string.connect_tafs_cloud_named_no_connection)
     val theVendorsPage: String get() = Res.s(R.string.connect_the_vendors_page)
     fun throughProvider(vendor: String): String = Res.s(R.string.connect_through_provider, vendor)
     object UsedBy {
@@ -674,20 +865,27 @@ object Words {
       fun one(name: String): String = Res.s(R.string.connect_used_by_one, name)
     }
     val whichTaf: String get() = Res.s(R.string.connect_which_taf)
+    val wordsAnotherConnectionThanOne: String get() = Res.s(R.string.connect_words_another_connection_than_one)
     fun wordsMismatch(what: String): String = Res.s(R.string.connect_words_mismatch, what)
   }
   object Door {
     val addDoor: String get() = Res.s(R.string.door_add_door)
     fun addIntro(taf: String): String = Res.s(R.string.door_add_intro, taf)
+    fun anyoneElseToday(others: String, cap: String): String = Res.s(R.string.door_anyone_else_today, others, cap)
     object App {
       val email: String get() = Res.s(R.string.door_app_email)
     }
     fun botStillListens(why: String): String = Res.s(R.string.door_bot_still_listens, why)
+    val checksSenderServerSignedMessage: String get() = Res.s(R.string.door_checks_sender_server_signed_message)
     val copyAddress: String get() = Res.s(R.string.door_copy_address)
     object Day {
       fun open(count: Int, today: String): String = Res.p(R.plurals.door_day_open, count, count, today)
       fun others(count: Int, others: String): String = Res.p(R.plurals.door_day_others, count, count, others)
       fun resting(count: Int): String = Res.p(R.plurals.door_day_resting, count, count)
+    }
+    object Dial {
+      fun addPosition(stops: String, stops2: String): String = Res.s(R.string.door_dial_add_position, stops, stops2)
+      val addStamp: String get() = Res.s(R.string.door_dial_add_stamp)
     }
     object DoIt {
       val default: String get() = Res.s(R.string.door_do_it_default)
@@ -697,7 +895,11 @@ object Words {
       val titleYourTaf: String get() = Res.s(R.string.door_do_it_title_your_taf)
     }
     val doItButton: String get() = Res.s(R.string.door_do_it_button)
+    val doorDial: String get() = Res.s(R.string.door_door_dial)
+    val doorRemoved: String get() = Res.s(R.string.door_door_removed)
+    val doorsTurnPickPressOpen: String get() = Res.s(R.string.door_doors_turn_pick_press_open)
     fun footer(taf: String): String = Res.s(R.string.door_footer, taf)
+    val hiLikeBackOrder: String get() = Res.s(R.string.door_hi_like_back_order)
     val ignore: String get() = Res.s(R.string.door_ignore)
     object Key {
       fun foot(how: String): String = Res.s(R.string.door_key_foot, how)
@@ -726,9 +928,12 @@ object Words {
     val knocksWaiting: String get() = Res.s(R.string.door_knocks_waiting)
     val nameOptional: String get() = Res.s(R.string.door_name_optional)
     fun named(door: String): String = Res.s(R.string.door_named, door)
+    fun noAppCalled(query: String): String = Res.s(R.string.door_no_app_called, query)
     fun noDoorYet(taf: String): String = Res.s(R.string.door_no_door_yet, taf)
     val noMore: String get() = Res.s(R.string.door_no_more)
     val notAddedUnconfirmed: String get() = Res.s(R.string.door_not_added_unconfirmed)
+    fun notClosed(why: String): String = Res.s(R.string.door_not_closed, why)
+    fun notOpened(why: String): String = Res.s(R.string.door_not_opened, why)
     val notRead: String get() = Res.s(R.string.door_not_read)
     val pair: String get() = Res.s(R.string.door_pair)
     object PairHint {
@@ -739,8 +944,12 @@ object Words {
     fun pairIntro(door: String): String = Res.s(R.string.door_pair_intro, door)
     val pairSomeone: String get() = Res.s(R.string.door_pair_someone)
     val paired: String get() = Res.s(R.string.door_paired)
+    fun pairedSendersTodayMoreDropped(limit: String, limit2: String): String = Res.s(R.string.door_paired_senders_today_more_dropped, limit, limit2)
+    fun pairedSendersTodayTextOnly(today: String, limit: String): String = Res.s(R.string.door_paired_senders_today_text_only, today, limit)
+    fun pressAddDoor(taf: String): String = Res.s(R.string.door_press_add_door, taf)
     val provenSection: String get() = Res.s(R.string.door_proven_section)
     val readingChannels: String get() = Res.s(R.string.door_reading_channels)
+    val refundRequest: String get() = Res.s(R.string.door_refund_request)
     val remove: String get() = Res.s(R.string.door_remove)
     fun removeBody(taf: String): String = Res.s(R.string.door_remove_body, taf)
     val removeDoor: String get() = Res.s(R.string.door_remove_door)
@@ -750,32 +959,45 @@ object Words {
     val sendToYourTaf: String get() = Res.s(R.string.door_send_to_your_taf)
     object Slack {
       val connectFirst: String get() = Res.s(R.string.door_slack_connect_first)
+      fun connectFirstInConnectApps(taf: String): String = Res.s(R.string.door_slack_connect_first_in_connect_apps, taf)
+      fun letRead(taf: String, place: String): String = Res.s(R.string.door_slack_let_read, taf, place)
       val noAccount: String get() = Res.s(R.string.door_slack_no_account)
       val noChannels: String get() = Res.s(R.string.door_slack_no_channels)
       fun reason(taf: String, channel: String): String = Res.s(R.string.door_slack_reason, taf, channel)
+      val theTaf: String get() = Res.s(R.string.door_slack_the_taf)
+      val thisTaf: String get() = Res.s(R.string.door_slack_this_taf)
       val whichBot: String get() = Res.s(R.string.door_slack_which_bot)
       val whichChannel: String get() = Res.s(R.string.door_slack_which_channel)
     }
+    val slackBotSeesNoChannel: String get() = Res.s(R.string.door_slack_bot_sees_no_channel)
     fun slackCantListen(why: String): String = Res.s(R.string.door_slack_cant_listen, why)
+    fun slackChannelsCouldNotRead(why: String): String = Res.s(R.string.door_slack_channels_could_not_read, why)
+    fun slackDidNotSubscribe(where: String, why: String): String = Res.s(R.string.door_slack_did_not_subscribe, where, why)
     val slackDoor: String get() = Res.s(R.string.door_slack_door)
     fun slackNotAdded(why: String): String = Res.s(R.string.door_slack_not_added, why)
     fun slackStillListens(why: String): String = Res.s(R.string.door_slack_still_listens, why)
+    fun slackSubscriptionNotStoppedDoor(why: String): String = Res.s(R.string.door_slack_subscription_not_stopped_door, why)
+    val slackWorkspace: String get() = Res.s(R.string.door_slack_workspace)
     object Stamp {
       fun by(app: String): String = Res.s(R.string.door_stamp_by, app)
       fun goesBack(app: String): String = Res.s(R.string.door_stamp_goes_back, app)
       val notSentBack: String get() = Res.s(R.string.door_stamp_not_sent_back)
       fun sentBack(app: String): String = Res.s(R.string.door_stamp_sent_back, app)
     }
+    fun startConnectedToolsFirstSlack(device: String): String = Res.s(R.string.door_start_connected_tools_first_slack, device)
     object Status {
       val closed: String get() = Res.s(R.string.door_status_closed)
       val open: String get() = Res.s(R.string.door_status_open)
       val resting: String get() = Res.s(R.string.door_status_resting)
     }
+    val swipeUpDownPickDoor: String get() = Res.s(R.string.door_swipe_up_down_pick_door)
     val unpair: String get() = Res.s(R.string.door_unpair)
     val unprovenSection: String get() = Res.s(R.string.door_unproven_section)
+    val whatDo: String get() = Res.s(R.string.door_what_do)
     val whatShouldItDo: String get() = Res.s(R.string.door_what_should_it_do)
     val whatsappAndroid: String get() = Res.s(R.string.door_whatsapp_android)
     val whatsappElsewhere: String get() = Res.s(R.string.door_whatsapp_elsewhere)
+    val whatsappSignupDidNotFinish: String get() = Res.s(R.string.door_whatsapp_signup_did_not_finish)
   }
   object Drive {
     val aSecretField: String get() = Res.s(R.string.drive_a_secret_field)
@@ -785,8 +1007,11 @@ object Words {
     fun cantScroll(direction: String): String = Res.s(R.string.drive_cant_scroll, direction)
     fun caption(task: String): String = Res.s(R.string.drive_caption, task)
     val cardNote: String get() = Res.s(R.string.drive_card_note)
+    val cardNoteScrolls: String get() = Res.s(R.string.drive_card_note_scrolls)
     val cardTitle: String get() = Res.s(R.string.drive_card_title)
+    fun coachDroveApp(task: String): String = Res.s(R.string.drive_coach_drove_app, task)
     val done: String get() = Res.s(R.string.drive_done)
+    val driveApp: String get() = Res.s(R.string.drive_drive_app)
     object Ended {
       val done: String get() = Res.s(R.string.drive_ended_done)
       val halted: String get() = Res.s(R.string.drive_ended_halted)
@@ -804,7 +1029,9 @@ object Words {
     val looked: String get() = Res.s(R.string.drive_looked)
     fun lookedDidntCome(event: String): String = Res.s(R.string.drive_looked_didnt_come, event)
     fun lookedOnceCame(event: String): String = Res.s(R.string.drive_looked_once_came, event)
+    val needsYouLetCoachDrive: String get() = Res.s(R.string.drive_needs_you_let_coach_drive)
     val noField: String get() = Res.s(R.string.drive_no_field)
+    val noStepDone: String get() = Res.s(R.string.drive_no_step_done)
     val noSteps: String get() = Res.s(R.string.drive_no_steps)
     val notOnScreen: String get() = Res.s(R.string.drive_not_on_screen)
     val nothingBack: String get() = Res.s(R.string.drive_nothing_back)
@@ -847,6 +1074,7 @@ object Words {
     val requestMismatch: String get() = Res.s(R.string.error_request_mismatch)
     val signInCodeExpired: String get() = Res.s(R.string.error_sign_in_code_expired)
     val signInFirst: String get() = Res.s(R.string.error_sign_in_first)
+    fun signInFirstOnDevice(device: String): String = Res.s(R.string.error_sign_in_first_on_device, device)
     val signInPending: String get() = Res.s(R.string.error_sign_in_pending)
     val signedOut: String get() = Res.s(R.string.error_signed_out)
     val slowDown: String get() = Res.s(R.string.error_slow_down)
@@ -855,7 +1083,9 @@ object Words {
   object Export {
     fun notExported(why: String): String = Res.s(R.string.export_not_exported, why)
     val notOffered: String get() = Res.s(R.string.export_not_offered)
+    val ownChatsEachTafCoach: String get() = Res.s(R.string.export_own_chats_each_taf_coach)
     val preparing: String get() = Res.s(R.string.export_preparing)
+    fun readyShareAgain(files: String): String = Res.s(R.string.export_ready_share_again, files)
     val row: String get() = Res.s(R.string.export_row)
     val tryAgain: String get() = Res.s(R.string.export_try_again)
   }
@@ -869,6 +1099,8 @@ object Words {
       val runningAll: String get() = Res.s(R.string.halt_explain_running_all)
       val runningOne: String get() = Res.s(R.string.halt_explain_running_one)
     }
+    fun haltedNothingReachesYourTools(since: String): String = Res.s(R.string.halt_halted_nothing_reaches_your_tools, since)
+    fun haltingStopsNoRunStarts(who: String): String = Res.s(R.string.halt_halting_stops_no_run_starts, who)
     object Headline {
       val halted: String get() = Res.s(R.string.halt_headline_halted)
       val halting: String get() = Res.s(R.string.halt_headline_halting)
@@ -876,10 +1108,14 @@ object Words {
     }
     val now: String get() = Res.s(R.string.halt_now)
     val rowRunning: String get() = Res.s(R.string.halt_row_running)
+    val yourTafsLower: String get() = Res.s(R.string.halt_your_tafs_lower)
   }
   object Home {
     fun calendarNotRead(why: String): String = Res.s(R.string.home_calendar_not_read, why)
     val cantReachKiff: String get() = Res.s(R.string.home_cant_reach_kiff)
+    val chooseTaf: String get() = Res.s(R.string.home_choose_taf)
+    val connectTool: String get() = Res.s(R.string.home_connect_tool)
+    val connectToolSetUpYour: String get() = Res.s(R.string.home_connect_tool_set_up_your)
     val couldntLoadFromKiff: String get() = Res.s(R.string.home_couldnt_load_from_kiff)
     val couldntLoadTafs: String get() = Res.s(R.string.home_couldnt_load_tafs)
     object Empty {
@@ -887,8 +1123,12 @@ object Words {
       val shared: String get() = Res.s(R.string.home_empty_shared)
     }
     val footer: String get() = Res.s(R.string.home_footer)
+    val haltedOpenHalt: String get() = Res.s(R.string.home_halted_open_halt)
     val loading: String get() = Res.s(R.string.home_loading)
+    val newTaf: String get() = Res.s(R.string.home_new_taf)
+    val noLongerRunsTafsDeletes: String get() = Res.s(R.string.home_no_longer_runs_tafs_deletes)
     val noTafs: String get() = Res.s(R.string.home_no_tafs)
+    fun notFullyRemoved(name: String): String = Res.s(R.string.home_not_fully_removed, name)
     val notLoaded: String get() = Res.s(R.string.home_not_loaded)
     val openHalt: String get() = Res.s(R.string.home_open_halt)
     val otherAgents: String get() = Res.s(R.string.home_other_agents)
@@ -902,16 +1142,30 @@ object Words {
       val title: String get() = Res.s(R.string.home_overview_title)
     }
     fun planLineDescription(words: String): String = Res.s(R.string.home_plan_line_description, words)
+    fun reasonAnswerBy(why: String, time: String): String = Res.s(R.string.home_reason_answer_by, why, time)
     val sampleFoot: String get() = Res.s(R.string.home_sample_foot)
+    val sharedYou: String get() = Res.s(R.string.home_shared_you)
+    val signApproveEachStep: String get() = Res.s(R.string.home_sign_approve_each_step)
+    val startNewTaf: String get() = Res.s(R.string.home_start_new_taf)
     val status: String get() = Res.s(R.string.home_status)
     fun statusRetrying(words: String): String = Res.s(R.string.home_status_retrying, words)
     val tafs: String get() = Res.s(R.string.home_tafs)
+    val tafsSharedYouShow: String get() = Res.s(R.string.home_tafs_shared_you_show)
     val tagline: String get() = Res.s(R.string.home_tagline)
     val title: String get() = Res.s(R.string.home_title)
     fun working(count: Int): String = Res.p(R.plurals.home_working, count, count)
+    val yourTafs: String get() = Res.s(R.string.home_your_tafs)
+  }
+  object Kiff {
+    fun askingKiff(title: String): String = Res.s(R.string.kiff_asking_kiff, title)
+    val didNotReachKiffTry: String get() = Res.s(R.string.kiff_did_not_reach_kiff_try)
+    fun kiffCanNotDoSign(device: String): String = Res.s(R.string.kiff_kiff_can_not_do_sign, device)
+    val kiffDidNotAnswerExpected: String get() = Res.s(R.string.kiff_kiff_did_not_answer_expected)
+    val kiffWordsDoNotMatch: String get() = Res.s(R.string.kiff_kiff_words_do_not_match)
   }
   object Knob {
     val allServices: String get() = Res.s(R.string.knob_all_services)
+    val approveEvent: String get() = Res.s(R.string.knob_approve_event)
     val approveOnce: String get() = Res.s(R.string.knob_approve_once)
     fun approveWith(biometry: String): String = Res.s(R.string.knob_approve_with, biometry)
     val askCoachToChange: String get() = Res.s(R.string.knob_ask_coach_to_change)
@@ -921,14 +1175,22 @@ object Words {
     val change: String get() = Res.s(R.string.knob_change)
     fun confirmWith(biometry: String): String = Res.s(R.string.knob_confirm_with, biometry)
     val connectFirst: String get() = Res.s(R.string.knob_connect_first)
+    fun dialCouldNotRead(why: String): String = Res.s(R.string.knob_dial_could_not_read, why)
+    fun dialDidNotChange(why: String): String = Res.s(R.string.knob_dial_did_not_change, why)
+    fun doneToday(done: String): String = Res.s(R.string.knob_done_today, done)
     val draft: String get() = Res.s(R.string.knob_draft)
     fun draftTitle(taf: String): String = Res.s(R.string.knob_draft_title, taf)
     val eventChanged: String get() = Res.s(R.string.knob_event_changed)
+    val eventChangedReadDialAgain: String get() = Res.s(R.string.knob_event_changed_read_dial_again)
     val eventFilters: String get() = Res.s(R.string.knob_event_filters)
+    fun followUpNotRemoved(why: String): String = Res.s(R.string.knob_follow_up_not_removed, why)
+    val listenOnlyEventsMatchingFilters: String get() = Res.s(R.string.knob_listen_only_events_matching_filters)
     val live: String get() = Res.s(R.string.knob_live)
     val lower: String get() = Res.s(R.string.knob_lower)
     fun makeLive(count: Int, biometry: String): String = Res.p(R.plurals.knob_make_live, count, count, biometry)
     val next: String get() = Res.s(R.string.knob_next)
+    val noRequests: String get() = Res.s(R.string.knob_no_requests)
+    val noStops: String get() = Res.s(R.string.knob_no_stops)
     fun notLive(version: String): String = Res.s(R.string.knob_not_live, version)
     val notReadBack: String get() = Res.s(R.string.knob_not_read_back)
     val notRecorded: String get() = Res.s(R.string.knob_not_recorded)
@@ -945,6 +1207,7 @@ object Words {
     }
     val search: String get() = Res.s(R.string.knob_search)
     val showing: String get() = Res.s(R.string.knob_showing)
+    val subscriptionMadeDialHasNot: String get() = Res.s(R.string.knob_subscription_made_dial_has_not)
     val tapARing: String get() = Res.s(R.string.knob_tap_a_ring)
     val thisTaf: String get() = Res.s(R.string.knob_this_taf)
     val useSize: String get() = Res.s(R.string.knob_use_size)
@@ -955,13 +1218,16 @@ object Words {
     val aTaf: String get() = Res.s(R.string.needs_you_a_taf)
     val answer: String get() = Res.s(R.string.needs_you_answer)
     fun answerBy(time: String): String = Res.s(R.string.needs_you_answer_by, time)
+    val answerGone: String get() = Res.s(R.string.needs_you_answer_gone)
     val answerInKiff: String get() = Res.s(R.string.needs_you_answer_in_kiff)
     val answerInKiffButton: String get() = Res.s(R.string.needs_you_answer_in_kiff_button)
     val answerInKiffUntil: String get() = Res.s(R.string.needs_you_answer_in_kiff_until)
+    val answerNamesEach: String get() = Res.s(R.string.needs_you_answer_names_each)
     val answerNotTaken: String get() = Res.s(R.string.needs_you_answer_not_taken)
     val approveAgain: String get() = Res.s(R.string.needs_you_approve_again)
     val approveOnce: String get() = Res.s(R.string.needs_you_approve_once)
     fun approveOnceWith(biometry: String): String = Res.s(R.string.needs_you_approve_once_with, biometry)
+    fun asksLapses(taf: String, what: String, reason: String, time: String, nothingSent: String): String = Res.s(R.string.needs_you_asks_lapses, taf, what, reason, time, nothingSent)
     object CardUnit {
       val changed: String get() = Res.s(R.string.needs_you_card_unit_changed)
       fun dismissPrompt(title: String): String = Res.s(R.string.needs_you_card_unit_dismiss_prompt, title)
@@ -977,15 +1243,22 @@ object Words {
     val expired: String get() = Res.s(R.string.needs_you_expired)
     val expiredLine: String get() = Res.s(R.string.needs_you_expired_line)
     fun extraRoomWith(biometry: String): String = Res.s(R.string.needs_you_extra_room_with, biometry)
+    val getAlertWhenCallWaits: String get() = Res.s(R.string.needs_you_get_alert_when_call_waits)
     val installFromCard: String get() = Res.s(R.string.needs_you_install_from_card)
+    fun iosAsksNextConfirmingSets(biometry: String): String = Res.s(R.string.needs_you_ios_asks_next_confirming_sets, biometry)
+    val knowMomentTafNeedsYou: String get() = Res.s(R.string.needs_you_know_moment_taf_needs_you)
     fun left(time: String): String = Res.s(R.string.needs_you_left, time)
+    fun noGivesCardRoomBack(biometry: String): String = Res.s(R.string.needs_you_no_gives_card_room_back, biometry)
     val nothing: String get() = Res.s(R.string.needs_you_nothing)
     val nothingSent: String get() = Res.s(R.string.needs_you_nothing_sent)
     val nothingWaiting: String get() = Res.s(R.string.needs_you_nothing_waiting)
+    fun opensWhereYouAnswer(taf: String): String = Res.s(R.string.needs_you_opens_where_you_answer, taf)
     val overTotal: String get() = Res.s(R.string.needs_you_over_total)
     val overTotalManager: String get() = Res.s(R.string.needs_you_over_total_manager)
     object Prompt {
       fun answer(summary: String): String = Res.s(R.string.needs_you_prompt_answer, summary)
+      fun didNotHappen(title: String): String = Res.s(R.string.needs_you_prompt_did_not_happen, title)
+      fun happened(title: String): String = Res.s(R.string.needs_you_prompt_happened, title)
     }
     val refuse: String get() = Res.s(R.string.needs_you_refuse)
     object Refused {
@@ -1003,12 +1276,16 @@ object Words {
     val signInAgainInstead: String get() = Res.s(R.string.needs_you_sign_in_again_instead)
     val signInAgainToAnswer: String get() = Res.s(R.string.needs_you_sign_in_again_to_answer)
     val someoneAnswers: String get() = Res.s(R.string.needs_you_someone_answers)
+    fun tabLabel(n: String): String = Res.s(R.string.needs_you_tab_label, n)
     val title: String get() = Res.s(R.string.needs_you_title)
+    val turnAlerts: String get() = Res.s(R.string.needs_you_turn_alerts)
+    val turningOn: String get() = Res.s(R.string.needs_you_turning_on)
     object Unsure {
       fun answerNotTaken(why: String): String = Res.s(R.string.needs_you_unsure_answer_not_taken, why)
       fun coachNotOpened(why: String): String = Res.s(R.string.needs_you_unsure_coach_not_opened, why)
     }
     val waitingForBrowser: String get() = Res.s(R.string.needs_you_waiting_for_browser)
+    fun whenTafAsksSomethingOutside(device: String): String = Res.s(R.string.needs_you_when_taf_asks_something_outside, device)
   }
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)
@@ -1016,8 +1293,10 @@ object Words {
   }
   object People {
     val accountPeople: String get() = Res.s(R.string.people_account_people)
+    val accountPeopleTitle: String get() = Res.s(R.string.people_account_people_title)
     val addGroup: String get() = Res.s(R.string.people_add_group)
     fun addSomeone(group: String): String = Res.s(R.string.people_add_someone, group)
+    fun addSomeoneTo(name: String): String = Res.s(R.string.people_add_someone_to, name)
     fun addTo(group: String): String = Res.s(R.string.people_add_to, group)
     fun addToGroup(who: String, group: String): String = Res.s(R.string.people_add_to_group, who, group)
     val asManager: String get() = Res.s(R.string.people_as_manager)
@@ -1033,6 +1312,7 @@ object Words {
     val everyoneUsesNone: String get() = Res.s(R.string.people_everyone_uses_none)
     val groupNameHint: String get() = Res.s(R.string.people_group_name_hint)
     fun groupUses(group: String, taf: String, people: String): String = Res.s(R.string.people_group_uses, group, taf, people)
+    fun lastRan(time: String): String = Res.s(R.string.people_last_ran, time)
     val makeManager: String get() = Res.s(R.string.people_make_manager)
     val makeMember: String get() = Res.s(R.string.people_make_member)
     fun makeRole(who: String, role: String, group: String): String = Res.s(R.string.people_make_role, who, role, group)
@@ -1046,6 +1326,8 @@ object Words {
     val noOneYet: String get() = Res.s(R.string.people_no_one_yet)
     fun notRead(why: String): String = Res.s(R.string.people_not_read, why)
     val notShared: String get() = Res.s(R.string.people_not_shared)
+    val onePerson: String get() = Res.s(R.string.people_one_person)
+    val opensTaf: String get() = Res.s(R.string.people_opens_taf)
     val ownChats: String get() = Res.s(R.string.people_own_chats)
     fun personUses(person: String, taf: String): String = Res.s(R.string.people_person_uses, person, taf)
     fun removeFrom(group: String): String = Res.s(R.string.people_remove_from, group)
@@ -1067,6 +1349,7 @@ object Words {
       fun whoUses(taf: String): String = Res.s(R.string.people_share_who_uses, taf)
     }
     fun sharedWith(names: String): String = Res.s(R.string.people_shared_with, names)
+    val sharedWithPrefix: String get() = Res.s(R.string.people_shared_with_prefix)
     val sharing: String get() = Res.s(R.string.people_sharing)
     fun stopsUsing(who: String, taf: String): String = Res.s(R.string.people_stops_using, who, taf)
     val title: String get() = Res.s(R.string.people_title)
@@ -1086,6 +1369,7 @@ object Words {
   }
   object Receipt {
     fun approvedOnceBy(who: String): String = Res.s(R.string.receipt_approved_once_by, who)
+    fun approvedOnceByLower(owner: String): String = Res.s(R.string.receipt_approved_once_by_lower, owner)
     val changed: String get() = Res.s(R.string.receipt_changed)
     object Check {
       val amountMismatch: String get() = Res.s(R.string.receipt_check_amount_mismatch)
@@ -1100,8 +1384,10 @@ object Words {
     }
     val checkAgain: String get() = Res.s(R.string.receipt_check_again)
     val checked: String get() = Res.s(R.string.receipt_checked)
+    fun checkedOnDevice(device: String): String = Res.s(R.string.receipt_checked_on_device, device)
     val checkedWhy: String get() = Res.s(R.string.receipt_checked_why)
     val checking: String get() = Res.s(R.string.receipt_checking)
+    fun checkingOnDevice(device: String): String = Res.s(R.string.receipt_checking_on_device, device)
     val copy: String get() = Res.s(R.string.receipt_copy)
     object DecidedBy {
       val card: String get() = Res.s(R.string.receipt_decided_by_card)
@@ -1157,6 +1443,7 @@ object Words {
     fun refusedBy(who: String): String = Res.s(R.string.receipt_refused_by, who)
     val share: String get() = Res.s(R.string.receipt_share)
     val showFull: String get() = Res.s(R.string.receipt_show_full)
+    fun signedOnDeviceWhy(biometry: String): String = Res.s(R.string.receipt_signed_on_device_why, biometry)
     val signedOnPhone: String get() = Res.s(R.string.receipt_signed_on_phone)
     val signedOnPhoneWhy: String get() = Res.s(R.string.receipt_signed_on_phone_why)
     val signsWithin: String get() = Res.s(R.string.receipt_signs_within)
@@ -1215,12 +1502,14 @@ object Words {
     }
     fun held(summary: String): String = Res.s(R.string.record_held, summary)
     val hide: String get() = Res.s(R.string.record_hide)
+    val kiffReceiptDoesNotCheck: String get() = Res.s(R.string.record_kiff_receipt_does_not_check)
     val lead: String get() = Res.s(R.string.record_lead)
     val noLongerWaiting: String get() = Res.s(R.string.record_no_longer_waiting)
     fun notRecorded(allowed: String): String = Res.s(R.string.record_not_recorded, allowed)
     val notSent: String get() = Res.s(R.string.record_not_sent)
     fun notSentBecause(reason: String): String = Res.s(R.string.record_not_sent_because, reason)
     fun notSentNothingReached(allowed: String): String = Res.s(R.string.record_not_sent_nothing_reached, allowed)
+    fun notSentNothingReachedWhy(allowed: String, why: String): String = Res.s(R.string.record_not_sent_nothing_reached_why, allowed, why)
     val nothingHere: String get() = Res.s(R.string.record_nothing_here)
     val nothingSent: String get() = Res.s(R.string.record_nothing_sent)
     object On {
@@ -1228,6 +1517,7 @@ object Words {
       fun short(noun: String, end: String): String = Res.s(R.string.record_on_short, noun, end)
       fun whole(noun: String, value: String): String = Res.s(R.string.record_on_whole, noun, value)
     }
+    val openTafChat: String get() = Res.s(R.string.record_open_taf_chat)
     fun reads(count: Int): String = Res.p(R.plurals.record_reads, count, count)
     fun refused(summary: String): String = Res.s(R.string.record_refused, summary)
     fun refusedByYou(at: String, summary: String): String = Res.s(R.string.record_refused_by_you, at, summary)
@@ -1253,6 +1543,8 @@ object Words {
     }
     fun sentWaiting(allowed: String): String = Res.s(R.string.record_sent_waiting, allowed)
     val show: String get() = Res.s(R.string.record_show)
+    val showsReceipt: String get() = Res.s(R.string.record_shows_receipt)
+    fun signedOnDevice(device: String): String = Res.s(R.string.record_signed_on_device, device)
     val signedOnPhone: String get() = Res.s(R.string.record_signed_on_phone)
     fun started(taf: String): String = Res.s(R.string.record_started, taf)
     val theConnection: String get() = Res.s(R.string.record_the_connection)
@@ -1260,6 +1552,7 @@ object Words {
     val title: String get() = Res.s(R.string.record_title)
     fun toolRefusedAmount(who: String): String = Res.s(R.string.record_tool_refused_amount, who)
     fun toolRefusedCounts(who: String): String = Res.s(R.string.record_tool_refused_counts, who)
+    fun toolRefusedCountsWhy(who: String, why: String): String = Res.s(R.string.record_tool_refused_counts_why, who, why)
     fun toolRefusedMoney(who: String): String = Res.s(R.string.record_tool_refused_money, who)
     val waitingForYou: String get() = Res.s(R.string.record_waiting_for_you)
     fun withinCard(amount: String): String = Res.s(R.string.record_within_card, amount)
@@ -1269,7 +1562,10 @@ object Words {
     val already: String get() = Res.s(R.string.report_already)
     val menu: String get() = Res.s(R.string.report_menu)
     fun notSent(why: String): String = Res.s(R.string.report_not_sent, why)
+    fun notSentWhy(failed: String): String = Res.s(R.string.report_not_sent_why, failed)
     val noteHint: String get() = Res.s(R.string.report_note_hint)
+    val noteMostCharacters: String get() = Res.s(R.string.report_note_most_characters)
+    val personKiffReadsYourReport: String get() = Res.s(R.string.report_person_kiff_reads_your_report)
     object Reason {
       val harmful: String get() = Res.s(R.string.report_reason_harmful)
       val offensive: String get() = Res.s(R.string.report_reason_offensive)
@@ -1278,6 +1574,7 @@ object Words {
     }
     fun runsNotLoaded(why: String): String = Res.s(R.string.report_runs_not_loaded, why)
     val thanks: String get() = Res.s(R.string.report_thanks)
+    val whatWrong: String get() = Res.s(R.string.report_what_wrong)
   }
   object Sample {
     object Access {
@@ -1364,6 +1661,8 @@ object Words {
       }
     }
     fun hello(name: String, now: String): String = Res.s(R.string.sample_hello, name, now)
+    val listCharges: String get() = Res.s(R.string.sample_list_charges)
+    val lookUpCharge: String get() = Res.s(R.string.sample_look_up_charge)
     object Memory {
       val askFirst: String get() = Res.s(R.string.sample_memory_ask_first)
       val explain: String get() = Res.s(R.string.sample_memory_explain)
@@ -1387,10 +1686,12 @@ object Words {
         val refunds: String get() = Res.s(R.string.sample_refunds_rule_refunds)
       }
     }
+    val refundsStripeTest: String get() = Res.s(R.string.sample_refunds_stripe_test)
     object Reply {
       val backToWork: String get() = Res.s(R.string.sample_reply_back_to_work)
       val gone: String get() = Res.s(R.string.sample_reply_gone)
       fun lately(done: String): String = Res.s(R.string.sample_reply_lately, done)
+      val lookingLately: String get() = Res.s(R.string.sample_reply_looking_lately)
       val moreRoom: String get() = Res.s(R.string.sample_reply_more_room)
       val note: String get() = Res.s(R.string.sample_reply_note)
       val nothingDone: String get() = Res.s(R.string.sample_reply_nothing_done)
@@ -1413,12 +1714,15 @@ object Words {
     val about: String get() = Res.s(R.string.settings_about)
     val accountActions: String get() = Res.s(R.string.settings_account_actions)
     val accountId: String get() = Res.s(R.string.settings_account_id)
+    fun accountZoneChangedSchedulesCould(why: String): String = Res.s(R.string.settings_account_zone_changed_schedules_could, why)
     val alerts: String get() = Res.s(R.string.settings_alerts)
     object AlertsOff {
       val text: String get() = Res.s(R.string.settings_alerts_off_text)
       val title: String get() = Res.s(R.string.settings_alerts_off_title)
+      fun titleDevice(device: String): String = Res.s(R.string.settings_alerts_off_title_device, device)
       val turnOn: String get() = Res.s(R.string.settings_alerts_off_turn_on)
     }
+    val chargebacksNeedsYou: String get() = Res.s(R.string.settings_chargebacks_needs_you)
     val chooseTimeZone: String get() = Res.s(R.string.settings_choose_time_zone)
     val clearSample: String get() = Res.s(R.string.settings_clear_sample)
     object DeleteAccount {
@@ -1444,31 +1748,40 @@ object Words {
       fun notLoaded(why: String): String = Res.s(R.string.settings_devices_not_loaded, why)
       val notUsed: String get() = Res.s(R.string.settings_devices_not_used)
       val note: String get() = Res.s(R.string.settings_devices_note)
+      fun noteDevice(device: String): String = Res.s(R.string.settings_devices_note_device, device)
       val signOut: String get() = Res.s(R.string.settings_devices_sign_out)
       fun signOutNamed(device: String): String = Res.s(R.string.settings_devices_sign_out_named, device)
       fun signOutPrompt(device: String): String = Res.s(R.string.settings_devices_sign_out_prompt, device)
       val signOutThis: String get() = Res.s(R.string.settings_devices_sign_out_this)
       val thisDevice: String get() = Res.s(R.string.settings_devices_this_device)
+      fun thisDeviceName(device: String): String = Res.s(R.string.settings_devices_this_device_name, device)
       val thisDeviceTitle: String get() = Res.s(R.string.settings_devices_this_device_title)
       val title: String get() = Res.s(R.string.settings_devices_title)
       val unnamed: String get() = Res.s(R.string.settings_devices_unnamed)
       val usedJustNow: String get() = Res.s(R.string.settings_devices_used_just_now)
     }
+    val disputeOverLimit: String get() = Res.s(R.string.settings_dispute_over_limit)
+    val eachSendsWhoAnsweredThrough: String get() = Res.s(R.string.settings_each_sends_who_answered_through)
+    val findTimeZone: String get() = Res.s(R.string.settings_find_time_zone)
     val kiffAccount: String get() = Res.s(R.string.settings_kiff_account)
     val legal: String get() = Res.s(R.string.settings_legal)
+    val lightTapsWhenYouSend: String get() = Res.s(R.string.settings_light_taps_when_you_send)
     val mode: String get() = Res.s(R.string.settings_mode)
     val modeKiff: String get() = Res.s(R.string.settings_mode_kiff)
     val modeSample: String get() = Res.s(R.string.settings_mode_sample)
     val modeSignedOut: String get() = Res.s(R.string.settings_mode_signed_out)
+    val noTafAlertsPhonesWhen: String get() = Res.s(R.string.settings_no_taf_alerts_phones_when)
     val peopleApps: String get() = Res.s(R.string.settings_people_apps)
     val plan: String get() = Res.s(R.string.settings_plan)
     val privacyPolicy: String get() = Res.s(R.string.settings_privacy_policy)
     val readAlerts: String get() = Res.s(R.string.settings_read_alerts)
+    val refundsAnsweredMaria: String get() = Res.s(R.string.settings_refunds_answered_maria)
     val searchTimeZones: String get() = Res.s(R.string.settings_search_time_zones)
     val showSuggestions: String get() = Res.s(R.string.settings_show_suggestions)
     val signInAgain: String get() = Res.s(R.string.settings_sign_in_again)
     object SignInAgainConfirm {
       val body: String get() = Res.s(R.string.settings_sign_in_again_confirm_body)
+      fun bodyDevice(device: String): String = Res.s(R.string.settings_sign_in_again_confirm_body_device, device)
       val confirm: String get() = Res.s(R.string.settings_sign_in_again_confirm_confirm)
       val title: String get() = Res.s(R.string.settings_sign_in_again_confirm_title)
     }
@@ -1476,6 +1789,7 @@ object Words {
     val signOut: String get() = Res.s(R.string.settings_sign_out)
     object SignOutOfKiff {
       val body: String get() = Res.s(R.string.settings_sign_out_of_kiff_body)
+      fun bodyDevice(device: String): String = Res.s(R.string.settings_sign_out_of_kiff_body_device, device)
       val title: String get() = Res.s(R.string.settings_sign_out_of_kiff_title)
     }
     val signedInAs: String get() = Res.s(R.string.settings_signed_in_as)
@@ -1490,14 +1804,17 @@ object Words {
     object TimeZone {
       fun notChanged(why: String): String = Res.s(R.string.settings_time_zone_not_changed, why)
       fun prompt(zone: String): String = Res.s(R.string.settings_time_zone_prompt, zone)
+      val usesThis: String get() = Res.s(R.string.settings_time_zone_uses_this)
     }
     object TimeZoneOffer {
       fun text(current: String): String = Res.s(R.string.settings_time_zone_offer_text, current)
+      fun textDevice(device: String, zone: String): String = Res.s(R.string.settings_time_zone_offer_text_device, device, zone)
       fun title(zone: String): String = Res.s(R.string.settings_time_zone_offer_title, zone)
       fun use(zone: String): String = Res.s(R.string.settings_time_zone_offer_use, zone)
     }
     val timeZoneTitle: String get() = Res.s(R.string.settings_time_zone_title)
     val title: String get() = Res.s(R.string.settings_title)
+    fun useDeviceZone(device: String, identifier: String): String = Res.s(R.string.settings_use_device_zone, device, identifier)
     fun usePhoneZone(zone: String): String = Res.s(R.string.settings_use_phone_zone, zone)
     val version: String get() = Res.s(R.string.settings_version)
     val yourAccount: String get() = Res.s(R.string.settings_your_account)
@@ -1519,6 +1836,7 @@ object Words {
     val followUps: String get() = Res.s(R.string.setup_follow_ups)
     val fromTafs: String get() = Res.s(R.string.setup_from_tafs)
     val ifBusy: String get() = Res.s(R.string.setup_if_busy)
+    val ifStillWorking: String get() = Res.s(R.string.setup_if_still_working)
     val improveInCoach: String get() = Res.s(R.string.setup_improve_in_coach)
     val inApps: String get() = Res.s(R.string.setup_in_apps)
     val job: String get() = Res.s(R.string.setup_job)
@@ -1547,9 +1865,12 @@ object Words {
       val replyTitle: String get() = Res.s(R.string.setup_place_reply_title)
       val replyWords: String get() = Res.s(R.string.setup_place_reply_words)
     }
+    val readingResults: String get() = Res.s(R.string.setup_reading_results)
+    val readingStarts: String get() = Res.s(R.string.setup_reading_starts)
     val remove: String get() = Res.s(R.string.setup_remove)
     val removeForGood: String get() = Res.s(R.string.setup_remove_for_good)
     val resultsGoTo: String get() = Res.s(R.string.setup_results_go_to)
+    fun resultsNotChanged(why: String): String = Res.s(R.string.setup_results_not_changed, why)
     val resumeEvery: String get() = Res.s(R.string.setup_resume_every)
     val runAfter: String get() = Res.s(R.string.setup_run_after)
     val schedule: String get() = Res.s(R.string.setup_schedule)
@@ -1562,11 +1883,19 @@ object Words {
   }
   object SignIn {
     val againToSign: String get() = Res.s(R.string.sign_in_again_to_sign)
+    fun againToSignDevice(device: String): String = Res.s(R.string.sign_in_again_to_sign_device, device)
     fun agree(terms: String, privacy: String): String = Res.s(R.string.sign_in_agree, terms, privacy)
     val checkCode: String get() = Res.s(R.string.sign_in_check_code)
+    fun couldNotFinish(why: String): String = Res.s(R.string.sign_in_could_not_finish, why)
+    fun couldNotStart(why: String): String = Res.s(R.string.sign_in_could_not_start, why)
+    val deletesEveryTafRunsChats: String get() = Res.s(R.string.sign_in_deletes_every_taf_runs_chats)
     val didntWork: String get() = Res.s(R.string.sign_in_didnt_work)
+    fun everyActionTafTakesGoes(device: String): String = Res.s(R.string.sign_in_every_action_taf_takes_goes, device)
+    val howWorks: String get() = Res.s(R.string.sign_in_how_works)
+    fun iosDidNotOpenSign(code: String, context: String): String = Res.s(R.string.sign_in_ios_did_not_open_sign, code, context)
     val lead: String get() = Res.s(R.string.sign_in_lead)
     val notSignedOut: String get() = Res.s(R.string.sign_in_not_signed_out)
+    fun notSignedOutDevice(why: String, device: String): String = Res.s(R.string.sign_in_not_signed_out_device, why, device)
     val openKiff: String get() = Res.s(R.string.sign_in_open_kiff)
     val otherBrowser: String get() = Res.s(R.string.sign_in_other_browser)
     object Relink {
@@ -1579,8 +1908,11 @@ object Words {
       val notApprovedInBrowser: String get() = Res.s(R.string.sign_in_relink_not_approved_in_browser)
       val prompt: String get() = Res.s(R.string.sign_in_relink_prompt)
     }
+    val signDidNotComeBack: String get() = Res.s(R.string.sign_in_sign_did_not_come_back)
     val signedOutOfKiff: String get() = Res.s(R.string.sign_in_signed_out_of_kiff)
+    val tafsHadNoWindowScreen: String get() = Res.s(R.string.sign_in_tafs_had_no_window_screen)
     val waiting: String get() = Res.s(R.string.sign_in_waiting)
+    fun waitingForBrowser(userCode: String, device: String): String = Res.s(R.string.sign_in_waiting_for_browser, userCode, device)
     object Welcome {
       val insideLead: String get() = Res.s(R.string.sign_in_welcome_inside_lead)
       val insideRest: String get() = Res.s(R.string.sign_in_welcome_inside_rest)
@@ -1629,6 +1961,7 @@ object Words {
       val whoHolds: String get() = Res.s(R.string.taf_halt_who_holds)
     }
     val itsWork: String get() = Res.s(R.string.taf_its_work)
+    val keysKeptSealed: String get() = Res.s(R.string.taf_keys_kept_sealed)
     val lastRun: String get() = Res.s(R.string.taf_last_run)
     object Memory {
       val empty: String get() = Res.s(R.string.taf_memory_empty)
@@ -1643,6 +1976,7 @@ object Words {
     }
     fun nextRunAt(time: String): String = Res.s(R.string.taf_next_run_at, time)
     fun notArchived(why: String): String = Res.s(R.string.taf_not_archived, why)
+    val notLiveVersionCardTaf: String get() = Res.s(R.string.taf_not_live_version_card_taf)
     fun notPutBack(why: String): String = Res.s(R.string.taf_not_put_back, why)
     object Now {
       val actingUnderKiff: String get() = Res.s(R.string.taf_now_acting_under_kiff)
@@ -1669,11 +2003,13 @@ object Words {
       val button: String get() = Res.s(R.string.taf_remove_button)
       fun cardsLeft(count: Int): String = Res.p(R.plurals.taf_remove_cards_left, count, count)
       val cardsRevoked: String get() = Res.s(R.string.taf_remove_cards_revoked)
+      fun cloudDidNotAnswer(cards: String, why: String): String = Res.s(R.string.taf_remove_cloud_did_not_answer, cards, why)
       val connectionsDisconnected: String get() = Res.s(R.string.taf_remove_connections_disconnected)
       fun connectionsLeft(count: Int): String = Res.p(R.plurals.taf_remove_connections_left, count, count)
       fun done(taf: String): String = Res.s(R.string.taf_remove_done, taf)
       val finishesOnRefresh: String get() = Res.s(R.string.taf_remove_finishes_on_refresh)
       fun notFinished(steps: String): String = Res.s(R.string.taf_remove_not_finished, steps)
+      fun notFinishedAfter(cards: String, failed: String): String = Res.s(R.string.taf_remove_not_finished_after, cards, failed)
       fun prompt(taf: String): String = Res.s(R.string.taf_remove_prompt, taf)
       val stepHistory: String get() = Res.s(R.string.taf_remove_step_history)
     }
@@ -1706,6 +2042,10 @@ object Words {
       val setup: String get() = Res.s(R.string.taf_section_setup)
     }
     val showAllRuns: String get() = Res.s(R.string.taf_show_all_runs)
+    fun showCard(title: String): String = Res.s(R.string.taf_show_card, title)
+    val showsCards: String get() = Res.s(R.string.taf_shows_cards)
+    val signedToolsBeingChosen: String get() = Res.s(R.string.taf_signed_tools_being_chosen)
+    val signedToolsWaitingYourApproval: String get() = Res.s(R.string.taf_signed_tools_waiting_your_approval)
     val startingRun: String get() = Res.s(R.string.taf_starting_run)
     object State {
       val halted: String get() = Res.s(R.string.taf_state_halted)
@@ -1715,6 +2055,9 @@ object Words {
       val waiting: String get() = Res.s(R.string.taf_state_waiting)
       val working: String get() = Res.s(R.string.taf_state_working)
     }
+    val tryVersionFirstYouChat: String get() = Res.s(R.string.taf_try_version_first_you_chat)
+    fun tryingResume(n: String): String = Res.s(R.string.taf_trying_resume, n)
+    fun unlessYouApproveToolsSign(time: String): String = Res.s(R.string.taf_unless_you_approve_tools_sign, time)
     object Versions {
       val title: String get() = Res.s(R.string.taf_versions_title)
     }
@@ -1730,16 +2073,20 @@ object Words {
     fun worksUnderCards(count: Int): String = Res.p(R.plurals.taf_works_under_cards, count, count)
   }
   object Usage {
+    fun adminAnswers(detail: String): String = Res.s(R.string.usage_admin_answers, detail)
     val balance: String get() = Res.s(R.string.usage_balance)
     fun balanceNotRead(why: String): String = Res.s(R.string.usage_balance_not_read, why)
     val buy: String get() = Res.s(R.string.usage_buy)
     val buying: String get() = Res.s(R.string.usage_buying)
+    val cancelSolo: String get() = Res.s(R.string.usage_cancel_solo)
+    fun companyBilledKiffSoloBought(time: String): String = Res.s(R.string.usage_company_billed_kiff_solo_bought, time)
     fun count(counted: String, unit: String): String = Res.s(R.string.usage_count, counted, unit)
     fun countOf(counted: String, of: String, unit: String): String = Res.s(R.string.usage_count_of, counted, of, unit)
     val credits: String get() = Res.s(R.string.usage_credits)
     fun creditsNotRead(why: String): String = Res.s(R.string.usage_credits_not_read, why)
     val label: String get() = Res.s(R.string.usage_label)
     val lastPeriod: String get() = Res.s(R.string.usage_last_period)
+    val lastPeriodCreditsCouldNot: String get() = Res.s(R.string.usage_last_period_credits_could_not)
     val limitCeiling: String get() = Res.s(R.string.usage_limit_ceiling)
     val limitChanged: String get() = Res.s(R.string.usage_limit_changed)
     val manage: String get() = Res.s(R.string.usage_manage)
@@ -1747,6 +2094,7 @@ object Words {
     val moreRuns: String get() = Res.s(R.string.usage_more_runs)
     fun moreRunsNotRead(why: String): String = Res.s(R.string.usage_more_runs_not_read, why)
     fun notRead(why: String): String = Res.s(R.string.usage_not_read, why)
+    val packCredits: String get() = Res.s(R.string.usage_pack_credits)
     val packsKeep: String get() = Res.s(R.string.usage_packs_keep)
     object RaiseLimit {
       fun notRaised(why: String): String = Res.s(R.string.usage_raise_limit_not_raised, why)
@@ -1776,6 +2124,7 @@ object Words {
     }
     val restorePurchases: String get() = Res.s(R.string.usage_restore_purchases)
     val restoring: String get() = Res.s(R.string.usage_restoring)
+    val runsCouldNotReadPull: String get() = Res.s(R.string.usage_runs_could_not_read_pull)
     val solo: String get() = Res.s(R.string.usage_solo)
     fun soloTerms(price: String, every: String): String = Res.s(R.string.usage_solo_terms, price, every)
     fun soloTermsTrial(trial: String, price: String, every: String): String = Res.s(R.string.usage_solo_terms_trial, trial, price, every)
@@ -1783,6 +2132,7 @@ object Words {
     fun tafRunsNotRead(why: String): String = Res.s(R.string.usage_taf_runs_not_read, why)
     fun tasks(count: Int): String = Res.p(R.plurals.usage_tasks, count, count)
     fun tasksThisPeriod(count: Int): String = Res.p(R.plurals.usage_tasks_this_period, count, count)
+    val theBalance: String get() = Res.s(R.string.usage_the_balance)
     val thisPeriod: String get() = Res.s(R.string.usage_this_period)
     val title: String get() = Res.s(R.string.usage_title)
     val useUnavailable: String get() = Res.s(R.string.usage_use_unavailable)
@@ -1795,7 +2145,9 @@ object Words {
     fun cardNotRead(why: String): String = Res.s(R.string.version_card_not_read, why)
     object CardNote {
       val issues: String get() = Res.s(R.string.version_card_note_issues)
+      fun issuesBiometry(biometry: String): String = Res.s(R.string.version_card_note_issues_biometry, biometry)
       val removes: String get() = Res.s(R.string.version_card_note_removes)
+      fun removesBiometry(biometry: String): String = Res.s(R.string.version_card_note_removes_biometry, biometry)
     }
     fun cardOutOfDate(n: String): String = Res.s(R.string.version_card_out_of_date, n)
     val cardUnreadable: String get() = Res.s(R.string.version_card_unreadable)
@@ -1853,6 +2205,7 @@ object Words {
     val startTrying: String get() = Res.s(R.string.version_start_trying)
     val stopAndInstall: String get() = Res.s(R.string.version_stop_and_install)
     fun switchNotCancelled(why: String): String = Res.s(R.string.version_switch_not_cancelled, why)
+    val thatTaf: String get() = Res.s(R.string.version_that_taf)
     val title: String get() = Res.s(R.string.version_title)
     object Trial {
       val badge: String get() = Res.s(R.string.version_trial_badge)
@@ -1869,6 +2222,7 @@ object Words {
       fun trying(n: String): String = Res.s(R.string.version_trial_trying, n)
     }
     val trialCardUnreadable: String get() = Res.s(R.string.version_trial_card_unreadable)
+    val trialHasEnded: String get() = Res.s(R.string.version_trial_has_ended)
     object Tried {
       fun calls(count: Int): String = Res.p(R.plurals.version_tried_calls, count, count)
       val ended: String get() = Res.s(R.string.version_tried_ended)
@@ -1896,18 +2250,35 @@ object Words {
     val working: String get() = Res.s(R.string.version_working)
   }
   object Voice {
+    val cancelDictating: String get() = Res.s(R.string.voice_cancel_dictating)
     fun cannot(language: String): String = Res.s(R.string.voice_cannot, language)
     val dictate: String get() = Res.s(R.string.voice_dictate)
+    fun dictationCouldNotStart(why: String): String = Res.s(R.string.voice_dictation_could_not_start, why)
     fun dictationIn(language: String): String = Res.s(R.string.voice_dictation_in, language)
+    fun dictationNotAddKeyboardDictation(device: String): String = Res.s(R.string.voice_dictation_not_add_keyboard_dictation, device)
+    val dictationNotAvailableRightTry: String get() = Res.s(R.string.voice_dictation_not_available_right_try)
+    fun dictationStoppedTapMicStart(why: String): String = Res.s(R.string.voice_dictation_stopped_tap_mic_start, why)
     fun downloading(language: String): String = Res.s(R.string.voice_downloading, language)
+    fun listeningIn(name: String): String = Res.s(R.string.voice_listening_in, name)
+    val microphoneOffTafsTurnSettings: String get() = Res.s(R.string.voice_microphone_off_tafs_turn_settings)
     val noMicrophone: String get() = Res.s(R.string.voice_no_microphone)
     val notOnDevice: String get() = Res.s(R.string.voice_not_on_device)
     val openSettings: String get() = Res.s(R.string.voice_open_settings)
+    val putsMessageBoxBack: String get() = Res.s(R.string.voice_puts_message_box_back)
+    val speechRecognitionNotAvailableLanguage: String get() = Res.s(R.string.voice_speech_recognition_not_available_language)
+    val speechRecognitionOffTafsTurn: String get() = Res.s(R.string.voice_speech_recognition_off_tafs_turn)
+    val speechRecognitionRestrictedDeviceDictation: String get() = Res.s(R.string.voice_speech_recognition_restricted_device_dictation)
     val stop: String get() = Res.s(R.string.voice_stop)
     val stopped: String get() = Res.s(R.string.voice_stopped)
+    val tafsTurnsYourVoiceInto: String get() = Res.s(R.string.voice_tafs_turns_your_voice_into)
     val title: String get() = Res.s(R.string.voice_title)
+    val voiceBecomesTextDeviceNot: String get() = Res.s(R.string.voice_voice_becomes_text_device_not)
+    val whatYouSaidStaysMessage: String get() = Res.s(R.string.voice_what_you_said_stays_message)
   }
   object Work {
+    fun askingKiffRun(tool: String): String = Res.s(R.string.work_asking_kiff_run, tool)
+    fun didNotStop(why: String): String = Res.s(R.string.work_did_not_stop, why)
+    val itsRuns: String get() = Res.s(R.string.work_its_runs)
     fun notRead(why: String): String = Res.s(R.string.work_not_read, why)
     fun notSentAgain(why: String): String = Res.s(R.string.work_not_sent_again, why)
     object Request {
@@ -1918,5 +2289,7 @@ object Words {
     fun requestsNeedYou(count: Int): String = Res.p(R.plurals.work_requests_need_you, count, count)
     val sendAgain: String get() = Res.s(R.string.work_send_again)
     val sendingAgain: String get() = Res.s(R.string.work_sending_again)
+    val stopRun: String get() = Res.s(R.string.work_stop_run)
+    fun stoppedPartWayBeforeFinished(taf: String): String = Res.s(R.string.work_stopped_part_way_before_finished, taf)
   }
 }

@@ -861,8 +861,8 @@ final class TafsCloud {
         var workingRun: String? = nil
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says.
         var steering: Steering? = nil
-        /// The latest run stopped at a cap of its own (`cost_cap` or `turn_cap`), with no
-        /// words for it: the app says why.
+        /// The latest run stopped without finishing (`cost_cap`, `turn_cap`, `max_token` or
+        /// `refused`), with no words for it: the app says why.
         var capped: Capped? = nil
         /// The taf's `ask_coach` cards, the settings it hands to Coach (kiff/tafs#476, gap 15):
         /// the only cards of a taf's own thread the app draws.
@@ -965,11 +965,14 @@ final class TafsCloud {
         }
         struct Response: Decodable {
             let messages: [ChatMessage]; let working: Working?; let steering: Lenient?; let capped: LenientCap?
+            /// Where the latest run stopped without finishing, any stop tafs cloud names (`turn_cap`,
+            /// `cost_cap`, `max_token`, `refused`); `capped` carries the two caps alone, for older apps.
+            var stopped: LenientCap? = nil
             var components: [AskCoachCard.Lenient]? = nil
         }
         let r: Response = try await send("GET", path)
         return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering,
-                      capped: r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card))
+                      capped: r.stopped?.capped ?? r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card))
     }
 
     /// What tafs cloud did with a message written to the run at work.
@@ -1213,7 +1216,7 @@ final class TafsCloud {
     /// Splits tafs cloud's export into its two files.
     static func splitExport(_ data: Data) throws -> (json: Data, text: String) {
         guard var body = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw CloudError(status: 0, message: "The export isn't what tafs cloud sends.")
+            throw CloudError(status: 0, message: Words.Chat.exportNotWhatTafsCloud)
         }
         let text = body.removeValue(forKey: "readable") as? String ?? ""
         let json = try JSONSerialization.data(withJSONObject: body, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])

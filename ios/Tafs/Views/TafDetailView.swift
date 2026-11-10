@@ -185,7 +185,7 @@ struct TafDetailView: View {
                 }
                 if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {
                     OpenTrialLink(chatID: chat, tafID: taf.id) {
-                        Text("Trying v\(trial.n) · Resume").scaledFont(13, weight: .semibold).foregroundColor(Theme.amber)
+                        Text(Words.Taf.tryingResume(n: "\(trial.n)")).scaledFont(13, weight: .semibold).foregroundColor(Theme.amber)
                     }
                 }
             }
@@ -491,7 +491,7 @@ struct ConnectionsPanel: View {
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(KIFFMapping.vendorWords(grant.vendor)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                            Text("Keys kept sealed\(grant.account.map { " · \($0)" } ?? "")")
+                            Text(grant.account.map { Words.Taf.keysKeptSealed + " · " + $0 } ?? Words.Taf.keysKeptSealed)
                                 .scaledFont(12).foregroundColor(Theme.dim)
                             if grant.needsReconnect {
                                 // Its vendor signed it out: planque's words, and the owner signs in again.
@@ -505,7 +505,7 @@ struct ConnectionsPanel: View {
                                 if model.leftOver(grant, of: tafID) {
                                     // Left over after a version moved its Card (kiff/tafs#138). An older version may still
                                     // run on it, so the words don't say to remove it.
-                                    Text("Not on the live version's Card: the taf doesn't use it now. Going back to an older version may need it.")
+                                    Text(Words.Taf.notLiveVersionCardTaf)
                                         .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
@@ -515,7 +515,7 @@ struct ConnectionsPanel: View {
                                     .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                             } else {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
-                                Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
+                                Text(grant.listed ? Words.Taf.signedToolsBeingChosen : Words.Taf.signedToolsWaitingYourApproval)
                                     .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                 // None chosen yet: Coach chooses them with the owner.
                                 if grant.listed, manages, model.mayUseCoach {
@@ -526,7 +526,7 @@ struct ConnectionsPanel: View {
                                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                                 }
                                 if let end = grant.heldUntilDate {
-                                    Text("Unless you approve its tools, the sign-in is revoked \(end.shown(date: .abbreviated, time: .shortened)).")
+                                    Text(Words.Taf.unlessYouApproveToolsSign(time: "\(end.shown(date: .abbreviated, time: .shortened))"))
                                         .scaledFont(12).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
                                 }
                             }
@@ -623,7 +623,7 @@ struct VersionsPanel: View {
     var body: some View {
         Panel {
             Eyebrow(text: Words.Version.title)
-            Text("Try a version first: you chat with it under a Card of its own, while the live version keeps working. Installing one makes it the live version.")
+            Text(Words.Taf.tryVersionFirstYouChat)
                 .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             if let sw = model.switches[tafID] { switchUnderWay(sw) }
             if let n = model.staleVersionCards[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
@@ -793,8 +793,8 @@ struct VersionCardSheet: View {
                     if let draft, draft.cards != nil {
                         DraftCardsView(draft: draft)
                         Text(draft.retires?.isEmpty == false
-                             ? "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
-                             : "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF, then this version goes live.")
+                             ? Words.Version.CardNote.removesBiometry(biometry: "\(Biometry.name)")
+                             : Words.Version.CardNote.issuesBiometry(biometry: "\(Biometry.name)"))
                             .scaledFont(12).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         ApprovalNotice()
                     } else if loaded {
@@ -1111,7 +1111,7 @@ struct CardBar: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.drivablePlain)
-        .accessibilityHint("Shows the Cards")
+        .accessibilityHint(Words.Taf.showsCards)
     }
 
     /// "Refunds · 3 Cards": the Card's name, its environment when it isn't production, and the
@@ -1192,7 +1192,7 @@ struct CardStack: View {
                         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(Color.black.opacity(Self.shade(depth: ordered.count - 1 - index))))
                         .shadow(color: .black.opacity(0.16), radius: 4, y: -2)
-                }.buttonStyle(.drivablePlain).accessibilityLabel("\(card.title). Show this Card")
+                }.buttonStyle(.drivablePlain).accessibilityLabel(Words.Taf.showCard(title: "\(card.title)"))
             }
         }
         .frame(maxWidth: TafCardFace.width)
