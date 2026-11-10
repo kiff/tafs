@@ -88,7 +88,9 @@ export function entryOf(text: string): CoachEntry {
   if (t.startsWith("[did this happen ")) return "did_this_happen";
   if (DELIVERY_NOTE.test(t)) return "delivery";
   const said = t.trim();
-  if (RECIPES.some((r) => said === r.say.trim() || said.startsWith(r.say.trim()))) return "recipe";
+  // A recipe's words in any of its languages: the apps fill the message box with the person's own.
+  const says = RECIPES.flatMap((r) => [r.say, ...Object.values(r.languages).map((l) => l.say)]);
+  if (says.some((say) => said === say.trim() || said.startsWith(say.trim()))) return "recipe";
   return "free";
 }
 
