@@ -107,12 +107,17 @@ export async function readCredits(token: string, previous: boolean, doFetch: Fet
 
 /** The account's balance now, from KIFF's credits read; unreadable from a KIFF from before it. */
 export async function readBalance(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<KIFFBalance> {
+  return (await readBalanceAndRuns(token, doFetch, base)).balance;
+}
+
+/** The balance now, and how many runs this period counted, from the same read. */
+export async function readBalanceAndRuns(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<{ balance: KIFFBalance; runs: number }> {
   const k = await readCredits(token, false, doFetch, base);
   const b = k.balance;
   if (!b || !["solo", "company", "unbounded", "none"].includes(b.kind) || !b.period || typeof b.period.end !== "string") {
     throw new CreditsError(503, UNREADABLE);
   }
-  return b;
+  return { balance: b, runs: k.runs };
 }
 
 /** A page of one taf's runs from KIFF: the person's own, and everyone's on a taf they manage. */
@@ -291,11 +296,16 @@ export interface BalanceView {
     warning: string | null;
     raise: { words: string; from_cents: number } | null;
     /**
-     * What the app may offer this person in the store. `first_month` is the First month pack, while
-     * it can still be offered: `ready` once Solo runs, when it can be bought; before a plan it isn't,
-     * and `words` say why, for a row with its price and no button. `null`: not offered.
+     * What the app may offer this person in the store. `first_month` is the First month pack, offered
+     * only while Solo runs, among the packs: `{ready: true, words: null}`. `null`: not offered, as
+     * before a plan, where a pack can't be bought.
      */
     buy: { solo: boolean; packs: boolean; first_month: { ready: boolean; words: string | null } | null } | null;
+    /**
+     * Whether Plan & usage shows the Credits panel: false only with no plan and no run this period or
+     * the last, the two periods the panel shows, as for an account just made.
+     */
+    credits_panel: boolean;
   };
   plan_line: string;
   plan_tone: KIFFBalance["state"];
@@ -327,9 +337,10 @@ export function waitingWords(b: Pick<KIFFBalance, "kind" | "why" | "can_raise" |
 /**
  * The balance, in tafs cloud's words (docs/accounts.md, "The balance read"): its line and second
  * line, the bar, the warning from 80% and while waiting, the raise for whoever may make it, what may
- * be bought, and the plan's lines for Settings and Home. The apps draw them as they are.
+ * be bought, and the plan's lines for Settings and Home. The apps draw them as they are. `ranLately`:
+ * a run counted this period or the last; with no plan and none, the Credits panel has nothing to show.
  */
-export function balanceView(b: KIFFBalance, lang: Lang = "en"): BalanceView {
+export function balanceView(b: KIFFBalance, lang: Lang = "en", ranLately = true): BalanceView {
   const w = wordsIn(lang);
   const c = (n: number) => credits(n, lang);
   const eur = (cents: number) => euros(cents, lang);
@@ -338,13 +349,9 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en"): BalanceView {
   const waiting = b.state === "waiting";
   const raise = b.kind === "company" && b.can_raise && b.raise_to_cents > 0
     ? { words: w.cr_raise_to(eur(b.raise_to_cents)), from_cents: b.limit_cents } : null;
-  // The First month pack is bought once Solo runs, like any pack: before a plan it is shown beside
-  // Solo, waiting, in words. Anywhere else (Solo running with no packs on offer, or a plan that
-  // buys none) it isn't offered: "Add it once Solo starts." is never said where Solo isn't offered.
-  const firstMonth = b.can_buy?.once !== true ? null
-    : b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null }
-    : b.kind === "none" && b.can_buy.solo === true ? { ready: false, words: w.cr_first_month_wait }
-    : null;
+  // The First month pack is bought once Solo runs, like any pack, and shown only then, among the
+  // packs: before a plan, a lone pack that can't be bought only reads as an upsell.
+  const firstMonth = b.can_buy?.once === true && b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null } : null;
   const buy = b.can_buy && (b.can_buy.solo || b.can_buy.packs)
     ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true, first_month: firstMonth } : null;
   let words: string, detail: string | null = null, warning: string | null = null, plan: string, home: string | null = null;
@@ -392,7 +399,7 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en"): BalanceView {
   }
   return {
     balance: { state: b.state, why: waiting ? (b.why ?? null) : null, meter_pct: b.kind === "solo" || b.kind === "company" ? pct : null,
-      words, detail, warning, raise, buy },
+      words, detail, warning, raise, buy, credits_panel: b.kind !== "none" || ranLately },
     plan_line: plan, plan_tone: b.state, home_line: home,
   };
 }
