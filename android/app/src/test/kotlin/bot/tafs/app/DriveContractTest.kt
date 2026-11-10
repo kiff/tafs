@@ -6,6 +6,8 @@ import bot.tafs.app.drive.DriveDiagnostics
 import bot.tafs.app.drive.Shot
 import bot.tafs.app.drive.topmostAt
 import java.io.File
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -22,6 +24,26 @@ class DriveContractTest {
   private fun File.text(): String = readText().replace("\r\n", "\n")
 
   private fun files(): List<File> = sources.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
+
+  /**
+   * Each `Words` accessor (`Words.Taf.Remove.button`) as the English it says, from the shared `app/strings/en.json`, a count by its
+   * `other` form: the scans read the words a control shows, wherever they're kept.
+   */
+  private val english: Map<String, String> by lazy {
+    val en = kotlinx.serialization.json.Json.parseToJsonElement(File("../../app/strings/en.json").readText()).jsonObject
+    fun camel(part: String, upper: Boolean) = part.split("_").let { w -> (if (upper) w[0].replaceFirstChar(Char::uppercase) else w[0]) + w.drop(1).joinToString("") { it.replaceFirstChar(Char::uppercase) } }
+    en.entries.associate { (key, value) ->
+      val parts = key.split(".")
+      val accessor = "Words." + parts.dropLast(1).joinToString(".") { camel(it, true) } + "." + camel(parts.last(), false)
+      val text = (value as? kotlinx.serialization.json.JsonObject)?.get("other") ?: value
+      accessor to text.jsonPrimitive.content
+    }
+  }
+
+  private val accessor = Regex("""Words(?:\.[A-Z]\w*)+\.[a-z]\w*""")
+
+  /** [line] with each `Words` accessor written out as its English, quoted, so a control's words read as they show. */
+  private fun readable(line: String): String = accessor.replace(line) { m -> english[m.value]?.let { "\"" + it.replace("\"", "'") + "\"" } ?: m.value }
 
   @Test
   fun aPointOnAScaledScreenshotGoesToTheTopmostWindowUnderIt() {
@@ -127,20 +149,24 @@ class DriveContractTest {
     val touch = Regex("""TextButton|DropdownMenuItem|OutlineButton|PrimaryButton|\bButton\(|clickable""")
     val notConfirming = setOf(
       "Modifier.clickable(onClickLabel = \"Open Halt\"", // the halt chip opens the halt screen, whose buttons carry the mark
-      "contentDescription = \"Remove \${file.name}\"", // takes a file off a message not sent yet
+      "contentDescription = \"Remove {name}\"(file.name)", // takes a file off a message not sent yet
       "Text(\"Delete account\", style = scaled(28", // the screen's title
       "Text(if (tafId == null) \"Halt all\" else \"Halt\", style = scaled(", // the halt screen's title, and the row that opens it
       "title = { Text(", // a dialog's title, never touched
     )
-    // Words kept as constants count too: `ConnectAppsWords.DISCONNECT` is "Disconnect" wherever it's used.
-    val constant = Regex("""const val (\w+)\s*=\s*("[^"]*")""")
+    // Words kept as constants count too: `ConnectAppsWords.DISCONNECT` is "Disconnect" wherever it's used, whether it's written
+    // there or reads a `Words` line.
+    val constant = Regex("""(?:const val (\w+)\s*=\s*("[^"]*")|val (\w+)(?::\s*String)?\s*get\(\)\s*=\s*(Words[\w.]+))""")
     val confirmingConstants = files().flatMap { f ->
       val obj = Regex("""object (\w+)""").find(f.text())?.groupValues?.get(1)
-      constant.findAll(f.text()).filter { label.containsMatchIn(it.groupValues[2]) }.mapNotNull { m -> obj?.let { "$it.${m.groupValues[1]}" } }.toList()
+      constant.findAll(f.text()).mapNotNull { m ->
+        val (name, words) = if (m.groupValues[1].isNotEmpty()) m.groupValues[1] to m.groupValues[2] else m.groupValues[3] to readable(m.groupValues[4])
+        if (label.containsMatchIn(words)) obj?.let { "$it.$name" } else null
+      }.toList()
     }.toSet()
     fun confirming(line: String) = label.containsMatchIn(line) || confirmingConstants.any { Regex("""\b${Regex.escape(it)}\b""").containsMatchIn(line) }
     val unmarked = files().filter { "/drive/" !in it.path }.flatMap { f ->
-      val lines = f.readLines()
+      val lines = f.readLines().map(::readable)
       lines.indices.filter { i ->
         val line = lines[i]
         confirming(line) && notConfirming.none { it in line } &&
