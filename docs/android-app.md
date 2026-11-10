@@ -81,6 +81,11 @@ The application id is `dev.kiff.tafs`; the Kotlin packages are `bot.tafs.app`.
 committed: CI writes it from the repository secret `GOOGLE_SERVICES_JSON`. A build without
 it has alerts off and says so in Settings.
 
+**Versions** (`android/app/build.gradle.kts`): `versionCode` goes up by one with every build,
+and `versionName` is what the store shows: `1.x` for a release with new features, `1.x.y` for
+one with fixes only. Every Android batch pull request says its `versionName`. The app went public
+at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
+
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job on a
 manual dispatch, in the `android-release` environment, which the owner approves each time.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
