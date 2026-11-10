@@ -26,6 +26,21 @@ class ConnectionSheetTest {
    * Connect apps lists every connection to an app (Android 36's phone round), by the app planque names for it: its `entry`,
    * which planque gives every grant now (kiff/planque#115, #116), a vendor's own sign-in included. Values as planque lists them.
    */
+  @Test fun theSetupIsReadAgainWhenPlanqueChangesAConnectionsState() {
+    fun g(status: String, agent: String = "refunds-1", signedIn: Boolean? = true) = KiffClient.json.decodeFromString<Grant>(
+      """{"id":"g1","status":"$status","signed_in":$signedIn,"request":{"server":"https://mcp.stripe.com","agent":"$agent","tools":[]}}""",
+    )
+    val connected = ConnectionWords.setupKey("refunds-1", listOf(g("connected")))
+    // The same state read again: nothing to read.
+    assertEquals(connected, ConnectionWords.setupKey("refunds-1", listOf(g("connected"))))
+    // Signed out at the vendor, then signed in again: each is read.
+    val signedOut = ConnectionWords.setupKey("refunds-1", listOf(g("needs_reconnect", signedIn = false)))
+    assertTrue(signedOut != connected)
+    assertEquals(connected, ConnectionWords.setupKey("refunds-1", listOf(g("connected"))))
+    // Another taf's connection changes nothing here.
+    assertEquals(connected, ConnectionWords.setupKey("refunds-1", listOf(g("connected"), g("needs_reconnect", agent = "other-2"))))
+  }
+
   @Test fun everyConnectionToAnAppIsListedUnderItWhateverStartedIt() {
     fun g(id: String, request: String, entry: String? = null, status: String = "connected") =
       KiffClient.json.decodeFromString<Grant>("""{"id":"$id","status":"$status"${entry?.let { ",\"entry\":\"$it\"" } ?: ""},"request":$request}""")

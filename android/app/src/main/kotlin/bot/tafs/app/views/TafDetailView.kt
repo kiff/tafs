@@ -167,7 +167,10 @@ fun TafDetailView(
     val sections = Section.entries.filter { it != Section.Chat || canChat }
     var section by rememberSaveable { mutableStateOf(sections.first()) }
     var activitySelection by rememberSaveable(taf.id) { mutableStateOf("") }
-    if (state.mode == Mode.kiff && taf.cloudId != null) LaunchedEffect(taf.id) { actions.loadSetup(taf.id) }
+    // tafs cloud's setup words a connection's state ("Connected"); planque's state is read on its own. Read the setup again
+    // whenever planque's state for one of the taf's connections changes, so the two never disagree on screen.
+    val grantsNow = bot.tafs.app.model.ConnectionWords.setupKey(taf.id, state.grants)
+    if (state.mode == Mode.kiff && taf.cloudId != null) LaunchedEffect(taf.id, grantsNow) { actions.loadSetup(taf.id) }
     var frontCard by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmRevoke by rememberSaveable { mutableStateOf(false) }
     var confirmRemove by rememberSaveable { mutableStateOf(false) }
