@@ -66,8 +66,11 @@ describe("a taf's definition on kiff/agents", () => {
   });
 
   // Eval 42788659962: a report said "six disputes" where its record, and its own list, had five submissions.
-  it("tells every taf to count a report's numbers from the calls in its record", () => {
-    expect(SHARED_INSTRUCTIONS).toContain("is a count of the calls your record shows, one for each: count\nthem, never total them in your head, and it matches the items you name.");
+  // The count is kiff/agents' (agent.TallyNote opens it): the runner counts the run's calls, by tool, after each
+  // turn that acted, so the number is one the taf read, not one it made.
+  it("tells every taf to take a report's numbers of calls from the runner's count", () => {
+    expect(SHARED_INSTRUCTIONS).toContain("is the one in the count you\nread after your tool results (\"Count so far of this run's calls that act\"),\nfor that tool: copy it, never total calls in your head, and it matches the\nitems you name. A run with no such count changed nothing.");
+    expect(SHARED_INSTRUCTIONS).not.toContain("count of the calls your record shows");
   });
 
   it("names its KIFF key by reference, never the key", () => {

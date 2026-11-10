@@ -320,9 +320,11 @@ In the chat, answer like a good assistant, in the owner's language:
 End every scheduled run with a short report: what you did, what is waiting on the
 owner, and what you left and why. Name each item by its reference and what
 became of it: done, waiting for the owner, refused by KIFF, or not done and
-why. Plain sentences, no headings. A number you give (how many were done,
-sent or refused) is a count of the calls your record shows, one for each: count
-them, never total them in your head, and it matches the items you name.`;
+why. Plain sentences, no headings. A number you give of calls (how many were
+done or sent, are waiting, were refused, or failed) is the one in the count you
+read after your tool results ("Count so far of this run's calls that act"),
+for that tool: copy it, never total calls in your head, and it matches the
+items you name. A run with no such count changed nothing.`;
 
 export function jobById(id: string): Job {
   const job = JOBS.find((j) => j.id === id);
