@@ -707,7 +707,8 @@ class TafsCloud(
   internal suspend fun representation(path: String, etag: String? = null, extra: Map<String, String> = emptyMap()): HttpResponse {
     val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
     require(path.startsWith("/v1/"))
-    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer")
+    // The lines tafs cloud words for people come in the app's language (docs/api.md, The person's language).
+    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     etag?.let { headers["If-None-Match"] = it }; headers.putAll(extra)
     val response = transport.send(HttpRequest("GET", baseUrl + path, headers))
     if (response.status != 304 && response.status !in 200..299) throw CloudError(response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()))
@@ -716,7 +717,8 @@ class TafsCloud(
 
   internal suspend fun send(method: String, path: String, body: ByteArray? = null, extra: Map<String, String> = emptyMap()): ByteArray {
     val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
-    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer")
+    // The lines tafs cloud words for people come in the app's language (docs/api.md, The person's language).
+    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     if (body != null) headers["Content-Type"] = "application/json"
     headers.putAll(extra)
     val response = transport.send(HttpRequest(method, baseUrl + path, headers, body))
@@ -764,7 +766,7 @@ class TafsCloud(
 
   private suspend fun events(method: String, path: String, body: ByteArray?): kotlinx.coroutines.flow.Flow<StreamEvent> {
     val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
-    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer")
+    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     if (body != null) headers["Content-Type"] = "application/json"
     val response = transport.stream(HttpRequest(method, streamUrl + path, headers, body))
     if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.refusal), field(response.refusal, "words"), field(response.refusal, "code"))
@@ -801,7 +803,7 @@ class TafsCloud(
   /** The drive's requests, on the streaming function's address (a stream lives 14 minutes, longer than a CDN waits). */
   override suspend fun driveStream(drive: String): kotlinx.coroutines.flow.Flow<bot.tafs.app.drive.DriveEvent> {
     val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
-    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer")
+    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     val response = transport.stream(HttpRequest("GET", streamUrl + "/v1/coach/drive/${escaped(drive)}/stream", headers))
     if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: Words.Error.cloudAnswered(status = response.status.toString()))
     return bot.tafs.app.drive.DriveEvent.parse(response.lines)
