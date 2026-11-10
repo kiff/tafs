@@ -86,7 +86,7 @@ Damit automatisierst du Erstattungen, Rechnungszahlungen, Zugänge und Deploys. 
 Innerhalb seiner Card handelt ein taf und hinterlässt einen Beleg. Außerhalb wartet der taf auf deinem Handy auf deine Antwort. Widerrufe die Card, und keine neue Aktion geht mehr durch.
 
 WARUM DU IHM DIE ARBEIT ÜBERGEBEN KANNST
-• Grenzen, die er sich nicht wegreden kann: KIFF prüft jede Aktion gegen ihre Card, außerhalb der KI, bevor sie deine App erreicht. Kein Prompt ändert ein Limit.
+• Grenzen, die er sich nicht wegreden kann: KIFF prüft jede Aktion gegen seine Card, außerhalb der KI, bevor sie deine App erreicht. Kein Prompt ändert ein Limit.
 • Deine Anmeldungen bleiben versiegelt: Der taf sieht nie deine Passwörter oder Tokens. Der Verbindungsdienst von KIFF und sein Anmeldeanbieter verwahren sie, nie das Handy.
 • Dein Fingerabdruck für das, was zählt: Routinearbeit läuft innerhalb ihrer Grenzen. Alles jenseits der Card wird abgelehnt oder wartet, wenn die Card „Fragen“ sagt, auf dich und wird mit Fingerabdruck oder Gesicht genehmigt.
 • Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Zahlung durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
@@ -245,16 +245,16 @@ European Portuguese (`pt-PT`), as [languages.md](languages.md) proposes, address
 **Full description:**
 
 ```
-O tafs é onde uma empresa entrega tarefas a agentes de IA, ou colegas de IA, chamados tafs, e dá a cada um uma Card: os limites dentro dos quais trabalha.
+O tafs é onde uma empresa entrega tarefas a agentes de IA, ou colegas de IA, chamados tafs, e dá a cada um um Card: os limites dentro dos quais trabalha.
 
-Use-o para automatizar reembolsos, pagamento de faturas, acessos e implementações. Cada agente de IA trabalha de forma autónoma dentro da sua Card, e nunca para além dela.
+Use-o para automatizar reembolsos, pagamento de faturas, acessos e implementações. Cada agente de IA trabalha de forma autónoma dentro do seu Card, e nunca para além dele.
 
-Dentro da sua Card, um taf age e deixa um recibo. Fora dela, o taf aguarda a sua resposta no seu telemóvel. Revogue a Card e nenhuma ação nova avança.
+Dentro do seu Card, um taf age e deixa um recibo. Fora dele, o taf aguarda a sua resposta no seu telemóvel. Revogue o Card e nenhuma ação nova avança.
 
 PORQUE PODE ENTREGAR-LHE O TRABALHO
-• Limites que não consegue contornar com conversa: cada ação é verificada pela KIFF face à sua Card, fora da IA, antes de chegar à sua app. Nenhum prompt altera um limite.
-• Os seus acessos ficam selados: o taf nunca vê as suas palavras-passe nem os seus tokens. São o serviço de ligação da KIFF e o seu fornecedor de início de sessão que os guardam, nunca o telemóvel.
-• A sua impressão digital para o que importa: o trabalho de rotina avança dentro dos seus limites. O que vai além da sua Card é recusado ou, se a sua Card disser «Perguntar», aguarda por si e é aprovado com a sua impressão digital ou o seu rosto.
+• Limites que não consegue contornar com conversa: cada ação é verificada pelo KIFF face ao seu Card, fora da IA, antes de chegar à sua app. Nenhum prompt altera um limite.
+• Os seus acessos ficam selados: o taf nunca vê as suas palavras-passe nem os seus tokens. São o serviço de ligação do KIFF e o seu fornecedor de início de sessão que os guardam, nunca o telemóvel.
+• A sua impressão digital para o que importa: o trabalho de rotina avança dentro dos seus limites. O que vai além do seu Card é recusado ou, se o seu Card disser «Perguntar», aguarda por si e é aprovado com a sua impressão digital ou o seu rosto.
 • É você quem decide o que aconteceu de facto: quando uma app não consegue confirmar que um pagamento foi feito, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por suposição.
 
 TAREFAS QUE UM TAF PODE ASSUMIR, POR EXEMPLO
@@ -265,8 +265,8 @@ TAREFAS QUE UM TAF PODE ASSUMIR, POR EXEMPLO
 • Estornos: responde a disputas de cartão com provas.
 
 COMO FUNCIONA
-• Coach: descreva a tarefa por palavras suas. O Coach, o assistente de IA do tafs, liga as suas apps, prepara o taf e a sua Card, e você confirma.
-• Precisa de si: quando um taf quer ir além da sua Card, a chamada fica retida. Aprove-a uma vez ou recuse-a, com a sua impressão digital ou o desbloqueio facial.
+• Coach: descreva a tarefa por palavras suas. O Coach, o assistente de IA do tafs, liga as suas apps, prepara o taf e o seu Card, e você confirma.
+• Precisa de si: quando um taf quer ir além do seu Card, a chamada fica retida. Aprove-a uma vez ou recuse-a, com a sua impressão digital ou o desbloqueio facial.
 • Chat: pergunte a um taf o que fez, ou diga-lhe o que fazer de outra forma, e acompanhe o trabalho enquanto decorre.
 • Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, com um recibo por cada ação que avançou.
 • Portas: deixe clientes ou colegas contactarem um taf por e-mail ou chat.
@@ -286,15 +286,15 @@ Planos: Solo, com {SOLO_MONTHLY_CREDITS} créditos por mês, e pacotes de crédi
 **Full description:**
 
 ```
-tafs is waar een bedrijf taken overdraagt aan AI-agents, of AI-collega's, tafs genoemd, en elk een Card geeft: de grenzen waarbinnen hij werkt.
+tafs is waar een bedrijf taken overdraagt aan AI-agents, of AI-collega's, tafs genoemd, en elk een Card geeft: de grenzen waarbinnen het werkt.
 
 Automatiseer hiermee terugbetalingen, het betalen van facturen, toegang en deploys. Elke AI-agent werkt zelfstandig binnen zijn Card, en nooit daarbuiten.
 
-Binnen zijn Card handelt een taf en laat hij een bewijs achter. Daarbuiten wacht de taf op je antwoord op je telefoon. Trek de Card in en er gaat geen nieuwe actie meer door.
+Binnen zijn Card handelt een taf en laat het een bewijs achter. Daarbuiten wacht het taf op je antwoord op je telefoon. Trek de Card in en er gaat geen nieuwe actie meer door.
 
 WAAROM JE HEM HET WERK KUNT GEVEN
-• Grenzen waar hij zich niet uit kan praten: KIFF toetst elke actie aan zijn Card, buiten de AI, voordat die je app bereikt. Geen prompt verandert een limiet.
-• Je inloggegevens blijven verzegeld: de taf ziet nooit je wachtwoorden of tokens. De koppelingsdienst van KIFF en zijn inlogprovider bewaren ze, nooit de telefoon.
+• Grenzen waar het zich niet uit kan praten: KIFF toetst elke actie aan zijn Card, buiten de AI, voordat die je app bereikt. Geen prompt verandert een limiet.
+• Je inloggegevens blijven verzegeld: het taf ziet nooit je wachtwoorden of tokens. De koppelingsdienst van KIFF en zijn inlogprovider bewaren ze, nooit de telefoon.
 • Je vingerafdruk voor wat ertoe doet: routinewerk gaat door binnen zijn grenzen. Alles buiten zijn Card wordt geweigerd of, als zijn Card 'Vragen' zegt, wacht op jou en wordt goedgekeurd met je vingerafdruk of gezicht.
 • Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een betaling is gelukt, vraagt tafs je "Is dit gebeurd?" Niets telt op goed geluk als gedaan.
 
@@ -306,16 +306,16 @@ TAKEN DIE EEN TAF KAN OPPAKKEN, BIJVOORBEELD
 • Chargebacks: beantwoordt kaartgeschillen met bewijs.
 
 ZO WERKT HET
-• Coach: zeg de taak in je eigen woorden. Coach, de AI-assistent van tafs, koppelt je apps, maakt een opzet van de taf en zijn Card, en jij bevestigt.
+• Coach: zeg de taak in je eigen woorden. Coach, de AI-assistent van tafs, koppelt je apps, maakt een opzet van het taf en zijn Card, en jij bevestigt.
 • Wacht op jou: als een taf buiten zijn Card wil gaan, wordt de aanroep vastgehouden. Keur hem eenmalig goed of weiger hem, met je vingerafdruk of gezichtsontgrendeling.
-• Chat: vraag een taf wat hij gedaan heeft, of zeg hem wat hij anders moet doen, en volg zijn werk terwijl het gebeurt.
+• Chat: vraag een taf wat het gedaan heeft, of zeg het wat het anders moet doen, en volg zijn werk terwijl het gebeurt.
 • Logboek: alles wat je tafs gedaan hebben, het nieuwste eerst, met een bewijs voor elke actie die doorging.
 • Deuren: laat klanten of collega's een taf bereiken via e-mail of chat.
 
 JE GEGEVENS
 Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/privacy#delete-account.
 
-Abonnementen: Solo, met {SOLO_MONTHLY_CREDITS} credits per maand, en creditpakketten die nooit verlopen, allebei in de app gekocht via Google Play. Elke run van een taf gebruikt credits voor de AI die hij gebruikte. Er is geen gratis proefperiode.
+Abonnementen: Solo, met {SOLO_MONTHLY_CREDITS} credits per maand, en creditpakketten die nooit verlopen, allebei in de app gekocht via Google Play. Elke run van een taf gebruikt credits voor de AI die het gebruikte. Er is geen gratis proefperiode.
 ```
 
 ## Polish (pl)
@@ -334,7 +334,7 @@ Zautomatyzujesz nim zwroty, opłacanie faktur, nadawanie dostępów i wdrożenia
 W ramach swojej Card taf działa i zostawia potwierdzenie. Poza nią taf czeka na Twoją odpowiedź na Twoim telefonie. Odwołaj Card, a żadna nowa akcja już nie przejdzie.
 
 DLACZEGO MOŻESZ POWIERZYĆ MU PRACĘ
-• Granice, których nie obejdzie słowami: KIFF sprawdza każdą akcję względem jej Card, poza AI, zanim dotrze ona do Twojej aplikacji. Żaden prompt nie zmienia limitu.
+• Granice, których nie obejdzie słowami: KIFF sprawdza każdą akcję względem jego Card, poza AI, zanim dotrze ona do Twojej aplikacji. Żaden prompt nie zmienia limitu.
 • Twoje dane logowania pozostają zapieczętowane: taf nigdy nie widzi Twoich haseł ani tokenów. Przechowują je usługa połączeń KIFF i jej dostawca logowania, nigdy telefon.
 • Twój odcisk palca do tego, co ważne: rutynowa praca idzie naprzód w swoich granicach. Wszystko poza jego Card zostaje odrzucone albo, jeśli jego Card mówi „Pytaj”, czeka na Ciebie i jest zatwierdzane odciskiem palca lub twarzą.
 • To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że płatność przeszła, tafs pyta Cię „Czy to się stało?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
