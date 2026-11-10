@@ -8122,49 +8122,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Person: tafs und KIFF für deine eigenen Agents, mit Credits in jedem Zeitraum inklusive."
+            "value": "Eine Person: tafs, mit Credits in jedem Zeitraum inklusive."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One person: tafs, and KIFF for your own agents, with credits included each period."
+            "value": "One person: tafs, with credits included each period."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Una persona: tafs, y KIFF para tus propios agentes, con créditos incluidos en cada periodo."
+            "value": "Una persona: tafs, con créditos incluidos en cada periodo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une personne : tafs, et KIFF pour vos propres agents, avec des crédits inclus à chaque période."
+            "value": "Une personne : tafs, avec des crédits inclus à chaque période."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Una persona: tafs, e KIFF per i tuoi agenti, con crediti inclusi ogni periodo."
+            "value": "Una persona: tafs, con crediti inclusi ogni periodo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eén persoon: tafs, en KIFF voor je eigen agents, met credits inbegrepen per periode."
+            "value": "Eén persoon: tafs, met credits inbegrepen per periode."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jedna osoba: tafs oraz KIFF dla Twoich własnych agentów, z kredytami w każdym okresie."
+            "value": "Jedna osoba: tafs, z kredytami w każdym okresie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma pessoa: tafs, e KIFF para os seus próprios agentes, com créditos incluídos em cada período."
+            "value": "Uma pessoa: tafs, com créditos incluídos em cada período."
           }
         }
       }
@@ -9553,49 +9553,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs und KIFF für eine Person, jeden Monat."
+            "value": "tafs für eine Person, jeden Monat."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tafs and KIFF for one person, every month."
+            "value": "Tafs for one person, every month."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs y KIFF para una persona, cada mes."
+            "value": "tafs para una persona, cada mes."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs et KIFF pour une personne, chaque mois."
+            "value": "tafs pour une personne, chaque mois."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tafs e KIFF per una persona, ogni mese."
+            "value": "Tafs per una persona, ogni mese."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs en KIFF voor één persoon, elke maand."
+            "value": "tafs voor één persoon, elke maand."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs i KIFF dla jednej osoby, co miesiąc."
+            "value": "tafs dla jednej osoby, co miesiąc."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs e KIFF para uma pessoa, todos os meses."
+            "value": "tafs para uma pessoa, todos os meses."
           }
         }
       }

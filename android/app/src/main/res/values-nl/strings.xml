@@ -159,7 +159,7 @@
     <string name="billing_not_bought">De aankoop is niet gelukt: %1$s</string>
     <string name="billing_not_restored">Aankopen konden niet worden hersteld: %1$s</string>
     <string name="billing_not_signed_in">Niet ingelogd.</string>
-    <string name="billing_one_person_tafs_kiff_your">Eén persoon: tafs, en KIFF voor je eigen agents, met credits inbegrepen per periode.</string>
+    <string name="billing_one_person_tafs_kiff_your">Eén persoon: tafs, met credits inbegrepen per periode.</string>
     <string name="billing_only_someone_who_manages_account">Alleen iemand die de facturatie van het account beheert, koopt credits.</string>
     <string name="billing_open_tafs_to_buy">Open tafs om te kopen.</string>
     <string name="billing_pack_adds_credits_once_never">Een pakket voegt eenmalig credits toe, en die verlopen nooit. De inbegrepen credits van elke periode worden eerst gebruikt, daarna die van de pakketten.</string>
@@ -186,7 +186,7 @@
     <string name="billing_solo_not_available_app_store">Solo is nu niet beschikbaar in de App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo is een abonnement van één %1$s voor %2$s, in rekening gebracht bij je Apple-account. Het wordt elke %3$s verlengd tot je opzegt.</string>
     <string name="billing_starts_free">Begint met %1$s gratis.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs en KIFF voor één persoon, elke maand.</string>
+    <string name="billing_tafs_kiff_one_person_every">tafs voor één persoon, elke maand.</string>
     <string name="billing_terms_use">Gebruiksvoorwaarden</string>
     <string name="billing_test_purchase_credits">Testaankopen voegen geen credits toe aan dit account.</string>
     <string name="billing_try_free">Probeer %1$s gratis</string>

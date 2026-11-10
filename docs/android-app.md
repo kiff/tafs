@@ -105,9 +105,9 @@ KIFF records each purchase before Play is told it's done, and Restore purchases 
 wasn't.
 - **Play's offers are read again** each time Usage shows, after every purchase and restore, and
   just before Play's sheet opens (`Purchases.load`, `PlayBillingStore.purchase`), never kept
-  from an earlier read. Solo's free trial is offered only while Play lists it for the Google
-  account in the Play Store, and the words follow it: "Free for 1 week, then €12.50 a month", or
-  "€12.50 a month". When Play can't be reached for that read (no network, its service down), the
+  from an earlier read. Solo has no free trial; the trial's words show only if Play ever lists a
+  free-trial offer for the Google account, and the words follow Play: "Free for {trial}, then
+  {price} a month", or "{price} a month". When Play can't be reached for that read (no network, its service down), the
   purchase says "Couldn't reach Google Play. Try again.", never that Play doesn't sell it
   (`PlayBillingStore.unreachable`).
 - **When Play lists none of what's offered,** the panel says why above Restore purchases, rather
