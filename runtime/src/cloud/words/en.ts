@@ -452,6 +452,7 @@ export const en = {
   cts_intro: "Coach needs a few tools to look after your tafs. They go on Coach's own Card, with their limits, and only your fingerprint can sign it.",
   cts_details: "Each tool and its limits",
   cts_ask: "Give Coach these tools? Your fingerprint signs its Card.",
+  cts_ask_connect: "Give Coach these tools? You'll confirm twice: once to connect them, once to sign its Card.",
   cts_give: "Give Coach its tools",
   cts_not_now: "Not now",
   cts_row: "Coach has no tools yet · Give them",

@@ -423,6 +423,8 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
   - a tool its Card refuses past the limit says only the limit.
 
   A test checks each Card's limit in its tool's line in all 8 languages.
+- **The ask** says what giving takes: one fingerprint for the Card, or, while the tools are still to
+  connect, two (the connect batch, then the Card).
 - **Buttons:** `give` and `not_now`. After **Not now**, the Coach screen keeps one line, `row`, which
   opens the same step. It's never a panel above the conversation.
 

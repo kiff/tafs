@@ -422,6 +422,7 @@ export const it: Words = {
   cts_intro: "Coach ha bisogno di qualche strumento per occuparsi dei tuoi tafs. Vanno sulla Card di Coach, con i loro limiti, e solo la tua impronta può firmarla.",
   cts_details: "Ogni strumento e i suoi limiti",
   cts_ask: "Dare a Coach questi strumenti? La tua impronta firma la sua Card.",
+  cts_ask_connect: "Dare a Coach questi strumenti? Confermi due volte: una per collegarli, una per firmare la sua Card.",
   cts_give: "Dare a Coach i suoi strumenti",
   cts_not_now: "Non ora",
   cts_row: "Coach non ha ancora strumenti · Darglieli",

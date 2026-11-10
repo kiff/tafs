@@ -422,6 +422,7 @@ export const de: Words = {
   cts_intro: "Coach braucht ein paar Werkzeuge, um sich um deine tafs zu kümmern. Sie kommen auf Coachs eigene Card, mit ihren Limits, und nur dein Fingerabdruck kann sie unterschreiben.",
   cts_details: "Jedes Werkzeug und seine Limits",
   cts_ask: "Coach diese Werkzeuge geben? Dein Fingerabdruck unterschreibt seine Card.",
+  cts_ask_connect: "Coach diese Werkzeuge geben? Du bestätigst zweimal: einmal zum Verbinden, einmal für seine Card.",
   cts_give: "Coach seine Werkzeuge geben",
   cts_not_now: "Nicht jetzt",
   cts_row: "Coach hat noch keine Werkzeuge · Geben",

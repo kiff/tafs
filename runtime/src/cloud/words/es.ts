@@ -422,6 +422,7 @@ export const es: Words = {
   cts_intro: "Coach necesita algunas herramientas para ocuparse de tus tafs. Van en la propia Card de Coach, con sus límites, y solo tu huella puede firmarla.",
   cts_details: "Cada herramienta y sus límites",
   cts_ask: "¿Dar a Coach estas herramientas? Tu huella firma su Card.",
+  cts_ask_connect: "¿Dar a Coach estas herramientas? Confirmarás dos veces: una para conectarlas y otra para firmar su Card.",
   cts_give: "Dar a Coach sus herramientas",
   cts_not_now: "Ahora no",
   cts_row: "Coach aún no tiene herramientas · Dárselas",

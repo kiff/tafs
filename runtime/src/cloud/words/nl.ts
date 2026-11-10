@@ -422,6 +422,7 @@ export const nl: Words = {
   cts_intro: "Coach heeft een paar tools nodig om voor je tafs te zorgen. Ze komen op Coach' eigen Card, met hun limieten, en alleen jouw vingerafdruk kan die ondertekenen.",
   cts_details: "Elke tool en zijn limieten",
   cts_ask: "Coach deze tools geven? Je vingerafdruk ondertekent zijn Card.",
+  cts_ask_connect: "Coach deze tools geven? Je bevestigt twee keer: één keer om ze te koppelen, één keer voor zijn Card.",
   cts_give: "Coach zijn tools geven",
   cts_not_now: "Niet nu",
   cts_row: "Coach heeft nog geen tools · Geven",

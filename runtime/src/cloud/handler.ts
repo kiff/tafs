@@ -1623,7 +1623,7 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
     }
     return {
       state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace, langOf(event)) } : {}), ...(card ? { card } : {}),
-      coach_tools_step: coachToolsStep(langOf(event)),
+      coach_tools_step: coachToolsStep(langOf(event), plan.missing.length > 0),
     };
   } catch (err) {
     if (err instanceof KIFFError) {
