@@ -5,6 +5,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android: a vendor sign-in left in its browser tab lets go.** Closing the vendor's sign-in page without finishing left the card on "Opening the sign-in…" for up to 15 minutes, and every other approval in the app stayed disabled behind it. Now, when the app is back in front with no answer from the vendor, the step lets go after a moment and the sign-in is offered again (docs/android-app.md).
+
 - **The First month pack shows beside Solo (tafs cloud).** An account can buy one First month pack of credits, once. The balance's `buy` gains `first_month`: before a plan it says "Add it once Solo starts." in the person's language, so the app shows the pack's row with the store's price and no button; once Solo runs, the row can be bought; once it's bought, it's gone. KIFF lists the pack and says when it's bought (docs/accounts.md).
 - **A taf's report takes its numbers from a count, not from its own adding up (tafs cloud).** kiff/agents now counts a run's calls that change something, by tool: sent, waiting for the owner, refused, failed. The taf reads that count after each step, and its report's numbers are copied from it. Before, the taf was told to count its calls itself, and could still say "six" of five. The rule covers every kind the count shows, a call sent with no word on whether it took effect included. Tafs get the new rule at their next Upgrade; it needs kiff/agents' count, which ships first.
 - **Run now that finds nothing new says so, not "The run didn't start" (Android).** A taf that checks first and finds nothing new answers with no session; Android takes that as a success and shows tafs cloud's words for it under Run now. Before, it read as a failure.
