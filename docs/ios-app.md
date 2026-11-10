@@ -300,6 +300,15 @@ Touch ID, the App Store and Apple ID, iOS's Settings paths. A few lines stay in 
 reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's Terms line, whose markdown link
 `Text` renders only from a literal.
 
+The pages the app opens follow the lines' language (`KIFFClient.appLanguage`, the first of the languages the screens
+resolved to), never the browser's:
+
+- **kiff.dev's Terms and Privacy policy** (Sign-in, Plan & usage): `/terms#tafs` in English, `/de/terms#tafs` in
+  German, and so on (`Legal`).
+- **KIFF's approval page**, for a sign-in and for approving again after Face ID changed: the link KIFF answers gets
+  `lang=<language>`, and a link that already names one keeps it (`DeviceStart.inAppLanguage`).
+- **A held call's page in KIFF**: `/needs-you/{id}?lang=<language>` (`KIFFClient.answerPage`).
+
 ## Conventions
 
 - The phone decides nothing in KIFF mode: it shows what KIFF and tafs cloud say.

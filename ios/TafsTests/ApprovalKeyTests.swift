@@ -473,7 +473,8 @@ final class ApprovalKeyTests: XCTestCase {
             ["POST /v1/auth/device/token": (200, #"{"status":"relinked","fingerprint":""# + KIFFClient.fingerprint(newKey) + #""}"#)]
         signer.approvalPrompted = []
         let url = await model.startRelink()
-        XCTAssertEqual(url?.absoluteString, "https://app.test/auth/device?code=WXYZ-BCDF")
+        // KIFF's approval page opens in the app's language, whatever the browser's.
+        XCTAssertEqual(url?.absoluteString, "https://app.test/auth/device?code=WXYZ-BCDF&lang=\(Legal.language)")
 
         // The new key signed KIFF's message, after Face ID; the device key signed the request.
         let proof = try XCTUnwrap(signer.approvalPrompted.first)
