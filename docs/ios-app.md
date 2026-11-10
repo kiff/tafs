@@ -268,7 +268,10 @@ Android reads; the servers' own lines stay theirs ([languages.md](languages.md))
 writes `Localizable.xcstrings` and `Design/Words.swift`, a typed accessor per key (`Words.NeedsYou.approveOnce`,
 `Words.Connect.Disconnect.title(vendor:)`), so a missing key or a wrong value doesn't compile. Nobody edits those
 two files by hand: change the JSON and run the generator, and `--check` fails CI when they differ. A count picks
-its plural form from the catalog's `_plural` entry, in the app's language; its number is always the first value.
+its plural form from the catalog's `_plural` entry, in the app's language; its number is always the first value,
+written as that language writes it (1,000 in English). The catalog's `_language` entry names the language its lines
+are in, and `Words` writes numbers in it, never in the device's region: an English line on a German-region iPhone
+reads "1,000 runs", not "1.000 runs".
 The notification extension compiles Model and KIFF, so it has `Words.swift` and the catalog too.
 
 What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, URL

@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "_language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en"
+          }
+        }
+      }
+    },
     "_plural": {
       "extractionState": "manual",
       "localizations": {

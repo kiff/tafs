@@ -4242,20 +4242,26 @@ enum Words {
         return filled(known ? form : "\(key)|other", [number(count)] + values)
     }
 
+    /// The language the app's lines are in, as the catalog names it, never the device's region.
+    static let locale = Locale(identifier: Bundle.main.localizedString(forKey: "_language", value: "en", table: nil))
+
     /// A count's number as the app's language writes it: 1,000, 1.000, 1 000.
     static func number(_ n: Int) -> String {
-        NumberFormatter.localizedString(from: NSNumber(value: n), number: .decimal)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = locale
+        return formatter.string(from: NSNumber(value: n)) ?? String(n)
     }
 
     /// The plural form a number takes in the app's language: one, few, many, other…
     static func pluralForm(_ count: Int) -> String {
         let format = Bundle.main.localizedString(forKey: "_plural", value: nil, table: nil)
-        let picked = String(format: format, locale: Locale.current, count)
+        let picked = String(format: format, locale: locale, count)
         return picked.split(separator: "|").last.map(String.init) ?? "other"
     }
 
     private static func filled(_ key: String, _ values: [String]) -> String {
         let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
-        return values.isEmpty ? format : String(format: format, locale: Locale.current, arguments: values)
+        return values.isEmpty ? format : String(format: format, locale: locale, arguments: values)
     }
 }

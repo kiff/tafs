@@ -78,6 +78,12 @@ def is_count(key, source, name):
 # "%lld|one", "%lld|few"… Words.swift asks it, then reads the line's entry for that form.
 IOS_PLURAL_KEY = "_plural"
 
+# The catalog's own entry that names the language its lines are in ("en"), so Words.swift writes
+# a number, and fills a line, in the language of the line itself. The device's region doesn't
+# decide it, and neither does `Bundle.main.preferredLocalizations`: that can answer Spanish or
+# French, the languages of Siri's phrases, while every screen is still in English.
+IOS_LANGUAGE_KEY = "_language"
+
 # The plural forms a language's whole numbers take (CLDR), beside "other".
 PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["one"], "pt": ["one"], "fr": ["one"],
            "pl": ["one", "few", "many"]}
@@ -118,6 +124,8 @@ def ios_catalog(source, shipped, lines):
     # Which form a number takes, in each shipped language's own rules.
     strings[IOS_PLURAL_KEY] = {"extractionState": "manual", "localizations": {
         lang: {"variations": {"plural": {form: unit(f"%lld|{form}") for form in PLURALS[lang] + ["other"]}}} for lang in shipped}}
+    # The language each language's lines are in: its own tag.
+    strings[IOS_LANGUAGE_KEY] = {"extractionState": "manual", "localizations": {lang: unit(lang) for lang in shipped}}
     catalog = {"sourceLanguage": "en", "strings": strings, "version": "1.0"}
     return json.dumps(catalog, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
@@ -185,21 +193,27 @@ def ios_swift(source):
             "        return filled(known ? form : \"\\(key)|other\", [number(count)] + values)",
             "    }",
             "",
+            "    /// The language the app's lines are in, as the catalog names it, never the device's region.",
+            f"    static let locale = Locale(identifier: Bundle.main.localizedString(forKey: \"{IOS_LANGUAGE_KEY}\", value: \"en\", table: nil))",
+            "",
             "    /// A count's number as the app's language writes it: 1,000, 1.000, 1 000.",
             "    static func number(_ n: Int) -> String {",
-            "        NumberFormatter.localizedString(from: NSNumber(value: n), number: .decimal)",
+            "        let formatter = NumberFormatter()",
+            "        formatter.numberStyle = .decimal",
+            "        formatter.locale = locale",
+            "        return formatter.string(from: NSNumber(value: n)) ?? String(n)",
             "    }",
             "",
             "    /// The plural form a number takes in the app's language: one, few, many, other…",
             "    static func pluralForm(_ count: Int) -> String {",
             f"        let format = Bundle.main.localizedString(forKey: \"{IOS_PLURAL_KEY}\", value: nil, table: nil)",
-            "        let picked = String(format: format, locale: Locale.current, count)",
+            "        let picked = String(format: format, locale: locale, count)",
             "        return picked.split(separator: \"|\").last.map(String.init) ?? \"other\"",
             "    }",
             "",
             "    private static func filled(_ key: String, _ values: [String]) -> String {",
             "        let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)",
-            "        return values.isEmpty ? format : String(format: format, locale: Locale.current, arguments: values)",
+            "        return values.isEmpty ? format : String(format: format, locale: locale, arguments: values)",
             "    }",
             "}",
             ""]
