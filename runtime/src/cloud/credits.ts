@@ -174,7 +174,8 @@ export interface CreditsView {
   credits: number;
   runs: number;
   words: string;
-  tafs: Array<{ taf: string | null; credits: number; runs: number; words: string }>;
+  /** Each row; `pace` is its line at this pace ("At this pace, about 640 this month"), once its own runs make one, this period only. */
+  tafs: Array<{ taf: string | null; credits: number; runs: number; words: string; pace?: string }>;
   coach: { credits: number; runs: number; words: string } | null;
   not_counted: { runs: number; words: string; lines: Array<{ why: string; runs: number; words: string }> };
   note: string;
