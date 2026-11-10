@@ -520,7 +520,7 @@ describe("KIFF's alerts", () => {
     expect(apns.sent).toHaveLength(2);
   });
 
-  it("tells the people who answer when a taf's refund failed or its charge was also refunded outside KIFF, once each, and opens that taf", async () => {
+  it("tells the people who answer when a taf's refund failed, its charge was also refunded outside KIFF, or a refund the owner said didn't happen went through, once each, and opens that taf", async () => {
     const push = account();
     const apns = fakeAPNs();
     const forward = fakeForward();
@@ -537,6 +537,10 @@ describe("KIFF's alerts", () => {
       collapseID: "refund-f-tc-1" });
     expect((await post(notice("evt_t", "refunded_twice"))).body).toEqual({ sent: 2 });
     expect(apns.sent[2]!.n.payload.aps.alert.body).toBe("A charge Refunds refunded was also refunded outside KIFF. Check it before anything more is refunded.");
+    expect((await post(notice("evt_n", "refund_after_no", "refunds-1", "tc-2"))).body).toEqual({ sent: 2 });
+    expect(apns.sent[4]!.n).toMatchObject({ payload: { aps: { alert: { title: "A refund",
+      body: "A refund Refunds sent, which you said didn't happen, went through at the payment processor. Its room on the Card is taken again. Check the request wasn't refunded twice." } } },
+      collapseID: "refund-n-tc-2" });
     // No run waits on it, so kiff/agents never hears of it.
     expect(forward.tries).toBe(0);
     // KIFF's resend of the same event tells nobody again.
@@ -545,7 +549,7 @@ describe("KIFF's alerts", () => {
     expect((await post(notice("evt_g", "refund_failed", "gone-1"))).body).toEqual({ ignored: "refund_notice: no taf runs gone-1" });
     expect((await post(notice("evt_x", "refund_maybe"))).status).toBe(400);
     expect((await post(notice("evt_y", "refund_failed", ""))).status).toBe(400);
-    expect(apns.sent).toHaveLength(4);
+    expect(apns.sent).toHaveLength(6);
   });
 
   it("tells only the member who asked when their request is answered, and nobody when it was withdrawn", async () => {

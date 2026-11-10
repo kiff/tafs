@@ -151,11 +151,12 @@ export const CONNECTION_SIGNED_OUT = "connection_signed_out";
 /** The account's tafs used 80% of what the period has, or all of it and wait: once each a period. */
 export const CREDITS_WARNING = "credits_warning";
 /**
- * A refund a taf sent failed at the payment processor (its Card's room came back), or a charge it
- * refunded was also refunded outside KIFF: the kind, then the taf's agent, in `reasons`.
+ * A refund a taf sent failed at the payment processor (its Card's room came back), a charge it
+ * refunded was also refunded outside KIFF, or a refund the owner said didn't happen went through
+ * after all (its Card's room was taken again): the kind, then the taf's agent, in `reasons`.
  */
 export const REFUND_NOTICE = "refund_notice";
-const REFUND_KINDS = ["refund_failed", "refunded_twice"] as const;
+const REFUND_KINDS = ["refund_failed", "refunded_twice", "refund_after_no"] as const;
 
 /**
  * Checks `KIFF-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>`
@@ -391,7 +392,7 @@ function refundNotification(taf: { id: string; name: string }, kind: (typeof REF
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: w.push_refund_title, body: kind === "refund_failed" ? w.push_refund_failed(clipped) : w.push_refunded_twice(clipped) },
+        alert: { title: w.push_refund_title, body: { refund_failed: w.push_refund_failed, refunded_twice: w.push_refunded_twice, refund_after_no: w.push_refund_after_no }[kind](clipped) },
         "thread-id": "refunds",
         sound: "default",
       },
@@ -399,7 +400,7 @@ function refundNotification(taf: { id: string; name: string }, kind: (typeof REF
       taf_id: taf.id,
     },
     // One alert per call and kind: KIFF's resend replaces it.
-    collapseID: `refund-${kind === "refund_failed" ? "f" : "t"}-${call}`.slice(0, 64),
+    collapseID: `refund-${{ refund_failed: "f", refunded_twice: "t", refund_after_no: "n" }[kind]}-${call}`.slice(0, 64),
   };
 }
 

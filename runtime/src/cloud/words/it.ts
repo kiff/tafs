@@ -133,6 +133,7 @@ export const it: Words = {
   push_refund_title: "Un rimborso",
   push_refund_failed: (taf) => `Un rimborso inviato da ${taf} non è andato a buon fine presso il processore di pagamento. Il suo margine sulla Card è tornato.`,
   push_refunded_twice: (taf) => `Un addebito rimborsato da ${taf} è stato rimborsato anche fuori da KIFF. Controllalo prima di altri rimborsi.`,
+  push_refund_after_no: (taf) => `Un rimborso inviato da ${taf}, che avevi detto non fosse avvenuto, è andato a buon fine presso il processore di pagamento. Il suo margine sulla Card è di nuovo occupato. Controlla che la richiesta non sia stata rimborsata due volte.`,
   push_raise_title: "Richiesta di aumento",
   push_raise_body: "Qualcuno del tuo account ti chiede di aumentare il limite di spesa. Apri Piano e utilizzo per rispondere.",
   push_pack_title: "Richiesta di pacchetto",
