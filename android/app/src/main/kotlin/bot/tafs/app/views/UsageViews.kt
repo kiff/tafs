@@ -144,8 +144,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
           Text(Words.Usage.solo, style = scaled(16, FontWeight.SemiBold, Theme.ink))
           Text(UsageWords.soloTerms(solo.price, solo.period, solo.freeTrial), style = scaled(13, color = Theme.soft))
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/terms#tafs") }.padding(vertical = 6.dp))
-            Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/privacy#tafs") }.padding(vertical = 6.dp))
+            Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.terms()) }.padding(vertical = 6.dp))
+            Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.privacy()) }.padding(vertical = 6.dp))
           }
           PrimaryButton(if (state.buying == id) Words.Usage.buying else Words.Usage.startSolo, { scope.launch { actions.buy(id) } }, enabled = state.buying == null, modifier = Modifier.confirms())
           PurchaseNoteLine(state, id, actions)

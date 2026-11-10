@@ -179,8 +179,8 @@ fun SettingsSheet(
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.yourChats) { ExportChatsRow(onExport) }
           Section(Words.Settings.legal) {
-            Action(Words.Settings.terms, Theme.amberText) { uri.openUri("https://kiff.dev/terms#tafs") }
-            Action(Words.Settings.privacyPolicy, Theme.amberText) { uri.openUri("https://kiff.dev/privacy#tafs") }
+            Action(Words.Settings.terms, Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.terms()) }
+            Action(Words.Settings.privacyPolicy, Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.privacy()) }
           }
           Section(Words.Settings.about) { Value(Words.Settings.version, version); Text(Words.Home.tagline, style = scaled(15, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           if (state.canDeleteAccount) Section(Words.Settings.DeleteAccount.title) { Action(Words.Settings.DeleteAccount.row, Theme.no, onDeleteAccount) }
