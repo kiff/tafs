@@ -482,6 +482,8 @@ data class AppState(
    * Launch and sign-in already send what's unfinished, so with nothing there it has nothing to do.
    */
   val restoreShown: Boolean = false,
+  /** A first Start just made Coach, with tools still to give: the tools step is asked, until given or put off. */
+  val coachToolsAsked: Boolean = false,
   /**
    * What a refresh the app made by itself couldn't do, said quietly under the account's name ("Can't reach KIFF"), never as
    * "Not done"; null once one goes through. And whether the app is still trying again by itself.
@@ -2662,7 +2664,12 @@ class AppModel(
       // A Coach this Start made took its one fingerprint, the draft's: its Card is another draft, signed over its own bytes, so
       // it's given from the tools panel, behind its own fingerprint, in its own words. A Coach already there gives its tools within
       // the step the owner just confirmed, as tafs cloud says they're still to give.
-      if (claim == null) giveCoachTools() else loadCoachTools()
+      if (claim == null) giveCoachTools()
+      else {
+        loadCoachTools()
+        // The step that ends a first Start: Coach's tools, asked in a sheet, behind their own fingerprint.
+        if (generation == accountGeneration && _state.value.coachTools?.toGive == true) _state.update { it.copy(coachToolsAsked = true) }
+      }
     } finally {
       planque.signer = null
       kiff.setupSigner = null
@@ -2672,6 +2679,9 @@ class AppModel(
     readThread(COACH_CHAT)
     return true
   }
+
+  /** The tools step put off, or done: the row above the conversation opens it again. */
+  fun notNowCoachTools() = _state.update { it.copy(coachToolsAsked = false) }
 
   private fun startFailed(words: String) = _state.update { it.copy(coachStartError = words) }
 

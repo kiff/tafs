@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -69,6 +70,9 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
   LaunchedEffect(Unit) { loadCoach() }
   // Folded while the thread scrolls toward its end, shown again as soon as it scrolls back.
   var folded by remember { mutableStateOf(false) }
+  var toolsOpen by remember { mutableStateOf(false) }
+  // With the keyboard open, what sits above the conversation steps aside: the box keeps its room.
+  val keyboard = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
   val folding = remember {
     object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
       override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
@@ -93,15 +97,20 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
         // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
         // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
         if (state.coachCloudId == null) StartNote(state)
-        else androidx.compose.animation.AnimatedVisibility(visible = !folded) {
+        else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
           Column {
-            CoachToolsPanel(state, chats)
+            CoachToolsRow(state) { toolsOpen = true }
             CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
           }
         }
         TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
       }
     }
+  }
+  // The tools step: asked at the end of a first Start, and from its row after.
+  if (toolsOpen || state.coachToolsAsked) CoachToolsSheet(state, chats) {
+    toolsOpen = false
+    if (state.coachToolsAsked) chats.notNowTools()
   }
 }
 

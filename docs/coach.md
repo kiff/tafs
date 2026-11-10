@@ -89,7 +89,7 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
    names the vendor's tool that holds one of Coach's names, and `unknown` asks to try
    again, both sending nothing. A replaced connection's line says what it replaces.
-   (Android: `AppModel.giveCoachTools`, `CoachToolsPanel`.)
+   (Android: `AppModel.giveCoachTools`, `CoachToolsSheet`.)
 
 On Android (1.2), Coach's conversation shows before Coach is started on the account, and the
 first Send starts it (`AppModel.sendChat`, `startCoach`):
@@ -98,9 +98,16 @@ first Send starts it (`AppModel.sendChat`, `startCoach`):
 - **One fingerprint, the draft's.** On a first Start the draft with no tools is signed by the
   approval key, and its prompt is the only one. planque's enrolment and the connector key come
   after that yes, so nothing is made before it.
-- **Coach's tools wait for their own tap.** Coach's Card is another draft, signed over its own
-  bytes, so giving it within the Start would be a second fingerprint. After a first Start the tools
-  panel offers **Give Coach its tools**, behind its own fingerprint, in its own words.
+- **Coach's tools are the step that ends a first Start.** Coach's Card is another draft, signed over
+  its own bytes, so it takes its own fingerprint. A sheet asks for it (`CoachToolsSheet`,
+  `AppState.coachToolsAsked`). Its words are tafs cloud's (`tools.coach_tools_step`: `title`,
+  `intro`, a few `groups` up front, each tool's `does` and `why` folded under `details`, closed at
+  first, then `ask`, `give` and `not_now`). The connections' `lines` and KIFF's words for the Card
+  sit in the same fold. A tafs cloud from before the step shows the `lines`, the Card and the app's
+  own button. **Not now** puts it off. Then one line above the conversation (`row`) opens the same
+  sheet; it's never a panel there.
+- **The message box keeps its room.** With the keyboard open, what sits above the conversation
+  steps aside, and the attach, mic and send buttons keep their 40 dp.
 - **A Coach already on the account,** started from another phone, asks this phone for the owner's
   yes once, then enrols it with planque. It makes no draft.
 - **Then the message goes, once.** A Start that's closed or fails sends nothing: the words go

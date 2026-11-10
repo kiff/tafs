@@ -62,6 +62,8 @@ class CoachChatActions(
   val unarchive: suspend (String) -> Boolean = { false },
   /** Gives Coach the tools tafs cloud says are still to give. */
   val giveTools: suspend () -> Boolean = { false },
+  /** The tools step asked at the end of a first Start was put off: the one-line row opens it again. */
+  val notNowTools: () -> Unit = {},
 )
 
 /** Coach's earlier conversations, newest first: each reopens; one can be archived, and the archived ones put back. */
@@ -229,19 +231,78 @@ fun CoachLines(lines: List<TafsCloud.CoachLine>) {
  * says so instead. Nothing shows once they're given.
  */
 @Composable
-fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
+fun CoachToolsRow(state: AppState, onOpen: () -> Unit) {
   val tools = state.coachTools ?: return
   if (tools.state == "given") return
+  // One line above the conversation, never the step itself: the box keeps its room, keyboard open or not.
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClickLabel = Words.Coach.Tools.title, onClick = onOpen).padding(horizontal = 16.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Text(tools.step?.row?.ifBlank { null } ?: Words.Coach.Tools.title, style = scaled(14, FontWeight.SemiBold, Theme.amberText), maxLines = 1, modifier = Modifier.weight(1f))
+    Text("›", style = scaled(20, color = Theme.dim))
+  }
+}
+
+/**
+ * Coach's tools as a step of their own (docs/coach.md): what tafs cloud says is still to give, the connections in its words and
+ * the Card in KIFF's, then Give Coach its tools behind its own fingerprint, or Not now. Opened at the end of a first Start, and
+ * from the one-line row after.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CoachToolsSheet(state: AppState, actions: CoachChatActions, onClose: () -> Unit) {
+  val tools = state.coachTools
+  if (tools == null || tools.state == "given") {
+    LaunchedEffect(Unit) { onClose() }
+    return
+  }
   val scope = rememberCoroutineScope()
   var giving by remember { mutableStateOf(false) }
-  bot.tafs.app.design.Panel(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), stroke = Theme.amber.copy(alpha = 0.45f)) {
-    bot.tafs.app.design.Eyebrow(Words.Coach.Tools.title, color = Theme.amber)
+  bot.tafs.app.drive.DriveSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  Column(
+    Modifier.fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp),
+    verticalArrangement = Arrangement.spacedBy(6.dp),
+  ) {
+    val step = tools.step
+    // tafs cloud's words where it sends them; the app's own only for a tafs cloud from before them.
+    fun said(server: String?, own: String) = server?.ifBlank { null } ?: own
+    if (step?.title.isNullOrBlank()) bot.tafs.app.design.Eyebrow(Words.Coach.Tools.title, color = Theme.amber)
+    else Text(step!!.title, style = scaled(22, FontWeight.Bold, Theme.ink, display = true))
     when (tools.state) {
       "taken" -> Text(CoachWords.taken(tools.taken), style = scaled(14, color = Theme.ink))
       "unknown" -> Text(CoachWords.TOOLS_UNKNOWN, style = scaled(14, color = Theme.ink))
       else -> {
-        tools.connect?.lines?.forEach { Text("· $it", style = scaled(14, color = Theme.ink)) }
-        tools.card?.let { card ->
+        var folded by remember { mutableStateOf(true) }
+        if (step != null && step.groups.isNotEmpty()) {
+          if (step.intro.isNotBlank()) Text(step.intro, style = scaled(15, color = Theme.soft))
+          // A few groups up front; each tool and its limits folded under them, closed at first.
+          step.groups.forEach { g ->
+            Column(Modifier.padding(top = 4.dp)) {
+              Text(g.name, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+              if (g.line.isNotBlank()) Text(g.line, style = scaled(14, color = Theme.soft))
+            }
+          }
+          if (step.details.isNotBlank()) Text(
+            step.details + if (folded) " ⌄" else " ⌃",
+            style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+            modifier = Modifier.heightIn(min = 44.dp).clickable { folded = !folded }.padding(vertical = 10.dp),
+          )
+        }
+        // What's signed: the connections in tafs cloud's words and the Card in KIFF's, under the fold where the step has one.
+        if (step == null || step.groups.isEmpty() || step.details.isBlank() || !folded) {
+          step?.groups?.forEach { g ->
+            if (g.tools.isNotEmpty()) Text(g.name, style = scaled(13, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp))
+            g.tools.forEach { t ->
+              Text(t.name, style = scaled(14, FontWeight.SemiBold, Theme.ink))
+              if (t.does.isNotBlank()) Text(t.does, style = scaled(13, color = Theme.ink))
+              if (t.why.isNotBlank()) Text(t.why, style = scaled(13, color = Theme.soft))
+            }
+          }
+          if (step == null || step.groups.isEmpty()) tools.connect?.lines?.forEach { Text("· $it", style = scaled(14, color = Theme.ink)) }
+        }
+        step?.ask?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 6.dp)) }
+        if (step == null || step.groups.isEmpty() || !folded) tools.card?.let { card ->
           card.cardTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp)) }
           card.words.forEach { (title, lines) ->
             if (title.isNotEmpty()) Text(title, style = scaled(13, FontWeight.SemiBold, Theme.ink))
@@ -249,11 +310,11 @@ fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
           }
         }
         bot.tafs.app.design.PrimaryButton(
-          if (giving) Words.Coach.Tools.giving else Words.Coach.Tools.give,
+          if (giving) Words.Coach.Tools.giving else said(step?.give, Words.Coach.Tools.give),
           {
             giving = true
             scope.launch {
-              actions.giveTools()
+              if (actions.giveTools()) onClose()
               giving = false
             }
           },
@@ -262,5 +323,7 @@ fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
       }
     }
     state.coachToolsError?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    bot.tafs.app.design.OutlineButton(said(step?.notNow, Words.Common.notNow), { actions.notNowTools(); onClose() }, Modifier.fillMaxWidth(), enabled = !giving)
+  }
   }
 }

@@ -108,8 +108,11 @@ class CoachStartTest {
     // One fingerprint, the draft's, behind the approval key, before anything is made: no other prompt, no Card yet.
     assertEquals(listOf("Start Coach"), auth.asked)
     assertEquals(listOf("Start Coach"), auth.fingerprints)
-    // Coach's tools wait for the tools panel, behind their own fingerprint.
+    // Coach's tools are the step that ends the Start: asked in their sheet, behind their own fingerprint, or put off.
     assertTrue(m.state.value.coachTools?.toGive == true)
+    assertTrue(m.state.value.coachToolsAsked)
+    m.notNowCoachTools()
+    assertFalse(m.state.value.coachToolsAsked)
     assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
     assertEquals(1, transport.requestsTo("POST /v1/me/agent-drafts").size)
     assertEquals("setup_1", m.state.value.coachCloudId)
@@ -176,6 +179,16 @@ class CoachStartTest {
     assertEquals(1, transport.requestsTo("POST /v1/connections/batch").size)
     assertEquals(KiffClient.json.parseToJsonElement(cardBody), KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/me/agent-drafts").single().body!!)))
     assertEquals("Give Coach its Card", auth.asked.last())
+  }
+
+  @Test fun theToolsStepReadsInTafsCloudsWordsAndAnOlderOneWithout() {
+    val step = """{"title":"Give Coach its tools","intro":"Coach needs a few tools.","groups":[{"name":"Watch your tafs","line":"See your tafs.","tools":[{"name":"See your tafs","does":"Read each taf. Up to 500 reads a day.","why":"It reads your account."}]}],"details":"Each tool and its limits","ask":"Give Coach these tools?","give":"Give Coach its tools","not_now":"Not now","row":"Coach has no tools yet · Give them"}"""
+    val tools = KiffClient.json.decodeFromString<bot.tafs.app.kiff.CoachTools>("""{"state":"to_give","coach_tools_step":$step}""")
+    val s = tools.step!!
+    assertEquals("Each tool and its limits", s.details)
+    assertEquals("Not now", s.notNow)
+    assertEquals("It reads your account.", s.groups.single().tools.single().why)
+    assertNull(KiffClient.json.decodeFromString<bot.tafs.app.kiff.CoachTools>(toGive).step)
   }
 
   @Test fun theCardsReadInKiffsWordsAndTheConnectionsInTafsClouds() {
@@ -296,6 +309,7 @@ class CoachStartTest {
     m.loadCoach()
     assertTrue(m.startCoach())
     assertEquals(listOf("Connect your apps"), auth.asked)
+    assertFalse("a Coach already there asks no tools step", m.state.value.coachToolsAsked)
     assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
     assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
     assertTrue(m.state.value.planqueReady)

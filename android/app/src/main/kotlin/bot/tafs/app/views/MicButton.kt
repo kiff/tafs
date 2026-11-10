@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
@@ -81,7 +82,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
   }
   Box(
     Modifier
-      .size(40.dp)
+      .requiredSize(40.dp)
       .clip(CircleShape)
       .background(if (listening) Theme.no else Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), CircleShape)

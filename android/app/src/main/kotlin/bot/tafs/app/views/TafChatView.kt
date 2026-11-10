@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -388,14 +389,14 @@ private fun Composer(
       if (onStop != null && empty) {
         // While the taf works and the box is empty, Send is Stop: its run is cancelled.
         Box(
-          Modifier.size(40.dp).clip(CircleShape).background(Theme.ink).clickable(onClick = onStop).semantics { contentDescription = Words.Chat.stop },
+          Modifier.requiredSize(40.dp).clip(CircleShape).background(Theme.ink).clickable(onClick = onStop).semantics { contentDescription = Words.Chat.stop },
           contentAlignment = Alignment.Center,
         ) {
           Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Theme.background))
         }
       } else Box(
         Modifier
-          .size(40.dp)
+          .requiredSize(40.dp)
           // The whole button dims while it can't send, as iOS's does: circle and arrow together, in one layer.
           .alpha(if (empty || sending || holdsSend) 0.4f else 1f)
           .clip(CircleShape)
