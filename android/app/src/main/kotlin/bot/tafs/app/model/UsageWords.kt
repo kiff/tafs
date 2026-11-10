@@ -36,6 +36,7 @@ object UsageWords {
   /** The balance's panel and buying's: their labels. The balance's lines are tafs cloud's (`GET /v1/usage/balance`). */
   val BALANCE get() = Words.Usage.balance
   val BUY get() = Words.Usage.buy
+  val CHOOSE_PLAN get() = Words.Usage.choosePlan
 
   /** Under a pack of credits on sale: its credits never expire. */
   val PACKS_KEEP get() = Words.Usage.packsKeep

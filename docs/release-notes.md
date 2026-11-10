@@ -5,6 +5,10 @@ seven other languages tafs speaks ([languages.md](languages.md)). Play takes up 
 per language. The same rules as [store-listing.md](store-listing.md): the glossary's words, the
 same claims in every language, nothing stronger, and only what a person can see on screen.
 
+## Android 45 (1.1.2)
+
+The same notes as Android 44 (1.1.1), below, in every language: its two fixes are small.
+
 ## Android 44 (1.1.1)
 
 **English (en-US):**

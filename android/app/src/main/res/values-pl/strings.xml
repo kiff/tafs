@@ -169,6 +169,7 @@
     <string name="billing_not_bought">Zakup nie doszedł do skutku: %1$s</string>
     <string name="billing_not_restored">Nie udało się przywrócić zakupów: %1$s</string>
     <string name="billing_not_signed_in">Nie zalogowano.</string>
+    <string name="billing_nothing_to_restore">Brak zakupów do przywrócenia.</string>
     <string name="billing_one_person_tafs_kiff_your">Jedna osoba: tafs, z kredytami w każdym okresie.</string>
     <string name="billing_only_someone_who_manages_account">Kredyty kupuje tylko osoba zarządzająca rozliczeniami konta.</string>
     <string name="billing_open_tafs_to_buy">Otwórz tafs, aby kupić.</string>
@@ -2133,6 +2134,7 @@
     <string name="usage_buy">Dodaj kredyty</string>
     <string name="usage_buying">Kupowanie…</string>
     <string name="usage_cancel_solo">Anuluj Solo</string>
+    <string name="usage_choose_plan">Wybierz plan</string>
     <string name="usage_company_billed_kiff_solo_bought">Company jest teraz rozliczane przez KIFF. Solo kupione w App Store odnowi się %1$s, chyba że zostanie anulowane z konta Apple, z którego je kupiono.</string>
     <string name="usage_credits">Kredyty</string>
     <string name="usage_credits_not_read">Nie udało się odczytać kredytów. %1$s</string>

@@ -100,7 +100,8 @@ bundle. `ndk.debugSymbolLevel` stays set, so any native code added later sends i
 **Plan & usage** (`UsageViews`) opens on tafs cloud's balance (`GET /v1/usage/balance`,
 [accounts.md](accounts.md)), every line in its words: the balance and its second line, a bar at
 `meter_pct`, the warning, and **Raise the limit** where `raise` is set (`BalancePanel`). Then buying,
-who bills the plan, asking an admin, and the Credits panel. Settings' Plan card shows `plan_line` in
+who bills the plan, asking an admin, and the Credits panel, which is left out where the balance's
+`credits_panel` is false (no plan and no run lately; a tafs cloud without the flag shows it). Settings' Plan card shows `plan_line` in
 `plan_tone`'s colour, and Home shows `home_line` when it's set (`planColor`); both are read with each
 refresh (`AppModel.refreshPlan`). A 404 from a tafs cloud from before the balance shows none, and a
 failed read shows tafs cloud's `words` above what was read before.
@@ -127,12 +128,17 @@ failed read shows tafs cloud's `words` above what was read before.
 Solo and packs of credits, which never expire, at Play's prices, where the balance's `buy` offers
 them to this person, and only once KIFF's usage names their Play products and the account's token.
 KIFF records each purchase before Play is told it's done, and Restore purchases sends again what
-wasn't.
+wasn't. The panel's title is **Choose a plan** while Solo is offered (`buy.solo`), and **Add
+credits** once it runs.
+- **Restore purchases** shows only while Play knows a purchase not finished yet, or couldn't say, or
+  after one KIFF didn't record (`AppState.restoreShown`, read with Play's offers). Launch and sign-in
+  already send what's unfinished, so an account that bought nothing has no Restore. A restore that
+  finds nothing says "Nothing to restore.", never "Purchases restored." (`PurchaseOutcome.NothingToRestore`).
 - **The First month pack** (`bot.tafs.credits.firstmonth`, KIFF's pack with `"once": true`) shows
-  right under Solo, where the balance's `buy.first_month` is set, and never with the other packs
-  (`UsageStore.firstMonthPack`, `repeatPacks`). With `buy.first_month.ready` true, its price is its
-  button. With `ready` false, before Solo starts, it shows its price and tafs cloud's `words`, with
-  no button. KIFF leaves it out once the account has bought it (`PlayOffersTest`).
+  first among the packs, where the balance's `buy.first_month` is set and `ready`, its price its
+  button (`UsageStore.firstMonthPack`, `repeatPacks`). Not ready, it isn't shown: never alone or
+  greyed. tafs cloud offers it only once Solo runs, and KIFF leaves it out once the account has
+  bought it (`PlayOffersTest`).
 - **Play's offers are read again** each time Usage shows, after every purchase and restore, and
   just before Play's sheet opens (`Purchases.load`, `PlayBillingStore.purchase`), never kept
   from an earlier read. Solo has no free trial; the trial's words show only if Play ever lists a

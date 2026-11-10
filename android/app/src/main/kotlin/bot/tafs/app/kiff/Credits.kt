@@ -86,6 +86,8 @@ data class BalanceNow(
   val raise: BalanceRaise? = null,
   /** What the store may offer this person: Solo, packs, or neither. */
   val buy: kotlinx.serialization.json.JsonElement? = null,
+  /** Whether Plan & usage shows the Credits panel: false only with no plan and no run lately. A tafs cloud without it: shown. */
+  @SerialName("credits_panel") val creditsPanel: Boolean = true,
 ) {
   val waiting: Boolean get() = state == WAITING
 

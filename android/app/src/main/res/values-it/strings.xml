@@ -159,6 +159,7 @@
     <string name="billing_not_bought">L\'acquisto non è andato a buon fine: %1$s</string>
     <string name="billing_not_restored">Non è stato possibile ripristinare gli acquisti: %1$s</string>
     <string name="billing_not_signed_in">Accesso non effettuato.</string>
+    <string name="billing_nothing_to_restore">Nessun acquisto da ripristinare.</string>
     <string name="billing_one_person_tafs_kiff_your">Una persona: tafs, con crediti inclusi ogni periodo.</string>
     <string name="billing_only_someone_who_manages_account">Solo chi gestisce la fatturazione dell\'account acquista crediti.</string>
     <string name="billing_open_tafs_to_buy">Apri tafs per acquistare.</string>
@@ -2019,6 +2020,7 @@
     <string name="usage_buy">Aggiungi crediti</string>
     <string name="usage_buying">Acquisto…</string>
     <string name="usage_cancel_solo">Annulla Solo</string>
+    <string name="usage_choose_plan">Scegli un piano</string>
     <string name="usage_company_billed_kiff_solo_bought">Company ora è fatturato da KIFF. Il Solo acquistato nell\'App Store si rinnova il %1$s se non viene annullato, dall\'account Apple che l\'ha acquistato.</string>
     <string name="usage_credits">Crediti</string>
     <string name="usage_credits_not_read">Non è stato possibile leggere i crediti. %1$s</string>

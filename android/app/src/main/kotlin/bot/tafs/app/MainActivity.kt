@@ -537,7 +537,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         answer = model::answerCoach,
         approve = model::startApproval,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
-        start = { model.startCoach() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
@@ -669,7 +668,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                       chats = remember(model) { CoachChatActions(
                         newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
                         loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
-                        giveTools = model::giveCoachTools,
+                        giveTools = model::giveCoachTools, notNowTools = model::notNowCoachTools,
                       ) })
                   }
                 }

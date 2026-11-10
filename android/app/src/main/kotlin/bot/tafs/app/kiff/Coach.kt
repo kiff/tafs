@@ -237,8 +237,32 @@ data class CoachTools(
   val taken: String? = null,
   val connect: CoachConnect? = null,
   val card: CoachCardDraft? = null,
+  /** The tools step's words, tafs cloud's in the person's language; null from a tafs cloud from before them. */
+  @kotlinx.serialization.SerialName("coach_tools_step") val step: CoachToolsStep? = null,
 ) {
   val toGive: Boolean get() = state == "to_give"
+}
+
+/**
+ * Coach's tools step, every word tafs cloud's (docs/coach.md): its title and intro, the tools in a few groups, each tool's own
+ * line folded under `details`, the ask, the buttons, and the one-line row once it's put off.
+ */
+@Serializable
+data class CoachToolsStep(
+  val title: String = "",
+  val intro: String = "",
+  val groups: List<Group> = emptyList(),
+  val details: String = "",
+  val ask: String = "",
+  val give: String = "",
+  @kotlinx.serialization.SerialName("not_now") val notNow: String = "",
+  val row: String = "",
+) {
+  @Serializable
+  data class Group(val name: String = "", val line: String = "", val tools: List<Tool> = emptyList())
+
+  @Serializable
+  data class Tool(val name: String = "", val does: String = "", val why: String = "")
 }
 
 /** The batch for KIFF's `POST /v1/connections/batch`, and a line per tool for the owner to read before signing. */
