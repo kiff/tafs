@@ -52,7 +52,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every taf halted"
+            "value": "All your tafs halted"
           }
         }
       }
@@ -134,17 +134,6 @@
         }
       }
     },
-    "alert.foot.tells_you": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When a taf needs you, this phone tells you even with tafs closed. Nothing is sent until you approve."
-          }
-        }
-      }
-    },
     "alert.foot.tells_you_device": {
       "extractionState": "manual",
       "localizations": {
@@ -207,17 +196,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "A taf needs you"
-          }
-        }
-      }
-    },
-    "alert.no_push_token": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This phone didn't give tafs a push token. Try again in a moment."
           }
         }
       }
@@ -295,17 +273,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alerts on this %1$@"
-          }
-        }
-      }
-    },
-    "alert.on_this_phone": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alerts on this phone"
           }
         }
       }
@@ -1130,7 +1097,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A taf asks before it does anything outside its Card, and Coach asks before it connects a tool or issues a Card. You approve on this device, and that needs Face ID or Touch ID."
+            "value": "A taf asks before it does anything outside its Card, and Coach asks before it connects an app or issues a Card. You approve on this device, and that needs Face ID or Touch ID."
           }
         }
       }
@@ -1559,7 +1526,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "As the conversation goes, the plan, the tools being connected and the taf's Card show here."
+            "value": "As the conversation goes, the plan, the apps being connected and the taf's Card show here."
           }
         }
       }
@@ -1725,17 +1692,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "A pack adds credits once, and they never expire. Each period's included credits are used first, then the packs'."
-          }
-        }
-      }
-    },
-    "billing.pending": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The purchase is waiting for approval. Your tasks are added once it's done."
           }
         }
       }
@@ -2011,17 +1967,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Terms of Use"
-          }
-        }
-      }
-    },
-    "billing.test_purchase": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Test purchases don't add tasks to this account."
           }
         }
       }
@@ -3665,17 +3610,6 @@
         }
       }
     },
-    "card.rule.each_call_asks": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Each call asks you first"
-          }
-        }
-      }
-    },
     "card.rule.in_total": {
       "extractionState": "manual",
       "localizations": {
@@ -3841,28 +3775,6 @@
         }
       }
     },
-    "card.window.any_24_hours": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in any 24 hours"
-          }
-        }
-      }
-    },
-    "card.window.any_7_days": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in any 7 days"
-          }
-        }
-      }
-    },
     "card.window.any_day": {
       "extractionState": "manual",
       "localizations": {
@@ -3892,17 +3804,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "in any 7 days"
-          }
-        }
-      }
-    },
-    "card.window.day": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "a day"
           }
         }
       }
@@ -4006,17 +3907,6 @@
         }
       }
     },
-    "card.window.total": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in total"
-          }
-        }
-      }
-    },
     "card.within_card": {
       "extractionState": "manual",
       "localizations": {
@@ -4024,28 +3914,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "within the Card"
-          }
-        }
-      }
-    },
-    "chat.answer.copied": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copied"
-          }
-        }
-      }
-    },
-    "chat.answer.copy": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy"
           }
         }
       }
@@ -4716,7 +4584,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@: sent, waiting for the tool"
+            "value": "%1$@: sent, waiting for the app"
           }
         }
       }
@@ -4794,17 +4662,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Run started %1$@ · %2$@"
-          }
-        }
-      }
-    },
-    "chat.seconds": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ s"
           }
         }
       }
@@ -5392,17 +5249,6 @@
         }
       }
     },
-    "coach.another_approval": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Another approval is going through. Approve this one once it's done."
-          }
-        }
-      }
-    },
     "coach.answer.approve": {
       "extractionState": "manual",
       "localizations": {
@@ -5728,7 +5574,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approving is needed to finish your first taf: Coach asks you to approve the tool it connects and the taf's Card on this device."
+            "value": "Approving is needed to finish your first taf: Coach asks you to approve the app it connects and the taf's Card on this device."
           }
         }
       }
@@ -5761,7 +5607,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval."
+            "value": "Set up a new taf, connect an app, or change how one works. Each connection and each Card waits for your approval."
           }
         }
       }
@@ -6003,7 +5849,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only an admin of this KIFF account can connect tools."
+            "value": "Only an admin of this KIFF account can connect apps."
           }
         }
       }
@@ -6014,7 +5860,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Another device connects this account's tools for now. Connect them from that one."
+            "value": "Another device connects this account's apps for now. Connect them from that one."
           }
         }
       }
@@ -6047,7 +5893,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecting your tools didn't work. Tap Start to try again."
+            "value": "Connecting your apps didn't work. Tap Start to try again."
           }
         }
       }
@@ -6058,7 +5904,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecting tools isn't set up. %1$@"
+            "value": "Connecting apps isn't set up. %1$@"
           }
         }
       }
@@ -6311,18 +6157,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it."
-          }
-        }
-      }
-    },
-    "coach.jump_latest_something_new": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jump to the latest, something new"
+            "value": "Name an app a taf should work with, like your payment provider. You sign in on the app's own page, and your sign-in is kept sealed: no taf ever sees it."
           }
         }
       }
@@ -6349,24 +6184,13 @@
         }
       }
     },
-    "coach.name": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach"
-          }
-        }
-      }
-    },
     "coach.name_tool_taf_should_work": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for %1$@."
+            "value": "Name an app a taf should work with, like your payment provider. You sign in on the app's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for %1$@."
           }
         }
       }
@@ -6378,17 +6202,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Needs you · approve"
-          }
-        }
-      }
-    },
-    "coach.needs_you_let_coach_drive": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Needs you · let Coach drive"
           }
         }
       }
@@ -6465,7 +6278,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecting tools isn't set up for this account from this phone. Open Coach to start it."
+            "value": "Connecting apps isn't set up for this account from this phone. Open Coach to start it."
           }
         }
       }
@@ -6503,17 +6316,6 @@
         }
       }
     },
-    "coach.not_now": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not now"
-          }
-        }
-      }
-    },
     "coach.not_put_back_try_again": {
       "extractionState": "manual",
       "localizations": {
@@ -6543,17 +6345,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ wasn't set up: %2$@."
-          }
-        }
-      }
-    },
-    "coach.not_set_up_here": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone."
           }
         }
       }
@@ -6652,7 +6443,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect your tools"
+            "value": "Connect your apps"
           }
         }
       }
@@ -6822,28 +6613,6 @@
         }
       }
     },
-    "coach.reading_request": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reading the request…"
-          }
-        }
-      }
-    },
-    "coach.request_does_not_match_what": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This request doesn't match what it shows, so it can't be approved."
-          }
-        }
-      }
-    },
     "coach.result.new_version": {
       "extractionState": "manual",
       "localizations": {
@@ -6917,17 +6686,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Version %1$@ is made."
-          }
-        }
-      }
-    },
-    "coach.send_once_files_up": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send once the files are up"
           }
         }
       }
@@ -8032,17 +7790,6 @@
         }
       }
     },
-    "connect.cancel_sign_in_confirm": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel the sign-in"
-          }
-        }
-      }
-    },
     "connect.cards_not_issued": {
       "extractionState": "manual",
       "localizations": {
@@ -8225,7 +7972,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connected tools"
+            "value": "Connected apps"
           }
         }
       }
@@ -8450,17 +8197,6 @@
         }
       }
     },
-    "connect.drive_app": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drive the app"
-          }
-        }
-      }
-    },
     "connect.from_removed": {
       "extractionState": "manual",
       "localizations": {
@@ -8479,17 +8215,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Give the key with %1$@"
-          }
-        }
-      }
-    },
-    "connect.keep_waiting": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep waiting"
           }
         }
       }
@@ -8709,7 +8434,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecting tools isn't set up for this account from this phone."
+            "value": "Connecting apps isn't set up for this account from this phone."
           }
         }
       }
@@ -8720,7 +8445,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone."
+            "value": "Connecting apps isn't set up for this account from this phone. Start from tafs on an iPhone."
           }
         }
       }
@@ -8852,7 +8577,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep your tools' sign-ins sealed"
+            "value": "Keep your apps' sign-ins sealed"
           }
         }
       }
@@ -9039,7 +8764,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start from Connected tools on this %1$@ first."
+            "value": "Start from Connected apps on this %1$@ first."
           }
         }
       }
@@ -9050,7 +8775,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start from Connected tools on this iPhone first."
+            "value": "Start from Connected apps on this iPhone first."
           }
         }
       }
@@ -9194,6 +8919,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "KIFF's words for this connection don't check out (%1$@). Nothing was approved."
+          }
+        }
+      }
+    },
+    "device.phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phone"
+          }
+        }
+      }
+    },
+    "device.tablet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tablet"
           }
         }
       }
@@ -10414,7 +10161,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start from Connected tools on this %1$@ first. Slack's subscription must be stopped before removing its door."
+            "value": "Start from Connected apps on this %1$@ first. Slack's subscription must be stopped before removing its door."
           }
         }
       }
@@ -11464,17 +11211,6 @@
         }
       }
     },
-    "export.try_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try again"
-          }
-        }
-      }
-    },
     "halt.again": {
       "extractionState": "manual",
       "localizations": {
@@ -11503,7 +11239,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halted. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
+            "value": "Halted. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again."
           }
         }
       }
@@ -11514,7 +11250,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halted since %1$@. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
+            "value": "Halted since %1$@. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again."
           }
         }
       }
@@ -11536,7 +11272,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halting stops your tafs: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
+            "value": "Halting stops your tafs: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone."
           }
         }
       }
@@ -11547,7 +11283,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halting stops it: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
+            "value": "Halting stops it: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone."
           }
         }
       }
@@ -11558,7 +11294,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halted%1$@. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
+            "value": "Halted%1$@. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again."
           }
         }
       }
@@ -11569,40 +11305,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halting stops %1$@: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
-          }
-        }
-      }
-    },
-    "halt.headline.halted": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halted"
-          }
-        }
-      }
-    },
-    "halt.headline.halting": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halting…"
-          }
-        }
-      }
-    },
-    "halt.headline.running": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Running"
+            "value": "Halting stops %1$@: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone."
           }
         }
       }
@@ -11679,7 +11382,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect a tool"
+            "value": "Connect an app"
           }
         }
       }
@@ -11690,7 +11393,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect a tool to set up your first taf."
+            "value": "Connect an app to set up your first taf."
           }
         }
       }
@@ -11723,7 +11426,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect a tool to set up your first taf. Pull down to refresh."
+            "value": "Connect an app to set up your first taf. Pull down to refresh."
           }
         }
       }
@@ -12025,17 +11728,6 @@
         }
       }
     },
-    "home.tafs": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tafs"
-          }
-        }
-      }
-    },
     "home.tafs_shared_you_show": {
       "extractionState": "manual",
       "localizations": {
@@ -12190,17 +11882,6 @@
         }
       }
     },
-    "knob.approve_with": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Approve with %1$@"
-          }
-        }
-      }
-    },
     "knob.ask_coach_to_change": {
       "extractionState": "manual",
       "localizations": {
@@ -12208,17 +11889,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ask Coach to change"
-          }
-        }
-      }
-    },
-    "knob.back": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back"
           }
         }
       }
@@ -12428,17 +12098,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Make %1$@ changes live with %2$@"
-          }
-        }
-      }
-    },
-    "knob.next": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next"
           }
         }
       }
@@ -14291,17 +13950,6 @@
         }
       }
     },
-    "push.a_taf_needs_you": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A taf needs you"
-          }
-        }
-      }
-    },
     "push.channel.holds_description": {
       "extractionState": "manual",
       "localizations": {
@@ -14363,7 +14011,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Usage to see."
+            "value": "Open Plan & usage to see."
           }
         }
       }
@@ -14500,17 +14148,6 @@
         }
       }
     },
-    "receipt.check_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check again"
-          }
-        }
-      }
-    },
     "receipt.checked": {
       "extractionState": "manual",
       "localizations": {
@@ -14540,17 +14177,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since."
-          }
-        }
-      }
-    },
-    "receipt.checking": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checking KIFF's receipt on this phone…"
           }
         }
       }
@@ -14995,17 +14621,6 @@
         }
       }
     },
-    "receipt.outcome.done_moved": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done. %1$@ moved."
-          }
-        }
-      }
-    },
     "receipt.outcome.moved": {
       "extractionState": "manual",
       "localizations": {
@@ -15155,7 +14770,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, and sent, but the tool's answer was lost: check the tool's own records"
+            "value": "%1$@, and sent, but the app's answer was lost: check the app's own records"
           }
         }
       }
@@ -15441,7 +15056,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The tool refused it, but nothing shows it had no effect."
+            "value": "The app refused it, but nothing shows it had no effect."
           }
         }
       }
@@ -15650,7 +15265,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It works again as before the halt"
+            "value": "It works again as it did before the halt."
           }
         }
       }
@@ -15848,7 +15463,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, but whether the tool did it wasn't recorded: check the tool's own records"
+            "value": "%1$@, but whether the app did it wasn't recorded: check the app's own records"
           }
         }
       }
@@ -15881,7 +15496,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, but it couldn't be sent: nothing reached the tool"
+            "value": "%1$@, but it couldn't be sent: nothing reached the app"
           }
         }
       }
@@ -15892,7 +15507,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, but it couldn't be sent: nothing reached the tool%2$@"
+            "value": "%1$@, but it couldn't be sent: nothing reached the app%2$@"
           }
         }
       }
@@ -16084,17 +15699,6 @@
         }
       }
     },
-    "record.result.nothing_sent": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "nothing sent"
-          }
-        }
-      }
-    },
     "record.result.nothing_sent_yet": {
       "extractionState": "manual",
       "localizations": {
@@ -16178,7 +15782,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, and sent: waiting for the tool's answer"
+            "value": "%1$@, and sent: waiting for the app's answer"
           }
         }
       }
@@ -16216,17 +15820,6 @@
         }
       }
     },
-    "record.signed_on_phone": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signed on this phone"
-          }
-        }
-      }
-    },
     "record.started": {
       "extractionState": "manual",
       "localizations": {
@@ -16255,7 +15848,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The tool"
+            "value": "The app"
           }
         }
       }
@@ -17745,17 +17338,6 @@
         }
       }
     },
-    "settings.alerts_off.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alerts are off on this phone"
-          }
-        }
-      }
-    },
     "settings.alerts_off.title_device": {
       "extractionState": "manual",
       "localizations": {
@@ -17872,7 +17454,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your tools' sign-ins, disconnected"
+            "value": "Your apps' sign-ins, disconnected"
           }
         }
       }
@@ -17905,7 +17487,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs couldn't erase your tafs. Your KIFF account isn't deleted. %1$@."
+            "value": "tafs couldn't erase your tafs. Your KIFF account isn't deleted. %1$@"
           }
         }
       }
@@ -18350,28 +17932,6 @@
         }
       }
     },
-    "settings.sign_in_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in again"
-          }
-        }
-      }
-    },
-    "settings.sign_in_again_confirm.body": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This phone signs out of KIFF first, then you sign in again in your browser."
-          }
-        }
-      }
-    },
     "settings.sign_in_again_confirm.body_device": {
       "extractionState": "manual",
       "localizations": {
@@ -18423,17 +17983,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sign out"
-          }
-        }
-      }
-    },
-    "settings.sign_out_of_kiff.body": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This phone stops working for your account until you sign in again. Your tafs keep working."
           }
         }
       }
@@ -18570,17 +18119,6 @@
         }
       }
     },
-    "settings.time_zone_offer.text": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Holds' deadlines, Activity, the Record and what your tafs write would use this phone's time zone. Your account uses %1$@ now."
-          }
-        }
-      }
-    },
     "settings.time_zone_offer.text_device": {
       "extractionState": "manual",
       "localizations": {
@@ -18643,17 +18181,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use this %3$@: %2$@"
-          }
-        }
-      }
-    },
-    "settings.use_phone_zone": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use this phone's: %1$@"
           }
         }
       }
@@ -18984,17 +18511,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listening"
-          }
-        }
-      }
-    },
-    "setup.next_run": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next run at %1$@"
           }
         }
       }
@@ -19401,7 +18917,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this %1$@."
+            "value": "Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this %1$@."
           }
         }
       }
@@ -19578,17 +19094,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "The sign-in didn't come back to tafs."
-          }
-        }
-      }
-    },
-    "sign_in.signed_out_of_kiff": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signed out of KIFF. Sign in again."
           }
         }
       }
@@ -19841,7 +19346,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The connection sends nothing to your tools"
+            "value": "The connection sends nothing to your apps"
           }
         }
       }
@@ -20319,17 +19824,6 @@
         }
       }
     },
-    "taf.now.paused": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paused"
-          }
-        }
-      }
-    },
     "taf.now.paused_by_you": {
       "extractionState": "manual",
       "localizations": {
@@ -20391,7 +19885,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Waiting on you · %1$@"
+            "value": "Waiting for you · %1$@"
           }
         }
       }
@@ -20402,7 +19896,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Waiting on you"
+            "value": "Waiting for you"
           }
         }
       }
@@ -20436,17 +19930,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pause"
-          }
-        }
-      }
-    },
-    "taf.paused": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paused"
           }
         }
       }
@@ -21067,17 +20550,6 @@
         }
       }
     },
-    "taf.versions.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Changes to how it runs"
-          }
-        }
-      }
-    },
     "taf.view_picker": {
       "extractionState": "manual",
       "localizations": {
@@ -21085,28 +20557,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "View"
-          }
-        }
-      }
-    },
-    "taf.work.show_all_runs": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show all runs"
-          }
-        }
-      }
-    },
-    "taf.work.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Its work"
           }
         }
       }
@@ -21239,28 +20689,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Company is billed by KIFF now. The Solo bought in the App Store renews on %1$@ unless it's cancelled, from the Apple account that bought it."
-          }
-        }
-      }
-    },
-    "usage.count": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ %2$@"
-          }
-        }
-      }
-    },
-    "usage.count_of": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ of %2$@ %3$@"
           }
         }
       }
@@ -23344,17 +22772,6 @@
         }
       }
     },
-    "work.request.ask_coach": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ask Coach"
-          }
-        }
-      }
-    },
     "work.request.try_reply_now": {
       "extractionState": "manual",
       "localizations": {
@@ -23362,17 +22779,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Try the reply now"
-          }
-        }
-      }
-    },
-    "work.request.what_happened": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What happened"
           }
         }
       }

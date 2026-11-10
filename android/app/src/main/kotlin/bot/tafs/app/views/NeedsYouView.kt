@@ -102,7 +102,7 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
   Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     if (again == null) {
       Text(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
-      signInAgain?.let { OutlineButton(Words.Settings.signInAgain, it, Modifier.fillMaxWidth(), color = Theme.amberText) }
+      signInAgain?.let { OutlineButton(Words.Connect.signInAgain, it, Modifier.fillMaxWidth(), color = Theme.amberText) }
       return@Column
     }
     Text(bot.tafs.app.signing.ApprovalKeyRenewed.APPROVE_AGAIN_WORDS, style = scaled(14, color = Theme.amberText))

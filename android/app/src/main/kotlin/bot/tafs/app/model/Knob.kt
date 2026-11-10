@@ -71,12 +71,12 @@ object KnobWords {
   val TAP_A_RING get() = Words.Knob.tapARing
   val USE_SIZE get() = Words.Knob.useSize
   val BACK_TO_WHY get() = Words.Knob.backToWhy
-  val BACK get() = Words.Knob.back
+  val BACK get() = Words.Common.back
   val LOWER get() = Words.Knob.lower
   val PAUSE get() = Words.Knob.pause
   val RESUME get() = Words.Knob.resume
   val RAISE get() = Words.Knob.raise
-  val NEXT get() = Words.Knob.next
+  val NEXT get() = Words.Common.next
   val NOT_READ_BACK get() = Words.Knob.notReadBack
   val DRAFT get() = Words.Knob.draft
   val READING_DRAFT get() = Words.Knob.readingDraft
@@ -90,7 +90,7 @@ object KnobWords {
   val NOT_RECORDED get() = Words.Knob.notRecorded
 
   /** The approval's button, with this phone's own prompt: "Approve with your fingerprint". */
-  fun approveWith(biometry: String): String = Words.Knob.approveWith(biometry)
+  fun approveWith(biometry: String): String = Words.Approval.approveWith(biometry)
 
   /** Over Coach's dial card: "Refunds will work like this". */
   fun draftTitle(taf: String): String = Words.Knob.draftTitle(taf)

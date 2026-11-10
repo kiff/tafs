@@ -3,6 +3,7 @@ package bot.tafs.app.kiff
 import bot.tafs.app.model.Knob
 import bot.tafs.app.model.KnobRim
 import bot.tafs.app.model.KnobRing
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.KnobStop
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -168,7 +169,7 @@ data class KnobWire(
    * grant), the taf's own ([THIS_TAF]), or all of them (null).
    */
   fun knob(showing: String? = null): Knob {
-    val names = rings.ifEmpty { listOf(RingName("wakes", "When"), RingName("what", "What"), RingName("results", "Where")) }
+    val names = rings.ifEmpty { listOf(RingName("wakes", Words.Knob.Ring.`when`), RingName("what", Words.Knob.Ring.what), RingName("results", Words.Knob.Ring.where)) }
     fun keep(i: Item) = when (showing) {
       null -> true
       THIS_TAF -> i.grant == null

@@ -40,7 +40,7 @@ import java.net.URLEncoder
   /** Under the last page, in tafs cloud's words: "Nothing older in this view". */
   @SerialName("end_words") val endWords: String? = null)
 @Serializable data class TafRunsPage(val requests: List<WorkRequest> = emptyList(), @SerialName("next_cursor") val nextCursor: String? = null,
-  val title: String = Words.Taf.Work.title, @SerialName("more_title") val moreTitle: String = Words.Taf.Work.showAllRuns, @SerialName("end_words") val endWords: String? = null)
+  val title: String = Words.Taf.itsWork, @SerialName("more_title") val moreTitle: String = Words.Taf.showAllRuns, @SerialName("end_words") val endWords: String? = null)
 
 @Serializable data class ConnectedAction(val name: String, val title: String, val limits: List<String> = emptyList(), val steps: List<Int> = emptyList(), @SerialName("step_words") val stepWords: String = "")
 @Serializable data class ConnectedStats(val calls: Int = 0, val done: Int = 0, val held: Int = 0, val words: String = "", val complete: Boolean = false, @SerialName("activity_query") val activityQuery: String = "")
@@ -60,7 +60,7 @@ import java.net.URLEncoder
 @Serializable data class WorkflowView(val title: String = Words.Taf.Workflow.title, val summary: String = "", val steps: List<WorkflowStep> = emptyList(),
   @SerialName("running_step") val runningStep: Int? = null)
 @Serializable data class MemorySummary(val count: Int = 0, val title: String = "", val latest: String? = null)
-@Serializable data class VersionSummary(val title: String = Words.Taf.Versions.title, val summary: String = "", val live: Int? = null, val earlier: Int = 0)
+@Serializable data class VersionSummary(val title: String = Words.Version.changesRow, val summary: String = "", val live: Int? = null, val earlier: Int = 0)
 @Serializable data class TafSetup(val connections: List<ConnectedApp> = emptyList(), val workflow: WorkflowView = WorkflowView(),
   val memory: MemorySummary = MemorySummary(), val versions: VersionSummary = VersionSummary(), @SerialName("connections_error") val connectionsError: String? = null,
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException> = emptyList())

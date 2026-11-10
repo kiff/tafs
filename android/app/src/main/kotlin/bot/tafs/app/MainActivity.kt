@@ -313,7 +313,7 @@ fun RootView(model: AppModel) {
   if (state.alertsOffSinceSignOut && state.lastError == null) {
     DriveAlert(
       onDismissRequest = model::dismissAlertsOff,
-      title = { Text(Words.Settings.AlertsOff.title) },
+      title = { Text(Words.Settings.AlertsOff.titleDevice(bot.tafs.app.model.ThisDevice.word)) },
       text = { Text(Words.Settings.AlertsOff.text) },
       confirmButton = { TextButton({ model.dismissAlertsOff(); rootScope.launch { model.turnOnAlerts() } }) { Text(Words.Settings.AlertsOff.turnOn, color = Theme.amber) } },
       dismissButton = { TextButton(model::dismissAlertsOff) { Text(Words.Common.notNow, color = Theme.soft) } },
@@ -344,7 +344,7 @@ fun RootView(model: AppModel) {
     DriveAlert(
       onDismissRequest = {},
       title = { Text(Words.Settings.TimeZoneOffer.title(zone = offer)) },
-      text = { Text(Words.Settings.TimeZoneOffer.text(current = state.kiffAccount?.timeZone ?: "UTC")) },
+      text = { Text(Words.Settings.TimeZoneOffer.textDevice(device = bot.tafs.app.model.ThisDevice.word, zone = state.kiffAccount?.timeZone ?: "UTC")) },
       confirmButton = { TextButton({ zoneScope.launch { model.answerTimeZoneOffer(use = true) } }) { Text(Words.Settings.TimeZoneOffer.use(zone = offer), color = Theme.amber) } },
       dismissButton = { TextButton({ zoneScope.launch { model.answerTimeZoneOffer(use = false) } }) { Text(Words.Common.notNow, color = Theme.soft) } },
       containerColor = Theme.panel,
@@ -662,7 +662,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 // Overview: today across the tafs, at the foot of the list (as iOS's sidebar row).
                 Box(Modifier.fillMaxWidth().height(1.dp).background(Theme.line))
                 androidx.compose.material3.Text(
-                  "Overview",
+                  Words.Home.Overview.title,
                   style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
                   modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -914,8 +914,8 @@ private fun railColors() = androidx.compose.material3.NavigationRailItemDefaults
 )
 
 /** The bar's two places that open: the account (Settings) and Coach. */
-const val ACCOUNT = "Account"
-const val COACH = "Coach"
+val ACCOUNT: String get() = Words.Settings.title
+val COACH: String get() = Words.Coach.title
 
 /** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad: a tablet either way up, or a large phone on its side. */
 private const val WIDE_DP = 720

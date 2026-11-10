@@ -149,7 +149,7 @@ object KiffMapping {
     )
     taf = when {
       h.state == "waiting" -> taf.copy(state = TafState.waiting, now = Words.Taf.Now.waitingOnYou)
-      h.state == "paused" -> taf.copy(state = TafState.paused, now = Words.Taf.Now.paused)
+      h.state == "paused" -> taf.copy(state = TafState.paused, now = Words.Taf.State.paused)
       // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
       h.state == "halted" -> taf.copy(state = TafState.halted, now = Words.Taf.Now.halted)
       // Its run waits for a connected app's event (the slow-tools design): not the owner's, in the connection's words.
@@ -372,11 +372,11 @@ object KiffMapping {
 
   /** A KIFF window in the words a Card's totals use (docs/tafs.md); one KIFF adds later shows as it is sent, never as a day. */
   fun windowWords(window: String): String = when (window) {
-    "calendar_day" -> Words.Card.Window.day
-    "rolling_24h" -> Words.Card.Window.any24Hours
+    "calendar_day" -> Words.Card.Window.aDay
+    "rolling_24h" -> Words.Card.Window.anyDay
     "rolling_1h" -> Words.Card.Window.anyHour
-    "rolling_7d" -> Words.Card.Window.any7Days
-    "lifetime" -> Words.Card.Window.total
+    "rolling_7d" -> Words.Card.Window.anyWeek
+    "lifetime" -> Words.Card.Window.inTotal
     else -> window
   }
 

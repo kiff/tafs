@@ -201,7 +201,7 @@ data class CardRule(
         perAction?.let { parts += Words.Card.Rule.upToEach(it.formatted) }
         ownTotal?.let { parts += Words.Card.Rule.totalThenAsks(it.formatted, window.label) }
         roomWords?.let { parts += it }
-        countPerWindow?.let { parts += if (it == 0) Words.Card.Rule.eachCallAsks else Words.Card.Rule.callsThenAsks(count = it, window = window.label) }
+        countPerWindow?.let { parts += if (it == 0) Words.Card.Held.eachCallAsks else Words.Card.Rule.callsThenAsks(count = it, window = window.label) }
         return parts.joinToString(" · ")
       }
       perAction?.let { parts += Words.Card.Rule.atMostEach(it.formatted) }
@@ -625,6 +625,11 @@ data class RecordEntry(
   val refusedByTool: Boolean? = null,
   /** Who refused it at the tool: the vendor as connected, when known. */
   val refusedBy: String? = null,
+  /**
+   * Its title is this phone's own line for the owner's answer ("Refused by you · 08:56 · …"), so the chat shows it as it
+   * is. KIFF's lines, titled by the action, leave it unset.
+   */
+  val byYou: Boolean? = null,
 ) {
   /** "payment …QbstR": what it acted on, by the argument's name, when tafs has its value and it matches KIFF's hash. */
   val onText: String?
@@ -672,7 +677,7 @@ data class RecordEntry(
   val resultLine: String
     get() = when (kind) {
       Kind.done, Kind.approved -> Words.Record.Result.done
-      Kind.refused, Kind.revoked -> Words.Record.Result.nothingSent
+      Kind.refused, Kind.revoked -> Words.Record.nothingSent
       Kind.notDone -> Words.Record.Result.notDone
       Kind.held -> Words.Record.Result.nothingSentYet
       Kind.sending -> Words.Record.Result.noAnswerYet

@@ -3,7 +3,7 @@ package bot.tafs.app.model
 /** What Settings says of alerts. */
 object AlertWords {
   val NOT_IN_BUILD get() = Words.Alert.notInBuild
-  val ON_THIS_PHONE get() = Words.Alert.onThisPhone
+  val ON_THIS_PHONE get() = Words.Alert.onThisDevice(ThisDevice.word)
   val SOUND get() = Words.Alert.sound
   val SOUND_WORDS get() = Words.Alert.soundWords
   val WITH_SOUND get() = Words.Alert.withSound
@@ -32,6 +32,6 @@ object AlertWords {
   fun foot(available: Boolean, canAnswerHolds: Boolean?): String? = when {
     !available -> NOT_IN_BUILD
     canAnswerHolds == false -> Words.Alert.Foot.cantAnswerHolds
-    else -> Words.Alert.Foot.tellsYou
+    else -> Words.Alert.Foot.tellsYouDevice(ThisDevice.word)
   }
 }

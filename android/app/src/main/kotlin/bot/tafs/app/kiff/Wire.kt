@@ -201,6 +201,11 @@ data class WireThread(
   val messages: List<WireChatMessage> = emptyList(),
   val working: WireWorking? = null,
   val capped: WireCapped? = null,
+  /**
+   * Where the latest run stopped without finishing, any stop tafs cloud names (`turn_cap`, `cost_cap`, `max_token`,
+   * `refused`); `capped` carries the two caps alone, for older apps.
+   */
+  val stopped: WireCapped? = null,
   /** Coach's cards, each read apart: one the app can't read is left out. */
   val components: List<JsonElement>? = null,
   /** News of the tasks Coach handed tafs (kiff/tafs#206), each read apart: one the app can't read is left out. */

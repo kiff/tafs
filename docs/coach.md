@@ -75,7 +75,7 @@ Before the first message, one Face ID (`AppModel.startSetup`):
 1. The phone enrolls with planque: planque gets the phone's key, and a KIFF key that
    connects tools and does nothing else, minted with a signed setup call and never kept
    on the phone. If planque can't check the phone with KIFF (401), the app says "Connecting
-   your tools didn't work. Tap Start to try again." It never says signed out, since KIFF's
+   your apps didn't work. Tap Start to try again." It never says signed out, since KIFF's
    session still works (Android).
 2. The phone submits a KIFF agent draft with no tools for Coach. tafs cloud claims its
    key, so the key never reaches the phone (`POST /v1/setup`).

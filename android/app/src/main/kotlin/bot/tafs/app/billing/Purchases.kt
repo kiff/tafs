@@ -173,7 +173,7 @@ class Purchases(private val store: PlayStore) {
   }
 
   companion object {
-    val TEST_PURCHASE: String get() = Words.Billing.testPurchase
+    val TEST_PURCHASE: String get() = Words.Billing.testPurchaseCredits
     /** Play couldn't be read just now: no network, or its service down. Not "doesn't sell this". */
     val PLAY_UNREACHABLE: String get() = Words.Billing.playUnreachable
     /** Play answered, but sells none of it to this app on this phone (Play billing off here, or nothing listed for this account). */

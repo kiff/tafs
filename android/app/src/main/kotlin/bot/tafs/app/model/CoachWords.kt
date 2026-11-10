@@ -176,10 +176,10 @@ object CoachWords {
   val ASK_NOT_THIS_CARDS get() = Words.Coach.askNotThisCards
 
   /** An approval tapped while another goes through: one at a time. */
-  val ANOTHER_APPROVAL get() = Words.Coach.anotherApproval
+  val ANOTHER_APPROVAL get() = Words.Connect.anotherApproval
 
   /** Approving needs this phone's key and the connection service, set up at sign-in. */
-  val NOT_SET_UP_HERE get() = Words.Coach.notSetUpHere
+  val NOT_SET_UP_HERE get() = Words.Connect.notSetUpHereIphone
 
   val INTRO get() = Words.Coach.intro
   val SIGN_IN_NOTE get() = Words.Coach.signInNote

@@ -58,7 +58,7 @@ object AlertPayload {
         val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
         // A held call that has expired is not shown: there is nothing to answer.
         if (expires != null && !expires.isAfter(now)) return null
-        val title = data["title"]?.takeIf { it.isNotBlank() } ?: if (open == NEEDS_YOU) Words.Push.aTafNeedsYou else Words.App.name
+        val title = data["title"]?.takeIf { it.isNotBlank() } ?: if (open == NEEDS_YOU) Words.Alert.needsYou else Words.App.name
         val body = data["body"]?.takeIf { it.isNotBlank() } ?: when {
           open == USAGE -> Words.Push.openUsage
           tafId != null && open != NEEDS_YOU -> Words.Push.openTaf

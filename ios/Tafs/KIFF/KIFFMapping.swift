@@ -113,7 +113,7 @@ enum KIFFMapping {
                       card: Card(rules: rules, issuedBy: owner, expires: h.card.expires, revoked: !h.card.active))
         switch h.state {
         case "waiting": taf.state = .waiting; taf.now = Words.Taf.Now.waitingOnYou
-        case "paused": taf.state = .paused; taf.now = Words.Taf.Now.paused
+        case "paused": taf.state = .paused; taf.now = Words.Taf.State.paused
         // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
         case "halted": taf.state = .halted; taf.now = Words.Taf.Now.halted
         // A taf with no schedule isn't at work until it's told something in its chat

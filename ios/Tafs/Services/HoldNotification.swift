@@ -22,7 +22,7 @@ enum HoldNotification {
     static func words(_ hold: KIFFClient.CardException, taf: String?, zone: TimeZone) -> Lines {
         let call = KIFFMapping.held(hold, tafID: UUID())
         let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
-        return Lines(title: taf.map { Words.Alert.tafNeedsYou(taf: $0) } ?? Words.Push.aTafNeedsYou,
+        return Lines(title: taf.map { Words.Alert.tafNeedsYou(taf: $0) } ?? Words.Alert.needsYou,
                      body: Words.Alert.answerNothingSentUntilYou(what: "\(what)", why: "\(call.reason)", zone: "\(time(call.expiresAt, in: zone))"))
     }
 
@@ -45,7 +45,7 @@ enum HoldNotification {
         async let account = try? kiff.me()
         guard let hold = await held?.first(where: { $0.id == id }) else { return }
         // Coach's own agent is "setup" (AppModel.setupAgent): its holds are named Coach.
-        let taf = await tafs?.first { $0.kiffAgent == hold.subject }?.name ?? (hold.subject == "setup" ? Words.Coach.name : nil)
+        let taf = await tafs?.first { $0.kiffAgent == hold.subject }?.name ?? (hold.subject == "setup" ? Words.Coach.title : nil)
         let zone = await account?.timeZone.flatMap(TimeZone.init(identifier:)) ?? TimeZone(identifier: "UTC")!
         let words = words(hold, taf: taf, zone: zone)
         content.title = words.title

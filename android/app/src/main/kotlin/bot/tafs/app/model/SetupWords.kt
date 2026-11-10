@@ -56,5 +56,5 @@ object SetupWords {
   val TAFS_PLACES = listOf("door_reply", "app", "owner_email")
 
   /** Under its schedule: "Next run at 13:00 · Europe/Paris". */
-  fun nextRun(time: String, zone: String?): String = Words.Setup.nextRun(time) + (zone?.let { " · $it" } ?: "")
+  fun nextRun(time: String, zone: String?): String = Words.Taf.nextRunAt(time) + (zone?.let { " · $it" } ?: "")
 }
