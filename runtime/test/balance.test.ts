@@ -38,7 +38,7 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ packs_left: 300, left: 900, over: 12 }))).toEqual({
       balance: { state: "ok", why: null, meter_pct: 40, words: "Solo · 900 credits left this period",
         detail: "300 credits of it in packs, which never expire · 12 credits used past your balance weren't charged",
-        warning: null, raise: null, buy: { solo: false, packs: true, first_month: null } },
+        warning: null, raise: null, buy: { solo: false, packs: true, first_month: null }, credits_panel: true },
       plan_line: "Solo · 900 credits left", plan_tone: "ok", home_line: null,
     });
   });
@@ -65,7 +65,7 @@ describe("the balance, in words", () => {
     expect(balanceView(co({ used: 1500, left: 500, meter_pct: 75 }))).toEqual({
       balance: { state: "ok", why: null, meter_pct: 75, words: "Company · 4 seats · 1,500 of 2,000 credits included used",
         detail: "Then up to the spend limit, €80, on this period's invoice", warning: null,
-        raise: { words: "Raise the spend limit to €120", from_cents: 8000 }, buy: null },
+        raise: { words: "Raise the spend limit to €120", from_cents: 8000 }, buy: null, credits_panel: true },
       plan_line: "Company · 4 seats · 1,500 credits used", plan_tone: "ok", home_line: null,
     });
     const beyond = balanceView(co({ state: "warning", used: 2640, left: 0, beyond: 640, beyond_cents: 6450, meter_pct: 80 }));
@@ -90,16 +90,16 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ kind: "unbounded", meter_pct: null, used: 0, billed_by: "" })).balance.words).toBe("No limit · no credits used yet this period");
     expect(balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false } }))).toEqual({
       balance: { state: "waiting", why: "no_plan", meter_pct: null, words: "No plan", detail: null, warning: "Choose a plan to start your tafs.",
-        raise: null, buy: { solo: true, packs: false, first_month: null } },
+        raise: null, buy: { solo: true, packs: false, first_month: null }, credits_panel: true },
       plan_line: "No plan · choose one to start", plan_tone: "waiting", home_line: "Choose a plan to start your tafs.",
     });
   });
 
   // The First month pack, sold once per account: KIFF says while it's still on offer (can_buy.once).
-  it("offers the First month pack beside Solo with no button before a plan, and to buy once Solo runs", () => {
-    // No plan: the row shows with words and nothing to press, since the pack is bought once Solo runs.
+  it("offers the First month pack only while Solo runs, among the packs, never before a plan", () => {
+    // No plan: not offered, since it can't be bought before Solo.
     const noPlan = balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } }));
-    expect(noPlan.balance.buy).toEqual({ solo: true, packs: false, first_month: { ready: false, words: "Add it once Solo starts." } });
+    expect(noPlan.balance.buy).toEqual({ solo: true, packs: false, first_month: null });
     // Solo runs: it can be bought, and needs no words.
     expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: true } })).balance.buy)
       .toEqual({ solo: false, packs: true, first_month: { ready: true, words: null } });
@@ -108,21 +108,21 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ can_buy: { solo: true, packs: false } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
     // Someone who may buy nothing is offered nothing, whatever KIFF says of the pack.
     expect(balanceView(balance({ can_buy: { solo: false, packs: false, once: true } })).balance.buy).toBeNull();
-    // KIFF sends neither of these, and neither says "Add it once Solo starts.": Solo running with
-    // no packs on offer, and a plan with Solo somehow still offered.
+    // Never alone: Solo running with no packs on offer, or another plan, offers none.
     expect(balanceView(balance({ can_buy: { solo: true, packs: false, once: true } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
     expect(balanceView(balance({ kind: "company", seats: 4, can_buy: { solo: true, packs: false, once: true } })).balance.buy)
       .toEqual({ solo: true, packs: false, first_month: null });
-    // In the person's language.
-    const said = (lang: Parameters<typeof balanceView>[1]) =>
-      balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } }), lang).balance.buy?.first_month;
-    expect(said("fr")).toEqual({ ready: false, words: "Ajoutez-le une fois Solo lancé." });
-    expect(said("de")).toEqual({ ready: false, words: "Füge es hinzu, sobald Solo läuft." });
-    for (const lang of ["es", "it", "pt", "nl", "pl"] as const) {
-      const fm = said(lang);
-      expect(fm?.ready).toBe(false);
-      expect(fm?.words).toContain("Solo");
-      expect(fm?.words).not.toBe("Add it once Solo starts.");
+  });
+
+  // The Credits panel shows this period and the last: with no plan and no run in either, it has
+  // nothing to say to someone who just signed in.
+  it("hides the Credits panel only with no plan and no run lately", () => {
+    const none = balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false } });
+    expect(balanceView(none, "en", false).balance.credits_panel).toBe(false);
+    expect(balanceView(none, "en", true).balance.credits_panel).toBe(true);
+    expect(balanceView(none).balance.credits_panel).toBe(true);
+    for (const kind of ["solo", "company", "unbounded"] as const) {
+      expect(balanceView(balance({ kind, seats: 4 }), "en", false).balance.credits_panel).toBe(true);
     }
   });
 
@@ -134,7 +134,7 @@ describe("the balance, in words", () => {
 });
 
 /** KIFF as the routes read it: who the token is, and the credits read with its balance. */
-function kiff(opts: { balance?: KIFFBalance | null; status?: number; asked?: string[] } = {}) {
+function kiff(opts: { balance?: KIFFBalance | null; status?: number; asked?: string[]; runs?: number; previousRuns?: number; previousStatus?: number } = {}) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     if (token !== "ana") return new Response("{}", { status: 401 });
@@ -144,9 +144,11 @@ function kiff(opts: { balance?: KIFFBalance | null; status?: number; asked?: str
     if (u.pathname === "/v1/me/access") return new Response(JSON.stringify({ agents: { "agt-refunds": { use: true } } }), { status: 200 });
     if (u.pathname === "/v1/me/usage/credits") {
       if (opts.status) return new Response("{}", { status: opts.status });
+      const previous = u.searchParams.get("period") === "previous";
+      if (previous && opts.previousStatus) return new Response("{}", { status: opts.previousStatus });
       const b = opts.balance === undefined ? balance() : opts.balance;
-      return new Response(JSON.stringify({ period: NOV, current: true, credits: 0, runs: 0, by_agent: [], setup: { credits: 0, runs: 0 }, free: {},
-        ...(b ? { balance: b } : {}) }), { status: 200 });
+      return new Response(JSON.stringify({ period: NOV, current: !previous, credits: 0, runs: (previous ? opts.previousRuns : opts.runs) ?? 0, by_agent: [],
+        setup: { credits: 0, runs: 0 }, free: {}, ...(b ? { balance: b } : {}) }), { status: 200 });
     }
     return new Response("{}", { status: 404 });
   }) as typeof fetch;
@@ -188,11 +190,28 @@ describe("GET /v1/usage/balance", () => {
     expect(asked).toContain("/v1/me/usage/credits");
   });
 
-  it("shows a no-plan account the First month pack's row with words and no button", async () => {
+  it("shows a new no-plan account no First month pack and no Credits panel", async () => {
     const none = balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } });
-    const r = await call(world(kiff({ balance: none })), "/v1/usage/balance");
+    const asked: string[] = [];
+    const r = await call(world(kiff({ balance: none, asked })), "/v1/usage/balance");
     expect(r.status).toBe(200);
-    expect((r.body as { balance: { buy: unknown } }).balance.buy).toEqual({ solo: true, packs: false, first_month: { ready: false, words: "Add it once Solo starts." } });
+    expect((r.body as { balance: { buy: unknown } }).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    expect((r.body as { balance: { credits_panel: boolean } }).balance.credits_panel).toBe(false);
+    expect(asked).toContain("/v1/me/usage/credits?period=previous");
+  });
+
+  it("keeps the Credits panel for a no-plan account that ran lately, or when last period can't be read", async () => {
+    const none = balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false } });
+    for (const opts of [{ runs: 2 }, { previousRuns: 3 }, { previousStatus: 500 }]) {
+      const r = await call(world(kiff({ balance: none, ...opts })), "/v1/usage/balance");
+      expect(r.status).toBe(200);
+      expect((r.body as { balance: { credits_panel: boolean } }).balance.credits_panel).toBe(true);
+    }
+    // With a plan, last period isn't read.
+    const asked: string[] = [];
+    const r = await call(world(kiff({ asked })), "/v1/usage/balance");
+    expect((r.body as { balance: { credits_panel: boolean } }).balance.credits_panel).toBe(true);
+    expect(asked).not.toContain("/v1/me/usage/credits?period=previous");
   });
 
   it("answers 503 with words when KIFF can't be read, or gives no balance", async () => {

@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
-import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsView, readBalance, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
+import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
@@ -29,7 +29,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
-import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, putResult, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
@@ -1621,7 +1621,10 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       const body = coachCardsDraft(setup.kiffAgent, missingCards);
       card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
-    return { state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace, langOf(event)) } : {}), ...(card ? { card } : {}) };
+    return {
+      state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace, langOf(event)) } : {}), ...(card ? { card } : {}),
+      coach_tools_step: coachToolsStep(langOf(event)),
+    };
   } catch (err) {
     if (err instanceof KIFFError) {
       // Said in the logs, so "KIFF didn't answer" can be told from a refusal: its status and words.
@@ -5490,7 +5493,21 @@ async function aiUsage(_event: HTTPEvent, _me: KIFFIdentity, _deps: Deps): Promi
  * (docs/accounts.md, "The balance read"): for Plan & usage, Settings' Plan card and Home.
  */
 async function usageBalance(event: HTTPEvent, _me: KIFFIdentity, deps: Deps): Promise<BalanceView> {
-  return balanceView(await creditsRead(() => readBalance(bearer(event), deps.fetch, deps.kiffBase), langOf(event)), langOf(event));
+  const token = bearer(event), lang = langOf(event);
+  const { balance, runs } = await creditsRead(() => readBalanceAndRuns(token, deps.fetch, deps.kiffBase), lang);
+  return balanceView(balance, lang, balance.kind !== "none" || runs > 0 || await ranLastPeriod(token, deps));
+}
+
+/**
+ * A run counted last period, for an account with no plan and none this period. Unreadable, it counts
+ * as yes: the Credits panel shows, as it did before the flag.
+ */
+async function ranLastPeriod(token: string, deps: Deps): Promise<boolean> {
+  try {
+    return (await readCredits(token, true, deps.fetch, deps.kiffBase)).runs > 0;
+  } catch {
+    return true;
+  }
 }
 
 /**
