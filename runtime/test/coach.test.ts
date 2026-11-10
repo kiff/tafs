@@ -556,6 +556,8 @@ describe("Coach's tools step, at the end of a first Start", () => {
     expect(does.tafs_state).toBe("Read each taf, its versions and its open runs. Up to 500 a day, counted with “Read a run”.");
     expect(does.taf_task).toBe("Hand a taf a task or a message. The taf works under its own Card. Up to 50 a day; after that, each one waits for you.");
     expect(does.version_install).toBe("Put a version live. Each one waits for your approval.");
+    // The row shows while any tool is still to give, some given or none: it never says Coach has none.
+    expect(step.row).toBe("Coach's tools are waiting for you · Give them");
     expect(does.app_look).toContain("Up to 2,000 a day.");
     expect(does.app_act).toContain("Up to 1,000 a day.");
     expect(coachToolsStep("de").groups[3]!.tools[0]!.does).toContain("2.000");

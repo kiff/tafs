@@ -424,7 +424,7 @@ export const nl: Words = {
   cts_ask: "Coach deze tools geven? Je ondertekent zijn Card op je telefoon.",
   cts_give: "Coach zijn tools geven",
   cts_not_now: "Niet nu",
-  cts_row: "Coach heeft nog geen tools · Geven",
+  cts_row: "Coach' tools wachten op jou · Geven",
   cts_g_watch: "Je tafs in de gaten houden",
   cts_g_watch_line: "Je tafs en hun runs zien, en vinden wat er misging.",
   cts_g_run: "Ze voor je laten werken",
