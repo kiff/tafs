@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { requestOf, runFailure, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
+import { requestOf, runFailure, skippedOf, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
 import { requestDetail } from "../src/cloud/request.js";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
@@ -173,5 +173,18 @@ describe("a failed run's code", () => {
     expect(runFailure({ status: "ERROR", error: words })).toBeUndefined();
     expect(runFailure({ status: "ERROR", error: "  ", code: "new_code" })).toBeUndefined();
     expect(runFailure({ status: "ERROR", error: words, code: "Ai-Unavailable" })).toBeUndefined();
+  });
+});
+
+// A taf that checks first wakes the AI only when its read lists something new: a firing that found nothing is quiet,
+// never shown as skipped or failed.
+describe("a check that found nothing", () => {
+  it("isn't listed among the skipped or failed times, while a check that couldn't read the app is", () => {
+    const fired = [
+      { due: "2026-10-30T11:45:00Z", at: "2026-10-30T11:45:01Z", outcome: "quiet" },
+      { due: "2026-10-30T11:30:00Z", at: "2026-10-30T11:30:01Z", outcome: "failed_check" },
+      { due: "2026-10-30T11:15:00Z", at: "2026-10-30T11:15:01Z", outcome: "quiet" },
+    ];
+    expect(skippedOf(fired, "UTC", NOW).map((s) => s.why)).toEqual(["check_failed"]);
   });
 });

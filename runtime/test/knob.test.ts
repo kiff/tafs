@@ -198,6 +198,33 @@ describe("the dial", () => {
     expect(() => recipeOf("check")).toThrow("list of steps");
   });
 
+  // Every schedule of a taf with a check reads its work first: the When ring says so after the time, in each language.
+  it("a taf that checks first says so on each schedule, in the person's language, and its setting carries the check", () => {
+    const check = { tool: "list_requests_k3f9", arguments: {}, items: "data", cursor: "created", first: "all" as const };
+    const k = knobOf({ ...base, check });
+    expect(k.wakes[1]!.words).toBe("Weekdays at 09:00, next Tue 09:00 · checks for new work first");
+    expect(k.setting.check).toEqual(check);
+    expect(knobOf({ ...base, check, lang: "de" }).wakes[1]!.words).toContain(" · prüft zuerst auf neue Arbeit");
+    expect(knobOf({ ...base, check, lang: "pl" }).wakes[1]!.words).toContain(" · najpierw sprawdza, czy jest nowa praca");
+    // A version's dial words each schedule with it, but not a door, nor an app check, which reads its own.
+    const appCheck = { kind: "app_check" as const, operation: "list_charges", items: "data", cursor: "created", every_minutes: 30 };
+    const v = knobOf({ ...base, setting: { wakes: [{ kind: "door" }, { kind: "schedule", form: "daily", at: "08:00" }], busy: "skip", results: ["app"], check } });
+    expect(v.wakes.filter((w) => w.kind === "schedule").map((w) => w.words)).toEqual(["Every day at 08:00, next Tue 09:00 · checks for new work first"]);
+    const draft = knobOf({ ...base, draft: { version: 3, setting: { wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }, { kind: "door" }], busy: "skip", results: ["app"], check } } });
+    expect(draft.draft!.wakes).toEqual(["Weekdays at 09:00 · checks for new work first", "Wakes on its door"]);
+    expect(draft.pending).toEqual({ version: 3, changes: 4 });
+    const ac = knobOf({ ...base, check, setting: { wakes: [appCheck], busy: "skip", results: ["app"] } });
+    expect(ac.wakes.find((w) => w.kind === "app_check")!.words).not.toContain("first");
+    // A taf with no check reads as before.
+    expect(knobOf(base).wakes[1]!.words).toBe("Weekdays at 09:00, next Tue 09:00");
+    // A version from before with two timetables and no check of its own was written unchecked: its stops don't say it checks.
+    const two = knobOf({ ...base, check, setting: { wakes: [{ kind: "schedule", form: "daily", at: "08:00" }, { kind: "schedule", form: "daily", at: "15:30" }], busy: "skip", results: ["app"] } });
+    expect(two.wakes.filter((w) => w.kind === "schedule").map((w) => w.words)).toEqual(["Every day at 08:00, next Tue 09:00", "Every day at 15:30"]);
+    // One timetable from before takes the taf's check, as applyKnob writes it.
+    const one = knobOf({ ...base, check, setting: { wakes: [{ kind: "schedule", form: "daily", at: "08:00" }], busy: "skip", results: ["app"] } });
+    expect(one.wakes.find((w) => w.kind === "schedule")!.words).toContain(" · checks for new work first");
+  });
+
   it("a paused schedule says so", () => {
     const k = knobOf({ ...base, schedule: { ...base.schedule!, enabled: false, next: undefined } });
     expect(k.wakes[1]).toMatchObject({ on: false, state: "Paused", words: "Weekdays at 09:00, paused" });

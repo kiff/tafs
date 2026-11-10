@@ -146,7 +146,11 @@ then shows its plan. Then, each step behind the owner's yes:
 4. **Start the taf.** The result card hands over the taf, with its job as Coach drafted it
    from the owner's words, any job at all (kiff/tafs#476): `summary`, one line on what this
    taf does, `kickoff`, what each run is asked to do, `instructions`, how it works, and
-   `cron`, when it runs, or `unscheduled`. tafs cloud starts it as the
+   `cron`, when it runs, with `check`, the read that lists its open work, or `unscheduled`.
+   Every schedule checks first: each firing makes that read without the model, and the
+   AI runs only when it lists something new, so a quiet schedule costs nothing. `first:
+   "all"` makes the first check hand the queue already there. A result with `cron` and no
+   `check` is answered failed, in words Coach acts on. tafs cloud starts it as the
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
@@ -159,6 +163,12 @@ then shows its plan. Then, each step behind the owner's yes:
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
 from its chat.
+
+A taf made before checks existed keeps its schedule as it was: every firing wakes it. Coach
+adds a check at its next dial change (`taf_dial`'s `check`), which goes live with that
+version. A taf with a check keeps one timetable: kiff/agents keeps a check's cursor per
+schedule, so two would hand the same work twice, and the dial refuses a second one with
+the nearest single timetable (skills `set-up-a-taf@4`, `the-dial@2`).
 
 ## Where results go
 

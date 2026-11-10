@@ -15,8 +15,9 @@ Memory and Stopping sections of `AppModel`.
 A taf's job is its own, as Coach drafted it from the owner's words (kiff/tafs#476,
 `ownJob` in `runtime/src/jobs.ts`): what it does in one line (`summary`), what each run is
 asked to do (`kickoff`, the first instruction), how it works (`instructions`), and when it runs
-(`cron`), or that it works from its chat (`unscheduled`). Its record keeps them (`Taf.work`,
-`summary`), under the job id `custom`, so its definition can be built again. Any job at all,
+(`cron`) with the read that lists its work, which each firing makes first (`check`), or
+that it works from its chat (`unscheduled`). Its record keeps them (`Taf.work`,
+`summary`, `Taf.check`), under the job id `custom`, so its definition can be built again. Any job at all,
 with whatever the account has connected, under a Card: nothing limits it to a template.
 
 The five jobs tafs began with are recipes now ([coach.md](coach.md#recipes)), and stay as the
@@ -83,7 +84,10 @@ A taf starts from a KIFF agent draft that holds its Cards:
    with the same draft resumes.
 4. It stores the definition in kiff/agents and, for a scheduled taf, its schedule, in
    the time zone given. A scheduled taf runs once at once; an unscheduled one waits for
-   the owner.
+   the owner. A taf of its own on a schedule checks its work first (`check`): its schedule
+   reads the work list without the model and wakes the AI only for what's new. Its first
+   run is that schedule fired once, so the first check hands it the open queue; an empty
+   queue starts no run, and the start still succeeds.
 
 `POST /v1/tafs` ([api.md](api.md)) does all of it. A taf runs at most every 15 minutes.
 Its name is at most 60 characters and unique on the account; a name Coach chose that's

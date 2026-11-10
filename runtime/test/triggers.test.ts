@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { instantIn, nearestEvery, schedulesOf, TriggerError, triggerOf, type Trigger } from "../src/cloud/triggers.js";
+import { checkOf, instantIn, nearestEvery, plannedOf, schedulesOf, TriggerError, triggerOf, type Trigger } from "../src/cloud/triggers.js";
 
 const crons = (t: Trigger, busy?: "skip" | "latest") => schedulesOf(t, busy).map((s) => s.cron ?? s.at);
 
@@ -104,5 +104,40 @@ describe("a connected app's event as a trigger", () => {
     expect(schedulesOf({ kind: "app_event", grant: "grt_1", event: "JIRA_ISSUE_UPDATED", name: "Jira · issue changes" })).toEqual([]);
     expect(() => schedulesOf({ kind: "app_event", grant: "../x", event: "E", name: "n" })).toThrow(TriggerError);
     expect(() => schedulesOf({ kind: "app_event", grant: "g", event: "E" })).toThrow("name the owner picked");
+  });
+});
+
+// A taf's every schedule reads its work first (kiff/agents' check), and kiff/agents keeps a check's cursor per schedule.
+describe("a taf that checks its work first", () => {
+  const check = { tool: "list_requests_k3f9", arguments: { status: "open" }, items: "data", cursor: "created", first: "all" as const };
+
+  it("puts the taf's check on each schedule trigger's schedule, and leaves an app check's own", () => {
+    const appCheck: Trigger = { kind: "app_check", operation: "list_charges", items: "data", cursor: "created", every_minutes: 30 };
+    expect(plannedOf([{ kind: "schedule", form: "weekdays", at: "09:00" }, { kind: "door" }], "skip", check)).toEqual([{ kind: "cron", cron: "0 9 * * 1-5", busy: "skip", check }]);
+    expect(plannedOf([appCheck], "skip", check)[0]!.check).toEqual({ tool: "list_charges", arguments: {}, items: "data", cursor: "created" });
+    // Without a check, nothing changes: as many schedules as the triggers make.
+    expect(plannedOf([{ kind: "schedule", form: "times_a_day", times: ["09:00", "12:30"] }]).map((p) => p.cron)).toEqual(["0 9 * * *", "30 12 * * *"]);
+  });
+
+  it("keeps one timetable: more is refused with the nearest one in words, never merged", () => {
+    const refused = (wakes: Trigger[]) => {
+      try { plannedOf(wakes, "skip", check); } catch (err) { return err instanceof TriggerError ? err.nearest : "not a TriggerError"; }
+      return "kept";
+    };
+    expect(refused([{ kind: "schedule", form: "times_a_day", times: ["09:00", "12:30", "17:00"] }])).toBe("one list of times on the same minute: every day at 09:00, 12:00 and 17:00");
+    expect(refused([{ kind: "schedule", form: "daily", at: "08:15" }, { kind: "schedule", form: "times_a_day", times: ["12:00"] }])).toBe("one list of times on the same minute: every day at 08:15 and 12:15");
+    expect(refused([{ kind: "schedule", form: "monthly", at: "07:00", date: "1" }, { kind: "schedule", form: "daily", at: "09:00" }])).toBe("one of them alone, such as on day 1 of each month at 07:00");
+    expect(refused([{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00"] }])).toBe("kept");
+  });
+
+  it("checks the read: one of the taf's tools, a cursor, a dotted path to the list, small plain arguments, and first new or all", () => {
+    expect(checkOf({ tool: "list_requests_k3f9", items: "", cursor: "id" }, ["list_requests_k3f9"])).toEqual({ tool: "list_requests_k3f9", arguments: {}, items: "", cursor: "id" });
+    expect(checkOf({ ...check, id: "number" })).toEqual({ ...check, id: "number" });
+    expect(() => checkOf(check, ["send_message_k3f9"])).toThrow("check.tool names list_requests_k3f9, which isn't among the taf's tools (send_message_k3f9)");
+    expect(() => checkOf(check, [])).toThrow("(none named)");
+    for (const bad of [{ ...check, cursor: " " }, { ...check, items: ".data" }, { ...check, items: undefined }, { ...check, arguments: null }, { ...check, arguments: "x" },
+      { ...check, arguments: { q: "x".repeat(2_048) } }, { ...check, arguments: { q: "é".repeat(1_100) } }, { ...check, first: "old" }, { ...check, tool: "" }, { ...check, id: 3 }, null, []]) {
+      expect(() => checkOf(bad), JSON.stringify(bad)).toThrow();
+    }
   });
 });
