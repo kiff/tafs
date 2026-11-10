@@ -260,6 +260,15 @@ class IOSLiterals(unittest.TestCase):
         self.assertEqual(sorted(left), sorted(["One thing waits", "\\(n) things wait", "Not now", "Tried today",
                                                '\\(waiting) thing\\(waiting == 1 ? " waits" : "s wait") on you', "s wait"]))
 
+    def test_ci_runs_the_scan_on_every_change_to_the_ios_sources(self):
+        with open(os.path.join(REPO, ".github", "workflows", "strings.yml"), encoding="utf-8") as f:
+            workflow = f.read()
+        sources = os.path.relpath(ios_literals.SOURCES, REPO).replace(os.sep, "/")
+        triggers = re.findall(r"paths: \[(.*)\]", workflow)
+        self.assertEqual(len(triggers), 2, "the push and pull_request paths weren't found")
+        for paths in triggers:
+            self.assertIn(f'"{sources}/**"', paths, f"a change to {sources} doesn't run the strings checks")
+
     def test_every_kept_literal_is_still_in_its_file(self):
         with open(ios_literals.KEPT, encoding="utf-8") as f:
             kept = json.load(f)
