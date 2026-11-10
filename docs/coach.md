@@ -581,10 +581,18 @@ one with `shown: false` and the words why. A manager turns them off for good wit
 `PUT /v1/me/suggestions {show: false}` (on by default). The apps draw only what comes.
 
 The source is one file per recipe in [`recipes/`](../recipes/README.md): its title, category
-(money, customers, operations, errands), one line on what the taf does, the vendors each
+(money, customers, operations, errands), the problem it ends (`headline`) and what that costs
+today (`today`), one line on what the taf does, the vendors each
 connection needs (any of several where one stands in for another), what its Card allows, holds and
-never does, in words. `runtime/scripts/recipes.mjs` reads the files into `runtime/src/recipes.ts`,
+never does, in words. Each recipe's words are also in the seven other languages the apps speak,
+in `recipes/<lang>/`. `runtime/scripts/recipes.mjs` reads the files into `runtime/src/recipes.ts`,
 and a test fails when they differ.
+
+tafs cloud sends them in the person's language, with the categories' titles, the sheet's labels and
+the suggestions words. It also says whether **Home** leads with them (`home: {shown, words}`): only
+while the list is shown, for a person who manages the account's tafs (`cards.manage`), and with
+at least one recipe listed. Otherwise `home.words` is Home's empty line, so a catalog that connects
+none of them, or suggestions turned off, leave Home as it was.
 
 tafs cloud serves them at `GET /v1/recipes` ([api.md](api.md#recipes), `runtime/src/cloud/recipes.ts`):
 the recipes whose every connection has a vendor the account's catalog lists, read from planque

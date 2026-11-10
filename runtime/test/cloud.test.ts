@@ -270,20 +270,36 @@ describe("tafs cloud", () => {
   it("shows recipes only while the account has no live taf and suggestions are on, decided here (kiff/tafs#476)", async () => {
     const w = world();
     const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
-    const call = async (_w: unknown, method: string, path: string, opts: { token?: string; body?: unknown } = {}) => {
-      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {}, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) }, deps);
+    const call = async (_w: unknown, method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {}) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...opts.headers }, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) }, deps);
       return { status: r.statusCode, body: JSON.parse(r.body) };
     };
-    // The account has Rae, live: a new conversation opens blank, and the words say why.
+    const labels = { allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" };
+    const empty = "No tafs yet. Connect an app to set up your first taf.";
+    // The account has Rae, live: a new conversation opens blank, and the words say why; Home keeps its empty line.
     const live = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(live.status).toBe(200);
-    expect(live.body).toEqual({ categories: [], recipes: [], filtered: false, shown: false, suggestions: { show: true, reason: "live", words: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good." } });
-    // No live taf: the recipes, shown.
+    expect(live.body).toEqual({ categories: [], recipes: [], filtered: false, shown: false, suggestions: { show: true, reason: "live", words: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good." },
+      home: { shown: false, words: empty }, labels });
+    // No live taf: the recipes, shown, and Home leads with them.
     for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k);
     const fresh = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(fresh.body.shown).toBe(true);
     expect(fresh.body.recipes.length).toBeGreaterThan(0);
     expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
+    expect(fresh.body.home).toEqual({ shown: true, words: "Pick a job for your first taf." });
+    expect(fresh.body.labels).toEqual(labels);
+    // Someone who doesn't manage the account's tafs can't make one: Home doesn't lead with recipes, and says what's shared shows there.
+    const viewer = await call(w, "GET", "/v1/recipes", { token: "viewer" });
+    expect(viewer.body.home).toEqual({ shown: false, words: "No tafs yet. Tafs shared with you show here." });
+    // In the person's language: every word, from the categories to the sheet's button.
+    const de = (await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "de-DE,de;q=0.9,en;q=0.8" } })).body;
+    expect(de.categories[0]).toEqual({ id: "money", title: "Geld" });
+    expect(de.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).toMatchObject({ title: "Erstattungen bis zu einem Limit", headline: "Keine Erstattung wartet über Nacht." });
+    expect(de.home).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf." });
+    expect(de.labels.hand).toBe("An Coach übergeben");
+    expect(de.suggestions.words).toBe("Vorschläge erscheinen in einem neuen Gespräch mit Coach, bis das Konto seinen ersten taf hat.");
+    expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana", headers: { "Accept-Language": "pl" } })).body.suggestions.words).toBe("Sugestie pojawiają się w nowej rozmowie z Coachem, dopóki konto nie ma pierwszego tafa.");
     // The setting: read by anyone, turned off by a manager, for good.
     expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana" })).body).toEqual({ suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: "no" } })).status).toBe(400);
@@ -296,6 +312,10 @@ describe("tafs cloud", () => {
     expect(off.body).toEqual({ suggestions: { show: false, reason: "off", words: "Suggestions are off for this account." } });
     const hidden = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(hidden.body).toMatchObject({ recipes: [], shown: false, suggestions: { show: false } });
+    // Suggestions off: Home shows its empty line, as before recipes.
+    expect(hidden.body.home).toEqual({ shown: false, words: empty });
+    expect((await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "fr" } })).body.home)
+      .toEqual({ shown: false, words: "Aucun taf pour l'instant. Connectez une app pour configurer votre premier taf." });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } })).body.suggestions.show).toBe(true);
     expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.shown).toBe(true);
   });
@@ -341,6 +361,12 @@ describe("tafs cloud", () => {
       { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("boom", { status: 500 }) : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
     expect(down.statusCode).toBe(200);
     expect(JSON.parse(down.body).filtered).toBe(false);
+    // A catalog that connects none of the recipes (qa-kiff): no recipe, so Home doesn't lead with an empty list; it keeps its empty line.
+    const none = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
+        ? new Response(JSON.stringify({ entries: [{ entry: "connector:composio:spotify", title: "Spotify", vendor: "Spotify", how: "oauth" }] }), { status: 200 })
+        : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
+    expect(JSON.parse(none.body)).toMatchObject({ filtered: true, recipes: [], categories: [], home: { shown: false, words: "No tafs yet. Connect an app to set up your first taf." } });
   });
 
   it("needs a KIFF sign-in, and a person rather than a key", async () => {

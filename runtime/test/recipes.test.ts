@@ -1,15 +1,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { RECIPES } from "../src/recipes.js";
-import { CATEGORIES, recipesFor, vendorOf } from "../src/cloud/recipes.js";
+import { CATEGORIES, categoriesIn, labelsIn, recipesFor, vendorOf } from "../src/cloud/recipes.js";
+import { LANGUAGES } from "../src/cloud/words/index.js";
 // The generator is plain JavaScript, so the script and the test parse the files the same way.
-import { MODULE, parseRecipe, readRecipes, RECIPES_DIR, render } from "../scripts/recipes.mjs";
+import { LANGS, MODULE, parseRecipe, readRecipes, RECIPES_DIR, render } from "../scripts/recipes.mjs";
 
 const FILE = `---
 id: pay-a-bill
 title: Pay a bill
 category: money
 line: Pays one bill.
+headline: Bills paid on time.
+today: Bills wait until someone has the time.
 connections:
   - quickbooks | xero
   - wise
@@ -39,7 +42,8 @@ describe("recipes", () => {
 
   it("reads a recipe file: the front matter and the words to say to Coach", () => {
     expect(parseRecipe(FILE, "pay-a-bill.md")).toEqual({
-      id: "pay-a-bill", title: "Pay a bill", category: "money", line: "Pays one bill.", say: "Pay my bills under 100 EUR.",
+      id: "pay-a-bill", title: "Pay a bill", category: "money", line: "Pays one bill.", headline: "Bills paid on time.", today: "Bills wait until someone has the time.",
+      say: "Pay my bills under 100 EUR.",
       connections: [["quickbooks", "xero"], ["wise"]],
       card: { allows: ["A payment up to 100 EUR"], holds: ["A payment over 100 EUR"], never: ["A new payee"] },
     });
@@ -55,6 +59,84 @@ describe("recipes", () => {
     bad(FILE.replace("Pay my bills under 100 EUR.\n", ""), "the words to say to Coach are missing");
     bad(FILE.replace("line: Pays one bill.", "line: Pays one bill.\ntried: 2026-11-10 test"), "tried isn't a recipe's field");
     bad(FILE.replace("title: Pay a bill\n", ""), "title is missing");
+    bad(FILE.replace("headline: Bills paid on time.\n", ""), "headline is missing");
+    bad(FILE.replace("today: Bills wait until someone has the time.\n", ""), "today is missing");
+  });
+
+  const DE = `---
+title: Eine Rechnung zahlen
+headline: Rechnungen pünktlich bezahlt.
+today: Rechnungen warten, bis jemand Zeit hat.
+line: Bezahlt eine Rechnung.
+card:
+  allows:
+    - Eine Zahlung bis 100 EUR
+  holds:
+    - Eine Zahlung über 100 EUR
+  never:
+    - Ein neuer Empfänger
+---
+Bezahle meine Rechnungen unter 100 EUR.
+`;
+
+  it("reads a recipe's words in another language, with the rest English's alone", () => {
+    const en = parseRecipe(FILE, "pay-a-bill.md");
+    expect(parseRecipe(DE, "de/pay-a-bill.md", en)).toEqual({
+      title: "Eine Rechnung zahlen", headline: "Rechnungen pünktlich bezahlt.", today: "Rechnungen warten, bis jemand Zeit hat.", line: "Bezahlt eine Rechnung.",
+      say: "Bezahle meine Rechnungen unter 100 EUR.",
+      card: { allows: ["Eine Zahlung bis 100 EUR"], holds: ["Eine Zahlung über 100 EUR"], never: ["Ein neuer Empfänger"] },
+    });
+    const bad = (text: string, why: string) => expect(() => parseRecipe(text, "de/pay-a-bill.md", en)).toThrow(`de/pay-a-bill.md: ${why}`);
+    // The Card says the same in every language: as many lines in each list.
+    bad(DE.replace("    - Ein neuer Empfänger\n", "    - Ein neuer Empfänger\n    - Eine Auszahlung\n"), "card.never has 2 lines, and English has 1");
+    bad(DE.replace("title: Eine Rechnung zahlen", "title: Eine Rechnung zahlen\nid: pay-a-bill"), "id isn't a translated recipe's field");
+    bad(DE.replace("card:", "connections:\n  - stripe\ncard:"), "connections isn't a translated recipe's field");
+    bad(DE.replace("today: Rechnungen warten, bis jemand Zeit hat.\n", ""), "today is missing");
+  });
+
+  it("has every recipe in every language the apps speak, each word translated", () => {
+    expect(["en", ...LANGS].sort()).toEqual([...LANGUAGES].sort());
+    for (const r of RECIPES) {
+      for (const lang of LANGS) {
+        const w = r.languages[lang as keyof typeof r.languages];
+        for (const key of ["title", "headline", "today", "line", "say"] as const) {
+          expect(w[key], `${lang}/${r.id}.md ${key}`).not.toBe(r[key]);
+        }
+      }
+    }
+  });
+
+  it("says what the problem costs today in words, never a figure, in every language", () => {
+    for (const r of RECIPES) {
+      expect(r.today, r.id).not.toMatch(/\d/);
+      for (const w of Object.values(r.languages)) expect(w.today, r.id).not.toMatch(/\d/);
+    }
+  });
+
+  it("serves the recipes, categories and sheet in the person's language", () => {
+    const fr = recipesFor(undefined, "fr");
+    expect(fr.categories.map((c) => c.title)).toEqual(["Argent", "Clients", "Opérations", "Tâches courantes"]);
+    expect(fr.recipes.find((r) => r.id === "refunds-within-a-limit")).toMatchObject({
+      title: "Remboursements dans une limite", headline: "Aucun remboursement n'attend jusqu'au lendemain.",
+      connections: [["gorgias", "intercom", "gmail"], ["stripe"]],
+    });
+    expect(fr.labels).toEqual({ allows: "Fait seul", holds: "Vous demande d'abord", never: "Ne fait jamais", hand: "Confier à Coach" });
+    expect(fr.home).toEqual({ shown: true, words: "Choisissez une tâche pour votre premier taf." });
+    expect(fr.suggestions.words).toBe("Les suggestions s'affichent dans une nouvelle conversation avec Coach tant que le compte n'a pas son premier taf.");
+    // Every language has its own words for the categories and the sheet.
+    for (const lang of LANGS) {
+      expect(categoriesIn(lang as never).map((c) => c.title)).not.toEqual(CATEGORIES.map((c) => c.title));
+      expect(labelsIn(lang as never)).not.toEqual(labelsIn("en"));
+    }
+    // English, the order the apps show: money, customers, operations, errands.
+    expect(recipesFor(undefined).recipes.find((r) => r.id === "refunds-within-a-limit")!.today)
+      .toBe("A refund that waits can turn into a chargeback, with a fee you pay even if you win.");
+  });
+
+  it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
+    expect(recipesFor(undefined).home).toEqual({ shown: true, words: "Pick a job for your first taf." });
+    expect(recipesFor(undefined, "en", false).home).toEqual({ shown: false, words: "No tafs yet. Tafs shared with you show here." });
+    expect(recipesFor([], "en", true).home).toEqual({ shown: false, words: "No tafs yet. Connect an app to set up your first taf." });
   });
 
   it("names a catalog entry's vendor as a recipe does", () => {
@@ -72,7 +154,9 @@ describe("recipes", () => {
       return order(a) - order(b);
     }));
     expect(all.categories).toEqual(CATEGORIES);
-    expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true, shown: true, suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
+    expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true, shown: true, suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." },
+      home: { shown: false, words: "No tafs yet. Connect an app to set up your first taf." },
+      labels: { allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" } });
   });
 
   it("filters by every connection, taking any vendor that would do for it, by category", () => {
@@ -91,7 +175,9 @@ describe("recipes", () => {
     // The title, line and words name the kind of app, never a brand (kiff/tafs#476, gap 2): the brands are the
     // connections' alone. Whole words, so "wise" never trips on "otherwise", and two-word brands are caught by their first.
     const brands = /\b(stripe|quickbooks|xero|moneybird|zoho|wise|revolut|gorgias|intercom|gmail|outlook|shopify|typeform|pipedrive|google|slack|github|notion|amazon|agentmail|hubspot|zendesk|microsoft|teams)\b/i;
-    for (const r of RECIPES) for (const text of [r.title, r.line, r.say]) expect(text).not.toMatch(brands);
+    for (const r of RECIPES) {
+      for (const w of [r, ...Object.values(r.languages)]) for (const text of [w.title, w.headline, w.today, w.line, w.say]) expect(text).not.toMatch(brands);
+    }
     expect("Save it in Google Drive, otherwise wait").toMatch(brands);
     expect("otherwise wait").not.toMatch(brands);
   });

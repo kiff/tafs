@@ -1,13 +1,17 @@
 #!/usr/bin/env node
-// Reads recipes/*.md (one recipe each: a front matter and the words to say to Coach) into
-// src/recipes.ts, which tafs cloud serves at GET /v1/recipes. Run after changing a recipe:
+// Reads recipes/*.md (one recipe each: a front matter and the words to say to Coach), and each
+// recipe's words in the other seven languages from recipes/<lang>/<id>.md, into src/recipes.ts,
+// which tafs cloud serves at GET /v1/recipes in the person's language. Run after changing a recipe:
 //   node scripts/recipes.mjs
 // The test (test/recipes.test.ts) fails when the generated module no longer matches the files.
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const CATEGORIES = ["money", "customers", "operations", "errands"];
+/** The languages besides English a recipe's words are in (docs/languages.md): each has a file per recipe. */
+export const LANGS = ["de", "fr", "es", "it", "pt", "nl", "pl"];
+const LISTS = ["allows", "holds", "never"];
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VENDOR = /^[a-z0-9_]+(?:-[a-z0-9_]+)*$/;
 
@@ -21,8 +25,12 @@ function lineOf(raw) {
   return { indent, key: m[1], value: (m[2] ?? "").trim() };
 }
 
-/** Parses one recipe file. Throws, naming the file, on anything it doesn't take. */
-export function parseRecipe(text, file) {
+/**
+ * Parses one recipe file. Throws, naming the file, on anything it doesn't take. With `of` (the English
+ * recipe), the file is that recipe's words in another language: its title, headline, today, line, Card
+ * lists and words to say, with as many lines in each list as English has; the rest is English's alone.
+ */
+export function parseRecipe(text, file, of) {
   const fail = (why) => { throw new Error(`${file}: ${why}`); };
   const m = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(text.replace(/\r\n/g, "\n"));
   if (!m) fail("a recipe starts with a front matter between --- lines, then the words to say to Coach");
@@ -67,9 +75,21 @@ export function parseRecipe(text, file) {
     fail(`a line I don't understand: ${raw.trim()}`);
   }
 
-  const known = ["id", "title", "category", "line", "connections", "card"];
-  for (const key of Object.keys(out)) if (!known.includes(key)) fail(`${key} isn't a recipe's field (${known.join(", ")})`);
-  for (const key of ["id", "title", "category", "line"]) if (!out[key]) fail(`${key} is missing`);
+  const words = ["title", "headline", "today", "line"];
+  const known = of ? [...words, "card"] : ["id", "title", "category", "line", "headline", "today", "connections", "card"];
+  // A translation names no connections: they're English's alone (an empty list reads as none given).
+  if (of && !out.connections.length) delete out.connections;
+  for (const key of Object.keys(out)) if (!known.includes(key)) fail(`${key} isn't a${of ? " translated" : ""} recipe's field (${known.join(", ")})`);
+  for (const key of words) if (!out[key]) fail(`${key} is missing`);
+  for (const key of LISTS) if (!out.card[key]) fail(`card.${key} is missing (an empty list is fine)`);
+  if (of) {
+    for (const key of LISTS) {
+      if (out.card[key].length !== of.card[key].length) fail(`card.${key} has ${out.card[key].length} lines, and English has ${of.card[key].length}`);
+    }
+    return { title: out.title, headline: out.headline, today: out.today, line: out.line, say, card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never } };
+  }
+  if (!out.id) fail("id is missing");
+  if (!out.category) fail("category is missing");
   if (!ID.test(out.id)) fail("id is lower-case words joined by -");
   if (`${out.id}.md` !== file) fail(`id ${out.id} isn't the file's name`);
   if (!CATEGORIES.includes(out.category)) fail(`category is one of ${CATEGORIES.join(", ")}`);
@@ -80,15 +100,14 @@ export function parseRecipe(text, file) {
     if (new Set(vendors).size !== vendors.length) fail(`a vendor named twice in one connection: ${group}`);
     return vendors;
   });
-  for (const key of ["allows", "holds", "never"]) if (!out.card[key]) fail(`card.${key} is missing (an empty list is fine)`);
   if (!out.card.allows.length) fail("card.allows says what the Card allows, at least one line");
   return {
-    id: out.id, title: out.title, category: out.category, line: out.line, say, connections,
+    id: out.id, title: out.title, category: out.category, line: out.line, headline: out.headline, today: out.today, say, connections,
     card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never },
   };
 }
 
-/** Every recipe in dir, by file name, each checked. */
+/** Every recipe in dir, by file name, each checked, with its words in every other language from dir/<lang>/. */
 export function readRecipes(dir) {
   const files = readdirSync(dir).filter((f) => f.endsWith(".md") && f !== "README.md").sort();
   const recipes = files.map((f) => parseRecipe(readFileSync(join(dir, f), "utf8"), f));
@@ -97,11 +116,20 @@ export function readRecipes(dir) {
     if (ids.has(r.id)) throw new Error(`${r.id}: two recipes with one id`);
     ids.add(r.id);
   }
+  // A language has a file for every recipe and none for a recipe that isn't one, so a recipe can't ship untranslated.
+  for (const lang of LANGS) {
+    const there = existsSync(join(dir, lang)) ? readdirSync(join(dir, lang)).filter((f) => f.endsWith(".md")) : [];
+    for (const f of there) if (!ids.has(f.slice(0, -3))) throw new Error(`${lang}/${f}: no recipe ${f.slice(0, -3)} in English`);
+    for (const r of recipes) {
+      if (!there.includes(`${r.id}.md`)) throw new Error(`${lang}/${r.id}.md: the recipe's words in ${lang} are missing`);
+      (r.languages ??= {})[lang] = parseRecipe(readFileSync(join(dir, lang, `${r.id}.md`), "utf8"), `${lang}/${r.id}.md`, r);
+    }
+  }
   return recipes;
 }
 
 export function render(recipes) {
-  return `// Generated by scripts/recipes.mjs from recipes/*.md. Do not edit by hand: run the script.
+  return `// Generated by scripts/recipes.mjs from recipes/*.md and recipes/<lang>/*.md. Do not edit by hand: run the script.
 /** The recipes, as recipes/README.md describes them. */
 export const RECIPES = ${JSON.stringify(recipes, null, 2)} as const;
 `;
