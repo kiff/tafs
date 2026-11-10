@@ -2346,7 +2346,7 @@ final class AppModel: ObservableObject {
 
     /// Where a held call from KIFF is answered while the phone cannot answer it.
     func answerPage(for call: HeldCall) -> URL? {
-        call.kiffID.map(kiff.answerPage(for:))
+        call.kiffID.map { kiff.answerPage(for: $0) }
     }
 
     /// `confirmed`: the owner just confirmed this step with Face ID (installing the version

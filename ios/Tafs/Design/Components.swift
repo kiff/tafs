@@ -258,10 +258,22 @@ extension Date {
     }
 }
 
-/// kiff.dev's Terms and Privacy policy, which cover tafs.
+/// kiff.dev's Terms and Privacy policy, which cover tafs, in the language the app's lines
+/// resolved to (`KIFFClient.screenLanguages`), never the phone's own setting: English at its
+/// own path (`/terms#tafs`), every other language under its prefix (`/de/terms#tafs`).
 enum Legal {
-    static let terms = URL(string: "https://kiff.dev/terms#tafs")!
-    static let privacy = URL(string: "https://kiff.dev/privacy#tafs")!
+    static var terms: URL { terms(in: language) }
+    static var privacy: URL { privacy(in: language) }
+    static func terms(in language: String) -> URL { page("terms", language) }
+    static func privacy(in language: String) -> URL { page("privacy", language) }
+
+    /// The language the app's own screens are written in.
+    static var language: String { KIFFClient.appLanguage }
+
+    private static func page(_ path: String, _ language: String) -> URL {
+        language == "en" ? URL(string: "https://kiff.dev/\(path)#tafs")! : URL(string: "https://kiff.dev/\(language)/\(path)#tafs")!
+    }
+
     /// KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't.
     static let status = URL(string: "https://status.kiff.dev")!
 

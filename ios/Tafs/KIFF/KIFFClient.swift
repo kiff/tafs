@@ -116,9 +116,11 @@ final class KIFFClient {
         self.session = session
     }
 
-    /// The held call's page in KIFF, where it can be answered today.
-    func answerPage(for exceptionID: String) -> URL {
+    /// The held call's page in KIFF, where it can be answered today, in the language the app's
+    /// lines resolved to (`lang`); the browser's is KIFF's fallback.
+    func answerPage(for exceptionID: String, language: String = KIFFClient.appLanguage) -> URL {
         webURL.appendingPathComponent("needs-you").appendingPathComponent(exceptionID)
+            .appending(queryItems: [URLQueryItem(name: "lang", value: language)])
     }
 
     // MARK: Device sign-in
@@ -135,6 +137,17 @@ final class KIFFClient {
             case deviceCode = "device_code", userCode = "user_code"
             case verificationURI = "verification_uri", verificationURIComplete = "verification_uri_complete"
             case expiresIn = "expires_in", interval
+        }
+
+        /// The approval page's link in the language the app's lines resolved to (`lang`), so
+        /// KIFF's page speaks the app's language whatever the browser's; a link that already
+        /// names one keeps it.
+        func inAppLanguage(_ language: String = KIFFClient.appLanguage) -> DeviceStart {
+            let link = verificationURIComplete
+            guard !link.isEmpty, link.range(of: "[?&]lang=", options: .regularExpression) == nil else { return self }
+            return DeviceStart(deviceCode: deviceCode, userCode: userCode, verificationURI: verificationURI,
+                               verificationURIComplete: link + (link.contains("?") ? "&" : "?") + "lang=" + language,
+                               expiresIn: expiresIn, interval: interval)
         }
     }
 
@@ -159,7 +172,8 @@ final class KIFFClient {
         if let deviceName { body["device_name"] = deviceName }
         // KIFF's device list names the platform: ios, ipados, macos.
         if let platform { body["platform"] = platform }
-        return try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
+        let start: DeviceStart = try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
+        return start.inAppLanguage()
     }
 
     /// What the person reads when this phone can't approve until they sign in again.
@@ -208,9 +222,10 @@ final class KIFFClient {
     /// sign-in, and the session goes on. A KIFF without it answers 404.
     func startRelink(approvalPublicKey: Data, signedAt: String, signature: String,
                      signer: @escaping @MainActor (Data) throws -> String) async throws -> DeviceStart {
-        try await send("POST", "/v1/me/device/relink",
+        let start: DeviceStart = try await send("POST", "/v1/me/device/relink",
                        body: ["approval_public_key": approvalPublicKey.base64EncodedString(), "signed_at": signedAt, "signature": signature],
                        signedBy: signer)
+        return start.inAppLanguage()
     }
 
     /// One poll of a re-link: the fingerprint of the key KIFF now holds, once approved.
@@ -1220,13 +1235,17 @@ final class KIFFClient {
     /// line) match the screen's (docs/languages.md, kiff/tafs#75). The language the screens
     /// resolved to comes first, then the phone's other languages the app ships, at most four;
     /// `acceptLanguage` adds English last.
-    static var screenLanguages: [String] {
+    nonisolated static var screenLanguages: [String] {
         screenLanguages(resolved: Bundle.main.preferredLocalizations.first, preferred: Locale.preferredLanguages, shipped: Words.languages)
     }
 
+    /// The one language the app's own screens resolved to: what KIFF's pages and kiff.dev's are
+    /// opened in. Not the main actor's: a link is built wherever it is shown.
+    nonisolated static var appLanguage: String { screenLanguages.first ?? "en" }
+
     /// Each language by its code as the app ships it ("pt-BR" is "pt"), once, and only one the
     /// app ships: a language only Siri's phrases are in never counts.
-    static func screenLanguages(resolved: String?, preferred: [String], shipped: [String]) -> [String] {
+    nonisolated static func screenLanguages(resolved: String?, preferred: [String], shipped: [String]) -> [String] {
         var out: [String] = []
         for tag in [resolved].compactMap({ $0 }) + preferred {
             let code = tag.lowercased().split(whereSeparator: { $0 == "-" || $0 == "_" }).first.map(String.init) ?? ""

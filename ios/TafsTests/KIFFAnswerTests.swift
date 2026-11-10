@@ -111,7 +111,7 @@ final class KIFFAnswerTests: XCTestCase {
         let model = try await makeModel(verifies: false, signer: signer)
         let call = try XCTUnwrap(model.held.first)
         XCTAssertFalse(model.canAnswer(call))
-        XCTAssertEqual(model.answerPage(for: call)?.absoluteString, "https://app.test/needs-you/ce_1")
+        XCTAssertEqual(model.answerPage(for: call)?.absoluteString, "https://app.test/needs-you/ce_1?lang=\(Legal.language)")
 
         for answer in [Answer.approveOnce, .refuse, .nextStep("return first")] {
             await model.answer(call, with: answer)
