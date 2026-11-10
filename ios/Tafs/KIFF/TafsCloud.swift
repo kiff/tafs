@@ -1715,10 +1715,123 @@ final class TafsCloud {
     }
 
     /// The account's Setup, or nil before it is started.
-    func setup() async throws -> CloudTaf? {
+    func setup() async throws -> CloudTaf? { try await setupRead().setup }
+
+    /// The account's Coach and its tools as KIFF has them, from the one read (docs/api.md).
+    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?) {
         struct Response: Decodable { let setup: CloudTaf? }
-        let r: Response = try await send("GET", "/v1/setup")
-        return r.setup
+        let data = try await sendData("GET", "/v1/setup", body: Optional<[String: String]>.none)
+        let r = try KIFFClient.decoder.decode(Response.self, from: data)
+        return (r.setup, CoachTools.read(data))
+    }
+
+    /// Coach's tools as tafs cloud reads them from KIFF (`GET /v1/setup`'s `tools`,
+    /// docs/coach.md): `given`, `to_give`, `taken` or `unknown`. With `to_give`, what the phone
+    /// signs and sends exactly as it came: the batch of connections, then Coach's Cards' draft;
+    /// and the words of the step that asks for them. The phone builds none of it.
+    struct CoachTools: Equatable {
+        /// The batch for KIFF's `POST /v1/connections/batch`, its bytes as tafs cloud wrote
+        /// them, and a line per tool.
+        struct Connect: Equatable {
+            let body: Data
+            var lines: [String] = []
+        }
+        /// Coach's Cards' draft for `POST /v1/me/agent-drafts`, its bytes as tafs cloud wrote
+        /// them, with KIFF's own words for each Card.
+        struct CardDraft: Equatable {
+            struct Words: Equatable {
+                var title = ""
+                var lines: [String] = []
+            }
+            let body: Data
+            var cardTitle: String? = nil
+            var cards: [Words] = []
+        }
+        /// The step's words, every one tafs cloud's, in the person's language.
+        struct Step: Decodable, Equatable {
+            struct Tool: Decodable, Equatable {
+                var name = ""
+                var does = ""
+                var why = ""
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    name = Step.text(c, .name); does = Step.text(c, .does); why = Step.text(c, .why)
+                }
+                enum CodingKeys: String, CodingKey { case name, does, why }
+            }
+            struct Group: Decodable, Equatable {
+                var name = ""
+                var line = ""
+                var tools: [Tool] = []
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    name = Step.text(c, .name); line = Step.text(c, .line)
+                    // A tool with no name the app can read is left out.
+                    tools = ((try? c.decodeIfPresent([LenientItem<Tool>].self, forKey: .tools)) ?? nil)?.compactMap(\.value).filter { !$0.name.isEmpty } ?? []
+                }
+                enum CodingKeys: String, CodingKey { case name, line, tools }
+            }
+            var title = ""
+            var intro = ""
+            var groups: [Group] = []
+            var details = ""
+            var ask = ""
+            var give = ""
+            var notNow = ""
+            var row = ""
+            enum CodingKeys: String, CodingKey { case title, intro, groups, details, ask, give, notNow = "not_now", row }
+
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                title = Self.text(c, .title); intro = Self.text(c, .intro); details = Self.text(c, .details)
+                ask = Self.text(c, .ask); give = Self.text(c, .give); notNow = Self.text(c, .notNow); row = Self.text(c, .row)
+                groups = ((try? c.decodeIfPresent([LenientItem<Group>].self, forKey: .groups)) ?? nil)?.compactMap(\.value) ?? []
+            }
+
+            /// A line as written, or none where it's missing or isn't text.
+            fileprivate static func text<K: CodingKey>(_ c: KeyedDecodingContainer<K>, _ k: K) -> String {
+                ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil) ?? ""
+            }
+        }
+        var state = "unknown"
+        /// With `taken`: the name a vendor's tool holds.
+        var taken: String? = nil
+        var connect: Connect? = nil
+        var card: CardDraft? = nil
+        var step: Step? = nil
+
+        var toGive: Bool { state == "to_give" }
+        var given: Bool { state == "given" }
+
+        /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `tools`.
+        /// The bodies are kept as their own bytes: they're signed and sent as they came.
+        static func read(_ response: Data) -> CoachTools? {
+            guard let raw = RawJSON.value(of: "tools", in: response),
+                  let fields = (try? JSONSerialization.jsonObject(with: raw)) as? [String: Any] else { return nil }
+            var tools = CoachTools()
+            tools.state = fields["state"] as? String ?? "unknown"
+            tools.taken = fields["taken"] as? String
+            if let connect = RawJSON.value(of: "connect", in: raw), let body = RawJSON.value(of: "body", in: connect) {
+                let lines = ((fields["connect"] as? [String: Any])?["lines"] as? [Any])?.compactMap { $0 as? String } ?? []
+                tools.connect = Connect(body: body, lines: lines)
+            }
+            if let card = RawJSON.value(of: "card", in: raw), let body = RawJSON.value(of: "body", in: card) {
+                let said = fields["card"] as? [String: Any]
+                let cards: [CardDraft.Words] = (said?["cards"] as? [Any] ?? []).compactMap { item in
+                    guard let c = item as? [String: Any] else { return nil }
+                    let title = (c["title"] as? String) ?? (c["card_title"] as? String) ?? (c["label"] as? String)
+                    let lines = (c["lines"] as? [Any])?.compactMap { $0 as? String } ?? []
+                    // A Card the app can't read is left out.
+                    if title == nil && lines.isEmpty { return nil }
+                    return CardDraft.Words(title: title ?? "", lines: lines)
+                }
+                tools.card = CardDraft(body: body, cardTitle: said?["card_title"] as? String, cards: cards)
+            }
+            if let step = RawJSON.value(of: "coach_tools_step", in: raw) {
+                tools.step = try? JSONDecoder().decode(Step.self, from: step)
+            }
+            return tools
+        }
     }
 
     /// Starts the account's Setup from a confirmed no-tools KIFF draft.

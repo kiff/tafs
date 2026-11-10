@@ -267,6 +267,31 @@ language: the app has none of its own for it.
 - **When it's read:** with each refresh that finds no taf, as well as when Coach opens
   (`HomeRecipesTests`).
 
+## Coach's tools
+
+As on Android ([coach.md](coach.md#coachs-tools-step)). The phone builds none of it: the tools,
+their addresses, Coach's Cards and the step's words are tafs cloud's.
+
+- **The read** (`TafsCloud.setupRead`, `CoachTools.read`): `GET /v1/setup`'s `tools`, with each
+  opening of Coach and after a Start. The `connect` batch and the `card` draft are kept as the
+  bytes tafs cloud wrote.
+- **The step** (`CoachToolsSheet`): a sheet at the end of a first Start, with tafs cloud's title,
+  intro, groups and ask. Each tool and KIFF's words for the Cards are folded under `details`.
+  It has **Give** and **Not now**.
+- **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
+  batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
+  (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,
+  they're read once it's in and given in the same step. `given` sends nothing. `taken` says
+  which name a vendor's tool holds, and `unknown` asks to try again; neither asks or sends.
+- **After Not now** (`CoachToolsRow`): one line above the conversation, tafs cloud's `row`, which
+  opens the same step. It's never a panel there, so the message box keeps its room.
+- **A phone that can't approve yet** reads why in the button's place (`ApprovalGate`), and
+  gives nothing. The button confirms: a drive's touch on it is refused.
+- **Nothing is given silently.** Before, the phone connected its own list of seven tools and
+  drafted six Cards inside any step the person had just confirmed, and remembered that on the
+  phone. That list, those Cards and that memory are gone. A held `version_install` of Coach's
+  reads as an install once tafs cloud says the tools are given.
+
 ## The calendar
 
 The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar

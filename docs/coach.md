@@ -89,7 +89,8 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
    names the vendor's tool that holds one of Coach's names, and `unknown` asks to try
    again, both sending nothing. A replaced connection's line says what it replaces.
-   (Android: `AppModel.giveCoachTools`, `CoachToolsSheet`.)
+   (Android: `AppModel.giveCoachTools`, `CoachToolsSheet`. iPhone and iPad: the same names, with the
+   batch and the Cards behind one Face ID, [ios-app.md](ios-app.md#coachs-tools).)
 
 On Android (1.2), Coach's conversation shows before Coach is started on the account, and the
 first Send starts it (`AppModel.sendChat`, `startCoach`):
