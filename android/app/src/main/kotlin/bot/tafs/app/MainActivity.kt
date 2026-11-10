@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import androidx.lifecycle.lifecycleScope
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
 import android.Manifest
@@ -212,6 +213,17 @@ class MainActivity : FragmentActivity() {
         CompositionLocalProvider(LocalBiometry provides biometry) { RootView(model) }
       }
     }
+  }
+
+  // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
+  override fun onPause() {
+    super.onPause()
+    app.vendorSignIn.paused()
+  }
+
+  override fun onResume() {
+    super.onResume()
+    app.vendorSignIn.resumed(lifecycleScope)
   }
 
   /** An alert was tapped while the app was up. */

@@ -38,7 +38,7 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ packs_left: 300, left: 900, over: 12 }))).toEqual({
       balance: { state: "ok", why: null, meter_pct: 40, words: "Solo · 900 credits left this period",
         detail: "300 credits of it in packs, which never expire · 12 credits used past your balance weren't charged",
-        warning: null, raise: null, buy: { solo: false, packs: true } },
+        warning: null, raise: null, buy: { solo: false, packs: true, first_month: null } },
       plan_line: "Solo · 900 credits left", plan_tone: "ok", home_line: null,
     });
   });
@@ -90,9 +90,40 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ kind: "unbounded", meter_pct: null, used: 0, billed_by: "" })).balance.words).toBe("No limit · no credits used yet this period");
     expect(balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false } }))).toEqual({
       balance: { state: "waiting", why: "no_plan", meter_pct: null, words: "No plan", detail: null, warning: "Choose a plan to start your tafs.",
-        raise: null, buy: { solo: true, packs: false } },
+        raise: null, buy: { solo: true, packs: false, first_month: null } },
       plan_line: "No plan · choose one to start", plan_tone: "waiting", home_line: "Choose a plan to start your tafs.",
     });
+  });
+
+  // The First month pack, sold once per account: KIFF says while it's still on offer (can_buy.once).
+  it("offers the First month pack beside Solo with no button before a plan, and to buy once Solo runs", () => {
+    // No plan: the row shows with words and nothing to press, since the pack is bought once Solo runs.
+    const noPlan = balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } }));
+    expect(noPlan.balance.buy).toEqual({ solo: true, packs: false, first_month: { ready: false, words: "Add it once Solo starts." } });
+    // Solo runs: it can be bought, and needs no words.
+    expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: true } })).balance.buy)
+      .toEqual({ solo: false, packs: true, first_month: { ready: true, words: null } });
+    // Bought, or a KIFF from before the pack: not offered.
+    expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: false } })).balance.buy).toEqual({ solo: false, packs: true, first_month: null });
+    expect(balanceView(balance({ can_buy: { solo: true, packs: false } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    // Someone who may buy nothing is offered nothing, whatever KIFF says of the pack.
+    expect(balanceView(balance({ can_buy: { solo: false, packs: false, once: true } })).balance.buy).toBeNull();
+    // KIFF sends neither of these, and neither says "Add it once Solo starts.": Solo running with
+    // no packs on offer, and a plan with Solo somehow still offered.
+    expect(balanceView(balance({ can_buy: { solo: true, packs: false, once: true } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    expect(balanceView(balance({ kind: "company", seats: 4, can_buy: { solo: true, packs: false, once: true } })).balance.buy)
+      .toEqual({ solo: true, packs: false, first_month: null });
+    // In the person's language.
+    const said = (lang: Parameters<typeof balanceView>[1]) =>
+      balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } }), lang).balance.buy?.first_month;
+    expect(said("fr")).toEqual({ ready: false, words: "Ajoutez-le une fois Solo lancé." });
+    expect(said("de")).toEqual({ ready: false, words: "Füge es hinzu, sobald Solo läuft." });
+    for (const lang of ["es", "it", "pt", "nl", "pl"] as const) {
+      const fm = said(lang);
+      expect(fm?.ready).toBe(false);
+      expect(fm?.words).toContain("Solo");
+      expect(fm?.words).not.toBe("Add it once Solo starts.");
+    }
   });
 
   it("words a refusal by its code, for this reader", () => {
@@ -155,6 +186,13 @@ describe("GET /v1/usage/balance", () => {
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ balance: { state: "warning", meter_pct: 85 }, plan_tone: "warning", home_line: "85% of this period's credits are used" });
     expect(asked).toContain("/v1/me/usage/credits");
+  });
+
+  it("shows a no-plan account the First month pack's row with words and no button", async () => {
+    const none = balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } });
+    const r = await call(world(kiff({ balance: none })), "/v1/usage/balance");
+    expect(r.status).toBe(200);
+    expect((r.body as { balance: { buy: unknown } }).balance.buy).toEqual({ solo: true, packs: false, first_month: { ready: false, words: "Add it once Solo starts." } });
   });
 
   it("answers 503 with words when KIFF can't be read, or gives no balance", async () => {

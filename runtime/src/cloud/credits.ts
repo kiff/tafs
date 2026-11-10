@@ -40,7 +40,8 @@ export interface KIFFBalance {
   period: { start: string; end: string };
   can_raise: boolean;
   raise_to_cents: number;
-  can_buy: { solo: boolean; packs: boolean };
+  /** `once`: the pack sold once per account (the First month pack) is still on offer; absent from a KIFF before it. */
+  can_buy: { solo: boolean; packs: boolean; once?: boolean };
   billed_by: string;
 }
 
@@ -289,7 +290,12 @@ export interface BalanceView {
     detail: string | null;
     warning: string | null;
     raise: { words: string; from_cents: number } | null;
-    buy: { solo: boolean; packs: boolean } | null;
+    /**
+     * What the app may offer this person in the store. `first_month` is the First month pack, while
+     * it can still be offered: `ready` once Solo runs, when it can be bought; before a plan it isn't,
+     * and `words` say why, for a row with its price and no button. `null`: not offered.
+     */
+    buy: { solo: boolean; packs: boolean; first_month: { ready: boolean; words: string | null } | null } | null;
   };
   plan_line: string;
   plan_tone: KIFFBalance["state"];
@@ -332,7 +338,15 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en"): BalanceView {
   const waiting = b.state === "waiting";
   const raise = b.kind === "company" && b.can_raise && b.raise_to_cents > 0
     ? { words: w.cr_raise_to(eur(b.raise_to_cents)), from_cents: b.limit_cents } : null;
-  const buy = b.can_buy && (b.can_buy.solo || b.can_buy.packs) ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true } : null;
+  // The First month pack is bought once Solo runs, like any pack: before a plan it is shown beside
+  // Solo, waiting, in words. Anywhere else (Solo running with no packs on offer, or a plan that
+  // buys none) it isn't offered: "Add it once Solo starts." is never said where Solo isn't offered.
+  const firstMonth = b.can_buy?.once !== true ? null
+    : b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null }
+    : b.kind === "none" && b.can_buy.solo === true ? { ready: false, words: w.cr_first_month_wait }
+    : null;
+  const buy = b.can_buy && (b.can_buy.solo || b.can_buy.packs)
+    ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true, first_month: firstMonth } : null;
   let words: string, detail: string | null = null, warning: string | null = null, plan: string, home: string | null = null;
   switch (b.kind) {
     case "solo": {
