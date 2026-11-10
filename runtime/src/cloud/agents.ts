@@ -1,5 +1,6 @@
 import { createHash, createHmac, type Hash, type Hmac } from "node:crypto";
 import { SignatureV4 } from "@smithy/signature-v4";
+import type { Check } from "./triggers.js";
 
 /**
  * kiff/agents, as tafs cloud calls it: the runtime that runs each taf
@@ -483,8 +484,8 @@ export interface Schedule {
   busy?: "skip" | "latest";
   /** Coming firings the owner skipped, by their due time. */
   skip?: string[];
-  /** A check of a connected app before each firing: a run only for what's new. */
-  check?: { tool: string; arguments: Record<string, unknown>; items: string; cursor: string };
+  /** A check of a connected app before each firing: a run only for what's new (kiff/agents' docs/schedules.md). */
+  check?: Check;
   /** A one-off follow-up the taf set itself (its id starts "fu-"): once, within seven days, at most three waiting. */
   follow_up?: boolean;
   /**
@@ -890,8 +891,12 @@ export class Agents {
     return this.call("POST", tenant, ["schedules", id, on ? "enable" : "disable"]);
   }
 
-  /** Fires the schedule now, by hand: an ordinary background run of its agent. */
-  trigger(tenant: string, id: string): Promise<Run> {
+  /**
+   * Fires the schedule now, by hand (`POST /schedules/{id}/trigger`): a background run of its agent. A schedule
+   * with a check reads the app first, and one that finds nothing (`quiet`) starts no run: the answer then has no
+   * session.
+   */
+  trigger(tenant: string, id: string): Promise<Partial<Run> & { outcome?: string }> {
     return this.call("POST", tenant, ["schedules", id, "trigger"]);
   }
 

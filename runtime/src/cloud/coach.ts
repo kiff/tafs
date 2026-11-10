@@ -118,6 +118,12 @@ export const TOOLS: ToolDef[] = [
         description: "The taf's recipe, its steps in order, for the dial's What ring: [{label: 2 or 3 words (\"Check\", \"Refund\", \"Log\"), words: one line, tool?: its KIFF tool}]. Few steps, each with a purpose.",
       },
       why: { type: "string", description: "The taf's purpose in 2 to 4 words, for the dial's face (\"Refund double charges\")." },
+      check: {
+        type: "object",
+        description: "The read every schedule of the taf makes first, without the AI: {tool: the read tool that lists its open work, arguments: {…}, " +
+          "items: where the list is in its result (\"\" when the result is the list), cursor: a field that only grows (created time, an increasing id), id?, " +
+          "first?: \"all\" to hand the queue already there, \"new\" (the default) to start from now}. Omitted, the taf's check stays as it is.",
+      },
       results: {
         type: "array",
         description: "Every place its results go; omitted, as they are. At least one of door_reply, app, owner_email, which tafs delivers; " +
@@ -128,8 +134,9 @@ export const TOOLS: ToolDef[] = [
     required: ["taf", "wakes"],
     description: "Drafts a taf's dial, the same three rings on every taf: When (what starts it), What (its recipe, in order) and Where " +
       "(where results go), with its Why on the face. Give each stop at most one choice. All its triggers and result places at once, from any of the taf's connections: it becomes the taf's " +
-      "next version, and nothing runs from it. Call it once with everything as it should be. A time the scheduler can't keep exactly is " +
-      "refused with the nearest one: offer that. Then show {type: \"knob\", version, taf_id} so the owner sees the change on the dial, " +
+      "next version, and nothing runs from it. Call it once with everything as it should be. A taf on a schedule names the read that lists its " +
+      "work (check), so a quiet firing wakes no AI; a taf from before without one gets it at its next dial change. A taf with a check keeps one timetable. " +
+      "A time the scheduler can't keep exactly is refused with the nearest one: offer that. Then show {type: \"knob\", version, taf_id} so the owner sees the change on the dial, " +
       "grouped by connection, and call version_install for that version.",
   },
   {

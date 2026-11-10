@@ -6,6 +6,21 @@
  */
 import { type Lang, wordsIn } from "./words/index.js";
 
+/**
+ * The read a taf's schedule makes first (kiff/agents' `check`): one call of a connected app's read tool,
+ * without the model, and a run only for the items past `cursor`. `items` is the dotted path to the list in
+ * the result ("" when the result is the list), `id` names an item (`id` when absent), and `first` says what
+ * the first check does: `new` (kiff/agents' default) only takes the cursor, `all` hands every item listed.
+ */
+export interface Check {
+  tool: string;
+  arguments: Record<string, unknown>;
+  items: string;
+  cursor: string;
+  id?: string;
+  first?: "new" | "all";
+}
+
 /** A schedule as kiff/agents stores it. */
 export interface PlannedSchedule {
   kind: "cron" | "once" | "monthly_last_day";
@@ -13,7 +28,34 @@ export interface PlannedSchedule {
   at?: string;
   busy: "skip" | "latest";
   skip?: string[];
-  check?: { tool: string; arguments: Record<string, unknown>; items: string; cursor: string };
+  check?: Check;
+}
+
+/** The most a check's arguments may take, as JSON. */
+export const CHECK_ARGS_MAX = 2048;
+const DOTTED = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$/;
+const FIELD = /^[A-Za-z0-9_.-]{1,128}$/;
+
+/**
+ * A check from a request (Coach's result, the dial), checked; an Error says what's wrong in words Coach can
+ * act on. `tools`, when given, are the taf's tools: the read is one of them, named as the result's tools are.
+ */
+export function checkOf(v: unknown, tools?: readonly string[]): Check {
+  if (!v || typeof v !== "object" || Array.isArray(v)) throw new Error("check is the read that lists the taf's work: {tool, arguments, items, cursor, id?, first?}");
+  const c = v as Record<string, unknown>;
+  const tool = typeof c.tool === "string" ? c.tool.trim() : "";
+  if (!tool || tool.length > 128) throw new Error("check.tool is the read tool that lists the taf's work, as the result's tools name it");
+  if (tools && !tools.includes(tool)) throw new Error(`check.tool names ${tool}, which isn't among the taf's tools (${tools.join(", ") || "none named"}): name the read as the result's tools do`);
+  const args = c.arguments === undefined ? {} : c.arguments;
+  if (typeof args !== "object" || args === null || Array.isArray(args) || Object.getPrototypeOf(args) !== Object.prototype) throw new Error("check.arguments is an object: the read's arguments");
+  if (JSON.stringify(args).length > CHECK_ARGS_MAX) throw new Error(`check.arguments is at most ${CHECK_ARGS_MAX} bytes as JSON`);
+  if (typeof c.items !== "string" || (c.items !== "" && !DOTTED.test(c.items))) throw new Error("check.items is where the list is in the read's result, a dotted path such as data or result.items (\"\" when the result is the list)");
+  const cursor = typeof c.cursor === "string" ? c.cursor.trim() : "";
+  if (!FIELD.test(cursor)) throw new Error("check.cursor is the field of each item that only grows, such as created or an increasing id");
+  const id = c.id === undefined || c.id === "" ? undefined : typeof c.id === "string" && FIELD.test(c.id.trim()) ? c.id.trim() : null;
+  if (id === null) throw new Error("check.id is the field that names an item, such as id");
+  if (c.first !== undefined && c.first !== "new" && c.first !== "all") throw new Error("check.first is new (the first check only takes the cursor) or all (it hands every item it lists)");
+  return { tool, arguments: args as Record<string, unknown>, items: c.items, cursor, ...(id ? { id } : {}), ...(c.first ? { first: c.first as "new" | "all" } : {}) };
 }
 
 /** A trigger from the dial or Coach's draft. */
@@ -147,6 +189,36 @@ export function schedulesOf(t: Trigger, busy: "skip" | "latest" = "skip"): Plann
     }
   }
   throw new TriggerError("form is daily, weekdays, weekly, monthly, monthly_last_day, times_a_day, every or once");
+}
+
+/**
+ * A dial's schedules: each trigger's, with the taf's check on every `schedule` one. kiff/agents keeps a
+ * check's cursor per schedule, so two schedules of a checked taf would hand its work twice: a checked taf
+ * keeps one timetable, and more is refused with the nearest one, never merged silently.
+ */
+export function plannedOf(wakes: Trigger[], busy: "skip" | "latest" = "skip", check?: Check): PlannedSchedule[] {
+  const planned = wakes.flatMap((t) => schedulesOf(t, busy).map((p) => (check && t.kind === "schedule" ? { ...p, check } : p)));
+  if (check && planned.length > 1) {
+    throw new TriggerError("a taf that checks its work first keeps one timetable, since two would hand it the same work twice",
+      oneTimetable(wakes.filter((t) => t.kind === "schedule" || t.kind === "app_check")));
+  }
+  return planned;
+}
+
+/** The nearest single timetable to several: times of day on the same days, all on the first one's minute; else the first alone. */
+function oneTimetable(timed: Trigger[]): string {
+  const sameDays = (t: Trigger) => (t.form === "times_a_day" ? (t.days ?? []).join(",") : "");
+  const fixed = timed.every((t) => t.kind === "schedule" && (t.form === "daily" || t.form === "times_a_day") && sameDays(t) === sameDays(timed[0]!));
+  const times = fixed ? timed.flatMap((t) => (t.form === "daily" ? [t.at ?? ""] : t.times ?? [])).filter((x) => HHMM.test(x)) : [];
+  if (times.length) {
+    const minute = times[0]!.slice(3);
+    const one = [...new Set(times.map((x) => `${x.slice(0, 2)}:${minute}`))].sort();
+    const list = one.length > 1 ? `${one.slice(0, -1).join(", ")} and ${one.at(-1)}` : one[0]!;
+    const days = timed[0]!.form === "times_a_day" ? timed[0]!.days ?? [] : [];
+    return `one list of times on the same minute: ${days.length ? `at ${list} on ${days.join(", ")}` : `every day at ${list}`}`;
+  }
+  const first = timed[0];
+  return first ? `one of them alone, such as ${triggerWords(first, "en").replace(/^\p{Lu}/u, (c) => c.toLowerCase())}` : "one timetable";
 }
 
 /** A wall-clock time in zone ("2026-11-05T09:00") as an instant, RFC 3339 in UTC. */

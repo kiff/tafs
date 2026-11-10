@@ -282,6 +282,7 @@ export const it: Words = {
   dial_wakes_door: "Si attiva alla sua porta",
   dial_wakes_vendor: "Si attiva su un evento di un fornitore",
   dial_checks: (operation, n) => `Controlla ${operation} ogni ${n} minuti e lavora solo su ciò che è nuovo`,
+  dial_checks_first: (read) => `controlla prima ${read}`,
   dial_wakes_before: "Si attiva prima di un evento del calendario",
   dial_wakes_on: (event) => `Si attiva su ${event}`,
   dial_an_app_event: "un evento di un'app",

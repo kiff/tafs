@@ -5,7 +5,7 @@
  */
 import type { Schedule } from "./agents.js";
 import type { ResultPlace } from "./handler.js";
-import { type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
+import { type Check, type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
 import { placeWords, type VendorPlace } from "./places.js";
 import { timeIn } from "./work.js";
 import { type Lang, plural, wordsIn } from "./words/index.js";
@@ -21,6 +21,8 @@ export interface KnobSetting {
   /** Coach's recipe and the taf's purpose in a few words, for the What ring and the face. */
   what?: Step[];
   why?: string;
+  /** The read each of its schedules makes first (triggers.ts, `Check`): kept from version to version, applied when the version goes live. */
+  check?: Check;
 }
 
 /** One stop on a ring. */
@@ -143,6 +145,8 @@ export interface KnobInput {
   now: Date;
   /** The person's language (docs/languages.md): the dial's words are written in it. */
   lang?: Lang;
+  /** The read its schedules make first, as the taf keeps it: when the live version's dial names none. */
+  check?: Check;
 }
 
 /** The schedule in words, for the forms the dial sets; any other cron reads as "On a schedule". */
@@ -195,13 +199,15 @@ export function knobOf(k: KnobInput): Knob {
   // The dial's triggers: as the live version set them, or the taf's own schedule read back.
   const fromSchedule = !k.unscheduled && k.schedule ? triggerOf(k.schedule, k.zone) : undefined;
   const timed = k.setting ? k.setting.wakes.filter((t) => t.kind === "schedule" || t.kind === "app_check") : [];
+  const check = k.setting?.check ?? k.check;
   if (!k.unscheduled && k.schedule && (!k.setting || timed.length)) {
     const s = k.schedule;
     const next = s.enabled && s.next ? w.dial_next(time(s.next)) : "";
     const stops = k.setting ? timed.map((t) => ({ trigger: t, ...wordsOf(t, lang) })) : [{ trigger: fromSchedule, ...cronWords(s.cron, lang) }];
     for (const [i, t] of stops.entries()) {
       // The scheduler says when the taf's own schedule fires next; that's the first trigger's.
-      const words = s.enabled ? `${t.words}${i === 0 ? next : ""}` : `${t.words}${w.dial_paused_after}`;
+      const first = check && t.trigger?.kind !== "app_check" ? ` · ${w.dial_checks_first(check.tool)}` : "";
+      const words = s.enabled ? `${t.words}${i === 0 ? next : ""}${first}` : `${t.words}${w.dial_paused_after}${first}`;
       wakes.push({ id: i === 0 ? "trg_schedule" : `trg_${i + 1}`, kind: t.trigger?.kind === "app_check" ? "app_check" : "schedule", label: t.label, words,
         on: s.enabled, state: s.enabled ? t.label : w.dial_paused, ...(t.trigger ? { trigger: t.trigger } : {}) });
     }
@@ -255,7 +261,7 @@ export function knobOf(k: KnobInput): Knob {
 
   const setting: KnobSetting = k.setting ?? {
     wakes: [...(k.doors.length ? [{ kind: "door" as const }] : []), ...(fromSchedule ? [fromSchedule] : [])],
-    busy, results: k.places,
+    busy, results: k.places, ...(k.check ? { check: k.check } : {}),
   };
   sizeStops(wakes, results, setting, lang);
 
@@ -285,8 +291,9 @@ function changesOf(live: KnobSetting | undefined, next: KnobSetting): number {
     const as = a.map(key), bs = b.map(key);
     return Math.max(as.filter((x) => !bs.includes(x)).length, bs.filter((x) => !as.includes(x)).length);
   };
-  if (!live) return diff([], next.wakes) + diff([], next.results) + diff([], next.what ?? []);
-  return diff(live.wakes, next.wakes) + diff(live.results, next.results) + diff(live.what ?? [], next.what ?? []) + (live.busy !== next.busy ? 1 : 0);
+  if (!live) return diff([], next.wakes) + diff([], next.results) + diff([], next.what ?? []) + (next.check ? 1 : 0);
+  return diff(live.wakes, next.wakes) + diff(live.results, next.results) + diff(live.what ?? [], next.what ?? []) + (live.busy !== next.busy ? 1 : 0)
+    + (key(live.check ?? null) !== key(next.check ?? null) ? 1 : 0);
 }
 
 /** A dial change's lines by connection: a connected app's events and actions under it, everything else under This taf. */
@@ -300,7 +307,7 @@ function groupsOf(s: KnobSetting, lang: Lang = "en"): NonNullable<Knob["draft"]>
     if (!g) by.set(grant, (g = { grant, name: (name ?? "").split(" · ")[0] || w.dial_app, wakes: [], what: [], results: [] }));
     return g;
   };
-  for (const t of s.wakes) of(t.kind === "app_event" ? t.grant : undefined, t.name).wakes.push(triggerWords(t, lang));
+  for (const t of s.wakes) of(t.kind === "app_event" ? t.grant : undefined, t.name).wakes.push(checkedWords(t, s.check, lang));
   for (const [i, w] of (s.what ?? []).entries()) own.what.push(`${i + 1} · ${w.label}: ${w.words}`);
   for (const p of s.results) {
     if (typeof p === "string") own.results.push(w.dial_results_go(p));
@@ -389,7 +396,7 @@ function connectionsOf(wakes: RingItem[], results: Knob["results"]): Knob["conne
 export function ringWords(k: KnobSetting, lang: Lang = "en"): { wakes: string[]; when: string[]; results: string[] } {
   const w = wordsIn(lang);
   return {
-    wakes: k.wakes.map((t) => triggerWords(t, lang)),
+    wakes: k.wakes.map((t) => checkedWords(t, k.check, lang)),
     when: [k.busy === "latest" ? w.dial_busy_latest_line : w.dial_busy_skip_line],
     results: [w.dial_results_go(k.results.map((p) => (typeof p === "string" ? p : p.name)).join(", "))],
   };
@@ -399,6 +406,12 @@ export function ringWords(k: KnobSetting, lang: Lang = "en"): { wakes: string[];
 export function settingWords(k: KnobSetting, lang: Lang = "en"): string[] {
   const r = ringWords(k, lang);
   return [...r.wakes, ...r.when, ...r.results];
+}
+
+/** A trigger's line, and that it checks first when it's a schedule of a taf with a check: "Weekdays at 09:00 · checks list_tickets first". */
+function checkedWords(t: Trigger, check: Check | undefined, lang: Lang = "en"): string {
+  const words = triggerWords(t, lang);
+  return check && t.kind === "schedule" ? `${words} · ${wordsIn(lang).dial_checks_first(check.tool)}` : words;
 }
 
 /** A trigger's word on the ring and its line. */

@@ -282,6 +282,7 @@ export const nl: Words = {
   dial_wakes_door: "Wordt wakker bij zijn deur",
   dial_wakes_vendor: "Wordt wakker bij een event van een leverancier",
   dial_checks: (operation, n) => `Controleert ${operation} elke ${n} minuten en werkt alleen aan wat nieuw is`,
+  dial_checks_first: (read) => `controleert eerst ${read}`,
   dial_wakes_before: "Wordt wakker vóór een agenda-afspraak",
   dial_wakes_on: (event) => `Wordt wakker bij ${event}`,
   dial_an_app_event: "een event van een app",

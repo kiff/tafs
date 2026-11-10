@@ -256,6 +256,9 @@ function depsOf(w: World): Deps {
 }
 
 const START = { name: "Bo", job: "refunds", agent_key: "key_rae" };
+/** The read a scheduled taf of its own checks first (kiff/agents' check), and the result's tools that hold it. */
+const WORK_TOOL = "list_requests_k3f9";
+const WORK_CHECK = { tool: WORK_TOOL, arguments: { status: "open" }, items: "data", cursor: "created" };
 
 describe("tafs cloud", () => {
   it("lists the jobs without signing in", async () => {
@@ -1351,7 +1354,8 @@ describe("Setup (kiff/agents#91)", () => {
 });
 
 describe("a taf Setup made (kiff/agents#91, #94)", () => {
-  const BODY = { name: "Refunds", draft_id: "drf_s1", from_setup: true, kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *" };
+  const BODY = { name: "Refunds", draft_id: "drf_s1", from_setup: true, kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *",
+    check: WORK_CHECK, tools: [WORK_TOOL] };
 
   it("starts from Setup's draft: kiff/agents claims the key into the taf's reference", async () => {
     const w = world();
@@ -1369,8 +1373,16 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
   it("starts a taf whose tools can't find its work with no running schedule and no first run (kiff/tafs#138)", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
-    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, unscheduled: true } });
+    // It checks nothing on a schedule: a check is refused, and it starts with none.
+    const checked = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, unscheduled: true } });
+    expect(checked.status).toBe(400);
+    expect(checked.body.error).toContain("works from its chat checks nothing");
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([]);
+    const { check: _check, ...unchecked } = BODY;
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...unchecked, unscheduled: true } });
     expect(r.status).toBe(200);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.check).toBeUndefined();
+    expect(w.agents.schedules.get(`t_acme|${NEW}`)?.check).toBeUndefined();
     expect(r.body.session).toBeNull();
     expect(r.body.taf).toMatchObject({ id: NEW, status: "active", unscheduled: true, next_run: null });
     expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * UTC`]);
@@ -1390,6 +1402,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
     const disclose = [{ tool: "send_message_k3f9", fields: ["text"] }];
     const own = { name: "Invoices", draft_id: "drf_s1", from_setup: true, kickoff: "Remind each customer of an overdue invoice.", cron: "0 9 * * 1-5", disclose,
+      check: { ...WORK_CHECK, tool: "list_invoices_k3f9" },
       tools: ["list_invoices_k3f9", "send_message_k3f9"] };
     expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: own })).status).toBe(200);
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ disclose });
@@ -1407,11 +1420,79 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     }
   });
 
+  // Every schedule a taf runs checks first: each firing reads its work list without the model, and the AI runs
+  // only when the read lists something new. A taf of its own on a schedule names that read, or isn't made.
+  it("refuses a job of its own on a schedule that names no read to check first, in words Coach can act on", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const { check: _check, ...unchecked } = BODY;
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: unchecked });
+    expect(r.status).toBe(400);
+    expect(r.body.error).toBe("a taf on a schedule checks its work first: name the read that lists its work (check.tool, check.items, check.cursor)");
+    expect(w.agents.calls).toEqual([]);
+    expect(w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+    // A check that doesn't fit is refused the same way, before anything is made.
+    for (const [bad, words] of [
+      [{ ...WORK_CHECK, tool: "list_orders_x1" }, "list_orders_x1, which isn't among the taf's tools"],
+      [{ ...WORK_CHECK, cursor: "" }, "check.cursor"],
+      [{ ...WORK_CHECK, items: "data..items" }, "check.items"],
+      [{ tool: WORK_TOOL, arguments: {}, cursor: "created" }, "check.items"],
+      [{ ...WORK_CHECK, arguments: ["open"] }, "check.arguments"],
+      [{ ...WORK_CHECK, arguments: { q: "x".repeat(2_100) } }, "2048 bytes"],
+      [{ ...WORK_CHECK, first: "everything" }, "check.first"],
+      ["list_requests_k3f9", "check is the read"],
+    ] as const) {
+      const refused = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, check: bad } });
+      expect(refused.status, JSON.stringify(bad)).toBe(400);
+      expect(refused.body.error, JSON.stringify(bad)).toContain(words);
+    }
+    expect(w.agents.calls).toEqual([]);
+    // A starter job checks nothing: one sent with it is refused.
+    const starter = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...START, check: WORK_CHECK } });
+    expect(starter.status).toBe(400);
+    expect(starter.body.error).toContain("job of its own");
+  });
+
+  it("creates the schedule with the check, the first check handing the open queue, and fires it through the schedule, never a run of its own", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, check: { ...WORK_CHECK, id: "number" } } });
+    expect(r.status).toBe(200);
+    const check = { ...WORK_CHECK, id: "number", first: "all" };
+    expect(w.agents.schedules.get(`t_acme|${NEW}`)).toMatchObject({ cron: "*/30 * * * *", enabled: true, check });
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.check).toEqual(check);
+    // The first firing goes through kiff/agents' schedule trigger, so the check reads first; nothing starts a run directly.
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * UTC`, `trigger ${NEW}`]);
+    expect(r.body.session).toEqual(expect.any(String));
+    // Coach's "new" is kept: the first check only takes the cursor.
+    w.agents.setupDrafts.set("drf_s2", { tenant: "t_acme", agent: "leads-x" });
+    const fresh = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, name: "Leads", draft_id: "drf_s2", check: { ...WORK_CHECK, first: "new" } } });
+    expect(fresh.status).toBe(200);
+    expect(w.agents.schedules.get(`t_acme|${NEW2}`)?.check).toEqual({ ...WORK_CHECK, first: "new" });
+  });
+
+  it("answers a success with no session when the first check finds the queue empty: no run, and no failure", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.quiet.add(NEW);
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
+    expect(r.status).toBe(200);
+    expect(r.body.session).toBeNull();
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Refunds" });
+    expect(w.agents.calls.at(-1)).toBe(`trigger ${NEW}`);
+    expect(w.agents.runs.filter((x) => x.agent === NEW)).toEqual([]);
+    // Run now answers the same way when its check finds nothing.
+    const now = await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana" });
+    expect(now.status).toBe(200);
+    expect(now.body.session).toBeNull();
+  });
+
   it("starts a taf with a job of its own, as Coach drafted it: any job, not one of the five (kiff/tafs#476)", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
     const own = { name: "Invoices", draft_id: "drf_s1", from_setup: true, summary: "Reminds customers of overdue invoices.",
-      kickoff: "Find every overdue invoice and send each customer one reminder, at most one a week.", instructions: "Never change an invoice or offer a discount.", cron: "0 9 * * 1-5" };
+      kickoff: "Find every overdue invoice and send each customer one reminder, at most one a week.", instructions: "Never change an invoice or offer a discount.", cron: "0 9 * * 1-5",
+      check: WORK_CHECK, tools: [WORK_TOOL] };
     const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: own });
     expect(r.status).toBe(200);
     expect(r.body.taf).toMatchObject({ id: NEW, name: "Invoices", job: "custom", kiff_agent: "invoices-x" });
@@ -1439,7 +1520,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(noWhen.status).toBe(400);
     expect(noWhen.body.error).toContain("unscheduled");
     // A drafted schedule keeps to the same calm as any other, and a kickoff to the same length; neither makes a taf.
-    const tooOften = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead.", cron: "* * * * *" } });
+    const tooOften = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "Follow up each new lead.", cron: "* * * * *", check: WORK_CHECK, tools: [WORK_TOOL] } });
     expect(tooOften.status).toBe(400);
     expect(tooOften.body.error).toContain("every 15 minutes");
     const tooLong = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Leads", draft_id: "drf_s2", from_setup: true, kickoff: "x".repeat(2_001), cron: "0 * * * *" } });
@@ -2134,6 +2215,65 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(choice.busy).toBe("latest");
     const sent = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: choice });
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.knobs?.[String(sent.body.version)]?.busy).toBe("latest");
+  });
+
+  // Every schedule of a checked taf reads its work first, and kiff/agents keeps a check's cursor per schedule: a dial
+  // edit of the times keeps the check, and a checked taf keeps one timetable, so no item is handed twice.
+  it("a checked taf's dial: its schedule carries the check, an edit of the times keeps it, and a second timetable is refused with the nearest one", async () => {
+    const w = twoVersions();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, check: { ...WORK_CHECK, first: "all" } });
+    const check = { ...WORK_CHECK, first: "all" };
+    // Read back before any dial change: the When ring says it checks first, and the setting carries the check.
+    const before = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(before.body.wakes.find((x: { id: string }) => x.id === "trg_schedule").words).toContain(" · checks list_requests_k3f9 first");
+    expect(before.body.setting.check).toEqual(check);
+    // The app sends back a setting with another time and no check: the check stays.
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "weekdays", at: "10:00" }], busy: "skip", results: ["app"] } });
+    expect(put.status).toBe(200);
+    expect(put.body.words[0]).toBe("Weekdays at 10:00 · checks list_requests_k3f9 first");
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${put.body.version}/live`, { token: "ana" })).status).toBe(200);
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)).toMatchObject({ cron: "0 10 * * 1-5", check });
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.wakes[0]).toMatchObject({ kind: "schedule", label: "Weekdays" });
+    expect(knob.body.wakes[0].words).toMatch(/^Weekdays at 10:00, next .+ · checks list_requests_k3f9 first$/);
+    expect(knob.body.setting.check).toEqual(check);
+    // A − or + on its time sends the check back with it.
+    const sized = knob.body.wakes[0].size.choices[0].setting;
+    expect(sized.check).toEqual(check);
+    // Two timetables would hand the same items twice: refused, with one timetable in words, never merged.
+    for (const [wakes, nearest] of [
+      [[{ kind: "schedule", form: "daily", at: "09:00" }, { kind: "schedule", form: "daily", at: "15:30" }], "the nearest is one list of times on the same minute: every day at 09:00 and 15:00"],
+      [[{ kind: "schedule", form: "times_a_day", times: ["09:00", "13:30"], days: ["mon", "fri"] }], "the nearest is one list of times on the same minute: at 09:00 and 13:00 on mon, fri"],
+      [[{ kind: "schedule", form: "weekdays", at: "09:00" }, { kind: "app_check", operation: "list_charges", items: "data", cursor: "created", every_minutes: 30 }], "the nearest is one of them alone, such as weekdays at 09:00"],
+    ] as const) {
+      const refused = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes } });
+      expect(refused.status, JSON.stringify(wakes)).toBe(400);
+      expect(refused.body.error).toBe(`a taf that checks its work first keeps one timetable, since two would hand it the same work twice: ${nearest}`);
+    }
+    // One schedule on several hours of one minute is one timetable.
+    expect((await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00"] }, { kind: "door" }] } })).status).toBe(200);
+  });
+
+  it("leaves a scheduled taf from before as it is: no check, every timetable it had, until Coach names a read", async () => {
+    const w = twoVersions();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.wakes[0].words).not.toContain("checks");
+    expect(knob.body.setting.check).toBeUndefined();
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "daily", at: "09:00" }, { kind: "schedule", form: "daily", at: "15:30" }] } });
+    expect(put.status).toBe(200);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${put.body.version}/live`, { token: "ana" })).status).toBe(200);
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)?.check).toBeUndefined();
+    expect(w.agents.schedules.get(`t_acme|${RAE}-t2`)?.check).toBeUndefined();
+    // Coach's check at a later dial change goes live with its version, onto the taf's record too.
+    const checked = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "daily", at: "09:00" }], check: WORK_CHECK } });
+    expect(checked.status).toBe(200);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.check).toBeUndefined();
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${checked.body.version}/live`, { token: "ana" })).status).toBe(200);
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)).toMatchObject({ cron: "0 9 * * *", check: WORK_CHECK });
+    expect(w.agents.schedules.get(`t_acme|${RAE}-t2`)?.enabled).toBe(false);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.check).toEqual(WORK_CHECK);
   });
 
   it("a dial change can send results to any connected app's action: the version's instructions carry it, and live, the dial shows it", async () => {
@@ -3147,7 +3287,8 @@ describe("deleting the account (kiff/tafs#185)", () => {
 
 describe("Coach's result, handed over by tafs cloud", () => {
   const COACH = "taf-c0ac4000000000000000";
-  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *" } };
+  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", tools: [WORK_TOOL],
+    taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the refund queue: every open refund request since your last run.", cron: "*/30 * * * *", check: WORK_CHECK } };
 
   /** A world with the account's Coach, its run paused on a result Ana's chat showed, and the deps that hand it over. */
   async function paused(card: Record<string, unknown> = RESULT, requester: { kind: string; id: string } | undefined = { kind: "member", id: "u_ana" }) {
@@ -3185,8 +3326,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   it("makes a taf with the job Coach drafted, outside the five, and runs it (kiff/tafs#476)", async () => {
     const own = { agent: "invoices-x", name: "Invoices", draft: "drf_s1", summary: "Reminds customers of overdue invoices.",
-      kickoff: "Find every overdue invoice and send each customer one reminder.", instructions: "Never change an invoice.", cron: "0 9 * * 1-5" };
-    const { w, note, answer } = await paused({ type: "result", id: "done", text: "Invoices is ready.", taf: own });
+      kickoff: "Find every overdue invoice and send each customer one reminder.", instructions: "Never change an invoice.", cron: "0 9 * * 1-5", check: WORK_CHECK };
+    const { w, note, answer } = await paused({ type: "result", id: "done", text: "Invoices is ready.", tools: [WORK_TOOL], taf: own });
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "invoices-x" });
     w.agents.access.set("u_ana", { cards_manage: true });
     await note();
@@ -3272,7 +3413,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
   // kiff/tafs#476, gap 9: the disclosure Coach names in its result reaches the taf it hands over.
   it("hands over the AI disclosure Coach's result names, into the taf's definition", async () => {
     const disclose = [{ tool: "send_message_k3f9", fields: ["text"] }];
-    const { w, note, answer } = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose } });
+    const { w, note, answer } = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose } });
     w.agents.access.set("u_ana", { cards_manage: true });
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
@@ -3283,7 +3424,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
   // language it comes in. No message carries a credit line any more (the owner's call, 7 Nov).
   it("names who a taf writes for in its disclosure, in each language, and credits no one", async () => {
     const disclose = [{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "file_evidence_k3f9", fields: ["note"], credit: false }];
-    const { w, note, answer } = await paused({ ...RESULT, tools: ["send_message_k3f9", "file_evidence_k3f9"], taf: { ...RESULT.taf, disclose, writes_for: "Kiff Agents OÜ" } });
+    const { w, note, answer } = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9", "file_evidence_k3f9"], taf: { ...RESULT.taf, disclose, writes_for: "Kiff Agents OÜ" } });
     w.agents.access.set("u_ana", { cards_manage: true });
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
@@ -3293,7 +3434,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(def).not.toHaveProperty("credit");
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ writesFor: "Kiff Agents OÜ" });
     // A name on two lines is refused, in words for Coach.
-    const two = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose, writes_for: "Kiff\nAgents" } });
+    const two = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose, writes_for: "Kiff\nAgents" } });
     two.w.agents.access.set("u_ana", { cards_manage: true });
     await two.note();
     expect(JSON.stringify(two.answer())).toContain("writes_for is who the taf's messages come from");
@@ -3338,13 +3479,13 @@ describe("Coach's result, handed over by tafs cloud", () => {
   // qa-kiff on #574: the name fits kiff/agents' 300-byte line in any script, on one line, unpadded.
   it("refuses a writes_for that doesn't fit the disclosure line", async () => {
     for (const bad of ["株".repeat(88), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
-      const { w, note, answer } = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: bad } });
+      const { w, note, answer } = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: bad } });
       w.agents.access.set("u_ana", { cards_manage: true });
       await note();
       expect(JSON.stringify(answer()), bad).toContain("writes_for is who the taf's messages come from");
     }
     // 87 of a 3-byte script fits: 261 bytes, so the line fits in every language, German's at 300 (qa-kiff on #587).
-    const fits = await paused({ ...RESULT, tools: ["send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(87) } });
+    const fits = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(87) } });
     fits.w.agents.access.set("u_ana", { cards_manage: true });
     await fits.note();
     expect(fits.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
@@ -3369,7 +3510,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
   // Gap 14: a tool its connections say sends outside the company is in disclose, whatever Coach remembered.
   it("refuses a new taf whose disclose leaves out a tool its connection says sends outside, naming it", async () => {
     const send = [{ tool: "send_message_k3f9", fields: ["text"] }];
-    const card = { ...RESULT, tools: ["list_invoices_k3f9", "send_message_k3f9"] };
+    const card = { ...RESULT, tools: [WORK_TOOL, "list_invoices_k3f9", "send_message_k3f9"] };
     const left = await paused(card);
     left.w.agents.access.set("u_ana", { cards_manage: true });
     await left.deps.coach.put("t_acme#sends-outside#refunds-x", { grants: { g_mail: ["send_message_k3f9"] }, at: "x" }, new Date("2027-01-01"));
@@ -3592,7 +3733,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@6,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@6,name-the-tools@5,set-up-a-taf@4,usage-and-plans@1`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -3600,18 +3741,18 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@5,draft-the-card@6,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@5,draft-the-card@6,name-the-tools@5,set-up-a-taf@4,usage-and-plans@1`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@5,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@4,usage-and-plans@1`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@5,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@3,usage-and-plans@1`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@5,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@4,usage-and-plans@1`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
@@ -3647,7 +3788,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // Once the Upgrade names the lock's versions, a new chat asks for those.
     await w.agents.api.putAgent("t_acme", COACH, live);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Another one", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@3");
+    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@4");
   });
 
   // agentgabo on #574, the owner's call (11:32): with no one named, a taf writes for the account's company,
@@ -3757,17 +3898,17 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.slice(before).filter((c) => c.startsWith("addSessionSkills")).length).toBe(1);
     // A second skill joins in the definition's order; a tool with no procedure, or a vendor's, adds none.
     await coachTool("taf_dial", { taf: RAE }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@1"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@2"]);
     await coachTool("stripe_refund_k3f9", {}, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@1"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@2"]);
     // kiff/agents failing the add leaves the tool's answer as it is, and the skill isn't marked loaded: the
     // next call adds it (qa-kiff).
     w.agents.fail.set("addSessionSkills", new AgentsError(503, "down"));
     const b = await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch((e: Error) => ({ error: e.message }));
     expect(JSON.stringify(b)).not.toContain("Skill");
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@1"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@2"]);
     await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@1", "halting@1"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@2", "halting@1"]);
   });
 
   it("shows what a Coach conversation cost, summed from kiff/agents' usage events", async () => {

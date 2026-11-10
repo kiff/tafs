@@ -282,6 +282,7 @@ export const de: Words = {
   dial_wakes_door: "Wacht bei seiner Tür auf",
   dial_wakes_vendor: "Wacht bei einem Ereignis eines Anbieters auf",
   dial_checks: (operation, n) => `Prüft ${operation} alle ${n} Minuten und bearbeitet nur Neues`,
+  dial_checks_first: (read) => `prüft zuerst ${read}`,
   dial_wakes_before: "Wacht vor einem Kalenderereignis auf",
   dial_wakes_on: (event) => `Wacht bei ${event} auf`,
   dial_an_app_event: "einem Ereignis einer App",

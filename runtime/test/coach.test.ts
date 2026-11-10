@@ -263,6 +263,23 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(withRecipe.version)]).toMatchObject({ why: "Refund double charges", what: [{ label: "Check", words: "Looks up the charge" }] });
   });
 
+  // A taf from before, whose schedule wakes the AI at every firing, gets the read it checks first at its next dial change.
+  it("taf_dial adds a check to a taf from before: the next version carries it, and a checked taf keeps one timetable", async () => {
+    const w = world();
+    w.agents.versions.set(`${T}|${RAE}`, []);
+    const check = { tool: "list_requests_k3f9", arguments: { status: "open" }, items: "data", cursor: "created", first: "all" };
+    const made = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check })).json as { version: number; words: string[] };
+    expect(made.words[0]).toBe("Weekdays at 09:00 · checks list_requests_k3f9 first");
+    expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]?.check).toEqual(check);
+    // Nothing reaches the scheduler, nor the taf's record, until the version goes live.
+    expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c))).toEqual([]);
+    expect(w.tafs.held.get(`${T}#${RAE}`)!.check).toBeUndefined();
+    expect(await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "13:30"] }] }))
+      .toMatchObject({ isError: true, text: expect.stringContaining("the nearest is one list of times on the same minute: every day at 09:00 and 13:00") });
+    expect(await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check: { ...check, cursor: "" } }))
+      .toMatchObject({ isError: true, text: expect.stringContaining("check.cursor") });
+  });
+
   it("run_stop and taf_pause act through kiff/agents; an unknown taf is refused", async () => {
     const w = world();
     const run = await w.agents.api.startRun(T, RAE, "go");

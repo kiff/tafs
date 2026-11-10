@@ -42,6 +42,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   /** Drafts Setup submitted (kiff/agents#94): draft id → its agent, and where its key was claimed. */
   const setupDrafts = new Map<string, { tenant: string; agent: string; keyRef?: string }>();
   const fail = new Map<string, AgentsError | Error>();
+  /** Schedules whose check finds nothing new: firing one by hand starts no run, as a quiet firing in kiff/agents. */
+  const quiet = new Set<string>();
   /** Accounts whose tafs wait for credits: every run they start is refused with this code, as kiff/agents does on KIFF's word. */
   const credits = new Map<string, string>();
   /** What a streamed run's agent does, in order: kiff/agents' stream events, or an Error that breaks it. */
@@ -495,6 +497,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       failing("trigger");
       const s = schedules.get(k(tenant, id));
       if (!s) throw gone();
+      if (s.check && quiet.has(id)) return { outcome: "quiet" };
       return newRun(tenant, s.agent, openSession(tenant, s.agent, "run").id, "schedule", s.input, id);
     },
     async claimTafDraft(tenant, draftID, keyRef) {
@@ -635,7 +638,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
