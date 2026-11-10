@@ -19,7 +19,7 @@ struct QuestionsCard: View {
         } else if chatting {
             HStack(spacing: 8) {
                 Text("You're talking these questions through with Setup.").scaledFont(13).foregroundColor(Theme.soft)
-                Button("Show them again") { chatting = false }.scaledFont(13, weight: .semibold).foregroundColor(Theme.coach)
+                Button(Words.Coach.Questions.showAgain) { chatting = false }.scaledFont(13, weight: .semibold).foregroundColor(Theme.coach)
             }
         } else {
             Panel {
@@ -36,14 +36,14 @@ struct QuestionsCard: View {
                 }
                 Divider()
                 WrapRow(spacing: 12) {
-                    Button { send() } label: { Text("Send answers") }
+                    Button { send() } label: { Text(Words.Coach.Questions.send) }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(answeredCount < questions.count || busy)
                     Button {
                         chatting = true
                         Haptics.tap()
                     } label: {
-                        Label("Chat about this", systemImage: "bubble.left")
+                        Label(Words.Coach.Questions.chatAbout, systemImage: "bubble.left")
                             .scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
                     }
                     .buttonStyle(.drivablePlain)

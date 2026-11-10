@@ -10,7 +10,7 @@ struct BuyCreditsView: View {
         BuyCreditsContent(purchases: model.purchases, done: { dismiss() }).environmentObject(model)
     }
 
-    static let title = "Add credits"
+    static let title = Words.Usage.buy
     static let explain = "A pack adds credits once, and they never expire. Each period's included credits are used first, then the packs'."
 }
 
@@ -48,7 +48,7 @@ private struct BuyCreditsContent: View {
                     if let message = model.planMessage {
                         Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     }
-                    Button("Restore purchases") { Task { await model.restorePurchases() } }
+                    Button(Words.Usage.restorePurchases) { Task { await model.restorePurchases() } }
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 .padding(16)
@@ -56,7 +56,7 @@ private struct BuyCreditsContent: View {
             .screenBackground()
             .navigationTitle(BuyCreditsView.title)
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { done() }.keyboardShortcut(.cancelAction) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.close) { done() }.keyboardShortcut(.cancelAction) } }
         }
     }
 }
@@ -81,7 +81,7 @@ struct AskAdminView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     if raise == false {
                         Panel {
-                            Eyebrow(text: "Which pack")
+                            Eyebrow(text: Words.Usage.Requests.whichPack)
                             ForEach(model.usage?.store?.packs ?? []) { p in
                                 Button { pack = p.id } label: {
                                     HStack {
@@ -97,14 +97,14 @@ struct AskAdminView: View {
                         }
                     }
                     Panel {
-                        Eyebrow(text: "Why (optional)")
+                        Eyebrow(text: Words.Usage.Requests.whyOptional)
                         DriveField("What the credits are for", text: $reason)
                             .scaledFont(15)
                     }
                     if let message = model.planMessage {
                         Text(message).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                     }
-                    Button(sending ? "Asking…" : "Ask") {
+                    Button(sending ? Words.Usage.Requests.asking : Words.Usage.Requests.ask) {
                         guard let raise else { return }
                         let chosen = model.usage?.store?.packs.first { $0.id == pack }
                         guard raise || chosen != nil else { return }
@@ -123,12 +123,12 @@ struct AskAdminView: View {
             .screenBackground()
             .navigationTitle(UsageView.askAdmin)
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
     }
 
-    static let forRaise = "Your account's admins get your request. When one raises the spend limit, your tafs go on."
-    static let forPack = "Your account's admins get your request. When one adds the pack, your tafs go on."
+    static let forRaise = Words.Billing.Ask.lineRaise
+    static let forPack = Words.Billing.Ask.linePack
 }
 
 /// Declining a member's request, with a note they'll read.
@@ -146,13 +146,13 @@ struct DeclineRequestView: View {
                     .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Panel {
-                    Eyebrow(text: "Note (optional)")
-                    DriveField("Why, for them", text: $note).scaledFont(15)
+                    Eyebrow(text: Words.Usage.Requests.noteOptional)
+                    DriveField(Words.Usage.Requests.noteHint, text: $note).scaledFont(15)
                 }
                 if let message = model.planMessage {
                     Text(message).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                 }
-                Button(sending ? "Declining…" : "Decline") {
+                Button(sending ? Words.Usage.Requests.declining : Words.Coach.Approval.decline) {
                     sending = true
                     Task {
                         let done = await model.declineRequest(request, note: String(note.prefix(500)))
@@ -166,9 +166,9 @@ struct DeclineRequestView: View {
             }
             .padding(16)
             .screenBackground()
-            .navigationTitle("Decline")
+            .navigationTitle(Words.Coach.Approval.decline)
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
     }
 }
@@ -200,7 +200,7 @@ private struct SoloContent: View {
             VStack(alignment: .leading, spacing: 16) {
                 if let store = model.usage?.store, let product = purchases.products[store.soloProduct] {
                     Panel {
-                        Eyebrow(text: "Solo")
+                        Eyebrow(text: Words.Usage.solo)
                         Text(SoloView.price(product)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                         if let trial = product.subscription?.freeTrial {
                             Text("Starts with \(trial) free.").scaledFont(15).foregroundColor(Theme.ok)
@@ -227,13 +227,13 @@ private struct SoloContent: View {
                 if let message = model.planMessage {
                     Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
-                Button("Restore purchases") { Task { await model.restorePurchases() } }
+                Button(Words.Usage.restorePurchases) { Task { await model.restorePurchases() } }
                     .scaledFont(14).foregroundColor(Theme.soft)
             }
             .padding(16)
         }
         .screenBackground()
-        .navigationTitle("Solo")
+        .navigationTitle(Words.Usage.solo)
         .inlineTitle()
     }
 }
@@ -256,7 +256,7 @@ extension SoloView {
 
     /// The subscription's terms, shown with every offer.
     static func terms(_ p: StoreProduct) -> String {
-        let period = p.subscription?.period ?? "month"
+        let period = p.subscription?.period ?? Words.Usage.month
         var lines: [String] = []
         if let trial = p.subscription?.freeTrial {
             lines.append("Free for \(trial), then \(p.displayPrice) a \(period).")

@@ -20,7 +20,7 @@ struct ExportChatsSection: View {
                 if preparing {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("Preparing your chats…").foregroundColor(Theme.dim)
+                        Text(Words.Export.preparing).foregroundColor(Theme.dim)
                     }
                 } else {
                     Text(why == nil ? "Export my chats" : "Try again")

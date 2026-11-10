@@ -3,7 +3,7 @@ import SwiftUI
 struct ThemePicker: View {
     @AppStorage(ThemePreference.key) private var choice = ThemePreference.system.rawValue
     var body: some View {
-        Picker("Theme", selection: $choice) {
+        Picker(Words.Settings.themeTitle, selection: $choice) {
             ForEach(ThemePreference.allCases) { theme in Label(theme.title, systemImage: theme.icon).tag(theme.rawValue) }
         }.pickerStyle(.segmented)
     }
@@ -31,7 +31,7 @@ struct TimeZonePicker: View {
             do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return }
             await model.loadTimeZones(query)
         }
-        .navigationTitle("Time zone")
+        .navigationTitle(Words.Settings.timeZoneTitle)
         .screenBackground()
     }
 }

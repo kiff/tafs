@@ -158,7 +158,7 @@ final class Purchases: ObservableObject {
 
     /// Sends a purchase to KIFF and finishes it once KIFF recorded it.
     func deliver(_ p: StorePurchase, requestID: String?) async -> PurchaseOutcome {
-        guard let record else { return .notRecorded("Not signed in.") }
+        guard let record else { return .notRecorded(Words.Billing.notSignedIn) }
         do {
             try await record(p.signed, requestID)
         } catch KIFFClient.KIFFError.server(403, "test_purchase", _) {
@@ -188,7 +188,7 @@ final class Purchases: ObservableObject {
     /// What the person reads when the purchase is another tafs account's.
     static let anotherAccount = "This purchase belongs to another tafs account on this Apple ID, so nothing was added here."
     /// What the person reads when KIFF can't add what they paid for.
-    static let contactSupport = "KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out."
+    static let contactSupport = Words.Billing.contactSupport
 
     /// Opens the App Store's page for this Apple account's subscriptions.
     static func manageSubscriptions() async {

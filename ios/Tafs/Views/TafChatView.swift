@@ -144,7 +144,7 @@ struct TafChatView: View {
                                          edit: {
                                              if let words = model.editUnsentChat(unsent, from: tafID) { draft = words; typing = true }
                                          },
-                                         taf: (tafID, taf?.name ?? "This taf"))
+                                         taf: (tafID, taf?.name ?? Words.Knob.thisTaf))
                                 .id(unsent.id.uuidString)
                                 .pinnedTop(unsent.id.uuidString == pinned)
                         }
@@ -249,7 +249,7 @@ struct TafChatView: View {
                                     if unseen { Circle().fill(Theme.amber).frame(width: 10, height: 10).offset(x: 1, y: -1) }
                                 }
                         }
-                        .accessibilityLabel(unseen ? "Jump to the latest, something new" : "Jump to the latest")
+                        .accessibilityLabel(unseen ? "Jump to the latest, something new" : Words.Chat.jumpToLatest)
                     }
                 }
                 .padding(.bottom, 10)
@@ -405,7 +405,7 @@ struct TafChatView: View {
                 Text(model.failedWords(tafID, taf: taf?.name ?? "The taf"))
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer()
-                Button("Retry") { Task { await model.retryChatRun(tafID) } }
+                Button(Words.Chat.retry) { Task { await model.retryChatRun(tafID) } }
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                     .disabled(model.chatSending.contains(tafID))
             }
@@ -440,7 +440,7 @@ struct TafChatView: View {
         return VStack(spacing: 0) {
         FileTray(key: key)
         VStack(alignment: .leading, spacing: 4) {
-            ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft, cursor: { model.dictation.cursor = $0 })
+            ChatField(title: thinking ? Words.Chat.writeNext : "Message \(name)", text: $draft, cursor: { model.dictation.cursor = $0 })
                 .accessibilityIdentifier("chat-field")
                 .focused($typing)
                 .scaledFont(16)
@@ -460,7 +460,7 @@ struct TafChatView: View {
                         .background(Theme.ink)
                         .clipShape(Circle())
                 }
-                .accessibilityLabel("Stop")
+                .accessibilityLabel(Words.Chat.stop)
                 .shortcut(.stop)
             } else {
                 // While the taf works, what's written goes to its run, which reads it at its
@@ -478,7 +478,7 @@ struct TafChatView: View {
                 .accessibilityIdentifier("chat-send")
                 .shortcut(.send)
                 .accessibilityLabel(held ? (uploading ? "Send once the files are up" : "Send files once \(name) is done")
-                                    : thinking ? "Send to \(name) while it works" : "Send")
+                                    : thinking ? "Send to \(name) while it works" : Words.Common.send)
             }
         }
             }.padding(.horizontal, 8).padding(.bottom, 8)
@@ -500,9 +500,9 @@ struct TafChatView: View {
     /// A sent message's menu (kiff/tafs#285): send it again, change it first, or copy it.
     @ViewBuilder private func askAgain(_ text: String) -> some View {
         // Its words only: files picked for the next message stay in the tray (kiff/tafs#209).
-        Button { draft = text; send(files: false) } label: { Label("Send again", systemImage: "arrow.clockwise") }
-        Button { draft = text; typing = true } label: { Label("Edit and send", systemImage: "pencil") }
-        Button { Clipboard.copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
+        Button { draft = text; send(files: false) } label: { Label(Words.Chat.sendAgain, systemImage: "arrow.clockwise") }
+        Button { draft = text; typing = true } label: { Label(Words.Chat.editAndSend, systemImage: "pencil") }
+        Button { Clipboard.copy(text) } label: { Label(Words.Common.copy, systemImage: "doc.on.doc") }
     }
 
     /// Sends what's in the box; with `files`, the tray's ready files go with it.
@@ -627,7 +627,7 @@ struct TypingBubble: View {
         if fullWidth {
             // The dots sit where the words will, with no bubble.
             dots.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement().accessibilityLabel("Answering")
+                .accessibilityElement().accessibilityLabel(Words.Chat.answering)
         } else {
             bubble
         }
@@ -760,7 +760,7 @@ extension View {
 /// Under an owner's message written while a card waited: their words were the card's answer.
 struct AnsweredCardLine: View {
     var body: some View {
-        Text("Answered the card above").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+        Text(Words.Chat.answeredCardAbove).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }
@@ -770,7 +770,7 @@ struct AnsweredCardLine: View {
 /// written or changed. Nothing is sent. Someone who can't change the taf reads it alone.
 struct AskCoachCardView: View {
     /// Its button, the same as Android's.
-    static let askWord = "Ask Coach"
+    static let askWord = Words.Coach.ask
     let text: String
     let ask: (() -> Void)?
     var body: some View {

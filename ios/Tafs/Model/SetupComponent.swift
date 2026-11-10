@@ -96,7 +96,7 @@ struct SetupComponent: Decodable, Equatable {
 
     /// Where a sign-in goes, as the app shows it: from the card's service, never from
     /// Setup's words (kiff/agents#112), so a label can't stand in for the destination.
-    var destination: String { service ?? "the vendor's page" }
+    var destination: String { service ?? Words.Connect.theVendorsPage }
 }
 
 /// A component as the thread holds it: where it first appeared, its latest version
@@ -299,10 +299,10 @@ struct SetupThread: Equatable {
             let options = components.first { $0.id == a.id }?.component.options ?? []
             return options.first { $0.value == a.text }?.label ?? a.text
         case .approval?:
-            if a.failed { return "Approve · it didn't go through" }
+            if a.failed { return Words.Coach.Answer.approveFailed }
             return a.text == "declined" ? "Decline" : "Approve"
         case .signIn?:
-            if a.failed { return "Sign in · it didn't go through" }
+            if a.failed { return Words.Coach.Answer.signInFailed }
             return a.text == "not now" ? "Not now" : "Signed in"
         case .drive?:
             return a.text == "declined" ? "Not now" : "Approve"

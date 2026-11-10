@@ -20,18 +20,18 @@ struct TrialStartSheet: View {
                         .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Panel {
-                        Eyebrow(text: "While you try it")
+                        Eyebrow(text: Words.Version.whileTrying)
                         line("You chat with version \(version.n) in its own window. What it does is real: its calls go through KIFF under the Card below.")
-                        line("The live version keeps working: its schedule, Card and budget don't change.")
-                        line("The trial's Card counts from zero, so on a day your taf can spend its live Card's limits plus this one's.")
-                        line("It ends when you install it or go back, or after 7 days unused. Its chat is then deleted, and Versions keeps one line about it.")
+                        line(Words.Version.WhileYouTry.liveKeepsWorking)
+                        line(Words.Version.WhileYouTry.countsFromZero)
+                        line(Words.Version.WhileYouTry.ends)
                     }
                     if let draft, draft.cards != nil {
-                        Eyebrow(text: "Its Card")
+                        Eyebrow(text: Words.Card.itsCard)
                         DraftCardsView(draft: draft)
                         ApprovalNotice()
                     } else if loaded {
-                        Text(model.trialErrors[tafID] ?? "This trial's Card couldn't be read.")
+                        Text(model.trialErrors[tafID] ?? Words.Version.trialCardUnreadable)
                             .scaledFont(13).foregroundColor(Theme.no)
                     } else {
                         ProgressView().tint(Theme.amber)
@@ -43,11 +43,11 @@ struct TrialStartSheet: View {
                 .padding(16)
             }
             .screenBackground()
-            .navigationTitle("Try it")
+            .navigationTitle(Words.Version.tryIt)
             .inlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(Words.Common.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(model.trialBusy.contains(tafID) ? "Starting…" : "Start trying") {
@@ -128,7 +128,7 @@ struct TrialScreen: View {
             }
         }
         .screenBackground()
-        .navigationTitle(model.taf(chatID)?.name ?? "Trial")
+        .navigationTitle(model.taf(chatID)?.name ?? Words.Version.Trial.badge)
         .inlineTitle()
         .task(id: tafID) { await model.loadTrial(tafID) }
     }
@@ -148,7 +148,7 @@ struct TrialScreen: View {
             }
             Text(["\(name) keeps working as it is. What this version does is real, under its own Card.",
                   trial.ends.map { "The trial ends \($0.shown(date: .abbreviated, time: .omitted)) if you don't use it." },
-                  "Install makes it the live version; Go back ends the trial."].compactMap { $0 }.joined(separator: " "))
+                  Words.Version.Guide.installOrBack].compactMap { $0 }.joined(separator: " "))
                 .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
@@ -160,22 +160,22 @@ struct TrialScreen: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Text("Trying version \(trial.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                Text("not live").scaledFont(11, weight: .bold).foregroundColor(.white)
+                Text(Words.Version.notLiveTag).scaledFont(11, weight: .bold).foregroundColor(.white)
                     .padding(.horizontal, 7).padding(.vertical, 2)
                     .background(Theme.amber).clipShape(Capsule())
                 Spacer(minLength: 0)
             }
             HStack(spacing: 8) {
-                Button("Go back") { confirmBack = true }
+                Button(Words.Version.goBack) { confirmBack = true }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
                     .confirming()
                     .disabled(busy)
-                    .confirmationDialog("Go back to the live version?", isPresented: $confirmBack, titleVisibility: .visible) {
-                        Button("Go back", role: .destructive) { Task { if await model.goBackFromTrial(tafID) { ended() } } }
+                    .confirmationDialog(Words.Version.goBackTitle, isPresented: $confirmBack, titleVisibility: .visible) {
+                        Button(Words.Version.goBack, role: .destructive) { Task { if await model.goBackFromTrial(tafID) { ended() } } }
                     } message: {
                         Text("Version \(trial.n)'s trial Card stops at once, and this chat is deleted. \(name) keeps working as it is.")
                     }
-                Button(busy ? "Working…" : "Install") { confirmInstall = true }
+                Button(busy ? Words.Version.working : Words.Version.install) { confirmInstall = true }
                     .buttonStyle(OutlineButtonStyle())
                     .confirming()
                     .disabled(busy || model.approvalBlocked)

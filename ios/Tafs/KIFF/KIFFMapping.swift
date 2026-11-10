@@ -121,7 +121,7 @@ enum KIFFMapping {
         case "working" where h.unscheduled == true: taf.state = .idle; taf.now = "Works from its chat"
         case "working": taf.state = .working; taf.now = h.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
         case "idle": taf.state = .idle; taf.now = "Acting under KIFF"
-        default: taf.state = .revoked; taf.now = "Card not active"
+        default: taf.state = .revoked; taf.now = Words.Taf.Now.cardNotActive
         }
         taf.kiffCardIDs = h.card.ids
         // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.
@@ -158,15 +158,15 @@ enum KIFFMapping {
             case "allowed":
                 (kind, detail) = executed(c.toolOutcome, approved: c.held, vendor: vendors[c.actionName], counts: counted(c))
             case "owner_required", "approval_required":
-                kind = .held; detail = "Waiting for you"
+                kind = .held; detail = Words.Record.waitingForYou
             default:
                 // KIFF's own words for why, when it has them (kiff/tafs#138).
-                kind = .refused; detail = c.reason.map { "Not sent · \($0)" } ?? "Not sent"
+                kind = .refused; detail = c.reason.map { "Not sent · \($0)" } ?? Words.Record.notSent
             }
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool", c.toolOutcome?.refusedBy == "connection", c.toolOutcome?.code != nil {
-                entry.detail = c.detail ?? "The connection refused it before sending. Nothing was sent."
+                entry.detail = c.detail ?? Words.Record.connectionRefusedBeforeSending
             }
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
@@ -209,12 +209,12 @@ enum KIFFMapping {
     /// says so plainly, naming the vendor as connected.
     static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, counts: Counted = .nothing) -> (RecordEntry.Kind, String) {
         let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
-        let allowed = approved ? "Approved by you" : "Allowed by its Card"
+        let allowed = approved ? Words.Record.approvedByYou : Words.Record.allowedByCard
         switch o?.status {
         case "done"?:
-            return approved ? (.approved, "Approved by you, then done") : (.done, "Done, within its Card")
+            return approved ? (.approved, Words.Record.approvedThenDone) : (.done, Words.Record.doneWithinCard)
         case "refused_by_tool"?:
-            let who = vendor ?? "The tool"
+            let who = vendor ?? Words.Record.theTool
             switch counts {
             case .money: return (.notDone, "\(who) refused it. No money moved, but it still counts against today's total.")
             case .amount: return (.notDone, "\(who) refused it. Nothing was done, but it still counts against today's total.")
@@ -378,7 +378,7 @@ enum KIFFMapping {
         case "per_action_exceeded": return "Over the Card's limit for one action"
         case "limit_reached": return "Over the Card's total"
         case "resource_not_on_card": return "Not one of the Card's resources"
-        default: return "Outside the Card"
+        default: return Words.Card.Outcome.outside
         }
     }
 }

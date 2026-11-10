@@ -21,9 +21,9 @@ final class PlanqueClient {
 
         var errorDescription: String? {
             switch self {
-            case .notSigning: return "This step needs your confirmation first."
-            case .noDevice: return "Couldn't reach KIFF to name this device. Check the connection and try again."
-            case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
+            case .notSigning: return Words.Error.needsConfirmationFirst
+            case .noDevice: return Words.Error.noDeviceName
+            case .digestMismatch: return Words.Error.requestMismatch
             case .wordsUnread: return "KIFF's words for this connection aren't shown yet. Nothing was approved."
             case .server(_, let message): return message
             }
@@ -411,7 +411,7 @@ final class PlanqueClient {
         // The account itself when path is empty (erasing it), else one of its routes.
         let account = "v1/accounts/\(escaped(tenant))"
         guard let url = URL(string: path.isEmpty ? account : "\(account)/\(path)", relativeTo: baseURL) else {
-            throw PlanqueError.server(status: 0, message: "Bad path")
+            throw PlanqueError.server(status: 0, message: Words.Error.badPath)
         }
         var request = URLRequest(url: url)
         request.httpMethod = method

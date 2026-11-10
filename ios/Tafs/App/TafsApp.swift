@@ -188,7 +188,7 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {
             NavigationStack {
                 UsageView()
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false }.keyboardShortcut(.cancelAction) } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { model.usageRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)
         }
@@ -196,7 +196,7 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { model.signedIn && model.haltRequested }, set: { model.haltRequested = $0 })) {
             NavigationStack {
                 HaltScreen(tafID: model.haltRequestedTaf)
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.haltRequested = false }.keyboardShortcut(.cancelAction) } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { model.haltRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)
         }
@@ -208,15 +208,15 @@ struct RootView: View {
             set: { _ in }
         )) {
             Button("Use \(model.timeZoneOffer ?? "")") { Task { await model.answerTimeZoneOffer(use: true) } }
-            Button("Not now", role: .cancel) { Task { await model.answerTimeZoneOffer(use: false) } }
+            Button(Words.Common.notNow, role: .cancel) { Task { await model.answerTimeZoneOffer(use: false) } }
         } message: {
             Text("Holds' deadlines, Activity, the Record and what your tafs write would use this \(ThisDevice.kind)'s time zone. Your account uses \(model.kiffAccount?.timeZone ?? "UTC") now.")
         }
-        .alert("Not done", isPresented: Binding(
+        .alert(Words.Common.notDone, isPresented: Binding(
             get: { model.lastError != nil },
             set: { if !$0 { model.lastError = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(Words.Common.ok, role: .cancel) {}
         } message: {
             Text(model.lastError ?? "")
         }

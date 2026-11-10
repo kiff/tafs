@@ -35,7 +35,7 @@ struct CalendarView: View {
             .refreshable { await model.loadCalendar(state) }
         }
         .screenBackground()
-        .navigationTitle("Calendar")
+        .navigationTitle(Words.Calendar.heading)
         .navigationBarTitleDisplayMode(.inline)
         // Read again for another range, and for another account (the same month, after a switch).
         .task(id: "\(model.accountGeneration)|\(CalendarMath.range(state.selected).from)") { await model.loadCalendar(state) }
@@ -82,7 +82,7 @@ struct CalendarView: View {
 
     @ViewBuilder private func header(compact: Bool) -> some View {
         let nav = HStack(spacing: 10) {
-            Button("Today") { select(today) }
+            Button(Words.Calendar.today) { select(today) }
                 .buttonStyle(OutlineButtonStyle())
                 .disabled(state.selected == today)
                 .accessibilityIdentifier("calendar.today")
@@ -99,7 +99,7 @@ struct CalendarView: View {
             DatePicker("Date", selection: dateBinding, displayedComponents: .date)
                 .labelsHidden()
                 .environment(\.timeZone, TimeZone(identifier: "UTC")!)
-                .accessibilityLabel("Choose a date")
+                .accessibilityLabel(Words.Calendar.chooseDate)
         }
         .tint(Theme.amberText)
         let picker = Picker("View", selection: Binding(get: { state.mode }, set: { show(CalendarState(mode: $0, selected: state.selected)) })) {
@@ -115,14 +115,14 @@ struct CalendarView: View {
         if let error = model.calendarError {
             HStack(spacing: 10) {
                 Text(error).scaledFont(13).foregroundColor(Theme.no)
-                Button("Try again") { Task { await model.loadCalendar(state) } }
+                Button(Words.Common.tryAgain) { Task { await model.loadCalendar(state) } }
                     .buttonStyle(OutlineButtonStyle())
                     .accessibilityIdentifier("calendar.retry")
             }
         } else if read == nil {
             HStack(spacing: 8) {
                 ProgressView()
-                Text("Reading the calendar…").scaledFont(13).foregroundColor(Theme.dim)
+                Text(Words.Calendar.reading).scaledFont(13).foregroundColor(Theme.dim)
             }
             .accessibilityIdentifier("calendar.loading")
         } else if let read, read.halted || read.more {
@@ -153,9 +153,9 @@ struct CalendarView: View {
                     .scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
                 Button { select(CalendarMath.plusMonths(state.selected, -1)) } label: { Image(systemName: "chevron.left") }
-                    .accessibilityLabel("Previous month")
+                    .accessibilityLabel(Words.Calendar.previousMonth)
                 Button { select(CalendarMath.plusMonths(state.selected, 1)) } label: { Image(systemName: "chevron.right") }
-                    .accessibilityLabel("Next month")
+                    .accessibilityLabel(Words.Calendar.nextMonth)
             }
             .tint(Theme.amberText)
             monthCells(large: false)
@@ -342,9 +342,9 @@ struct CalendarView: View {
     private var agenda: some View {
         let groups = CalendarMath.agenda(events, days: CalendarMath.shown(state))
         return VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: "Agenda")
+            Eyebrow(text: Words.Calendar.agenda)
             // tafs cloud's own words when nothing is to come, so both apps say the same.
-            if let read, groups.isEmpty { empty(read.words.isEmpty ? "Nothing scheduled in these days." : read.words) }
+            if let read, groups.isEmpty { empty(read.words.isEmpty ? Words.Calendar.nothingTheseDays : read.words) }
             ForEach(groups) { group in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(CalendarMath.dayHeading(group.day)).scaledFont(14, weight: .semibold)

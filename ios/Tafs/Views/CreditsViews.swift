@@ -90,9 +90,9 @@ struct CreditsPanel: View {
         }
     }
 
-    static let title = "Credits"
-    static let thisPeriod = "This period"
-    static let lastPeriod = "Last period"
+    static let title = Words.Usage.credits
+    static let thisPeriod = Words.Usage.thisPeriod
+    static let lastPeriod = Words.Usage.lastPeriod
     static let unread = "The last period's credits couldn't be read. Choose it again to try again."
 }
 
@@ -144,7 +144,7 @@ struct TafCreditsView: View {
         .refreshable { await model.readTafCredits(taf, previous: previous) }
     }
 
-    static let more = "More runs"
+    static let more = Words.Usage.moreRuns
     static let unread = "These runs couldn't be read. Pull to try again."
 }
 

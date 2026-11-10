@@ -17,13 +17,13 @@ enum KeyCommand: CaseIterable {
 
     var title: String {
         switch self {
-        case .send: "Send"
-        case .close: "Close"
+        case .send: Words.Common.send
+        case .close: Words.Common.close
         case .newTaf: "New taf"
-        case .tafs: "Tafs"
-        case .needsYou: "Needs you"
-        case .record: "Record"
-        case .account: "Account"
+        case .tafs: Words.Home.title
+        case .needsYou: Words.NeedsYou.title
+        case .record: Words.Record.title
+        case .account: Words.Settings.title
         case .stop: "Stop the run"
         case .coach: "Coach mode"
         }

@@ -34,10 +34,10 @@ struct ConnectedToolsRing: View {
     var body: some View {
         let source = model.tafSetups[taf.id]
         Panel {
-            Eyebrow(text: "Connected tools")
+            Eyebrow(text: Words.Connect.connectedTools)
             if let error = model.tafSetupErrors[taf.id] ?? source?.connections_error {
                 Text(error).scaledFont(13).foregroundColor(Theme.no)
-                Button("Try again") { Task { await model.loadTafSetup(taf.id) } }
+                Button(Words.Common.tryAgain) { Task { await model.loadTafSetup(taf.id) } }
             }
             if source == nil && model.tafSetupErrors[taf.id] == nil { ProgressView() }
             if let source {
@@ -53,7 +53,7 @@ struct ConnectedToolsRing: View {
                             }
                         }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                     }
-                    if model.manages(taf.id) { Button("Change the workflow with Coach") { coach() } }
+                    if model.manages(taf.id) { Button(Words.Taf.Workflow.changeWithCoach) { coach() } }
                 } label: {
                     VStack(alignment: .leading) { Text(source.workflow.title); Text(source.workflow.summary).scaledFont(13).foregroundColor(Theme.soft) }
                 }
@@ -64,7 +64,7 @@ struct ConnectedToolsRing: View {
                 .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $connect) { NavStack { ConnectAppsView().environmentObject(model) } }
-        .alert(taf.name, isPresented: $job) { Button("Done", role: .cancel) {} } message: { Text(taf.job) }
+        .alert(taf.name, isPresented: $job) { Button(Words.Common.done, role: .cancel) {} } message: { Text(taf.job) }
     }
 
     private func coach() { model.improveTaf(taf.id); model.coachOpen = true }
@@ -94,7 +94,7 @@ struct ConnectedToolsRing: View {
                     Button { connect = true } label: {
                         Image(systemName: "plus").scaledFont(24).frame(width: 46, height: 46)
                             .background(Theme.raised).clipShape(Circle()).overlay(Circle().stroke(Theme.line, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
-                    }.accessibilityLabel("Connect an app").position(x: center.x + CGFloat(cos(angle)) * radius, y: center.y + CGFloat(sin(angle)) * radius)
+                    }.accessibilityLabel(Words.Connect.connectAnApp).position(x: center.x + CGFloat(cos(angle)) * radius, y: center.y + CGFloat(sin(angle)) * radius)
                 }
                 Button { job = true } label: {
                     Text(taf.initial).scaledFont(27, weight: .bold, design: .rounded).foregroundColor(.white)
@@ -120,7 +120,7 @@ private struct ConnectedAppSheet: View {
                 Section {
                     Text(app.status_words).foregroundColor(app.reconnect ? Theme.amberText : Theme.soft)
                     if app.reconnect, model.manages(tafID) {
-                        Button("Sign in again") { Task { await model.reconnectApp(app.id); await model.loadTafSetup(tafID) } }
+                        Button(Words.Connect.signInAgain) { Task { await model.reconnectApp(app.id); await model.loadTafSetup(tafID) } }
                     }
                     // Gap 13, where an owner whose taf fails looks first: its last failed call, and
                     // how to fix the connection.
@@ -141,7 +141,7 @@ private struct ConnectedAppSheet: View {
                     }
                     if let error = model.reconnectErrors[app.id] { Text(error).foregroundColor(Theme.no) }
                 }
-                Section("What it may do") {
+                Section(Words.Taf.App.whatItMayDo) {
                     ForEach(app.actions) { action in
                         VStack(alignment: .leading, spacing: 5) {
                             Text(action.title).scaledFont(16, weight: .semibold)
@@ -152,7 +152,7 @@ private struct ConnectedAppSheet: View {
                         }
                     }
                 }
-                Section("Workflow") {
+                Section(Words.Taf.Workflow.title) {
                     if let words = app.workflow_words { Text(words).foregroundColor(Theme.dim) }
                     ForEach(app.workflow_steps) { step in Text(step.words.isEmpty ? "\(step.number) · \(step.label)" : "\(step.number) · \(step.label)\n\(step.words)") }
                 }
@@ -161,25 +161,25 @@ private struct ConnectedAppSheet: View {
                 }
                 if model.manages(tafID) {
                     Section {
-                        Button("Add actions with Coach") { dismiss(); model.improveTaf(tafID); model.coachOpen = true }
-                        Button("Disconnect", role: .destructive) { disconnect = true }.confirming().disabled(busy)
+                        Button(Words.Taf.App.addActions) { dismiss(); model.improveTaf(tafID); model.coachOpen = true }
+                        Button(Words.Connect.disconnectButton, role: .destructive) { disconnect = true }.confirming().disabled(busy)
                     }
                 }
             }
             .navigationTitle(app.name).screenBackground()
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { dismiss() } } }
             .sheet(item: $replacing) { g in
                 ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
             }
             .confirmationDialog("Disconnect \(app.name)?", isPresented: $disconnect, titleVisibility: .visible) {
-                Button("Disconnect", role: .destructive) {
+                Button(Words.Connect.disconnectButton, role: .destructive) {
                     busy = true
                     Task {
                         defer { busy = false }
                         if await model.disconnect(grantID: app.id) { await model.loadTafSetup(tafID); dismiss() }
                     }
                 }
-            } message: { Text("Its actions stop working for this taf.") }
+            } message: { Text(Words.Connect.disconnectBody) }
         }
     }
 }
@@ -197,7 +197,7 @@ struct TafActivityList: View {
                 ForEach(cache.pages.last?.card_unit_exceptions ?? model.cardUnitExceptions.filter { $0.taf == model.cloudTaf(for: tafID)?.id }) { exception in CardUnitExceptionPanel(ask: exception) }
                 if let notice = cache.pages.last?.card_unit_exceptions_notice { Text(notice).scaledFont(13).foregroundColor(Theme.dim) }
                 RetainedRuns(tafID: tafID)
-                if !selection.isEmpty { Button("All apps") { selection = "" } }
+                if !selection.isEmpty { Button(Words.Taf.Activity.allApps) { selection = "" } }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         ForEach(cache.pages.first?.filters ?? []) { choice in
@@ -215,13 +215,13 @@ struct TafActivityList: View {
                 }
                 if let error = cache.error {
                     Text(error).foregroundColor(Theme.no)
-                    Button("Try again") { Task { await model.loadActivityPage(tafID, filter: filter, more: !cache.pages.isEmpty, selection: selection) } }
+                    Button(Words.Common.tryAgain) { Task { await model.loadActivityPage(tafID, filter: filter, more: !cache.pages.isEmpty, selection: selection) } }
                 } else if let cursor = cache.pages.last?.next_cursor {
                     ProgressView().frame(maxWidth: .infinity)
                         .task(id: cursor) { await model.loadActivityPage(tafID, filter: filter, more: true, selection: selection) }
                 } else if cache.loading { ProgressView() }
                 else if let words = cache.pages.last?.end_words { Text(words).foregroundColor(Theme.dim) }
-                else if cache.pages.allSatisfy({ $0.entries.isEmpty }) { Text("Nothing here.").foregroundColor(Theme.dim) }
+                else if cache.pages.allSatisfy({ $0.entries.isEmpty }) { Text(Words.Record.nothingHere).foregroundColor(Theme.dim) }
             }.padding(16)
         }
         .task(id: "\(tafID):\(filter):\(selection)") { await model.loadActivityPage(tafID, filter: filter, selection: selection) }
@@ -311,12 +311,12 @@ struct RetainedRuns: View {
         }
         .task(id: tafID) { await model.loadRunPage(tafID, all: all) }
         .sheet(isPresented: $showAll) {
-            NavStack { ScrollView { RetainedRuns(tafID: tafID, all: true).padding(16) }.navigationTitle("Its work") }.environmentObject(model)
+            NavStack { ScrollView { RetainedRuns(tafID: tafID, all: true).padding(16) }.navigationTitle(Words.Taf.itsWork) }.environmentObject(model)
         }
     }
     @ViewBuilder private var content: some View {
         let cache = model.runPages[model.runKey(tafID, all)] ?? SourcePages()
-        Eyebrow(text: cache.pages.first?.title ?? "Its work")
+        Eyebrow(text: cache.pages.first?.title ?? Words.Taf.itsWork)
         ForEach(Array(cache.pages.enumerated()), id: \.offset) { _, page in
             ForEach(page.requests) { request in
                 NavigationLink { KnobRequestDetail(tafID: tafID, run: request.id) } label: {
@@ -327,7 +327,7 @@ struct RetainedRuns: View {
                 }
             }
         }
-        if let error = cache.error { Text(error).foregroundColor(Theme.no); Button("Try again") { Task { await model.loadRunPage(tafID, all: all) } } }
+        if let error = cache.error { Text(error).foregroundColor(Theme.no); Button(Words.Common.tryAgain) { Task { await model.loadRunPage(tafID, all: all) } } }
         if all, let cursor = cache.pages.last?.next_cursor, cache.error == nil {
             ProgressView().task(id: cursor) { await model.loadRunPage(tafID, all: true, more: true) }
         } else if !all, let title = cache.pages.first?.more_title { Button(title) { showAll = true } }
@@ -341,12 +341,12 @@ struct MemorySummaryPanel: View {
     let tafID: UUID
     var body: some View {
         Panel {
-            Eyebrow(text: "What it remembers")
+            Eyebrow(text: Words.Taf.Memory.title)
             if let memory = model.tafSetups[tafID]?.memory {
                 Text(memory.title).scaledFont(15, weight: .semibold)
                 if let latest = memory.latest { Text(latest).scaledFont(14).foregroundColor(Theme.soft).lineLimit(2) }
-                NavigationLink("See all") {
-                    ScrollView { MemoryPanel(tafID: tafID, loadAll: true).padding(16) }.navigationTitle("What it remembers")
+                NavigationLink(Words.Taf.Memory.seeAll) {
+                    ScrollView { MemoryPanel(tafID: tafID, loadAll: true).padding(16) }.navigationTitle(Words.Taf.Memory.title)
                         .onDisappear { Task { await model.loadTafSetup(tafID) } }
                 }
             } else { ProgressView() }

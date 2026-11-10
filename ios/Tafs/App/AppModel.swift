@@ -383,7 +383,7 @@ final class AppModel: ObservableObject {
         #endif
     }
 
-    init(ownerName: String = "You",
+    init(ownerName: String = Words.Common.you,
          signer: ApprovalSigning = ApprovalSigner(),
          kiff: KIFFClient = KIFFClient(),
          cloud: TafsCloud = TafsCloud(),
@@ -871,7 +871,7 @@ final class AppModel: ObservableObject {
                 return
             }
         }
-        lastError = "The code expired before it was approved in your browser. Try again."
+        lastError = Words.SignIn.Relink.codeExpired
     }
 
     /// The person gave up waiting for the browser: nothing changes, and a new re-link
@@ -1302,7 +1302,7 @@ final class AppModel: ObservableObject {
     @discardableResult
     func turnOnAlerts() async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Sign in with KIFF again to turn on alerts: this sign-in can't sign for the phone."
+            lastError = Words.Alert.signInAgain
             return false
         }
         guard !turningOnAlerts else { return false }
@@ -1311,7 +1311,7 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
 
         guard await askNotificationPermission?() ?? false else {
-            lastError = "Allow notifications for tafs in Settings, then try again."
+            lastError = Words.Alert.allowNotifications
             return false
         }
         if pushToken == nil { requestPushToken?() }
@@ -1339,8 +1339,8 @@ final class AppModel: ObservableObject {
                 pendingHandoff = handoff
             } catch KIFFClient.KIFFError.server(403, let message, _) {
                 lastError = message.contains("phone_alert_url_forbidden") || message.contains("app backend")
-                    ? "KIFF doesn't send alerts to tafs yet on this account."
-                    : "Your role on this KIFF account can't turn on alerts."
+                    ? Words.Alert.kiffDoesntSend
+                    : Words.Alert.roleCant
                 return false
             } catch {
                 lastError = "Alerts aren't on: \(error.localizedDescription)"
@@ -1431,7 +1431,7 @@ final class AppModel: ObservableObject {
                                            .cannotFindHost, .dnsLookupFailed, .dataNotAllowed, .internationalRoamingOff,
                                            .secureConnectionFailed]
         if let e = error as? URLError, network.contains(e.code) { return "Can't reach KIFF" }
-        return "Couldn't load from KIFF"
+        return Words.Home.couldntLoadFromKiff
     }
 
     /// A refresh failed: say so quietly, and refresh again a moment later, then less often,
@@ -1544,7 +1544,7 @@ final class AppModel: ObservableObject {
             cancelled = true
         } catch is TafsCloud.CloudError {
             // A refresh is the app's own doing, so it never shows as "Not done" (the 930 test).
-            refreshFailed("Couldn't load your tafs", gen: gen)
+            refreshFailed(Words.Home.couldntLoadTafs, gen: gen)
             if !listLoaded { listUnread = true }
         } catch {
             refreshFailed(Self.refreshWords(error), gen: gen)
@@ -1709,7 +1709,7 @@ final class AppModel: ObservableObject {
             name: draft.name, job: draft.job, tools: draft.tools,
             colorIndex: tafs.count,
             card: Card(rules: draft.rules, issuedBy: ownerName, expires: expires),
-            state: .working, now: "Starting"
+            state: .working, now: Words.Taf.Now.starting
         )
         tafs.insert(taf, at: 0)
         if let key = draft.templateKey { templateOf[taf.id] = key }
@@ -1745,7 +1745,7 @@ final class AppModel: ObservableObject {
     /// room back, "Yes" keeps it counted. The first answer stands.
     func answerHappened(_ call: KIFFClient.Unproven, happened: Bool) async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            lastError = Words.SignIn.againToSign
             return false
         }
         let gen = accountGeneration
@@ -2067,7 +2067,7 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return false }
                 guard let grant = grants.first(where: { $0.id == approval.grant && $0.connected && $0.request.agent == taf.kiffAgent }),
                       let account = grant.account, !account.isEmpty else {
-                    lastError = "Connect this app for the taf before approving its event."
+                    lastError = Words.Knob.connectFirst
                     return false
                 }
                 guard !approvalBlocked else {
@@ -2363,18 +2363,18 @@ final class AppModel: ObservableObject {
         // Approving Coach's install is installing it (kiff/tafs#206): the switch and its
         // Card come first, then this answer, so tafs never hears of a half-done install.
         if call.install != nil, answer == .approveOnce, !confirmed, !installed {
-            lastError = "Install it from its card: the version goes live, then Coach hears."
+            lastError = Words.NeedsYou.installFromCard
             return
         }
         guard canAnswer(call) else {
             lastError = kiff.serverVerifiesSignatures && !sessionHasKey
-                ? "Sign out and in again to answer from this phone, so KIFF knows its key. Or answer this one in KIFF."
-                : "Answer this one in KIFF. Answering from the phone arrives once KIFF checks the phone's signature."
+                ? Words.NeedsYou.signInAgainToAnswer
+                : Words.NeedsYou.answerInKiff
             return
         }
         if call.kiffID == nil, clock() > call.expiresAt {
             resolve(call)
-            log(call.tafID, .refused, "Expired: \(call.proposed.summary)", "Nobody answered in time")
+            log(call.tafID, .refused, "Expired: \(call.proposed.summary)", Words.Record.expiredDetail)
             save()
             return
         }
@@ -2416,7 +2416,7 @@ final class AppModel: ObservableObject {
             }
             // A prompt closed without a recognized face or finger, while the key is still good.
             lastError = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)
-                ? KIFFClient.notRecognized : "Not sent: it wasn't confirmed."
+                ? KIFFClient.notRecognized : Words.Common.notSentUnconfirmed
             return
         }
 
@@ -2495,10 +2495,10 @@ final class AppModel: ObservableObject {
         guard let j = tafs.firstIndex(where: { $0.id == tafID }) else { return }
         tafs[j].card.revoked = true
         tafs[j].state = .revoked
-        tafs[j].now = "Stopped: Card revoked"
+        tafs[j].now = Words.Taf.Now.cardRevoked
         let dropped = held.filter { $0.tafID == tafID }
         held.removeAll { $0.tafID == tafID }
-        let detail = dropped.isEmpty ? "No new action goes through" : "No new action goes through. \(dropped.count) waiting action(s) refused."
+        let detail = dropped.isEmpty ? Words.Record.Revoked.noNewAction : "No new action goes through. \(dropped.count) waiting action(s) refused."
         log(tafID, .revoked, "You revoked \(tafs[j].name)'s Card", detail)
         notifyHeld()
         save()
@@ -2533,7 +2533,7 @@ final class AppModel: ObservableObject {
         // taf can draw on this one's.
         guard let connections = await disconnectGrants(of: c.kiffAgent ?? "", gen: gen) else { return nil }
         let cards = (cardsLeft == 0
-            ? "Its Cards are revoked in KIFF."
+            ? Words.Taf.Remove.cardsRevoked
             : "KIFF didn't revoke \(cardsLeft) of its Cards: revoke them in KIFF.")
             + (connections.left > 0 ? " \(connections.left) of its connections couldn't be disconnected: disconnect them in Connect apps."
                : connections.done > 0 ? " Its connections are disconnected." : "")
@@ -2548,14 +2548,14 @@ final class AppModel: ObservableObject {
         if cardsLeft == 0, let i = tafs.firstIndex(where: { $0.id == tafID }) {
             tafs[i].card.revoked = true
             tafs[i].state = .revoked
-            tafs[i].now = "Removed"
+            tafs[i].now = Words.Taf.Now.removed
         }
         guard removal.done else {
             let failed = removal.failed.map(Self.removalStep).joined(separator: ", ")
             return "\(cards) Not finished: its \(failed) couldn't be removed. tafs tries again each time it refreshes."
         }
         if let agent = holderIDs.first(where: { $0.value == tafID })?.key { cloudTafs[agent] = nil }
-        log(tafID, .revoked, "You removed \(taf.name)", "Schedule, memory and key deleted; name free")
+        log(tafID, .revoked, "You removed \(taf.name)", Words.Record.Removed.detail)
         save()
         return "\(cards) Its schedule, chats, run reports, memory and key are deleted, and the name \(taf.name) is free. KIFF's receipts stay."
     }
@@ -2595,7 +2595,7 @@ final class AppModel: ObservableObject {
             cloudTafs[agent] = updated
             if let i = tafs.firstIndex(where: { $0.id == tafID }), tafs[i].state != .waiting, tafs[i].state != .revoked {
                 tafs[i].state = updated.paused ? .paused : .working
-                tafs[i].now = updated.paused ? "Paused by you" : updated.nextRun.map { "Next run \($0.shortTime)" } ?? "Back to work"
+                tafs[i].now = updated.paused ? Words.Taf.Now.pausedByYou : updated.nextRun.map { "Next run \($0.shortTime)" } ?? Words.Taf.Now.backToWork
             }
         } catch let error as TafsCloud.CloudError where error.status == 502 && paused {
             // Its own schedule is paused, but a start may still come: say so plainly.
@@ -2610,7 +2610,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    static let notEveryStartPaused = "Not every start could be paused. Try again."
+    static let notEveryStartPaused = Words.Setup.notEveryPaused
 
     /// The places tafs cloud delivers its results to itself, set at once (`PUT …/results`).
     @discardableResult
@@ -2770,7 +2770,7 @@ final class AppModel: ObservableObject {
     }
 
     /// Why credits couldn't be read: tafs cloud's words when it gives them.
-    static func creditsWords(_ e: Error, what: String = "Credits") -> String {
+    static func creditsWords(_ e: Error, what: String = Words.Usage.credits) -> String {
         (e as? TafsCloud.CloudError)?.words ?? "\(what) couldn't be read: \(e.localizedDescription)"
     }
 
@@ -2792,7 +2792,7 @@ final class AppModel: ObservableObject {
             read = got
         } catch {
             guard gen == accountGeneration else { return }
-            tafCreditsError[key] = Self.creditsWords(error, what: more ? "More runs" : "Its runs")
+            tafCreditsError[key] = Self.creditsWords(error, what: more ? Words.Usage.moreRuns : "Its runs")
             return
         }
         guard gen == accountGeneration else { return }
@@ -2810,29 +2810,29 @@ final class AppModel: ObservableObject {
     /// The sample's credits: its tafs' words, as tafs cloud writes them.
     static func sampleCredits(now: Date, previous: Bool = false) -> TafsCloud.Credits {
         if previous {
-            return TafsCloud.Credits(period: nil, credits: 2310, runs: 126, words: "Last period: 2,310 credits used · 1 Oct to 31 Oct",
-                                     tafs: [.init(taf: "sample-refunds", credits: 1480, runs: 74, words: "Refunds · 1,480 credits · 74 runs"),
-                                            .init(taf: "sample-invoices", credits: 830, runs: 52, words: "Overdue invoices · 830 credits · 52 runs")],
+            return TafsCloud.Credits(period: nil, credits: 2310, runs: 126, words: Words.Sample.Credits.lastPeriod,
+                                     tafs: [.init(taf: "sample-refunds", credits: 1480, runs: 74, words: Words.Sample.Credits.refundsLast),
+                                            .init(taf: "sample-invoices", credits: 830, runs: 52, words: Words.Sample.Credits.invoicesLast)],
                                      note: Self.sampleCreditsNote)
         }
-        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: "This period: 1,240 credits used · ends on 30 Nov",
-                                 tafs: [.init(taf: "sample-refunds", credits: 820, runs: 41, words: "Refunds · 820 credits · 41 runs"),
-                                        .init(taf: "sample-invoices", credits: 420, runs: 28, words: "Overdue invoices · 420 credits · 28 runs")],
-                                 notCounted: .init(runs: 9, words: "Not counted: 9 runs",
-                                                   lines: [.init(why: "coach", runs: 6, words: "Coach, within its fair use · 6 runs"),
-                                                           .init(why: "trial", runs: 2, words: "Trials of a new version · 2 runs"),
-                                                           .init(why: "failed", runs: 1, words: "Failed on our side · 1 run")]),
+        return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: Words.Sample.Credits.thisPeriod,
+                                 tafs: [.init(taf: "sample-refunds", credits: 820, runs: 41, words: Words.Sample.Credits.refundsThis),
+                                        .init(taf: "sample-invoices", credits: 420, runs: 28, words: Words.Sample.Credits.invoicesThis)],
+                                 notCounted: .init(runs: 9, words: Words.Sample.Credits.notCounted,
+                                                   lines: [.init(why: "coach", runs: 6, words: Words.Sample.Credits.notCountedCoach),
+                                                           .init(why: "trial", runs: 2, words: Words.Sample.Credits.notCountedTrials),
+                                                           .init(why: "failed", runs: 1, words: Words.Sample.Credits.notCountedFailed)]),
                                  note: Self.sampleCreditsNote)
     }
 
-    static let sampleCreditsNote = "Each run counts once, when it ends, in whole credits."
+    static let sampleCreditsNote = Words.Sample.Credits.note
 
     /// The sample's balance, as tafs cloud words it, the same as Android's: Solo, about half the
     /// period's credits left.
     static let sampleBalance = TafsCloud.Balance(
-        balance: .init(state: "ok", meterPct: 48, words: "Solo · 260 of 500 credits left this period",
-                       detail: "Then 900 in packs, which never expire"),
-        planLine: "Solo · 260 credits left", planTone: "ok", homeLine: nil)
+        balance: .init(state: "ok", meterPct: 48, words: Words.Sample.Credits.balanceWords,
+                       detail: Words.Sample.Credits.balanceDetail),
+        planLine: Words.Sample.Credits.planLine, planTone: "ok", homeLine: nil)
 
     /// A balance read, kept with its failure: nil for a tafs cloud without it (404).
     private func balanceResult() async -> Result<TafsCloud.Balance?, Error> {
@@ -2898,7 +2898,7 @@ final class AppModel: ObservableObject {
         case .done: planMessage = nil
         case .cancelled: break
         case .pending: planMessage = "The purchase is waiting for approval. Your credits are added once it's done."
-        case .notRecorded: planMessage = "Bought. KIFF hasn't added it yet: tafs tries again when it opens."
+        case .notRecorded: planMessage = Words.Billing.boughtNotRecorded
         case .notAdded(let why), .needsSupport(let why): planMessage = why
         case .failed(let why): planMessage = "The purchase didn't go through: \(why)"
         }
@@ -2910,8 +2910,8 @@ final class AppModel: ObservableObject {
         planMessage = nil
         guard mode == .kiff else { return }
         switch await purchases.restore() {
-        case .done: planMessage = "Purchases restored."
-        case .notRecorded: planMessage = "Restored. KIFF hasn't added everything yet: tafs tries again when it opens."
+        case .done: planMessage = Words.Billing.restored
+        case .notRecorded: planMessage = Words.Billing.restoredNotRecorded
         case .notAdded(let why), .needsSupport(let why): planMessage = why
         case .failed(let why): planMessage = "Purchases couldn't be restored: \(why)"
         default: break
@@ -2994,8 +2994,8 @@ final class AppModel: ObservableObject {
 
     static let readBalanceFirst = "The limit was raised. Read the balance again before raising it once more."
     static let noRaise = "The limit can't be raised from here right now."
-    static let limitChanged = "The limit changed meanwhile. Here it is now: raise it again if it's still needed."
-    static let limitCeiling = "The limit is as high as it can be raised from the app. Contact KIFF to raise it further."
+    static let limitChanged = Words.Usage.limitChanged
+    static let limitCeiling = Words.Usage.limitCeiling
 
     /// KIFF's code for a 409 refusal of a raise (`limit_changed`, `limit_ceiling`), as its
     /// `reason` or its `error`.
@@ -3015,7 +3015,7 @@ final class AppModel: ObservableObject {
         planMessage = nil
         guard mode == .kiff, let tenant = kiffTenant else { return false }
         guard sessionHasKey else {
-            planMessage = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            planMessage = Words.SignIn.againToSign
             return false
         }
         let gen = accountGeneration
@@ -3068,7 +3068,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let key = haltKey(tafID) else { return false }
         haltErrors[key] = nil
         guard sessionHasKey, let tenant = kiffTenant else {
-            recordHaltError(key, "Sign in with KIFF again: this sign-in can't sign for the phone.")
+            recordHaltError(key, Words.SignIn.againToSign)
             return false
         }
         let agent: String?
@@ -3082,7 +3082,7 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         do {
             try await ResumeConfirmation.confirm(signer: signer, message: Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
-                reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", wait: resumeConfirmationWait)
+                reason: name.map { "Resume \($0)" } ?? Words.Taf.Halt.resumeAllPrompt, wait: resumeConfirmationWait)
         } catch ResumeConfirmation.Failure.timedOut {
             if gen == accountGeneration { recordHaltError(key, "\(Biometry.name) timed out. Try again.") }
             return false
@@ -3129,7 +3129,7 @@ final class AppModel: ObservableObject {
         deleteAccountError = nil
         guard mode == .kiff else { return false }
         guard sessionHasKey, let tenant = kiffTenant else {
-            deleteAccountError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            deleteAccountError = Words.SignIn.againToSign
             return false
         }
         let gen = accountGeneration
@@ -3140,11 +3140,11 @@ final class AppModel: ObservableObject {
         do {
             let r = try await cloud.deleteAccount()
             guard r.done else {
-                deleteAccountError = "tafs couldn't erase everything yet. Your KIFF account isn't deleted. Try again."
+                deleteAccountError = Words.Settings.DeleteAccount.notErasedYet
                 return false
             }
         } catch let error as TafsCloud.CloudError where error.status == 403 {
-            deleteAccountError = "Only the account's owner can delete it."
+            deleteAccountError = Words.Settings.DeleteAccount.ownerOnly
             return false
         } catch {
             deleteAccountError = "tafs couldn't erase your tafs: \(error.localizedDescription). Your KIFF account isn't deleted. Try again."
@@ -3234,9 +3234,9 @@ final class AppModel: ObservableObject {
     /// A sample taf's notes: the kind of thing a real one writes down as it learns.
     private static func sampleNotes(_ taf: Taf, at now: Date) -> [TafsCloud.Note] {
         let notes: [(String, String, TimeInterval)] = [
-            ("/how-you-like-it.md", "You'd rather I explain a decision in one line than in a paragraph.", 3_600),
-            ("/customers/regulars.md", "Customers who write every week get a reply the same morning.", 86_400),
-            ("/from-the-owner.md", "Ask before anything unusual, even when it fits the Card.", 3 * 86_400),
+            ("/how-you-like-it.md", Words.Sample.Memory.explain, 3_600),
+            ("/customers/regulars.md", Words.Sample.Memory.regulars, 86_400),
+            ("/from-the-owner.md", Words.Sample.Memory.askFirst, 3 * 86_400),
         ]
         return notes.enumerated().map { i, n in
             TafsCloud.Note(id: "sample-\(taf.id.uuidString)-\(i)", path: n.0, content: n.1, updatedAt: now.addingTimeInterval(-n.2))
@@ -3352,7 +3352,7 @@ final class AppModel: ObservableObject {
         guard let ask = call.install else { return nil }
         let match = cloudTafs.first { $0.value.id == ask.taf } ?? cloudTafs.first { $0.value.name.caseInsensitiveCompare(ask.taf) == .orderedSame }
         guard let agent = match?.key, let tafID = holderIDs[agent] else {
-            lastError = "Coach asked to install a version of a taf that isn't here."
+            lastError = Words.Version.coachUnknownTaf
             return nil
         }
         await loadVersions(tafID)
@@ -3424,7 +3424,7 @@ final class AppModel: ObservableObject {
         if let draft, draft.version != shownDraft, !draft.confirmed, draft.status != "claimed" {
             changedVersionCards[tafID] = draft
             await cancelSwitch(tafID)
-            versionErrors[tafID] = "What you're asked to approve changed since it was shown. Read it again, then approve."
+            versionErrors[tafID] = Words.Version.outOfDateCard
             return false
         }
         // A claimed draft is later than confirmed, its Cards issued all the same.
@@ -3534,7 +3534,7 @@ final class AppModel: ObservableObject {
               var taf = tafs.first(where: { $0.id == tafID }) else { return nil }
         taf.id = id
         taf.name = "\(taf.name) · v\(trial.n)"
-        taf.badge = trial.label ?? "Trial"
+        taf.badge = trial.label ?? Words.Version.Trial.badge
         taf.now = [trial.title ?? "Trying version \(trial.n)", trial.ends.map { "ends \($0.shown(date: .abbreviated, time: .omitted)) if unused" }]
             .compactMap { $0 }.joined(separator: " · ")
         return taf
@@ -3612,7 +3612,7 @@ final class AppModel: ObservableObject {
         // What the owner read is what Face ID signs: changed since, it's read again.
         guard draft.version == shownDraft else {
             changedVersionCards[tafID] = draft
-            trialErrors[tafID] = "What you're asked to approve changed since it was shown. Read it again, then start."
+            trialErrors[tafID] = Words.Version.Trial.changed
             return nil
         }
         do {
@@ -3628,7 +3628,7 @@ final class AppModel: ObservableObject {
             guard confirmed.status == "trying" else {
                 guard gen == accountGeneration else { return nil }
                 trialErrors[tafID] = confirmed.status == "confirmed"
-                    ? "KIFF didn't start a trial: it issued these Cards as the taf's own. Check its Card tab, or install the version you had."
+                    ? Words.Version.NotATrial.confirmed
                     : "KIFF didn't start a trial for this version (it answered \(confirmed.status)). Nothing runs under it."
                 await loadVersions(tafID)
                 return nil
@@ -3836,7 +3836,7 @@ final class AppModel: ObservableObject {
         guard let c = cloudTaf(for: tafID) else {
             chats[tafID]?.removeAll { $0.id == pending.id }
             chatSent[tafID]?.removeAll { $0.id == pending.id }
-            chatErrors[tafID] = "This taf isn't running on tafs cloud, so it can't be messaged."
+            chatErrors[tafID] = Words.Chat.notOnCloud
             return .notTried
         }
         chatStates[tafID, default: ChatState()].ended = nil
@@ -4847,24 +4847,24 @@ final class AppModel: ObservableObject {
     /// A sample taf answers from its own record: what it did, what waits, or a pause.
     private func sampleReply(to text: String, tafID: UUID) -> String {
         let lower = text.lowercased()
-        guard let taf = taf(tafID) else { return "I'm not here any more." }
+        guard let taf = taf(tafID) else { return Words.Sample.Reply.gone }
         if ["stop", "pause", "hold off"].contains(where: { lower.contains($0) }) {
             if taf.state != .paused { togglePause(tafID) }
-            return "Paused. Nothing more goes out until you tell me to carry on."
+            return Words.Sample.Reply.paused
         }
         if ["go", "carry on", "resume", "continue"].contains(where: { lower == $0 || lower.hasPrefix($0 + " ") }) {
             if taf.state == .paused { togglePause(tafID) }
-            return "Back to work."
+            return Words.Sample.Reply.backToWork
         }
         if ["more", "raise", "limit", "bigger", "increase"].contains(where: { lower.contains($0) }) {
-            return "I can't give myself more room: only you can, by changing my Card. Anything over it waits for you in Needs you."
+            return Words.Sample.Reply.moreRoom
         }
         let done = entries(for: tafID).prefix(3).map { "• " + $0.title }
         let waiting = heldCalls(for: tafID).count
         var lines: [String] = []
-        lines.append(done.isEmpty ? "Nothing done yet today." : "Lately:\n" + done.joined(separator: "\n"))
+        lines.append(done.isEmpty ? Words.Sample.Reply.nothingDone : "Lately:\n" + done.joined(separator: "\n"))
         if waiting > 0 { lines.append("\(waiting) thing\(waiting == 1 ? " waits" : "s wait") on you in Needs you.") }
-        lines.append("(Sample reply. Signed in with KIFF, your taf answers for real.)")
+        lines.append(Words.Sample.Reply.note)
         return lines.joined(separator: "\n\n")
     }
 
@@ -4888,8 +4888,8 @@ final class AppModel: ObservableObject {
         if let refunds = tafs.first(where: { $0.name == "Refunds" }) {
             chats[refunds.id] = [
                 sampleMessage(.taf, Self.sampleHello(refunds)),
-                sampleMessage(.owner, "How did this morning go?"),
-                sampleMessage(.taf, sampleReply(to: "How did this morning go?", tafID: refunds.id)),
+                sampleMessage(.owner, Words.Sample.Chat.question),
+                sampleMessage(.taf, sampleReply(to: Words.Sample.Chat.question, tafID: refunds.id)),
             ]
         }
     }
@@ -4924,7 +4924,7 @@ final class AppModel: ObservableObject {
 
     private func notifyHeld() {
         // Coach's own holds are named Coach where no taf names them.
-        let coach = holderIDs[Self.setupAgent].map { [$0: "Coach"] } ?? [:]
+        let coach = holderIDs[Self.setupAgent].map { [$0: Words.Coach.name] } ?? [:]
         onHeldChanged?(held, tafs + otherAgents, coach)
     }
 
@@ -5261,7 +5261,7 @@ final class AppModel: ObservableObject {
     /// connection is asked for, so every grant is read and shown before it is approved.
     func setUpPlanque() async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            lastError = Words.SignIn.againToSign
             return false
         }
         if planqueReady { return true }
@@ -5302,10 +5302,10 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return false }
             _ = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: key)
         } catch KIFFClient.KIFFError.server(403, _, _) {
-            lastError = "Only an admin of this KIFF account can connect tools."
+            lastError = Words.Coach.connectAdminOnly
             return false
         } catch PlanqueClient.PlanqueError.server(409, _) {
-            lastError = "Another device connects this account's tools for now. Connect them from that one."
+            lastError = Words.Coach.connectOtherDevice
             return false
         } catch {
             lastError = "Connecting tools isn't set up: \(error.localizedDescription)"
@@ -5335,7 +5335,7 @@ final class AppModel: ObservableObject {
         }
         quietStop = nil
         guard connecting == nil else {
-            quietStop = "Another approval is going through. Approve this one once it's done."
+            quietStop = Words.Connect.anotherApproval
             return nil
         }
         connecting = grantID
@@ -5354,7 +5354,7 @@ final class AppModel: ObservableObject {
         var draft: KIFFClient.AgentDraft?
         do {
             guard let found = try await planque.grants().first(where: { $0.id == grantID }) else {
-                lastError = "There's no connection with that id."
+                lastError = Words.Connect.noSuchConnection
                 return nil
             }
             grant = found
@@ -5460,11 +5460,11 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return nil }
             // Back from the vendor: signed in only once planque says the grant is connected,
             // never because the page closed.
-            connectStep = "Checking the sign-in…"
+            connectStep = Words.Coach.checkingSignIn
             defer { connectStep = nil }
             connected = try await planque.confirm(grantID: grant.id, code: signedIn.code)
         } catch VendorSignIn.SignInError.cancelled {
-            lastError = "The sign-in was closed. Nothing was connected."
+            lastError = Words.Connect.signInClosedNothingConnected
             await refreshConnections()
             return nil
         } catch {
@@ -5872,7 +5872,7 @@ final class AppModel: ObservableObject {
             let current = try await kiff.cardException(exception.id)
             guard gen == accountGeneration else { return }
             guard current.kind == "card_unit", current.status == "held", current.subject == agent, let version = current.accountingVersion else {
-                lastError = "This request changed. Read it again before dismissing it."
+                lastError = Words.NeedsYou.CardUnit.changed
                 return
             }
             let at = SigningTime.next()
@@ -6117,7 +6117,7 @@ final class AppModel: ObservableObject {
     /// asks for can be read and shown.
     func startSetup() async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
-            setupError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            setupError = Words.SignIn.againToSign
             return false
         }
         if planqueReady, setupTaf != nil { return true }
@@ -6416,7 +6416,7 @@ final class AppModel: ObservableObject {
         /// sends one, else the step in progress (`current`, in its words), else "Writing…" or
         /// "Thinking…". The thinking text is never in it.
         func line(current: String?) -> String {
-            state?.line ?? current ?? (text.isEmpty ? "Thinking…" : "Writing…")
+            state?.line ?? current ?? (text.isEmpty ? Words.Chat.thinking : "Writing…")
         }
 
         /// A tool call begins: shown as a step, in its words. Show draws in the chat itself.
@@ -6456,7 +6456,7 @@ final class AppModel: ObservableObject {
             case "done": return nil
             case "working": return words.map { "\($0)…" } ?? "Working…"
             case "waiting_for_you": return "Waiting for you"
-            default: return "Thinking…"
+            default: return Words.Chat.thinking
             }
         }
     }
@@ -6608,7 +6608,7 @@ final class AppModel: ObservableObject {
         case "version_install": return "Installing the new version…"
         case "memory": return "Reading its notes…"
         case "show": return nil
-        default: return "Working…"
+        default: return Words.Chat.working
         }
     }
 
@@ -6833,7 +6833,7 @@ final class AppModel: ObservableObject {
             return
         }
         guard connecting == nil else {
-            cardNotes[component.id] = "Another approval is going through. Approve this one once it's done."
+            cardNotes[component.id] = Words.Connect.anotherApproval
             return
         }
         connecting = grantID
@@ -6859,7 +6859,7 @@ final class AppModel: ObservableObject {
                 cardNotes[component.id] = decision.note
                 await setupAnswered(s.id, ref: ref, decision: decision, gen: gen)
             case "read_again":
-                cardNotes[component.id] = decision.note ?? "What you're asked to approve changed since it was shown. Read it again, then approve."
+                cardNotes[component.id] = decision.note ?? Words.Version.outOfDateCard
                 await refreshConnections()
                 if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
             case "sign":
@@ -6893,7 +6893,7 @@ final class AppModel: ObservableObject {
                 cardNotes[component.id] = outcome.note
                 await setupAnswered(s.id, ref: ref, decision: outcome, gen: gen)
             default:
-                cardNotes[component.id] = "Setup answered something this app doesn't read. Update the app."
+                cardNotes[component.id] = Words.Coach.unknownAnswer
             }
         } catch {
             guard gen == accountGeneration else { return }
@@ -6957,7 +6957,7 @@ final class AppModel: ObservableObject {
     }
 
     /// tafs cloud asked this phone to sign a message that isn't this card's: refused, nothing signed.
-    static let askNotThisCards = "Setup asked this phone to sign something that isn't this card's. Nothing was signed."
+    static let askNotThisCards = Words.Coach.askNotThisCards
 
     /// The message this card's approval may sign, rebuilt from what the phone holds: its own account, the
     /// card's grant and the digest the person was shown for the connect step; the card's draft and the
@@ -7007,7 +7007,7 @@ final class AppModel: ObservableObject {
             guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == p.grant, signedIn.tenant == tenant else { return Came(result: "no_code") }
             guard gen == accountGeneration else { return Came(result: "failed", why: "the account changed") }
             // Back from the vendor: connected only once planque says so, never because the page closed.
-            connectStep = "Checking the sign-in…"
+            connectStep = Words.Coach.checkingSignIn
             let connected = try await planque.confirm(grantID: p.grant, code: signedIn.code)
             return connected.connected || connected.listed ? Came(result: "connected") : Came(result: "failed", why: "the sign-in came back, but the connection is \(connected.status)")
         } catch VendorSignIn.SignInError.cancelled {
@@ -7035,7 +7035,7 @@ final class AppModel: ObservableObject {
     }
 
     /// An approval signed earlier: connected, its Card confirmed in KIFF.
-    static let alreadyApproved = "Already approved"
+    static let alreadyApproved = Words.Coach.alreadyApproved
 
     /// Whether this approval, as it reads now, was refused for the request itself: sent
     /// again unchanged it fails the same way (kiff/tafs#138). A grant planque failed can't
@@ -7096,7 +7096,7 @@ final class AppModel: ObservableObject {
     /// nothing was signed, and the owner approves again.
     private func termsChanged() {
         shownTermsChanged = true
-        lastError = "What you're asked to approve changed since it was shown. Read it again, then approve."
+        lastError = Words.Version.outOfDateCard
     }
 
     /// The tafs tafs cloud said it set up that the list was read again for: one not listed yet

@@ -7,7 +7,7 @@ import SwiftUI
 /// connection. A connection is a taf's: opened from Settings, Connect asks which taf first,
 /// unless only one can have it. An app nobody listed goes to Coach.
 struct ConnectAppsView: View {
-    static let title = "Connect apps"
+    static let title = Words.Connect.Apps.title
     @EnvironmentObject private var model: AppModel
     /// The taf the apps connect for, when opened from one.
     var taf: UUID?
@@ -30,7 +30,7 @@ struct ConnectAppsView: View {
                     .accessibilityIdentifier("connect.more")
                 }
                 if apps.byKey {
-                    Button("Not listed? Ask Coach") { model.openCoach() }
+                    Button(Words.Connect.Apps.notListed) { model.openCoach() }
                         .accessibilityIdentifier("connect.askCoach")
                 }
             } else {
@@ -75,15 +75,15 @@ struct ConnectAppsView: View {
             if app.connected, !model.connections(of: app).isEmpty {
                 // Its connections, each with the taf it serves and Disconnect, on a screen of their own.
                 NavigationLink { AppConnectionsView(app: app) } label: {
-                    Label("Connected", systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
+                    Label(Words.Connect.Status.connected, systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
                 }
                 .accessibilityLabel("Connected. Manage")
                 .accessibilityIdentifier("connect.manage." + app.entry)
             } else if app.connected {
-                Label("Connected", systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
-                    .accessibilityLabel("Connected")
+                Label(Words.Connect.Status.connected, systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
+                    .accessibilityLabel(Words.Connect.Status.connected)
             } else {
-                Button(app.needsReconnect ? "Sign in again" : "Connect") { connect(app) }
+                Button(app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect) { connect(app) }
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(starting != nil || (taf == nil && model.connectableTafs.isEmpty))
             }
@@ -112,20 +112,20 @@ struct ConnectAppsView: View {
 /// How a connection is fixed, and a sign-in that never came back cancelled (gap 13), the same
 /// as Android's words.
 enum ConnectionFixWords {
-    static let replaceKey = "Replace the key"
-    static let signInAgain = "Sign in again"
+    static let replaceKey = Words.Connect.replaceKey
+    static let signInAgain = Words.Connect.signInAgain
     /// In place of Sign in again on a provider's connection, as planque says it.
     static func throughProvider(_ vendor: String) -> String {
         "\(vendor) signs in through its connection provider. To sign in again, disconnect it and connect it again."
     }
-    static let cancel = "Cancel"
+    static let cancel = Words.Common.cancel
     static func waiting(_ vendor: String) -> String { "Waiting for the sign-in at \(vendor)" }
     static func cancelTitle(_ vendor: String) -> String { "Cancel the sign-in to \(vendor)?" }
     static func cancelBody(_ vendor: String) -> String { "Nothing is connected yet. Connect \(vendor) again from Coach or Connect apps when you're ready." }
 }
 
 enum DisconnectWords {
-    static let footer = "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay."
+    static let footer = Words.Connect.Apps.disconnectWhy
 
     /// A name's possessive: "Refunds'", "Chargebacks'"; else "Coach's".
     static func possessive(_ name: String) -> String { name.hasSuffix("s") ? "\(name)'" : "\(name)'s" }
@@ -157,15 +157,15 @@ enum ConnectionGroupWords {
     /// The last group: connections whose taf the app can't name and tafs cloud doesn't name as
     /// removed. That may be a taf this person doesn't see, an agent that isn't a taf, or a taf
     /// removed before tafs cloud named them, so the words claim none of them.
-    static let others = "Other connections"
+    static let others = Words.Connect.otherConnections
 
     // The connections of tafs tafs cloud names as removed (`removed_tafs`), under their own
     // heading, cleared at once.
-    static let fromRemoved = "From removed tafs"
-    static let clearRemoved = "Clear these connections"
+    static let fromRemoved = Words.Connect.fromRemoved
+    static let clearRemoved = Words.Connect.ClearRemoved.button
     static func clearTitle(_ n: Int) -> String { Words.Connect.ClearRemoved.title(count: n) }
-    static let clearBody = "Each is signed out at its vendor. One another taf's Card uses is kept."
-    static let clear = "Clear"
+    static let clearBody = Words.Connect.ClearRemoved.body
+    static let clear = Words.Connect.ClearRemoved.clear
 
     /// How clearing went: "Cleared 2. Kept 1 for Chargebacks, whose Card uses it.", and what
     /// couldn't be, to try again. `kept` connections were kept for `keptFor`, the tafs whose
@@ -180,7 +180,7 @@ enum ConnectionGroupWords {
 
     /// A connection a live taf's Card still uses, as tafs cloud says (`used_by`): kept, and for whom.
     static func keptLine(_ kept: Int, _ names: [String]) -> String {
-        let who = names.isEmpty ? "another taf" : joined(names)
+        let who = names.isEmpty ? Words.Connect.Kept.anotherTaf : joined(names)
         return "Kept \(kept) for \(who), whose Card\(names.count > 1 ? "s use" : " uses") \(kept == 1 ? "it" : "them")."
     }
 
@@ -241,7 +241,7 @@ struct AppConnectionsView: View {
                 Section {
                     ForEach(groups.removed) { g in removedRow(g, usedBy: listed[g.id]?.usedBy) }
                     if model.canManageCards, !clearable.isEmpty {
-                        Button(model.clearingRemoved ? "Clearing…" : ConnectionGroupWords.clearRemoved, role: .destructive) { clearing = clearable }
+                        Button(model.clearingRemoved ? Words.Connect.Apps.clearing : ConnectionGroupWords.clearRemoved, role: .destructive) { clearing = clearable }
                             .buttonStyle(.borderless)
                             .confirming()
                             .disabled(model.clearingRemoved || busy != nil)
@@ -278,8 +278,8 @@ struct AppConnectionsView: View {
         .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0), alsoStops: model.alsoStops($0)) } ?? "",
                             isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                             titleVisibility: .visible, presenting: confirming) { g in
-            Button("Disconnect", role: .destructive) { disconnect(g) }
-            Button("Cancel", role: .cancel) { confirming = nil }
+            Button(Words.Connect.disconnectButton, role: .destructive) { disconnect(g) }
+            Button(Words.Common.cancel, role: .cancel) { confirming = nil }
         } message: { g in
             Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g)))
         }
@@ -288,15 +288,15 @@ struct AppConnectionsView: View {
                             isPresented: Binding(get: { clearing != nil }, set: { if !$0 { clearing = nil } }),
                             titleVisibility: .visible, presenting: clearing) { ids in
             Button(ConnectionGroupWords.clear, role: .destructive) { clearRemoved(ids) }
-            Button("Cancel", role: .cancel) { clearing = nil }
+            Button(Words.Common.cancel, role: .cancel) { clearing = nil }
         } message: { _ in
             Text(ConnectionGroupWords.clearBody)
         }
         .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0.vendor) } ?? "",
                             isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
                             titleVisibility: .visible, presenting: cancelling) { g in
-            Button("Cancel the sign-in", role: .destructive) { disconnect(g) }
-            Button("Keep waiting", role: .cancel) { cancelling = nil }
+            Button(Words.Connect.CancelSignIn.button, role: .destructive) { disconnect(g) }
+            Button(Words.Connect.CancelSignIn.keepWaiting, role: .cancel) { cancelling = nil }
         } message: { g in
             Text(ConnectionFixWords.cancelBody(g.vendor))
         }
@@ -425,7 +425,7 @@ struct ConnectApprovalSheet: View {
                                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         }
                         if start.needsKey {
-                            DriveField("The key", text: $key, kind: .secure)
+                            DriveField(Words.Connect.key, text: $key, kind: .secure)
                                 .textContentType(.password).autocorrectionDisabled().textInputAutocapitalization(.never)
                                 .padding(12).background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 .accessibilityIdentifier("connect.key")
@@ -434,7 +434,7 @@ struct ConnectApprovalSheet: View {
                             Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                         }
                         ApprovalGate {
-                            Button(busy ? "Approving…" : start.needsKey ? "Give the key with \(Biometry.name)" : "Approve with \(Biometry.name)") {
+                            Button(busy ? Words.Approval.approving : start.needsKey ? "Give the key with \(Biometry.name)" : "Approve with \(Biometry.name)") {
                                 approve(grant)
                             }
                             .buttonStyle(PrimaryButtonStyle())
@@ -446,9 +446,9 @@ struct ConnectApprovalSheet: View {
                 }
                 .padding(20)
             }
-            .navigationTitle(grant.map { "Connect \($0.vendor)" } ?? "Connect")
+            .navigationTitle(grant.map { "Connect \($0.vendor)" } ?? Words.Connect.Apps.connect)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } } }
         }
     }
 

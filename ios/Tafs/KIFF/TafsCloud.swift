@@ -807,7 +807,7 @@ final class TafsCloud {
         let (_, response) = try await session.upload(for: request, from: data)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            throw CloudError(status: status, message: "The file didn't upload. Try attaching it again.")
+            throw CloudError(status: status, message: Words.Error.fileNotUploaded)
         }
     }
 
@@ -1176,10 +1176,10 @@ final class TafsCloud {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .offensive: return "Offensive"
-            case .harmful: return "Harmful"
-            case .wrong: return "Wrong"
-            case .other: return "Other"
+            case .offensive: return Words.Report.Reason.offensive
+            case .harmful: return Words.Report.Reason.harmful
+            case .wrong: return Words.Report.Reason.wrong
+            case .other: return Words.Report.Reason.other
             }
         }
     }
@@ -1312,7 +1312,7 @@ final class TafsCloud {
     /// with the run's events to follow. A refusal throws, as `sendMessage` does.
     func streamMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         guard let url = URL(string: "/v1/tafs/\(escaped(id))/messages/stream", relativeTo: streamURL) else {
-            throw CloudError(status: 0, message: "Bad path")
+            throw CloudError(status: 0, message: Words.Error.badPath)
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -1321,7 +1321,7 @@ final class TafsCloud {
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(MessageBody(text, target, files: files))
-        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         return try await events(request)
@@ -1331,13 +1331,13 @@ final class TafsCloud {
     /// as it goes, until it stops. Only their own run; another's is a 404.
     func resumeRun(_ id: String, run: String, after: Int = 0) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         guard let url = URL(string: "/v1/tafs/\(escaped(id))/runs/\(escaped(run))/stream?after=\(max(0, after))", relativeTo: streamURL) else {
-            throw CloudError(status: 0, message: "Bad path")
+            throw CloudError(status: 0, message: Words.Error.badPath)
         }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return try await events(request)
     }
@@ -1954,7 +1954,7 @@ final class TafsCloud {
             request.httpBody = try (body as? KIFFClient.RawJSON)?.data ?? JSONEncoder().encode(body)
         }
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
-        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await session.data(for: request)

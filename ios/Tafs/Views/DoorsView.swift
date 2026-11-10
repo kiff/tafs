@@ -112,7 +112,7 @@ struct DoorsView: View {
         .sheet(isPresented: $adding) { AddDoorSheet(doors: doors, addSlack: addSlack) { added in if added { selected = doors.doors.count - 1 } } }
         .sheet(item: $pairing) { PairSheet(door: $0, doors: doors) }
         .confirmationDialog("Remove the \(confirmRemove?.label.lowercased() ?? "") door?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
-            Button("Remove", role: .destructive) {
+            Button(Words.Door.remove, role: .destructive) {
                 if let d = confirmRemove {
                     Task {
                         if d.kind == "slack", let removeSlack { await removeSlack(d) } else { await doors.remove(d) }
@@ -143,13 +143,13 @@ struct DoorsView: View {
             let waiting = doors.openKnocks.filter { !$0.isLine && !$0.paired }
             if !paired.isEmpty {
                 Panel {
-                    Eyebrow(text: "Paired")
+                    Eyebrow(text: Words.Door.paired)
                     ForEach(paired) { KnockCard(knock: $0, taf: taf, doors: doors, compact: true) }
                 }
             }
             if !waiting.isEmpty {
                 Panel(stroke: Theme.amber.opacity(0.45)) {
-                    Eyebrow(text: "Knocks · waiting on you", color: Theme.amber)
+                    Eyebrow(text: Words.Door.knocksWaiting, color: Theme.amber)
                     ForEach(waiting) { KnockCard(knock: $0, taf: taf, doors: doors, compact: true) }
                 }
             }
@@ -176,12 +176,12 @@ struct DoorsView: View {
 
     private var addPanel: some View {
         Panel {
-            Eyebrow(text: "Add a door")
+            Eyebrow(text: Words.Door.addDoor)
             Text("Give \(taf.name) an address people can write to. It has none until you turn one on, and its Card still decides what it does.")
                 .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-            Button("Add a door") { adding = true }.buttonStyle(PrimaryButtonStyle()).disabled(!doors.loaded || doors.addable.isEmpty)
+            Button(Words.Door.addDoor) { adding = true }.buttonStyle(PrimaryButtonStyle()).disabled(!doors.loaded || doors.addable.isEmpty)
             if doors.loaded && doors.addable.isEmpty {
-                Text("No more doors can be added here.").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                Text(Words.Door.noMore).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
         }
     }
@@ -193,19 +193,19 @@ struct DoorsView: View {
                     DoorBadge(app: door.app, open: door.open, size: 34)
                     VStack(alignment: .leading, spacing: 2) {
                         Eyebrow(text: "\(door.label) door")
-                        Text(door.words?.state ?? (door.open ? (door.resting ? "Resting until tomorrow" : "Open") : "Closed"))
+                        Text(door.words?.state ?? (door.open ? (door.resting ? Words.Door.Status.resting : Words.Door.Status.`open`) : Words.Door.Status.closed))
                             .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
                     if manages {
-                        Toggle("Open", isOn: Binding(get: { door.open }, set: { on in Task { await doors.setOpen(door, on) } }))
+                        Toggle(Words.Door.Status.`open`, isOn: Binding(get: { door.open }, set: { on in Task { await doors.setOpen(door, on) } }))
                             .labelsHidden().tint(Theme.ok).disabled(doors.busy)
                     }
                 }
                 Text(door.address).scaledFont(15, weight: .medium, design: .monospaced).foregroundColor(Theme.ink).textSelection(.enabled)
                 if door.kind == "email" {
-                    Button(copied ? "Copied" : "Copy address") {
+                    Button(copied ? Words.Common.copied : Words.Door.copyAddress) {
                         Clipboard.copy(door.address)
                         copied = true
                         Task { try? await Task.sleep(nanoseconds: 1_400_000_000); copied = false }
@@ -222,7 +222,7 @@ struct DoorsView: View {
                 }
             }
             Panel {
-                Eyebrow(text: door.holdsKeys ? "Paired · can give work" : "No one is paired here")
+                Eyebrow(text: door.holdsKeys ? Words.Door.Key.paired : Words.Door.Key.noOnePaired)
                 if door.holdsKeys {
                     ForEach(door.keys) { key in
                         HStack {
@@ -238,7 +238,7 @@ struct DoorsView: View {
                             }
                             Spacer()
                             if !key.auto, manages {
-                                Button("Unpair") { Task { await doors.unpair(door, key) } }
+                                Button(Words.Door.unpair) { Task { await doors.unpair(door, key) } }
                                     .confirming()
                                     .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
                             }
@@ -247,14 +247,14 @@ struct DoorsView: View {
                     Text("\(door.how). A message counts as theirs only when that holds; anyone else knocks.")
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     if manages {
-                        Button("Pair someone") { pairing = door }.buttonStyle(OutlineButtonStyle()).confirming()
+                        Button(Words.Door.pairSomeone) { pairing = door }.buttonStyle(OutlineButtonStyle()).confirming()
                     }
                 } else {
                     Text("\(door.how), so no one here can give \(taf.name) work. Everything that comes through knocks.")
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 }
                 if manages {
-                    Button("Remove door", role: .destructive) { confirmRemove = door }
+                    Button(Words.Door.removeDoor, role: .destructive) { confirmRemove = door }
                         .confirming()
                         .scaledFont(14, weight: .medium)
                 }
@@ -537,21 +537,21 @@ struct AddDoorSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("Add a door").scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(Words.Door.addDoor).scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Spacer()
-                Button("Done") { dismiss() }
+                Button(Words.Common.done) { dismiss() }
             }
-            DriveField("Search apps", text: $query)
+            DriveField(Words.Connect.Apps.search, text: $query)
                 .textFieldStyle(.roundedBorder)
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     section("Knows who's writing · can hold keys", doors.addable.filter { $0.proof == "proven" && matches($0) })
                     section("Can't prove who's writing · knocks only", doors.addable.filter { $0.proof != "proven" && matches($0) })
                     if doors.addable.filter(matches).isEmpty {
-                        Text(query.isEmpty ? "No more doors can be added here." : "No app called \"\(query)\" here yet.")
+                        Text(query.isEmpty ? Words.Door.noMore : "No app called \"\(query)\" here yet.")
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                     }
-                    Text("Replies go only to who wrote. Anything else the taf does still goes through KIFF.")
+                    Text(Words.Door.repliesOnly)
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).padding(.top, 6)
                 }
             }
@@ -611,15 +611,15 @@ struct PairSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Pair someone").scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+            Text(Words.Door.pairSomeone).scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("Their messages to this \(door.label.lowercased()) door give work, within the Card. Anyone else's only knock.")
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             DriveField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code"
                       : door.kind == "slack" ? "Slack member ID, such as U012AB3CD" : "Who, as \(door.label) names them", text: $sender)
                 .textFieldStyle(.roundedBorder)
                 .disableAutocorrection(true)
-            DriveField("Name (optional)", text: $name).textFieldStyle(.roundedBorder)
-            Button("Pair") {
+            DriveField(Words.Door.nameOptional, text: $name).textFieldStyle(.roundedBorder)
+            Button(Words.Door.pair) {
                 Task {
                     await doors.pair(door, sender: sender, name: name)
                     if doors.error == nil { dismiss() }
@@ -628,7 +628,7 @@ struct PairSheet: View {
             .buttonStyle(PrimaryButtonStyle())
             .confirming()
             .disabled(sender.trimmingCharacters(in: .whitespaces).isEmpty || doors.busy)
-            Button("Cancel") { dismiss() }.frame(maxWidth: .infinity)
+            Button(Words.Common.cancel) { dismiss() }.frame(maxWidth: .infinity)
             Spacer()
         }
         .padding(20)
@@ -649,14 +649,14 @@ struct KnockCard: View {
             Text("\(knock.paired ? "PAIRED · BY " : "● KNOCK · BY ")\(DoorNames.label(knock.app).uppercased())\(knock.proof == "fail" ? " · DIDN'T CHECK OUT" : "")")
                 .scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(knock.paired ? Theme.soft : Theme.amberText)
             if knock.paired {
-                Text("Paired · Do it or Ignore this message").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                Text(Words.Door.Knock.pairedLine).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             }
             if let rest = knock.rest {
                 Text(rest == "keys"
                      ? "This door had its messages from you and paired senders for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped."
                      : "This door had its messages from people who aren't paired for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped.")
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                Button("OK") { Task { await doors.answer(knock, "ignore") } }.buttonStyle(OutlineButtonStyle())
+                Button(Words.Common.ok) { Task { await doors.answer(knock, "ignore") } }.buttonStyle(OutlineButtonStyle())
             } else {
                 Text("\(knock.who) wrote\(knock.subject.map { " about \"\($0)\"" } ?? ""). Nothing was done.")
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
@@ -670,7 +670,7 @@ struct KnockCard: View {
                 }
                 HStack(spacing: 8) {
                     if knock.proof != "fail" {
-                        Button("Do it") { asking = true }
+                        Button(Words.Door.doItButton) { asking = true }
                             .buttonStyle(.drivablePlain)
                             .scaledFont(14, weight: .semibold).foregroundColor(.white)
                             .padding(.horizontal, 14).padding(.vertical, 8)
@@ -682,7 +682,7 @@ struct KnockCard: View {
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .overlay(Capsule().stroke(Theme.ink.opacity(0.2)))
                     }
-                    Button("Ignore") { Task { await doors.answer(knock, "ignore") } }
+                    Button(Words.Door.ignore) { Task { await doors.answer(knock, "ignore") } }
                         .buttonStyle(.drivablePlain).scaledFont(14, weight: .medium).foregroundColor(Theme.soft)
                         .padding(.horizontal, 12).padding(.vertical, 8)
                 }
@@ -714,7 +714,7 @@ struct DoItSheet: View {
     let taf: Taf?
     @ObservedObject var doors: DoorsModel
     @Environment(\.dismiss) private var dismiss
-    @State private var say = "Do what it asks, within your Card."
+    @State private var say = Words.Door.DoIt.`default`
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -734,7 +734,7 @@ struct DoItSheet: View {
                     .scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Button(doors.busy ? "Sending…" : "Send to \(taf?.name ?? "your taf")") {
+            Button(doors.busy ? Words.Common.sending : "Send to \(taf?.name ?? "your taf")") {
                 Task {
                     await doors.answer(knock, "do", say: say.trimmingCharacters(in: .whitespacesAndNewlines))
                     if doors.error == nil { dismiss() }
@@ -742,7 +742,7 @@ struct DoItSheet: View {
             }
             .buttonStyle(PrimaryButtonStyle())
             .disabled(say.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || doors.busy)
-            Button("Cancel") { dismiss() }.frame(maxWidth: .infinity)
+            Button(Words.Common.cancel) { dismiss() }.frame(maxWidth: .infinity)
             Spacer()
         }
         .padding(20)
@@ -898,9 +898,9 @@ struct SlackDoorSheet: View {
                     Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                 }
             }
-            .navigationTitle("Slack door")
+            .navigationTitle(Words.Door.slackDoor)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } } }
             .task {
                 await model.refreshConnections()
                 if let only = model.slackBots(for: tafID).first, model.slackBots(for: tafID).count == 1, grant == nil {

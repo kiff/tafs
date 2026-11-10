@@ -13,22 +13,22 @@ struct OnboardingView: View {
                 Text("They taf.\nYou kiff.")
                     .scaledFont(48, weight: .bold, design: .rounded, relativeTo: .title)
                     .foregroundColor(Theme.ink)
-                Text("Hand a job to a taf. It works inside a Card you set, and asks you when it needs more.")
+                Text(Words.SignIn.Welcome.lead)
                     .scaledFont(16)
                     .foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                point("Inside the Card", "it acts, and every action has a receipt.", Theme.ok)
-                point("Outside it", "it waits for you, right here.", Theme.amber)
-                point("Revoked", "no new action goes through.", Theme.no)
+                point(Words.SignIn.Welcome.insideLead, Words.SignIn.Welcome.insideRest, Theme.ok)
+                point(Words.SignIn.Welcome.outsideLead, Words.SignIn.Welcome.outsideRest, Theme.amber)
+                point(Words.SignIn.Welcome.revokedLead, Words.SignIn.Welcome.revokedRest, Theme.no)
             }
 
             Spacer()
 
             VStack(spacing: 10) {
-                Button("Sign in with KIFF") { signingIn = true }
+                Button(Words.SignIn.withKiff) { signingIn = true }
                     .buttonStyle(PrimaryButtonStyle())
 
                 Button {
@@ -38,7 +38,7 @@ struct OnboardingView: View {
                         loading = false
                     }
                 } label: {
-                    if loading { ProgressView().tint(Theme.ink) } else { Text("Try it with sample data") }
+                    if loading { ProgressView().tint(Theme.ink) } else { Text(Words.Sample.tryIt) }
                 }
                 .buttonStyle(OutlineButtonStyle())
                 .disabled(loading)

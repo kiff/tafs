@@ -22,10 +22,10 @@ struct AttachButton: View {
         let room = max(0, FilePrep.perMessage - model.files(key).count)
         Menu {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button { takingPhoto = true } label: { Label("Take photo", systemImage: "camera") }
+                Button { takingPhoto = true } label: { Label(Words.Chat.File.takePhoto, systemImage: "camera") }
             }
-            Button { choosingPhotos = true } label: { Label("Choose photos", systemImage: "photo.on.rectangle") }
-            Button { choosingFile = true } label: { Label("Choose file", systemImage: "doc") }
+            Button { choosingPhotos = true } label: { Label(Words.Chat.File.choosePhotos, systemImage: "photo.on.rectangle") }
+            Button { choosingFile = true } label: { Label(Words.Chat.File.chooseFile, systemImage: "doc") }
         } label: {
             Image(systemName: "paperclip")
                 .font(.system(size: 17, weight: .semibold))
@@ -168,10 +168,10 @@ struct FileChip: View {
                 case .uploading:
                     HStack(spacing: 4) {
                         ProgressView().controlSize(.mini)
-                        Text("Uploading").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        Text(Words.Chat.File.uploading).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     }
                 case .ready:
-                    Text("Ready").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    Text(Words.Chat.File.ready).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 case .failed(let why):
                     Text(why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.no).lineLimit(2)
                 }

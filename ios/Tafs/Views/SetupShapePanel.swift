@@ -45,7 +45,7 @@ struct SetupShapePanel: View {
                             .foregroundColor(step.state == .toDo || step.state == .skipped ? Theme.dim : Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         if step.state == .needsYou {
-                            Text("Needs you").scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.amberText)
+                            Text(Words.NeedsYou.title).scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.amberText)
                         }
                     }
                 }
@@ -56,7 +56,7 @@ struct SetupShapePanel: View {
 
     private static func mark(_ state: SetupShape.Step.State) -> String {
         switch state {
-        case .done: return "done"
+        case .done: return Words.Record.Result.done
         case .failed: return "failed"
         case .needsYou, .now: return "active"
         case .toDo, .skipped: return "pending"
@@ -96,9 +96,9 @@ struct SetupShapePanel: View {
 
     private static func status(_ state: SetupShape.Tool.State) -> (String, Color) {
         switch state {
-        case .connected: return ("Connected", Theme.ok)
-        case .signedIn: return ("Signed in", Theme.amberText)
-        case .waiting: return ("Waiting for you", Theme.amberText)
+        case .connected: return (Words.Connect.Status.connected, Theme.ok)
+        case .signedIn: return (Words.Coach.Answer.signedIn, Theme.amberText)
+        case .waiting: return (Words.Chat.waitingForYou, Theme.amberText)
         case .failed: return ("Not connected", Theme.no)
         }
     }
@@ -112,7 +112,7 @@ struct SetupShapePanel: View {
                     Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                if card.lines.isEmpty { Text("no actions yet").scaledFont(12, design: .monospaced, relativeTo: .caption) }
+                if card.lines.isEmpty { Text(Words.Card.noActionsShort).scaledFont(12, design: .monospaced, relativeTo: .caption) }
             }
             .foregroundColor(Theme.ink)
             .padding(14)

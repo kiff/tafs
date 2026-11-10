@@ -13,8 +13,8 @@ struct RecordView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Record").scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                Text("Everything your tafs did, were refused, or asked you. Newest first.")
+                Text(Words.Record.title).scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(Words.Record.lead)
                     .scaledFont(14).foregroundColor(Theme.soft)
                 tafChips
                 chips
@@ -138,10 +138,10 @@ enum RecordFilter: CaseIterable {
 
     var title: String {
         switch self {
-        case .all: return "All"
-        case .moneyMoved: return "Money moved"
-        case .stopped: return "Stopped"
-        case .waiting: return "Waiting"
+        case .all: return Words.Record.Filter.all
+        case .moneyMoved: return Words.Record.Filter.moneyMoved
+        case .stopped: return Words.Record.Filter.stopped
+        case .waiting: return Words.Record.Filter.waiting
         }
     }
 
@@ -188,7 +188,7 @@ extension RecordEntry {
     /// and it matches KIFF's hash.
     var onText: String? {
         guard let value = onValue else { return nil }
-        let noun = (onArg ?? "it").replacingOccurrences(of: "_", with: " ")
+        let noun = (onArg ?? Words.Record.On.it).replacingOccurrences(of: "_", with: " ")
         return value.count > 6 ? "\(noun) …\(value.suffix(5))" : "\(noun) \(value)"
     }
 
@@ -197,8 +197,8 @@ extension RecordEntry {
 
     /// Who answered, in words: "you", or by KIFF's role for them ("an admin").
     var answerer: String {
-        if answeredByOwner { return "you" }
-        guard let role = answer?.by?.replacingOccurrences(of: "_", with: " "), let first = role.first else { return "someone else" }
+        if answeredByOwner { return Words.Record.Answerer.you }
+        guard let role = answer?.by?.replacingOccurrences(of: "_", with: " "), let first = role.first else { return Words.Record.Answerer.someoneElse }
         return ("aeiou".contains(first) ? "an " : "a ") + role
     }
 
@@ -208,10 +208,10 @@ extension RecordEntry {
             return answer.decision == "refused" ? "refused by \(answerer)" : "approved by \(answerer)"
         }
         switch kind {
-        case .refused: return "refused by its Card"
-        case .held: return "waiting for you"
-        case .revoked: return "Card revoked"
-        case .started: return "Card issued"
+        case .refused: return Words.Record.Decided.refusedByCard
+        case .held: return Words.Record.Decided.waitingForYou
+        case .revoked: return Words.Card.cardRevoked
+        case .started: return Words.Record.Decided.cardIssued
         default: return ownerApproved == true ? "approved by you" : "within its Card"
         }
     }
@@ -219,13 +219,13 @@ extension RecordEntry {
     /// What became of it at the tool.
     var resultLine: String {
         switch kind {
-        case .done, .approved: return "done"
-        case .refused, .revoked: return "nothing sent"
-        case .notDone: return "not done"
-        case .held: return "nothing sent yet"
-        case .sending: return "sent, no answer yet"
-        case .unknown: return "result unknown"
-        case .started: return "started"
+        case .done, .approved: return Words.Record.Result.done
+        case .refused, .revoked: return Words.Record.nothingSent
+        case .notDone: return Words.Record.Result.notDone
+        case .held: return Words.Record.Result.nothingSentYet
+        case .sending: return Words.Record.Result.noAnswerYet
+        case .unknown: return Words.Record.Result.unknown
+        case .started: return Words.Record.Result.started
         case .inTafs: return ""
         }
     }
@@ -269,7 +269,7 @@ struct RecordRow: View {
                 Text(detail).scaledFont(13).foregroundColor(Theme.soft)
                 if entry.receipt?.status == "signed" {
                     // KIFF says it's signed; the seal is for the sheet's own check.
-                    Label("KIFF receipt", systemImage: "doc.text")
+                    Label(Words.Receipt.kiffReceipt, systemImage: "doc.text")
                         .scaledFont(12).foregroundColor(Theme.ok)
                 } else if entry.signature != nil {
                     Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal")
@@ -292,7 +292,7 @@ struct RecordRow: View {
         if entry.kind == .held, !model.isWaiting(entry) {
             // Held, and KIFF no longer holds it (the 789 retest: the row still said "waiting for
             // you" after it expired). It may have expired, or been withdrawn when its run stopped.
-            parts += ["no longer waiting", "nothing sent"]
+            parts += [Words.Record.noLongerWaiting, Words.Record.nothingSent]
         } else if entry.receipt != nil || entry.answer != nil {
             parts += [entry.decidedLine, entry.resultLine]
         } else {
@@ -316,16 +316,16 @@ extension RecordEntry.Kind {
 
     var label: String {
         switch self {
-        case .done: return "Done within the Card"
-        case .approved: return "Approved once by you"
-        case .refused: return "Refused"
-        case .held: return "Held for you"
-        case .unknown: return "Outcome unknown"
-        case .notDone: return "Not done"
-        case .sending: return "In progress"
-        case .revoked: return "Card revoked"
-        case .started: return "Taf started"
-        case .inTafs: return "In tafs"
+        case .done: return Words.Receipt.Label.done
+        case .approved: return Words.Receipt.Label.approved
+        case .refused: return Words.Record.Filter.refused
+        case .held: return Words.Receipt.Label.held
+        case .unknown: return Words.Receipt.Label.unknown
+        case .notDone: return Words.Receipt.Label.notDone
+        case .sending: return Words.Receipt.Label.sending
+        case .revoked: return Words.Card.cardRevoked
+        case .started: return Words.Receipt.Label.started
+        case .inTafs: return Words.Receipt.Label.inTafs
         }
     }
 }
@@ -351,18 +351,18 @@ struct ReceiptView: View {
                     }
                     Text(entry.titleWithAmount).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     Panel {
-                        line("Taf", model.taf(entry.tafID)?.name ?? "–")
-                        line("When", entry.at.zonedShown(date: .abbreviated, time: .standard))
+                        line(Words.Receipt.Fact.taf, model.taf(entry.tafID)?.name ?? "–")
+                        line(Words.Receipt.Fact.at, entry.at.zonedShown(date: .abbreviated, time: .standard))
                         if let value = entry.onValue {
-                            line("On", "\((entry.onArg ?? "").replacingOccurrences(of: "_", with: " ")) \(value)")
+                            line(Words.Receipt.Fact.on, "\((entry.onArg ?? "").replacingOccurrences(of: "_", with: " ")) \(value)")
                         }
-                        line("Outcome", outcome, bold: true)
+                        line(Words.Receipt.Fact.outcome, outcome, bold: true)
                         // KIFF's words, never its codes (kiff/tafs#138).
-                        if let reason = entry.reason { line("Why", reason) }
-                        line("Decided by", decidedBy)
+                        if let reason = entry.reason { line(Words.Receipt.Fact.why, reason) }
+                        line(Words.Receipt.Fact.decidedBy, decidedBy)
                     }
                     if !steps.isEmpty {
-                        Eyebrow(text: "What happened")
+                        Eyebrow(text: Words.Receipt.whatHappened)
                         timeline
                     }
                     if let signature = entry.signature {
@@ -388,7 +388,7 @@ struct ReceiptView: View {
                 .padding(20)
             }
             .screenBackground()
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Record.Filter.done) { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
         .task { await loadReceipt() }
     }
@@ -409,16 +409,16 @@ struct ReceiptView: View {
     @ViewBuilder private var receiptPanel: some View {
         switch check {
         case .verified? where onMismatch:
-            failedPanel("The payment on this line doesn't match KIFF's receipt.")
+            failedPanel(Words.Receipt.Check.paymentMismatch)
         case .verified? where amountMismatch:
-            failedPanel("The amount on this line doesn't match KIFF's receipt.")
+            failedPanel(Words.Receipt.Check.amountMismatch)
         case .verified? where answerMismatch:
-            failedPanel("The answer on this line doesn't match KIFF's receipt.")
+            failedPanel(Words.Receipt.Check.answerMismatch)
         case .verified(let signer)?:
             Panel(stroke: Theme.ok.opacity(0.4)) {
                 Label("KIFF's receipt · checked on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
-                Text("KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.")
+                Text(Words.Receipt.checkedWhy)
                     .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 receiptFacts(signer: signer)
                 fullReceipt(signer: signer)
@@ -428,22 +428,22 @@ struct ReceiptView: View {
             Panel {
                 HStack(spacing: 8) {
                     Circle().fill(Theme.amber).frame(width: 9, height: 9)
-                    Text("KIFF's receipt · not signed yet").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    Text(Words.Receipt.notSignedYet).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 }
-                Text("KIFF signs receipts within a minute of deciding. Check again shortly.")
+                Text(Words.Receipt.signsWithin)
                     .scaledFont(13).foregroundColor(Theme.soft)
                 if Date().timeIntervalSince(entry.at) > 10 * 60 {
-                    Text("If this stays, tell us the receipt id below.").scaledFont(13).foregroundColor(Theme.soft)
+                    Text(Words.Receipt.ifItStays).scaledFont(13).foregroundColor(Theme.soft)
                     Text(entry.receipt?.traceID ?? "").scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
                 }
             }
         case .failed?:
-            failedPanel("This receipt was changed after KIFF signed it, or it wasn't signed by KIFF. Don't rely on this line.")
+            failedPanel(Words.Receipt.changed)
         case nil:
             Panel {
                 if let loadProblem {
                     Text(loadProblem).scaledFont(13).foregroundColor(Theme.no)
-                    Button("Try again") { Task { await loadReceipt() } }.buttonStyle(OutlineButtonStyle())
+                    Button(Words.Common.tryAgain) { Task { await loadReceipt() } }.buttonStyle(OutlineButtonStyle())
                 } else {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
@@ -517,7 +517,7 @@ struct ReceiptView: View {
                 .scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
                 .padding(.top, 8)
             } label: {
-                Text("Show the full receipt").scaledFont(13, weight: .semibold).foregroundColor(Theme.blue)
+                Text(Words.Receipt.showFull).scaledFont(13, weight: .semibold).foregroundColor(Theme.blue)
             }
         }
     }
@@ -525,8 +525,8 @@ struct ReceiptView: View {
     @ViewBuilder private func receiptButtons(share: Bool) -> some View {
         if let raw, let text = String(data: raw, encoding: .utf8) {
             HStack(spacing: 8) {
-                Button("Copy receipt") { Clipboard.copy(text) }.buttonStyle(OutlineButtonStyle())
-                if share { ShareLink("Share", item: text).buttonStyle(OutlineButtonStyle()) }
+                Button(Words.Receipt.copy) { Clipboard.copy(text) }.buttonStyle(OutlineButtonStyle())
+                if share { ShareLink(Words.Receipt.share, item: text).buttonStyle(OutlineButtonStyle()) }
             }
         }
     }
@@ -610,7 +610,7 @@ struct ReceiptView: View {
         switch entry.kind {
         case .done, .approved: return entry.amount == nil ? "Done." : "Done.\(money) moved."
         case .refused: return entry.answer?.decision == "refused" ? "Not sent. Refused by \(entry.answerer)." : "Not sent. Its Card refused it."
-        case .held: return "Waiting for your answer."
+        case .held: return Words.Receipt.Outcome.waiting
         default: return entry.detail
         }
     }
@@ -620,25 +620,25 @@ struct ReceiptView: View {
             return answer.decision == "refused" ? "held → refused by \(entry.answerer)" : "held → approved once by \(entry.answerer)"
         }
         switch entry.kind {
-        case .refused: return "refused by the Card"
+        case .refused: return Words.Receipt.Decision.refusedByCard
         // Still waiting: the Card held it, it didn't allow it (the 755 retest).
-        case .held: return "held for you by the Card"
+        case .held: return Words.Receipt.Decision.heldByCard
         default: return entry.ownerApproved == true ? "held → approved by you" : "allowed by the Card"
         }
     }
 
     private var decidedBy: String {
         if let answer = entry.answer {
-            var how = entry.answeredByOwner ? "You" : entry.answerer.prefix(1).uppercased() + entry.answerer.dropFirst()
+            var how = entry.answeredByOwner ? Words.Receipt.DecidedBy.you : entry.answerer.prefix(1).uppercased() + entry.answerer.dropFirst()
             if answer.signed == true { how += ", signed on \(answer.device ?? "your device")" }
             return how
         }
         switch entry.kind {
-        case .approved: return "You, approving once"
+        case .approved: return Words.Receipt.DecidedBy.youApprovingOnce
         case _ where entry.ownerApproved == true: return "You, approving once"
         case .refused where entry.signature != nil: return "You"
-        case .revoked: return "You, revoking the Card"
-        case .started: return "You, issuing the Card"
+        case .revoked: return Words.Receipt.DecidedBy.youRevoking
+        case .started: return Words.Receipt.DecidedBy.youIssuing
         default: return model.mode == .kiff ? "KIFF, against the Card" : "The Card"
         }
     }

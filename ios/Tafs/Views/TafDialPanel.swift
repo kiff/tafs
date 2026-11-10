@@ -154,8 +154,8 @@ struct KnobRequestsSheet: View {
                     Text("No requests yet.").foregroundColor(Theme.dim)
                 }
             }
-            .navigationTitle("Its work").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .navigationTitle(Words.Taf.itsWork).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { dismiss() } } }
             .navigationDestination(for: String.self) { run in KnobRequestDetail(tafID: tafID, run: run) }
             .task(id: tafID) {
                 await model.loadWork(tafID)
@@ -193,7 +193,7 @@ struct KnobRequestDetail: View {
                 }
                 ForEach(Array(detail.deliveries.enumerated()), id: \.offset) { _, delivery in
                     if delivery.sendAgain, model.manages(tafID) {
-                        Button(sending ? "Sending again…" : "Try the reply now") {
+                        Button(sending ? Words.Work.sendingAgain : Words.Work.Request.tryReplyNow) {
                             sending = true
                             Task {
                                 defer { sending = false }
@@ -203,11 +203,11 @@ struct KnobRequestDetail: View {
                         }.disabled(sending)
                     }
                 }
-                Button("Ask Coach") { model.openCoach() }
+                Button(Words.Coach.ask) { model.openCoach() }
             } else if error == nil { ProgressView() }
             if let error {
                 Text(error).foregroundColor(Theme.no)
-                Button("Try again") { Task { await load() } }
+                Button(Words.Common.tryAgain) { Task { await load() } }
             }
         }
         .navigationTitle("Request").navigationBarTitleDisplayMode(.inline)

@@ -56,21 +56,21 @@ struct ApprovalSetupView: View {
                 }
                 VStack(spacing: 10) {
                     if readiness.opensSettings {
-                        Button("Open Settings") { openTafsSettings() }
+                        Button(Words.Voice.openSettings) { openTafsSettings() }
                             .buttonStyle(PrimaryButtonStyle())
                     }
                     if !readiness.isReady && readiness != .unsupported {
-                        Button("Check again", action: checkAgain)
+                        Button(Words.Approval.checkAgain, action: checkAgain)
                             .buttonStyle(OutlineButtonStyle())
                     }
                     if let continueWithout {
                         if readiness.isReady {
-                            Button("Continue", action: continueWithout)
+                            Button(Words.Common.`continue`, action: continueWithout)
                                 .buttonStyle(PrimaryButtonStyle())
                         } else {
-                            Button("Continue without approvals", action: continueWithout)
+                            Button(Words.Approval.continueWithout, action: continueWithout)
                                 .buttonStyle(OutlineButtonStyle())
-                            Text("Without approvals you can still sign in, review, refuse and halt.")
+                            Text(Words.Approval.withoutAllows)
                                 .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                                 .frame(maxWidth: .infinity)
                         }
@@ -145,11 +145,11 @@ struct ApprovalNotReady: View {
             }
             HStack(spacing: 10) {
                 if readiness.opensSettings {
-                    Button("Open Settings") { openTafsSettings() }
+                    Button(Words.Voice.openSettings) { openTafsSettings() }
                         .buttonStyle(PrimaryButtonStyle())
                 }
                 if readiness != .unsupported {
-                    Button("Check again", action: checkAgain)
+                    Button(Words.Approval.checkAgain, action: checkAgain)
                         .buttonStyle(OutlineButtonStyle())
                 }
             }

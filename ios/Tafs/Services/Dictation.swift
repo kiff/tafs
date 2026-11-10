@@ -456,7 +456,7 @@ final class DeviceSpeech: SpeechEngine {
                 onText(result.bestTranscription.formattedString, result.isFinal || result.speechRecognitionMetadata != nil)
                 if result.isFinal { onEnd(nil) }
             } else if error != nil {
-                onEnd("Dictation stopped. Tap the mic to start again.")
+                onEnd(Words.Voice.stopped)
             }
         }
     }

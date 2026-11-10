@@ -16,27 +16,27 @@ struct SignInView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Sign in with KIFF").scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                Text("Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here.")
+                Text(Words.SignIn.withKiff).scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(Words.SignIn.lead)
                     .scaledFont(15).foregroundColor(Theme.soft)
 
                 if let start {
                     Panel(stroke: Theme.amber.opacity(0.4)) {
-                        Eyebrow(text: "Your code")
+                        Eyebrow(text: Words.SignIn.yourCode)
                         Text(start.userCode)
                             .scaledFont(34, weight: .semibold, design: .monospaced)
                             .foregroundColor(Theme.ink)
                             .textSelection(.enabled)
-                        Text("Check that KIFF shows the same code before you approve.")
+                        Text(Words.SignIn.checkCode)
                             .scaledFont(13).foregroundColor(Theme.dim)
                     }
-                    Button("Open KIFF to approve") {
+                    Button(Words.SignIn.openKiff) {
                         if let url = URL(string: start.verificationURIComplete) { openURL(url) }
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     // To approve in another browser, where they're signed in to KIFF.
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Or open this link in another browser:").scaledFont(13).foregroundColor(Theme.dim)
+                        Text(Words.SignIn.otherBrowser).scaledFont(13).foregroundColor(Theme.dim)
                         HStack(spacing: 8) {
                             Text(start.verificationURIComplete)
                                 .scaledFont(13, design: .monospaced).foregroundColor(Theme.soft)
@@ -47,7 +47,7 @@ struct SignInView: View {
                                 Clipboard.copy(start.verificationURIComplete)
                                 copied = true
                             } label: {
-                                Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
+                                Label(copied ? Words.Common.copied : Words.Common.copy, systemImage: copied ? "checkmark" : "doc.on.doc")
                                     .labelStyle(.titleAndIcon).scaledFont(13, weight: .semibold)
                             }
                             .buttonStyle(.borderless).tint(Theme.amber)
@@ -55,7 +55,7 @@ struct SignInView: View {
                     }
                     HStack(spacing: 10) {
                         ProgressView().tint(Theme.amber)
-                        Text("Waiting for your approval…").scaledFont(14).foregroundColor(Theme.soft)
+                        Text(Words.SignIn.waiting).scaledFont(14).foregroundColor(Theme.soft)
                     }
                 } else if problem == nil {
                     ProgressView().tint(Theme.amber)
@@ -63,7 +63,7 @@ struct SignInView: View {
 
                 if let problem {
                     Text(problem).scaledFont(14).foregroundColor(Theme.no)
-                    Button("Try again") { begin() }.buttonStyle(OutlineButtonStyle())
+                    Button(Words.Common.tryAgain) { begin() }.buttonStyle(OutlineButtonStyle())
                 }
                 Spacer()
                 Text("By signing in, you agree to KIFF's [Terms](https://kiff.dev/terms#tafs), which cover tafs, and its [Privacy policy](https://kiff.dev/privacy#tafs).")
@@ -73,7 +73,7 @@ struct SignInView: View {
             .screenBackground()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { task?.cancel(); dismiss() }
+                    Button(Words.Common.cancel) { task?.cancel(); dismiss() }
                 }
             }
         }
@@ -117,36 +117,36 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Your account") {
-                    LabeledContent("Mode", value: modeText)
+                Section(Words.Settings.yourAccount) {
+                    LabeledContent(Words.Settings.mode, value: modeText)
                     if model.mode == .kiff, let account = model.kiffAccount {
-                        NavigationLink { AccountView(account: account, done: { dismiss() }).environmentObject(model) } label: { LabeledContent("KIFF account", value: account.name) }
-                        LabeledContent("Account id", value: account.slug)
-                        if let email = account.email { LabeledContent("Signed in as", value: email) }
+                        NavigationLink { AccountView(account: account, done: { dismiss() }).environmentObject(model) } label: { LabeledContent(Words.Settings.kiffAccount, value: account.name) }
+                        LabeledContent(Words.Settings.accountId, value: account.slug)
+                        if let email = account.email { LabeledContent(Words.Settings.signedInAs, value: email) }
                     }
                 }
                 if model.mode == .kiff {
-                    Section("People & apps") {
+                    Section(Words.Settings.peopleApps) {
                         NavigationLink(PeopleGroupsView.title) { PeopleGroupsView() }
                         NavigationLink(DevicesView.title) { DevicesView() }
                         NavigationLink(ConnectAppsView.title) { ConnectAppsView() }
                     }
-                    Section("Plan") {
+                    Section(Words.Settings.plan) {
                         NavigationLink { UsageView() } label: { PlanRow(balance: model.balance) }.accessibilityIdentifier("plan-card")
                     }
                 }
                 // What a new Coach conversation offers, as tafs cloud keeps it: its words say what the
                 // switch does now. Enabled for the people who manage the account's tafs.
                 if model.mode == .kiff, model.mayUseCoach, let shown = model.suggestions {
-                    Section("Coach") {
+                    Section(Words.Coach.title) {
                         Toggle(isOn: Binding(get: { shown.show }, set: { on in Task { await model.setSuggestions(on) } })) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Show suggestions")
+                                Text(Words.Settings.showSuggestions)
                                 if !shown.words.isEmpty { Text(shown.words).scaledFont(13).foregroundColor(Theme.soft) }
                             }
                         }
                         .disabled(!model.canManageCards || model.suggestionsBusy)
-                        .drivable("Show suggestions", role: .toggle, id: "show-suggestions") { Task { await model.setSuggestions(!shown.show) } }
+                        .drivable(Words.Settings.showSuggestions, role: .toggle, id: "show-suggestions") { Task { await model.setSuggestions(!shown.show) } }
                         .accessibilityIdentifier("show-suggestions")
                         if let why = model.suggestionsError { Text(why).scaledFont(13).foregroundColor(Theme.no) }
                     }
@@ -154,10 +154,10 @@ struct SettingsView: View {
                 Section {
                     NavigationLink(NotificationSettingsView.title) { NotificationSettingsView() }
                 }
-                Section("Theme") { ThemePicker() }
+                Section(Words.Settings.themeTitle) { ThemePicker() }
                 if model.mode == .kiff {
                     Section {
-                        NavigationLink { TimeZonePicker() } label: { LabeledContent("Time zone", value: model.kiffAccount?.timeZone ?? "UTC") }
+                        NavigationLink { TimeZonePicker() } label: { LabeledContent(Words.Settings.timeZoneTitle, value: model.kiffAccount?.timeZone ?? "UTC") }
                     }
                     ExportChatsSection()
                 }
@@ -165,15 +165,15 @@ struct SettingsView: View {
                     Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this \(ThisDevice.kind).")
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
-                Section("Legal") {
-                    Link("Terms", destination: Legal.terms)
-                    Link("Privacy policy", destination: Legal.privacy)
+                Section(Words.Settings.legal) {
+                    Link(Words.Settings.terms, destination: Legal.terms)
+                    Link(Words.Settings.privacyPolicy, destination: Legal.privacy)
                 }
-                Section("About") {
-                    LabeledContent("Version", value: Self.versionLabel())
-                    Text("They taf. You kiff.").foregroundColor(Theme.dim)
+                Section(Words.Settings.about) {
+                    LabeledContent(Words.Settings.version, value: Self.versionLabel())
+                    Text(Words.Home.tagline).foregroundColor(Theme.dim)
                 }
-                Section("Account actions") {
+                Section(Words.Settings.accountActions) {
                     if model.mode == .sample { Button("Sign in with KIFF") { signingIn = true } }
                     Button(model.mode == .kiff ? "Sign out" : "Clear the sample", role: .destructive) {
                         if model.mode == .kiff { confirming = .signOut }
@@ -189,7 +189,7 @@ struct SettingsView: View {
             .overlay(alignment: .bottom) {
                 if !atEnd { Image(systemName: "chevron.down").foregroundColor(Theme.dim).padding(8).frame(maxWidth: .infinity).background(LinearGradient(colors: [.clear, Theme.background], startPoint: .top, endPoint: .bottom)).allowsHitTesting(false) }
             }
-            .navigationTitle("Account")
+            .navigationTitle(Words.Settings.title)
             .task(id: model.mode) { await model.loadSuggestions() }
             .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
@@ -207,9 +207,9 @@ struct SettingsView: View {
 
     private var modeText: String {
         switch model.mode {
-        case .kiff: return "Signed in with KIFF"
-        case .sample: return "Sample data"
-        case .signedOut: return "Signed out"
+        case .kiff: return Words.Settings.modeKiff
+        case .sample: return Words.Settings.modeSample
+        case .signedOut: return Words.Settings.modeSignedOut
         }
     }
 }
@@ -246,18 +246,18 @@ struct AccountView: View {
     var body: some View {
         List {
             Section {
-                LabeledContent("KIFF account", value: account.name)
+                LabeledContent(Words.Settings.kiffAccount, value: account.name)
                 if account.name != account.slug {
-                    LabeledContent("Account id", value: account.slug)
+                    LabeledContent(Words.Settings.accountId, value: account.slug)
                 }
                 if let email = account.email, !email.isEmpty {
-                    LabeledContent("Signed in as", value: email)
+                    LabeledContent(Words.Settings.signedInAs, value: email)
                 }
             }
             Section {
                 // A Card's day ends at midnight here, and every time the owner reads is in it
                 // (kiff/tafs#96, #206 6.11); set from the device as a signed setup call.
-                NavigationLink { TimeZonePicker() } label: { LabeledContent("Time zone", value: zone) }
+                NavigationLink { TimeZonePicker() } label: { LabeledContent(Words.Settings.timeZoneTitle, value: zone) }
                 if zone != TimeZone.current.identifier {
                     Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") {
                         Task { await model.useThisDevicesTimeZone() }
@@ -272,14 +272,14 @@ struct AccountView: View {
             // Their own copy, for their rights of access and portability (kiff/tafs#424).
             ExportChatsSection()
             if model.mayDeleteAccount { Section {
-                Button("Delete account…", role: .destructive) { deletingAccount = true }.confirming()
+                Button(Words.Settings.DeleteAccount.row, role: .destructive) { deletingAccount = true }.confirming()
             } footer: {
                 Text("Deletes every taf, its runs, chats and notes, your Cards and your connections. It can't be undone.")
             } }
         }
         .scrollContentBackground(.hidden)
         .screenBackground()
-        .navigationTitle("KIFF account")
+        .navigationTitle(Words.Settings.kiffAccount)
         .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { done() } }) {
             DeleteAccountView().environmentObject(model)
         }

@@ -28,15 +28,15 @@ struct TafKnobRemote: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            remoteButton("Back", symbol: "backward.end.fill", enabled: !allStops.isEmpty) { walk(-1) }
+            remoteButton(Words.Knob.back, symbol: "backward.end.fill", enabled: !allStops.isEmpty) { walk(-1) }
             remoteButton("Lower", symbol: "minus", enabled: manages && !busy && chosenItem.map { canAdjust($0, -1) } == true) {
                 if let item = chosenItem { adjust(item, -1) }
             }
-            remoteButton(paused ? "Resume" : "Pause", symbol: "power", enabled: manages && !busy && knob.canPause, power: true, action: pause)
+            remoteButton(paused ? Words.Knob.resume : Words.Knob.pause, symbol: "power", enabled: manages && !busy && knob.canPause, power: true, action: pause)
             remoteButton("Raise", symbol: "plus", enabled: manages && !busy && chosenItem.map { canAdjust($0, 1) } == true) {
                 if let item = chosenItem { adjust(item, 1) }
             }
-            remoteButton("Next", symbol: "forward.end.fill", enabled: !allStops.isEmpty) { walk(1) }
+            remoteButton(Words.Knob.next, symbol: "forward.end.fill", enabled: !allStops.isEmpty) { walk(1) }
         }
         .accessibilityElement(children: .contain)
     }
