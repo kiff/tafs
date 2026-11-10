@@ -13,6 +13,8 @@ struct HomeView: View {
     /// what resumes it), else the taf's.
     @State private var showingHalt = false
     @State private var haltTaf: UUID?
+    /// A recipe's sheet, opened from Home with no taf.
+    @State private var openRecipe: TafsCloud.Recipes.Recipe?
 
     private func openHalt(_ tafID: UUID) {
         haltTaf = model.haltState(nil).state == .running ? tafID : nil
@@ -94,11 +96,23 @@ struct HomeView: View {
                 }
 
                 if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
-                    Panel {
-                        Text(Words.Home.noTafs).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                        // Setting one up is Coach's: someone who may not use it reads where shared tafs show.
-                        Text(model.mayUseCoach ? Words.Home.Empty.coach : Words.Home.Empty.shared)
-                            .scaledFont(14).foregroundColor(Theme.soft)
+                    // tafs cloud says what Home shows with no taf: the recipes under its line, or
+                    // its empty line (docs/ios-app.md).
+                    if let recipes = model.recipes, recipes.homeListsRecipes {
+                        HomeRecipes(recipes: recipes) { openRecipe = $0 }
+                    } else {
+                        Panel {
+                            if let words = model.recipes?.homeWords {
+                                // tafs cloud's empty line, whoever reads it: no words of the app's.
+                                Text(words).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                            } else {
+                                // Not read yet, or a tafs cloud from before the line: the app's own.
+                                Text(Words.Home.noTafs).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                // Setting one up is Coach's: someone who may not use it reads where shared tafs show.
+                                Text(model.mayUseCoach ? Words.Home.Empty.coach : Words.Home.Empty.shared)
+                                    .scaledFont(14).foregroundColor(Theme.soft)
+                            }
+                        }
                     }
                 }
 
@@ -122,6 +136,14 @@ struct HomeView: View {
         .screenBackground()
         .navigationDestination(isPresented: $showingCalendar) { CalendarView() }
         .navigationDestination(isPresented: $showingHalt) { HaltScreen(tafID: haltTaf) }
+        .sheet(item: $openRecipe) { recipe in
+            // A recipe no longer listed (the account has a taf now) shows no sheet's worth: the
+            // sheet draws what was tapped, and handing it over closes it.
+            RecipeSheet(recipe: recipe, recipes: model.recipes ?? TafsCloud.Recipes(), canHand: model.mayUseCoach) {
+                openRecipe = nil
+                model.handRecipeToCoach(recipe)
+            }
+        }
         .navigationDestination(for: UUID.self) { id in
             if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
         }
@@ -209,7 +231,9 @@ struct HomeView: View {
             } else if model.listUnread {
                 Text(Words.Home.notLoaded)
                     .foregroundColor(Theme.dim)
-            } else {
+            } else if !model.homeListsRecipes {
+                // With no taf and the recipes listed, tafs cloud's line leads: no "0 tafs
+                // working" above them (as on Android).
                 Text(Words.Home.working(count: working))
                     .foregroundColor(Theme.ink)
                 Text(model.needsYouWords)

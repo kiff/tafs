@@ -64,8 +64,14 @@ struct SetupChatView: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                if model.setupTaf == nil || !model.planqueReady {
+                if !model.setupStarted {
                     intro
+                    if model.setupHanded {
+                        // Words first (docs/ios-app.md): what was handed over waits in the
+                        // box, and Send starts Coach behind its one prompt, then sends.
+                        composer
+                        DictationBar(dictation: model.dictation)
+                    }
                 } else {
                     // Beside the chat, the plan is in the panel.
                     if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
@@ -141,12 +147,16 @@ struct SetupChatView: View {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
             }
             Spacer()
-            ApprovalGate {
-                Button(model.startingSetup ? Words.Common.starting : Words.Coach.start) { Task { _ = await model.startSetup() } }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(model.startingSetup || model.mode != .kiff)
+            if !model.setupHanded {
+                ApprovalGate {
+                    Button(model.startingSetup ? Words.Common.starting : Words.Coach.start) { Task { _ = await model.startSetup() } }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(model.startingSetup || model.mode != .kiff)
+                }
             }
-            Text(Words.Coach.startingAsks(biometry: "\(Biometry.name)")).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            // With words handed over, Send is what starts: the same line says what it asks.
+            Text(model.setupHanded && model.startingSetup ? Words.Common.starting : Words.Coach.startingAsks(biometry: "\(Biometry.name)"))
+                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 .frame(maxWidth: .infinity)
         }
         .padding(20)

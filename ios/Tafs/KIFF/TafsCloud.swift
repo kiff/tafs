@@ -1509,17 +1509,40 @@ final class TafsCloud {
     /// app draws them and keeps no list of its own.
     struct Recipes: Decodable, Equatable {
         struct Category: Decodable, Equatable { let id: String; let title: String }
+        /// The Card a recipe's taf would have, as its file says it: what it does on its own,
+        /// asks first, and never does.
+        struct Card: Decodable, Equatable {
+            var allows: [String] = []
+            var holds: [String] = []
+            var never: [String] = []
+            private enum CodingKeys: String, CodingKey { case allows, holds, never }
+            init(allows: [String] = [], holds: [String] = [], never: [String] = []) {
+                self.allows = allows; self.holds = holds; self.never = never
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                allows = (try? c.decodeIfPresent([String].self, forKey: .allows)) ?? []
+                holds = (try? c.decodeIfPresent([String].self, forKey: .holds)) ?? []
+                never = (try? c.decodeIfPresent([String].self, forKey: .never)) ?? []
+            }
+        }
         /// One recipe: its title and line, and `say`, what a tap puts in Coach's message box for
-        /// the person to edit and send.
+        /// the person to edit and send. On Home its `headline` (the problem it ends) leads, then
+        /// `line`; its sheet adds `today` (what that costs today) and its `card`.
         struct Recipe: Decodable, Equatable, Identifiable {
             let id: String
             let title: String
             var category: String = ""
             var line: String = ""
             var say: String = ""
-            private enum CodingKeys: String, CodingKey { case id, title, category, line, say }
-            init(id: String, title: String, category: String = "", line: String = "", say: String = "") {
+            var headline: String = ""
+            var today: String = ""
+            var card = Card()
+            private enum CodingKeys: String, CodingKey { case id, title, category, line, say, headline, today, card }
+            init(id: String, title: String, category: String = "", line: String = "", say: String = "",
+                 headline: String = "", today: String = "", card: Card = Card()) {
                 self.id = id; self.title = title; self.category = category; self.line = line; self.say = say
+                self.headline = headline; self.today = today; self.card = card
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -1528,7 +1551,50 @@ final class TafsCloud {
                 category = try c.decodeIfPresent(String.self, forKey: .category) ?? ""
                 line = try c.decodeIfPresent(String.self, forKey: .line) ?? ""
                 say = try c.decodeIfPresent(String.self, forKey: .say) ?? ""
+                headline = (try? c.decodeIfPresent(String.self, forKey: .headline)) ?? ""
+                today = (try? c.decodeIfPresent(String.self, forKey: .today)) ?? ""
+                card = (try? c.decodeIfPresent(Card.self, forKey: .card)) ?? Card()
             }
+            /// What leads the recipe on Home and on its sheet: the problem it ends; its title
+            /// from a tafs cloud from before headlines.
+            var lead: String { headline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? title : headline }
+        }
+        /// Home with no taf: `shown`, the recipes are listed under `words`; not shown, `words`
+        /// is Home's empty line.
+        struct Home: Decodable, Equatable {
+            var shown = false
+            var words = ""
+            private enum CodingKeys: String, CodingKey { case shown, words }
+            init(shown: Bool = false, words: String = "") { self.shown = shown; self.words = words }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                shown = (try? c.decodeIfPresent(Bool.self, forKey: .shown)) ?? false
+                words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
+            }
+        }
+        /// The recipe sheet's words, in the person's language: its three zones and its button.
+        struct Labels: Decodable, Equatable {
+            var allows = ""
+            var holds = ""
+            var never = ""
+            var hand = ""
+            private enum CodingKeys: String, CodingKey { case allows, holds, never, hand }
+            init(allows: String = "", holds: String = "", never: String = "", hand: String = "") {
+                self.allows = allows; self.holds = holds; self.never = never; self.hand = hand
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                allows = (try? c.decodeIfPresent(String.self, forKey: .allows)) ?? ""
+                holds = (try? c.decodeIfPresent(String.self, forKey: .holds)) ?? ""
+                never = (try? c.decodeIfPresent(String.self, forKey: .never)) ?? ""
+                hand = (try? c.decodeIfPresent(String.self, forKey: .hand)) ?? ""
+            }
+        }
+        /// One zone of a recipe's Card on its sheet: its title and its lines.
+        struct Zone: Equatable, Identifiable {
+            let id: String
+            let title: String
+            let lines: [String]
         }
         var categories: [Category] = []
         var recipes: [Recipe] = []
@@ -1536,9 +1602,15 @@ final class TafsCloud {
         /// suggestions are on; else none come.
         var shown = true
         var suggestions: Suggestions?
-        private enum CodingKeys: String, CodingKey { case categories, recipes, shown, suggestions }
-        init(categories: [Category] = [], recipes: [Recipe] = [], shown: Bool = true, suggestions: Suggestions? = nil) {
+        /// What Home shows with no taf; nil from a tafs cloud from before it.
+        var home: Home?
+        /// The recipe sheet's words; nil from a tafs cloud from before them.
+        var labels: Labels?
+        private enum CodingKeys: String, CodingKey { case categories, recipes, shown, suggestions, home, labels }
+        init(categories: [Category] = [], recipes: [Recipe] = [], shown: Bool = true, suggestions: Suggestions? = nil,
+             home: Home? = nil, labels: Labels? = nil) {
             self.categories = categories; self.recipes = recipes; self.shown = shown; self.suggestions = suggestions
+            self.home = home; self.labels = labels
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -1546,6 +1618,37 @@ final class TafsCloud {
             recipes = try c.decodeIfPresent([Recipe].self, forKey: .recipes) ?? []
             shown = try c.decodeIfPresent(Bool.self, forKey: .shown) ?? true
             suggestions = try? c.decodeIfPresent(Suggestions.self, forKey: .suggestions)
+            home = try? c.decodeIfPresent(Home.self, forKey: .home)
+            labels = try? c.decodeIfPresent(Labels.self, forKey: .labels)
+        }
+        /// Whether Home with no taf lists the recipes: tafs cloud says so (`home.shown`), and
+        /// the sheet's words came with them.
+        var homeListsRecipes: Bool { home?.shown == true && labels != nil && !byCategory.isEmpty }
+        /// tafs cloud's line for Home with no taf; nil when it sent none.
+        var homeWords: String? {
+            guard let w = home?.words.trimmingCharacters(in: .whitespacesAndNewlines), !w.isEmpty else { return nil }
+            return w
+        }
+        /// The categories Home lists, narrowed to `picked` when one is: nothing picked is all of
+        /// them, and a category no longer listed narrows nothing.
+        func groups(picked: String?) -> [(category: Category, recipes: [Recipe])] {
+            let all = byCategory
+            guard let picked, all.contains(where: { $0.category.id == picked }) else { return all }
+            return all.filter { $0.category.id == picked }
+        }
+        /// The zones a recipe's sheet draws, in order (does on its own, asks first, never does),
+        /// titled by `labels`: a zone its Card leaves empty isn't one.
+        func zones(of recipe: Recipe) -> [Zone] {
+            let l = labels ?? Labels()
+            return [Zone(id: "allows", title: l.allows, lines: recipe.card.allows),
+                    Zone(id: "holds", title: l.holds, lines: recipe.card.holds),
+                    Zone(id: "never", title: l.never, lines: recipe.card.never)]
+                .filter { !$0.lines.isEmpty }
+        }
+        /// The words of the sheet's button that hands the recipe to Coach; nil when none came.
+        var handWords: String? {
+            guard let w = labels?.hand.trimmingCharacters(in: .whitespacesAndNewlines), !w.isEmpty else { return nil }
+            return w
         }
         /// Each category in tafs cloud's order, with its recipes; a category with none isn't shown.
         var byCategory: [(category: Category, recipes: [Recipe])] {

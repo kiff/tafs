@@ -46,6 +46,8 @@ struct HomeSplitView: View {
     /// do, the first taf in the list is the one open (the 859 test).
     @State private var opened: HomeSelection?
     @State private var chosen = false
+    /// A recipe's sheet, opened from the detail pane with no taf.
+    @State private var openRecipe: TafsCloud.Recipes.Recipe?
 
     var body: some View {
         NavigationSplitView {
@@ -61,6 +63,16 @@ struct HomeSplitView: View {
                     OverviewView { open in withMotion(.easeInOut(duration: 0.25)) { selection = open } }
                 case .calendar?:
                     CalendarView { id in withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) } }
+                case nil where model.homeListsRecipes:
+                    // No taf yet: the recipes take the pane beside the sidebar, which is
+                    // narrow for a headline (docs/ios-app.md).
+                    ScrollView {
+                        HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes()) { openRecipe = $0 }
+                            .padding(.horizontal, 24).padding(.vertical, 20)
+                            .frame(maxWidth: 720, alignment: .leading)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .screenBackground()
                 case nil:
                     VStack(spacing: 12) {
                         Mascot(size: 72)
@@ -77,6 +89,12 @@ struct HomeSplitView: View {
             .environment(\.sidebarSelects, true)
         }
         .navigationSplitViewStyle(.balanced)
+        .sheet(item: $openRecipe) { recipe in
+            RecipeSheet(recipe: recipe, recipes: model.recipes ?? TafsCloud.Recipes(), canHand: model.mayUseCoach) {
+                openRecipe = nil
+                model.handRecipeToCoach(recipe)
+            }
+        }
         .onAppear { model.sidebarShown = true }
         .onDisappear { model.sidebarShown = false }
         .onChange(of: selection) { s in
@@ -164,7 +182,8 @@ struct HomeSplitView: View {
                 Section {
                     ForEach(sections.own) { taf in tafLinks(taf) }
                     if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
-                        Text(model.mayUseCoach ? Words.Home.connectToolSetUpYour : Words.Home.tafsSharedYouShow)
+                        // tafs cloud's line for a Home with no taf; the app's own only when it sent none.
+                        Text(model.recipes?.homeWords ?? (model.mayUseCoach ? Words.Home.connectToolSetUpYour : Words.Home.tafsSharedYouShow))
                             .scaledFont(13).foregroundColor(Theme.dim)
                             .listRowBackground(Color.clear)
                     }
