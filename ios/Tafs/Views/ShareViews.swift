@@ -44,7 +44,7 @@ struct ShareLine: View {
         let names = shares.compactMap { s in
             s.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? s.subject.map { model.person($0)?.label ?? $0 }
         }
-        return names.isEmpty ? Words.People.notShared : Words.People.sharedWithPrefix + ListFormatter.localizedString(byJoining: names)
+        return names.isEmpty ? Words.People.notShared : Words.People.sharedWithPrefix + Words.list(names)
     }
 }
 

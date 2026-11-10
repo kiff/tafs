@@ -119,7 +119,7 @@ struct PeopleGroupsView: View {
             if model.canManagePeople {
                 let role = member.isManager ? "member" : "manager"
                 Button(member.isManager ? Words.People.makeMember : Words.People.makeManager) {
-                    Task { await model.changePeople(Words.People.makeRole(who: "\(person?.label ?? member.subject)", role: "\(role)", group: "\(group.name)")) { try await $0.setGroupMember(group.id, subject: member.subject, role: role) } }
+                    Task { await model.changePeople(member.isManager ? Words.People.makeRoleMember(who: person?.label ?? member.subject, group: group.name) : Words.People.makeRoleManager(who: person?.label ?? member.subject, group: group.name)) { try await $0.setGroupMember(group.id, subject: member.subject, role: role) } }
                 }
             }
             if mayRemove(member, from: group) {
@@ -140,7 +140,7 @@ struct PeopleGroupsView: View {
     static func uses(_ group: KIFFClient.Group, _ model: AppModel) -> String {
         let names = group.agents.compactMap { model.tafName(agent: $0) }
         if names.isEmpty { return group.everyone == true ? Words.People.everyoneUsesNone : Words.People.usesNone }
-        return Words.People.uses(tafs: ListFormatter.localizedString(byJoining: names.sorted()))
+        return Words.People.uses(tafs: Words.list(names.sorted()))
     }
 
     static func managersFirst(_ model: AppModel) -> (KIFFClient.GroupMember, KIFFClient.GroupMember) -> Bool {

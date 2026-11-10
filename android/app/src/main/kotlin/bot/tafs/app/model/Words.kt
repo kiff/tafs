@@ -1407,6 +1407,8 @@ object Words {
     val makeManager: String get() = Res.s(R.string.people_make_manager)
     val makeMember: String get() = Res.s(R.string.people_make_member)
     fun makeRole(who: String, role: String, group: String): String = Res.s(R.string.people_make_role, who, role, group)
+    fun makeRoleManager(who: String, group: String): String = Res.s(R.string.people_make_role_manager, who, group)
+    fun makeRoleMember(who: String, group: String): String = Res.s(R.string.people_make_role_member, who, group)
     val manager: String get() = Res.s(R.string.people_manager)
     val managerExplains: String get() = Res.s(R.string.people_manager_explains)
     val member: String get() = Res.s(R.string.people_member)
@@ -1427,6 +1429,15 @@ object Words {
     fun renameGroup(group: String, name: String): String = Res.s(R.string.people_rename_group, group, name)
     fun renameGroupTitle(group: String): String = Res.s(R.string.people_rename_group_title, group)
     val renameHint: String get() = Res.s(R.string.people_rename_hint)
+    object RolePhrase {
+      val admin: String get() = Res.s(R.string.people_role_phrase_admin)
+      val approver: String get() = Res.s(R.string.people_role_phrase_approver)
+      val manager: String get() = Res.s(R.string.people_role_phrase_manager)
+      val member: String get() = Res.s(R.string.people_role_phrase_member)
+      fun other(role: String): String = Res.s(R.string.people_role_phrase_other, role)
+      val owner: String get() = Res.s(R.string.people_role_phrase_owner)
+      val viewer: String get() = Res.s(R.string.people_role_phrase_viewer)
+    }
     object Share {
       val action: String get() = Res.s(R.string.people_share_action)
       val chooseSomeone: String get() = Res.s(R.string.people_share_choose_someone)

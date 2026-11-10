@@ -2611,6 +2611,10 @@ enum Words {
         static var makeMember: String { Words.line("people.make_member") }
         /// Make {who} a {role} of {group}
         static func makeRole(who: String, role: String, group: String) -> String { Words.line("people.make_role", who, role, group) }
+        /// Make {who} a manager of {group}
+        static func makeRoleManager(who: String, group: String) -> String { Words.line("people.make_role_manager", who, group) }
+        /// Make {who} a member of {group}
+        static func makeRoleMember(who: String, group: String) -> String { Words.line("people.make_role_member", who, group) }
         /// Manager
         static var manager: String { Words.line("people.manager") }
         /// A manager adds and removes the group's members. Managing doesn't let them change a taf's Cards.
@@ -2651,6 +2655,22 @@ enum Words {
         static func renameGroupTitle(group: String) -> String { Words.line("people.rename_group_title", group) }
         /// Only the name changes: its people and tafs stay.
         static var renameHint: String { Words.line("people.rename_hint") }
+        enum RolePhrase {
+            /// an admin
+            static var admin: String { Words.line("people.role_phrase.admin") }
+            /// an approver
+            static var approver: String { Words.line("people.role_phrase.approver") }
+            /// a manager
+            static var manager: String { Words.line("people.role_phrase.manager") }
+            /// a member
+            static var member: String { Words.line("people.role_phrase.member") }
+            /// someone with the role {role}
+            static func other(role: String) -> String { Words.line("people.role_phrase.other", role) }
+            /// an owner
+            static var owner: String { Words.line("people.role_phrase.owner") }
+            /// a viewer
+            static var viewer: String { Words.line("people.role_phrase.viewer") }
+        }
         enum Share {
             /// Share
             static var action: String { Words.line("people.share.action") }
@@ -3058,7 +3078,7 @@ enum Words {
         enum Revoked {
             /// No new action goes through
             static var noNewAction: String { Words.line("record.revoked.no_new_action") }
-            /// No new action goes through. {count} waiting action(s) refused.
+            /// No new action goes through. {count} waiting actions refused.
             static func refusedWaiting(count: Int) -> String { Words.count("record.revoked.refused_waiting", count) }
             /// You revoked {taf}'s Card
             static func title(taf: String) -> String { Words.line("record.revoked.title", taf) }
@@ -4513,6 +4533,21 @@ enum Words {
     static func number(_ n: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
+        formatter.locale = locale
+        return formatter.string(from: NSNumber(value: n)) ?? String(n)
+    }
+
+    /// Names joined as the lines' language joins them: "Refunds and Bills", "A, B and C".
+    static func list(_ names: [String]) -> String {
+        let formatter = ListFormatter()
+        formatter.locale = locale
+        return formatter.string(from: names) ?? names.joined(separator: ", ")
+    }
+
+    /// A number's ordinal as the lines' language writes it: 21st, 21., 21e.
+    static func ordinal(_ n: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .ordinal
         formatter.locale = locale
         return formatter.string(from: NSNumber(value: n)) ?? String(n)
     }

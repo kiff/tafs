@@ -324,13 +324,7 @@ enum KIFFMapping {
 
     /// 1st, 2nd, 3rd, 11th, 21st.
     static func ordinal(_ n: Int64) -> String {
-        if (11...13).contains(n % 100) { return "\(n)th" }
-        switch n % 10 {
-        case 1: return "\(n)st"
-        case 2: return "\(n)nd"
-        case 3: return "\(n)rd"
-        default: return "\(n)th"
-        }
+        Words.ordinal(Int(n))
     }
 
     static func moneyReason(_ e: KIFFClient.CardException) -> String? {

@@ -1353,6 +1353,8 @@
   "people.make_manager": "Make the manager",
   "people.make_member": "Make a member",
   "people.make_role": "Make {who} a {role} of {group}",
+  "people.make_role_manager": "Make {who} a manager of {group}",
+  "people.make_role_member": "Make {who} a member of {group}",
   "people.manager": "Manager",
   "people.manager_explains": "A manager adds and removes the group's members. Managing doesn't let them change a taf's Cards.",
   "people.member": "Member",
@@ -1373,6 +1375,13 @@
   "people.rename_group": "Rename {group} to {name}",
   "people.rename_group_title": "Rename {group}",
   "people.rename_hint": "Only the name changes: its people and tafs stay.",
+  "people.role_phrase.admin": "an admin",
+  "people.role_phrase.approver": "an approver",
+  "people.role_phrase.manager": "a manager",
+  "people.role_phrase.member": "a member",
+  "people.role_phrase.other": "someone with the role {role}",
+  "people.role_phrase.owner": "an owner",
+  "people.role_phrase.viewer": "a viewer",
   "people.share.action": "Share",
   "people.share.choose_someone": "Choose someone on the account.",
   "people.share.groups": "GROUPS",
@@ -1561,8 +1570,8 @@
   "record.result.unknown": "result unknown",
   "record.revoked.no_new_action": "No new action goes through",
   "record.revoked.refused_waiting": {
-    "one": "No new action goes through. {count} waiting action(s) refused.",
-    "other": "No new action goes through. {count} waiting action(s) refused."
+    "one": "No new action goes through. {count} waiting action refused.",
+    "other": "No new action goes through. {count} waiting actions refused."
   },
   "record.revoked.title": "You revoked {taf}'s Card",
   "record.sent_waiting": "{allowed}, and sent: waiting for the tool's answer",

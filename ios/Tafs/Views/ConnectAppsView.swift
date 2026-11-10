@@ -135,7 +135,7 @@ enum DisconnectWords {
     static func title(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
         let asked = taf.map { Words.Connect.Disconnect.titleFrom(vendor: "\(vendor)", taf: "\($0)") } ?? Words.Connect.Disconnect.title(vendor: "\(vendor)")
         guard !alsoStops.isEmpty else { return asked }
-        return asked + " " + Words.Connect.Disconnect.alsoStops(count: alsoStops.count, names: alsoStops.joined(separator: " and "))
+        return asked + " " + Words.Connect.Disconnect.alsoStops(count: alsoStops.count, names: Words.list(alsoStops))
     }
 
     static func message(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
@@ -143,7 +143,7 @@ enum DisconnectWords {
         switch alsoStops.count {
         case 0: others = ""
         case 1: others = " " + Words.Connect.Disconnect.alsoCard(owner: possessive(alsoStops[0]))
-        default: others = " " + Words.Connect.Disconnect.alsoCards(names: alsoStops.joined(separator: " and "))
+        default: others = " " + Words.Connect.Disconnect.alsoCards(names: Words.list(alsoStops))
         }
         return (taf.map { Words.Connect.Disconnect.toolsStop(owner: "\(possessive($0))", vendor: "\(vendor)") } ?? Words.Connect.Disconnect.noTafUses(vendor: "\(vendor)"))
             + others
@@ -199,7 +199,7 @@ enum ConnectionGroupWords {
 
     /// "A", "A and B", "A, B and C".
     private static func joined(_ names: [String]) -> String {
-        names.count == 1 ? names[0] : names.dropLast().joined(separator: ", ") + " and " + (names.last ?? "")
+        Words.list(names)
     }
 }
 

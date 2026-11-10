@@ -1355,6 +1355,8 @@
     <string name="people_make_manager">Make the manager</string>
     <string name="people_make_member">Make a member</string>
     <string name="people_make_role">Make %1$s a %2$s of %3$s</string>
+    <string name="people_make_role_manager">Make %1$s a manager of %2$s</string>
+    <string name="people_make_role_member">Make %1$s a member of %2$s</string>
     <string name="people_manager">Manager</string>
     <string name="people_manager_explains">A manager adds and removes the group\'s members. Managing doesn\'t let them change a taf\'s Cards.</string>
     <string name="people_member">Member</string>
@@ -1375,6 +1377,13 @@
     <string name="people_rename_group">Rename %1$s to %2$s</string>
     <string name="people_rename_group_title">Rename %1$s</string>
     <string name="people_rename_hint">Only the name changes: its people and tafs stay.</string>
+    <string name="people_role_phrase_admin">an admin</string>
+    <string name="people_role_phrase_approver">an approver</string>
+    <string name="people_role_phrase_manager">a manager</string>
+    <string name="people_role_phrase_member">a member</string>
+    <string name="people_role_phrase_other">someone with the role %1$s</string>
+    <string name="people_role_phrase_owner">an owner</string>
+    <string name="people_role_phrase_viewer">a viewer</string>
     <string name="people_share_action">Share</string>
     <string name="people_share_choose_someone">Choose someone on the account.</string>
     <string name="people_share_groups">GROUPS</string>
@@ -1563,8 +1572,8 @@
     <string name="record_result_unknown">result unknown</string>
     <string name="record_revoked_no_new_action">No new action goes through</string>
     <plurals name="record_revoked_refused_waiting">
-        <item quantity="one">No new action goes through. %1$d waiting action(s) refused.</item>
-        <item quantity="other">No new action goes through. %1$d waiting action(s) refused.</item>
+        <item quantity="one">No new action goes through. %1$d waiting action refused.</item>
+        <item quantity="other">No new action goes through. %1$d waiting actions refused.</item>
     </plurals>
     <string name="record_revoked_title">You revoked %1$s\'s Card</string>
     <string name="record_sent_waiting">%1$s, and sent: waiting for the tool\'s answer</string>

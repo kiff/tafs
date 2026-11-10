@@ -13851,6 +13851,28 @@
         }
       }
     },
+    "people.make_role_manager": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %1$@ a manager of %2$@"
+          }
+        }
+      }
+    },
+    "people.make_role_member": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %1$@ a member of %2$@"
+          }
+        }
+      }
+    },
     "people.manager": {
       "extractionState": "manual",
       "localizations": {
@@ -14067,6 +14089,83 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only the name changes: its people and tafs stay."
+          }
+        }
+      }
+    },
+    "people.role_phrase.admin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an admin"
+          }
+        }
+      }
+    },
+    "people.role_phrase.approver": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an approver"
+          }
+        }
+      }
+    },
+    "people.role_phrase.manager": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a manager"
+          }
+        }
+      }
+    },
+    "people.role_phrase.member": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a member"
+          }
+        }
+      }
+    },
+    "people.role_phrase.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "someone with the role %1$@"
+          }
+        }
+      }
+    },
+    "people.role_phrase.owner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an owner"
+          }
+        }
+      }
+    },
+    "people.role_phrase.viewer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a viewer"
           }
         }
       }
@@ -16112,7 +16211,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No new action goes through. %1$@ waiting action(s) refused."
+            "value": "No new action goes through. %1$@ waiting action refused."
           }
         }
       }
@@ -16123,7 +16222,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No new action goes through. %1$@ waiting action(s) refused."
+            "value": "No new action goes through. %1$@ waiting actions refused."
           }
         }
       }
