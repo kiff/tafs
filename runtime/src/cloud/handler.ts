@@ -15,7 +15,7 @@ import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, rea
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
-import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, withLanguage, wordsIn } from "./words/index.js";
+import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
@@ -4650,12 +4650,28 @@ const CREDITS_CODES = ["credits_used_up", "limit_reached", "no_plan"];
  */
 async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): Promise<Record<string, unknown> | undefined> {
   const code = err.extra?.code;
+  if (code === "halted") return { ...err.extra, words: await haltedWords(event, deps) };
   if (typeof code !== "string" || !CREDITS_CODES.includes(code)) return err.extra;
   try {
     const b = await readBalance(bearer(event), deps.fetch, deps.kiffBase);
     return { ...err.extra, words: waitingWords({ ...b, why: code }, langOf(event)) };
   } catch {
     return err.extra;
+  }
+}
+
+/**
+ * A refusal for a halt, in the person's language: the whole account when it's halted (a Coach chat's
+ * refusal included), else the taf on its own. An account halt that can't be read says the taf's.
+ */
+async function haltedWords(event: HTTPEvent, deps: Deps): Promise<string> {
+  const w = wordsIn(langOf(event));
+  try {
+    const me = await person(event, deps);
+    const account = await deps.agents.halted(me.tenantID);
+    return account.halted ? w.refusal_halted_account : w.refusal_halted_taf;
+  } catch {
+    return w.refusal_halted_taf;
   }
 }
 
@@ -5443,7 +5459,10 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const needsYou = unsure === undefined ? undefined : (() => {
     const count = kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length + unsure + unitExceptions.length
       + lights.filter((l) => l.some((d) => d.knocks > 0)).length;
-    return { count, words: count === 0 ? "Nothing needs you." : `${count} ${count === 1 ? "needs" : "need"} you.` };
+    // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
+    const lang = langOf(event);
+    const w = wordsIn(lang);
+    return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
   return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
