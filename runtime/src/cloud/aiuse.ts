@@ -1,22 +1,12 @@
 import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 
 /**
- * AI fair use (kiff/tafs#193): what chats with the tafs and Setup cost the
- * model is bounded at half the plan's monthly price, per period. kiff/agents
- * counts the cost and refuses a new chat past the bound; KIFF keeps the plan,
- * its seats, the period and how many times the owner said go on (signed on
- * the phone). tafs cloud joins them: the bound it sends with each chat, and
- * what the app shows. AI use is never billed: the bound only asks first.
+ * AI fair use (kiff/tafs#193), from before credits: chats with the tafs and
+ * Setup were bounded per period by a share of the plan's price. Since credits
+ * are the balance, tafs cloud sends kiff/agents no bound with a chat, and
+ * GET /v1/usage/ai answers that there is none (docs/accounts.md, "In the apps").
+ * What's left here is that answer, and the words and reads older apps still meet.
  */
-
-/** Each plan's monthly price per seat, in euro cents excl. VAT, as /pricing shows it. The trial uses Solo's. */
-export const PLAN_EUR_CENTS: Readonly<Record<string, number>> = { trial: 899, solo: 899, team: 899 };
-
-/**
- * US dollars per euro: the model costs are in dollars and the prices in euros.
- * A fixed rate, changed by hand (kiff/tafs#193), so the bound stays predictable.
- */
-export const USD_PER_EUR = 1.08;
 
 /** The part of KIFF's usage read AI fair use needs. */
 export interface Plan {
@@ -56,28 +46,6 @@ export function periodName(start: string): string {
   return start.toLowerCase().replace(/:/g, ".").replace(/[^a-z0-9._-]/g, "-");
 }
 
-/**
- * Half the plan's monthly price, in micro US dollars: the bound before any go on.
- * The trial and Solo have one seat. 0 is no bound: the internal plan, and any
- * plan without a price here.
- */
-export function base(p: Plan): number {
-  const cents = PLAN_EUR_CENTS[p.plan];
-  if (cents === undefined) return 0;
-  const seats = p.plan === "team" ? p.seats : 1;
-  return Math.round((cents / 2) * seats * USD_PER_EUR * 10_000);
-}
-
-/** The bound now: each go on adds one more base, so the tafs ask again at 200%, 300%… */
-export function bound(p: Plan): number {
-  return base(p) * (p.goOns + 1);
-}
-
-/** What kiff/agents takes with a chat: the period it counts toward and its bound (0, none). */
-export function aiFor(p: Plan | undefined): { period: string; bound_micro_usd: number } | undefined {
-  return p ? { period: periodName(p.start), bound_micro_usd: bound(p) } : undefined;
-}
-
 /** What the app shows. No bound: nulls, and never paused. */
 export interface AIView {
   used_pct: number | null;
@@ -112,22 +80,11 @@ function again(p: Plan | undefined, zone: string): string {
 }
 
 /**
- * The period's use as a share of the base, where the tafs ask next, and whether they're asking now.
- * While they wait, someone who may go on is told to; anyone else is told who can, and when it starts
- * again by itself. An account's admin is named by role, never by email.
+ * What GET /v1/usage/ai answers since credits are the balance: no bound, nothing used, never
+ * waiting. canGoOn is passed through as the apps from before credits read it.
  */
-export function view(p: Plan | undefined, spent: number, canGoOn = false, zone = "UTC"): AIView {
-  const b = p ? base(p) : 0;
-  const starts = p?.end ?? null;
-  if (!p || b <= 0) return { used_pct: null, asks_at_pct: null, paused: false, can_go_on: canGoOn, starts_again: starts, words: "Your plan sets no AI limit for your tafs." };
-  const used = Math.floor((spent * 100) / b), at = 100 * (p.goOns + 1), paused = spent >= bound(p);
-  let words = `Your tafs used ${used}% of this period's AI. They ask you before going past ${at}%.`;
-  if (paused) {
-    words = canGoOn
-      ? `Your tafs used ${used}% of this period's AI and are waiting for you. Go on, and they ask again at ${at + 100}%. Otherwise it starts again ${again(p, zone)}.`
-      : `Your tafs used ${used}% of this period's AI and are waiting. An admin of this account can let them go on from Settings › AI use. Otherwise it starts again ${again(p, zone)}.`;
-  }
-  return { used_pct: used, asks_at_pct: at, paused, can_go_on: canGoOn, starts_again: starts, words };
+export function view(canGoOn = false): AIView {
+  return { used_pct: null, asks_at_pct: null, paused: false, can_go_on: canGoOn, starts_again: null, words: "Your plan sets no AI limit for your tafs." };
 }
 
 /** Whether kiff/agents refused a chat for AI fair use. */

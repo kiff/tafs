@@ -5366,8 +5366,8 @@ async function aiBound(_event: HTTPEvent, _deps: Deps): Promise<AIBound | undefi
  * nothing used, never waiting, no Go on. It goes once the apps with credits as the balance are
  * out on both stores.
  */
-async function aiUsage(_event: HTTPEvent, me: KIFFIdentity, _deps: Deps): Promise<AIView> {
-  return aiView(undefined, 0, false, me.timeZone ?? "UTC");
+async function aiUsage(_event: HTTPEvent, _me: KIFFIdentity, _deps: Deps): Promise<AIView> {
+  return aiView();
 }
 
 /**
