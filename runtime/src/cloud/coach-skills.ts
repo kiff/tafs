@@ -101,8 +101,8 @@ const DELIVERY_NOTE = /^.{1,120} didn't deliver its result to .{1,200}Find out w
  *
  * An account with a taf of its own also starts with the holds and the halting, whatever its state: an
  * owner of a running taf asks why it did nothing, or to stop everything, in words that never name a skill,
- * and the model left to read_skill didn't (kiff/agents Eval 42788659962). A first taf, with nothing
- * running yet, loads neither.
+ * and the model left to read_skill didn't (kiff/agents Eval 42788659962). An account with no taf yet
+ * loads neither; once Setup has made its first taf, even mid-setup, both load.
  */
 export function startSkills(entry: CoachEntry, state: CoachState = {}): SkillRef[] {
   const names = new Set(ENTRY_SKILLS[entry]);

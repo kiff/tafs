@@ -68,7 +68,8 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
  * The first tool of the grant no Card covers, once the draft is confirmed: neither the draft's Cards
  * nor the agent's Cards in force (inForce, as actionsInForce reads them) name it. KIFF refuses every
  * call no Card covers, so the taf couldn't use it, and would ask its owner for a Card it shouldn't
- * need (Eval 42781271564). Setup's own reads (setup_reads) are on its reader Card, never the taf's.
+ * need (Eval 42781271564). Setup's own reads (setup_reads) are on its reader Card, never the taf's, and a
+ * tool listed with no KIFF name is left out.
  */
 export function uncoveredTool(grant: ApprovalGrant, cards: unknown[], inForce: Set<string>): string | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
@@ -79,8 +80,10 @@ export function uncoveredTool(grant: ApprovalGrant, cards: unknown[], inForce: S
   }
   for (const t of grant.request.tools ?? []) {
     if (t.setup_reads) continue;
-    const name = fold(t.name || t.tool);
-    if (name && !covered.has(name)) return t.title || t.name || t.tool || name;
+    // By its name in KIFF, which is what a Card covers. A tool with none is left out, never compared by the
+    // vendor's own name (tool): planque names every tool when it's requested.
+    const name = fold(t.name);
+    if (name && !covered.has(name)) return t.title || t.name || name;
   }
   return undefined;
 }
