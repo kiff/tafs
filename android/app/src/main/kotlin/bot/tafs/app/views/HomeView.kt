@@ -81,6 +81,8 @@ fun HomeView(
   onHalted: (String) -> Unit = {},
   /** Opens Plan & usage, from the plan's line when it needs the owner. */
   onUsage: () -> Unit = {},
+  /** Opens a recipe's sheet, from Home's list with no taf. */
+  onRecipe: (bot.tafs.app.kiff.Recipe) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   // Pulling to refresh plays the sample's next round; signed in, it reads KIFF again.
@@ -168,11 +170,25 @@ fun HomeView(
           }
         }
         if (state.listLoaded && !state.listUnread && state.tafs.isEmpty()) {
+          // tafs cloud says what Home shows with no taf: the recipes under its line, or its empty line (docs/android-app.md).
+          val recipes = state.recipes
+          val labels = recipes?.labels
           item {
-            Panel {
-              Text(Words.Home.noTafs, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-              // Setting one up is Coach's: someone a taf is shared with who can't use Coach waits for one instead.
-              Text(HomeWords.empty(state.mayUseCoach), style = scaled(14, color = Theme.soft))
+            if (state.mode == Mode.kiff && recipes?.home?.shown == true && labels != null) {
+              HomeRecipes(recipes, labels, onRecipe)
+            } else {
+              Panel {
+                val words = recipes?.home?.words?.takeIf { it.isNotBlank() }
+                if (words != null) {
+                  // tafs cloud's empty line, whoever reads it: it has no words from the app.
+                  Text(words, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                } else {
+                  // A tafs cloud from before Home's line: the app's own. Setting one up is Coach's, so someone a taf is shared
+                  // with who can't use Coach waits for one instead.
+                  Text(Words.Home.noTafs, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                  Text(HomeWords.empty(state.mayUseCoach), style = scaled(14, color = Theme.soft))
+                }
+              }
             }
           }
         }

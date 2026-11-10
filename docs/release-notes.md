@@ -5,6 +5,64 @@ seven other languages tafs speaks ([languages.md](languages.md)). Play takes up 
 per language. The same rules as [store-listing.md](store-listing.md): the glossary's words, the
 same claims in every language, nothing stronger, and only what a person can see on screen.
 
+## Android 42
+
+**English (en-US):**
+
+```
+• An app's connection screen shows when its sign-in has ended, and offers to sign in again.
+• Signing in to tafs no longer gets stuck waiting for approval if the phone closes the app while you're in the browser.
+```
+
+**German (de-DE):**
+
+```
+• Die Verbindungsseite einer App zeigt, wenn ihre Anmeldung abgelaufen ist, und bietet an, sich erneut anzumelden.
+• Die Anmeldung bei tafs bleibt nicht mehr beim Warten auf die Freigabe hängen, wenn das Telefon die App schließt, während du im Browser bist.
+```
+
+**French (fr-FR):**
+
+```
+• L'écran de connexion d'une app indique quand sa connexion a expiré et propose de se reconnecter.
+• La connexion à tafs ne reste plus bloquée en attente d'approbation si le téléphone ferme l'app pendant que vous êtes dans le navigateur.
+```
+
+**Spanish (es-ES):**
+
+```
+• La pantalla de conexión de una app indica cuándo ha caducado su inicio de sesión y ofrece volver a iniciarla.
+• Iniciar sesión en tafs ya no se queda esperando la aprobación si el teléfono cierra la app mientras estás en el navegador.
+```
+
+**Italian (it-IT):**
+
+```
+• La schermata di connessione di un'app indica quando il suo accesso è scaduto e propone di accedere di nuovo.
+• L'accesso a tafs non resta più bloccato in attesa di approvazione se il telefono chiude l'app mentre sei nel browser.
+```
+
+**Portuguese (pt-PT):**
+
+```
+• O ecrã de ligação de uma app indica quando o início de sessão expirou e propõe iniciar sessão de novo.
+• Iniciar sessão no tafs já não fica preso à espera de aprovação se o telefone fechar a app enquanto está no navegador.
+```
+
+**Dutch (nl-NL):**
+
+```
+• Het verbindingsscherm van een app laat zien wanneer de aanmelding is verlopen en biedt aan opnieuw aan te melden.
+• Aanmelden bij tafs blijft niet meer hangen op wachten op goedkeuring als de telefoon de app sluit terwijl je in de browser bent.
+```
+
+**Polish (pl-PL):**
+
+```
+• Ekran połączenia aplikacji pokazuje, kiedy jej logowanie wygasło, i proponuje zalogować się ponownie.
+• Logowanie do tafs nie zatrzymuje się już na oczekiwaniu na zatwierdzenie, gdy telefon zamknie aplikację, kiedy jesteś w przeglądarce.
+```
+
 ## Android 41
 
 **English (en-US):**

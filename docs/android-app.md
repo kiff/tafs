@@ -38,6 +38,25 @@ scrolls (the last two drawn by `TafPageScreenTest`, from synthetic data):
   <img src="screenshots/android/taf-page-folded.png" width="180" alt="The page folded: the Card's line gone, the header and tabs kept">
 </p>
 
+## Home with no taf
+
+An account with no taf sees the jobs a taf can take on Home, where tafs cloud says so
+(`GET /v1/recipes`, its `home`; [coach.md](coach.md)). Every word is tafs cloud's, in the
+person's language.
+- **The list** (`HomeRecipes`): `home.words` leads it, then a chip per category to narrow it
+  (picked again, every recipe shows), then each recipe led by its `headline`, the problem it
+  removes, with its `line` under it.
+- **Only when `home.shown`** is true, which tafs cloud sets only with no taf, suggestions on, and
+  someone who can set a taf up with Coach. Otherwise Home shows `home.words` alone, its empty line.
+  A tafs cloud from before `home` leaves Home's own "No tafs yet." as it was.
+- **A recipe's sheet** (`RecipeSheet`): the headline, the line, `today` (what it costs today),
+  then its Card in three zones titled by `labels` (`allows`, `holds`, `never`), a zone with
+  nothing left out, and one button, `labels.hand`. The button opens a new Coach conversation
+  with the recipe's `say` in the message box, to edit and send, as a recipe tap in Coach does
+  (`AppModel.handRecipeToCoach`). Someone who can't use Coach gets no button.
+- **When it's read:** the recipes are read with each refresh that finds no taf, as well as when
+  Coach opens (`RecipesTest`, `HomeRecipesTest`).
+
 ## Building and testing
 
 ```bash
@@ -61,6 +80,11 @@ The application id is `dev.kiff.tafs`; the Kotlin packages are `bot.tafs.app`.
 **Alerts** need Firebase's settings, `android/app/google-services.json`, which is never
 committed: CI writes it from the repository secret `GOOGLE_SERVICES_JSON`. A build without
 it has alerts off and says so in Settings.
+
+**Versions** (`android/app/build.gradle.kts`): `versionCode` goes up by one with every build,
+and `versionName` is what the store shows: `1.x` for a release with new features, `1.x.y` for
+one with fixes only. Every Android batch pull request says its `versionName`. The app went public
+at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
 
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job on a
 manual dispatch, in the `android-release` environment, which the owner approves each time.
