@@ -544,6 +544,67 @@ describe("tafs cloud", () => {
     expect(r.status).toBe(200); expect(r.body.needs_you).toBeUndefined();
   });
 
+  it("says what Needs you counts in the person's language, in all 8", async () => {
+    const said: Record<string, [string, string, string]> = {
+      en: ["Nothing needs you.", "1 needs you.", "4 need you."],
+      de: ["Nichts braucht dich.", "1 braucht dich.", "4 brauchen dich."],
+      fr: ["Rien ne vous attend.", "1 vous attend.", "4 vous attendent."],
+      es: ["Nada te necesita.", "1 te necesita.", "4 te necesitan."],
+      it: ["Niente ti aspetta.", "1 ti aspetta.", "4 ti aspettano."],
+      pt: ["Nada precisa de si.", "1 precisa de si.", "4 precisam de si."],
+      nl: ["Niets wacht op jou.", "1 wacht op jou.", "4 wachten op jou."],
+      pl: ["Nic nie czeka na Ciebie.", "1 czeka na Ciebie.", "4 czekają na Ciebie."],
+    };
+    for (const [lang, [none, one, four]] of Object.entries(said)) {
+      const w = world();
+      const read = async () => (await call(w, "GET", "/v1/home", { token: "ana", headers: { "accept-language": lang } })).body.needs_you;
+      w.account.unsure = 0;
+      expect(await read(), lang).toEqual({ count: 0, words: none });
+      w.account.unsure = 1;
+      expect(await read(), lang).toEqual({ count: 1, words: one });
+      w.account.unsure = 4;
+      expect(await read(), lang).toEqual({ count: 4, words: four });
+    }
+  });
+
+  it("says a halted refusal in the person's language: the whole account's, Coach's included, or the taf's own", async () => {
+    const taf: Record<string, string> = {
+      en: "This taf is halted: nothing of it runs until you resume it from Halt.",
+      de: "Dieser taf ist angehalten: nichts davon läuft, bis du ihn über „Anhalten“ fortsetzt.",
+      fr: "Ce taf est bloqué : rien ne tourne jusqu'à ce que vous le repreniez depuis Bloquer.",
+      es: "Este taf está bloqueado: nada de él se ejecuta hasta que lo reanudes desde Bloquear.",
+      it: "Questo taf è bloccato: nulla viene eseguito finché non lo riprendi da Blocca.",
+      pt: "Este taf está bloqueado: nada dele é executado até o retomar em Bloquear.",
+      nl: "Deze taf is stilgezet: er draait niets van tot je hem hervat via Stilzetten.",
+      pl: "Ten taf jest zablokowany: nic z niego nie działa, dopóki nie wznowisz go w sekcji Zablokuj.",
+    };
+    const account: Record<string, string> = {
+      en: "Your account is halted: none of your tafs runs, Coach included, until you resume it from Halt.",
+      de: "Dein Konto ist angehalten: keiner deiner tafs läuft, auch Coach nicht, bis du es über „Anhalten“ fortsetzt.",
+      fr: "Votre compte est bloqué : aucun de vos tafs ne tourne, Coach compris, jusqu'à ce que vous le repreniez depuis Bloquer.",
+      es: "Tu cuenta está bloqueada: ninguno de tus tafs se ejecuta, Coach incluido, hasta que la reanudes desde Bloquear.",
+      it: "Il tuo account è bloccato: nessuno dei tuoi tafs viene eseguito, Coach compreso, finché non lo riprendi da Blocca.",
+      pt: "A sua conta está bloqueada: nenhum dos seus tafs é executado, Coach incluído, até a retomar em Bloquear.",
+      nl: "Je account is stilgezet: geen van je tafs draait, ook Coach niet, tot je het hervat via Stilzetten.",
+      pl: "Twoje konto jest zablokowane: żaden z Twoich tafs nie działa, łącznie z Coachem, dopóki nie wznowisz go w sekcji Zablokuj.",
+    };
+    const refused = () => new AgentsError(409, "halted", undefined, "halted");
+    for (const lang of Object.keys(taf)) {
+      const w = world();
+      // The taf alone is halted: its own words.
+      await w.agents.api.halt("t_acme", RAE);
+      w.agents.fail.set("startRun", refused());
+      const own = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" }, headers: { "accept-language": lang } });
+      expect(own.status, lang).toBe(409);
+      expect(own.body, lang).toMatchObject({ code: "halted", words: taf[lang] });
+      // The whole account is halted: the account's, which a Coach chat's refusal says too.
+      await w.agents.api.halt("t_acme");
+      w.agents.fail.set("startRun", refused());
+      const all = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" }, headers: { "accept-language": lang } });
+      expect(all.body, lang).toMatchObject({ code: "halted", words: account[lang] });
+    }
+  });
+
   it("reads \"Did this happen?\" together with the Cards, not after them", async () => {
     const w = world();
     w.account.unsure = 1;
