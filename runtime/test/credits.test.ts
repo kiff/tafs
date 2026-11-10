@@ -49,7 +49,7 @@ describe("the period's credits, in words", () => {
       .toBe("This period: 3 credits used · ends on 19 Nov");
   });
 
-  it("names each taf that used credits, most first, Coach past its fair use, and what wasn't counted", () => {
+  it("names each taf that used credits, most first, Coach past what's included, and what wasn't counted", () => {
     expect(creditsView(kiffCredits(), tafs)).toEqual({
       period: { ...NOV, current: true },
       credits: 1240, runs: 61,
@@ -58,11 +58,11 @@ describe("the period's credits, in words", () => {
         { taf: REFUNDS, credits: 820, runs: 41, words: "Refunds · 820 credits · 41 runs" },
         { taf: CHARGEBACKS, credits: 374, runs: 18, words: "Chargebacks · 374 credits · 18 runs" },
       ],
-      coach: { credits: 46, runs: 2, words: "Coach, past its fair use · 46 credits · 2 runs" },
+      coach: { credits: 46, runs: 2, words: "Coach, past what's included · 46 credits · 2 runs" },
       not_counted: {
         runs: 12, words: "Not counted: 12 runs",
         lines: [
-          { why: "coach", runs: 7, words: "Coach, within its fair use · 7 runs" },
+          { why: "coach", runs: 7, words: "Coach, included in your plan · 7 runs" },
           { why: "trial", runs: 3, words: "Trials of a new version · 3 runs" },
           { why: "failed", runs: 2, words: "Failed on our side · 2 runs" },
         ],
