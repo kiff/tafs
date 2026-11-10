@@ -38,7 +38,7 @@ enum TafTemplates {
         job: "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
         tools: ["Payments", "Store", "Email"],
         rules: [
-            CardRule(action: "refund", label: "Refunds", perAction: .eur(150), perWindow: .eur(2_000), window: .day, nextSteps: ["Return first"]),
+            CardRule(action: "refund", label: "Refunds", perAction: .eur(150), perWindow: .eur(2_000), window: .day, nextSteps: [Words.Sample.Refunds.nextStep]),
             CardRule(action: "credit", label: "Credits", perAction: .eur(100), perWindow: .eur(1_000), window: .day),
             CardRule(action: "payout", label: "Payouts", never: true, outside: .refuse),
         ],
@@ -57,7 +57,7 @@ enum TafTemplates {
         job: "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
         tools: ["Accounting", "Email"],
         rules: [
-            CardRule(action: "pay_bill", label: "Bills", perAction: .eur(5_000), perWindow: .eur(25_000), window: .week, nextSteps: ["Pay half now"]),
+            CardRule(action: "pay_bill", label: "Bills", perAction: .eur(5_000), perWindow: .eur(25_000), window: .week, nextSteps: [Words.Sample.BillPay.nextStep]),
             CardRule(action: "wire", label: "Wires", alwaysAsk: true),
             CardRule(action: "bank_details", label: "Bank detail changes", never: true, outside: .refuse),
             CardRule(action: "new_payee", label: "New payees", never: true, outside: .refuse),
@@ -99,7 +99,7 @@ enum TafTemplates {
         rules: [
             CardRule(action: "deploy", label: "Production deploys", countPerWindow: 10, window: .day),
             CardRule(action: "rollback", label: "Rollbacks", countPerWindow: 20, window: .day),
-            CardRule(action: "migration", label: "Schema migrations", alwaysAsk: true, nextSteps: ["Run it tonight"]),
+            CardRule(action: "migration", label: "Schema migrations", alwaysAsk: true, nextSteps: [Words.Sample.Deploys.nextStep]),
             CardRule(action: "destroy_data", label: "Dropping or deleting data", never: true, outside: .refuse),
         ],
         script: [

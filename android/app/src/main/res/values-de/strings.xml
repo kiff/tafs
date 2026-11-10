@@ -1165,7 +1165,7 @@
     <string name="home_status_retrying">%1$s · neuer Versuch</string>
     <string name="home_tafs_shared_you_show">Mit dir geteilte tafs erscheinen hier.</string>
     <string name="home_tagline">They taf. You kiff.</string>
-    <string name="home_title">tafs</string>
+    <string name="home_title">Tafs</string>
     <plurals name="home_working">
         <item quantity="one">%1$s taf arbeitet.</item>
         <item quantity="other">%1$s tafs arbeiten.</item>

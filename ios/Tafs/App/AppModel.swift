@@ -4844,7 +4844,7 @@ final class AppModel: ObservableObject {
     }
 
     private static func sampleHello(_ taf: Taf) -> String {
-        Words.Sample.hello(name: "\(taf.name)", now: "\(taf.now.lowercased())")
+        Words.Sample.hello(name: "\(taf.name)", now: "\(taf.now)")
     }
 
     /// A sample taf answers from its own record: what it did, what waits, or a pause.
