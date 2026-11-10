@@ -3171,16 +3171,19 @@ describe("halting", () => {
     await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
     w.account.acksAtOnce = true;
     await call(w, "POST", "/v1/halt", { token: "ana" });
-    expect(w.pushed.map((p) => p.token)).toEqual(["a".repeat(64), "a".repeat(64)]);
-    expect(w.pushed[0]!.n).toMatchObject({ kind: "alert", collapseID: "halt-Rae", payload: {
+    // The alerts, apart from the silent "something changed" pushes every phone gets (tellChange), which are told
+    // at most once every few seconds per account: whether one goes depends on how lately another test told it.
+    const alerts = () => w.pushed.filter((p) => p.n.kind !== "background");
+    expect(alerts().map((p) => p.token)).toEqual(["a".repeat(64), "a".repeat(64)]);
+    expect(alerts()[0]!.n).toMatchObject({ kind: "alert", collapseID: "halt-Rae", payload: {
       aps: { alert: { title: "Halting Rae", body: "Nothing new is sent until you resume in tafs." }, category: "halt", "interruption-level": "time-sensitive", sound: "default" },
       open: `halt:${RAE}`,
     } });
-    expect(w.pushed[1]!.n).toMatchObject({ collapseID: "halt-all", payload: { aps: { alert: { title: "All your tafs halted" } }, open: "halt" } });
+    expect(alerts()[1]!.n).toMatchObject({ collapseID: "halt-all", payload: { aps: { alert: { title: "All your tafs halted" } }, open: "halt" } });
     // A resume replaces the halt's notification, quietly (kiff/tafs#236, item 21).
     w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
-    expect(w.pushed.at(-1)!.n).toMatchObject({ collapseID: "halt-Rae", payload: {
+    expect(alerts().at(-1)!.n).toMatchObject({ collapseID: "halt-Rae", payload: {
       aps: { alert: { title: "Rae resumed" }, "interruption-level": "passive" }, open: `halt:${RAE}`,
     } });
     // Each halt and resume is in Activity, newest first (kiff/tafs#236, item 15).
