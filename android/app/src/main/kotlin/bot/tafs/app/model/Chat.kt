@@ -343,7 +343,7 @@ object Chat {
 
   /** The sample taf's first words. */
   fun hello(taf: Taf): String =
-    Words.Sample.hello(taf.name, taf.now.lowercase())
+    Words.Sample.hello(taf.name, taf.now)
 
   /** What a held call's outcome says in the chat. */
   fun outcomeText(entry: RecordEntry): String = when (entry.kind) {

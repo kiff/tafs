@@ -1582,6 +1582,7 @@
     <string name="sample_access_sales_role_why">Starts Monday, per HR</string>
     <string name="sample_bill_pay_job">Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Pay half now</string>
     <string name="sample_bill_pay_pay_atlas">Pay Atlas Freight</string>
     <string name="sample_bill_pay_pay_atlas_why">Matches PO-3390, quarterly</string>
     <string name="sample_bill_pay_pay_northwind">Pay Northwind Packaging</string>
@@ -1626,6 +1627,7 @@
     <string name="sample_deploys_migration">Run migration 0042_orders_index</string>
     <string name="sample_deploys_migration_why">Adds an index, 3M rows</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">Run it tonight</string>
     <string name="sample_deploys_rule_deploys">Production deploys</string>
     <string name="sample_deploys_rule_destroy_data">Dropping or deleting data</string>
     <string name="sample_deploys_rule_migrations">Schema migrations</string>
@@ -1641,6 +1643,7 @@
     <string name="sample_refunds_credit_2290_why">Billing error last month</string>
     <string name="sample_refunds_job">Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">Return first</string>
     <string name="sample_refunds_payout">Pay out to a new bank account</string>
     <string name="sample_refunds_payout_why">Customer asked for cash instead</string>
     <string name="sample_refunds_refund_4471">Refund order #4471</string>
