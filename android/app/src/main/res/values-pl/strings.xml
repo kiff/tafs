@@ -169,7 +169,7 @@
     <string name="billing_not_bought">Zakup nie doszedł do skutku: %1$s</string>
     <string name="billing_not_restored">Nie udało się przywrócić zakupów: %1$s</string>
     <string name="billing_not_signed_in">Nie zalogowano.</string>
-    <string name="billing_one_person_tafs_kiff_your">Jedna osoba: tafs oraz KIFF dla Twoich własnych agentów, z kredytami w każdym okresie.</string>
+    <string name="billing_one_person_tafs_kiff_your">Jedna osoba: tafs, z kredytami w każdym okresie.</string>
     <string name="billing_only_someone_who_manages_account">Kredyty kupuje tylko osoba zarządzająca rozliczeniami konta.</string>
     <string name="billing_open_tafs_to_buy">Otwórz tafs, aby kupić.</string>
     <string name="billing_pack_adds_credits_once_never">Pakiet dodaje kredyty jednorazowo i nigdy nie wygasają. Najpierw zużywane są kredyty z okresu, potem z pakietów.</string>
@@ -196,7 +196,7 @@
     <string name="billing_solo_not_available_app_store">Solo nie jest teraz dostępne w App Store.</string>
     <string name="billing_solo_subscription_one_charged_your">Solo to subskrypcja na okres %1$s za %2$s, pobierana z Twojego konta Apple. Odnawia się co %3$s, dopóki jej nie anulujesz.</string>
     <string name="billing_starts_free">Zaczyna się od %1$s za darmo.</string>
-    <string name="billing_tafs_kiff_one_person_every">tafs i KIFF dla jednej osoby, co miesiąc.</string>
+    <string name="billing_tafs_kiff_one_person_every">tafs dla jednej osoby, co miesiąc.</string>
     <string name="billing_terms_use">Warunki korzystania</string>
     <string name="billing_test_purchase_credits">Zakupy testowe nie dodają kredytów do tego konta.</string>
     <string name="billing_try_free">Wypróbuj %1$s za darmo</string>
