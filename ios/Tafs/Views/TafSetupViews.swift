@@ -20,8 +20,8 @@ struct StartsWhenView: View {
     @State private var slackApp: TafsCloud.DoorApp?
     @State private var busy = false
 
-    static let title = "Starts when"
-    static let approveNote = "Approve signs on this phone; the app starts telling the taf only after that."
+    static let title = Words.Setup.startsWhen
+    static let approveNote = Words.Setup.approveNote
 
     var body: some View {
         let knob = model.setupKnob(tafID)
@@ -35,7 +35,7 @@ struct StartsWhenView: View {
                     doors(manages: manages)
                     followUps(knob, manages: manages)
                     if manages && model.mayUseCoach {
-                        Button("Change when it starts with Coach") { model.improveTaf(tafID); model.coachOpen = true }
+                        Button(Words.Setup.changeStarts) { model.improveTaf(tafID); model.coachOpen = true }
                             .buttonStyle(OutlineButtonStyle())
                     }
                     pause(knob, manages: manages)
@@ -62,7 +62,7 @@ struct StartsWhenView: View {
         let schedules = knob.wakes.filter { $0.kind == "schedule" }
         let cloud = model.cloudTaf(for: tafID)
         Panel {
-            Eyebrow(text: "Its schedule")
+            Eyebrow(text: Words.Setup.schedule)
             if schedules.isEmpty {
                 Text(cloud?.worksFromChat == true ? "When you tell it, in its chat." : "No schedule starts it.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -85,12 +85,12 @@ struct StartsWhenView: View {
             }
             if !schedules.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("If it is still working when the next start comes").scaledFont(13).foregroundColor(Theme.soft)
+                    Text(Words.Setup.ifBusy).scaledFont(13).foregroundColor(Theme.soft)
                     Picker("If it is still working", selection: Binding(
                         get: { knob.setting?.busy ?? "skip" },
                         set: { value in change { $0.busy = value } })) {
-                        Text("Skip it").tag("skip")
-                        Text("Run after").tag("latest")
+                        Text(Words.Setup.skipIt).tag("skip")
+                        Text(Words.Setup.runAfter).tag("latest")
                     }
                     .pickerStyle(.segmented)
                     .disabled(!manages || busy || knob.setting == nil)
@@ -128,7 +128,7 @@ struct StartsWhenView: View {
         let events = knob.wakes.filter { $0.kind == "app_event" }
         if !events.isEmpty {
             Panel {
-                Eyebrow(text: "App events")
+                Eyebrow(text: Words.Setup.appEvents)
                 ForEach(events) { item in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(item.label).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
@@ -136,13 +136,13 @@ struct StartsWhenView: View {
                             Text(item.words).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         }
                         if item.approval?.state == "needed", item.ok == "approve" {
-                            Button("Approve") { approving = item }
+                            Button(Words.Setup.approve) { approving = item }
                                 .buttonStyle(PrimaryButtonStyle())
                                 .confirming()
                                 .disabled(!manages || model.approvalBlocked)
                         } else if item.approval?.state == "approved" || item.on {
                             HStack {
-                                Label("Listening", systemImage: "dot.radiowaves.left.and.right")
+                                Label(Words.Setup.listening, systemImage: "dot.radiowaves.left.and.right")
                                     .scaledFont(13, weight: .semibold).foregroundColor(Theme.ok)
                                 Spacer()
                                 if manages, let trigger = item.trigger {
@@ -182,7 +182,7 @@ struct StartsWhenView: View {
         let followUps = knob.wakes.filter { $0.kind == "follow_up" }
         if !followUps.isEmpty {
             Panel {
-                Eyebrow(text: "Follow-ups it set itself")
+                Eyebrow(text: Words.Setup.followUps)
                 ForEach(followUps) { item in
                     HStack(alignment: .firstTextBaseline) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -194,7 +194,7 @@ struct StartsWhenView: View {
                         }
                         Spacer()
                         if manages, let id = item.followUp {
-                            Button("Remove") {
+                            Button(Words.Setup.remove) {
                                 busy = true
                                 Task { await model.removeFollowUp(tafID, id); busy = false }
                             }
@@ -220,7 +220,7 @@ struct StartsWhenView: View {
     @ViewBuilder
     private func pause(_ knob: TafsCloud.Knob, manages: Bool) -> some View {
         if manages, knob.canPause, let cloud = model.cloudTaf(for: tafID) {
-            Button(cloud.paused ? "Resume every start" : "Pause every start") {
+            Button(cloud.paused ? Words.Setup.resumeEvery : Words.Setup.pauseEvery) {
                 busy = true
                 Task {
                     await model.setPaused(tafID, !cloud.paused)
@@ -268,16 +268,16 @@ private struct DoorsList: View {
 
     var body: some View {
         Panel {
-            Eyebrow(text: "Doors")
+            Eyebrow(text: Words.Setup.doors)
             ForEach(doors.doors) { door in
                 HStack(spacing: 12) {
                     DoorBadge(app: door.app, open: door.open, size: 30)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(door.label).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                        Text(door.words?.state ?? (door.open ? "Open" : "Closed")).scaledFont(13).foregroundColor(Theme.soft)
+                        Text(door.words?.state ?? (door.open ? Words.Setup.`open` : Words.Door.Status.closed)).scaledFont(13).foregroundColor(Theme.soft)
                     }
                     Spacer()
-                    NavigationLink("Edit") {
+                    NavigationLink(Words.Setup.edit) {
                         DoorsView(taf: taf, doors: doors, manages: true, myEmail: myEmail)
                             .slack(add: { _ in }, remove: removeSlack)
                             .only(door.id)
@@ -285,7 +285,7 @@ private struct DoorsList: View {
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                 }
             }
-            Button(action: add) { Label("Add a door…", systemImage: "plus") }
+            Button(action: add) { Label(Words.Setup.addDoor, systemImage: "plus") }
                 .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 .disabled(!doors.loaded || doors.addable.isEmpty)
         }
@@ -302,7 +302,7 @@ struct ResultsGoToView: View {
     let tafID: UUID
     @State private var busy = false
 
-    static let title = "Results go to"
+    static let title = Words.Setup.resultsGoTo
 
     private struct BuiltIn {
         let place: String
@@ -312,9 +312,9 @@ struct ResultsGoToView: View {
 
     /// tafs' own places, in the same words as on Android.
     private var builtIns: [BuiltIn] {
-        [BuiltIn(place: "door_reply", title: "Reply to the sender", line: "On the same thread, through the door it came in on"),
-         BuiltIn(place: "app", title: "Alert our phones", line: "Who was answered and through which door, never its words"),
-         BuiltIn(place: "owner_email", title: "Email me", line: "Its answer to \(model.kiffAccount?.email ?? "your email"); not when you wrote the message")]
+        [BuiltIn(place: "door_reply", title: Words.Setup.Place.replyTitle, line: Words.Setup.Place.replyWords),
+         BuiltIn(place: "app", title: Words.Setup.Place.appTitle, line: Words.Setup.Place.appWords),
+         BuiltIn(place: "owner_email", title: Words.Setup.Place.emailTitle, line: "Its answer to \(model.kiffAccount?.email ?? "your email"); not when you wrote the message")]
     }
 
     private static let builtInPlaces: Set<String> = ["door_reply", "app", "owner_email"]
@@ -349,10 +349,10 @@ struct ResultsGoToView: View {
                 if let knob {
                     let actions = knob.results.filter { !Self.builtInPlaces.contains($0.place ?? "") }
                     let live = Self.liveBuiltIns(model.cloudTaf(for: tafID)?.results, knob: knob)
-                    Text("At least one place stays on.").scaledFont(13).foregroundColor(Theme.dim)
+                    Text(Words.Setup.atLeastOne).scaledFont(13).foregroundColor(Theme.dim)
                     KnobPendingPanel(tafID: tafID, knob: knob)
                     Panel {
-                        Eyebrow(text: "From tafs")
+                        Eyebrow(text: Words.Setup.fromTafs)
                         ForEach(builtIns, id: \.place) { b in
                             let on = live?.contains(b.place) ?? false
                             placeRow(title: b.title, line: b.line, on: on,
@@ -360,7 +360,7 @@ struct ResultsGoToView: View {
                         }
                     }
                     Panel {
-                        Eyebrow(text: "In your connected apps")
+                        Eyebrow(text: Words.Setup.inApps)
                         ForEach(actions) { item in
                             placeRow(title: item.label, line: item.words, on: item.on,
                                      disabled: !manages || busy || toggled(item) == nil) { _ in
@@ -368,7 +368,7 @@ struct ResultsGoToView: View {
                             }
                         }
                         if manages, model.mayUseCoach, model.mode == .kiff {
-                            Button("Add a place from a connected app…") {
+                            Button(Words.Setup.addPlace) {
                                 model.improveTaf(tafID)
                                 model.coachOpen = true
                             }
@@ -448,13 +448,13 @@ struct ResultsGoToView: View {
         }
         if !unsent.isEmpty {
             Panel(stroke: Theme.amber.opacity(0.45)) {
-                Eyebrow(text: "Not sent", color: Theme.amber)
+                Eyebrow(text: Words.Setup.notSent, color: Theme.amber)
                 ForEach(unsent) { r in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(r.line).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                         if manages {
                             let sending = model.sendingAgain.contains(r.id)
-                            Button(sending ? "Sending again…" : "Send again") { Task { await model.sendAgain(tafID, run: r.id) } }
+                            Button(sending ? Words.Work.sendingAgain : Words.Setup.sendAgain) { Task { await model.sendAgain(tafID, run: r.id) } }
                                 .buttonStyle(OutlineButtonStyle())
                                 .disabled(sending)
                         }
@@ -476,7 +476,7 @@ struct KnobPendingPanel: View {
     var body: some View {
         if let pending = knob.pending, model.manages(tafID) {
             Panel(stroke: Theme.amber.opacity(0.45)) {
-                Text("DRAFT · V\(pending.version) · NOT LIVE").scaledFont(10, weight: .semibold, design: .monospaced)
+                Text(Words.Knob.notLive(version: "\(pending.version)")).scaledFont(10, weight: .semibold, design: .monospaced)
                     .foregroundColor(Theme.amberText)
                 ForEach(Array((knob.draft?.words ?? []).enumerated()), id: \.offset) { _, line in
                     Text(line).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)

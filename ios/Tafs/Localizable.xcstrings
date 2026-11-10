@@ -1,6 +1,29 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "_plural": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld|one"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld|other"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "alert.all_halted": {
       "extractionState": "manual",
       "localizations": {
@@ -276,25 +299,24 @@
         }
       }
     },
-    "alert.tafs": {
+    "alert.tafs|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld taf ›"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld tafs ›"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf ›"
+          }
+        }
+      }
+    },
+    "alert.tafs|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs ›"
           }
         }
       }
@@ -970,94 +992,90 @@
         }
       }
     },
-    "billing.length.days": {
+    "billing.length.days|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld day"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld days"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ day"
           }
         }
       }
     },
-    "billing.length.months": {
+    "billing.length.days|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld month"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld months"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ days"
           }
         }
       }
     },
-    "billing.length.weeks": {
+    "billing.length.months|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld week"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld weeks"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ month"
           }
         }
       }
     },
-    "billing.length.years": {
+    "billing.length.months|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld year"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld years"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ months"
+          }
+        }
+      }
+    },
+    "billing.length.weeks|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ week"
+          }
+        }
+      }
+    },
+    "billing.length.weeks|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ weeks"
+          }
+        }
+      }
+    },
+    "billing.length.years|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ year"
+          }
+        }
+      }
+    },
+    "billing.length.years|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ years"
           }
         }
       }
@@ -1304,25 +1322,24 @@
         }
       }
     },
-    "calendar.day_scheduled": {
+    "calendar.day_scheduled|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@, %1$lld scheduled"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@, %1$lld scheduled"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@, %1$@ scheduled"
+          }
+        }
+      }
+    },
+    "calendar.day_scheduled|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@, %1$@ scheduled"
           }
         }
       }
@@ -1624,48 +1641,46 @@
         }
       }
     },
-    "calendar.slot_times": {
+    "calendar.slot_times|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@, %1$lld time from %3$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@, %1$lld times from %3$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@, %1$@ time from %3$@"
           }
         }
       }
     },
-    "calendar.times": {
+    "calendar.slot_times|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "×%1$lld"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "×%1$lld"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@, %1$@ times from %3$@"
+          }
+        }
+      }
+    },
+    "calendar.times|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "×%1$@"
+          }
+        }
+      }
+    },
+    "calendar.times|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "×%1$@"
           }
         }
       }
@@ -1835,25 +1850,24 @@
         }
       }
     },
-    "card.all_of": {
+    "card.all_of|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "All of the Card"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "All of the Cards"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "All of the Card"
+          }
+        }
+      }
+    },
+    "card.all_of|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All of the Cards"
           }
         }
       }
@@ -1869,71 +1883,68 @@
         }
       }
     },
-    "card.calls_left": {
+    "card.calls_left|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld call left"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls left"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ call left"
           }
         }
       }
     },
-    "card.calls_used_of": {
+    "card.calls_left|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ of %1$lld calls %3$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ of %1$lld calls %3$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls left"
           }
         }
       }
     },
-    "card.calls_window": {
+    "card.calls_used_of|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls %2$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ of %1$@ calls %3$@"
+          }
+        }
+      }
+    },
+    "card.calls_used_of|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ of %1$@ calls %3$@"
+          }
+        }
+      }
+    },
+    "card.calls_window|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls %2$@"
+          }
+        }
+      }
+    },
+    "card.calls_window|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls %2$@"
           }
         }
       }
@@ -1982,25 +1993,24 @@
         }
       }
     },
-    "card.check.over_count": {
+    "card.check.over_count|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Over %1$lld %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Over %1$lld %2$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "card.check.over_count|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over %1$@ %2$@"
           }
         }
       }
@@ -2027,25 +2037,24 @@
         }
       }
     },
-    "card.count": {
+    "card.count|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld Card"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld Cards"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ Card"
+          }
+        }
+      }
+    },
+    "card.count|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ Cards"
           }
         }
       }
@@ -2116,48 +2125,46 @@
         }
       }
     },
-    "card.heading": {
+    "card.heading|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Card"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Cards"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card"
           }
         }
       }
     },
-    "card.held.count_in_window": {
+    "card.heading|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld call %2$@%3$@: this would be the %4$@%5$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls %2$@%3$@: this would be the %4$@%5$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cards"
+          }
+        }
+      }
+    },
+    "card.held.count_in_window|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ call %2$@%3$@: this would be the %4$@%5$@"
+          }
+        }
+      }
+    },
+    "card.held.count_in_window|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls %2$@%3$@: this would be the %4$@%5$@"
           }
         }
       }
@@ -2195,25 +2202,24 @@
         }
       }
     },
-    "card.held.over_count": {
+    "card.held.over_count|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Over its limit of %1$lld calls: this would be the %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Over its limit of %1$lld calls: this would be the %2$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over its limit of %1$@ calls: this would be the %2$@"
+          }
+        }
+      }
+    },
+    "card.held.over_count|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over its limit of %1$@ calls: this would be the %2$@"
           }
         }
       }
@@ -2240,25 +2246,24 @@
         }
       }
     },
-    "card.hero.calls_left_of": {
+    "card.hero.calls_left_of|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "call left %2$@ of %3$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "calls left %2$@ of %3$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "call left %2$@ of %3$@"
+          }
+        }
+      }
+    },
+    "card.hero.calls_left_of|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calls left %2$@ of %3$@"
           }
         }
       }
@@ -2395,25 +2400,24 @@
         }
       }
     },
-    "card.line.calls_in_window": {
+    "card.line.calls_in_window|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld call %2$@%3$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls %2$@%3$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ call %2$@%3$@"
+          }
+        }
+      }
+    },
+    "card.line.calls_in_window|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls %2$@%3$@"
           }
         }
       }
@@ -2462,25 +2466,24 @@
         }
       }
     },
-    "card.more": {
+    "card.more|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld more"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld more"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ more"
+          }
+        }
+      }
+    },
+    "card.more|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ more"
           }
         }
       }
@@ -2650,48 +2653,46 @@
         }
       }
     },
-    "card.rule.calls": {
+    "card.rule.calls_then_asks|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld call %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls %2$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ call %2$@, then it asks you"
           }
         }
       }
     },
-    "card.rule.calls_then_asks": {
+    "card.rule.calls_then_asks|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld call %2$@, then it asks you"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls %2$@, then it asks you"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls %2$@, then it asks you"
+          }
+        }
+      }
+    },
+    "card.rule.calls|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ call %2$@"
+          }
+        }
+      }
+    },
+    "card.rule.calls|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls %2$@"
           }
         }
       }
@@ -2762,25 +2763,24 @@
         }
       }
     },
-    "card.tools": {
+    "card.tools|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld tools"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld tools"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tools"
+          }
+        }
+      }
+    },
+    "card.tools|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tools"
           }
         }
       }
@@ -3247,25 +3247,24 @@
         }
       }
     },
-    "chat.file.attach_full": {
+    "chat.file.attach_full|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Attach: %1$lld file is the most a message carries"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Attach: %1$lld files is the most a message carries"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attach: %1$@ file is the most a message carries"
+          }
+        }
+      }
+    },
+    "chat.file.attach_full|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attach: %1$@ files is the most a message carries"
           }
         }
       }
@@ -3391,25 +3390,24 @@
         }
       }
     },
-    "chat.file.too_many": {
+    "chat.file.too_many|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "A message carries at most %1$lld files."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "A message carries at most %1$lld files."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "A message carries at most %1$@ files."
+          }
+        }
+      }
+    },
+    "chat.file.too_many|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A message carries at most %1$@ files."
           }
         }
       }
@@ -3678,25 +3676,24 @@
         }
       }
     },
-    "chat.too_long": {
+    "chat.too_long|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "That's longer than %1$lld characters. Say it in fewer words."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "That's longer than %1$lld characters. Say it in fewer words."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's longer than %1$@ characters. Say it in fewer words."
+          }
+        }
+      }
+    },
+    "chat.too_long|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's longer than %1$@ characters. Say it in fewer words."
           }
         }
       }
@@ -3734,48 +3731,46 @@
         }
       }
     },
-    "chat.worked_steps": {
+    "chat.worked_steps_failed|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Worked %2$@ · %1$lld step"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Worked %2$@ · %1$lld steps"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worked %2$@ · %1$@ step, %3$@ failed"
           }
         }
       }
     },
-    "chat.worked_steps_failed": {
+    "chat.worked_steps_failed|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Worked %2$@ · %1$lld step, %3$@ failed"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Worked %2$@ · %1$lld steps, %3$@ failed"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worked %2$@ · %1$@ steps, %3$@ failed"
+          }
+        }
+      }
+    },
+    "chat.worked_steps|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worked %2$@ · %1$@ step"
+          }
+        }
+      }
+    },
+    "chat.worked_steps|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worked %2$@ · %1$@ steps"
           }
         }
       }
@@ -5683,71 +5678,68 @@
         }
       }
     },
-    "connect.clear_removed.cleared": {
+    "connect.clear_removed.cleared|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Cleared %1$lld."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Cleared %1$lld."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleared %1$@."
           }
         }
       }
     },
-    "connect.clear_removed.not_cleared": {
+    "connect.clear_removed.cleared|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld couldn't be cleared. Try again."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld couldn't be cleared. Try again."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleared %1$@."
           }
         }
       }
     },
-    "connect.clear_removed.title": {
+    "connect.clear_removed.not_cleared|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Clear %1$lld connection from removed tafs?"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Clear %1$lld connections from removed tafs?"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ couldn't be cleared. Try again."
+          }
+        }
+      }
+    },
+    "connect.clear_removed.not_cleared|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ couldn't be cleared. Try again."
+          }
+        }
+      }
+    },
+    "connect.clear_removed.title|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear %1$@ connection from removed tafs?"
+          }
+        }
+      }
+    },
+    "connect.clear_removed.title|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear %1$@ connections from removed tafs?"
           }
         }
       }
@@ -5840,25 +5832,24 @@
         }
       }
     },
-    "connect.disconnect.also_stops": {
+    "connect.disconnect.also_stops|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ stops too."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ stop too."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ stops too."
+          }
+        }
+      }
+    },
+    "connect.disconnect.also_stops|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ stop too."
           }
         }
       }
@@ -5995,71 +5986,68 @@
         }
       }
     },
-    "connect.kept.for_card": {
+    "connect.kept.for_cards|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Kept %1$lld for %2$@, whose Card uses it."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Kept %1$lld for %2$@, whose Card uses them."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept %1$@ for %2$@, whose Cards use it."
           }
         }
       }
     },
-    "connect.kept.for_cards": {
+    "connect.kept.for_cards|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Kept %1$lld for %2$@, whose Cards use it."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Kept %1$lld for %2$@, whose Cards use them."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept %1$@ for %2$@, whose Cards use them."
           }
         }
       }
     },
-    "connect.kept_connection": {
+    "connect.kept.for_card|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Kept your %2$@ connection: %3$@ uses it."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Kept your %2$@ connection: %3$@ use it."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept %1$@ for %2$@, whose Card uses it."
+          }
+        }
+      }
+    },
+    "connect.kept.for_card|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept %1$@ for %2$@, whose Card uses them."
+          }
+        }
+      }
+    },
+    "connect.kept_connection|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept your %2$@ connection: %3$@ uses it."
+          }
+        }
+      }
+    },
+    "connect.kept_connection|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept your %2$@ connection: %3$@ use it."
           }
         }
       }
@@ -6559,71 +6547,68 @@
         }
       }
     },
-    "door.day.open": {
+    "door.day.open|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ of %1$lld from you and paired senders today. Text only: attachments aren't opened, and the reply says so."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ of %1$lld from you and paired senders today. Text only: attachments aren't opened, and the reply says so."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ of %1$@ from you and paired senders today. Text only: attachments aren't opened, and the reply says so."
           }
         }
       }
     },
-    "door.day.others": {
+    "door.day.open|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ of %1$lld from anyone else today."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ of %1$lld from anyone else today."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ of %1$@ from you and paired senders today. Text only: attachments aren't opened, and the reply says so."
           }
         }
       }
     },
-    "door.day.resting": {
+    "door.day.others|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld of %1$lld from you and paired senders today. More are dropped until tomorrow."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld of %1$lld from you and paired senders today. More are dropped until tomorrow."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ of %1$@ from anyone else today."
+          }
+        }
+      }
+    },
+    "door.day.others|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ of %1$@ from anyone else today."
+          }
+        }
+      }
+    },
+    "door.day.resting|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %1$@ from you and paired senders today. More are dropped until tomorrow."
+          }
+        }
+      }
+    },
+    "door.day.resting|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %1$@ from you and paired senders today. More are dropped until tomorrow."
           }
         }
       }
@@ -6771,25 +6756,24 @@
         }
       }
     },
-    "door.knock.attachments": {
+    "door.knock.attachments|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "It had %1$lld attachment, not opened."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "It had %1$lld attachments, not opened."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "It had %1$@ attachment, not opened."
+          }
+        }
+      }
+    },
+    "door.knock.attachments|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It had %1$@ attachments, not opened."
           }
         }
       }
@@ -6893,48 +6877,46 @@
         }
       }
     },
-    "door.knock.rest_keys": {
+    "door.knock.rest_keys|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "This door had its messages from you and paired senders for today. %1$lld more was dropped."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "This door had its messages from you and paired senders for today. %1$lld more were dropped."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "This door had its messages from you and paired senders for today. %1$@ more was dropped."
           }
         }
       }
     },
-    "door.knock.rest_others": {
+    "door.knock.rest_keys|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "This door had its messages from people who aren't paired for today. %1$lld more was dropped."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "This door had its messages from people who aren't paired for today. %1$lld more were dropped."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "This door had its messages from you and paired senders for today. %1$@ more were dropped."
+          }
+        }
+      }
+    },
+    "door.knock.rest_others|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This door had its messages from people who aren't paired for today. %1$@ more was dropped."
+          }
+        }
+      }
+    },
+    "door.knock.rest_others|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This door had its messages from people who aren't paired for today. %1$@ more were dropped."
           }
         }
       }
@@ -8699,25 +8681,24 @@
         }
       }
     },
-    "home.working": {
+    "home.working|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld taf working."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld tafs working."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf working."
+          }
+        }
+      }
+    },
+    "home.working|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs working."
           }
         }
       }
@@ -8898,25 +8879,24 @@
         }
       }
     },
-    "knob.make_live": {
+    "knob.make_live|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Make %1$lld change live with %2$@"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Make %1$lld changes live with %2$@"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %1$@ change live with %2$@"
+          }
+        }
+      }
+    },
+    "knob.make_live|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %1$@ changes live with %2$@"
           }
         }
       }
@@ -9130,25 +9110,24 @@
         }
       }
     },
-    "knob.with_stops": {
+    "knob.with_stops|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ · %1$lld stop"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%2$@ · %1$lld stops"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ · %1$@ stop"
+          }
+        }
+      }
+    },
+    "knob.with_stops|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ · %1$@ stops"
           }
         }
       }
@@ -9329,25 +9308,24 @@
         }
       }
     },
-    "needs_you.count": {
+    "needs_you.count|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld needs you."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld need you."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ needs you."
+          }
+        }
+      }
+    },
+    "needs_you.count|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ need you."
           }
         }
       }
@@ -9792,25 +9770,24 @@
         }
       }
     },
-    "people.count": {
+    "people.count|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld person"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld people"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ person"
+          }
+        }
+      }
+    },
+    "people.count|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ people"
           }
         }
       }
@@ -11729,25 +11706,24 @@
         }
       }
     },
-    "record.reads": {
+    "record.reads|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld read of data, within its Card"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld reads of data, within its Card"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ read of data, within its Card"
+          }
+        }
+      }
+    },
+    "record.reads|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ reads of data, within its Card"
           }
         }
       }
@@ -11906,25 +11882,24 @@
         }
       }
     },
-    "record.revoked.refused_waiting": {
+    "record.revoked.refused_waiting|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "No new action goes through. %1$lld waiting action(s) refused."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "No new action goes through. %1$lld waiting action(s) refused."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "No new action goes through. %1$@ waiting action(s) refused."
+          }
+        }
+      }
+    },
+    "record.revoked.refused_waiting|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No new action goes through. %1$@ waiting action(s) refused."
           }
         }
       }
@@ -13161,25 +13136,24 @@
         }
       }
     },
-    "sample.reply.waiting": {
+    "sample.reply.waiting|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld thing waits on you in Needs you."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld things wait on you in Needs you."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ thing waits on you in Needs you."
+          }
+        }
+      }
+    },
+    "sample.reply.waiting|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ things wait on you in Needs you."
           }
         }
       }
@@ -15659,25 +15633,24 @@
         }
       }
     },
-    "taf.remove.cards_left": {
+    "taf.remove.cards_left|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "KIFF didn't revoke %1$lld of its Cards: revoke them in KIFF."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "KIFF didn't revoke %1$lld of its Cards: revoke them in KIFF."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF didn't revoke %1$@ of its Cards: revoke them in KIFF."
+          }
+        }
+      }
+    },
+    "taf.remove.cards_left|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF didn't revoke %1$@ of its Cards: revoke them in KIFF."
           }
         }
       }
@@ -15704,25 +15677,24 @@
         }
       }
     },
-    "taf.remove.connections_left": {
+    "taf.remove.connections_left|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld of its connections couldn't be disconnected: disconnect them in Connect apps."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld of its connections couldn't be disconnected: disconnect them in Connect apps."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of its connections couldn't be disconnected: disconnect them in Connect apps."
+          }
+        }
+      }
+    },
+    "taf.remove.connections_left|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of its connections couldn't be disconnected: disconnect them in Connect apps."
           }
         }
       }
@@ -16178,25 +16150,24 @@
         }
       }
     },
-    "taf.works_under_cards": {
+    "taf.works_under_cards|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Works under %1$lld KIFF Card."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Works under %1$lld KIFF Cards."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works under %1$@ KIFF Card."
+          }
+        }
+      }
+    },
+    "taf.works_under_cards|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works under %1$@ KIFF Cards."
           }
         }
       }
@@ -16718,48 +16689,46 @@
         }
       }
     },
-    "usage.tasks": {
+    "usage.tasks_this_period|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld task"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld tasks"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ task this period"
           }
         }
       }
     },
-    "usage.tasks_this_period": {
+    "usage.tasks_this_period|other": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld task this period"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld tasks this period"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tasks this period"
+          }
+        }
+      }
+    },
+    "usage.tasks|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ task"
+          }
+        }
+      }
+    },
+    "usage.tasks|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tasks"
           }
         }
       }
@@ -17578,25 +17547,24 @@
         }
       }
     },
-    "version.tried.calls": {
+    "version.tried.calls|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld call"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld calls"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ call"
+          }
+        }
+      }
+    },
+    "version.tried.calls|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls"
           }
         }
       }
@@ -17623,25 +17591,24 @@
         }
       }
     },
-    "version.tried.held": {
+    "version.tried.held|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld held"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld held"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ held"
+          }
+        }
+      }
+    },
+    "version.tried.held|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ held"
           }
         }
       }
@@ -17668,25 +17635,24 @@
         }
       }
     },
-    "version.tried.refused": {
+    "version.tried.refused|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld refused"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld refused"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ refused"
+          }
+        }
+      }
+    },
+    "version.tried.refused|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ refused"
           }
         }
       }
@@ -18010,25 +17976,24 @@
         }
       }
     },
-    "work.requests_need_you": {
+    "work.requests_need_you|one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld request needs you"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%1$lld requests need you"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ request needs you"
+          }
+        }
+      }
+    },
+    "work.requests_need_you|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ requests need you"
           }
         }
       }

@@ -21,9 +21,9 @@ final class PlanqueClient {
 
         var errorDescription: String? {
             switch self {
-            case .notSigning: return "This step needs your confirmation first."
-            case .noDevice: return "Couldn't reach KIFF to name this device. Check the connection and try again."
-            case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
+            case .notSigning: return Words.Error.needsConfirmationFirst
+            case .noDevice: return Words.Error.noDeviceName
+            case .digestMismatch: return Words.Error.requestMismatch
             case .wordsUnread: return "KIFF's words for this connection aren't shown yet. Nothing was approved."
             case .server(_, let message): return message
             }
@@ -191,7 +191,7 @@ final class PlanqueClient {
         var waitingSignIn: Bool { status == "approved" && signedIn != true && !connectedNow }
         /// The signed-out connection in planque's words; before planque sends them, the app's.
         var signedOutWords: String {
-            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? "Signed out by \(vendor) · sign in again"
+            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Connect.Status.signedOut(vendor: "\(vendor)")
         }
         /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
         var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
@@ -411,7 +411,7 @@ final class PlanqueClient {
         // The account itself when path is empty (erasing it), else one of its routes.
         let account = "v1/accounts/\(escaped(tenant))"
         guard let url = URL(string: path.isEmpty ? account : "\(account)/\(path)", relativeTo: baseURL) else {
-            throw PlanqueError.server(status: 0, message: "Bad path")
+            throw PlanqueError.server(status: 0, message: Words.Error.badPath)
         }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -434,7 +434,7 @@ final class PlanqueClient {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "The connection answered \(status)"
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? Words.Error.connectionAnswered(status: "\(status)")
             throw PlanqueError.server(status: status, message: message)
         }
         return data

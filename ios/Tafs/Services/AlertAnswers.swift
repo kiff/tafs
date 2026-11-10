@@ -21,7 +21,7 @@ enum AlertAnswers {
         let approve = UNNotificationAction(identifier: approve, title: "Approve once…", options: [.authenticationRequired, .foreground])
         let refuse = UNNotificationAction(identifier: refuse, title: "Refuse", options: [.authenticationRequired, .destructive])
         let hold = UNNotificationCategory(identifier: holdCategory, actions: [approve, refuse], intentIdentifiers: [],
-                                          hiddenPreviewsBodyPlaceholder: "A taf needs you", options: [])
+                                          hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
         let halt = UNNotificationCategory(identifier: haltCategory, actions: [], intentIdentifiers: [], options: [])
         return [hold, halt]
     }

@@ -213,6 +213,15 @@ the app in sample mode.
   Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the
   Card its room back; the first answer stands.
 
+### Connect apps
+
+A connected app (“Connected ✓”) opens its connections (`AppConnectionsView`, `AppModel.connectionGroups`), in four parts:
+
+- **One section per taf,** its name as the heading, holding each of the account's live grants for the app (not `disconnected` or `failed`). The tafs with a connection that needs the owner come first (a sign-in waiting, signed out, or a last call that failed), then the rest by name. A row shows the vendor's account when the connection service gives one, else the app's name, then the connection's status words, and “Also on Chargebacks's Card” when another taf's Card uses it.
+- **On a row,** whoever manages the account's Cards has **Sign in again** and **Disconnect**, or **Cancel** on a sign-in that never came back (“Cancel the sign-in to Stripe?”, “Keep waiting”). Disconnect asks first, naming the one taf it ends (“Disconnect Stripe from Refunds?”, with Cancel). It also names any other taf whose Card draws on the connection's tools, which stops too (“Chargebacks stops too.”), and says other connections to the app stay. Face ID then asks the same words, and the device key signs the connection service's `DELETE` ([api.md](api.md#disconnecting-and-removed-tafs)). The list is read again after.
+- **From removed tafs** comes between the tafs and Other connections. It holds the connections whose `request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (the grant's `agent_name`). The app sends its signed grants read with the read (`connectApps(proof:)`). A connection a live taf's Card still uses says so (“Kept: Chargebacks's Card uses it”). **Clear these connections** shows only when at least one listed connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2 connections from removed tafs?”), then one Face ID, and the device key signs each disconnect. The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). With no `grants`, the section shows with no Clear. Which to keep is tafs cloud's word, never the phone's (`clearPlan`, `clearRemovedConnections`; the words are `ConnectionGroupWords`, the same as Android's).
+- **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that isn't a taf, so nothing there says it was removed.
+
 ## The calendar
 
 The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
@@ -251,6 +260,27 @@ cd ios && xcodegen generate
 xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
   -destination 'platform=iOS Simulator,name=iPhone 14 Pro'
 ```
+
+## Words and languages
+
+The app's own lines are in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
+Android reads; the servers' own lines stay theirs ([languages.md](languages.md)). `app/strings/generate.py`
+writes `Localizable.xcstrings` and `Design/Words.swift`, a typed accessor per key (`Words.NeedsYou.approveOnce`,
+`Words.Connect.Disconnect.title(vendor:)`), so a missing key or a wrong value doesn't compile. Nobody edits those
+two files by hand: change the JSON and run the generator, and `--check` fails CI when they differ. A count picks
+its plural form from the catalog's `_plural` entry, in the app's language; its number is always the first value.
+The notification extension compiles Model and KIFF, so it has `Words.swift` and the catalog too.
+
+What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, URL
+schemes, what's sent to a server as data (the labels KIFF stores, a door's app and kind), every signed message,
+the sample's templates and the knob's server-shaped sample, and the drive's lines only Coach reads. A screen
+never reads an error's or a line's words to know what it is: a Record line the phone wrote carries `byYou`, and an
+error the screen shows only for itself carries where it came from (`AppModel.fail(_:from:)`). The drive contract
+tests read a `Words` accessor in the sources as the English it says (`DriveTests.readable`), so a confirming
+control is still found by its words.
+
+Lines iOS writes that Android has no key for still sit in the code, in English; they move with the next iOS
+strings PR, before any language ships (`languages.json`'s `shipped` is English only).
 
 ## Conventions
 

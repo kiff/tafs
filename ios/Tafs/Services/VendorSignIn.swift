@@ -20,7 +20,7 @@ final class VendorSignIn: NSObject, VendorSigningIn {
 
         var errorDescription: String? {
             switch self {
-            case .cancelled: return "The sign-in was closed."
+            case .cancelled: return Words.Connect.signInClosed
             case .noCallback: return "The sign-in didn't come back to tafs."
             case .noWindow: return "tafs had no window on screen to open the sign-in over. Open tafs and try again."
             case .notShown(let code, let context):

@@ -6,7 +6,7 @@ import SwiftUI
 /// them. KIFF keeps all of it; the app shows what KIFF says, and each change is the
 /// person's act behind Face ID.
 struct PeopleGroupsView: View {
-    static let title = "People & groups"
+    static let title = Words.People.title
     @EnvironmentObject private var model: AppModel
     @State private var naming: GroupNaming?
     @State private var adding: KIFFClient.Group?
@@ -39,7 +39,7 @@ struct PeopleGroupsView: View {
                 }
             }
             if loaded && model.groups.isEmpty && model.peopleError == nil {
-                Text("No groups yet.").scaledFont(14).foregroundColor(Theme.dim)
+                Text(Words.People.noGroups).scaledFont(14).foregroundColor(Theme.dim)
             }
         }
         .scrollContentBackground(.hidden)
@@ -50,8 +50,8 @@ struct PeopleGroupsView: View {
                 ToolbarItem(placement: .primaryAction) {
                     // "+" alone didn't say it makes a group, and iPadOS draws a toolbar Label as its
                     // icon only (the 793 retest): the button is words.
-                    Button { naming = GroupNaming(group: nil) } label: { Text("+ Group") }
-                        .accessibilityLabel("New group")
+                    Button { naming = GroupNaming(group: nil) } label: { Text(Words.People.addGroup) }
+                        .accessibilityLabel(Words.People.newGroup)
                 }
             }
         }
@@ -68,10 +68,10 @@ struct PeopleGroupsView: View {
         .confirmationDialog("Delete \(deleting?.name ?? "this group")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                             titleVisibility: .visible, presenting: deleting) { group in
             Button("Delete \(group.name)", role: .destructive) {
-                Task { await model.changePeople("Delete the group \(group.name)") { try await $0.deleteGroup(group.id) } }
+                Task { await model.changePeople(Words.People.deleteGroup(group: "\(group.name)")) { try await $0.deleteGroup(group.id) } }
             }
         } message: { group in
-            Text("Its people lose the tafs they used through it, unless another group or a share of their own gives them those tafs. Their chats stay theirs.")
+            Text(Words.People.deleteGroupBody)
         }
     }
 
@@ -85,8 +85,8 @@ struct PeopleGroupsView: View {
             Spacer()
             if model.canManagePeople && group.everyone != true {
                 Menu {
-                    Button("Rename") { naming = GroupNaming(group: group) }
-                    Button("Delete", role: .destructive) { deleting = group }
+                    Button(Words.People.rename) { naming = GroupNaming(group: group) }
+                    Button(Words.People.delete, role: .destructive) { deleting = group }
                 } label: {
                     Image(systemName: "ellipsis.circle").foregroundColor(Theme.soft)
                 }
@@ -101,15 +101,15 @@ struct PeopleGroupsView: View {
             PersonBadge(label: person?.label ?? member.subject)
             VStack(alignment: .leading, spacing: 2) {
                 Text(person?.label ?? member.subject).scaledFont(15).foregroundColor(Theme.ink).oneLineUnlessLarge()
-                Text(member.isManager ? "Manager" : "Member").scaledFont(12).foregroundColor(member.isManager ? Theme.amber : Theme.dim)
+                Text(member.isManager ? Words.People.manager : Words.People.member).scaledFont(12).foregroundColor(member.isManager ? Theme.amber : Theme.dim)
             }
             Spacer()
         }
         .accessibilityElement(children: .combine)
         .swipeActions {
             if mayRemove(member, from: group) {
-                Button("Remove", role: .destructive) {
-                    Task { await model.changePeople("Remove \(person?.label ?? member.subject) from \(group.name)") { try await $0.removeGroupMember(group.id, subject: member.subject) } }
+                Button(Words.Taf.Remove.button, role: .destructive) {
+                    Task { await model.changePeople(Words.People.removeFromGroup(who: "\(person?.label ?? member.subject)", group: "\(group.name)")) { try await $0.removeGroupMember(group.id, subject: member.subject) } }
                 }
             }
         }
@@ -118,13 +118,13 @@ struct PeopleGroupsView: View {
             // members.manage), not for the group's manager.
             if model.canManagePeople {
                 let role = member.isManager ? "member" : "manager"
-                Button(member.isManager ? "Make a member" : "Make the manager") {
+                Button(member.isManager ? Words.People.makeMember : Words.People.makeManager) {
                     Task { await model.changePeople("Make \(person?.label ?? member.subject) a \(role) of \(group.name)") { try await $0.setGroupMember(group.id, subject: member.subject, role: role) } }
                 }
             }
             if mayRemove(member, from: group) {
-                Button("Remove from \(group.name)", role: .destructive) {
-                    Task { await model.changePeople("Remove \(person?.label ?? member.subject) from \(group.name)") { try await $0.removeGroupMember(group.id, subject: member.subject) } }
+                Button(Words.People.removeFrom(group: "\(group.name)"), role: .destructive) {
+                    Task { await model.changePeople(Words.People.removeFromGroup(who: "\(person?.label ?? member.subject)", group: "\(group.name)")) { try await $0.removeGroupMember(group.id, subject: member.subject) } }
                 }
             }
         }
@@ -167,13 +167,13 @@ struct GroupNameSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                DriveField("Support, Finance…", text: $name)
+                DriveField(Words.People.groupNameHint, text: $name)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.done)
                     .onSubmit { save() }
                 Text(naming.group == nil
-                     ? "Add its people next, then share a taf with it from the taf's page."
-                     : "Only the name changes: its people and tafs stay.")
+                     ? Words.People.newGroupHint
+                     : Words.People.renameHint)
                     .scaledFont(13).foregroundColor(Theme.dim)
             }
             .scrollContentBackground(.hidden)
@@ -181,7 +181,7 @@ struct GroupNameSheet: View {
             .navigationTitle(naming.group == nil ? "New group" : "Rename \(naming.group?.name ?? "")")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(naming.group == nil ? "Create" : "Save") { save() }
                         .disabled(trimmed.isEmpty || saving)
@@ -200,9 +200,9 @@ struct GroupNameSheet: View {
         Task {
             let done: Bool
             if let group = naming.group {
-                done = await model.changePeople("Rename \(group.name) to \(name)") { try await $0.renameGroup(group.id, to: name) }
+                done = await model.changePeople(Words.People.renameGroup(group: "\(group.name)", name: "\(name)")) { try await $0.renameGroup(group.id, to: name) }
             } else {
-                done = await model.changePeople("Create the group \(name)") { try await $0.createGroup(name: name) }
+                done = await model.changePeople(Words.People.createGroup(name: "\(name)")) { try await $0.createGroup(name: name) }
             }
             saving = false
             if done { dismiss() }
@@ -223,9 +223,9 @@ struct AddToGroupSheet: View {
                 // Naming a manager is for whoever manages people (KIFF's members.manage).
                 if model.canManagePeople {
                     Section {
-                        Toggle("As the group's manager", isOn: $asManager)
+                        Toggle(Words.People.asManager, isOn: $asManager)
                     } footer: {
-                        Text("A manager adds and removes the group's members. Managing doesn't let them change a taf's Cards.")
+                        Text(Words.People.managerExplains)
                     }
                 }
                 Section {
@@ -245,7 +245,7 @@ struct AddToGroupSheet: View {
                         }
                     }
                     if outside.isEmpty {
-                        Text("Everyone on the account is in \(group.name). Invite people from the KIFF dashboard.")
+                        Text(Words.People.everyoneIn(group: "\(group.name)"))
                             .scaledFont(14).foregroundColor(Theme.dim)
                     }
                 } header: { Text("The account's people") }
@@ -257,7 +257,7 @@ struct AddToGroupSheet: View {
             .screenBackground()
             .navigationTitle("Add to \(group.name)")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } } }
         }
     }
 

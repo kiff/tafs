@@ -57,10 +57,10 @@ def placeholders(line):
 
 
 def arguments(key, source):
-    """A line's values in the order every language is given them: English's order, the count first."""
+    """A line's values in the order every language is given them: English's order. A count's
+    `count` always comes first, whether or not its words show the number ("All of the Card",
+    "All of the Cards"): it picks the form."""
     names = placeholders(source[key])
-    # A count always takes its number first, even when no form shows it ("All of the Card" / "All of the Cards"): the
-    # number picks the form.
     if isinstance(source[key], dict):
         if "count" in names:
             names.remove("count")
@@ -74,35 +74,50 @@ def is_count(key, source, name):
 
 # ---------------------------------------------------------------- iPhone and iPad
 
+# The catalog's own entry that says which plural form a number takes in the app's language:
+# "%lld|one", "%lld|few"… Words.swift asks it, then reads the line's entry for that form.
+IOS_PLURAL_KEY = "_plural"
+
+# The plural forms a language's whole numbers take (CLDR), beside "other".
+PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["one"], "pt": ["one"], "fr": ["one"],
+           "pl": ["one", "few", "many"]}
+
+
 def ios_text(text, key, source):
     """A line in the catalog's form: each placeholder by its position, so a language may reorder
-    them. A count is a number, anything else text."""
+    them. Every value is text, a count's number too, as the app writes it. A line with no
+    values is never formatted (`Words.line` returns it as it is), so its `%` stays as it is."""
     names = arguments(key, source)
+    if not names:
+        return text
     text = text.replace("%", "%%")
+    return PLACEHOLDER.sub(lambda m: f"%{names.index(m.group(1)) + 1}$@", text)
 
-    def spec(m):
-        name = m.group(1)
-        kind = "lld" if is_count(key, source, name) else "@"
-        return f"%{names.index(name) + 1}${kind}"
 
-    return PLACEHOLDER.sub(spec, text)
+def ios_form_key(key, form):
+    """A count's entry for one plural form."""
+    return f"{key}|{form}"
 
 
 def ios_catalog(source, shipped, lines):
+    def unit(value):
+        return {"stringUnit": {"state": "translated", "value": value}}
+
     strings = {}
     for key in sorted(source):
-        localizations = {}
-        for lang in shipped:
-            line = lines[lang].get(key)
-            if line is None:
-                continue
-            if isinstance(line, dict):
-                plural = {form: {"stringUnit": {"state": "translated", "value": ios_text(line[form], key, source)}}
-                          for form in PLURAL_FORMS if form in line}
-                localizations[lang] = {"variations": {"plural": plural}}
-            else:
-                localizations[lang] = {"stringUnit": {"state": "translated", "value": ios_text(line, key, source)}}
+        if isinstance(source[key], dict):
+            # A count: one entry for each plural form any shipped language has.
+            for form in PLURAL_FORMS:
+                localizations = {lang: unit(ios_text(lines[lang][key][form], key, source)) for lang in shipped
+                                 if isinstance(lines[lang].get(key), dict) and form in lines[lang][key]}
+                if localizations:
+                    strings[ios_form_key(key, form)] = {"extractionState": "manual", "localizations": localizations}
+            continue
+        localizations = {lang: unit(ios_text(lines[lang][key], key, source)) for lang in shipped if key in lines[lang]}
         strings[key] = {"extractionState": "manual", "localizations": localizations}
+    # Which form a number takes, in each shipped language's own rules.
+    strings[IOS_PLURAL_KEY] = {"extractionState": "manual", "localizations": {
+        lang: {"variations": {"plural": {form: unit(f"%lld|{form}") for form in PLURALS[lang] + ["other"]}}} for lang in shipped}}
     catalog = {"sourceLanguage": "en", "strings": strings, "version": "1.0"}
     return json.dumps(catalog, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
@@ -141,19 +156,43 @@ def ios_swift(source):
                 continue
             key = value
             english = source[key]["other"] if isinstance(source[key], dict) else source[key]
-            out.append(f"{pad}/// {english}")
+            # One comment line: a line's own line breaks are written as \n.
+            out.append(f"{pad}/// {english}".replace("\n", "\\n"))
             names = arguments(key, source)
             if not names:
                 out.append(f'{pad}static var {camel(name)}: String {{ Words.line("{key}") }}')
                 continue
             params = ", ".join(f"{camel(n)}: {'Int' if is_count(key, source, n) else 'String'}" for n in names)
-            args = ", ".join(camel(n) for n in names)
-            out.append(f'{pad}static func {camel(name)}({params}) -> String {{ Words.line("{key}", {args}) }}')
+            if isinstance(source[key], dict):
+                rest = "".join(f", {camel(n)}" for n in names[1:])
+                out.append(f'{pad}static func {camel(name)}({params}) -> String {{ Words.count("{key}", count{rest}) }}')
+            else:
+                args = ", ".join(camel(n) for n in names)
+                out.append(f'{pad}static func {camel(name)}({params}) -> String {{ Words.line("{key}", {args}) }}')
 
     emit(tree, 1)
     out += ["",
-            "    /// A line by its key, with its values. A count picks the plural form its language needs.",
-            "    static func line(_ key: String, _ values: CVarArg...) -> String {",
+            "    /// A line by its key, with its values.",
+            "    static func line(_ key: String, _ values: String...) -> String {",
+            "        filled(key, values)",
+            "    }",
+            "",
+            "    /// A count's line: the plural form its number takes in the app's language, else `other`.",
+            "    /// The number is the line's first value, written as the app writes a number.",
+            "    static func count(_ key: String, _ count: Int, _ values: String...) -> String {",
+            "        let form = \"\\(key)|\\(pluralForm(count))\"",
+            "        let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form",
+            "        return filled(known ? form : \"\\(key)|other\", [String(count)] + values)",
+            "    }",
+            "",
+            "    /// The plural form a number takes in the app's language: one, few, many, other…",
+            "    static func pluralForm(_ count: Int) -> String {",
+            f"        let format = Bundle.main.localizedString(forKey: \"{IOS_PLURAL_KEY}\", value: nil, table: nil)",
+            "        let picked = String(format: format, locale: Locale.current, count)",
+            "        return picked.split(separator: \"|\").last.map(String.init) ?? \"other\"",
+            "    }",
+            "",
+            "    private static func filled(_ key: String, _ values: [String]) -> String {",
             "        let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)",
             "        return values.isEmpty ? format : String(format: format, locale: Locale.current, arguments: values)",
             "    }",

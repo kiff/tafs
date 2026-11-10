@@ -28,24 +28,24 @@ enum ReceiptCheck: Equatable {
 
     static func check(_ response: Data, signer expected: String = kiffSigner) -> ReceiptCheck {
         guard let receipt = try? JSONSerialization.jsonObject(with: response) as? [String: Any] else {
-            return .failed("The receipt couldn't be read.")
+            return .failed(Words.Receipt.Check.unreadable)
         }
         guard let attestation = receipt["attestation"] as? [String: Any] else { return .notSignedYet }
         guard attestation["algorithm"] as? String == algorithm else {
-            return .failed("It's signed in a way this app doesn't know.")
+            return .failed(Words.Receipt.Check.unknownSignature)
         }
         guard let chain = RawJSON.value(of: "causal_chain", in: response) else {
-            return .failed("The receipt has no steps to check.")
+            return .failed(Words.Receipt.Check.noSteps)
         }
         guard let signature = (attestation["signature"] as? String).flatMap(Hex.decode), signature.count == 65 else {
-            return .failed("The signature is malformed.")
+            return .failed(Words.Receipt.Check.malformedSignature)
         }
         let declared = (attestation["wallet_address"] as? String ?? "").lowercased()
 
         let chainHash = Hex.encode(Data(SHA256.hash(data: chain)))
         let digest = Keccak.hash256(Data(chainHash.utf8))
         guard let recovered = recoverAddress(digest: digest, signature: signature) else {
-            return .failed("The signature doesn't match these steps.")
+            return .failed(Words.Receipt.Check.signatureMismatch)
         }
         guard recovered == declared else { return .failed("The signature doesn't match these steps.") }
         guard recovered == expected.lowercased() else { return .failed("It isn't signed by KIFF.") }

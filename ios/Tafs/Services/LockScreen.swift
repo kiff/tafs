@@ -70,7 +70,7 @@ final class LockScreen {
         }
         let taf = tafs.first { $0.id == first.tafID }
         let state = HeldActivityAttributes.ContentState(
-            tafName: taf?.name ?? names[first.tafID] ?? "A taf",
+            tafName: taf?.name ?? names[first.tafID] ?? Words.NeedsYou.aTaf,
             tafInitial: taf?.initial ?? "t",
             summary: first.proposed.summary,
             amount: first.proposed.amount?.formatted,

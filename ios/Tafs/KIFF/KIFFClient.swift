@@ -24,13 +24,13 @@ final class KIFFClient {
 
         var errorDescription: String? {
             switch self {
-            case .authorizationPending: return "Waiting for you to approve the sign-in."
-            case .slowDown: return "Asked KIFF too often; slowing down."
-            case .expired: return "The sign-in code expired. Start again."
-            case .unauthorized: return "Signed out of KIFF. Sign in again."
+            case .authorizationPending: return Words.Error.signInPending
+            case .slowDown: return Words.Error.slowDown
+            case .expired: return Words.Error.signInCodeExpired
+            case .unauthorized: return Words.Error.signedOut
             case .server(_, let message, _): return message
             case .approvalKeyRequired: return KIFFClient.approvalKeyLost
-            case .approvalKeyExists: return "KIFF holds an approval key for this session already."
+            case .approvalKeyExists: return Words.Error.approvalKeyExists
             }
         }
     }
@@ -884,21 +884,21 @@ final class KIFFClient {
                 let name = KIFFMapping.name(g.action, title: g.title)
                 let caps = (g.perActionMax ?? []).map { cap in
                     KIFFMapping.isSum(cap.quantity)
-                        ? "up to \(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted) each"
-                        : "up to \(cap.max) each"
+                        ? Words.Card.Line.upToEach(amount: "\(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted)")
+                        : Words.Card.Line.upToEach(amount: "\(cap.max)")
                 }
                 let action = alike.contains(name.lowercased()) ? "\(name) · \(KIFFMapping.toolWords(g.action))" : name
-                let more = asksPastLimits ? "; more asks you first" : ""
+                let more = asksPastLimits ? Words.Card.Line.moreAsks : ""
                 out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", ") + more)
             }
-            let then = asksPastLimits ? ", then it asks you" : ""
+            let then = asksPastLimits ? Words.Card.Line.thenAsks : ""
             for a in aggregates ?? [] {
                 // KIFF's own window, exactly: never a lifetime or hourly total read as a day's.
                 let window = Window(a.window)
                 if KIFFMapping.isSum(a.quantity) {
                     out.append("\(KIFFMapping.money(a.limit, unit: a.unit, scale: a.scale).formatted) \(window.sumLabel)\(then)")
                 } else if asksPastLimits && a.limit == 0 {
-                    out.append("Each call asks you first")
+                    out.append(Words.Card.Held.eachCallAsks)
                 } else {
                     out.append("\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window.label)\(then)")
                 }

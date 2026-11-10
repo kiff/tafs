@@ -16,7 +16,7 @@ struct ShareLine: View {
             HStack(spacing: 10) {
                 if model.access[agent]?.manage == true {
                     Button { sharing = true } label: {
-                        Label("Share", systemImage: "square.and.arrow.up")
+                        Label(Words.People.Share.action, systemImage: "square.and.arrow.up")
                             .scaledFont(15, weight: .semibold)
                             .padding(.horizontal, 12).padding(.vertical, 7)
                             .background(Theme.panel)
@@ -40,11 +40,11 @@ struct ShareLine: View {
 
     /// "Shared with Support and ana@acme.com", or not shared yet.
     static func sharedWith(_ shares: [KIFFClient.Share]?, _ model: AppModel) -> String {
-        guard let shares else { return "Sharing…" }
+        guard let shares else { return Words.People.sharing }
         let names = shares.compactMap { s in
             s.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? s.subject.map { model.person($0)?.label ?? $0 }
         }
-        return names.isEmpty ? "Not shared" : "Shared with " + ListFormatter.localizedString(byJoining: names)
+        return names.isEmpty ? Words.People.notShared : "Shared with " + ListFormatter.localizedString(byJoining: names)
     }
 }
 
@@ -81,7 +81,7 @@ struct ShareTafSheet: View {
                     if step == 1 {
                         Button("Next") { step = 2 }.disabled(!loaded || chosen == had)
                     } else {
-                        Button("Share") { save() }.disabled(saving)
+                        Button(Words.People.Share.action) { save() }.disabled(saving)
                     }
                 }
             }
@@ -96,7 +96,7 @@ struct ShareTafSheet: View {
     // Step 1 of 2: who uses it.
     @ViewBuilder private var whoUses: some View {
         Section {
-            Text("STEP 1 OF 2").scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
+            Text(Words.People.Share.step1).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
             Text("Who uses \(taf.name)?").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
         }
         .listRowBackground(Color.clear)
@@ -121,14 +121,14 @@ struct ShareTafSheet: View {
                     }
                 }
             }
-        } header: { Text("One person") } footer: { Text("Choose someone on the account.") }
+        } header: { Text("One person") } footer: { Text(Words.People.Share.chooseSomeone) }
     }
 
     // Step 2 of 2: what sharing means for them.
     @ViewBuilder private var whatItMeans: some View {
         Section {
-            Text("STEP 2 OF 2").scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
-            Text(chosen.isEmpty ? "\(taf.name) won't be shared" : "Who gets \(taf.name)").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
+            Text(Words.People.Share.step2).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
+            Text(chosen.isEmpty ? Words.People.Share.notShared(taf: "\(taf.name)") : "Who gets \(taf.name)").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
         }
         .listRowBackground(Color.clear)
         Section {
@@ -174,14 +174,14 @@ struct ShareTafSheet: View {
             let label = model.person(m.subject)?.label ?? m.subject
             return m.isManager ? "\(label) (manager)" : label
         }
-        return names.isEmpty ? "No one yet" : names.joined(separator: ", ")
+        return names.isEmpty ? Words.People.noOneYet : names.joined(separator: ", ")
     }
 
     /// What the change means, as it holds today: each person's own chats and notes, which no
     /// one else sees in the app, and who stops using it.
     static func consequences(taf: Taf, had: Set<KIFFClient.Share>, chosen: Set<KIFFClient.Share>, model: AppModel) -> [String] {
         var lines: [String] = []
-        if !chosen.isEmpty { lines.append("Each person gets their own chats and notes. No one else sees them in the app.") }
+        if !chosen.isEmpty { lines.append(Words.People.ownChats) }
         for share in chosen.sorted(by: { ($0.group ?? $0.subject ?? "") < ($1.group ?? $1.subject ?? "") }) {
             if let id = share.group, let group = model.groups.first(where: { $0.id == id }) {
                 lines.append("\(group.name) uses \(taf.name): \(people(of: group, model)).")
@@ -191,7 +191,7 @@ struct ShareTafSheet: View {
         }
         for share in had.subtracting(chosen) {
             let name = share.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? share.subject.map { model.person($0)?.label ?? $0 } ?? ""
-            lines.append("\(name) stops using \(taf.name). Their chats stay theirs.")
+            lines.append(Words.People.stopsUsing(who: "\(name)", taf: "\(taf.name)"))
         }
         return lines
     }
@@ -210,8 +210,8 @@ struct OverviewView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Overview").scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                        Text("Today, across your tafs").scaledFont(14).foregroundColor(Theme.dim)
+                        Text(Words.Home.Overview.title).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                        Text(Words.Home.Overview.subtitle).scaledFont(14).foregroundColor(Theme.dim)
                     }
                     Spacer()
                     // The tafs' scheduled work to come (kiff/tafs#534).
@@ -221,12 +221,12 @@ struct OverviewView: View {
                             .background(Circle().fill(Theme.raised))
                     }
                     .buttonStyle(.drivablePlain)
-                    .accessibilityLabel("Calendar")
+                    .accessibilityLabel(Words.Calendar.heading)
                     .accessibilityIdentifier("overview.calendar")
                 }
                 if !model.held.isEmpty { needsYou }
                 tafsTable
-                Text("Each line opens the taf.").scaledFont(12).foregroundColor(Theme.dim)
+                Text(Words.Home.Overview.eachLineOpens).scaledFont(12).foregroundColor(Theme.dim)
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
@@ -243,7 +243,7 @@ struct OverviewView: View {
 
     private var needsYou: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Eyebrow(text: "Needs you", color: Theme.amber)
+            Eyebrow(text: Words.NeedsYou.title, color: Theme.amber)
             ForEach(model.held) { call in
                 if let taf = model.taf(call.tafID) {
                     Button { open(.held(call.id, taf: taf.id)) } label: {
@@ -251,7 +251,7 @@ struct OverviewView: View {
                             Circle().fill(Theme.amber).frame(width: 8, height: 8)
                             Text("\(taf.name) · \(call.proposed.summary)").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                             Spacer()
-                            Text("answer by \(call.expiresAt.zonedShortTime)").scaledFont(12).foregroundColor(Theme.soft)
+                            Text(Words.NeedsYou.answerBy(time: "\(call.expiresAt.zonedShortTime)")).scaledFont(12).foregroundColor(Theme.soft)
                         }
                         .padding(12)
                         .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
@@ -268,7 +268,7 @@ struct OverviewView: View {
     private var tafsTable: some View {
         Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 12) {
             GridRow {
-                ForEach(["TAF", "NOW", "CARD", "LAST RESULT"], id: \.self) { title in
+                ForEach([Words.Home.Overview.columnTaf, Words.Home.Overview.columnNow, Words.Home.Overview.columnCard, Words.Home.Overview.columnLastResult], id: \.self) { title in
                     Text(title).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -278,7 +278,7 @@ struct OverviewView: View {
                 row(taf)
             }
             if model.listedTafs.isEmpty {
-                Text("No tafs yet.").scaledFont(14).foregroundColor(Theme.dim).gridCellColumns(4)
+                Text(Words.Home.noTafs).scaledFont(14).foregroundColor(Theme.dim).gridCellColumns(4)
             }
         }
     }
@@ -316,7 +316,7 @@ struct OverviewView: View {
     /// as on its page. Someone who uses it doesn't see who else does (the 870 test).
     private func usedBy(_ taf: Taf) -> String {
         guard model.manages(taf.id), let agent = model.kiffAgent(for: taf.id), let shares = shares[agent] else { return "" }
-        if shares.isEmpty { return "Not shared" }
+        if shares.isEmpty { return Words.People.notShared }
         var people = Set<String>()
         var names: [String] = []
         for s in shares {
@@ -353,7 +353,7 @@ struct OverviewView: View {
             if let first { return first.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "#", with: "").trimmingCharacters(in: .whitespaces) }
             if let error = report.error { return error }
         }
-        return cloud.lastRun.map { "Last ran at \($0.shortTime)" } ?? "Nothing yet"
+        return cloud.lastRun.map { "Last ran at \($0.shortTime)" } ?? Words.Overview.nothingYet
     }
 }
 

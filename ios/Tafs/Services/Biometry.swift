@@ -40,7 +40,7 @@ enum ApprovalReadiness: Equatable {
     /// No Face ID or Touch ID on this device: approvals need another one.
     case unsupported
 
-    static let title = "Set up approvals on this device"
+    static let title = Words.Approval.title
 
     /// The state, from what `canEvaluatePolicy` said: no error is ready.
     static func from(_ code: LAError.Code?, biometry: LABiometryType) -> ApprovalReadiness {

@@ -387,6 +387,12 @@ status line, the one line on who keeps its sign-in; with none sent, nothing show
 `account_words` says which account the connection works in and in which mode ("Demo Shop ·
 Live"), as tafs cloud sends it; with none sent, nothing shows.
 
+A connected app opens its connections by taf (`byTaf`), as on iPhone and iPad
+([ios-app.md](ios-app.md#connect-apps)): one section per taf, those that need the owner first,
+the same rows with **Sign in again**, **Disconnect** and **Cancel**, then **From removed tafs**
+with **Clear these connections** on tafs cloud's `used_by` (`AppModel.clearRemovedConnections`),
+one fingerprint for them all, and **Other connections** last.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

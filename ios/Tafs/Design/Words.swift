@@ -60,7 +60,7 @@ enum Words {
             static var on: String { Words.line("alert.status.on") }
         }
         /// {count} tafs ›
-        static func tafs(count: Int) -> String { Words.line("alert.tafs", count) }
+        static func tafs(count: Int) -> String { Words.count("alert.tafs", count) }
         /// What alerts you
         static var whatAlerts: String { Words.line("alert.what_alerts") }
         /// With sound
@@ -203,13 +203,13 @@ enum Words {
         static var contactSupport: String { Words.line("billing.contact_support") }
         enum Length {
             /// {count} days
-            static func days(count: Int) -> String { Words.line("billing.length.days", count) }
+            static func days(count: Int) -> String { Words.count("billing.length.days", count) }
             /// {count} months
-            static func months(count: Int) -> String { Words.line("billing.length.months", count) }
+            static func months(count: Int) -> String { Words.count("billing.length.months", count) }
             /// {count} weeks
-            static func weeks(count: Int) -> String { Words.line("billing.length.weeks", count) }
+            static func weeks(count: Int) -> String { Words.count("billing.length.weeks", count) }
             /// {count} years
-            static func years(count: Int) -> String { Words.line("billing.length.years", count) }
+            static func years(count: Int) -> String { Words.count("billing.length.years", count) }
         }
         /// The purchase didn't go through: {why}
         static func notBought(why: String) -> String { Words.line("billing.not_bought", why) }
@@ -260,7 +260,7 @@ enum Words {
         /// {weekday} {day} {month}
         static func dayHeading(weekday: String, day: String, month: String) -> String { Words.line("calendar.day_heading", weekday, day, month) }
         /// {day}, {count} scheduled
-        static func dayScheduled(count: Int, day: String) -> String { Words.line("calendar.day_scheduled", count, day) }
+        static func dayScheduled(count: Int, day: String) -> String { Words.count("calendar.day_scheduled", count, day) }
         /// Calendar
         static var heading: String { Words.line("calendar.heading") }
         enum Mode {
@@ -320,9 +320,9 @@ enum Words {
         /// {name}, at {first}
         static func slotAt(name: String, first: String) -> String { Words.line("calendar.slot_at", name, first) }
         /// {name}, {count} times from {first}
-        static func slotTimes(count: Int, name: String, first: String) -> String { Words.line("calendar.slot_times", count, name, first) }
+        static func slotTimes(count: Int, name: String, first: String) -> String { Words.count("calendar.slot_times", count, name, first) }
         /// ×{count}
-        static func times(count: Int) -> String { Words.line("calendar.times", count) }
+        static func times(count: Int) -> String { Words.count("calendar.times", count) }
         enum Title {
             /// {weekday} {day} {month} {year}
             static func day(weekday: String, day: String, month: String, year: String) -> String { Words.line("calendar.title.day", weekday, day, month, year) }
@@ -360,15 +360,15 @@ enum Words {
     }
     enum Card {
         /// All of the Cards
-        static func allOf(count: Int) -> String { Words.line("card.all_of", count) }
+        static func allOf(count: Int) -> String { Words.count("card.all_of", count) }
         /// {amount} {window}
         static func amountWindow(amount: String, window: String) -> String { Words.line("card.amount_window", amount, window) }
         /// {count} calls left
-        static func callsLeft(count: Int) -> String { Words.line("card.calls_left", count) }
+        static func callsLeft(count: Int) -> String { Words.count("card.calls_left", count) }
         /// {used} of {count} calls {window}
-        static func callsUsedOf(count: Int, used: String, window: String) -> String { Words.line("card.calls_used_of", count, used, window) }
+        static func callsUsedOf(count: Int, used: String, window: String) -> String { Words.count("card.calls_used_of", count, used, window) }
         /// {count} calls {window}
-        static func callsWindow(count: Int, window: String) -> String { Words.line("card.calls_window", count, window) }
+        static func callsWindow(count: Int, window: String) -> String { Words.count("card.calls_window", count, window) }
         /// Card revoked
         static var cardRevoked: String { Words.line("card.card_revoked") }
         enum Check {
@@ -379,14 +379,14 @@ enum Words {
             /// Not on this taf's Card
             static var notOnCard: String { Words.line("card.check.not_on_card") }
             /// Over {count} {window}
-            static func overCount(count: Int, window: String) -> String { Words.line("card.check.over_count", count, window) }
+            static func overCount(count: Int, window: String) -> String { Words.count("card.check.over_count", count, window) }
             /// Over {amount} each
             static func overEach(amount: String) -> String { Words.line("card.check.over_each", amount) }
             /// Over {amount} {window}
             static func overTotal(amount: String, window: String) -> String { Words.line("card.check.over_total", amount, window) }
         }
         /// {count} Cards
-        static func count(count: Int) -> String { Words.line("card.count", count) }
+        static func count(count: Int) -> String { Words.count("card.count", count) }
         /// Ended
         static var ended: String { Words.line("card.ended") }
         /// Ended {date}
@@ -400,10 +400,10 @@ enum Words {
         /// {figure} left
         static func figureLeft(figure: String) -> String { Words.line("card.figure_left", figure) }
         /// Cards
-        static func heading(count: Int) -> String { Words.line("card.heading", count) }
+        static func heading(count: Int) -> String { Words.count("card.heading", count) }
         enum Held {
             /// {count} calls {window}{each}: this would be the {nth}{item}
-            static func countInWindow(count: Int, window: String, each: String, nth: String, item: String) -> String { Words.line("card.held.count_in_window", count, window, each, nth, item) }
+            static func countInWindow(count: Int, window: String, each: String, nth: String, item: String) -> String { Words.count("card.held.count_in_window", count, window, each, nth, item) }
             /// Each call asks you first
             static var eachCallAsks: String { Words.line("card.held.each_call_asks") }
             ///  for each {name}
@@ -411,7 +411,7 @@ enum Words {
             ///  for {item}
             static func forItem(item: String) -> String { Words.line("card.held.for_item", item) }
             /// Over its limit of {count} calls: this would be the {nth}
-            static func overCount(count: Int, nth: String) -> String { Words.line("card.held.over_count", count, nth) }
+            static func overCount(count: Int, nth: String) -> String { Words.count("card.held.over_count", count, nth) }
             /// {amount} is over the {cap} limit for one call
             static func overOneCall(amount: String, cap: String) -> String { Words.line("card.held.over_one_call", amount, cap) }
             /// {amount} would go over the {cap} total
@@ -419,7 +419,7 @@ enum Words {
         }
         enum Hero {
             /// calls left {window} of {limit}
-            static func callsLeftOf(count: Int, window: String, limit: String) -> String { Words.line("card.hero.calls_left_of", count, window, limit) }
+            static func callsLeftOf(count: Int, window: String, limit: String) -> String { Words.count("card.hero.calls_left_of", count, window, limit) }
             /// calls {window} · use unavailable
             static func callsUseUnavailable(window: String) -> String { Words.line("card.hero.calls_use_unavailable", window) }
             /// left {window} of {limit}
@@ -447,7 +447,7 @@ enum Words {
         static func left(amount: String, window: String) -> String { Words.line("card.left", amount, window) }
         enum Line {
             /// {count} calls {window}{then}
-            static func callsInWindow(count: Int, window: String, then: String) -> String { Words.line("card.line.calls_in_window", count, window, then) }
+            static func callsInWindow(count: Int, window: String, then: String) -> String { Words.count("card.line.calls_in_window", count, window, then) }
             /// ; more asks you first
             static var moreAsks: String { Words.line("card.line.more_asks") }
             /// , then it asks you
@@ -458,7 +458,7 @@ enum Words {
             static func upToEach(amount: String) -> String { Words.line("card.line.up_to_each", amount) }
         }
         /// {count} more
-        static func more(count: Int) -> String { Words.line("card.more", count) }
+        static func more(count: Int) -> String { Words.count("card.more", count) }
         /// No actions yet
         static var noActions: String { Words.line("card.no_actions") }
         /// no actions yet
@@ -493,9 +493,9 @@ enum Words {
             /// ≤ {amount} each · refused above
             static func atMostEachRefusedAbove(amount: String) -> String { Words.line("card.rule.at_most_each_refused_above", amount) }
             /// {count} calls {window}
-            static func calls(count: Int, window: String) -> String { Words.line("card.rule.calls", count, window) }
+            static func calls(count: Int, window: String) -> String { Words.count("card.rule.calls", count, window) }
             /// {count} calls {window}, then it asks you
-            static func callsThenAsks(count: Int, window: String) -> String { Words.line("card.rule.calls_then_asks", count, window) }
+            static func callsThenAsks(count: Int, window: String) -> String { Words.count("card.rule.calls_then_asks", count, window) }
             /// Each call asks you first
             static var eachCallAsks: String { Words.line("card.rule.each_call_asks") }
             /// {amount} in total {window}
@@ -510,7 +510,7 @@ enum Words {
         /// {rule} {summary}
         static func ruleLine(rule: String, summary: String) -> String { Words.line("card.rule_line", rule, summary) }
         /// {count} tools
-        static func tools(count: Int) -> String { Words.line("card.tools", count) }
+        static func tools(count: Int) -> String { Words.count("card.tools", count) }
         /// Until
         static var until: String { Words.line("card.until") }
         /// Until {date}
@@ -609,7 +609,7 @@ enum Words {
             /// Attach a photo or file
             static var attach: String { Words.line("chat.file.attach") }
             /// Attach: {count} files is the most a message carries
-            static func attachFull(count: Int) -> String { Words.line("chat.file.attach_full", count) }
+            static func attachFull(count: Int) -> String { Words.count("chat.file.attach_full", count) }
             /// That file can't be attached.
             static var cantAttach: String { Words.line("chat.file.cant_attach") }
             /// Choose file
@@ -633,7 +633,7 @@ enum Words {
             /// Take photo
             static var takePhoto: String { Words.line("chat.file.take_photo") }
             /// A message carries at most {count} files.
-            static func tooMany(count: Int) -> String { Words.line("chat.file.too_many", count) }
+            static func tooMany(count: Int) -> String { Words.count("chat.file.too_many", count) }
             /// That file couldn't be read.
             static var unreadable: String { Words.line("chat.file.unreadable") }
             /// Uploading
@@ -686,7 +686,7 @@ enum Words {
         /// The thread couldn't be loaded. {why}
         static func threadNotLoaded(why: String) -> String { Words.line("chat.thread_not_loaded", why) }
         /// That's longer than {count} characters. Say it in fewer words.
-        static func tooLong(count: Int) -> String { Words.line("chat.too_long", count) }
+        static func tooLong(count: Int) -> String { Words.count("chat.too_long", count) }
         /// That's a lot of messages in a few minutes. Give {taf} a moment, then try again.
         static func tooMany(taf: String) -> String { Words.line("chat.too_many", taf) }
         /// Waiting for you
@@ -694,9 +694,9 @@ enum Words {
         /// Worked {took}
         static func worked(took: String) -> String { Words.line("chat.worked", took) }
         /// Worked {took} · {count} steps
-        static func workedSteps(count: Int, took: String) -> String { Words.line("chat.worked_steps", count, took) }
+        static func workedSteps(count: Int, took: String) -> String { Words.count("chat.worked_steps", count, took) }
         /// Worked {took} · {count} steps, {failed} failed
-        static func workedStepsFailed(count: Int, took: String, failed: String) -> String { Words.line("chat.worked_steps_failed", count, took, failed) }
+        static func workedStepsFailed(count: Int, took: String, failed: String) -> String { Words.count("chat.worked_steps_failed", count, took, failed) }
         /// Working…
         static var working: String { Words.line("chat.working") }
         /// {step}…
@@ -1079,11 +1079,11 @@ enum Words {
             /// Clear
             static var clear: String { Words.line("connect.clear_removed.clear") }
             /// Cleared {count}.
-            static func cleared(count: Int) -> String { Words.line("connect.clear_removed.cleared", count) }
+            static func cleared(count: Int) -> String { Words.count("connect.clear_removed.cleared", count) }
             /// {count} couldn't be cleared. Try again.
-            static func notCleared(count: Int) -> String { Words.line("connect.clear_removed.not_cleared", count) }
+            static func notCleared(count: Int) -> String { Words.count("connect.clear_removed.not_cleared", count) }
             /// Clear {count} connections from removed tafs?
-            static func title(count: Int) -> String { Words.line("connect.clear_removed.title", count) }
+            static func title(count: Int) -> String { Words.count("connect.clear_removed.title", count) }
         }
         /// Connect an app
         static var connectAnApp: String { Words.line("connect.connect_an_app") }
@@ -1103,7 +1103,7 @@ enum Words {
             /// The Cards of {names} also use these tools, so they stop too.
             static func alsoCards(names: String) -> String { Words.line("connect.disconnect.also_cards", names) }
             /// {names} stop too.
-            static func alsoStops(count: Int, names: String) -> String { Words.line("connect.disconnect.also_stops", count, names) }
+            static func alsoStops(count: Int, names: String) -> String { Words.count("connect.disconnect.also_stops", count, names) }
             /// No taf uses this {vendor} connection now. Its tools leave KIFF.
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
             /// Other connections to {vendor} stay connected. If no other connection uses this sign-in, it's revoked at {vendor}. Connecting again asks you to approve and sign in again.
@@ -1131,12 +1131,12 @@ enum Words {
             /// another taf
             static var anotherTaf: String { Words.line("connect.kept.another_taf") }
             /// Kept {count} for {who}, whose Card uses them.
-            static func forCard(count: Int, who: String) -> String { Words.line("connect.kept.for_card", count, who) }
+            static func forCard(count: Int, who: String) -> String { Words.count("connect.kept.for_card", count, who) }
             /// Kept {count} for {who}, whose Cards use them.
-            static func forCards(count: Int, who: String) -> String { Words.line("connect.kept.for_cards", count, who) }
+            static func forCards(count: Int, who: String) -> String { Words.count("connect.kept.for_cards", count, who) }
         }
         /// Kept your {vendor} connection: {names} use it.
-        static func keptConnection(count: Int, vendor: String, names: String) -> String { Words.line("connect.kept_connection", count, vendor, names) }
+        static func keptConnection(count: Int, vendor: String, names: String) -> String { Words.count("connect.kept_connection", count, vendor, names) }
         /// The key
         static var key: String { Words.line("connect.key") }
         /// The key wasn't given. {why}
@@ -1241,11 +1241,11 @@ enum Words {
         static var copyAddress: String { Words.line("door.copy_address") }
         enum Day {
             /// {today} of {count} from you and paired senders today. Text only: attachments aren't opened, and the reply says so.
-            static func `open`(count: Int, today: String) -> String { Words.line("door.day.open", count, today) }
+            static func `open`(count: Int, today: String) -> String { Words.count("door.day.open", count, today) }
             /// {others} of {count} from anyone else today.
-            static func others(count: Int, others: String) -> String { Words.line("door.day.others", count, others) }
+            static func others(count: Int, others: String) -> String { Words.count("door.day.others", count, others) }
             /// {count} of {count} from you and paired senders today. More are dropped until tomorrow.
-            static func resting(count: Int) -> String { Words.line("door.day.resting", count) }
+            static func resting(count: Int) -> String { Words.count("door.day.resting", count) }
         }
         enum DoIt {
             /// Do what it asks, within your Card.
@@ -1279,7 +1279,7 @@ enum Words {
         }
         enum Knock {
             /// It had {count} attachments, not opened.
-            static func attachments(count: Int) -> String { Words.line("door.knock.attachments", count) }
+            static func attachments(count: Int) -> String { Words.count("door.knock.attachments", count) }
             /// ● KNOCK · BY {app}
             static func by(app: String) -> String { Words.line("door.knock.by", app) }
             /// DIDN'T CHECK OUT
@@ -1299,9 +1299,9 @@ enum Words {
             /// This door can't prove who wrote it.
             static var proofNone: String { Words.line("door.knock.proof_none") }
             /// This door had its messages from you and paired senders for today. {count} more were dropped.
-            static func restKeys(count: Int) -> String { Words.line("door.knock.rest_keys", count) }
+            static func restKeys(count: Int) -> String { Words.count("door.knock.rest_keys", count) }
             /// This door had its messages from people who aren't paired for today. {count} more were dropped.
-            static func restOthers(count: Int) -> String { Words.line("door.knock.rest_others", count) }
+            static func restOthers(count: Int) -> String { Words.count("door.knock.rest_others", count) }
             /// That's a lot of messages in a few minutes. Wait a little, then send it again: nothing was sent.
             static var tooMany: String { Words.line("door.knock.too_many") }
             /// {who} wrote. Nothing was done.
@@ -1652,7 +1652,7 @@ enum Words {
         /// Tafs
         static var title: String { Words.line("home.title") }
         /// {count} tafs working.
-        static func working(count: Int) -> String { Words.line("home.working", count) }
+        static func working(count: Int) -> String { Words.count("home.working", count) }
     }
     enum Knob {
         /// All services
@@ -1688,7 +1688,7 @@ enum Words {
         /// Lower
         static var lower: String { Words.line("knob.lower") }
         /// Make {count} changes live with {biometry}
-        static func makeLive(count: Int, biometry: String) -> String { Words.line("knob.make_live", count, biometry) }
+        static func makeLive(count: Int, biometry: String) -> String { Words.count("knob.make_live", count, biometry) }
         /// Next
         static var next: String { Words.line("knob.next") }
         /// DRAFT · V{version} · NOT LIVE
@@ -1730,7 +1730,7 @@ enum Words {
         /// WHY
         static var why: String { Words.line("knob.why") }
         /// {name} · {count} stops
-        static func withStops(count: Int, name: String) -> String { Words.line("knob.with_stops", count, name) }
+        static func withStops(count: Int, name: String) -> String { Words.count("knob.with_stops", count, name) }
     }
     enum NeedsYou {
         /// A taf
@@ -1768,7 +1768,7 @@ enum Words {
         /// Check that KIFF shows the same code, and approve only with this phone in your hands.
         static var checkCode: String { Words.line("needs_you.check_code") }
         /// {count} need you.
-        static func count(count: Int) -> String { Words.line("needs_you.count", count) }
+        static func count(count: Int) -> String { Words.count("needs_you.count", count) }
         /// Details ▸
         static var detailsClosed: String { Words.line("needs_you.details_closed") }
         /// Details ▾
@@ -1860,7 +1860,7 @@ enum Words {
         /// As the group's manager
         static var asManager: String { Words.line("people.as_manager") }
         /// {count} people
-        static func count(count: Int) -> String { Words.line("people.count", count) }
+        static func count(count: Int) -> String { Words.count("people.count", count) }
         /// Create
         static var create: String { Words.line("people.create") }
         /// Create the group {name}
@@ -2242,7 +2242,7 @@ enum Words {
             static func whole(noun: String, value: String) -> String { Words.line("record.on.whole", noun, value) }
         }
         /// {count} reads of data, within its Card
-        static func reads(count: Int) -> String { Words.line("record.reads", count) }
+        static func reads(count: Int) -> String { Words.count("record.reads", count) }
         /// Refused: {summary}
         static func refused(summary: String) -> String { Words.line("record.refused", summary) }
         /// Refused by you · {at} · {summary}
@@ -2277,7 +2277,7 @@ enum Words {
             /// No new action goes through
             static var noNewAction: String { Words.line("record.revoked.no_new_action") }
             /// No new action goes through. {count} waiting action(s) refused.
-            static func refusedWaiting(count: Int) -> String { Words.line("record.revoked.refused_waiting", count) }
+            static func refusedWaiting(count: Int) -> String { Words.count("record.revoked.refused_waiting", count) }
             /// You revoked {taf}'s Card
             static func title(taf: String) -> String { Words.line("record.revoked.title", taf) }
         }
@@ -2526,8 +2526,7 @@ enum Words {
             static var backToWork: String { Words.line("sample.reply.back_to_work") }
             /// I'm not here any more.
             static var gone: String { Words.line("sample.reply.gone") }
-            /// Lately:
-{done}
+            /// Lately:\n{done}
             static func lately(done: String) -> String { Words.line("sample.reply.lately", done) }
             /// I can't give myself more room: only you can, by changing my Card. Anything over it waits for you in Needs you.
             static var moreRoom: String { Words.line("sample.reply.more_room") }
@@ -2538,7 +2537,7 @@ enum Words {
             /// Paused. Nothing more goes out until you tell me to carry on.
             static var paused: String { Words.line("sample.reply.paused") }
             /// {count} things wait on you in Needs you.
-            static func waiting(count: Int) -> String { Words.line("sample.reply.waiting", count) }
+            static func waiting(count: Int) -> String { Words.count("sample.reply.waiting", count) }
         }
         enum Tool {
             /// Accounting
@@ -2893,8 +2892,7 @@ enum Words {
             static var revokedLead: String { Words.line("sign_in.welcome.revoked_lead") }
             /// no new action goes through.
             static var revokedRest: String { Words.line("sign_in.welcome.revoked_rest") }
-            /// They taf.
-You kiff.
+            /// They taf.\nYou kiff.
             static var title: String { Words.line("sign_in.welcome.title") }
         }
         /// Sign in with KIFF
@@ -2974,9 +2972,7 @@ You kiff.
             static var explains: String { Words.line("taf.memory.explains") }
             /// Forget
             static var forget: String { Words.line("taf.memory.forget") }
-            /// “{note}”
-
-It can't be undone: the taf stops working with it from its next run or chat. Other notes stay.
+            /// “{note}”\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.
             static func forgetBody(note: String) -> String { Words.line("taf.memory.forget_body", note) }
             /// Forget this note?
             static var forgetTitle: String { Words.line("taf.memory.forget_title") }
@@ -3039,13 +3035,13 @@ It can't be undone: the taf stops working with it from its next run or chat. Oth
             /// Remove
             static var button: String { Words.line("taf.remove.button") }
             /// KIFF didn't revoke {count} of its Cards: revoke them in KIFF.
-            static func cardsLeft(count: Int) -> String { Words.line("taf.remove.cards_left", count) }
+            static func cardsLeft(count: Int) -> String { Words.count("taf.remove.cards_left", count) }
             /// Its Cards are revoked in KIFF.
             static var cardsRevoked: String { Words.line("taf.remove.cards_revoked") }
             /// Its connections are disconnected.
             static var connectionsDisconnected: String { Words.line("taf.remove.connections_disconnected") }
             /// {count} of its connections couldn't be disconnected: disconnect them in Connect apps.
-            static func connectionsLeft(count: Int) -> String { Words.line("taf.remove.connections_left", count) }
+            static func connectionsLeft(count: Int) -> String { Words.count("taf.remove.connections_left", count) }
             /// Its schedule, chats, run reports, memory and key are deleted, and the name {taf} is free. KIFF's receipts stay.
             static func done(taf: String) -> String { Words.line("taf.remove.done", taf) }
             /// If the removal began, tafs finishes it the next time it refreshes.
@@ -3144,7 +3140,7 @@ It can't be undone: the taf stops working with it from its next run or chat. Oth
         /// It works when you tell it, in its chat: no schedule runs it.
         static var worksFromChat: String { Words.line("taf.works_from_chat") }
         /// Works under {count} KIFF Cards.
-        static func worksUnderCards(count: Int) -> String { Words.line("taf.works_under_cards", count) }
+        static func worksUnderCards(count: Int) -> String { Words.count("taf.works_under_cards", count) }
     }
     enum Usage {
         /// Balance
@@ -3246,9 +3242,9 @@ It can't be undone: the taf stops working with it from its next run or chat. Oth
         /// Its runs couldn't be read. {why}
         static func tafRunsNotRead(why: String) -> String { Words.line("usage.taf_runs_not_read", why) }
         /// {count} tasks
-        static func tasks(count: Int) -> String { Words.line("usage.tasks", count) }
+        static func tasks(count: Int) -> String { Words.count("usage.tasks", count) }
         /// {count} tasks this period
-        static func tasksThisPeriod(count: Int) -> String { Words.line("usage.tasks_this_period", count) }
+        static func tasksThisPeriod(count: Int) -> String { Words.count("usage.tasks_this_period", count) }
         /// This period
         static var thisPeriod: String { Words.line("usage.this_period") }
         /// Plan & usage
@@ -3411,19 +3407,19 @@ It can't be undone: the taf stops working with it from its next run or chat. Oth
         static var trialCardUnreadable: String { Words.line("version.trial_card_unreadable") }
         enum Tried {
             /// {count} calls
-            static func calls(count: Int) -> String { Words.line("version.tried.calls", count) }
+            static func calls(count: Int) -> String { Words.count("version.tried.calls", count) }
             /// ended
             static var ended: String { Words.line("version.tried.ended") }
             /// ended unused
             static var endedUnused: String { Words.line("version.tried.ended_unused") }
             /// {count} held
-            static func held(count: Int) -> String { Words.line("version.tried.held", count) }
+            static func held(count: Int) -> String { Words.count("version.tried.held", count) }
             /// installed
             static var installed: String { Words.line("version.tried.installed") }
             /// Tried {date}
             static func on(date: String) -> String { Words.line("version.tried.on", date) }
             /// {count} refused
-            static func refused(count: Int) -> String { Words.line("version.tried.refused", count) }
+            static func refused(count: Int) -> String { Words.count("version.tried.refused", count) }
             /// went back
             static var wentBack: String { Words.line("version.tried.went_back") }
         }
@@ -3492,15 +3488,34 @@ It can't be undone: the taf stops working with it from its next run or chat. Oth
             static var whatHappened: String { Words.line("work.request.what_happened") }
         }
         /// {count} requests need you
-        static func requestsNeedYou(count: Int) -> String { Words.line("work.requests_need_you", count) }
+        static func requestsNeedYou(count: Int) -> String { Words.count("work.requests_need_you", count) }
         /// Send again
         static var sendAgain: String { Words.line("work.send_again") }
         /// Sending again…
         static var sendingAgain: String { Words.line("work.sending_again") }
     }
 
-    /// A line by its key, with its values. A count picks the plural form its language needs.
-    static func line(_ key: String, _ values: CVarArg...) -> String {
+    /// A line by its key, with its values.
+    static func line(_ key: String, _ values: String...) -> String {
+        filled(key, values)
+    }
+
+    /// A count's line: the plural form its number takes in the app's language, else `other`.
+    /// The number is the line's first value, written as the app writes a number.
+    static func count(_ key: String, _ count: Int, _ values: String...) -> String {
+        let form = "\(key)|\(pluralForm(count))"
+        let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form
+        return filled(known ? form : "\(key)|other", [String(count)] + values)
+    }
+
+    /// The plural form a number takes in the app's language: one, few, many, other…
+    static func pluralForm(_ count: Int) -> String {
+        let format = Bundle.main.localizedString(forKey: "_plural", value: nil, table: nil)
+        let picked = String(format: format, locale: Locale.current, count)
+        return picked.split(separator: "|").last.map(String.init) ?? "other"
+    }
+
+    private static func filled(_ key: String, _ values: [String]) -> String {
         let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
         return values.isEmpty ? format : String(format: format, locale: Locale.current, arguments: values)
     }

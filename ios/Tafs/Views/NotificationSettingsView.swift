@@ -6,7 +6,7 @@ struct NotificationSettingsView: View {
     @EnvironmentObject private var model: AppModel
     @AppStorage(Haptics.key) private var haptics = true
 
-    static let title = "Alerts"
+    static let title = Words.Settings.alerts
 
     var body: some View {
         List {
@@ -27,16 +27,16 @@ struct NotificationSettingsView: View {
                         .disabled(model.phoneAlertsBusy || model.turningOnAlerts)
                     Toggle(isOn: Binding(get: { model.alertSound }, set: { model.alertSound = $0 })) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Sound")
-                            Text("For a hold or a halt only").scaledFont(13).foregroundColor(Theme.dim)
+                            Text(Words.Alert.sound)
+                            Text(Words.Alert.soundWords).scaledFont(13).foregroundColor(Theme.dim)
                         }
                     }
                 } footer: {
                     Text(model.canAnswerHolds == false
-                         ? "Alerts go to the people who may answer held calls. Your role on this account can't."
+                         ? Words.Alert.Foot.cantAnswerHolds
                          : "When a taf needs you, this \(ThisDevice.kind) tells you even with tafs closed. Nothing is sent until you approve.")
                 }
-                Section("What alerts you") {
+                Section(Words.Alert.whatAlerts) {
                     ForEach(model.phoneAlerts?.kinds ?? []) { choice in
                         Toggle(isOn: Binding(get: { choice.enabled }, set: { enabled in Task { await model.setAlertKind(choice.id, enabled: enabled) } })) {
                             VStack(alignment: .leading) { Text(choice.title); Text(choice.words).scaledFont(13).foregroundColor(Theme.dim) }
@@ -65,7 +65,7 @@ struct NotificationSettingsView: View {
     private func level(_ title: String, sound: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).foregroundColor(Theme.ink)
-            Label(sound ? "Sound, always" : "Silent", systemImage: sound ? "speaker.wave.2" : "bell.slash")
+            Label(sound ? Words.Alert.always : Words.Alert.silent, systemImage: sound ? "speaker.wave.2" : "bell.slash")
                 .scaledFont(13).foregroundColor(Theme.dim)
         }
         .accessibilityElement(children: .combine)
@@ -126,6 +126,6 @@ private struct AlertingTafsView: View {
         }
         .scrollContentBackground(.hidden)
         .screenBackground()
-        .navigationTitle("A taf answered someone")
+        .navigationTitle(Words.Alert.answered)
     }
 }

@@ -192,6 +192,16 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertNil(ConnectionGroupWords.usedBy([""]))
     }
 
+    /// A count's line picks the plural form its number takes, from the shared words
+    /// (app/strings): English has one and other.
+    func testACountPicksItsPluralForm() {
+        XCTAssertEqual(Words.pluralForm(1), "one")
+        XCTAssertEqual([0, 2, 5, 22].map(Words.pluralForm), ["other", "other", "other", "other"])
+        XCTAssertEqual(Words.Work.requestsNeedYou(count: 1), "1 request needs you")
+        XCTAssertEqual(Words.Work.requestsNeedYou(count: 3), "3 requests need you")
+        XCTAssertEqual(Words.NeedsYou.approveOnce, "Approve once")
+    }
+
     /// planque keeps the name of the taf a connection was made for: what a removed taf's row is called.
     func testAGrantKeepsItsTafsName() throws {
         let json = #"{"id":"g2","status":"connected","text":"","digest":"d","vendor":"Stripe","agent_name":"Old refunds","request":{"server":"https://mcp.stripe.com","agent":"gone-1","tools":[]},"events":[]}"#

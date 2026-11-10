@@ -5,9 +5,9 @@ enum CalendarMode: String, CaseIterable, Codable, Sendable {
     case day, week, month
     var title: String {
         switch self {
-        case .day: return "Day"
-        case .week: return "Week"
-        case .month: return "Month"
+        case .day: return Words.Calendar.Mode.day
+        case .week: return Words.Calendar.Mode.week
+        case .month: return Words.Calendar.Mode.month
         }
     }
 }
@@ -43,9 +43,9 @@ enum CalendarMath {
         return c
     }()
 
-    static let monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    static let monthNames = [Words.Calendar.MonthName.january, Words.Calendar.MonthName.february, Words.Calendar.MonthName.march, Words.Calendar.MonthName.april, Words.Calendar.MonthName.may, Words.Calendar.MonthName.june, Words.Calendar.MonthName.july, Words.Calendar.MonthName.august, Words.Calendar.MonthName.september, Words.Calendar.MonthName.october, Words.Calendar.MonthName.november, Words.Calendar.MonthName.december]
     /// Monday first.
-    static let weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    static let weekdayNames = [Words.Calendar.Weekday.mon, Words.Calendar.Weekday.tue, Words.Calendar.Weekday.wed, Words.Calendar.Weekday.thu, Words.Calendar.Weekday.fri, Words.Calendar.Weekday.sat, Words.Calendar.Weekday.sun]
 
     private static func parts(_ day: String) -> (y: Int, m: Int, d: Int)? {
         let p = day.split(separator: "-").compactMap { Int($0) }

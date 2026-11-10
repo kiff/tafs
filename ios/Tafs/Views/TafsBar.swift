@@ -21,10 +21,10 @@ struct TafsBar: View {
     }
 
     static let items = [
-        Item(tab: .account, title: "Account", icon: "person.crop.circle", selectedIcon: "person.crop.circle.fill"),
-        Item(tab: .tafs, title: "Tafs", icon: "square.stack", selectedIcon: "square.stack.fill"),
-        Item(tab: .needsYou, title: "Needs you", icon: "bell", selectedIcon: "bell.fill"),
-        Item(tab: .record, title: "Record", icon: "list.bullet", selectedIcon: "list.bullet"),
+        Item(tab: .account, title: Words.Settings.title, icon: "person.crop.circle", selectedIcon: "person.crop.circle.fill"),
+        Item(tab: .tafs, title: Words.Home.title, icon: "square.stack", selectedIcon: "square.stack.fill"),
+        Item(tab: .needsYou, title: Words.NeedsYou.title, icon: "bell", selectedIcon: "bell.fill"),
+        Item(tab: .record, title: Words.Record.title, icon: "list.bullet", selectedIcon: "list.bullet"),
     ]
 
     var body: some View {
@@ -82,7 +82,7 @@ struct TafsBar: View {
     /// The account this is stays in reach (the 870 test): VoiceOver reads it with Account.
     private func label(_ item: Item, count: Int) -> String {
         switch item.tab {
-        case .account: return model.accountLabel.map { "Account, \($0)" } ?? "Account"
+        case .account: return model.accountLabel.map { "Account, \($0)" } ?? Words.Settings.title
         case .needsYou where count > 0: return "Needs you, \(count)"
         default: return item.title
         }
@@ -95,11 +95,11 @@ struct TafsBar: View {
                 if rail {
                     VStack(spacing: 3) {
                         Image(systemName: drive.isOn ? "sparkles" : "sparkle").scaledFont(18, weight: .semibold)
-                        Text(drive.isOn ? "Driving" : "Coach").scaledFont(12, weight: .semibold)
+                        Text(drive.isOn ? "Driving" : Words.Coach.title).scaledFont(12, weight: .semibold)
                     }
                     .frame(maxWidth: .infinity, minHeight: 56)
                 } else {
-                    Label(drive.isOn ? "Driving" : "Coach", systemImage: drive.isOn ? "sparkles" : "sparkle").scaledFont(15, weight: .semibold)
+                    Label(drive.isOn ? "Driving" : Words.Coach.title, systemImage: drive.isOn ? "sparkles" : "sparkle").scaledFont(15, weight: .semibold)
                         .padding(.horizontal, 14).frame(minHeight: 44)
                 }
             }
@@ -109,7 +109,7 @@ struct TafsBar: View {
         }
         .buttonStyle(.plain)
         // In the drive's registry with no action: Coach can't use it, and the person's tap on it stops the drive.
-        .drivable("Coach", id: DriveSession.coachButtonID)
+        .drivable(Words.Coach.title, id: DriveSession.coachButtonID)
         .accessibilityLabel("Coach mode")
         .accessibilityIdentifier("bar.Coach")
     }

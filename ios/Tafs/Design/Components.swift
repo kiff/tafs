@@ -276,8 +276,8 @@ struct UnreachableLine: View {
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(Theme.amber).frame(width: 7, height: 7)
-            Text(retrying ? "\(words) · trying again" : words).scaledFont(12).foregroundColor(Theme.dim)
-            Link("Status", destination: Legal.status).scaledFont(12, weight: .semibold)
+            Text(retrying ? Words.Home.statusRetrying(words: "\(words)") : words).scaledFont(12).foregroundColor(Theme.dim)
+            Link(Words.Home.status, destination: Legal.status).scaledFont(12, weight: .semibold)
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("unreachable")
@@ -292,8 +292,8 @@ enum SignOutWay {
 
     var title: String {
         switch self {
-        case .signOut: return "Sign out of KIFF?"
-        case .signInAgain: return "Sign in again?"
+        case .signOut: return Words.Settings.SignOutOfKiff.title
+        case .signInAgain: return Words.Settings.SignInAgainConfirm.title
         }
     }
 
@@ -306,8 +306,8 @@ enum SignOutWay {
 
     var confirm: String {
         switch self {
-        case .signOut: return "Sign out"
-        case .signInAgain: return "Sign out and sign in"
+        case .signOut: return Words.Settings.signOut
+        case .signInAgain: return Words.Settings.SignInAgainConfirm.confirm
         }
     }
 }
@@ -319,7 +319,7 @@ extension View {
         alert(way.wrappedValue?.title ?? "", isPresented: Binding(get: { way.wrappedValue != nil }, set: { if !$0 { way.wrappedValue = nil } }),
               presenting: way.wrappedValue) { w in
             Button(w.confirm, role: .destructive) { go(w) }
-            Button("Cancel", role: .cancel) {}
+            Button(Words.Common.cancel, role: .cancel) {}
         } message: { w in
             Text(w.message)
         }
@@ -372,7 +372,7 @@ struct ApprovalKeyLostLine: View {
                 HStack(spacing: 8) {
                     Button("Open the browser again") { openURL(relink.url) }
                         .buttonStyle(OutlineButtonStyle())
-                    Button("Cancel") { model.cancelRelink() }
+                    Button(Words.Common.cancel) { model.cancelRelink() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 }
             } else {
@@ -386,7 +386,7 @@ struct ApprovalKeyLostLine: View {
                         starting = false
                     }
                 } label: {
-                    Label("Approve again in your browser", systemImage: Biometry.symbol)
+                    Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .confirming()
@@ -394,7 +394,7 @@ struct ApprovalKeyLostLine: View {
                 Button {
                     confirming = .signInAgain
                 } label: {
-                    Text("Sign in again instead").scaledFont(13)
+                    Text(Words.NeedsYou.signInAgainInstead).scaledFont(13)
                 }
                 .buttonStyle(.drivablePlain)
                 .foregroundColor(Theme.soft)

@@ -106,58 +106,36 @@ app's side. If the app signs you out on its side (a
 changed password, an expired session), the taf says so and waits for you: **Sign in again**
 asks for one approval, then the app's own page.
 
+### An app's connections, taf by taf
+
+In Connect apps, an app you've connected (“Connected ✓”) opens its connections, one section
+per taf. The tafs with a connection that needs you come first: a sign-in still waiting, an app
+that signed you out, or a last call that failed. Each row says whose account it is and how
+it's doing, and “Also on Chargebacks's Card” when another taf's Card uses it. If you manage
+the account's Cards, a row has **Sign in again** and **Disconnect**, or **Cancel** on a
+sign-in that never came back. Disconnect also names any other taf whose Card draws on that
+connection, which stops too (“Chargebacks stops too.”).
+
+**Other connections** comes last: connections the app can't put under a taf you see. It
+doesn't say the taf was removed, because it may be one you don't see.
+
+### Connections from removed tafs
+
+When you remove a taf for good, its connections are disconnected with it, under the same
+confirmation. If some couldn't be, the result says how many, and you can disconnect them
+here.
+
+Connections left by a taf that was removed earlier show under **From removed tafs**, with
+that taf's name. **Clear these connections** ends the ones no live taf uses, after one
+question (“Clear 2 connections from removed tafs?”) and one Face ID or fingerprint. A
+connection another taf's Card still uses is kept, and says so (“Kept: Chargebacks's Card
+uses it”). The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose
+Card uses it.”). When tafs can't tell which ones are still used, there's no Clear.
+
+How the apps build these lists is in [api.md](api.md#connect-apps),
+[ios-app.md](ios-app.md#connect-apps) and [android-app.md](android-app.md#connect-apps).
+
 ## When an app isn't on the list
 
 Ask Coach: **Not listed? Ask Coach** in Connect apps, or tell Coach what you need. Coach can
 connect some apps that aren't on the list, and tells you when one isn't available yet.
-
-## Disconnecting
-
-A connected app (“Connected ✓”) opens its connections: each planque grant the account has for that app, live (not
-`disconnected` or `failed`), **one section per taf**, its name as the heading. The tafs with a connection that needs you
-come first (a sign-in waiting, signed out, or a last call that failed), then the rest by name. A row shows the vendor's
-account when planque gives one, else the app's name, then planque's status words and “Also on Chargebacks's Card” when
-another taf's Card uses it. Whoever manages the account's Cards has **Sign in again** and **Disconnect** on a row, or
-**Cancel** on a sign-in that never came back (“Cancel the sign-in to Stripe?”, “Keep waiting”). Disconnect asks first, naming the one taf it ends (“Disconnect
-Stripe from Refunds?”, with Cancel), names any other taf whose Card draws on its tools, which stops too (“Chargebacks
-stops too.”), and says other connections to the app stay; Face ID or the fingerprint then asks the same words. It calls planque's signed `DELETE /v1/accounts/{tenant}/grants/{id}`: planque removes that
-connection's tools from KIFF, and revokes its sign-in at the app only when no other live connection uses it (a second
-taf that reused it, or the same provider account); the last connection on a sign-in revokes it. The list is read again
-after.
-
-**Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing
-that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that
-isn't a taf, so nothing there says it was removed (`byTaf` on Android; `AppModel.connectionGroups` and
-`AppConnectionsView` on iPhone and iPad).
-
-**Removed tafs** are named by the server, never inferred by the apps. `GET /v1/connect/apps` carries `removed_tafs`:
-each KIFF agent that KIFF has archived, as removing a taf does, and that is no taf of tafs cloud's any more (not
-live, not still being removed, not Setup), with when KIFF archived it (`removed_at`), newest first. A grant whose
-`request.agent` is one of these is from a removed taf, and its `agent_name` names the taf. It's listed only for
-someone who manages Cards, who alone can clear. Anyone else gets none, and so does everyone when KIFF's agents can't
-be read, so nothing is offered to clear on a guess. Tafs removed before removal archived their KIFF agent aren't on
-it, so their connections stay under Other connections.
-
-**What Clear keeps is decided there too.** When the app sends its signed grants read (`Planque-Device-Signature`, as
-for a taf's Setup), each removed taf also carries `grants`: its live connections (not `disconnected` or `failed`),
-each with `used_by`, the live tafs whose Card in force has a rule on one of the connection's actions. KIFF's tools are
-the account's, so a taf can draw on a connection another taf asked for. A connection's actions are planque's `tools`
-once it's connected, else each asked tool's name, leaving out Setup's own reads. Clear disconnects only those with an
-empty `used_by`, and says which it kept and for which taf. Without the proof, or when planque's grants or KIFF's
-Cards can't be read, a removed taf has no `grants`, and the apps offer no Clear on it (`removedTafs` and `tafsUsing`
-in `runtime/src/cloud/handler.ts`).
-
-**From removed tafs**, on both apps, comes between the tafs and Other connections: the connections whose
-`request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (planque's
-`agent_name`). The app sends its signed grants read with the read (`Planque-Device-Signature`, as Setup does). A
-connection a live taf's Card still uses says so (“Kept: Chargebacks's Card uses it”). **Clear these connections**
-shows only when at least one listed connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2
-connections from removed tafs?”), then one fingerprint or Face ID, and the device key signs each disconnect. The line
-under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). With no `grants` the section
-shows with no Clear. Which to keep is tafs cloud's word, never the phone's (Android: `AppModel.clearRemovedConnections`,
-`byTaf`; iPhone and iPad: `AppModel.connectionGroups`, `clearPlan` and `clearRemovedConnections`).
-
-Removing a taf for good does the same for every live connection its agent asked for, signed under the removal's own
-confirmation, after its Cards are revoked and before tafs cloud removes the rest. Its result says the connections are
-disconnected, or how many couldn't be (then Disconnect here).
-

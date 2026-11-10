@@ -91,7 +91,7 @@ enum FilePrep {
             return try photo(data, name: name)
         }
         guard let mt = mediaType(type) else {
-            throw FileProblem(message: "\(name) can't be attached. Photos, PDFs, text, CSV, Markdown, Word and Excel files can.")
+            throw FileProblem(message: Words.Attachment.wrongKind(name: "\(name)"))
         }
         try check(name: name, size: data.count, mediaType: mt)
         return PreparedFile(name: name, mediaType: mt, data: data, thumbnail: nil)
@@ -100,10 +100,10 @@ enum FilePrep {
     /// Refuses a file over its type's limit, saying which.
     static func check(name: String, size: Int, mediaType: String) throws {
         guard let limit = limits[mediaType] else {
-            throw FileProblem(message: "\(name) can't be attached.")
+            throw FileProblem(message: Words.Attachment.cantAttach(name: "\(name)"))
         }
         if size > limit {
-            throw FileProblem(message: "\(name) is \(megabytes(size)); the most is \(megabytes(limit)).")
+            throw FileProblem(message: Words.Attachment.tooLarge(name: "\(name)", size: "\(megabytes(size))", limit: "\(megabytes(limit))"))
         }
     }
 
@@ -120,14 +120,14 @@ enum FilePrep {
     /// 2576 px, with a small thumbnail for the tray.
     static func photo(_ data: Data, name: String) throws -> PreparedFile {
         guard let image = UIImage(data: data) else {
-            throw FileProblem(message: "\(name) couldn't be read as a photo.")
+            throw FileProblem(message: Words.Chat.Attach.notAPhoto(name: "\(name)"))
         }
         return try photo(image, name: name)
     }
 
     static func photo(_ image: UIImage, name: String) throws -> PreparedFile {
         let jpeg = scaled(image, to: longEdge).jpegData(compressionQuality: 0.85)
-        guard let jpeg else { throw FileProblem(message: "\(name) couldn't be read as a photo.") }
+        guard let jpeg else { throw FileProblem(message: Words.Chat.Attach.notAPhoto(name: "\(name)")) }
         let base = (name as NSString).deletingPathExtension
         let named = (base.isEmpty ? "Photo" : base) + ".jpg"
         try check(name: named, size: jpeg.count, mediaType: "image/jpeg")

@@ -34,7 +34,7 @@ struct AppEventApprovalSheet: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     ApprovalGate {
-                        Button(busy ? "Approving…" : "Approve with " + Biometry.name) {
+                        Button(busy ? Words.Approval.approving : Words.Approval.approveWith(biometry: Biometry.name)) {
                             busy = true
                             Task {
                                 defer { busy = false }
@@ -47,7 +47,7 @@ struct AppEventApprovalSheet: View {
                 }.padding(20)
             }
             .navigationTitle("Approve event").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() }.disabled(busy) } }
         }
         .interactiveDismissDisabled(busy)
     }

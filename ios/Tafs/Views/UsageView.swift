@@ -57,10 +57,10 @@ struct UsageView: View {
         if !u.managesBilling {
             if let mine = Self.waiting(u) {
                 Panel {
-                    Eyebrow(text: "Waiting")
+                    Eyebrow(text: Words.Usage.Requests.waiting)
                     Text("\(Self.askedLine(mine, in: u)) An admin answers.").scaledFont(15).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    Button("Withdraw") { Task { await model.withdrawRequest(mine) } }.buttonStyle(OutlineButtonStyle())
+                    Button(Words.Usage.Requests.withdraw) { Task { await model.withdrawRequest(mine) } }.buttonStyle(OutlineButtonStyle())
                 }
             } else {
                 if let answer = Self.lastAnswer(u) {
@@ -83,7 +83,7 @@ struct UsageView: View {
         let open = Self.openRequests(u)
         if !open.isEmpty {
             Panel(stroke: Theme.amber.opacity(0.5)) {
-                Eyebrow(text: "Requests", color: Theme.amber)
+                Eyebrow(text: Words.Usage.Requests.title, color: Theme.amber)
                 ForEach(open) { r in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(Self.requestLine(r, in: u)).scaledFont(15).foregroundColor(Theme.ink)
@@ -104,12 +104,12 @@ struct UsageView: View {
                             } else if model.balance?.balance.buy?.packs == true,
                                       let pack = u.store?.packs.first(where: { $0.id == r.pack }) {
                                 // Approving buys the pack: only while packs are on sale.
-                                Button("Approve") { Task { await model.buyPack(pack, answering: r) } }
+                                Button(Words.Usage.Requests.approve) { Task { await model.buyPack(pack, answering: r) } }
                                     .buttonStyle(PrimaryButtonStyle())
                                     .confirming()
                                     .disabled(model.purchases.buying != nil)
                             }
-                            Button("Decline") { declining = r }.buttonStyle(OutlineButtonStyle())
+                            Button(Words.Usage.Requests.decline) { declining = r }.buttonStyle(OutlineButtonStyle())
                         }
                     }
                 }
@@ -128,7 +128,7 @@ struct UsageView: View {
                         Text(line).scaledFont(15).foregroundColor(Theme.ink)
                         Spacer()
                         if Self.managedByApple(u) {
-                            Button("Manage") { Task { await Purchases.manageSubscriptions() } }
+                            Button(Words.Usage.manage) { Task { await Purchases.manageSubscriptions() } }
                                 .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                         }
                     }
@@ -147,9 +147,9 @@ struct UsageView: View {
     }
 
     /// The account's screen: its plan, and what the period used.
-    static let title = "Plan & usage"
-    static let askAdmin = "Ask an admin"
-    static let raiseLimit = "Raise the limit"
+    static let title = Words.Usage.title
+    static let askAdmin = Words.Usage.Requests.askAdmin
+    static let raiseLimit = Words.Usage.raiseLimitButton
 
     /// The colour of tafs cloud's tone: `waiting` in red, `warning` in amber, else calm.
     static func color(_ tone: String, calm: Color = Theme.ink) -> Color {
@@ -209,8 +209,8 @@ struct UsageView: View {
         switch r.status {
         case "approved": return r.kind == "raise" ? "An admin raised the spend limit." : "An admin added a pack."
         case "declined":
-            if let note = r.note, !note.isEmpty { return "An admin declined: \(note)" }
-            return "An admin declined."
+            if let note = r.note, !note.isEmpty { return Words.Billing.Ask.declinedNote(note: "\(note)") }
+            return Words.Billing.Ask.declined
         case "expired": return "Your request ended with the period."
         default: return nil
         }
@@ -272,7 +272,7 @@ struct BalancePanel: View {
                 // The raise went through and the balance couldn't be read since: only a read is offered.
                 Panel {
                     Text(Self.readSince).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                    Button(reading ? "Reading…" : Self.readAgain) {
+                    Button(reading ? Words.Usage.reading : Self.readAgain) {
                         reading = true
                         Task { await model.readBalance(); reading = false }
                     }
@@ -291,7 +291,7 @@ struct BalancePanel: View {
                             raising = false
                         }
                     } label: {
-                        Label(raising || model.raising ? "Raising…" : raise.words, systemImage: Biometry.symbol)
+                        Label(raising || model.raising ? Words.Usage.raising : raise.words, systemImage: Biometry.symbol)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(raising || model.raising)
@@ -314,7 +314,7 @@ struct BalancePanel: View {
                         Panel {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Solo").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                    Text(Words.Usage.solo).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                                     Text(SoloView.line).scaledFont(13).foregroundColor(Theme.dim)
                                 }
                                 Spacer()
@@ -330,8 +330,8 @@ struct BalancePanel: View {
         }
     }
 
-    static let buyCredits = "Add credits"
-    static let readAgain = "Read it again"
+    static let buyCredits = Words.Usage.buy
+    static let readAgain = Words.Usage.readAgain
     /// After a raise whose read failed (docs/accounts.md › In the apps).
-    static let readSince = "Your tafs can go on. This period's credits couldn't be read since."
+    static let readSince = Words.Usage.raisedUnread
 }
