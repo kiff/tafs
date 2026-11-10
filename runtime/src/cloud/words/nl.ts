@@ -133,6 +133,7 @@ export const nl: Words = {
   push_refund_title: "Een terugbetaling",
   push_refund_failed: (taf) => `Een terugbetaling die ${taf} stuurde, is mislukt bij de betaalverwerker. De ruimte op de Card is terug.`,
   push_refunded_twice: (taf) => `Een betaling die ${taf} terugbetaalde, is ook buiten KIFF terugbetaald. Controleer die voordat er meer wordt terugbetaald.`,
+  push_refund_after_no: (taf) => `Een terugbetaling die ${taf} stuurde en waarvan je zei dat die niet was gebeurd, is toch gelukt bij de betaalverwerker. De ruimte op de Card is weer in gebruik. Controleer of het verzoek niet twee keer is terugbetaald.`,
   push_raise_title: "Verhoging gevraagd",
   push_raise_body: "Iemand in je account vraagt je de uitgavenlimiet te verhogen. Open Abonnement en gebruik om te antwoorden.",
   push_pack_title: "Pakket gevraagd",

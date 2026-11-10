@@ -332,11 +332,15 @@ taf runs any more tells nobody.
 **A refund that failed, or a charge refunded twice.** KIFF follows a refund a taf sent until
 the payment processor says how it ended. It sends `refund_notice` when that refund failed or
 was cancelled (KIFF gives its room on the Card back), and when a charge the taf refunded was
-also refunded outside KIFF, for example in the processor's dashboard. The notice carries the
-kind (`refund_failed` or `refunded_twice`), the taf's agent and the call. tafs cloud alerts the
+also refunded outside KIFF, for example in the processor's dashboard. It also sends it when the
+owner answered "No" to "Did this happen?" about a refund that then shows up at the processor
+after all: KIFF takes that refund's room on the Card again. The notice carries the kind
+(`refund_failed`, `refunded_twice` or `refund_after_no`), the taf's agent and the call. tafs cloud alerts the
 phones of the people who answer: "A refund Refunds sent failed at the payment processor. Its
 room on the Card came back." or "A charge Refunds refunded was also refunded outside KIFF. Check
-it before anything more is refunded." Tapping it opens the taf. Each phone hears it in its own
+it before anything more is refunded." or "A refund Refunds sent, which you said didn't happen,
+went through at the payment processor. Its room on the Card is taken again. Check the request
+wasn't refunded twice." Tapping it opens the taf. Each phone hears it in its own
 language. It sounds, and isn't Time Sensitive. No run waits on it, so it isn't handed to
 kiff/agents. KIFF's resend of the same event tells nobody twice, and an agent that no taf runs
 any more tells nobody.
