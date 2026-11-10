@@ -31,6 +31,8 @@ import bot.tafs.app.model.LiveStep
 import bot.tafs.app.kiff.StreamEvent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.NonCancellable
 import bot.tafs.app.model.CardCheck
 import bot.tafs.app.model.Card
 import bot.tafs.app.model.Decision
@@ -934,7 +936,9 @@ class AppModel(
       throw e
     }
     endSignIn()
-    useSession(token.accessToken, token.tenant)
+    // The account loads to the end whatever the screen does: the sign-in screen leaves as soon as the app is signed in, and its
+    // coroutine with it, which used to cancel the first refresh and leave Home on "Loading your tafs…" until a pull.
+    withContext(NonCancellable) { useSession(token.accessToken, token.tenant) }
   }
 
   /** A sign-in's code and when it expires, kept with the phone's secrets until it's done. */
@@ -1069,7 +1073,15 @@ class AppModel(
    * holds, as KIFF sent it. What the tafs did comes from KIFF's activity; a KIFF that doesn't let the
    * phone read it leaves the Record as it is.
    */
-  suspend fun refresh(retry: Boolean = false) {
+  /**
+   * Reads the account again: the list, its holds, its access, then planque, the plan and the rest. It runs to the end whoever
+   * asked, so a screen that goes away meanwhile (the sign-in screen once signed in, a screen left as the app comes back) never
+   * cancels it: a cancelled refresh used to leave Home on "Loading your tafs…" until a pull. A sign-out or another sign-in on
+   * the way is told by the account's generation, as before.
+   */
+  suspend fun refresh(retry: Boolean = false) = withContext(NonCancellable) { refreshNow(retry) }
+
+  private suspend fun refreshNow(retry: Boolean) {
     if (_state.value.mode != Mode.kiff) return
     // Any refresh but the app's own try again (back in the app, a pull) starts the tries over.
     if (!retry) retries = 0

@@ -15,6 +15,8 @@ import java.util.Base64
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -258,6 +260,37 @@ class SignInTest {
     } finally {
       file.delete()
     }
+  }
+
+  /** A phone whose alerts are on and allowed, for what a sign-in registers. */
+  private val pushOn = object : bot.tafs.app.push.PushPlatform {
+    override val available = true
+    override suspend fun allowed() = true
+    override suspend fun token(): String? = "fcm_token_1"
+  }
+
+  @Test fun theAccountLoadsToTheEndWhenTheSignInScreenGoesAway() = runTest {
+    approved()
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("POST /v1/push", 200, """{"answers":true,"alerts":true}""")
+    secrets.save("1", AppModel.ALERTS_ON)
+    val m = testModel(transport = transport, secrets = secrets, signer = signer, clock = { t0.plusMillis(currentTime) }, start = false, push = pushOn)
+    // The account's first read waits, as a slow network does, while the sign-in screen leaves and its coroutine is cancelled.
+    val slow = transport.holdNext("GET /v1/me")
+    val screen = launch { m.finishSignIn(start) }
+    advanceTimeBy(6_000)
+    runCurrent()
+    assertTrue("the token came", transport.requestsTo("POST /v1/auth/device/token").isNotEmpty())
+    screen.cancel()
+    slow.complete(Unit)
+    advanceUntilIdle()
+    assertEquals(Mode.kiff, m.state.value.mode)
+    assertTrue("Home isn't left on Loading your tafs…", m.state.value.listLoaded)
+    assertTrue("the list was read", transport.requestsTo("GET /v1/home").isNotEmpty())
+    // The rest of the sign-in too: the phone's approval key is registered, and its alerts with tafs cloud.
+    assertEquals(1, transport.requestsTo("POST /v1/me/device/approval-key").size)
+    assertEquals("1", secrets.load(AppModel.KEYED))
+    assertEquals(1, transport.requestsTo("POST /v1/push").size)
   }
 
   @Test fun anApprovalDeclinedInTheBrowserIsKiffsWords() = runTest {
