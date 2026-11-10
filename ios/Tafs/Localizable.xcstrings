@@ -910,7 +910,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks braucht dich · Dispute #4825 · 640 € liegt über seinem Limit"
+            "value": "Chargebacks braucht dich · Anfechtung #4825 · 640 € liegt über seinem Limit"
           }
         },
         "en": {
@@ -940,7 +940,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks wacht op jou · Geschil #4825 · €640 is boven de limiet"
+            "value": "Chargebacks wacht op jou · Geschil #4825 · € 640 is boven de limiet"
           }
         },
         "pl": {
@@ -84100,7 +84100,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · test Stripe"
+            "value": "Refunds · Stripe di test"
           }
         },
         "nl": {
@@ -87437,7 +87437,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dispute #4825 · 640 € liegt über seinem Limit"
+            "value": "Anfechtung #4825 · 640 € liegt über seinem Limit"
           }
         },
         "en": {
@@ -87467,7 +87467,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geschil #4825 · €640 is boven de limiet"
+            "value": "Geschil #4825 · € 640 is boven de limiet"
           }
         },
         "pl": {
@@ -100852,7 +100852,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configurazione"
+            "value": "Setup"
           }
         },
         "nl": {

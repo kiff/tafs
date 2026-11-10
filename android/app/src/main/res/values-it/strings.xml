@@ -1665,7 +1665,7 @@
     <string name="sample_refunds_rule_credits">Crediti</string>
     <string name="sample_refunds_rule_payouts">Pagamenti in uscita</string>
     <string name="sample_refunds_rule_refunds">Rimborsi</string>
-    <string name="sample_refunds_stripe_test">Refunds · test Stripe</string>
+    <string name="sample_refunds_stripe_test">Refunds · Stripe di test</string>
     <string name="sample_reply_back_to_work">Torno al lavoro.</string>
     <string name="sample_reply_gone">Non sono più qui.</string>
     <string name="sample_reply_lately">Ultimamente:\n%1$s</string>
@@ -1989,7 +1989,7 @@
     <string name="taf_section_activity">Attività</string>
     <string name="taf_section_card">Card</string>
     <string name="taf_section_chat">Chat</string>
-    <string name="taf_section_setup">Configurazione</string>
+    <string name="taf_section_setup">Setup</string>
     <string name="taf_show_all_runs">Mostra tutte le esecuzioni</string>
     <string name="taf_show_card">%1$s. Mostra questa Card</string>
     <string name="taf_shows_cards">Mostra le Card</string>

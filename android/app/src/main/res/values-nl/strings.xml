@@ -15,7 +15,7 @@
     <string name="alert_haptics">Trillingen</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF heeft de weigering niet aangenomen. Open tafs om te antwoorden.</string>
     <string name="alert_kiff_doesnt_send">KIFF stuurt in dit account nog geen meldingen naar tafs.</string>
-    <string name="alert_loud_example">Chargebacks wacht op jou · Geschil #4825 · €640 is boven de limiet</string>
+    <string name="alert_loud_example">Chargebacks wacht op jou · Geschil #4825 · € 640 is boven de limiet</string>
     <string name="alert_needs_you">Een taf wacht op jou</string>
     <string name="alert_no_push_token_device">Deze %1$s heeft tafs geen pushtoken gegeven. Probeer het zo opnieuw.</string>
     <string name="alert_not_in_build">Meldingen zijn niet ingesteld in deze build van tafs.</string>
@@ -1730,7 +1730,7 @@
     <string name="settings_devices_title">Apparaten</string>
     <string name="settings_devices_unnamed">Een apparaat</string>
     <string name="settings_devices_used_just_now">Zojuist gebruikt</string>
-    <string name="settings_dispute_over_limit">Geschil #4825 · €640 is boven de limiet</string>
+    <string name="settings_dispute_over_limit">Geschil #4825 · € 640 is boven de limiet</string>
     <string name="settings_each_sends_who_answered_through">Elke melding vermeldt wie er is beantwoord en via welke deur, nooit de woorden. Zet het uit in Configuratie › Resultaten gaan naar van het taf.</string>
     <string name="settings_find_time_zone">Een tijdzone zoeken</string>
     <string name="settings_kiff_account">KIFF-account</string>

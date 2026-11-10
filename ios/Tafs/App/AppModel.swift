@@ -7192,11 +7192,15 @@ enum Screenshots {
     static var listSettlesOnReturn: Bool { enabled && UserDefaults.standard.bool(forKey: "listSettlesOnReturn") }
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
-    /// purchase screens' screenshots.
+    /// purchase screens' screenshots. The App Store writes a price the way the phone's
+    /// language does ("4,99 €"), so the sample does too.
     static let packs: [(id: String, name: String, price: String)] = [
-        ("pico", "Pico", "€4.99"), ("vonk", "Vonk", "€9.99"), ("rayo", "Rayo", "€19.99"),
-        ("forte", "Forte", "€49.99"), ("maxi", "Maxi", "€99.99"),
+        ("pico", "Pico", euros(4.99)), ("vonk", "Vonk", euros(9.99)), ("rayo", "Rayo", euros(19.99)),
+        ("forte", "Forte", euros(49.99)), ("maxi", "Maxi", euros(99.99)),
     ]
+    static func euros(_ amount: Decimal) -> String {
+        amount.formatted(.currency(code: "EUR").locale(Words.locale))
+    }
     /// `-screen card`: the Refunds taf's Cards as KIFF would list them (kiff/tafs#211), a live
     /// one with its total, a read-only one with its calls, and a test one.
     static func cards(_ taf: Taf) -> [TafCard] {
@@ -7225,7 +7229,7 @@ enum Screenshots {
     }
     static var products: [StoreProduct] {
         packs.map { StoreProduct(id: "bot.tafs.pack.\($0.id)", displayName: $0.name, displayPrice: $0.price) } +
-            [StoreProduct(id: soloProduct, displayName: Words.Usage.solo, displayPrice: "€10.99", subscription: .init(period: "month"))]
+            [StoreProduct(id: soloProduct, displayName: Words.Usage.solo, displayPrice: euros(10.99), subscription: .init(period: Words.Usage.month))]
     }
     static var tab: Tab {
         switch UserDefaults.standard.string(forKey: "tab") {

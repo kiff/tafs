@@ -247,9 +247,12 @@ jobs:
           }
           # The languages set: the main screens in each language the app ships, a line cut off
           # or left in English shows here. The app's language and region come from the launch
-          # arguments, as a phone set to that language gives them.
+          # arguments, as a phone set to that language gives them. Each language starts from a
+          # fresh install, so a permission asked in one doesn't hang over the next one's screens.
           if [ "$SET" = languages ]; then
             for lang in en de fr es it pt nl pl; do
+              xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
+              xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
               region=$(echo "$lang" | tr a-z A-Z); [ "$lang" = en ] && region=US
               loc=(-AppleLanguages "($lang)" -AppleLocale "${lang}_${region}")
               shoot "$lang-1-welcome" "${loc[@]}"
