@@ -2880,6 +2880,33 @@ describe("halting", () => {
     expect(events.map((e: { kind: string; name?: string }) => [e.kind, e.name])).toEqual([["resumed", "Rae"], ["halted", undefined], ["halted", "Rae"]]);
   });
 
+  it("says a halt and a resume of every taf in the plural, in a language whose words agree in number", async () => {
+    const w = world();
+    w.phones.push({ token: "f".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "fr" },
+      { token: "d".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "de" });
+    const titles = (token: string) => w.pushed.filter((p) => p.token === token)
+      .map((p) => (p.n.payload as { aps: { alert?: { title: string; body: string } } }).aps.alert).filter((a) => a !== undefined);
+    w.account.acksAtOnce = true;
+    await call(w, "POST", "/v1/halt", { token: "ana" });
+    await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    // All of them, then one: "bloqués" for the tafs, "bloqué" for Rae. The body says "resume" as the button does.
+    expect(titles("f".repeat(64)).map((a) => a.title)).toEqual(["Tous vos tafs bloqués", "Rae bloqué"]);
+    expect(titles("f".repeat(64))[0]!.body).toBe("Rien de nouveau n'est envoyé jusqu'à ce que vous repreniez dans tafs.");
+    w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
+    w.account.halts![""] = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", "/v1/halt", { token: "ana" })).status).toBe(200);
+    expect(titles("f".repeat(64)).slice(2)).toEqual([
+      { title: "Rae repris", body: "Il fonctionne à nouveau comme avant le blocage." },
+      { title: "Tous vos tafs repris", body: "Ils fonctionnent à nouveau comme avant le blocage." },
+    ]);
+    // German: one taf is "er", all of them "sie".
+    expect(titles("d".repeat(64)).slice(2)).toEqual([
+      { title: "Rae fortgesetzt", body: "Er arbeitet wieder wie vor dem Anhalten." },
+      { title: "Alle deine tafs fortgesetzt", body: "Sie arbeiten wieder wie vor dem Anhalten." },
+    ]);
+  });
+
   it("cancels the taf's pending runs when it halts", async () => {
     const w = world();
     await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });

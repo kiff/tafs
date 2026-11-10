@@ -152,7 +152,7 @@ export const de: Words = {
   push_all_tafs_object: "Alle deine tafs",
   push_halt_body: "Nichts Neues wird gesendet, bis du in tafs fortsetzt.",
   push_resumed: (who) => `${who} fortgesetzt`,
-  push_resume_body: "Es arbeitet wieder wie vor dem Anhalten.",
+  push_resume_body: (all) => (all ? "Sie arbeiten wieder wie vor dem Anhalten." : "Er arbeitet wieder wie vor dem Anhalten."),
   push_ended_failed: "Fehlgeschlagen. Öffne den Coach-Modus, um zu sehen, warum.",
   push_ended_stopped: "Es wurde gestoppt.",
   push_ended_done: "Erledigt. Öffne den Coach-Modus, um zu lesen, wie es lief.",

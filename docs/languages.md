@@ -110,7 +110,6 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | knock (a message from someone not paired) | Klopfen | demande d'accès | llamada | bussata | pedido de contacto | klop | pukanie |
 | Pair (a sender with a door) | Koppeln | Associer | Vincular | Associa | Associar | Koppelen | Powiąż |
 | paired senders (the people a door takes work from) | gekoppelte Absender | expéditeurs associés | remitentes vinculados | mittenti associati | remetentes associados | gekoppelde afzenders | powiązani nadawcy |
-| key (a paired sender, on a door's page) | Schlüssel | clé | llave | chiave | chave | sleutel | klucz |
 | Send again | Erneut senden | Renvoyer | Volver a enviar | Invia di nuovo | Enviar novamente | Opnieuw verzenden | Wyślij ponownie |
 | Not sent | Nicht gesendet | Non envoyé | No enviado | Non inviato | Não enviado | Niet verzonden | Nie wysłano |
 | Activity | Aktivität | Activité | Actividad | Attività | Atividade | Activiteit | Aktywność |

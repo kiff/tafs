@@ -1195,7 +1195,7 @@ function haltNotification(taf: Taf | undefined, halted: boolean, lang: Lang = "e
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: halted ? w.push_halted(who) : w.push_halting(name ?? w.push_all_tafs_object), body: w.push_halt_body },
+        alert: { title: halted ? w.push_halted(who, !name) : w.push_halting(name ?? w.push_all_tafs_object), body: w.push_halt_body },
         "thread-id": "halt",
         category: "halt",
         ...apsFor(levelOf("halt", false)),
@@ -1214,7 +1214,7 @@ function resumeNotification(taf: Taf | undefined, lang: Lang = "en"): Notificati
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: w.push_resumed(taf?.name ?? w.push_all_tafs), body: w.push_resume_body },
+        alert: { title: w.push_resumed(taf?.name ?? w.push_all_tafs, !taf), body: w.push_resume_body(!taf) },
         "thread-id": "halt",
         ...apsFor("quiet"),
       },
