@@ -2,6 +2,7 @@
 id: access-for-joiners-and-leavers
 title: Access for joiners and leavers
 category: operations
+order: 2
 line: Gives joiners the apps their team's template lists and removes leavers on their last day; elevated access always asks.
 headline: A leaver's access ends the day they leave.
 today: Old accounts stay open for weeks, and new hires wait days for their apps.

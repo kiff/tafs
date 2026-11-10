@@ -10,6 +10,7 @@ const FILE = `---
 id: pay-a-bill
 title: Pay a bill
 category: money
+order: 1
 line: Pays one bill.
 headline: Bills paid on time.
 today: Bills wait until someone has the time.
@@ -42,7 +43,7 @@ describe("recipes", () => {
 
   it("reads a recipe file: the front matter and the words to say to Coach", () => {
     expect(parseRecipe(FILE, "pay-a-bill.md")).toEqual({
-      id: "pay-a-bill", title: "Pay a bill", category: "money", line: "Pays one bill.", headline: "Bills paid on time.", today: "Bills wait until someone has the time.",
+      id: "pay-a-bill", title: "Pay a bill", category: "money", order: 1, line: "Pays one bill.", headline: "Bills paid on time.", today: "Bills wait until someone has the time.",
       say: "Pay my bills under 100 EUR.",
       connections: [["quickbooks", "xero"], ["wise"]],
       card: { allows: ["A payment up to 100 EUR"], holds: ["A payment over 100 EUR"], never: ["A new payee"] },
@@ -60,6 +61,8 @@ describe("recipes", () => {
     bad(FILE.replace("line: Pays one bill.", "line: Pays one bill.\ntried: 2026-11-10 test"), "tried isn't a recipe's field");
     bad(FILE.replace("title: Pay a bill\n", ""), "title is missing");
     bad(FILE.replace("headline: Bills paid on time.\n", ""), "headline is missing");
+    bad(FILE.replace("order: 1\n", ""), "order is the recipe's place in its category");
+    bad(FILE.replace("order: 1", "order: first"), "order is the recipe's place in its category");
     bad(FILE.replace("today: Bills wait until someone has the time.\n", ""), "today is missing");
   });
 
@@ -133,6 +136,23 @@ Bezahle meine Rechnungen unter 100 EUR.
       .toBe("A refund that waits can turn into a chargeback, with a fee you pay even if you win.");
   });
 
+  it("keeps the apps' order: by category, then each recipe's place, with refunds leading Money", () => {
+    expect(RECIPES.map((r) => r.id)).toEqual([
+      "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "pay-matching-bills", "save-a-customer-who-cancels",
+      "answer-questions-about-orders", "follow-up-new-leads",
+      "book-and-move-appointments", "access-for-joiners-and-leavers", "ship-when-green",
+      "file-receipts",
+    ]);
+    for (const c of CATEGORIES) {
+      const places = RECIPES.filter((r) => r.category === c.id).map((r) => r.order);
+      expect(places, c.id).toEqual(places.map((_, i) => i + 1));
+    }
+    // Filtered or in another language, the order holds.
+    expect(recipesFor(undefined, "pl").recipes[0]!.id).toBe("refunds-within-a-limit");
+    const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
+    expect(recipesFor(stripeAndGmail).recipes.map((r) => r.id)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
+  });
+
   it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
     expect(recipesFor(undefined).home).toEqual({ shown: true, words: "Pick a job for your first taf." });
     expect(recipesFor(undefined, "en", false).home).toEqual({ shown: false, words: "No tafs yet. Tafs shared with you show here." });
@@ -165,7 +185,7 @@ Bezahle meine Rechnungen unter 100 EUR.
     expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
     // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk.
     expect(ids([{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gorgias", vendor: "Gorgias" }]))
-      .toEqual(["chargebacks-with-evidence", "refunds-within-a-limit"]);
+      .toEqual(["refunds-within-a-limit", "chargebacks-with-evidence"]);
     expect(ids([{ entry: "stripe@3", vendor: "Stripe" }])).toEqual([]);
     // Only the categories with a recipe, in their order, with the title the apps show.
     const github = recipesFor([{ entry: "connector:composio:github", vendor: "GitHub" }]);

@@ -2,6 +2,7 @@
 id: refunds-within-a-limit
 title: Refunds within a limit
 category: money
+order: 1
 line: Answers refund requests from the support queue and refunds in the payment provider, within the Card.
 headline: No refund waits overnight.
 today: A refund that waits can turn into a chargeback, with a fee you pay even if you win.

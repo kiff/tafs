@@ -76,7 +76,7 @@ export function parseRecipe(text, file, of) {
   }
 
   const words = ["title", "headline", "today", "line"];
-  const known = of ? [...words, "card"] : ["id", "title", "category", "line", "headline", "today", "connections", "card"];
+  const known = of ? [...words, "card"] : ["id", "title", "category", "order", "line", "headline", "today", "connections", "card"];
   // A translation names no connections: they're English's alone (an empty list reads as none given).
   if (of && !out.connections.length) delete out.connections;
   for (const key of Object.keys(out)) if (!known.includes(key)) fail(`${key} isn't a${of ? " translated" : ""} recipe's field (${known.join(", ")})`);
@@ -93,6 +93,7 @@ export function parseRecipe(text, file, of) {
   if (!ID.test(out.id)) fail("id is lower-case words joined by -");
   if (`${out.id}.md` !== file) fail(`id ${out.id} isn't the file's name`);
   if (!CATEGORIES.includes(out.category)) fail(`category is one of ${CATEGORIES.join(", ")}`);
+  if (!/^[1-9][0-9]*$/.test(out.order ?? "")) fail("order is the recipe's place in its category: 1, 2, 3…");
   if (!out.connections.length) fail("connections lists at least one vendor");
   const connections = out.connections.map((group) => {
     const vendors = group.split("|").map((v) => v.trim());
@@ -102,20 +103,25 @@ export function parseRecipe(text, file, of) {
   });
   if (!out.card.allows.length) fail("card.allows says what the Card allows, at least one line");
   return {
-    id: out.id, title: out.title, category: out.category, line: out.line, headline: out.headline, today: out.today, say, connections,
+    id: out.id, title: out.title, category: out.category, order: Number(out.order), line: out.line, headline: out.headline, today: out.today, say, connections,
     card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never },
   };
 }
 
-/** Every recipe in dir, by file name, each checked, with its words in every other language from dir/<lang>/. */
+/** Every recipe in dir, each checked, in the apps' order (by category, then `order`), with its words in every other language from dir/<lang>/. */
 export function readRecipes(dir) {
   const files = readdirSync(dir).filter((f) => f.endsWith(".md") && f !== "README.md").sort();
   const recipes = files.map((f) => parseRecipe(readFileSync(join(dir, f), "utf8"), f));
   const ids = new Set();
+  const places = new Set();
   for (const r of recipes) {
     if (ids.has(r.id)) throw new Error(`${r.id}: two recipes with one id`);
     ids.add(r.id);
+    if (places.has(`${r.category} ${r.order}`)) throw new Error(`${r.id}.md: another ${r.category} recipe is already at order ${r.order}`);
+    places.add(`${r.category} ${r.order}`);
   }
+  // In the order the apps show them: by category, then each recipe's place in it.
+  recipes.sort((a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category) || a.order - b.order);
   // A language has a file for every recipe and none for a recipe that isn't one, so a recipe can't ship untranslated.
   for (const lang of LANGS) {
     const there = existsSync(join(dir, lang)) ? readdirSync(join(dir, lang)).filter((f) => f.endsWith(".md")) : [];
