@@ -131,7 +131,7 @@ export const pl: Words = {
   push_signed_out: (who, taf) => `${who} wylogował ${taf} · zaloguj się ponownie`,
   push_a_provider: "Dostawca",
   push_refund_title: "Zwrot",
-  push_refund_failed: (taf) => `Zwrot wysłany przez ${taf} nie powiódł się u operatora płatności. Jego limit na Card wrócił.`,
+  push_refund_failed: (taf) => `Zwrot wysłany przez ${taf} nie powiódł się u operatora płatności. Jego zapas na Card wrócił.`,
   push_refunded_twice: (taf) => `Płatność zwrócona przez ${taf} została zwrócona także poza KIFF. Sprawdź ją przed kolejnym zwrotem.`,
   push_raise_title: "Prośba o podniesienie limitu",
   push_raise_body: "Ktoś na Twoim koncie prosi o podniesienie limitu wydatków. Otwórz Plan i wykorzystanie, aby odpowiedzieć.",
