@@ -134,6 +134,7 @@ export const nl: Words = {
   cr_no_plan_line: "Geen abonnement · kies er een om te beginnen",
   cr_w_again: (day) => `ze gaan verder wanneer de periode op ${day} opnieuw begint`,
   cr_w_no_plan: "Kies een abonnement om je tafs te starten.",
+  cr_buy_coach: "Coach is inbegrepen: genoeg om zo'n 4 nieuwe taken per maand in te stellen. Daarboven gebruikt de hulp van Coach je credits.",
   cr_w_limit_raise: (again) => `Je tafs wachten: de uitgavenlimiet is bereikt. Verhoog die zodat ze verdergaan, of ${again}.`,
   cr_w_limit_ceiling: (again) => `Je tafs wachten: de uitgavenlimiet is bereikt en kan in de app niet hoger. Neem contact op met KIFF om die te verhogen, of ${again}.`,
   cr_w_limit_admin: "Je tafs wachten: de uitgavenlimiet is bereikt. Een beheerder van dit account kan die verhogen.",
