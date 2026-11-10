@@ -351,7 +351,7 @@ struct TafKnobView: View {
     private var hint: String {
         if let call = heldCall { return call.approvableOnce ? Self.approveOnce : "" }
         guard chosen != nil else { return Self.tapARing }
-        if chosenItem?.ok == "approve" { return "Approve with " + Biometry.name }
+        if chosenItem?.ok == "approve" { return Words.Approval.approveWith(biometry: Biometry.name) }
         if let tap = chosenItem?.tap { return tap }
         return chosenItem?.size != nil ? "Use − and +" : "Ask Coach to change"
     }

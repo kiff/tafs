@@ -209,7 +209,7 @@ struct UsageView: View {
         switch r.status {
         case "approved": return r.kind == "raise" ? "An admin raised the spend limit." : "An admin added a pack."
         case "declined":
-            if let note = r.note, !note.isEmpty { return "An admin declined: \(note)" }
+            if let note = r.note, !note.isEmpty { return Words.Billing.Ask.declinedNote(note: "\(note)") }
             return Words.Billing.Ask.declined
         case "expired": return "Your request ended with the period."
         default: return nil

@@ -665,8 +665,8 @@ extension TafChatView {
         switch entry.kind {
         // Why, as the Record says it: a vendor's refusal still counts (kiff/tafs#206 6.13).
         case .notDone: return "\(entry.title): \(entry.detail)"
-        case .sending: return "\(entry.title): sent, waiting for the tool"
-        case .unknown: return "\(entry.title): outcome unknown"
+        case .sending: return Words.Chat.Outcome.sending(title: "\(entry.title)")
+        case .unknown: return Words.Chat.Outcome.unknown(title: "\(entry.title)")
         // KIFF's own record of a held call, after a restart: what the owner decided (kiff/tafs#138).
         // The phone's own line is shown as it is; KIFF's, titled by the action, gets the outcome.
         case .refused where entry.byYou != true: return "\(entry.title): refused, not sent"

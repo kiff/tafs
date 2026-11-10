@@ -463,7 +463,7 @@ final class DriveTests: XCTestCase {
         XCTAssertEqual(gate.components(separatedBy: "button().confirming()").count - 1, 2, "ApprovalGate doesn't mark its approvals")
         let gated = try ["Views/NeedsYouView.swift", "Views/DriveViews.swift", "Views/SetupChatView.swift", "Views/AppEventApprovalSheet.swift", "Views/ConnectAppsView.swift"]
             .map { try source($0) }.joined()
-        for words in [#"Button("Yes, it did")"#, #"Button("No")"#, "Approve once with", "Extra room with", #""Approve with \(Biometry.name)""#] {
+        for words in [#"Button("Yes, it did")"#, #"Button("No")"#, "Approve once with", "Extra room with", #""Approve with {biometry}""#] {
             let at = try XCTUnwrap(gated.range(of: words), words)
             let before = gated[..<at.lowerBound].suffix(400)
             XCTAssertTrue(before.contains("ApprovalGate {"), "\(words) isn't in an ApprovalGate")

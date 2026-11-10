@@ -171,7 +171,7 @@ private struct ConnectedAppSheet: View {
             .sheet(item: $replacing) { g in
                 ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
             }
-            .confirmationDialog("Disconnect \(app.name)?", isPresented: $disconnect, titleVisibility: .visible) {
+            .confirmationDialog(Words.Connect.disconnectAppQuestion(app: "\(app.name)"), isPresented: $disconnect, titleVisibility: .visible) {
                 Button(Words.Connect.disconnectButton, role: .destructive) {
                     busy = true
                     Task {

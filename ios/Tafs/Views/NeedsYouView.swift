@@ -181,7 +181,7 @@ struct HeldCallCard: View {
                 if model.canManageCards {
                     ApprovalGate {
                         Button { send(.extraRoom) } label: {
-                            Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                            Label(Words.NeedsYou.extraRoomWith(biometry: "\(Biometry.name)"), systemImage: Biometry.symbol)
                         }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(sending)

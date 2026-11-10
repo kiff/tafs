@@ -54,7 +54,7 @@ struct TafDialPanel<Details: View>: View {
     private var content: some View {
         VStack(spacing: 14) {
             if let pending = knob.pending {
-                Text("DRAFT · V\(pending.version) · NOT LIVE").scaledFont(10, weight: .semibold, design: .monospaced)
+                Text(Words.Knob.notLive(version: "\(pending.version)")).scaledFont(10, weight: .semibold, design: .monospaced)
                     .foregroundColor(Theme.amberText).frame(maxWidth: .infinity, alignment: .leading)
             }
             TafKnobView(knob: knob, face: $face, held: held, press: { _, item in

@@ -115,12 +115,12 @@ struct TafDetailView: View {
             .onDisappear { if model.tafOnScreen == tafID { model.tafOnScreen = nil } }
             .navigationDestination(isPresented: $openStarts) { StartsWhenView(tafID: tafID) }
             .navigationDestination(isPresented: $openResults) { ResultsGoToView(tafID: tafID) }
-            .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
+            .confirmationDialog(Words.Taf.revokeTitle(taf: "\(taf.name)"), isPresented: $confirmRevoke, titleVisibility: .visible) {
                 Button(Words.Taf.revokeAndStop, role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
                 Text(Words.Taf.revokeBody)
             }
-            .confirmationDialog("Remove \(taf.name) for good?", isPresented: $confirmRemove, titleVisibility: .visible) {
+            .confirmationDialog(Words.Taf.removeTitle(taf: "\(taf.name)"), isPresented: $confirmRemove, titleVisibility: .visible) {
                 Button(Words.Taf.Remove.button, role: .destructive) { Task { removal = await model.removeTaf(tafID) } }
             } message: {
                 Text(Words.Taf.removeBody)
@@ -217,7 +217,7 @@ struct TafDetailView: View {
                     Text(Words.Taf.worksFromChat)
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text(cloud.paused ? Words.Taf.paused : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? Words.Taf.onItsSchedule)
+                    Text(cloud.paused ? Words.Taf.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
                         .scaledFont(15).foregroundColor(Theme.ink)
                     Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
                         guard !runTapped else { return }
@@ -744,7 +744,7 @@ struct VersionsPanel: View {
         let version = model.versions[tafID]?.first { $0.n == sw.n }
         let working = model.switchingVersion[tafID] != nil
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Installing version \(sw.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+            Text(Words.Version.installingNumber(version: "\(sw.n)")).scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
             Text(Words.Version.doesntRunUntil)
                 .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
@@ -1034,7 +1034,7 @@ struct TafCardFace: View {
         parts.append([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))
         parts += card.facts
         if card.rules.isEmpty { parts.append(Words.Card.noActions) }
-        parts.append("Issued by \(issuedBy)")
+        parts.append(Words.Card.issuedByNamed(who: "\(issuedBy)"))
         let end = card.expires?.formatted(date: .abbreviated, time: .omitted)
         parts.append(revoked ? Words.Card.revoked : !card.active ? "Ended \(end ?? "")" : end.map { "Until \($0)" } ?? Words.Card.noEndDate)
         return parts.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: ". ") + "."

@@ -191,7 +191,7 @@ final class PlanqueClient {
         var waitingSignIn: Bool { status == "approved" && signedIn != true && !connectedNow }
         /// The signed-out connection in planque's words; before planque sends them, the app's.
         var signedOutWords: String {
-            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? "Signed out by \(vendor) · sign in again"
+            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Connect.Status.signedOut(vendor: "\(vendor)")
         }
         /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
         var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
@@ -434,7 +434,7 @@ final class PlanqueClient {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "The connection answered \(status)"
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? Words.Error.connectionAnswered(status: "\(status)")
             throw PlanqueError.server(status: status, message: message)
         }
         return data

@@ -55,7 +55,7 @@ struct ConnectAppsView: View {
                 Button(t.name) { start(app, for: t.id) }
             }
         } message: { app in
-            Text("\(app.vendor.isEmpty ? app.title : app.vendor) is connected for one taf, which uses it as its Card allows.")
+            Text(Words.Connect.oneTaf(app: "\(app.vendor.isEmpty ? app.title : app.vendor)"))
         }
         .sheet(item: Binding(get: { model.connectStart.map(StartSheet.init) }, set: { if $0 == nil { model.connectStart = nil } })) { sheet in
             ConnectApprovalSheet(start: sheet.start).environmentObject(model)
@@ -116,12 +116,12 @@ enum ConnectionFixWords {
     static let signInAgain = Words.Connect.signInAgain
     /// In place of Sign in again on a provider's connection, as planque says it.
     static func throughProvider(_ vendor: String) -> String {
-        "\(vendor) signs in through its connection provider. To sign in again, disconnect it and connect it again."
+        Words.Connect.throughProvider(vendor: "\(vendor)")
     }
     static let cancel = Words.Common.cancel
-    static func waiting(_ vendor: String) -> String { "Waiting for the sign-in at \(vendor)" }
-    static func cancelTitle(_ vendor: String) -> String { "Cancel the sign-in to \(vendor)?" }
-    static func cancelBody(_ vendor: String) -> String { "Nothing is connected yet. Connect \(vendor) again from Coach or Connect apps when you're ready." }
+    static func waiting(_ vendor: String) -> String { Words.Connect.Status.waitingSignIn(vendor: "\(vendor)") }
+    static func cancelTitle(_ vendor: String) -> String { Words.Connect.CancelSignIn.title(vendor: "\(vendor)") }
+    static func cancelBody(_ vendor: String) -> String { Words.Connect.CancelSignIn.body(vendor: "\(vendor)") }
 }
 
 enum DisconnectWords {
@@ -133,7 +133,7 @@ enum DisconnectWords {
     /// The question, naming the one taf it ends and `alsoStops`, the other tafs whose Card
     /// draws on its tools; the Face ID prompt asks the same.
     static func title(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
-        let asked = taf.map { "Disconnect \(vendor) from \($0)?" } ?? "Disconnect \(vendor)?"
+        let asked = taf.map { Words.Connect.Disconnect.titleFrom(vendor: "\(vendor)", taf: "\($0)") } ?? Words.Connect.Disconnect.title(vendor: "\(vendor)")
         guard !alsoStops.isEmpty else { return asked }
         return "\(asked) \(alsoStops.joined(separator: " and ")) \(alsoStops.count == 1 ? "stops" : "stop") too."
     }
@@ -145,7 +145,7 @@ enum DisconnectWords {
         case 1: others = " \(possessive(alsoStops[0])) Card also uses these tools, so it stops too."
         default: others = " The Cards of \(alsoStops.joined(separator: " and ")) also use these tools, so they stop too."
         }
-        return (taf.map { "\(possessive($0)) \(vendor) tools stop working." } ?? "No taf uses this \(vendor) connection now. Its tools leave KIFF.")
+        return (taf.map { Words.Connect.Disconnect.toolsStop(owner: "\(possessive($0))", vendor: "\(vendor)") } ?? Words.Connect.Disconnect.noTafUses(vendor: "\(vendor)"))
             + others
             + " Other connections to \(vendor) stay connected. If no other connection uses this sign-in, it's revoked at \(vendor)."
             + " Connecting again asks you to approve and sign in again."
@@ -269,7 +269,7 @@ struct AppConnectionsView: View {
                 Text(error).foregroundColor(Theme.no)
             }
         }
-        .navigationTitle("Your \(app.title) connections")
+        .navigationTitle(Words.Connect.Apps.yourConnections(app: "\(app.title)"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $replacing) { g in
             ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
@@ -434,7 +434,7 @@ struct ConnectApprovalSheet: View {
                             Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                         }
                         ApprovalGate {
-                            Button(busy ? Words.Approval.approving : start.needsKey ? "Give the key with \(Biometry.name)" : "Approve with \(Biometry.name)") {
+                            Button(busy ? Words.Approval.approving : start.needsKey ? Words.Connect.giveKeyWith(biometry: "\(Biometry.name)") : Words.Approval.approveWith(biometry: "\(Biometry.name)")) {
                                 approve(grant)
                             }
                             .buttonStyle(PrimaryButtonStyle())

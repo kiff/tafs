@@ -276,7 +276,7 @@ struct UnreachableLine: View {
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(Theme.amber).frame(width: 7, height: 7)
-            Text(retrying ? "\(words) · trying again" : words).scaledFont(12).foregroundColor(Theme.dim)
+            Text(retrying ? Words.Home.statusRetrying(words: "\(words)") : words).scaledFont(12).foregroundColor(Theme.dim)
             Link(Words.Home.status, destination: Legal.status).scaledFont(12, weight: .semibold)
         }
         .accessibilityElement(children: .combine)

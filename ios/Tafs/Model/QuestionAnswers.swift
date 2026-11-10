@@ -48,7 +48,7 @@ enum QuestionAnswers {
             switch a {
             case .choice(let v): return label(v)
             case .choices(let vs): return vs.map(label).joined(separator: ", ")
-            case .own(let t): return "In your words: “\(t)”"
+            case .own(let t): return Words.Coach.Answer.inYourWords(text: "\(t)")
             }
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")

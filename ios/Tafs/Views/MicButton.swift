@@ -25,7 +25,7 @@ struct MicButton: View {
                         .overlay(Capsule().stroke(Theme.line))
                 }
                 .frame(minWidth: 40, minHeight: 40)
-                .accessibilityLabel("Dictation in \(dictation.language.name). Switch language")
+                .accessibilityLabel(Words.Voice.dictationIn(language: "\(dictation.language.name)"))
             }
             Button {
                 Task { await dictation.toggle(text: text, hints: model.dictationHints) { text = $0 } }

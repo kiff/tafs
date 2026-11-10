@@ -128,7 +128,7 @@ struct ShareTafSheet: View {
     @ViewBuilder private var whatItMeans: some View {
         Section {
             Text(Words.People.Share.step2).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
-            Text(chosen.isEmpty ? "\(taf.name) won't be shared" : "Who gets \(taf.name)").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
+            Text(chosen.isEmpty ? Words.People.Share.notShared(taf: "\(taf.name)") : "Who gets \(taf.name)").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
         }
         .listRowBackground(Color.clear)
         Section {
@@ -191,7 +191,7 @@ struct ShareTafSheet: View {
         }
         for share in had.subtracting(chosen) {
             let name = share.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? share.subject.map { model.person($0)?.label ?? $0 } ?? ""
-            lines.append("\(name) stops using \(taf.name). Their chats stay theirs.")
+            lines.append(Words.People.stopsUsing(who: "\(name)", taf: "\(taf.name)"))
         }
         return lines
     }
@@ -251,7 +251,7 @@ struct OverviewView: View {
                             Circle().fill(Theme.amber).frame(width: 8, height: 8)
                             Text("\(taf.name) · \(call.proposed.summary)").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                             Spacer()
-                            Text("answer by \(call.expiresAt.zonedShortTime)").scaledFont(12).foregroundColor(Theme.soft)
+                            Text(Words.NeedsYou.answerBy(time: "\(call.expiresAt.zonedShortTime)")).scaledFont(12).foregroundColor(Theme.soft)
                         }
                         .padding(12)
                         .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))

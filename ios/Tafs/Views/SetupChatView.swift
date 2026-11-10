@@ -146,7 +146,7 @@ struct SetupChatView: View {
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(model.startingSetup || model.mode != .kiff)
             }
-            Text("Starting asks for \(Biometry.name) once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            Text(Words.Coach.startingAsks(biometry: "\(Biometry.name)")).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 .frame(maxWidth: .infinity)
         }
         .padding(20)
@@ -477,7 +477,7 @@ struct SetupChatView: View {
                     .scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text("Say what should change, or ask how it's going. Coach mode starts from what \(taf.name) did and what its Card allows.")
+                Text(Words.Coach.improveLine(name: "\(taf.name)"))
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else {
                 Text(Words.Coach.askAnything)
@@ -1161,7 +1161,7 @@ struct SetupComponentView: View {
                 Eyebrow(text: state.isFailure ? "Didn't go through · sign in" : Words.Coach.SignIn.eyebrow,
                         color: state.isFailure ? Theme.no : Theme.amber)
                 // A connection its vendor signed out reads planque's words for it (needs_reconnect).
-                Text(signedOut?.signedOutWords ?? "Sign in at \(vendor)").scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(signedOut?.signedOutWords ?? Words.Coach.SignIn.at(vendor: "\(vendor)")).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if case .failed(let why) = state {
                     Text(why.map { "It didn't go through: \($0)" } ?? "It didn't go through.")
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
@@ -1212,11 +1212,11 @@ struct SetupComponentView: View {
                     NavigationLink {
                         VersionsScreen(tafID: tafID)
                     } label: {
-                        Text("See version \(n)").frame(maxWidth: .infinity)
+                        Text(Words.Coach.Result.seeVersion(version: "\(n)")).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 } else {
-                    Text("Version \(n) is made.").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                    Text(Words.Coach.Result.versionMade(version: "\(n)")).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                 }
             case .failed(let why):
                 // tafs cloud told Coach, which hands it over again: no Try again here.
@@ -1271,7 +1271,7 @@ struct SetupComponentView: View {
                     }
                 } else {
                     // Set up, and the list is being read again for it.
-                    Text("Setting up \(name)…").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                    Text(Words.Coach.settingUp(name: "\(name)")).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                 }
             case .failed(let why):
                 // tafs cloud couldn't set it up, and told Coach, which hands it over again: no
@@ -1281,7 +1281,7 @@ struct SetupComponentView: View {
                 Text(Words.Coach.coachKnows)
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             case .settingUp:
-                Text("Setting up \(name)…").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                Text(Words.Coach.settingUp(name: "\(name)")).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
         }
     }
@@ -1658,7 +1658,7 @@ struct KnobDraftCard: View {
                 }
                 if let tafID, model.manages(tafID) {
                     HStack(spacing: 8) {
-                        Button(busy ? "Confirming…" : "Confirm with \(Biometry.name)") { confirm(tafID, draft.version) }
+                        Button(busy ? "Confirming…" : Words.Knob.confirmWith(biometry: "\(Biometry.name)")) { confirm(tafID, draft.version) }
                             .buttonStyle(PrimaryButtonStyle()).disabled(busy)
                         Button(Words.Knob.change) { model.openCoach() }.buttonStyle(OutlineButtonStyle())
                     }

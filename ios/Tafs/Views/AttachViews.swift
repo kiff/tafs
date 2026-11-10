@@ -82,7 +82,7 @@ struct AttachButton: View {
         let name = url.lastPathComponent
         // Over every limit: refused before it's read into memory.
         if size > 25 << 20, !type.conforms(to: .image) {
-            throw FileProblem(message: "\(name) is \(FilePrep.megabytes(size)); the most is \(FilePrep.megabytes(25 << 20)).")
+            throw FileProblem(message: Words.Attachment.tooLarge(name: "\(name)", size: "\(FilePrep.megabytes(size))", limit: "\(FilePrep.megabytes(25 << 20))"))
         }
         return try FilePrep.file(name: name, data: try Data(contentsOf: url), type: type)
     }

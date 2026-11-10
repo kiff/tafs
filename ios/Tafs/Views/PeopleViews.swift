@@ -68,7 +68,7 @@ struct PeopleGroupsView: View {
         .confirmationDialog("Delete \(deleting?.name ?? "this group")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                             titleVisibility: .visible, presenting: deleting) { group in
             Button("Delete \(group.name)", role: .destructive) {
-                Task { await model.changePeople("Delete the group \(group.name)") { try await $0.deleteGroup(group.id) } }
+                Task { await model.changePeople(Words.People.deleteGroup(group: "\(group.name)")) { try await $0.deleteGroup(group.id) } }
             }
         } message: { group in
             Text(Words.People.deleteGroupBody)
@@ -109,7 +109,7 @@ struct PeopleGroupsView: View {
         .swipeActions {
             if mayRemove(member, from: group) {
                 Button(Words.Taf.Remove.button, role: .destructive) {
-                    Task { await model.changePeople("Remove \(person?.label ?? member.subject) from \(group.name)") { try await $0.removeGroupMember(group.id, subject: member.subject) } }
+                    Task { await model.changePeople(Words.People.removeFromGroup(who: "\(person?.label ?? member.subject)", group: "\(group.name)")) { try await $0.removeGroupMember(group.id, subject: member.subject) } }
                 }
             }
         }
@@ -123,8 +123,8 @@ struct PeopleGroupsView: View {
                 }
             }
             if mayRemove(member, from: group) {
-                Button("Remove from \(group.name)", role: .destructive) {
-                    Task { await model.changePeople("Remove \(person?.label ?? member.subject) from \(group.name)") { try await $0.removeGroupMember(group.id, subject: member.subject) } }
+                Button(Words.People.removeFrom(group: "\(group.name)"), role: .destructive) {
+                    Task { await model.changePeople(Words.People.removeFromGroup(who: "\(person?.label ?? member.subject)", group: "\(group.name)")) { try await $0.removeGroupMember(group.id, subject: member.subject) } }
                 }
             }
         }
@@ -200,9 +200,9 @@ struct GroupNameSheet: View {
         Task {
             let done: Bool
             if let group = naming.group {
-                done = await model.changePeople("Rename \(group.name) to \(name)") { try await $0.renameGroup(group.id, to: name) }
+                done = await model.changePeople(Words.People.renameGroup(group: "\(group.name)", name: "\(name)")) { try await $0.renameGroup(group.id, to: name) }
             } else {
-                done = await model.changePeople("Create the group \(name)") { try await $0.createGroup(name: name) }
+                done = await model.changePeople(Words.People.createGroup(name: "\(name)")) { try await $0.createGroup(name: name) }
             }
             saving = false
             if done { dismiss() }
@@ -245,7 +245,7 @@ struct AddToGroupSheet: View {
                         }
                     }
                     if outside.isEmpty {
-                        Text("Everyone on the account is in \(group.name). Invite people from the KIFF dashboard.")
+                        Text(Words.People.everyoneIn(group: "\(group.name)"))
                             .scaledFont(14).foregroundColor(Theme.dim)
                     }
                 } header: { Text("The account's people") }

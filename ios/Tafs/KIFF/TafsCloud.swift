@@ -25,7 +25,7 @@ final class TafsCloud {
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
         struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
-        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [], words: body?.words,
+        return CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
                           code: body?.code)
     }
 

@@ -127,7 +127,7 @@ struct RecordView: View {
     static func dayTitle(_ day: Date, calendar: Calendar = AccountTime.calendar) -> String {
         let date = day.shown(.dateTime.day().month(.abbreviated))
         if calendar.isDateInToday(day) { return "Today · \(date)" }
-        if calendar.isDateInYesterday(day) { return "Yesterday · \(date)" }
+        if calendar.isDateInYesterday(day) { return Words.Calendar.yesterdayDate(date: "\(date)") }
         return day.shown(.dateTime.weekday(.wide)) + " · " + date
     }
 }

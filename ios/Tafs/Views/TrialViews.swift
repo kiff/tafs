@@ -21,7 +21,7 @@ struct TrialStartSheet: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Panel {
                         Eyebrow(text: Words.Version.whileTrying)
-                        line("You chat with version \(version.n) in its own window. What it does is real: its calls go through KIFF under the Card below.")
+                        line(Words.Version.WhileYouTry.chat(n: "\(version.n)"))
                         line(Words.Version.WhileYouTry.liveKeepsWorking)
                         line(Words.Version.WhileYouTry.countsFromZero)
                         line(Words.Version.WhileYouTry.ends)
@@ -138,16 +138,16 @@ struct TrialScreen: View {
     private func guide(_ trial: TafsCloud.OpenTrial, name: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if let changed = trial.changed {
-                Text("What's new: \(changed)").scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                Text(Words.Version.Guide.whatsNew(changed: "\(changed)")).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             }
             if let tryWith = trial.`try` {
-                Text("Try it with: \(tryWith)").scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                Text(Words.Version.Guide.tryWith(tryWith: "\(tryWith)")).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             } else {
-                Text("Give it a task that uses the change, as you would the live \(name).")
+                Text(Words.Version.Guide.giveTask(name: "\(name)"))
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             }
-            Text(["\(name) keeps working as it is. What this version does is real, under its own Card.",
-                  trial.ends.map { "The trial ends \($0.shown(date: .abbreviated, time: .omitted)) if you don't use it." },
+            Text([Words.Version.Guide.keepsWorking(name: "\(name)"),
+                  trial.ends.map { Words.Version.Guide.trialEnds(date: "\($0.shown(date: .abbreviated, time: .omitted))") },
                   Words.Version.Guide.installOrBack].compactMap { $0 }.joined(separator: " "))
                 .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
         }
@@ -159,7 +159,7 @@ struct TrialScreen: View {
         let busy = model.trialBusy.contains(tafID)
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text("Trying version \(trial.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Words.Version.Trial.trying(n: "\(trial.n)")).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 Text(Words.Version.notLiveTag).scaledFont(11, weight: .bold).foregroundColor(.white)
                     .padding(.horizontal, 7).padding(.vertical, 2)
                     .background(Theme.amber).clipShape(Capsule())
@@ -173,16 +173,16 @@ struct TrialScreen: View {
                     .confirmationDialog(Words.Version.goBackTitle, isPresented: $confirmBack, titleVisibility: .visible) {
                         Button(Words.Version.goBack, role: .destructive) { Task { if await model.goBackFromTrial(tafID) { ended() } } }
                     } message: {
-                        Text("Version \(trial.n)'s trial Card stops at once, and this chat is deleted. \(name) keeps working as it is.")
+                        Text(Words.Version.goBackBody(version: "\(trial.n)", taf: "\(name)"))
                     }
                 Button(busy ? Words.Version.working : Words.Version.install) { confirmInstall = true }
                     .buttonStyle(OutlineButtonStyle())
                     .confirming()
                     .disabled(busy || model.approvalBlocked)
-                    .confirmationDialog("Install version \(trial.n)?", isPresented: $confirmInstall, titleVisibility: .visible) {
-                        Button("Install with \(Biometry.name)") { Task { if await model.installTrial(tafID) { ended() } } }
+                    .confirmationDialog(Words.Version.installTitle(version: "\(trial.n)"), isPresented: $confirmInstall, titleVisibility: .visible) {
+                        Button(Words.Version.installWith(biometry: "\(Biometry.name)")) { Task { if await model.installTrial(tafID) { ended() } } }
                     } message: {
-                        Text("Version \(trial.n) becomes the live version, with its Card. This chat is deleted.")
+                        Text(Words.Version.installBody(version: "\(trial.n)"))
                     }
             }
             ApprovalNotice()

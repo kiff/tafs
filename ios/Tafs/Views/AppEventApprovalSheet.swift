@@ -34,7 +34,7 @@ struct AppEventApprovalSheet: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     ApprovalGate {
-                        Button(busy ? Words.Approval.approving : "Approve with " + Biometry.name) {
+                        Button(busy ? Words.Approval.approving : Words.Approval.approveWith(biometry: Biometry.name)) {
                             busy = true
                             Task {
                                 defer { busy = false }

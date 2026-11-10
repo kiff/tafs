@@ -29,7 +29,7 @@ struct DriveCard: View {
                     }
                     .buttonStyle(OutlineButtonStyle())
                     ApprovalGate {
-                        Button(busy ? Words.Approval.approving : "Approve with \(Biometry.name)") {
+                        Button(busy ? Words.Approval.approving : Words.Approval.approveWith(biometry: "\(Biometry.name)")) {
                             busy = true
                             Task { await model.approveDrive(c); busy = false }
                         }

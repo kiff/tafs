@@ -121,7 +121,7 @@ struct DoorsView: View {
                 }
             }
         } message: {
-            Text("Its address stops being \(taf.name)'s. Messages already in its chat stay.")
+            Text(Words.Door.removeBody(taf: "\(taf.name)"))
         }
     }
 
@@ -134,7 +134,7 @@ struct DoorsView: View {
             if let door { panel(door) } else if focus != nil {
                 Text("This door was removed.").scaledFont(15).foregroundColor(Theme.soft)
             } else if manages, knob == nil { addPanel } else if !manages {
-                Text("\(taf.name) has no door yet. Someone who manages it can add one.")
+                Text(Words.Door.noDoorYet(taf: "\(taf.name)"))
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
             // Strangers' knocks wait on the owner; a paired sender's message, kept from its knock,
@@ -156,7 +156,7 @@ struct DoorsView: View {
             if let error = doors.error {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
             }
-            Text("Anyone can write to a door. Only people you pair can give \(taf.name) work, and its Card decides the rest.")
+            Text(Words.Door.footer(taf: "\(taf.name)"))
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         }
     }
@@ -177,7 +177,7 @@ struct DoorsView: View {
     private var addPanel: some View {
         Panel {
             Eyebrow(text: Words.Door.addDoor)
-            Text("Give \(taf.name) an address people can write to. It has none until you turn one on, and its Card still decides what it does.")
+            Text(Words.Door.addIntro(taf: "\(taf.name)"))
                 .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             Button(Words.Door.addDoor) { adding = true }.buttonStyle(PrimaryButtonStyle()).disabled(!doors.loaded || doors.addable.isEmpty)
             if doors.loaded && doors.addable.isEmpty {
@@ -244,13 +244,13 @@ struct DoorsView: View {
                             }
                         }
                     }
-                    Text("\(door.how). A message counts as theirs only when that holds; anyone else knocks.")
+                    Text(Words.Door.Key.foot(how: "\(door.how)"))
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     if manages {
                         Button(Words.Door.pairSomeone) { pairing = door }.buttonStyle(OutlineButtonStyle()).confirming()
                     }
                 } else {
-                    Text("\(door.how), so no one here can give \(taf.name) work. Everything that comes through knocks.")
+                    Text(Words.Door.Key.none(how: "\(door.how)", taf: "\(taf.name)"))
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 }
                 if manages {
@@ -612,7 +612,7 @@ struct PairSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(Words.Door.pairSomeone).scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-            Text("Their messages to this \(door.label.lowercased()) door give work, within the Card. Anyone else's only knock.")
+            Text(Words.Door.pairIntro(door: "\(door.label.lowercased())"))
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             DriveField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code"
                       : door.kind == "slack" ? "Slack member ID, such as U012AB3CD" : "Who, as \(door.label) names them", text: $sender)
@@ -772,7 +772,7 @@ struct DoorStamp: View {
         switch mark.reply {
         case "sent": return "↩ SENT BACK BY \(label.uppercased()) · SAME THREAD"
         case "not_sent": return "NOT SENT BACK\(mark.why.map { " · \($0)" } ?? "")"
-        default: return "GOES BACK BY \(label.uppercased()) WHEN DONE"
+        default: return Words.Door.Stamp.goesBack(app: "\(label.uppercased())")
         }
     }
 

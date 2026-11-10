@@ -54,6 +54,6 @@ struct DevicesView: View {
     static func lastUsed(_ date: Date?, now: Date = Date()) -> String {
         guard let date else { return Words.Settings.Devices.notUsed }
         let words = RelativeDateTimeFormatter().localizedString(for: date, relativeTo: now)
-        return "Last used \(words)"
+        return Words.Settings.Devices.lastUsed(ago: "\(words)")
     }
 }

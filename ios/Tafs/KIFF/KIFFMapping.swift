@@ -216,19 +216,19 @@ enum KIFFMapping {
         case "refused_by_tool"?:
             let who = vendor ?? Words.Record.theTool
             switch counts {
-            case .money: return (.notDone, "\(who) refused it. No money moved, but it still counts against today's total.")
-            case .amount: return (.notDone, "\(who) refused it. Nothing was done, but it still counts against today's total.")
+            case .money: return (.notDone, Words.Record.toolRefusedMoney(who: "\(who)"))
+            case .amount: return (.notDone, Words.Record.toolRefusedAmount(who: "\(who)"))
             case .nothing: return (.notDone, "\(who) refused it, and it still counts toward today's limits\(why)")
             }
         case "not_sent"?:
             return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
         case "sending"?:
-            return (.sending, "\(allowed), and sent: waiting for the tool's answer")
+            return (.sending, Words.Record.sentWaiting(allowed: "\(allowed)"))
         case "unknown"?:
-            return (.unknown, "\(allowed), and sent, but the tool's answer was lost: check the tool's own records")
+            return (.unknown, Words.Record.answerLost(allowed: "\(allowed)"))
         default:
             // not_recorded, none, or one this app doesn't know yet.
-            return (.unknown, "\(allowed), but whether the tool did it wasn't recorded: check the tool's own records")
+            return (.unknown, Words.Record.notRecorded(allowed: "\(allowed)"))
         }
     }
 

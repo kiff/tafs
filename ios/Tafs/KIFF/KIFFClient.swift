@@ -884,8 +884,8 @@ final class KIFFClient {
                 let name = KIFFMapping.name(g.action, title: g.title)
                 let caps = (g.perActionMax ?? []).map { cap in
                     KIFFMapping.isSum(cap.quantity)
-                        ? "up to \(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted) each"
-                        : "up to \(cap.max) each"
+                        ? Words.Card.Line.upToEach(amount: "\(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted)")
+                        : Words.Card.Line.upToEach(amount: "\(cap.max)")
                 }
                 let action = alike.contains(name.lowercased()) ? "\(name) · \(KIFFMapping.toolWords(g.action))" : name
                 let more = asksPastLimits ? Words.Card.Line.moreAsks : ""

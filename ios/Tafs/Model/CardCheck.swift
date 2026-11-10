@@ -22,7 +22,7 @@ enum CardCheck {
 
         var breaches: [String] = []
         if let perAction = rule.perAction, let amount = proposed.amount, amount > perAction {
-            breaches.append("Over \(perAction.formatted) each")
+            breaches.append(Words.Card.Check.overEach(amount: "\(perAction.formatted)"))
         }
         if let perWindow = rule.perWindow, let amount = proposed.amount {
             let used = taf.used[rule.action] ?? .zero

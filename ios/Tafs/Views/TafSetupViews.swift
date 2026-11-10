@@ -476,7 +476,7 @@ struct KnobPendingPanel: View {
     var body: some View {
         if let pending = knob.pending, model.manages(tafID) {
             Panel(stroke: Theme.amber.opacity(0.45)) {
-                Text("DRAFT · V\(pending.version) · NOT LIVE").scaledFont(10, weight: .semibold, design: .monospaced)
+                Text(Words.Knob.notLive(version: "\(pending.version)")).scaledFont(10, weight: .semibold, design: .monospaced)
                     .foregroundColor(Theme.amberText)
                 ForEach(Array((knob.draft?.words ?? []).enumerated()), id: \.offset) { _, line in
                     Text(line).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
