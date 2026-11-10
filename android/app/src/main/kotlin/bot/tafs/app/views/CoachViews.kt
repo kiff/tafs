@@ -87,9 +87,13 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       !state.coachChecked -> Row(Modifier.fillMaxWidth().padding(24.dp), horizontalArrangement = Arrangement.Center) {
         CircularProgressIndicator(strokeWidth = 2.dp, color = Theme.dim)
       }
-      state.coachCloudId == null -> CoachIntro(state, actions.coach.start)
+      // A phone that can't approve yet can't start Coach: it says why, as before.
+      state.coachCloudId == null && LocalApprovalReadiness.current != bot.tafs.app.model.ApprovalReadiness.Ready -> CoachIntro(state)
       else -> {
-        androidx.compose.animation.AnimatedVisibility(visible = !folded) {
+        // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
+        // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
+        if (state.coachCloudId == null) StartNote(state)
+        else androidx.compose.animation.AnimatedVisibility(visible = !folded) {
           Column {
             CoachToolsPanel(state, chats)
             CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
@@ -139,24 +143,28 @@ private fun Note(text: String) {
   Panel(Modifier.padding(12.dp)) { Text(text, style = scaled(15, color = Theme.soft)) }
 }
 
-/** Before Coach is started on this account: what it is for, and the one confirmation that starts it. */
+/** Above a conversation Coach isn't started for yet: what it is, that the first message asks for one fingerprint, and why a Start didn't go. */
 @Composable
-private fun CoachIntro(state: AppState, start: suspend () -> Unit) {
-  val scope = rememberCoroutineScope()
+private fun StartNote(state: AppState) {
+  val biometry = LocalBiometry.current
+  Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(14, color = Theme.soft))
+    Text(if (state.startingCoach) Words.Common.starting else Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
+    (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
+  }
+}
+
+/** Before Coach is started on this account, on a phone that can't approve yet: what it is for, and why it can't start. */
+@Composable
+private fun CoachIntro(state: AppState) {
   val biometry = LocalBiometry.current
   Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Text(Words.Coach.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
     Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
     // Starting issues Coach's own Cards, an approval: before the first taf, say so while this phone can't approve yet.
-    val readiness = LocalApprovalReadiness.current
-    if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready) {
-      Text(bot.tafs.app.model.ApprovalWords.FIRST_TAF, style = scaled(15, color = Theme.ink))
-      ApprovalsUnavailable(readiness)
-    } else {
-      PrimaryButton(if (state.startingCoach) Words.Common.starting else Words.Coach.start, { scope.launch { start() } }, enabled = !state.startingCoach)
-      Text(Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
-    }
+    Text(bot.tafs.app.model.ApprovalWords.FIRST_TAF, style = scaled(15, color = Theme.ink))
+    ApprovalsUnavailable(LocalApprovalReadiness.current)
   }
 }
 
@@ -211,8 +219,6 @@ class CoachActions(
   val approve: (SetupComponent, String?, String?) -> Unit,
   /** The owner gave up waiting on the vendor's sign-in page. */
   val cancelSignIn: () -> Unit,
-  /** Starts Coach on this account, behind one confirmation. */
-  val start: suspend () -> Unit = {},
   /** Signs in again at the vendor, for a sign-in card: a new approval, one confirmation. */
   val signInAgain: (SetupComponent) -> Unit = {},
   /** A new conversation about improving one taf, by its id: Coach starts from what it did and what its Card allows. */

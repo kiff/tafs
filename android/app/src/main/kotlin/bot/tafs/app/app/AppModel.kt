@@ -2585,23 +2585,41 @@ class AppModel(
     val signer = signer
     val sign: (ByteArray) -> String = { signer.signConfirmed(it) }
     try {
-      try {
-        // The owner says yes before anything is made: Coach's connector key and its drafts. Its drafts grant authority, so
-        // with the approval key in KIFF each asks for its own fingerprint as well.
-        signer.sign("tafs.setup.v1|$tenant".toByteArray(), Words.Coach.Prompt.connectTools)
-      } catch (e: SignerException) {
-        notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
-        return false
-      }
-      if (generation != accountGeneration) return false
       kiff.tenant = tenant
       kiff.setupSigner = sign
       planque.tenant = tenant
       planque.deviceLoader = { kiff.thisDeviceId() }
       planque.signer = sign
       var setup = _state.value.coachCloudId?.let { id -> CloudSetup(id, kiffAgent = _state.value.coachAgent) }
+      // The draft this Start made, and its claim: set only when Coach wasn't there yet.
+      var claim: Pair<String, String>? = null
       try {
+        // Whether Coach is there yet: a read, which makes nothing.
         if (setup == null) setup = cloud.setup()
+        if (generation != accountGeneration) return false
+        // One yes, before anything is made (Coach's connector key, its drafts). A first Start whose draft is signed by the
+        // approval key in KIFF asks for that fingerprint and no other, so "once" stays true; otherwise the owner says yes here.
+        val draftAsks = setup == null && sessionHasApprovalKey
+        if (!draftAsks) {
+          try {
+            signer.sign("tafs.setup.v1|$tenant".toByteArray(), Words.Coach.Prompt.connectTools)
+          } catch (e: SignerException) {
+            notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
+            return false
+          }
+          if (generation != accountGeneration) return false
+        }
+        if (setup == null) {
+          approvalReason = Words.Coach.Prompt.start
+          val draft = kiff.submitNoToolsDraft(COACH_AGENT, "Coach")
+          val secret = draft.claimSecret
+          if (generation != accountGeneration) return false
+          if (secret == null) {
+            startFailed(Words.Coach.didntStart(why = ErrorWords.OURS))
+            return false
+          }
+          claim = draft.id to secret
+        }
         if (!_state.value.planqueReady) {
           try {
             planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
@@ -2623,17 +2641,7 @@ class AppModel(
           }
           if (generation != accountGeneration) return false
         }
-        if (setup == null) {
-          approvalReason = Words.Coach.Prompt.start
-          val draft = kiff.submitNoToolsDraft(COACH_AGENT, "Coach")
-          val secret = draft.claimSecret
-          if (generation != accountGeneration) return false
-          if (secret == null) {
-            startFailed(Words.Coach.didntStart(why = ErrorWords.OURS))
-            return false
-          }
-          setup = cloud.startSetup(draft.id, secret)
-        }
+        claim?.let { (draft, secret) -> setup = cloud.startSetup(draft, secret) }
       } catch (e: SignerException) {
         if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
         return false
@@ -2643,10 +2651,13 @@ class AppModel(
         if (generation == accountGeneration) startFailed(Words.Coach.couldntStart(why = ErrorWords.of(e)))
         return false
       }
+      val started = setup ?: return false
       if (generation != accountGeneration) return false
-      _state.update { it.copy(coachCloudId = setup.id, coachAgent = setup.kiffAgent, coachChecked = true) }
-      // Within the step the owner just confirmed: Coach's tools, as tafs cloud says they're still to give.
-      giveCoachTools()
+      _state.update { it.copy(coachCloudId = started.id, coachAgent = started.kiffAgent, coachChecked = true) }
+      // A Coach this Start made took its one fingerprint, the draft's: its Card is another draft, signed over its own bytes, so
+      // it's given from the tools panel, behind its own fingerprint, in its own words. A Coach already there gives its tools within
+      // the step the owner just confirmed, as tafs cloud says they're still to give.
+      if (claim == null) giveCoachTools() else loadCoachTools()
     } finally {
       planque.signer = null
       kiff.setupSigner = null
@@ -4198,7 +4209,13 @@ class AppModel(
    * didn't go, so the screen can keep them.
    */
   fun sendChat(text: String, tafId: String, withFiles: Boolean = false, onNotSent: (String) -> Unit) {
-    viewModelScope.launch {
+    scope.launch {
+      // Coach not started on this phone yet: the first message starts it, behind its one fingerprint, then goes. Not started
+      // (the fingerprint cancelled, or Start refused), nothing is sent and the words go back to the box; why shows above it.
+      if (tafId == COACH_CHAT && _state.value.coachCloudId == null && !startCoach()) {
+        onNotSent(text)
+        return@launch
+      }
       // One that was tried and refused stays in the thread, marked not sent: it never comes back to the box as well.
       if (!deliverChat(text, tafId, withFiles) && _state.value.chatUnsent[tafId].orEmpty().none { it.message.text == text.trim() }) onNotSent(text)
     }

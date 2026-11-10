@@ -67,8 +67,9 @@ class CoachStartTest {
   private val coach = """{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}"""
 
   private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""") {
-    // Before the start, no Coach; once started, its tools still to give; once given, given.
+    // Before the start, no Coach; once started, its tools still to give, read by the start and by the tools panel; once given, given.
     transport.answer("GET /v1/setup", 200, """{"setup":null}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":{"state":"given"}}""")
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
@@ -104,8 +105,13 @@ class CoachStartTest {
     // The start's refresh read planque's grants: planque doesn't know this phone yet.
     assertFalse(m.state.value.planqueReady)
     assertTrue(m.startCoach())
-    // Yes before anything is made, then a fingerprint for each of Coach's drafts, which grant authority.
-    assertEquals(listOf("Connect your apps", "Start Coach", "Give Coach its Card"), auth.asked)
+    // One fingerprint, the draft's, behind the approval key, before anything is made: no other prompt, no Card yet.
+    assertEquals(listOf("Start Coach"), auth.asked)
+    assertEquals(listOf("Start Coach"), auth.fingerprints)
+    // Coach's tools wait for the tools panel, behind their own fingerprint.
+    assertTrue(m.state.value.coachTools?.toGive == true)
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertEquals(1, transport.requestsTo("POST /v1/me/agent-drafts").size)
     assertEquals("setup_1", m.state.value.coachCloudId)
     assertEquals("setup-acme", m.state.value.coachAgent)
     assertTrue(m.state.value.planqueReady)
@@ -133,6 +139,7 @@ class CoachStartTest {
     val m = model()
     m.refreshConnections()
     assertTrue(m.startCoach())
+    assertTrue(m.giveCoachTools())
     // The connect batch, signed, to KIFF's gateway, byte for byte what tafs cloud gave.
     val batch = transport.requestsTo("POST /v1/connections/batch").single()
     assertEquals("https://mcp.kiff.dev/v1/connections/batch", batch.url)
@@ -147,7 +154,7 @@ class CoachStartTest {
     assertNull(m.state.value.coachToolsError)
     // Started and given, it asks nothing again and sends nothing again.
     assertTrue(m.startCoach())
-    assertEquals(3, auth.asked.size)
+    assertEquals(listOf("Start Coach", "Give Coach its Card"), auth.asked)
     assertEquals(1, transport.requestsTo("POST /v1/connections/batch").size)
     assertEquals(2, transport.requestsTo("POST /v1/me/agent-drafts").size)
   }
@@ -221,8 +228,77 @@ class CoachStartTest {
     assertFalse(m.startCoach())
     assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
     assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
-    assertNull(m.state.value.coachStartError)
+    // A closed prompt says what any approval says: try again.
+    assertEquals(bot.tafs.app.model.Words.Approval.notRecognized, m.state.value.coachStartError)
     assertFalse(m.state.value.startingCoach)
+  }
+
+  // MARK: The first message starts Coach
+
+  private fun coachMessages() = transport.requestsTo("POST /v1/tafs/setup_1/messages").map { String(it.body!!) }
+
+  @Test fun aFirstMessageToCoachStartsItBehindOneFingerprintThenGoesOnce() = runTest {
+    reads()
+    startAnswers()
+    transport.answer("POST /v1/tafs/setup_1/messages", 200, """{"session":"s1","new_session":false}""")
+    val m = model(scope = backgroundScope)
+    val back = mutableListOf<String>()
+    m.sendChat("Refund orders under 50 euros", COACH_CHAT) { back += it }
+    testScheduler.runCurrent()
+    assertEquals(listOf("Start Coach"), auth.fingerprints)
+    assertEquals(listOf("Start Coach"), auth.asked)
+    assertEquals("setup_1", m.state.value.coachCloudId)
+    assertEquals(1, coachMessages().size)
+    assertTrue(coachMessages().single().contains("Refund orders under 50 euros"))
+    assertTrue(back.isEmpty())
+  }
+
+  @Test fun aStartTheOwnerClosesKeepsTheWordsAndSendsNothing() = runTest {
+    reads()
+    startAnswers()
+    transport.answer("POST /v1/tafs/setup_1/messages", 200, """{"session":"s1","new_session":false}""")
+    val m = model(scope = backgroundScope)
+    auth.confirms = false
+    val back = mutableListOf<String>()
+    m.sendChat("Refund orders under 50 euros", COACH_CHAT) { back += it }
+    testScheduler.runCurrent()
+    assertEquals(listOf("Refund orders under 50 euros"), back)
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
+    assertTrue(coachMessages().isEmpty())
+    assertNull(m.state.value.coachCloudId)
+    assertEquals(bot.tafs.app.model.Words.Approval.notRecognized, m.state.value.coachStartError)
+  }
+
+  @Test fun aStartThatFailsKeepsTheWordsAndSaysWhy() = runTest {
+    reads()
+    startAnswers(keys = 403 to """{"error":"forbidden"}""")
+    val m = model(scope = backgroundScope)
+    val back = mutableListOf<String>()
+    m.sendChat("Refund orders under 50 euros", COACH_CHAT) { back += it }
+    testScheduler.runCurrent()
+    assertEquals(listOf("Refund orders under 50 euros"), back)
+    assertEquals("Only an admin of this KIFF account can connect apps.", m.state.value.coachStartError)
+    assertTrue(coachMessages().isEmpty())
+    assertFalse(m.state.value.startingCoach)
+  }
+
+  @Test fun aCoachAlreadyThereOnAPhoneNewToPlanqueAsksYesOnceAndMakesNoDraft() = runTest {
+    reads()
+    // Coach was started from another phone: this one enrols with planque, behind the owner's yes.
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":{"state":"given"}}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
+    val m = model()
+    m.loadCoach()
+    assertTrue(m.startCoach())
+    assertEquals(listOf("Connect your apps"), auth.asked)
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
+    assertTrue(m.state.value.planqueReady)
   }
 
   @Test fun aMemberWhoIsNotAnAdminIsToldOnlyAnAdminConnectsTools() = runTest {

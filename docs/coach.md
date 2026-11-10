@@ -91,6 +91,24 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    again, both sending nothing. A replaced connection's line says what it replaces.
    (Android: `AppModel.giveCoachTools`, `CoachToolsPanel`.)
 
+On Android (1.2), Coach's conversation shows before Coach is started on the account, and the
+first Send starts it (`AppModel.sendChat`, `startCoach`):
+- **No step before the words.** A job handed to Coach from Home lands in the box with nothing to
+  tap first. Above the conversation, what Coach is, and "Starting asks for your fingerprint once."
+- **One fingerprint, the draft's.** On a first Start the draft with no tools is signed by the
+  approval key, and its prompt is the only one. planque's enrolment and the connector key come
+  after that yes, so nothing is made before it.
+- **Coach's tools wait for their own tap.** Coach's Card is another draft, signed over its own
+  bytes, so giving it within the Start would be a second fingerprint. After a first Start the tools
+  panel offers **Give Coach its tools**, behind its own fingerprint, in its own words.
+- **A Coach already on the account,** started from another phone, asks this phone for the owner's
+  yes once, then enrols it with planque. It makes no draft.
+- **Then the message goes, once.** A Start that's closed or fails sends nothing: the words go
+  back to the box, and why shows above it.
+- **A phone that can't approve yet** shows what Coach is and why it can't start, with no box.
+
+iOS follows.
+
 ## What Coach shows
 
 Coach writes messages and shows cards (`SetupComponent.Kind`). A card grants nothing by
