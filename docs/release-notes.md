@@ -55,9 +55,9 @@ same claims in every language, nothing stronger, and only what a person can see 
 **Portuguese (pt-PT):**
 
 ```
-• O tafs fala agora oito línguas: inglês, alemão, francês, espanhol, italiano, português, neerlandês e polaco, conforme a língua do seu telemóvel.
+• O tafs fala agora oito línguas: inglês, alemão, francês, espanhol, italiano, português, neerlandês e polaco, conforme a língua do seu telefone.
 • Um chat diz porque é que uma execução parou mais cedo, por exemplo quando a resposta ficou sem espaço.
-• Plano e utilização indica quando o Google Play não pode vender neste telemóvel.
+• Plano e utilização indica quando o Google Play não pode vender neste telefone.
 • Os montantes do exemplo estão em euros.
 ```
 
