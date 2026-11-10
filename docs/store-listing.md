@@ -292,7 +292,7 @@ Automatiseer hiermee terugbetalingen, het betalen van facturen, toegang en deplo
 
 Binnen zijn Card handelt een taf en laat het een bewijs achter. Daarbuiten wacht het taf op je antwoord op je telefoon. Trek de Card in en er gaat geen nieuwe actie meer door.
 
-WAAROM JE HEM HET WERK KUNT GEVEN
+WAAROM JE EEN TAF HET WERK KUNT GEVEN
 • Grenzen waar het zich niet uit kan praten: KIFF toetst elke actie aan zijn Card, buiten de AI, voordat die je app bereikt. Geen prompt verandert een limiet.
 • Je inloggegevens blijven verzegeld: het taf ziet nooit je wachtwoorden of tokens. De koppelingsdienst van KIFF en zijn inlogprovider bewaren ze, nooit de telefoon.
 • Je vingerafdruk voor wat ertoe doet: routinewerk gaat door binnen zijn grenzen. Alles buiten zijn Card wordt geweigerd of, als zijn Card 'Vragen' zegt, wacht op jou en wordt goedgekeurd met je vingerafdruk of gezicht.
