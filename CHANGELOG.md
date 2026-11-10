@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **What Coach's help includes, under the Solo offer (tafs cloud).** The balance read's `buy` carries `coach`, in the person's language: "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.", the same sentence as kiff.dev. The apps draw it under the Solo offer in their next batches (docs/accounts.md).
 - **iPhone and iPad: Plan & usage on a new account says less.** As on Android 1.2. Solo sits under "Choose a plan", and "Add credits" shows only once Solo runs. The Credits panel is left out where tafs cloud says so (`credits_panel`: no plan and no run lately). The First month pack leads the packs only while it can be bought, and is never shown alone or greyed. Restore purchases stays, and a restore that finds nothing says "Nothing to restore." (docs/ios-app.md).
 - **Coach's credits lines say what's included (tafs cloud).** Plan & usage reads "Coach, included" and "Coach, past what's included", as kiff.dev says it, in 8 languages; before, "within its fair use" (docs/accounts.md).
 - **Plan & usage on a new account says less (Android 1.2).** Restore purchases shows only while a purchase is left to send again, and a restore that finds nothing says "Nothing to restore." The panel is titled "Choose a plan" while Solo is offered, and "Add credits" once it runs. The First month pack is never shown alone or greyed, and the Credits panel stays out where tafs cloud's `credits_panel` says so.

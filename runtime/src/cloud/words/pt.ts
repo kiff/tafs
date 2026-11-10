@@ -134,6 +134,7 @@ export const pt: Words = {
   cr_no_plan_line: "Sem plano · escolha um para começar",
   cr_w_again: (day) => `continuam quando o período recomeçar a ${day}`,
   cr_w_no_plan: "Escolha um plano para pôr os seus tafs a trabalhar.",
+  cr_buy_coach: "O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa os seus créditos.",
   cr_w_limit_raise: (again) => `Os seus tafs estão em espera: o limite de gastos foi atingido. Aumente-o para que continuem, ou ${again}.`,
   cr_w_limit_ceiling: (again) => `Os seus tafs estão em espera: o limite de gastos foi atingido e não pode subir mais a partir da app. Contacte o KIFF para o aumentar, ou ${again}.`,
   cr_w_limit_admin: "Os seus tafs estão em espera: o limite de gastos foi atingido. Um administrador desta conta pode aumentá-lo.",
