@@ -219,6 +219,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
       "coach fragen": ["coach bitten"], // "Ask Coach to …": asking Coach to do something
       "erneut versuchen": ["noch einmal"], // "Try again in a moment": "versuch es gleich noch einmal"
       klopfen: ["klopft"],
+      "gekoppelte absender": ["gekoppelten absendern"], // "von dir und gekoppelten Absendern"
     },
     fr: { crédits: ["crédit"], approuver: ["approuvez"], réessayer: ["réessayez"] },
     es: {
@@ -234,6 +235,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     pl: {
       kredyty: ["kredyt"], wersja: ["wersji", "wersję"], "limit wydatków": ["limitu wydatków"], prośba: ["prośbę", "prośby", "próśb"],
       pukanie: ["zapuka"], "zapytaj coacha": ["poproś coacha"], "spróbuj ponownie": ["spróbuj później"],
+      "powiązani nadawcy": ["powiązanych nadawców"],
     },
   };
 

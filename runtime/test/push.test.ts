@@ -467,7 +467,7 @@ describe("KIFF's alerts", () => {
       request: { id: "pr_2", kind: "raise", status: "approved", asked_by: "u_bo" },
     });
     expect((await alert(raised, push, { apns, slots })).body).toEqual({ sent: 1 });
-    expect(apns.sent[1]).toMatchObject({ token: TOKEN_B, n: { payload: { aps: { alert: { title: "Your request for a raise", body: "Your admin raised the spend limit." } } } } });
+    expect(apns.sent[1]).toMatchObject({ token: TOKEN_B, n: { payload: { aps: { alert: { title: "Your request for a raise", body: "An admin raised the spend limit." } } } } });
   });
 
   it("tells only the people who manage billing of a credits warning, once each a period, loud when the tafs wait", async () => {
@@ -530,14 +530,14 @@ describe("KIFF's alerts", () => {
     });
     expect((await alert(answer("evt_ok", { status: "approved" }), push, { apns })).body).toEqual({ sent: 1 });
     expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_B]);
-    expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { aps: { alert: { body: "Your admin added Rayo." } }, open: "usage", request_id: "pr_1" } });
+    expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { aps: { alert: { body: "An admin added Rayo." } }, open: "usage", request_id: "pr_1" } });
     // Quiet (kiff/tafs#210): no sound or banner.
     expect(apns.sent[0]!.n.payload.aps).toMatchObject({ "interruption-level": "passive" });
     expect(apns.sent[0]!.n.payload.aps).not.toHaveProperty("sound");
     expect((await alert(answer("evt_no", { status: "declined", note: "  Next\nmonth " }), push, { apns })).body).toEqual({ sent: 1 });
-    expect(apns.sent[1]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined: Next month" } } } });
+    expect(apns.sent[1]!.n).toMatchObject({ payload: { aps: { alert: { body: "An admin declined: Next month" } } } });
     expect((await alert(answer("evt_bare", { status: "declined" }), push, { apns })).body).toEqual({ sent: 1 });
-    expect(apns.sent[2]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined your request." } } } });
+    expect(apns.sent[2]!.n).toMatchObject({ payload: { aps: { alert: { body: "An admin declined your request." } } } });
     expect((await alert(answer("evt_gone", { status: "withdrawn" }), push, { apns })).body).toEqual({ ignored: "pack_request_answered: withdrawn" });
     expect(apns.sent).toHaveLength(3);
     // An answer that doesn't say who asked tells nobody.

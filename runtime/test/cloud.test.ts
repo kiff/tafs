@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -398,6 +398,94 @@ describe("tafs cloud", () => {
     ]);
   });
 
+  it("shows the firings that didn't end in finished work, each in words", async () => {
+    const w = world();
+    const at = (iso: string) => ({ due: iso, at: iso });
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:45:00.000Z"), outcome: "failed_unfinished", run: "r5" },
+      { ...at("2026-10-29T09:30:00.000Z"), outcome: "failed_retrying", run: "r4" },
+      { ...at("2026-10-29T09:15:00.000Z"), outcome: "failed_check" },
+      { ...at("2026-10-29T09:00:00.000Z"), outcome: "skipped_switching" },
+      // Not listed: a halt's and a credits skip are said elsewhere, a quiet check and a run aren't skips, and an outcome not known here is left out.
+      { ...at("2026-10-29T08:45:00.000Z"), outcome: "skipped_halted" },
+      { ...at("2026-10-29T08:30:00.000Z"), outcome: "skipped_credits" },
+      { ...at("2026-10-29T08:15:00.000Z"), outcome: "quiet" },
+      { ...at("2026-10-29T08:00:00.000Z"), outcome: "something_new" },
+    ]);
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(r.body.skipped).toEqual([
+      { due: "2026-10-29T09:45:00.000Z", why: "unfinished", words: "The 09:45 run stopped part-way: what it was working on won't be tried again" },
+      { due: "2026-10-29T09:30:00.000Z", why: "retrying", words: "The 09:30 run didn't finish: its work goes to the next run" },
+      { due: "2026-10-29T09:15:00.000Z", why: "check_failed", words: "The 09:15 check couldn't read the app" },
+      { due: "2026-10-29T09:00:00.000Z", why: "switching", words: "Skipped the 09:00 run: its taf was switching versions" },
+    ]);
+    // In the reader's language too.
+    const es = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana", headers: { "accept-language": "es" } });
+    expect(es.body.skipped[2].words).toBe("La revisión prevista a las 09:15 no pudo leer la app");
+  });
+
+  it("says a taf's health where an idle taf says its next run, on its page and on the list", async () => {
+    const w = world();
+    const at = (iso: string) => ({ due: iso, at: iso });
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:45:00.000Z"), outcome: "failed_unworked" },
+      { ...at("2026-10-29T09:30:00.000Z"), outcome: "failed_unworked" },
+      { ...at("2026-10-29T09:15:00.000Z"), outcome: "run", run: "r1" },
+    ]);
+    const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(page.body.health).toEqual({ level: "failing", lines: ["Its last 2 scheduled runs couldn't start. Open one to see why."] });
+    expect(page.body.summary).toEqual({ status: "idle", line: "Its last 2 scheduled runs couldn't start", needs_you: 0 });
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(rae.health).toEqual(page.body.health);
+    expect(rae.work).toEqual(page.body.summary);
+    // In the reader's language.
+    const de = await call(w, "GET", "/v1/home", { token: "ana", headers: { "accept-language": "de" } });
+    expect(de.body.tafs.find((t: { id: string }) => t.id === RAE).health.lines).toEqual(["Seine letzten 2 geplanten Läufe konnten nicht starten. Öffne einen, um zu sehen, warum."]);
+
+    // What's happening now, and what waits for the owner, come first: the health is still there, the line isn't its.
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_now", agent: RAE, session: "s", trigger: "schedule", status: "RUNNING", cost_micro_usd: 0, turns: 1, created: "2026-10-29T09:59:00Z", updated: "2026-10-29T09:59:00Z" });
+    const working = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(working.body.summary.status).toBe("working");
+    expect(working.body.summary.line).not.toContain("couldn't start");
+    expect(working.body.health.level).toBe("failing");
+    w.agents.runs.shift();
+    // A halted taf reads Halted, never failing.
+    w.agents.halts.set(`t_acme|${RAE}`, { on: true, at: "2026-10-29T09:50:00Z" });
+    const halted = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(halted.body.summary.status).toBe("halted");
+    expect(halted.body.summary.line).not.toContain("couldn't start");
+  });
+
+  it("shows a taf as before, with no health, when its firings can't be read or come too slowly", async () => {
+    const w = world();
+    const read = w.agents.api.scheduleFirings.bind(w.agents.api);
+    w.agents.api.scheduleFirings = async () => { throw new Error("kiff/agents is down"); };
+    const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(page.status).toBe(200);
+    expect(page.body.health).toBeUndefined();
+    expect(page.body.skipped).toEqual([]);
+    expect(page.body.summary.line).toBe("Next run Fri 12:30");
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.status).toBe(200);
+    const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(rae.health).toBeUndefined();
+    expect(rae.work).toEqual({ status: "idle", line: "Next run Fri 12:30", needs_you: 0 });
+    // A read that never answers doesn't hold the list: it comes without the health.
+    vi.useFakeTimers();
+    try {
+      w.agents.api.scheduleFirings = () => new Promise(() => {});
+      const slow = call(w, "GET", "/v1/home", { token: "ana" });
+      await vi.advanceTimersByTimeAsync(1600);
+      const got = await slow;
+      expect(got.status).toBe(200);
+      expect(got.body.tafs.find((t: { id: string }) => t.id === RAE).health).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+      w.agents.api.scheduleFirings = read;
+    }
+  });
+
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
     expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"], time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC" }]);
@@ -745,6 +833,8 @@ describe("the home list", () => {
       color: 0, state: "working", waiting: 0,
       // Where its work stands, in words (docs/reliability.md).
       work: { status: "idle", line: "Next run Fri 12:30", needs_you: 0 },
+      // Its health over its recent work (health.ts): nothing against it.
+      health: { level: "healthy", lines: [] },
       card: {
         ids: ["card_rae"], active: true, expires: "2026-12-31T00:00:00Z", tools: ["Create refund"],
         rules: [{
@@ -2445,7 +2535,7 @@ describe("a schedule whose runs keep failing to start", () => {
     expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: RAE }]);
     expect(w.pushed).toHaveLength(1);
     expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.unfinishedOne);
-    expect(FAILING_WORDS.unfinishedOne).toBe("Its scheduled run stopped partway. What it was working on won't be tried again. Open it to see what it did.");
+    expect(FAILING_WORDS.unfinishedOne).toBe("Its scheduled run stopped part-way. What it was working on won't be tried again. Open it to see what it did.");
     // A later run of failures that ends on one: its count, in the same words.
     const later = new Date(AT.getTime() + 3600_000).toISOString();
     w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: later, firings: 3, run: "run_9", outcome: "failed_unfinished" } });
@@ -2471,6 +2561,185 @@ describe("a schedule whose runs keep failing to start", () => {
       w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 2, outcome } });
       expect(await sweepFailingSchedules(d2)).toHaveLength(1);
       expect(bodyOf(w2.pushed[0]!.n)).toBe(FAILING_WORDS.many(2));
+    }
+  });
+
+  it("says a later partway stop in the same run of failures again, at most once every six hours for that schedule", async () => {
+    const hours = (h: number) => new Date(Date.parse(SINCE) + h * 3600_000).toISOString();
+    const stopped = (firings: number, last: string) => ({ since: SINCE, firings, run: `run_${firings}`, outcome: "failed_unfinished", last });
+    const { w, deps } = await setUp(stopped(1, SINCE));
+    const set = (id: string, failing: ReturnType<typeof stopped>) => w.agents.schedules.set(`t_acme|${id}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, id, failing });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    // Another partway stop an hour later, and one just under six: both quiet.
+    set(RAE, stopped(2, hours(1)));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    set(RAE, stopped(3, hours(5.9)));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(1);
+    // Six hours on: said again, once, in the same words with its count.
+    set(RAE, stopped(4, hours(6)));
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(bodyOf(w.pushed[1]!.n)).toBe(FAILING_WORDS.unfinishedMany(4));
+    set(RAE, stopped(5, hours(11)));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    set(RAE, stopped(6, hours(12.5)));
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(w.pushed).toHaveLength(3);
+    // The six hours count for each schedule: the taf's other schedule says its own partway stop.
+    set(`${RAE}-t2`, stopped(1, hours(12.6)));
+    expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: `${RAE}-t2` }]);
+    expect(w.pushed).toHaveLength(4);
+    // A kiff/agents that sends no `last` says the first one only.
+    const older = await setUp({ since: SINCE, firings: 1, outcome: "failed_unfinished" });
+    expect(await sweepFailingSchedules(older.deps)).toHaveLength(1);
+    older.w.agents.schedules.set(`t_acme|${RAE}`, { ...older.w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 9, outcome: "failed_unfinished" } });
+    expect(await sweepFailingSchedules(older.deps)).toEqual([]);
+  });
+
+  it("says once when a taf's runs fail one after another, for each bad spell, and nothing for one at risk", async () => {
+    const { w, deps } = await setUp();
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const next = (iso: string) => w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, next: iso });
+    const ended = (id: string, m: number, status: "ERROR" | "COMPLETED") => w.agents.runs.unshift({ tenant: "t_acme", id, agent: RAE, session: "s", trigger: "schedule", status, ...(status === "COMPLETED" ? { stop: "answered" } : { error: "the run failed" }), cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+    w.agents.runs.length = 0;
+    // The first pass only notes the schedule's next time: nothing has fired since a pass before it.
+    next(at(15));
+    ended("f1", -40, "ERROR"); ended("f2", -25, "ERROR"); ended("f3", -10, "ERROR");
+    expect(await sweepHealth(deps)).toEqual([]);
+    // Before its next time comes, nothing is read.
+    w.now = new Date(AT.getTime() + 10 * 60_000);
+    const runsRead = vi.spyOn(w.agents.api, "runs");
+    expect(await sweepHealth(deps)).toEqual([]);
+    const readsOfRae = () => runsRead.mock.calls.filter((c) => c[1] === RAE).length;
+    expect(readsOfRae()).toBe(0);
+    // It fired: its last three runs failed, and the phones that answer hear once.
+    w.now = new Date(AT.getTime() + 16 * 60_000);
+    next(at(30));
+    expect(await sweepHealth(deps)).toEqual([{ tenant: "t_acme", taf: RAE }]);
+    expect(readsOfRae()).toBe(1);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", payload: {
+      aps: { alert: { title: "Rae", body: "Its last 3 runs failed. Open it to see why." }, "interruption-level": "time-sensitive" }, open: "taf", taf_id: RAE,
+    } } });
+    // The same spell, a fourth failure later: nothing more.
+    w.now = new Date(AT.getTime() + 31 * 60_000);
+    next(at(45));
+    ended("f4", 30, "ERROR");
+    expect(await sweepHealth(deps)).toEqual([]);
+    // It recovers, then fails three times again: another spell, said once more.
+    w.now = new Date(AT.getTime() + 91 * 60_000);
+    next(at(105));
+    ended("ok", 45, "COMPLETED"); ended("g1", 60, "ERROR"); ended("g2", 75, "ERROR"); ended("g3", 90, "ERROR");
+    expect(await sweepHealth(deps)).toHaveLength(1);
+    expect(w.pushed).toHaveLength(2);
+    w.now = new Date(AT.getTime() + 106 * 60_000);
+    next(at(120));
+    expect(await sweepHealth(deps)).toEqual([]);
+
+    // At risk (two of its runs failed, not in a row) shows in the app and sends nothing.
+    const risk = await setUp();
+    risk.w.agents.runs.length = 0;
+    const put = (id: string, m: number, status: "ERROR" | "COMPLETED") => risk.w.agents.runs.unshift({ tenant: "t_acme", id, agent: RAE, session: "s", trigger: "schedule", status, ...(status === "COMPLETED" ? { stop: "answered" } : {}), cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+    put("a", -40, "ERROR"); put("b", -30, "COMPLETED"); put("c", -20, "ERROR"); put("d", -10, "COMPLETED");
+    risk.w.agents.schedules.set(`t_acme|${RAE}`, { ...risk.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+    expect(await sweepHealth(risk.deps)).toEqual([]);
+    expect(await sweepHealth(risk.deps)).toEqual([]);
+    expect(risk.w.pushed).toHaveLength(0);
+  });
+
+  it("says nothing of a taf's health while it's halted or paused, nor what the failing alert already says", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const failing3 = async () => {
+      const x = await setUp();
+      x.w.agents.runs.length = 0;
+      for (const [i, m] of [-40, -25, -10].entries()) x.w.agents.runs.unshift({ tenant: "t_acme", id: `f${i}`, agent: RAE, session: "s", trigger: "schedule", status: "ERROR", cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+      x.w.agents.schedules.set(`t_acme|${RAE}`, { ...x.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+      expect(await sweepHealth(x.deps)).toEqual([]); // the first pass notes its next time
+      return x;
+    };
+    // Halted: nothing, and it's said once the halt is over.
+    const halted = await failing3();
+    halted.w.agents.halts.set(`t_acme|${RAE}`, { on: true, at: at(-1) });
+    expect(await sweepHealth(halted.deps)).toEqual([]);
+    halted.w.agents.halts.delete(`t_acme|${RAE}`);
+    expect(await sweepHealth(halted.deps)).toHaveLength(1);
+    // Its schedule off: nothing.
+    const off = await failing3();
+    off.w.agents.schedules.set(`t_acme|${RAE}`, { ...off.w.agents.schedules.get(`t_acme|${RAE}`)!, enabled: false });
+    expect(await sweepHealth(off.deps)).toEqual([]);
+    // A run of failures at its schedule is the failing alert's to say: this sweep adds nothing for it, though
+    // kiff/agents left a failed run, with no turn, behind each of those times.
+    const streak = await setUp({ since: SINCE, firings: 4, outcome: "failed_unworked" });
+    streak.w.agents.runs.length = 0;
+    for (const m of [-55, -40, -25, -10]) streak.w.agents.runs.unshift({ tenant: "t_acme", id: `never${m}`, agent: RAE, session: "s", trigger: "schedule", status: "ERROR", error: "the run didn't start", cost_micro_usd: 0, turns: 0, created: at(m), updated: at(m) });
+    streak.w.agents.firings.set(`t_acme|${RAE}`, [-10, -25, -40, -55].map((m) => ({ due: at(m), at: at(m), outcome: "failed_unworked" })));
+    streak.w.agents.schedules.set(`t_acme|${RAE}`, { ...streak.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+    expect(await sweepHealth(streak.deps)).toEqual([]);
+    expect(await sweepHealth(streak.deps)).toEqual([]);
+    expect(await sweepFailingSchedules(streak.deps)).toHaveLength(1);
+    expect(streak.w.pushed).toHaveLength(1);
+    // One alert in all, and one failing line on its page.
+    const page = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, streak.deps);
+    expect(JSON.parse(page.body ?? "{}").health).toEqual({ level: "failing", lines: ["Its last 4 scheduled runs couldn't start. Open one to see why."] });
+  });
+
+  it("stays quiet when the schedule's last counted run failed for our own outage, and speaks for the taf's own failure after it", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const { w, deps } = await setUp({ since: SINCE, firings: 3, run: "run_down" });
+    w.agents.runs.length = 0;
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_down", agent: RAE, session: "s", trigger: "schedule", status: "ERROR", code: "ai_unavailable", error: "The AI isn't available right now.", cost_micro_usd: 0, turns: 0, created: at(-10), updated: at(-10) });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(0);
+    // The outage over, the same run of failures goes on with a failure of the taf's own: said now, once.
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_own", agent: RAE, session: "s", trigger: "schedule", status: "ERROR", error: "the run didn't start", cost_micro_usd: 0, turns: 0, created: at(-1), updated: at(-1) });
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 4, run: "run_own" } });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.many(4));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    // A run that can't be found among its latest isn't known to be ours: it's said, as before.
+    const unknown = await setUp({ since: SINCE, firings: 2, run: "run_gone" });
+    unknown.w.agents.runs.length = 0;
+    expect(await sweepFailingSchedules(unknown.deps)).toHaveLength(1);
+    // A follow-up that didn't run won't run again, whatever stopped it: still said.
+    const fu = await setUp();
+    fu.w.agents.runs.length = 0;
+    fu.w.agents.runs.unshift({ tenant: "t_acme", id: "run_fu", agent: RAE, session: "s", trigger: "schedule", status: "ERROR", code: "ai_unavailable", cost_micro_usd: 0, turns: 0, created: at(-10), updated: at(-10) });
+    fu.w.agents.schedules.set(`t_acme|fu-1`, { ...fu.w.agents.schedules.get(`t_acme|${RAE}`)!, id: "fu-1", kind: "once", follow_up: true, enabled: false, failing: { since: SINCE, firings: 1, run: "run_fu" } });
+    expect(await sweepFailingSchedules(fu.deps)).toEqual([{ tenant: "t_acme", schedule: "fu-1" }]);
+    expect(bodyOf(fu.w.pushed[0]!.n)).toBe(FAILING_WORDS.followUp);
+  });
+
+  it("doesn't alert for runs started from the taf's chat: whoever asked saw them fail", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const x = await setUp();
+    x.w.agents.runs.length = 0;
+    for (const m of [-40, -25, -10]) x.w.agents.runs.unshift({ tenant: "t_acme", id: `c${m}`, agent: RAE, session: "s", trigger: "owner", status: "ERROR", cost_micro_usd: 0, turns: 2, created: at(m), updated: at(m) });
+    x.w.agents.schedules.set(`t_acme|${RAE}`, { ...x.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+    expect(await sweepHealth(x.deps)).toEqual([]);
+    expect(await sweepHealth(x.deps)).toEqual([]);
+    expect(x.w.pushed).toHaveLength(0);
+    // Its page still says it: the health counts every run.
+    const page = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, x.deps);
+    expect(JSON.parse(page.body ?? "{}").health.level).toBe("failing");
+  });
+
+  it("says nothing of a taf's health for our own outage, or for a version switch", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    for (const [what, more] of [
+      ["the AI provider not serving us", { code: "ai_unavailable", error: "The AI isn't available right now.", turns: 2 }],
+      ["a version switch", { error: "the agent is switching versions, so the run didn't start", turns: 0 }],
+    ] as const) {
+      const x = await setUp();
+      x.w.agents.runs.length = 0;
+      for (const m of [-40, -25, -10]) x.w.agents.runs.unshift({ tenant: "t_acme", id: `r${m}`, agent: RAE, session: "s", trigger: "schedule", status: "ERROR", cost_micro_usd: 0, created: at(m), updated: at(m), ...more });
+      x.w.agents.schedules.set(`t_acme|${RAE}`, { ...x.w.agents.schedules.get(`t_acme|${RAE}`)!, next: at(-5) });
+      expect(await sweepHealth(x.deps), what).toEqual([]);
+      expect(await sweepHealth(x.deps), what).toEqual([]);
+      expect(x.w.pushed, what).toHaveLength(0);
+      const page = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, x.deps);
+      expect(JSON.parse(page.body ?? "{}").health, what).toEqual({ level: "healthy", lines: [] });
     }
   });
 
@@ -2609,6 +2878,36 @@ describe("halting", () => {
     // Each halt and resume is in Activity, newest first (kiff/tafs#236, item 15).
     const events = (await call(w, "GET", "/v1/events", { token: "ana" })).body.events;
     expect(events.map((e: { kind: string; name?: string }) => [e.kind, e.name])).toEqual([["resumed", "Rae"], ["halted", undefined], ["halted", "Rae"]]);
+  });
+
+  it("says a halt and a resume of every taf in the plural, in a language whose words agree in number", async () => {
+    const w = world();
+    w.phones.push({ token: "f".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "fr" },
+      { token: "d".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "de" },
+      { token: "e".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "es" });
+    const titles = (token: string) => w.pushed.filter((p) => p.token === token)
+      .map((p) => (p.n.payload as { aps: { alert?: { title: string; body: string } } }).aps.alert).filter((a) => a !== undefined);
+    w.account.acksAtOnce = true;
+    await call(w, "POST", "/v1/halt", { token: "ana" });
+    await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    // All of them, then one: "bloqués" for the tafs, "bloqué" for Rae. The body says "resume" as the button does.
+    expect(titles("f".repeat(64)).map((a) => a.title)).toEqual(["Tous vos tafs bloqués", "Rae bloqué"]);
+    expect(titles("f".repeat(64))[0]!.body).toBe("Rien de nouveau n'est envoyé jusqu'à ce que vous repreniez dans tafs.");
+    w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
+    w.account.halts![""] = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", "/v1/halt", { token: "ana" })).status).toBe(200);
+    expect(titles("f".repeat(64)).slice(2)).toEqual([
+      { title: "Rae repris", body: "Il fonctionne à nouveau comme avant le blocage." },
+      { title: "Tous vos tafs repris", body: "Ils fonctionnent à nouveau comme avant le blocage." },
+    ]);
+    // Spanish: "reanudado" takes the plural too.
+    expect(titles("e".repeat(64)).map((a) => a.title)).toEqual(["Todos tus tafs bloqueados", "Rae bloqueado", "Rae reanudado", "Todos tus tafs reanudados"]);
+    // German: one taf is "er", all of them "sie".
+    expect(titles("d".repeat(64)).slice(2)).toEqual([
+      { title: "Rae fortgesetzt", body: "Er arbeitet wieder wie vor dem Anhalten." },
+      { title: "Alle deine tafs fortgesetzt", body: "Sie arbeiten wieder wie vor dem Anhalten." },
+    ]);
   });
 
   it("cancels the taf's pending runs when it halts", async () => {

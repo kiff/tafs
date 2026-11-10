@@ -272,6 +272,23 @@ describe("conversation", () => {
     expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" })).body.capped).toBeUndefined();
   });
 
+  it("says when the latest run stopped without finishing, whichever way, and keeps capped for the caps alone", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund every charge this month", ANA);
+    const thread = async () => (await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" })).body;
+    for (const stop of ["turn_cap", "cost_cap", "max_token", "refused"]) {
+      Object.assign(w.agents.runs.find((r) => r.id === chat.id)!, { status: "COMPLETED", stop });
+      const b = await thread();
+      expect(b.stopped, stop).toEqual({ run: chat.id, stop });
+      expect(b.capped, stop).toEqual(stop.endsWith("_cap") ? { run: chat.id, stop } : undefined);
+    }
+    // One that answered, or a stop this code doesn't know, has no line to close with.
+    for (const stop of ["answered", "something_new"]) {
+      Object.assign(w.agents.runs.find((r) => r.id === chat.id)!, { stop });
+      expect((await thread()).stopped, stop).toBeUndefined();
+    }
+  });
+
   it("says what the owner wrote to the latest run that it hasn't read, while it goes and once it's over", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 60_000));

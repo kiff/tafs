@@ -78,13 +78,13 @@ describe("a run cut off, never read as done", () => {
   it("says a run stopped at its turn cap or its cost cap, and which, on its line, its request page and the list", () => {
     const turns = run({ stop: "turn_cap", turns: 50 });
     const cost = run({ stop: "cost_cap" });
-    expect(requestOf(turns, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its limit of turns for one run" });
+    expect(requestOf(turns, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its limit of steps for one run" });
     expect(requestOf(cost, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its cost limit for one run" });
-    expect(requestDetail(turns, [], [], "UTC", NOW).steps.at(-1)).toEqual({ label: "Stopped", line: "Stopped at 11:05: it reached its limit of turns for one run", state: "failed" });
+    expect(requestDetail(turns, [], [], "UTC", NOW).steps.at(-1)).toEqual({ label: "Stopped", line: "Stopped at 11:05: it reached its limit of steps for one run", state: "failed" });
     expect(requestDetail(cost, [], [], "UTC", NOW).steps.at(-1)).toMatchObject({ label: "Stopped", line: "Stopped at 11:05: it reached its cost limit for one run" });
     expect(workOf([turns, cost], "UTC", NOW, []).counts).toMatchObject({ done: 0, stopped: 2 });
     // The list's line for the taf: the last one cut off says so, never "Last done".
-    expect(summaryOf([turns], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its limit of turns for one run");
+    expect(summaryOf([turns], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its limit of steps for one run");
     expect(summaryOf([cost], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its cost limit for one run");
   });
 
@@ -96,17 +96,22 @@ describe("a run cut off, never read as done", () => {
   });
 
   it("reads a stop it doesn't know as stopped, never as success", () => {
-    for (const stop of ["max_token", "refused", "something_new"]) {
-      expect(requestOf(run({ stop }), "UTC", NOW), stop).toMatchObject({ state: "stopped", line: "Stopped at 11:05" });
-      expect(summaryOf([run({ stop })], false, "UTC", NOW).line, stop).toBe("Stopped at 11:05");
-    }
+    expect(requestOf(run({ stop: "something_new" }), "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05" });
+    expect(summaryOf([run({ stop: "something_new" })], false, "UTC", NOW).line).toBe("Stopped at 11:05");
+  });
+
+  it("says why a run stopped when its reply ran out of room or the AI declined to continue", () => {
+    expect(requestOf(run({ stop: "max_token" }), "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: its reply ran out of room" });
+    expect(requestOf(run({ stop: "refused" }), "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: the AI declined to continue" });
+    expect(requestOf(run({ stop: "refused" }), "UTC", NOW, [], undefined, [], "fr").line).toBe("Arrêté à 11:05 : l'IA a refusé de continuer");
+    expect(requestOf(run({ stop: "max_token" }), "UTC", NOW, [], undefined, [], "pl").line).toBe("Zatrzymane o 11:05: w odpowiedzi zabrakło miejsca");
   });
 
   it("says it in the person's language with the glossary's Stopped, never Halted's word", () => {
     const stopped = { de: "Gestoppt", fr: "Arrêté", es: "Detenido", it: "Fermato", pt: "Parado", nl: "Gestopt", pl: "Zatrzymane" } as const;
     const halted = { de: "Angehalten", fr: "Bloqué", es: "Bloqueado", it: "Bloccato", pt: "Bloqueado", nl: "Stilgezet", pl: "Zablokowane" } as const;
     for (const lang of Object.keys(stopped) as Array<keyof typeof stopped>) {
-      for (const stop of ["turn_cap", "cost_cap", "max_token"]) {
+      for (const stop of ["turn_cap", "cost_cap", "max_token", "refused"]) {
         const line = requestOf(run({ stop }), "UTC", NOW, [], undefined, [], lang).line;
         expect(line.startsWith(stopped[lang]), `${lang} ${stop}: ${line}`).toBe(true);
         expect(line.toLowerCase().includes(halted[lang].toLowerCase()), `${lang} ${stop}: ${line}`).toBe(false);

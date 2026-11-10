@@ -410,7 +410,7 @@ function creditsNotification(pct: string | undefined, why: string | undefined, p
 export const MAX_NOTE = 180;
 
 /**
- * The member's answer to their request: "Your admin added Rayo" or "Your admin declined:
+ * The member's answer to their request: "An admin added Rayo" or "An admin declined:
  * <note>". A withdrawn or expired request tells nobody (undefined).
  */
 function answerNotification(requestID: string, status: unknown, pack: unknown, note: unknown, kind?: unknown, lang: Lang = "en"): Notification | undefined {

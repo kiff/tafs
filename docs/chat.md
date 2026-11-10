@@ -361,7 +361,10 @@ person's last 5 chats, oldest first, at most 100 messages. Each message is
 result went, in tafs cloud's words, "Sent to Google Sheets · Refunds 2026 and handed to
 Invoices"; the app draws it above the taf's own words, `docs/reliability.md`). With it come the components, whether the taf is at work
 (`working`), what the owner wrote to the run that it hasn't read (`steering`), and where
-the latest run stopped at a cap (`capped`). A job run's report may carry `delivered`, tafs
+the latest run stopped without finishing (`stopped: {run, stop}`, where `stop` is `turn_cap`,
+`cost_cap`, `max_token` for a reply cut off at its length limit, or `refused` for the AI declining to
+continue; the app closes the thread with a line for it). `capped` carries the two caps alone, for apps
+that read only those. A job run's report may carry `delivered`, tafs
 cloud's one line on where its result went; Android draws it above the taf's words, as written
 (`ChatMessage.delivered`), and nothing where none comes.
 
