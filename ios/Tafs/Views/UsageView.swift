@@ -27,7 +27,8 @@ struct UsageView: View {
                         askPanel(u)
                         requestsPanel(u)
                     }
-                    CreditsPanel()
+                    // Left out where tafs cloud says so: no plan and no run lately.
+                    if model.showsCreditsPanel { CreditsPanel() }
                     // KIFF's read failed: buying and requests wait on it, said once.
                     if model.mode == .kiff, model.usage == nil, let why = model.usageError {
                         Panel { Text(why).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true) }
@@ -186,7 +187,7 @@ struct UsageView: View {
     static func asks(_ u: KIFFClient.Usage) -> Bool? {
         switch u.plan {
         case "team": return true
-        case "solo": return (u.store?.packs.isEmpty ?? true) ? nil : false
+        case "solo": return (u.store?.offered(firstMonth: false).isEmpty ?? true) ? nil : false
         default: return nil
         }
     }
@@ -302,7 +303,7 @@ struct BalancePanel: View {
                 Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
             if model.mode == .kiff, let buy = line.buy {
-                if buy.packs, !(model.usage?.store?.packs.isEmpty ?? true) {
+                if buy.packs, !model.offeredPacks.isEmpty {
                     if line.waiting {
                         Button(Self.buyCredits) { buyCredits() }.buttonStyle(PrimaryButtonStyle())
                     } else {
@@ -310,6 +311,8 @@ struct BalancePanel: View {
                     }
                 }
                 if buy.solo, model.usage?.store != nil {
+                    // The plan while Solo is offered; "Add credits" only once it runs.
+                    Eyebrow(text: Self.choosePlan)
                     NavigationLink(destination: SoloView().environmentObject(model)) {
                         Panel {
                             HStack {
@@ -331,6 +334,7 @@ struct BalancePanel: View {
     }
 
     static let buyCredits = Words.Usage.buy
+    static let choosePlan = Words.Usage.choosePlan
     static let readAgain = Words.Usage.readAgain
     /// After a raise whose read failed (docs/accounts.md › In the apps).
     static let readSince = Words.Usage.raisedUnread

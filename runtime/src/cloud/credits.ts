@@ -188,7 +188,7 @@ export interface CreditsView {
 /**
  * The period, in words: each taf that used credits, most first, as the person may see it; the
  * rest (tafs removed since, and those the person doesn't use or oversee) on one row that doesn't
- * open; Coach's row past its fair use; and what wasn't counted, and why.
+ * open; Coach's row past what the plan includes; and what wasn't counted, and why.
  */
 export function creditsView(k: KIFFCredits, tafs: CreditsTaf[], lang: Lang = "en"): CreditsView {
   const w = wordsIn(lang);
@@ -298,7 +298,7 @@ export interface BalanceView {
     /**
      * What the app may offer this person in the store. `first_month` is the First month pack, offered
      * only while Solo runs, among the packs: `{ready: true, words: null}`. `coach` says what Coach's
-     * help includes, for the app to show under the Solo offer. `null`: not offered, as before a plan,
+     * help includes, set wherever `buy` is, for the app to show under the Solo offer. `null`: not offered, as before a plan,
      * where a pack can't be bought.
      */
     buy: { solo: boolean; packs: boolean; first_month: { ready: boolean; words: string | null } | null; coach: string } | null;

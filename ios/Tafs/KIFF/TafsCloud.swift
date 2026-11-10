@@ -362,21 +362,39 @@ final class TafsCloud {
         /// What the store may sell this person now: Solo, on an account with no plan billed,
         /// and packs of credits while Solo runs.
         struct Buy: Decodable, Equatable {
+            /// The First month pack, which an account buys once: set only while it's offered
+            /// (while Solo runs). `ready` false is a tafs cloud from before, where it couldn't
+            /// be bought yet: the app shows no such pack.
+            struct FirstMonth: Decodable, Equatable {
+                var ready = false
+                init(ready: Bool = false) { self.ready = ready }
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    ready = ((try? c.decodeIfPresent(Bool.self, forKey: .ready)) ?? nil) ?? false
+                }
+                enum CodingKeys: String, CodingKey { case ready }
+            }
             var solo = false
             var packs = false
-            init(solo: Bool = false, packs: Bool = false) { self.solo = solo; self.packs = packs }
+            var firstMonth: FirstMonth? = nil
+            init(solo: Bool = false, packs: Bool = false, firstMonth: FirstMonth? = nil) {
+                self.solo = solo; self.packs = packs; self.firstMonth = firstMonth
+            }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 solo = Self.offered(c, .solo)
                 packs = Self.offered(c, .packs)
+                firstMonth = (try? c.decodeIfPresent(FirstMonth.self, forKey: .firstMonth)) ?? nil
             }
+            /// The First month pack can be bought now.
+            var firstMonthReady: Bool { firstMonth?.ready == true }
             /// `true`, or anything set that isn't `false` (a list of products), offers it.
             private static func offered(_ c: KeyedDecodingContainer<CodingKeys>, _ k: CodingKeys) -> Bool {
                 if let b = try? c.decodeIfPresent(Bool.self, forKey: k) { return b }
                 guard c.contains(k), (try? c.decodeNil(forKey: k)) == false else { return false }
                 return true
             }
-            enum CodingKeys: String, CodingKey { case solo, packs }
+            enum CodingKeys: String, CodingKey { case solo, packs, firstMonth = "first_month" }
         }
         struct Line: Decodable, Equatable {
             /// `ok`, `warning` (from 80%) or `waiting`; a state the app doesn't know reads `ok`.
@@ -391,12 +409,17 @@ final class TafsCloud {
             /// Set only for someone who may raise the spend limit.
             var raise: Offer? = nil
             var buy: Buy? = nil
-            enum CodingKeys: String, CodingKey { case state, why, meterPct = "meter_pct", words, detail, warning, raise, buy }
+            /// Whether Plan & usage shows the Credits panel: false only with no plan and no run
+            /// lately. A tafs cloud from before the flag doesn't say, and the panel shows.
+            var creditsPanel = true
+            enum CodingKeys: String, CodingKey {
+                case state, why, meterPct = "meter_pct", words, detail, warning, raise, buy, creditsPanel = "credits_panel"
+            }
 
             init(state: String = "ok", why: String? = nil, meterPct: Int? = nil, words: String, detail: String? = nil,
-                 warning: String? = nil, raise: Offer? = nil, buy: Buy? = nil) {
+                 warning: String? = nil, raise: Offer? = nil, buy: Buy? = nil, creditsPanel: Bool = true) {
                 self.state = state; self.why = why; self.meterPct = meterPct; self.words = words; self.detail = detail
-                self.warning = warning; self.raise = raise; self.buy = buy
+                self.warning = warning; self.raise = raise; self.buy = buy; self.creditsPanel = creditsPanel
             }
 
             init(from decoder: Decoder) throws {
@@ -409,6 +432,7 @@ final class TafsCloud {
                 warning = Self.text(c, .warning)
                 raise = (try? c.decodeIfPresent(Offer.self, forKey: .raise)) ?? nil
                 buy = (try? c.decodeIfPresent(Buy.self, forKey: .buy)) ?? nil
+                creditsPanel = ((try? c.decodeIfPresent(Bool.self, forKey: .creditsPanel)) ?? nil) ?? true
             }
 
             private static func text(_ c: KeyedDecodingContainer<CodingKeys>, _ k: CodingKeys) -> String? {

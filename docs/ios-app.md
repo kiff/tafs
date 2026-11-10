@@ -122,8 +122,16 @@ the app in sample mode.
   - **The balance** (`BalancePanel`), from `GET /v1/usage/balance`: `words`, a bar at
     `meter_pct` (none when it's `null`), `detail`, the `warning`, then **Raise the limit** where
     `raise` is set, **Add credits** (`BuyCreditsView`) where `buy.packs` is, and Solo
-    (`SoloView`) where `buy.solo` is. A 404 shows no balance, and a failed read keeps what was
-    read with tafs cloud's words above it.
+    (`SoloView`) where `buy.solo` is, under **Choose a plan**. "Add credits" shows only once
+    Solo runs. A 404 shows no balance, and a failed read keeps what was read with tafs cloud's
+    words above it.
+  - **The packs** (`AppModel.offeredPacks`): the First month pack comes first, only where
+    `buy.first_month` is set and `ready`, then the packs that can be bought again
+    (`Store.offered(firstMonth:)`). Not ready, it isn't listed: never alone or greyed. KIFF
+    lists it with no App Store product today, so iPhone and iPad don't show it yet.
+  - **Restore purchases** stays on Solo's screen and Add credits, as the App Store asks. A
+    restore that finds nothing says "Nothing to restore.", never "Purchases restored."
+    (`PurchaseOutcome.nothingToRestore`).
   - **Raise the limit** (`AppModel.raiseLimit`): Face ID, then KIFF's `PUT /v1/me/usage/limit`
     with `raise.from_cents`, signed by the device key, as Go on was. Then the balance is read
     again. If that read fails, only **Read it again** is offered, which signs nothing. A
@@ -137,7 +145,9 @@ the app in sample mode.
     opens its runs (`TafCreditsView`, 50 a page with More runs), each with its time as a short
     time in the account's zone, as on Android, and a run opens its request
     (`KnobRequestDetail`) while `opens` is true. The row for tafs removed since doesn't open. A
-    404 shows no panel, and a 503 shows tafs cloud's `words`.
+    404 shows no panel, and a 503 shows tafs cloud's `words`. The panel is left out where the
+    balance's `credits_panel` is false (no plan and no run lately); a tafs cloud without the
+    flag shows it (`AppModel.showsCreditsPanel`).
   - **Who bills and requests** (`PlanViews.swift`), after the balance and before the credits,
     as on Android: from KIFF's usage read, which the app reads only for `plan`, `store`,
     `billing` and `requests`. Someone who manages billing answers a raise with **Raise the
