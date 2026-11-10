@@ -17,7 +17,10 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 NEEDS = {lang: set(forms) for lang, forms in generate.PLURALS.items()}
 
 # Lines that read the same in English and another language, on purpose: by language, the keys.
-SAME_AS_ENGLISH = {}
+# The lines a language writes as English does, each read and kept on purpose: names (tafs, Coach, Card, Face ID,
+# the sample's tafs), units and lines that are only their values, and words the language shares ("Agenda", "Status").
+with open(os.path.join(HERE, "same_as_english.json"), encoding="utf-8") as f:
+    SAME_AS_ENGLISH = json.load(f)
 
 # A line that is exactly a glossary term but names a group, where the language says the term in the plural:
 # the Record's "Done" filter sits beside "Held" and "Refused", plural as tafs cloud's filters are.
@@ -114,6 +117,12 @@ class SharedWords(unittest.TestCase):
             same = [k for k, line in self.lines[lang].items()
                     if line == self.source[k] and k not in SAME_AS_ENGLISH.get(lang, ())]
             self.assertEqual(same, [], lang)
+
+    def test_every_line_kept_as_english_still_is(self):
+        # A line kept as English that is then translated, or removed, comes off same_as_english.json.
+        for lang, keys in SAME_AS_ENGLISH.items():
+            stale = [k for k in keys if self.lines[lang].get(k) != self.source.get(k)]
+            self.assertEqual(stale, [], f"{lang}: no longer the same as English")
 
     def test_a_line_that_is_a_glossary_term_is_that_term_in_every_language(self):
         terms = glossary()
