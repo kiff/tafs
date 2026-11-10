@@ -105,7 +105,7 @@ class ChatTest {
     m.loadChat(id)
     val before = m.messages(id).size
     assertFalse(m.deliverChat("x".repeat(Chat.LIMIT + 1), id))
-    assertEquals("That's longer than 2000 characters. Say it in fewer words.", m.state.value.chatErrors[id])
+    assertEquals("That's longer than 2,000 characters. Say it in fewer words.", m.state.value.chatErrors[id])
     assertEquals(before, m.messages(id).size)
     // The next one that goes clears it.
     assertTrue(m.deliverChat("hi", id))

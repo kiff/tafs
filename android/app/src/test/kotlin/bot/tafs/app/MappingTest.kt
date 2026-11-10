@@ -467,7 +467,7 @@ class MappingTest {
     val answered = line("p2").copy(answer = line("p2").answer!!.copy(you = false, by = "admin"))
     assertEquals("approved by an admin", answered.decidedLine)
     val refused = line("p2").copy(answer = line("p2").answer!!.copy(you = false, by = "billing_manager", decision = "refused"))
-    assertEquals("refused by a billing manager", refused.decidedLine)
+    assertEquals("refused by someone with the role billing manager", refused.decidedLine)
     assertEquals("someone else", line("p2").copy(answer = line("p2").answer!!.copy(you = false, by = null)).answerer)
   }
 

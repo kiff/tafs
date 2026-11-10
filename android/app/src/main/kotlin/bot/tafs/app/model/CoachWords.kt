@@ -221,10 +221,8 @@ object CoachWords {
     }
   }
 
-  fun notImproved(name: String, why: String) = Words.Coach.notImproved(possessive(name), why.trimEnd('.'))
+  fun notImproved(name: String, why: String) = Words.Coach.notImproved(name, why.trimEnd('.'))
 
-  /** "Coach's", "Refunds'": a name ending in s takes the apostrophe alone. */
-  fun possessive(name: String) = ConnectionWords.possessive(name)
 
   /** An owner's message in their own words: an answer to a card reads as what they chose, never as the contract's form. */
   fun ownerWords(text: String, components: List<ShownComponent>): String {
@@ -266,7 +264,7 @@ object CoachWords {
   fun answeredApproval(answer: String, c: SetupComponent, grantText: String?, draftLabel: String?): String {
     val what = c.title?.takeIf { it.isNotBlank() }
       ?: grantText?.takeIf { it.isNotBlank() }
-      ?: draftLabel?.takeIf { it.isNotBlank() }?.let { Words.Coach.cardOf(possessive(it)) }
+      ?: draftLabel?.takeIf { it.isNotBlank() }?.let { Words.Coach.cardOf(it) }
       ?: c.service?.let { Words.Coach.connectService(it) }
     return if (what == null) answer else "$answer · $what"
   }

@@ -64,6 +64,23 @@ class XmlWords(folder: String = "values") : Res.Source {
 
   override val locale: Locale = Locale.ROOT
 
+  /** English's list, as the platform writes it (CLDR): "a and b", "a, b, and c". */
+  override fun list(items: List<String>, language: String): String = when (items.size) {
+    0 -> ""
+    1 -> items[0]
+    2 -> "${items[0]} and ${items[1]}"
+    else -> items.dropLast(1).joinToString(", ") + ", and " + items.last()
+  }
+
+  /** English's ordinal, as the platform writes it: 1st, 2nd, 3rd, 11th, 21st. */
+  override fun ordinal(n: Long, language: String): String = when {
+    n % 100 in 11..13 -> "${n}th"
+    n % 10 == 1L -> "${n}st"
+    n % 10 == 2L -> "${n}nd"
+    n % 10 == 3L -> "${n}rd"
+    else -> "${n}th"
+  }
+
   companion object {
     /** The app's resources, from the module's folder, where Gradle runs unit tests. */
     val RES = File("src/main/res")

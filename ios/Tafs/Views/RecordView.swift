@@ -198,8 +198,17 @@ extension RecordEntry {
     /// Who answered, in words: "you", or by KIFF's role for them ("an admin").
     var answerer: String {
         if answeredByOwner { return Words.Record.Answerer.you }
-        guard let role = answer?.by?.replacingOccurrences(of: "_", with: " "), let first = role.first else { return Words.Record.Answerer.someoneElse }
-        return ("aeiou".contains(first) ? "an " : "a ") + role
+        guard let role = answer?.by, !role.isEmpty else { return Words.Record.Answerer.someoneElse }
+        switch role {
+        case "admin": return Words.People.RolePhrase.admin
+        case "approver": return Words.People.RolePhrase.approver
+        case "editor": return Words.People.RolePhrase.editor
+        case "member": return Words.People.RolePhrase.member
+        case "manager": return Words.People.RolePhrase.manager
+        case "owner": return Words.People.RolePhrase.owner
+        case "viewer": return Words.People.RolePhrase.viewer
+        default: return Words.People.RolePhrase.other(role: role.replacingOccurrences(of: "_", with: " "))
+        }
     }
 
     /// Who decided: its Card, the owner or another person (approving or refusing), or KIFF's refusal.

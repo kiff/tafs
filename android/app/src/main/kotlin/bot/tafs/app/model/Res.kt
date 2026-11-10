@@ -22,6 +22,12 @@ object Res {
 
     /** The language numbers in the words are formatted for, as Android's own `getString` does. */
     val locale: Locale
+
+    /** [items] joined as [language] lists them: "Refunds, Bills, and Save". */
+    fun list(items: List<String>, language: String): String
+
+    /** [n] as [language] writes it in order: "21st", "21.", "21e". */
+    fun ordinal(n: Long, language: String): String
   }
 
   @Volatile private var installed: Source? = null
@@ -36,6 +42,21 @@ object Res {
   }
 
   private val source: Source get() = installed ?: loaded
+
+  /**
+   * The language the lines are in, as Android resolved them (each generated folder names its own): a possessive and a count's
+   * number follow it, never the phone's setting, which may be a language tafs doesn't ship and show English lines.
+   */
+  val language: String get() = source.string(bot.tafs.app.R.string.words_language)
+
+  /** Names joined as the lines' language lists them: "Refunds and Bills", "Refunds, Bills, and Save". */
+  fun list(items: List<String>): String = source.list(items, language)
+
+  /** A number in order, as the lines' language writes it: "21st" in English, "21." in German. */
+  fun ordinal(n: Long): String = source.ordinal(n, language)
+
+  /** A count's number as the lines' language writes it: "1,000" in English, "1.000" in German. */
+  fun number(n: Int): String = java.text.NumberFormat.getIntegerInstance(Locale.forLanguageTag(language)).format(n.toLong())
 
   /** A string with no arguments, as written. */
   fun s(id: Int): String = source.string(id)

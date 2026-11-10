@@ -3253,7 +3253,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Issue %1$@'s Card"
+            "value": "Issue %2$@ Card"
           }
         }
       }
@@ -5816,7 +5816,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ Card"
+            "value": "%2$@ Card"
           }
         }
       }
@@ -6487,7 +6487,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ new version wasn't made: %2$@."
+            "value": "%3$@ new version wasn't made: %2$@."
           }
         }
       }
@@ -7383,39 +7383,6 @@
         }
       }
     },
-    "common.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "a %1$@"
-          }
-        }
-      }
-    },
-    "common.an": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "an %1$@"
-          }
-        }
-      }
-    },
-    "common.and": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ and %2$@"
-          }
-        }
-      }
-    },
     "common.and_join": {
       "extractionState": "manual",
       "localizations": {
@@ -7592,17 +7559,6 @@
         }
       }
     },
-    "common.list_and": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ and %2$@"
-          }
-        }
-      }
-    },
     "common.loading": {
       "extractionState": "manual",
       "localizations": {
@@ -7709,28 +7665,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opening…"
-          }
-        }
-      }
-    },
-    "common.possessive": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@'s"
-          }
-        }
-      }
-    },
-    "common.possessive_s": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@'"
           }
         }
       }
@@ -7895,7 +7829,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Also on %1$@ Card"
+            "value": "Also on %2$@ Card"
           }
         }
       }
@@ -8379,7 +8313,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ Card also uses these tools, so it stops too."
+            "value": "%2$@ Card also uses these tools, so it stops too."
           }
         }
       }
@@ -8467,7 +8401,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ %2$@ tools stop working."
+            "value": "%3$@ %2$@ tools stop working."
           }
         }
       }
@@ -9215,7 +9149,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kept: %1$@'s Cards use it"
+            "value": "Kept: the Cards of %1$@ use it"
           }
         }
       }
@@ -9226,7 +9160,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kept: %1$@'s Card uses it"
+            "value": "Kept: %2$@ Card uses it"
           }
         }
       }
@@ -9490,7 +9424,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@'s message goes with your words, as information. %2$@ acts on what you say, within its Card, and doesn't write back to them unless you ask."
+            "value": "%3$@ message goes with your words, as information. %2$@ acts on what you say, within its Card, and doesn't write back to them unless you ask."
           }
         }
       }
@@ -9501,7 +9435,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@'s message goes with your words, as information. It acts on what you say, within its Card, and doesn't write back to them unless you ask."
+            "value": "%2$@ message goes with your words, as information. It acts on what you say, within its Card, and doesn't write back to them unless you ask."
           }
         }
       }
@@ -10161,7 +10095,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Its address stops being %1$@'s. Messages already in its chat stay."
+            "value": "Its address stops being %2$@. Messages already in its chat stay."
           }
         }
       }
@@ -13840,13 +13774,24 @@
         }
       }
     },
-    "people.make_role": {
+    "people.make_role_manager": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make %1$@ a %2$@ of %3$@"
+            "value": "Make %1$@ a manager of %2$@"
+          }
+        }
+      }
+    },
+    "people.make_role_member": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %1$@ a member of %2$@"
           }
         }
       }
@@ -14067,6 +14012,94 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only the name changes: its people and tafs stay."
+          }
+        }
+      }
+    },
+    "people.role_phrase.admin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an admin"
+          }
+        }
+      }
+    },
+    "people.role_phrase.approver": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an approver"
+          }
+        }
+      }
+    },
+    "people.role_phrase.editor": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an editor"
+          }
+        }
+      }
+    },
+    "people.role_phrase.manager": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a manager"
+          }
+        }
+      }
+    },
+    "people.role_phrase.member": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a member"
+          }
+        }
+      }
+    },
+    "people.role_phrase.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "someone with the role %1$@"
+          }
+        }
+      }
+    },
+    "people.role_phrase.owner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an owner"
+          }
+        }
+      }
+    },
+    "people.role_phrase.viewer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a viewer"
           }
         }
       }
@@ -15507,7 +15540,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You had it act on %1$@'s message"
+            "value": "You had it act on %2$@ message"
           }
         }
       }
@@ -15529,7 +15562,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You ignored %1$@'s message"
+            "value": "You ignored %2$@ message"
           }
         }
       }
@@ -16112,7 +16145,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No new action goes through. %1$@ waiting action(s) refused."
+            "value": "No new action goes through. %1$@ waiting action refused."
           }
         }
       }
@@ -16123,7 +16156,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No new action goes through. %1$@ waiting action(s) refused."
+            "value": "No new action goes through. %1$@ waiting actions refused."
           }
         }
       }
@@ -16134,7 +16167,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You revoked %1$@'s Card"
+            "value": "You revoked %2$@ Card"
           }
         }
       }
@@ -18554,7 +18587,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Holds' deadlines, Activity, the Record and what your tafs write would use this %1$@'s time zone. Your account uses %2$@ now."
+            "value": "Holds' deadlines, Activity, the Record and what your tafs write would use this %3$@ time zone. Your account uses %2$@ now."
           }
         }
       }
@@ -18609,7 +18642,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use this %1$@'s: %2$@"
+            "value": "Use this %3$@: %2$@"
           }
         }
       }
@@ -20039,7 +20072,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@'s job"
+            "value": "%2$@ job"
           }
         }
       }
@@ -20765,7 +20798,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke %1$@'s Card?"
+            "value": "Revoke %2$@ Card?"
           }
         }
       }
@@ -21975,7 +22008,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %1$@'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve."
+            "value": "Version %2$@ Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve."
           }
         }
       }
@@ -22074,7 +22107,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %1$@'s trial Card stops at once, and this chat is deleted. %2$@ keeps working as it is."
+            "value": "Version %3$@ trial Card stops at once, and this chat is deleted. %2$@ keeps working as it is."
           }
         }
       }
@@ -22580,7 +22613,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Version %1$@'s trial Card couldn't be read. %2$@"
+            "value": "Version %3$@ trial Card couldn't be read. %2$@"
           }
         }
       }

@@ -91,8 +91,6 @@ object ConnectionWords {
   /** What planque last did, as it writes it ("Approved from tafs on Android phone"). */
   fun lastEvent(g: Grant): String? = g.events.lastOrNull()?.what?.takeIf { it.isNotBlank() }
 
-  /** A name's possessive: "Refunds'", "Invoice reminders'", "Chargebacks'"; else "Coach's". */
-  fun possessive(name: String): String = if (name.endsWith("s")) Words.Common.possessiveS(name) else Words.Common.possessive(name)
 
   /**
    * Disconnect's question, naming the one taf it ends ([taf], or none once its taf was removed), and [alsoStops], the
@@ -105,10 +103,10 @@ object ConnectionWords {
 
   /** What stops and what doesn't: this taf's connection ends, with any other taf whose Card draws on its tools; other connections to the vendor stay. */
   fun disconnectBody(g: Grant, taf: String?, alsoStops: List<String> = emptyList()): String =
-    (taf?.let { Words.Connect.Disconnect.toolsStop(possessive(it), g.vendor) } ?: Words.Connect.Disconnect.noTafUses(g.vendor)) +
+    (taf?.let { Words.Connect.Disconnect.toolsStop(it, g.vendor) } ?: Words.Connect.Disconnect.noTafUses(g.vendor)) +
       when (alsoStops.size) {
         0 -> ""
-        1 -> " " + Words.Connect.Disconnect.alsoCard(possessive(alsoStops[0]))
+        1 -> " " + Words.Connect.Disconnect.alsoCard(alsoStops[0])
         else -> " " + Words.Connect.Disconnect.alsoCards(PeopleWords.all(alsoStops))
       } +
       " " + Words.Connect.Disconnect.rest(g.vendor)

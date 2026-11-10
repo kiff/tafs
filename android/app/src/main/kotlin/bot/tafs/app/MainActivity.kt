@@ -417,7 +417,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       deleteGroup = { group -> model.changePeople(Words.People.deleteGroup(group = group.name)) { it.deleteGroup(group.id) } },
       setMember = { group, subject, role ->
         val who = model.state.value.person(subject)?.label ?: subject
-        val what = if (group.members.any { it.subject == subject }) Words.People.makeRole(who = who, role = role, group = group.name) else Words.People.addToGroup(who = who, group = group.name)
+        val what = if (group.members.any { it.subject == subject }) (if (role == "manager") Words.People.makeRoleManager(who = who, group = group.name) else Words.People.makeRoleMember(who = who, group = group.name)) else Words.People.addToGroup(who = who, group = group.name)
         model.changePeople(what) { it.setGroupMember(group.id, subject, role) }
       },
       removeMember = { group, subject ->

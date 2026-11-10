@@ -380,16 +380,8 @@ object KiffMapping {
     else -> window
   }
 
-  /** 1st, 2nd, 3rd, 11th, 21st. */
-  fun ordinal(n: Long): String {
-    if (n % 100 in 11..13) return "${n}th"
-    return when (n % 10) {
-      1L -> "${n}st"
-      2L -> "${n}nd"
-      3L -> "${n}rd"
-      else -> "${n}th"
-    }
-  }
+  /** 1st, 2nd, 3rd, 11th, 21st: as the lines' language writes a number in order. */
+  fun ordinal(n: Long): String = bot.tafs.app.model.Res.ordinal(n)
 
   /**
    * What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent: pi_…"). The
