@@ -167,6 +167,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@5", "draft-the-card@6", "improve-a-taf@1", "name-the-tools@5"]);
   });
 
+  // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
+  // answered without their skills, which the model was left to read. An account with a taf has them from the start.
+  it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@5", "draft-the-card@6", "halting@1", "name-the-tools@5", "set-up-a-taf@3", "usage-and-plans@1"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@5", "draft-the-card@6", "halting@1", "improve-a-taf@1", "name-the-tools@5"]);
+    expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
+    expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
+  });
+
   it("loads a skill by the tool whose procedure it is, and nothing for a vendor's tool or a tool with none", () => {
     // planque's and KIFF's tools never reach tafs cloud (KIFF's gateway serves them): their skills come with the start.
     expect(toolSkills("kiff_draft")).toEqual([]);

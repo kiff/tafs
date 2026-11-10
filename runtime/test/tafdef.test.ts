@@ -65,6 +65,11 @@ describe("a taf's definition on kiff/agents", () => {
     expect(SHARED_INSTRUCTIONS).toContain("a refund refused on one charge\n  is never a refusal on another.");
   });
 
+  // Eval 42788659962: a report said "six disputes" where its record, and its own list, had five submissions.
+  it("tells every taf to count a report's numbers from the calls in its record", () => {
+    expect(SHARED_INSTRUCTIONS).toContain("is a count of the calls your record shows, one for each: count\nthem, never total them in your head, and it matches the items you name.");
+  });
+
   it("names its KIFF key by reference, never the key", () => {
     expect(definition(ID, jobById("refunds")).key_ref).toBe(`kiff/${ID}`);
   });
