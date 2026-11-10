@@ -601,8 +601,8 @@ enum Words {
         }
         /// How this is counted
         static var howCounted: String { Words.line("card.how_counted") }
-        /// Issue {taf}'s Card
-        static func issuePrompt(taf: String) -> String { Words.line("card.issue_prompt", taf) }
+        /// Issue {taf|possessive} Card
+        static func issuePrompt(taf: String) -> String { Words.line("card.issue_prompt", taf, Words.possessive(taf)) }
         /// Issued by
         static var issuedBy: String { Words.line("card.issued_by") }
         /// The account
@@ -1081,8 +1081,8 @@ enum Words {
         static var backWidth: String { Words.line("coach.back_width") }
         /// Your answer wasn't sent. {why}
         static func cardAnswerNotSent(why: String) -> String { Words.line("coach.card_answer_not_sent", why) }
-        /// {owner} Card
-        static func cardOf(owner: String) -> String { Words.line("coach.card_of", owner) }
+        /// {owner|possessive} Card
+        static func cardOf(owner: String) -> String { Words.line("coach.card_of", owner, Words.possessive(owner)) }
         enum Chats {
             /// Archive
             static var archive: String { Words.line("coach.chats.archive") }
@@ -1209,8 +1209,8 @@ enum Words {
         static var notConnectable: String { Words.line("coach.not_connectable") }
         /// The sign-in at {vendor} didn't connect: the connection is {status}. Nothing was connected. Try signing in again.
         static func notConnected(vendor: String, status: String) -> String { Words.line("coach.not_connected", vendor, status) }
-        /// {owner} new version wasn't made: {why}.
-        static func notImproved(owner: String, why: String) -> String { Words.line("coach.not_improved", owner, why) }
+        /// {owner|possessive} new version wasn't made: {why}.
+        static func notImproved(owner: String, why: String) -> String { Words.line("coach.not_improved", owner, why, Words.possessive(owner)) }
         /// Not now: no sign-in at {vendor}
         static func notNoSign(vendor: String) -> String { Words.line("coach.not_no_sign", vendor) }
         /// Not now
@@ -1474,8 +1474,8 @@ enum Words {
         enum Apps {
             /// Also on the Cards of {tafs}
             static func alsoOnMany(tafs: String) -> String { Words.line("connect.apps.also_on_many", tafs) }
-            /// Also on {owner} Card
-            static func alsoOnOne(owner: String) -> String { Words.line("connect.apps.also_on_one", owner) }
+            /// Also on {owner|possessive} Card
+            static func alsoOnOne(owner: String) -> String { Words.line("connect.apps.also_on_one", owner, Words.possessive(owner)) }
             /// Clearing…
             static var clearing: String { Words.line("connect.apps.clearing") }
             /// Connect
@@ -1562,8 +1562,8 @@ enum Words {
         /// {vendor} couldn't be connected: {why}
         static func couldNotConnected(vendor: String, why: String) -> String { Words.line("connect.could_not_connected", vendor, why) }
         enum Disconnect {
-            /// {owner} Card also uses these tools, so it stops too.
-            static func alsoCard(owner: String) -> String { Words.line("connect.disconnect.also_card", owner) }
+            /// {owner|possessive} Card also uses these tools, so it stops too.
+            static func alsoCard(owner: String) -> String { Words.line("connect.disconnect.also_card", owner, Words.possessive(owner)) }
             /// The Cards of {names} also use these tools, so they stop too.
             static func alsoCards(names: String) -> String { Words.line("connect.disconnect.also_cards", names) }
             /// {names} stop too.
@@ -1576,8 +1576,8 @@ enum Words {
             static func title(vendor: String) -> String { Words.line("connect.disconnect.title", vendor) }
             /// Disconnect {vendor} from {taf}?
             static func titleFrom(vendor: String, taf: String) -> String { Words.line("connect.disconnect.title_from", vendor, taf) }
-            /// {owner} {vendor} tools stop working.
-            static func toolsStop(owner: String, vendor: String) -> String { Words.line("connect.disconnect.tools_stop", owner, vendor) }
+            /// {owner|possessive} {vendor} tools stop working.
+            static func toolsStop(owner: String, vendor: String) -> String { Words.line("connect.disconnect.tools_stop", owner, vendor, Words.possessive(owner)) }
         }
         /// Disconnect {app}?
         static func disconnectAppQuestion(app: String) -> String { Words.line("connect.disconnect_app_question", app) }
@@ -1716,10 +1716,10 @@ enum Words {
         /// {vendor} signs in through its connection provider. To sign in again, disconnect it and connect it again.
         static func throughProvider(vendor: String) -> String { Words.line("connect.through_provider", vendor) }
         enum UsedBy {
-            /// Kept: {names}'s Cards use it
+            /// Kept: the Cards of {names} use it
             static func many(names: String) -> String { Words.line("connect.used_by.many", names) }
-            /// Kept: {name}'s Card uses it
-            static func one(name: String) -> String { Words.line("connect.used_by.one", name) }
+            /// Kept: {name|possessive} Card uses it
+            static func one(name: String) -> String { Words.line("connect.used_by.one", name, Words.possessive(name)) }
         }
         /// Which taf is this for?
         static var whichTaf: String { Words.line("connect.which_taf") }
@@ -1770,10 +1770,10 @@ enum Words {
         enum DoIt {
             /// Do what it asks, within your Card.
             static var `default`: String { Words.line("door.do_it.default") }
-            /// {who}'s message goes with your words, as information. {taf} acts on what you say, within its Card, and doesn't write back to them unless you ask.
-            static func intro(who: String, taf: String) -> String { Words.line("door.do_it.intro", who, taf) }
-            /// {who}'s message goes with your words, as information. It acts on what you say, within its Card, and doesn't write back to them unless you ask.
-            static func introIt(who: String) -> String { Words.line("door.do_it.intro_it", who) }
+            /// {who|possessive} message goes with your words, as information. {taf} acts on what you say, within its Card, and doesn't write back to them unless you ask.
+            static func intro(who: String, taf: String) -> String { Words.line("door.do_it.intro", who, taf, Words.possessive(who)) }
+            /// {who|possessive} message goes with your words, as information. It acts on what you say, within its Card, and doesn't write back to them unless you ask.
+            static func introIt(who: String) -> String { Words.line("door.do_it.intro_it", who, Words.possessive(who)) }
             /// Tell {taf} what to do
             static func title(taf: String) -> String { Words.line("door.do_it.title", taf) }
             /// Tell your taf what to do
@@ -1893,8 +1893,8 @@ enum Words {
         static var refundRequest: String { Words.line("door.refund_request") }
         /// Remove
         static var remove: String { Words.line("door.remove") }
-        /// Its address stops being {taf}'s. Messages already in its chat stay.
-        static func removeBody(taf: String) -> String { Words.line("door.remove_body", taf) }
+        /// Its address stops being {taf|possessive}. Messages already in its chat stay.
+        static func removeBody(taf: String) -> String { Words.line("door.remove_body", taf, Words.possessive(taf)) }
         /// Remove door
         static var removeDoor: String { Words.line("door.remove_door") }
         /// Remove the {door} door?
@@ -2948,12 +2948,12 @@ enum Words {
             static var haltedAll: String { Words.line("record.event.halted_all") }
             /// Nothing of it runs until you resume it
             static var haltedDetail: String { Words.line("record.event.halted_detail") }
-            /// You had it act on {who}'s message
-            static func knockDone(who: String) -> String { Words.line("record.event.knock_done", who) }
+            /// You had it act on {who|possessive} message
+            static func knockDone(who: String) -> String { Words.line("record.event.knock_done", who, Words.possessive(who)) }
             /// By {door}, in your words
             static func knockDoneDetail(door: String) -> String { Words.line("record.event.knock_done_detail", door) }
-            /// You ignored {who}'s message
-            static func knockIgnored(who: String) -> String { Words.line("record.event.knock_ignored", who) }
+            /// You ignored {who|possessive} message
+            static func knockIgnored(who: String) -> String { Words.line("record.event.knock_ignored", who, Words.possessive(who)) }
             /// By {door}: nothing was done
             static func knockIgnoredDetail(door: String) -> String { Words.line("record.event.knock_ignored_detail", door) }
             /// {who} wrote by {door}
@@ -3068,8 +3068,8 @@ enum Words {
             static var noNewAction: String { Words.line("record.revoked.no_new_action") }
             /// No new action goes through. {count} waiting actions refused.
             static func refusedWaiting(count: Int) -> String { Words.count("record.revoked.refused_waiting", count) }
-            /// You revoked {taf}'s Card
-            static func title(taf: String) -> String { Words.line("record.revoked.title", taf) }
+            /// You revoked {taf|possessive} Card
+            static func title(taf: String) -> String { Words.line("record.revoked.title", taf, Words.possessive(taf)) }
         }
         /// {allowed}, and sent: waiting for the tool's answer
         static func sentWaiting(allowed: String) -> String { Words.line("record.sent_waiting", allowed) }
@@ -3562,8 +3562,8 @@ enum Words {
         enum TimeZoneOffer {
             /// Holds' deadlines, Activity, the Record and what your tafs write would use this phone's time zone. Your account uses {current} now.
             static func text(current: String) -> String { Words.line("settings.time_zone_offer.text", current) }
-            /// Holds' deadlines, Activity, the Record and what your tafs write would use this {device}'s time zone. Your account uses {zone} now.
-            static func textDevice(device: String, zone: String) -> String { Words.line("settings.time_zone_offer.text_device", device, zone) }
+            /// Holds' deadlines, Activity, the Record and what your tafs write would use this {device|possessive} time zone. Your account uses {zone} now.
+            static func textDevice(device: String, zone: String) -> String { Words.line("settings.time_zone_offer.text_device", device, zone, Words.possessive(device)) }
             /// Use {zone} for times in tafs?
             static func title(zone: String) -> String { Words.line("settings.time_zone_offer.title", zone) }
             /// Use {zone}
@@ -3573,8 +3573,8 @@ enum Words {
         static var timeZoneTitle: String { Words.line("settings.time_zone_title") }
         /// Account
         static var title: String { Words.line("settings.title") }
-        /// Use this {device}'s: {identifier}
-        static func useDeviceZone(device: String, identifier: String) -> String { Words.line("settings.use_device_zone", device, identifier) }
+        /// Use this {device|possessive}: {identifier}
+        static func useDeviceZone(device: String, identifier: String) -> String { Words.line("settings.use_device_zone", device, identifier, Words.possessive(device)) }
         /// Use this phone's: {zone}
         static func usePhoneZone(zone: String) -> String { Words.line("settings.use_phone_zone", zone) }
         /// Version
@@ -3853,8 +3853,8 @@ enum Words {
         }
         /// Its work
         static var itsWork: String { Words.line("taf.its_work") }
-        /// {taf}'s job
-        static func jobLabel(taf: String) -> String { Words.line("taf.job_label", taf) }
+        /// {taf|possessive} job
+        static func jobLabel(taf: String) -> String { Words.line("taf.job_label", taf, Words.possessive(taf)) }
         /// Keys kept sealed
         static var keysKeptSealed: String { Words.line("taf.keys_kept_sealed") }
         /// Last run
@@ -3989,8 +3989,8 @@ enum Words {
         static var revokeAndStop: String { Words.line("taf.revoke_and_stop") }
         /// No new action goes through. Anything already done stays done.
         static var revokeBody: String { Words.line("taf.revoke_body") }
-        /// Revoke {taf}'s Card?
-        static func revokeTitle(taf: String) -> String { Words.line("taf.revoke_title", taf) }
+        /// Revoke {taf|possessive} Card?
+        static func revokeTitle(taf: String) -> String { Words.line("taf.revoke_title", taf, Words.possessive(taf)) }
         /// The run didn't start. {why}
         static func runNotStarted(why: String) -> String { Words.line("taf.run_not_started", why) }
         /// Run now
@@ -4225,8 +4225,8 @@ enum Words {
             /// While it switches, your taf doesn't run. Confirming with {biometry} once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live.
             static func removesBiometry(biometry: String) -> String { Words.line("version.card_note.removes_biometry", biometry) }
         }
-        /// Version {n}'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve.
-        static func cardOutOfDate(n: String) -> String { Words.line("version.card_out_of_date", n) }
+        /// Version {n|possessive} Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve.
+        static func cardOutOfDate(n: String) -> String { Words.line("version.card_out_of_date", n, Words.possessive(n)) }
         /// This version's Card couldn't be read.
         static var cardUnreadable: String { Words.line("version.card_unreadable") }
         /// Changes a Card
@@ -4243,8 +4243,8 @@ enum Words {
         static var firstOnly: String { Words.line("version.first_only") }
         /// Go back
         static var goBack: String { Words.line("version.go_back") }
-        /// Version {version}'s trial Card stops at once, and this chat is deleted. {taf} keeps working as it is.
-        static func goBackBody(version: String, taf: String) -> String { Words.line("version.go_back_body", version, taf) }
+        /// Version {version|possessive} trial Card stops at once, and this chat is deleted. {taf} keeps working as it is.
+        static func goBackBody(version: String, taf: String) -> String { Words.line("version.go_back_body", version, taf, Words.possessive(version)) }
         /// Go back to the live version?
         static var goBackTitle: String { Words.line("version.go_back_title") }
         enum Guide {
@@ -4342,8 +4342,8 @@ enum Words {
             static var badge: String { Words.line("version.trial.badge") }
             /// Version {n} can't be tried now. {why}
             static func cantTry(n: String, why: String) -> String { Words.line("version.trial.cant_try", n, why) }
-            /// Version {n}'s trial Card couldn't be read. {why}
-            static func cardNotRead(n: String, why: String) -> String { Words.line("version.trial.card_not_read", n, why) }
+            /// Version {n|possessive} trial Card couldn't be read. {why}
+            static func cardNotRead(n: String, why: String) -> String { Words.line("version.trial.card_not_read", n, why, Words.possessive(n)) }
             /// What you're asked to approve changed since it was shown. Read it again, then start.
             static var changed: String { Words.line("version.trial.changed") }
             /// {taf} · v{n}

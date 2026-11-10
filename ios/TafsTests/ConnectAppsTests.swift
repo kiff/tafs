@@ -230,7 +230,7 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertEqual(DisconnectWords.title("Stripe", taf: "Refunds", alsoStops: ["Chargebacks"]), "Disconnect Stripe from Refunds? Chargebacks stops too.")
         let shared = DisconnectWords.message("Stripe", taf: "Refunds", alsoStops: ["Chargebacks"])
         XCTAssertTrue(shared.contains("Chargebacks' Card also uses these tools, so it stops too."), shared)
-        XCTAssertEqual(DisconnectWords.possessive("Coach"), "Coach's")
+        XCTAssertEqual([Words.possessive("Coach"), Words.possessive("Refunds")], ["Coach's", "Refunds'"], "by the lines' language's rule")
         XCTAssertEqual(DisconnectWords.footer, "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay.")
     }
 }

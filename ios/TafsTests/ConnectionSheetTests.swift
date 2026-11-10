@@ -186,8 +186,8 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertEqual(ConnectionGroupWords.cleared(done: 2, kept: 0, keptFor: [], left: 1), "Cleared 2. 1 couldn't be cleared. Try again.")
         XCTAssertEqual(ConnectionGroupWords.cleared(done: 0, kept: 2, keptFor: ["Refunds", "Bills", "Refunds", " "], left: 0), "Kept 2 for Refunds and Bills, whose Cards use them.")
         XCTAssertEqual(ConnectionGroupWords.keptLine(1, []), "Kept 1 for another taf, whose Card uses it.")
-        XCTAssertEqual(ConnectionGroupWords.usedBy(["Chargebacks"]), "Kept: Chargebacks's Card uses it")
-        XCTAssertEqual(ConnectionGroupWords.usedBy(["Refunds", "Bills", "Save"]), "Kept: Refunds, Bills, and Save's Cards use it", "joined as the language joins a list")
+        XCTAssertEqual(ConnectionGroupWords.usedBy(["Chargebacks"]), "Kept: Chargebacks' Card uses it", "the possessive by the language's rule")
+        XCTAssertEqual(ConnectionGroupWords.usedBy(["Refunds", "Bills", "Save"]), "Kept: the Cards of Refunds, Bills, and Save use it", "joined as the language joins a list")
         XCTAssertNil(ConnectionGroupWords.usedBy([]))
         XCTAssertNil(ConnectionGroupWords.usedBy([""]))
     }

@@ -5617,7 +5617,7 @@ final class AppModel: ObservableObject {
     func alsoOnCards(_ grant: PlanqueClient.Grant) -> String? {
         let names = alsoStops(grant)
         guard !names.isEmpty else { return nil }
-        return names.count == 1 ? Words.Connect.Apps.alsoOnOne(owner: DisconnectWords.possessive(names[0])) : Words.Connect.Apps.alsoOnMany(tafs: Words.list(names))
+        return names.count == 1 ? Words.Connect.Apps.alsoOnOne(owner: names[0]) : Words.Connect.Apps.alsoOnMany(tafs: Words.list(names))
     }
 
     /// The other tafs whose Card draws on a connection's tools: disconnecting it stops them too.

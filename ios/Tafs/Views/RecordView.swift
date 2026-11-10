@@ -202,6 +202,7 @@ extension RecordEntry {
         switch role {
         case "admin": return Words.People.RolePhrase.admin
         case "approver": return Words.People.RolePhrase.approver
+        case "editor": return Words.People.RolePhrase.editor
         case "member": return Words.People.RolePhrase.member
         case "manager": return Words.People.RolePhrase.manager
         case "owner": return Words.People.RolePhrase.owner

@@ -330,7 +330,7 @@
     <string name="card_hero_use_unavailable">%1$s · use unavailable</string>
     <string name="card_hero_use_unavailable_note">%1$s · use unavailable%2$s</string>
     <string name="card_how_counted">How this is counted</string>
-    <string name="card_issue_prompt">Issue %1$s\'s Card</string>
+    <string name="card_issue_prompt">Issue %2$s Card</string>
     <string name="card_issued_by">Issued by</string>
     <string name="card_issued_by_account">The account</string>
     <string name="card_issued_by_named">Issued by %1$s</string>
@@ -587,7 +587,7 @@
     <string name="coach_away">While you were away</string>
     <string name="coach_back_width">Back to its width</string>
     <string name="coach_card_answer_not_sent">Your answer wasn\'t sent. %1$s</string>
-    <string name="coach_card_of">%1$s Card</string>
+    <string name="coach_card_of">%2$s Card</string>
     <string name="coach_chats_archive">Archive</string>
     <string name="coach_chats_archive_body">It leaves this list on all your devices. You\'ll find it under Archived, where you can open it or put it back.</string>
     <string name="coach_chats_archive_title">Archive this conversation?</string>
@@ -648,7 +648,7 @@
     <string name="coach_not_archived_try_again">Not archived. Try again.</string>
     <string name="coach_not_connectable">Connecting tools isn\'t set up for this account from this phone. Open Coach to start it.</string>
     <string name="coach_not_connected">The sign-in at %1$s didn\'t connect: the connection is %2$s. Nothing was connected. Try signing in again.</string>
-    <string name="coach_not_improved">%1$s new version wasn\'t made: %2$s.</string>
+    <string name="coach_not_improved">%3$s new version wasn\'t made: %2$s.</string>
     <string name="coach_not_no_sign">Not now: no sign-in at %1$s</string>
     <string name="coach_not_now">Not now</string>
     <string name="coach_not_put_back_try_again">Not put back. Try again.</string>
@@ -770,7 +770,7 @@
     <string name="connect_approve_not_read">Couldn\'t read what to approve. %1$s</string>
     <string name="connect_approve_title">Approve this connection</string>
     <string name="connect_apps_also_on_many">Also on the Cards of %1$s</string>
-    <string name="connect_apps_also_on_one">Also on %1$s Card</string>
+    <string name="connect_apps_also_on_one">Also on %2$s Card</string>
     <string name="connect_apps_clearing">Clearing…</string>
     <string name="connect_apps_connect">Connect</string>
     <string name="connect_apps_connected">Connected ✓</string>
@@ -820,7 +820,7 @@
     <string name="connect_connections_disconnected">" Its connections are disconnected."</string>
     <string name="connect_could_not_cleared_try_again">%1$s couldn\'t be cleared. Try again.</string>
     <string name="connect_could_not_connected">%1$s couldn\'t be connected: %2$s</string>
-    <string name="connect_disconnect_also_card">%1$s Card also uses these tools, so it stops too.</string>
+    <string name="connect_disconnect_also_card">%2$s Card also uses these tools, so it stops too.</string>
     <string name="connect_disconnect_also_cards">The Cards of %1$s also use these tools, so they stop too.</string>
     <plurals name="connect_disconnect_also_stops">
         <item quantity="one">%2$s stops too.</item>
@@ -830,7 +830,7 @@
     <string name="connect_disconnect_rest">Other connections to %1$s stay connected. If no other connection uses this sign-in, it\'s revoked at %1$s. Connecting again asks you to approve and sign in again.</string>
     <string name="connect_disconnect_title">Disconnect %1$s?</string>
     <string name="connect_disconnect_title_from">Disconnect %1$s from %2$s?</string>
-    <string name="connect_disconnect_tools_stop">%1$s %2$s tools stop working.</string>
+    <string name="connect_disconnect_tools_stop">%3$s %2$s tools stop working.</string>
     <string name="connect_disconnect_app_question">Disconnect %1$s?</string>
     <string name="connect_disconnect_body">Its actions stop working for this taf.</string>
     <string name="connect_disconnect_button">Disconnect</string>
@@ -904,8 +904,8 @@
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud named no connection to approve</string>
     <string name="connect_the_vendors_page">the vendor\'s page</string>
     <string name="connect_through_provider">%1$s signs in through its connection provider. To sign in again, disconnect it and connect it again.</string>
-    <string name="connect_used_by_many">Kept: %1$s\'s Cards use it</string>
-    <string name="connect_used_by_one">Kept: %1$s\'s Card uses it</string>
+    <string name="connect_used_by_many">Kept: the Cards of %1$s use it</string>
+    <string name="connect_used_by_one">Kept: %2$s Card uses it</string>
     <string name="connect_which_taf">Which taf is this for?</string>
     <string name="connect_words_another_connection_than_one">These words are for another connection than the one shown. Nothing can be approved.</string>
     <string name="connect_words_mismatch">KIFF\'s words for this connection don\'t check out (%1$s). Nothing was approved.</string>
@@ -935,8 +935,8 @@
     <string name="door_dial_position_closed">%1$s door, closed, %2$s of %3$s</string>
     <string name="door_dial_position_open">%1$s door, open, %2$s of %3$s</string>
     <string name="door_do_it_default">Do what it asks, within your Card.</string>
-    <string name="door_do_it_intro">%1$s\'s message goes with your words, as information. %2$s acts on what you say, within its Card, and doesn\'t write back to them unless you ask.</string>
-    <string name="door_do_it_intro_it">%1$s\'s message goes with your words, as information. It acts on what you say, within its Card, and doesn\'t write back to them unless you ask.</string>
+    <string name="door_do_it_intro">%3$s message goes with your words, as information. %2$s acts on what you say, within its Card, and doesn\'t write back to them unless you ask.</string>
+    <string name="door_do_it_intro_it">%2$s message goes with your words, as information. It acts on what you say, within its Card, and doesn\'t write back to them unless you ask.</string>
     <string name="door_do_it_title">Tell %1$s what to do</string>
     <string name="door_do_it_title_your_taf">Tell your taf what to do</string>
     <string name="door_do_it_button">Do it</string>
@@ -1002,7 +1002,7 @@
     <string name="door_reading_channels">Reading its channels…</string>
     <string name="door_refund_request">Refund request</string>
     <string name="door_remove">Remove</string>
-    <string name="door_remove_body">Its address stops being %1$s\'s. Messages already in its chat stay.</string>
+    <string name="door_remove_body">Its address stops being %2$s. Messages already in its chat stay.</string>
     <string name="door_remove_door">Remove door</string>
     <string name="door_remove_title">Remove the %1$s door?</string>
     <string name="door_replies_only">Replies go only to who wrote. Anything else the taf does still goes through KIFF.</string>
@@ -1509,9 +1509,9 @@
     <string name="record_event_halted">Halted</string>
     <string name="record_event_halted_all">Halted with all your tafs</string>
     <string name="record_event_halted_detail">Nothing of it runs until you resume it</string>
-    <string name="record_event_knock_done">You had it act on %1$s\'s message</string>
+    <string name="record_event_knock_done">You had it act on %2$s message</string>
     <string name="record_event_knock_done_detail">By %1$s, in your words</string>
-    <string name="record_event_knock_ignored">You ignored %1$s\'s message</string>
+    <string name="record_event_knock_ignored">You ignored %2$s message</string>
     <string name="record_event_knock_ignored_detail">By %1$s: nothing was done</string>
     <string name="record_event_knocked">%1$s wrote by %2$s</string>
     <string name="record_event_knocked_detail">Not paired, so nothing was done</string>
@@ -1570,7 +1570,7 @@
         <item quantity="one">No new action goes through. %1$s waiting action refused.</item>
         <item quantity="other">No new action goes through. %1$s waiting actions refused.</item>
     </plurals>
-    <string name="record_revoked_title">You revoked %1$s\'s Card</string>
+    <string name="record_revoked_title">You revoked %2$s Card</string>
     <string name="record_sent_waiting">%1$s, and sent: waiting for the tool\'s answer</string>
     <string name="record_show">Show</string>
     <string name="record_shows_receipt">Shows the receipt</string>
@@ -1792,12 +1792,12 @@
     <string name="settings_time_zone_prompt">Set your account\'s time zone to %1$s</string>
     <string name="settings_time_zone_uses_this">Holds\' deadlines, Activity, the Record and what your tafs write use this time zone.</string>
     <string name="settings_time_zone_offer_text">Holds\' deadlines, Activity, the Record and what your tafs write would use this phone\'s time zone. Your account uses %1$s now.</string>
-    <string name="settings_time_zone_offer_text_device">Holds\' deadlines, Activity, the Record and what your tafs write would use this %1$s\'s time zone. Your account uses %2$s now.</string>
+    <string name="settings_time_zone_offer_text_device">Holds\' deadlines, Activity, the Record and what your tafs write would use this %3$s time zone. Your account uses %2$s now.</string>
     <string name="settings_time_zone_offer_title">Use %1$s for times in tafs?</string>
     <string name="settings_time_zone_offer_use">Use %1$s</string>
     <string name="settings_time_zone_title">Time zone</string>
     <string name="settings_title">Account</string>
-    <string name="settings_use_device_zone">Use this %1$s\'s: %2$s</string>
+    <string name="settings_use_device_zone">Use this %3$s: %2$s</string>
     <string name="settings_use_phone_zone">Use this phone\'s: %1$s</string>
     <string name="settings_version">Version</string>
     <string name="settings_your_account">Your account</string>
@@ -1927,7 +1927,7 @@
     <string name="taf_halt_title_all">Halt all</string>
     <string name="taf_halt_who_holds">Who holds the halt</string>
     <string name="taf_its_work">Its work</string>
-    <string name="taf_job_label">%1$s\'s job</string>
+    <string name="taf_job_label">%2$s job</string>
     <string name="taf_keys_kept_sealed">Keys kept sealed</string>
     <string name="taf_last_run">Last run</string>
     <string name="taf_memory_empty">Nothing yet. It writes down what it learns about how you like the job done.</string>
@@ -1997,7 +1997,7 @@
     <string name="taf_revoke">Revoke</string>
     <string name="taf_revoke_and_stop">Revoke and stop</string>
     <string name="taf_revoke_body">No new action goes through. Anything already done stays done.</string>
-    <string name="taf_revoke_title">Revoke %1$s\'s Card?</string>
+    <string name="taf_revoke_title">Revoke %2$s Card?</string>
     <string name="taf_run_not_started">The run didn\'t start. %1$s</string>
     <string name="taf_run_now">Run now</string>
     <string name="taf_runs">Runs</string>
@@ -2113,7 +2113,7 @@
     <string name="version_card_note_issues_biometry">While it switches, your taf doesn\'t run. Confirming with %1$s once issues these Cards in KIFF, then this version goes live.</string>
     <string name="version_card_note_removes">While it switches, your taf doesn\'t run. Confirming once issues these Cards in KIFF and removes the ones this version doesn\'t have, then this version goes live.</string>
     <string name="version_card_note_removes_biometry">While it switches, your taf doesn\'t run. Confirming with %1$s once issues these Cards in KIFF and removes the ones this version doesn\'t have, then this version goes live.</string>
-    <string name="version_card_out_of_date">Version %1$s\'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve.</string>
+    <string name="version_card_out_of_date">Version %2$s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve.</string>
     <string name="version_card_unreadable">This version\'s Card couldn\'t be read.</string>
     <string name="version_changes_card">Changes a Card</string>
     <string name="version_changes_row">Changes to how it runs</string>
@@ -2122,7 +2122,7 @@
     <string name="version_finish">Finish</string>
     <string name="version_first_only">One version so far. When you improve it, each change is kept here.</string>
     <string name="version_go_back">Go back</string>
-    <string name="version_go_back_body">Version %1$s\'s trial Card stops at once, and this chat is deleted. %2$s keeps working as it is.</string>
+    <string name="version_go_back_body">Version %3$s trial Card stops at once, and this chat is deleted. %2$s keeps working as it is.</string>
     <string name="version_go_back_title">Go back to the live version?</string>
     <string name="version_guide_give_task">Give it a task that uses the change, as you would the live %1$s.</string>
     <string name="version_guide_install_or_back">Install makes it the live version; Go back ends the trial.</string>
@@ -2168,7 +2168,7 @@
     <string name="version_title">Versions</string>
     <string name="version_trial_badge">Trial</string>
     <string name="version_trial_cant_try">Version %1$s can\'t be tried now. %2$s</string>
-    <string name="version_trial_card_not_read">Version %1$s\'s trial Card couldn\'t be read. %2$s</string>
+    <string name="version_trial_card_not_read">Version %3$s trial Card couldn\'t be read. %2$s</string>
     <string name="version_trial_changed">What you\'re asked to approve changed since it was shown. Read it again, then start.</string>
     <string name="version_trial_chat_name">%1$s · v%2$s</string>
     <string name="version_trial_ends_if_unused">ends %1$s if unused</string>

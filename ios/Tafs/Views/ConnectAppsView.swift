@@ -127,8 +127,6 @@ enum ConnectionFixWords {
 enum DisconnectWords {
     static let footer = Words.Connect.Apps.disconnectWhy
 
-    /// A name's possessive: "Refunds'", "Chargebacks'"; else "Coach's".
-    static func possessive(_ name: String) -> String { name.hasSuffix("s") ? "\(name)'" : "\(name)'s" }
 
     /// The question, naming the one taf it ends and `alsoStops`, the other tafs whose Card
     /// draws on its tools; the Face ID prompt asks the same.
@@ -142,10 +140,10 @@ enum DisconnectWords {
         let others: String
         switch alsoStops.count {
         case 0: others = ""
-        case 1: others = " " + Words.Connect.Disconnect.alsoCard(owner: possessive(alsoStops[0]))
+        case 1: others = " " + Words.Connect.Disconnect.alsoCard(owner: alsoStops[0])
         default: others = " " + Words.Connect.Disconnect.alsoCards(names: Words.list(alsoStops))
         }
-        return (taf.map { Words.Connect.Disconnect.toolsStop(owner: "\(possessive($0))", vendor: "\(vendor)") } ?? Words.Connect.Disconnect.noTafUses(vendor: "\(vendor)"))
+        return (taf.map { Words.Connect.Disconnect.toolsStop(owner: $0, vendor: vendor) } ?? Words.Connect.Disconnect.noTafUses(vendor: "\(vendor)"))
             + others
             + Words.Connect.otherConnectionsStayConnectedNo(vendor: "\(vendor)", vendor2: "\(vendor)")
             + Words.Connect.connectingAgainAsksYouApprove
