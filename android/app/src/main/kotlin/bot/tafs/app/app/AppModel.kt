@@ -1122,6 +1122,8 @@ class AppModel(
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
       nameRecordLines(generation)
+      // An account with no taf: Home lists the recipes, when tafs cloud says so (docs/android-app.md).
+      if (_state.value.tafs.isEmpty()) loadRecipes()
     } catch (e: CancellationException) {
       cancelled = true
       throw e
@@ -1594,6 +1596,17 @@ class AppModel(
         chatErrors = s.chatErrors - COACH_CHAT,
       )
     }
+  }
+
+  /**
+   * A recipe handed to Coach from Home: a new conversation with the recipe's words in the message box, for the person to edit
+   * and send, as a recipe tap in Coach does. Nothing is sent.
+   */
+  fun handRecipeToCoach(recipe: bot.tafs.app.kiff.Recipe) {
+    if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach) return
+    newCoachChat()
+    setDraft(COACH_CHAT, recipe.say)
+    _state.update { it.copy(coachRequested = true) }
   }
 
   /** The conversation on screen is left: this phone stops following it, and work it accepted goes on at tafs cloud. */

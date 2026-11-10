@@ -27,9 +27,9 @@ class RecipesTest {
       """{"id":"follow-up-new-leads","title":"Follow up new leads","category":"customers","line":"Writes back to new leads the same day.",""" +
       """"say":"Follow up every new lead within a day.","connections":[["hubspot"]],"card":{"allows":[],"holds":[],"never":[]}}],"filtered":true}"""
 
-  private fun reads() {
+  private fun reads(home: String = """{"tafs":[],"others":[],"removing":[]}""") {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["members.manage","cards.manage","holds.answer"]}""")
-    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/home", 200, home)
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
@@ -41,6 +41,68 @@ class RecipesTest {
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
     return testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false).also { it.restore() }
+  }
+
+  // MARK: Home with no taf (Android 43)
+
+  private val forHome =
+    """{"categories":[{"id":"money","title":"Dinero"}],""" +
+      """"recipes":[{"id":"refunds-within-a-limit","title":"Reembolsos dentro de un límite","category":"money","line":"Reembolsa lo que cabe en el límite.",""" +
+      """"say":"Reembolsa los pedidos de menos de 50 €.","headline":"Ningún reembolso espera a mañana.","today":"Un reembolso que espera puede acabar en un contracargo.",""" +
+      """"card":{"allows":["Reembolsa hasta 50 €"],"holds":["Más de 50 €"],"never":["Reembolsar dos veces"]}}],""" +
+      """"filtered":true,"shown":true,"home":{"shown":true,"words":"Elige un trabajo para tu primer taf."},""" +
+      """"labels":{"allows":"Lo hace solo","holds":"Te pregunta antes","never":"Nunca lo hace","hand":"Pásalo a Coach"}}"""
+
+  @Test fun homeReadsTheRecipesWhenTheListHasNoTafAndKeepsEveryWordAsTafsCloudSaysIt() = runTest {
+    reads()
+    transport.answer("GET /v1/recipes", 200, forHome)
+    val m = model()
+    m.refresh()
+    val r = m.state.value.recipes!!
+    assertEquals(true, r.home?.shown)
+    assertEquals("Elige un trabajo para tu primer taf.", r.home?.words)
+    assertEquals("Pásalo a Coach", r.labels?.hand)
+    val recipe = r.recipes.single()
+    assertEquals("Ningún reembolso espera a mañana.", recipe.headline)
+    assertEquals("Un reembolso que espera puede acabar en un contracargo.", recipe.today)
+    assertEquals(listOf("Reembolsa hasta 50 €"), recipe.card.allows)
+    assertEquals(listOf("Más de 50 €"), recipe.card.holds)
+    assertEquals(listOf("Reembolsar dos veces"), recipe.card.never)
+  }
+
+  @Test fun anAccountWithATafDoesntReadTheRecipesForHome() = runTest {
+    reads(home = """{"tafs":[{"id":"t1","name":"Refunds","job":"refunds","kiff_agent":"rae","status":"active","color":0,"state":"running","waiting":0}],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/recipes", 200, forHome)
+    val m = model()
+    m.refresh()
+    assertEquals("the list has a taf", 1, m.state.value.tafs.size)
+    assertTrue(transport.requestsTo("GET /v1/recipes").isEmpty())
+  }
+
+  @Test fun aTafsCloudFromBeforeHomesLineLeavesHomeAsItWas() = runTest {
+    reads()
+    transport.answer("GET /v1/recipes", 200, recipes)
+    val m = model()
+    m.refresh()
+    val r = m.state.value.recipes!!
+    assertNull("no home: Home draws its own empty line, as before", r.home)
+    assertNull(r.labels)
+    assertEquals("", r.recipes.first().headline)
+  }
+
+  @Test fun handingARecipeToCoachOpensANewConversationWithItsWordsAndSendsNothing() = runTest {
+    reads()
+    transport.answer("GET /v1/recipes", 200, forHome)
+    val m = model()
+    m.refresh()
+    val recipe = m.state.value.recipes!!.recipes.single()
+    m.handRecipeToCoach(recipe)
+    val s = m.state.value
+    assertEquals("Reembolsa los pedidos de menos de 50 €.", s.drafts[COACH_CHAT])
+    assertTrue(s.coachRequested)
+    assertTrue("a new conversation", s.coachFresh)
+    assertNull(s.coachImproving)
+    assertTrue("nothing sent", transport.requestsTo("POST /v1/setup/messages").isEmpty())
   }
 
   @Test fun coachReadsTheRecipesByCategoryInTafsCloudsOrder() = runTest {

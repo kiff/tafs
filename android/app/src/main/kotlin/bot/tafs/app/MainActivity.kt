@@ -384,6 +384,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var haltOpen by rememberSaveable { mutableStateOf(false) }
   var haltTaf by rememberSaveable { mutableStateOf<String?>(null) }
   var usageOpen by rememberSaveable { mutableStateOf(false) }
+  // A recipe's sheet, opened from Home with no taf.
+  var recipeOpen by rememberSaveable { mutableStateOf<String?>(null) }
   var versionsTaf by rememberSaveable { mutableStateOf<String?>(null) }
   val versionActions = remember(model) {
     VersionActions(
@@ -626,6 +628,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               // A halted taf's chip: the account's Halt when the account is halted (that's what resumes it), else the taf's.
               onHalted = { id -> haltTaf = if (!state.haltOf(null).running) null else id; haltOpen = true },
               onUsage = { usageOpen = true },
+              onRecipe = { recipeOpen = it.id },
             )
           }
           val detail: @Composable (String) -> Unit = { id ->
@@ -795,6 +798,13 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (haltOpen) HaltSheet(haltTaf, state, account, onClose = { haltOpen = false })
     versionsTaf?.let { taf ->
       VersionsSheet(taf, state, versionActions, onOpenTrial = { versionsTaf = null; trialTaf = taf; tab = Tab.Tafs; openTaf = taf }, onClose = { versionsTaf = null })
+    }
+    recipeOpen?.let { id ->
+      val recipes = state.recipes
+      val recipe = recipes?.recipes?.firstOrNull { it.id == id }
+      val labels = recipes?.labels
+      // A recipe no longer listed (the account has a taf now, or the list was read again) shows no sheet.
+      if (recipe != null && labels != null) bot.tafs.app.views.RecipeSheet(recipe, labels, canHand = state.mayUseCoach, onHand = { recipeOpen = null; model.handRecipeToCoach(recipe) }, onClose = { recipeOpen = null })
     }
     if (usageOpen) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
     // A taf's runs: over Plan & usage from its Credits row, or over its page from its Usage row.
