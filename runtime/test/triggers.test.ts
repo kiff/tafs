@@ -136,7 +136,7 @@ describe("a taf that checks its work first", () => {
     expect(() => checkOf(check, ["send_message_k3f9"])).toThrow("check.tool names list_requests_k3f9, which isn't among the taf's tools (send_message_k3f9)");
     expect(() => checkOf(check, [])).toThrow("(none named)");
     for (const bad of [{ ...check, cursor: " " }, { ...check, items: ".data" }, { ...check, items: undefined }, { ...check, arguments: null }, { ...check, arguments: "x" },
-      { ...check, arguments: { q: "x".repeat(2_048) } }, { ...check, first: "old" }, { ...check, tool: "" }, { ...check, id: 3 }, null, []]) {
+      { ...check, arguments: { q: "x".repeat(2_048) } }, { ...check, arguments: { q: "é".repeat(1_100) } }, { ...check, first: "old" }, { ...check, tool: "" }, { ...check, id: 3 }, null, []]) {
       expect(() => checkOf(bad), JSON.stringify(bad)).toThrow();
     }
   });

@@ -206,7 +206,7 @@ export function knobOf(k: KnobInput): Knob {
     const stops = k.setting ? timed.map((t) => ({ trigger: t, ...wordsOf(t, lang) })) : [{ trigger: fromSchedule, ...cronWords(s.cron, lang) }];
     for (const [i, t] of stops.entries()) {
       // The scheduler says when the taf's own schedule fires next; that's the first trigger's.
-      const first = check && t.trigger?.kind !== "app_check" ? ` · ${w.dial_checks_first(check.tool)}` : "";
+      const first = check && t.trigger?.kind !== "app_check" ? ` · ${w.dial_checks_first}` : "";
       const words = s.enabled ? `${t.words}${i === 0 ? next : ""}${first}` : `${t.words}${w.dial_paused_after}${first}`;
       wakes.push({ id: i === 0 ? "trg_schedule" : `trg_${i + 1}`, kind: t.trigger?.kind === "app_check" ? "app_check" : "schedule", label: t.label, words,
         on: s.enabled, state: s.enabled ? t.label : w.dial_paused, ...(t.trigger ? { trigger: t.trigger } : {}) });
@@ -408,10 +408,10 @@ export function settingWords(k: KnobSetting, lang: Lang = "en"): string[] {
   return [...r.wakes, ...r.when, ...r.results];
 }
 
-/** A trigger's line, and that it checks first when it's a schedule of a taf with a check: "Weekdays at 09:00 · checks list_tickets first". */
+/** A trigger's line, and that it checks first when it's a schedule of a taf with a check: "Weekdays at 09:00 · checks for new work first". */
 function checkedWords(t: Trigger, check: Check | undefined, lang: Lang = "en"): string {
   const words = triggerWords(t, lang);
-  return check && t.kind === "schedule" ? `${words} · ${wordsIn(lang).dial_checks_first(check.tool)}` : words;
+  return check && t.kind === "schedule" ? `${words} · ${wordsIn(lang).dial_checks_first}` : words;
 }
 
 /** A trigger's word on the ring and its line. */

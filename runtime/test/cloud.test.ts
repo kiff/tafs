@@ -1471,20 +1471,43 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.agents.schedules.get(`t_acme|${NEW2}`)?.check).toEqual({ ...WORK_CHECK, first: "new" });
   });
 
-  it("answers a success with no session when the first check finds the queue empty: no run, and no failure", async () => {
+  it("answers a success with no session when the first check finds the queue empty, saying it was quiet", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
     w.agents.quiet.add(NEW);
     const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
     expect(r.status).toBe(200);
-    expect(r.body.session).toBeNull();
+    expect(r.body).toMatchObject({ session: null, outcome: "quiet", words: "Checked for new work: nothing new." });
     expect(r.body.taf).toMatchObject({ id: NEW, name: "Refunds" });
     expect(w.agents.calls.at(-1)).toBe(`trigger ${NEW}`);
     expect(w.agents.runs.filter((x) => x.agent === NEW)).toEqual([]);
-    // Run now answers the same way when its check finds nothing.
-    const now = await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana" });
-    expect(now.status).toBe(200);
-    expect(now.body.session).toBeNull();
+    // Its kept tools are what Coach's taf_dial may check against.
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.tools).toEqual([WORK_TOOL]);
+  });
+
+  // Run now fires the schedule: a check that hands items answers the run it started; a quiet one starts nothing,
+  // and says so in the person's language, never the tool's name, with no run started behind it.
+  it("answers Run now with the trigger's run when the check hands items, and quiet in words when it finds nothing", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY })).status).toBe(200);
+    w.agents.calls.length = 0;
+    const before = new Set(w.agents.runs.map((x) => x.id));
+    const handed = await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana" });
+    expect(handed.status).toBe(200);
+    const started = w.agents.runs.filter((x) => !before.has(x.id));
+    expect(started.map((x) => [x.trigger, x.session])).toEqual([["schedule", handed.body.session]]);
+    expect(w.agents.calls).toEqual([`trigger ${NEW}`]);
+    w.agents.quiet.add(NEW);
+    const runs = w.agents.runs.length;
+    w.agents.calls.length = 0;
+    const quiet = await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana" });
+    expect(quiet.status).toBe(200);
+    expect(quiet.body).toEqual({ session: null, outcome: "quiet", words: "Checked for new work: nothing new." });
+    const de = await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana", headers: { "accept-language": "de" } });
+    expect(de.body).toEqual({ session: null, outcome: "quiet", words: "Auf neue Arbeit geprüft: nichts Neues." });
+    expect(w.agents.calls).toEqual([`trigger ${NEW}`, `trigger ${NEW}`]);
+    expect(w.agents.runs.length).toBe(runs);
   });
 
   it("starts a taf with a job of its own, as Coach drafted it: any job, not one of the five (kiff/tafs#476)", async () => {
@@ -2226,17 +2249,17 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const check = { ...WORK_CHECK, first: "all" };
     // Read back before any dial change: the When ring says it checks first, and the setting carries the check.
     const before = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
-    expect(before.body.wakes.find((x: { id: string }) => x.id === "trg_schedule").words).toContain(" · checks list_requests_k3f9 first");
+    expect(before.body.wakes.find((x: { id: string }) => x.id === "trg_schedule").words).toContain(" · checks for new work first");
     expect(before.body.setting.check).toEqual(check);
     // The app sends back a setting with another time and no check: the check stays.
     const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "weekdays", at: "10:00" }], busy: "skip", results: ["app"] } });
     expect(put.status).toBe(200);
-    expect(put.body.words[0]).toBe("Weekdays at 10:00 · checks list_requests_k3f9 first");
+    expect(put.body.words[0]).toBe("Weekdays at 10:00 · checks for new work first");
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${put.body.version}/live`, { token: "ana" })).status).toBe(200);
     expect(w.agents.schedules.get(`t_acme|${RAE}`)).toMatchObject({ cron: "0 10 * * 1-5", check });
     const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(knob.body.wakes[0]).toMatchObject({ kind: "schedule", label: "Weekdays" });
-    expect(knob.body.wakes[0].words).toMatch(/^Weekdays at 10:00, next .+ · checks list_requests_k3f9 first$/);
+    expect(knob.body.wakes[0].words).toMatch(/^Weekdays at 10:00, next .+ · checks for new work first$/);
     expect(knob.body.setting.check).toEqual(check);
     // A − or + on its time sends the check back with it.
     const sized = knob.body.wakes[0].size.choices[0].setting;
@@ -2266,6 +2289,11 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${put.body.version}/live`, { token: "ana" })).status).toBe(200);
     expect(w.agents.schedules.get(`t_acme|${RAE}`)?.check).toBeUndefined();
     expect(w.agents.schedules.get(`t_acme|${RAE}-t2`)?.check).toBeUndefined();
+    // Its read is one of the taf's tools, on its Cards as KIFF reads them with the person's session.
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, grants: [{ action: WORK_TOOL }], aggregates: [] } as unknown as Mandate];
+    const stray = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "daily", at: "09:00" }], check: { ...WORK_CHECK, tool: "list_orders_x1" } } });
+    expect(stray.status).toBe(400);
+    expect(stray.body.error).toContain("check.tool names list_orders_x1, which isn't among the taf's tools (list_requests_k3f9)");
     // Coach's check at a later dial change goes live with its version, onto the taf's record too.
     const checked = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "daily", at: "09:00" }], check: WORK_CHECK } });
     expect(checked.status).toBe(200);

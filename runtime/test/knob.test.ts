@@ -202,16 +202,16 @@ describe("the dial", () => {
   it("a taf that checks first says so on each schedule, in the person's language, and its setting carries the check", () => {
     const check = { tool: "list_requests_k3f9", arguments: {}, items: "data", cursor: "created", first: "all" as const };
     const k = knobOf({ ...base, check });
-    expect(k.wakes[1]!.words).toBe("Weekdays at 09:00, next Tue 09:00 · checks list_requests_k3f9 first");
+    expect(k.wakes[1]!.words).toBe("Weekdays at 09:00, next Tue 09:00 · checks for new work first");
     expect(k.setting.check).toEqual(check);
-    expect(knobOf({ ...base, check, lang: "de" }).wakes[1]!.words).toContain(" · prüft zuerst list_requests_k3f9");
-    expect(knobOf({ ...base, check, lang: "pl" }).wakes[1]!.words).toContain(" · najpierw sprawdza list_requests_k3f9");
+    expect(knobOf({ ...base, check, lang: "de" }).wakes[1]!.words).toContain(" · prüft zuerst auf neue Arbeit");
+    expect(knobOf({ ...base, check, lang: "pl" }).wakes[1]!.words).toContain(" · najpierw sprawdza, czy jest nowa praca");
     // A version's dial words each schedule with it, but not a door, nor an app check, which reads its own.
     const appCheck = { kind: "app_check" as const, operation: "list_charges", items: "data", cursor: "created", every_minutes: 30 };
     const v = knobOf({ ...base, setting: { wakes: [{ kind: "door" }, { kind: "schedule", form: "daily", at: "08:00" }], busy: "skip", results: ["app"], check } });
-    expect(v.wakes.filter((w) => w.kind === "schedule").map((w) => w.words)).toEqual(["Every day at 08:00, next Tue 09:00 · checks list_requests_k3f9 first"]);
+    expect(v.wakes.filter((w) => w.kind === "schedule").map((w) => w.words)).toEqual(["Every day at 08:00, next Tue 09:00 · checks for new work first"]);
     const draft = knobOf({ ...base, draft: { version: 3, setting: { wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }, { kind: "door" }], busy: "skip", results: ["app"], check } } });
-    expect(draft.draft!.wakes).toEqual(["Weekdays at 09:00 · checks list_requests_k3f9 first", "Wakes on its door"]);
+    expect(draft.draft!.wakes).toEqual(["Weekdays at 09:00 · checks for new work first", "Wakes on its door"]);
     expect(draft.pending).toEqual({ version: 3, changes: 4 });
     const ac = knobOf({ ...base, check, setting: { wakes: [appCheck], busy: "skip", results: ["app"] } });
     expect(ac.wakes.find((w) => w.kind === "app_check")!.words).not.toContain("first");

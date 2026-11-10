@@ -31,7 +31,7 @@ export interface PlannedSchedule {
   check?: Check;
 }
 
-/** The most a check's arguments may take, as JSON. */
+/** The most a check's arguments may take, in bytes of UTF-8 JSON. */
 export const CHECK_ARGS_MAX = 2048;
 const DOTTED = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$/;
 const FIELD = /^[A-Za-z0-9_.-]{1,128}$/;
@@ -48,7 +48,7 @@ export function checkOf(v: unknown, tools?: readonly string[]): Check {
   if (tools && !tools.includes(tool)) throw new Error(`check.tool names ${tool}, which isn't among the taf's tools (${tools.join(", ") || "none named"}): name the read as the result's tools do`);
   const args = c.arguments === undefined ? {} : c.arguments;
   if (typeof args !== "object" || args === null || Array.isArray(args) || Object.getPrototypeOf(args) !== Object.prototype) throw new Error("check.arguments is an object: the read's arguments");
-  if (JSON.stringify(args).length > CHECK_ARGS_MAX) throw new Error(`check.arguments is at most ${CHECK_ARGS_MAX} bytes as JSON`);
+  if (Buffer.byteLength(JSON.stringify(args), "utf8") > CHECK_ARGS_MAX) throw new Error(`check.arguments is at most ${CHECK_ARGS_MAX} bytes as JSON`);
   if (typeof c.items !== "string" || (c.items !== "" && !DOTTED.test(c.items))) throw new Error("check.items is where the list is in the read's result, a dotted path such as data or result.items (\"\" when the result is the list)");
   const cursor = typeof c.cursor === "string" ? c.cursor.trim() : "";
   if (!FIELD.test(cursor)) throw new Error("check.cursor is the field of each item that only grows, such as created or an increasing id");

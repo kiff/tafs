@@ -301,8 +301,10 @@ export const en = {
   dial_wakes_door: "Wakes on its door",
   dial_wakes_vendor: "Wakes on a vendor's event",
   dial_checks: (operation: string, n: number) => `Checks ${operation} every ${n} minutes, and works only on what's new`,
-  // A schedule of a taf that checks its work first (triggers.ts, Check), after its time: "Weekdays at 09:00 · checks list_tickets first".
-  dial_checks_first: (read: string) => `checks ${read} first`,
+  // A schedule of a taf that checks its work first (triggers.ts, Check), after its time: "Weekdays at 09:00 · checks for new work first".
+  dial_checks_first: "checks for new work first",
+  // Run now, or a new taf's first firing, whose check found nothing new: no run started (POST …/run, POST /v1/tafs).
+  checked_nothing_new: "Checked for new work: nothing new.",
   dial_wakes_before: "Wakes before a calendar event",
   dial_wakes_on: (event: string) => `Wakes on ${event}`,
   dial_an_app_event: "an app's event",

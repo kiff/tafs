@@ -269,7 +269,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     w.agents.versions.set(`${T}|${RAE}`, []);
     const check = { tool: "list_requests_k3f9", arguments: { status: "open" }, items: "data", cursor: "created", first: "all" };
     const made = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check })).json as { version: number; words: string[] };
-    expect(made.words[0]).toBe("Weekdays at 09:00 · checks list_requests_k3f9 first");
+    expect(made.words[0]).toBe("Weekdays at 09:00 · checks for new work first");
     expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]?.check).toEqual(check);
     // Nothing reaches the scheduler, nor the taf's record, until the version goes live.
     expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c))).toEqual([]);
@@ -278,6 +278,11 @@ describe("Coach's tools (kiff/tafs#206)", () => {
       .toMatchObject({ isError: true, text: expect.stringContaining("the nearest is one list of times on the same minute: every day at 09:00 and 13:00") });
     expect(await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check: { ...check, cursor: "" } }))
       .toMatchObject({ isError: true, text: expect.stringContaining("check.cursor") });
+    // Once the taf's tools are known (as Coach's results named them), the read is one of them.
+    w.tafs.held.set(`${T}#${RAE}`, { ...w.tafs.held.get(`${T}#${RAE}`)!, tools: ["list_requests_k3f9", "refund_k3f9"] });
+    expect(await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check: { ...check, tool: "list_orders_x1" } }))
+      .toMatchObject({ isError: true, text: expect.stringContaining("check.tool names list_orders_x1, which isn't among the taf's tools (list_requests_k3f9, refund_k3f9)") });
+    expect((await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check })).isError).toBeFalsy();
   });
 
   it("run_stop and taf_pause act through kiff/agents; an unknown taf is refused", async () => {
