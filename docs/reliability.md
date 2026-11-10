@@ -205,7 +205,7 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
   - `switching`: skipped while the taf switched versions;
   - `check_failed`: its check of a connected app couldn't read the app;
   - `retrying`: its run didn't finish, and its work goes to the next run;
-  - `unfinished`: its run stopped partway, and what it was working on won't be tried again.
+  - `unfinished`: its run stopped part-way, and what it was working on won't be tried again.
 
   A skip for a halt or for credits is said elsewhere, and isn't listed.
 
@@ -219,7 +219,7 @@ days count, of its last 10 runs that ended and its schedule's last 20 times.
 
 | Level | When |
 |---|---|
-| `failing` | two or more scheduled runs in a row couldn't start; its check couldn't read the app two or more times in a row; a scheduled run stopped partway and its work was dropped; its last three runs failed |
+| `failing` | two or more scheduled runs in a row couldn't start; its check couldn't read the app two or more times in a row; a scheduled run stopped part-way and its work was dropped; its last three runs failed |
 | `at_risk` | one scheduled run couldn't start, or one check couldn't read the app; its last run didn't finish and its work goes to the next run; two or more of its last ten runs failed, or were cut short by a limit (its turns, its cost, or its reply running out of room); three or more of its last twenty scheduled times were skipped as late or busy |
 | `healthy` | none of these |
 

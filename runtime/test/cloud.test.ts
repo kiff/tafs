@@ -414,14 +414,14 @@ describe("tafs cloud", () => {
     ]);
     const r = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
     expect(r.body.skipped).toEqual([
-      { due: "2026-10-29T09:45:00.000Z", why: "unfinished", words: "The 09:45 run stopped partway: what it was working on won't be tried again" },
+      { due: "2026-10-29T09:45:00.000Z", why: "unfinished", words: "The 09:45 run stopped part-way: what it was working on won't be tried again" },
       { due: "2026-10-29T09:30:00.000Z", why: "retrying", words: "The 09:30 run didn't finish: its work goes to the next run" },
       { due: "2026-10-29T09:15:00.000Z", why: "check_failed", words: "The 09:15 check couldn't read the app" },
       { due: "2026-10-29T09:00:00.000Z", why: "switching", words: "Skipped the 09:00 run: its taf was switching versions" },
     ]);
     // In the reader's language too.
     const es = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana", headers: { "accept-language": "es" } });
-    expect(es.body.skipped[2].words).toBe("La comprobación prevista a las 09:15 no pudo leer la app");
+    expect(es.body.skipped[2].words).toBe("La revisión prevista a las 09:15 no pudo leer la app");
   });
 
   it("says a taf's health where an idle taf says its next run, on its page and on the list", async () => {
@@ -2535,7 +2535,7 @@ describe("a schedule whose runs keep failing to start", () => {
     expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: RAE }]);
     expect(w.pushed).toHaveLength(1);
     expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.unfinishedOne);
-    expect(FAILING_WORDS.unfinishedOne).toBe("Its scheduled run stopped partway. What it was working on won't be tried again. Open it to see what it did.");
+    expect(FAILING_WORDS.unfinishedOne).toBe("Its scheduled run stopped part-way. What it was working on won't be tried again. Open it to see what it did.");
     // A later run of failures that ends on one: its count, in the same words.
     const later = new Date(AT.getTime() + 3600_000).toISOString();
     w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: later, firings: 3, run: "run_9", outcome: "failed_unfinished" } });
@@ -2878,6 +2878,36 @@ describe("halting", () => {
     // Each halt and resume is in Activity, newest first (kiff/tafs#236, item 15).
     const events = (await call(w, "GET", "/v1/events", { token: "ana" })).body.events;
     expect(events.map((e: { kind: string; name?: string }) => [e.kind, e.name])).toEqual([["resumed", "Rae"], ["halted", undefined], ["halted", "Rae"]]);
+  });
+
+  it("says a halt and a resume of every taf in the plural, in a language whose words agree in number", async () => {
+    const w = world();
+    w.phones.push({ token: "f".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "fr" },
+      { token: "d".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "de" },
+      { token: "e".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "es" });
+    const titles = (token: string) => w.pushed.filter((p) => p.token === token)
+      .map((p) => (p.n.payload as { aps: { alert?: { title: string; body: string } } }).aps.alert).filter((a) => a !== undefined);
+    w.account.acksAtOnce = true;
+    await call(w, "POST", "/v1/halt", { token: "ana" });
+    await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    // All of them, then one: "bloqués" for the tafs, "bloqué" for Rae. The body says "resume" as the button does.
+    expect(titles("f".repeat(64)).map((a) => a.title)).toEqual(["Tous vos tafs bloqués", "Rae bloqué"]);
+    expect(titles("f".repeat(64))[0]!.body).toBe("Rien de nouveau n'est envoyé jusqu'à ce que vous repreniez dans tafs.");
+    w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
+    w.account.halts![""] = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", "/v1/halt", { token: "ana" })).status).toBe(200);
+    expect(titles("f".repeat(64)).slice(2)).toEqual([
+      { title: "Rae repris", body: "Il fonctionne à nouveau comme avant le blocage." },
+      { title: "Tous vos tafs repris", body: "Ils fonctionnent à nouveau comme avant le blocage." },
+    ]);
+    // Spanish: "reanudado" takes the plural too.
+    expect(titles("e".repeat(64)).map((a) => a.title)).toEqual(["Todos tus tafs bloqueados", "Rae bloqueado", "Rae reanudado", "Todos tus tafs reanudados"]);
+    // German: one taf is "er", all of them "sie".
+    expect(titles("d".repeat(64)).slice(2)).toEqual([
+      { title: "Rae fortgesetzt", body: "Er arbeitet wieder wie vor dem Anhalten." },
+      { title: "Alle deine tafs fortgesetzt", body: "Sie arbeiten wieder wie vor dem Anhalten." },
+    ]);
   });
 
   it("cancels the taf's pending runs when it halts", async () => {

@@ -78,13 +78,13 @@ describe("a run cut off, never read as done", () => {
   it("says a run stopped at its turn cap or its cost cap, and which, on its line, its request page and the list", () => {
     const turns = run({ stop: "turn_cap", turns: 50 });
     const cost = run({ stop: "cost_cap" });
-    expect(requestOf(turns, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its limit of turns for one run" });
+    expect(requestOf(turns, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its limit of steps for one run" });
     expect(requestOf(cost, "UTC", NOW)).toMatchObject({ state: "stopped", line: "Stopped at 11:05: it reached its cost limit for one run" });
-    expect(requestDetail(turns, [], [], "UTC", NOW).steps.at(-1)).toEqual({ label: "Stopped", line: "Stopped at 11:05: it reached its limit of turns for one run", state: "failed" });
+    expect(requestDetail(turns, [], [], "UTC", NOW).steps.at(-1)).toEqual({ label: "Stopped", line: "Stopped at 11:05: it reached its limit of steps for one run", state: "failed" });
     expect(requestDetail(cost, [], [], "UTC", NOW).steps.at(-1)).toMatchObject({ label: "Stopped", line: "Stopped at 11:05: it reached its cost limit for one run" });
     expect(workOf([turns, cost], "UTC", NOW, []).counts).toMatchObject({ done: 0, stopped: 2 });
     // The list's line for the taf: the last one cut off says so, never "Last done".
-    expect(summaryOf([turns], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its limit of turns for one run");
+    expect(summaryOf([turns], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its limit of steps for one run");
     expect(summaryOf([cost], false, "UTC", NOW).line).toBe("Stopped at 11:05: it reached its cost limit for one run");
   });
 
