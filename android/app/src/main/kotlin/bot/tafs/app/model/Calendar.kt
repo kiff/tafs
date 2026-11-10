@@ -38,6 +38,15 @@ object CalendarMath {
       listOf(it.january, it.february, it.march, it.april, it.may, it.june, it.july, it.august, it.september, it.october, it.november, it.december)
     }
 
+  /**
+   * A month on its own, as the month view's title names it: the form a language uses with no day ("listopad 2026" in Polish,
+   * where a date says "5 listopada").
+   */
+  val monthTitles: List<String>
+    get() = Words.Calendar.MonthTitle.let {
+      listOf(it.january, it.february, it.march, it.april, it.may, it.june, it.july, it.august, it.september, it.october, it.november, it.december)
+    }
+
   /** Monday first. */
   val weekdayNames: List<String>
     get() = Words.Calendar.Weekday.let { listOf(it.mon, it.tue, it.wed, it.thu, it.fri, it.sat, it.sun) }
@@ -115,7 +124,7 @@ object CalendarMath {
           else -> Words.Calendar.Title.week(a.dayOfMonth.toString(), b.dayOfMonth.toString(), months[b.monthValue - 1], b.year.toString())
         }
       }
-      CalendarMode.Month -> Words.Calendar.Title.month(months[d.monthValue - 1], d.year.toString())
+      CalendarMode.Month -> Words.Calendar.Title.month(monthTitles[d.monthValue - 1], d.year.toString())
     }
   }
 

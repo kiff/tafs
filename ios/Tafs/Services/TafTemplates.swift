@@ -33,96 +33,96 @@ enum TafTemplates {
 
     /// Support: settle refund and credit requests within policy.
     static let refunds = TafTemplate(
-        key: "refunds", name: "Refunds",
+        key: "refunds", name: Words.Sample.Refunds.name,
         keywords: ["refund", "credit", "return", "goodwill"],
-        job: "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
-        tools: ["Payments", "Store", "Email"],
+        job: Words.Sample.Refunds.job,
+        tools: [Words.Sample.Tool.payments, Words.Sample.Tool.store, Words.Sample.Tool.email],
         rules: [
-            CardRule(action: "refund", label: "Refunds", perAction: .eur(150), perWindow: .eur(2_000), window: .day, nextSteps: ["Return first"]),
-            CardRule(action: "credit", label: "Credits", perAction: .eur(100), perWindow: .eur(1_000), window: .day),
-            CardRule(action: "payout", label: "Payouts", never: true, outside: .refuse),
+            CardRule(action: "refund", label: Words.Sample.Refunds.Rule.refunds, perAction: .eur(150), perWindow: .eur(2_000), window: .day, nextSteps: [Words.Sample.Refunds.nextStep]),
+            CardRule(action: "credit", label: Words.Sample.Refunds.Rule.credits, perAction: .eur(100), perWindow: .eur(1_000), window: .day),
+            CardRule(action: "payout", label: Words.Sample.Refunds.Rule.payouts, never: true, outside: .refuse),
         ],
         script: [
-            ProposedAction(action: "refund", summary: "Refund order #4471", amount: .eur(40), context: "Arrived 6 days late"),
-            ProposedAction(action: "credit", summary: "Credit on account #2290", amount: .eur(25), context: "Billing error last month"),
-            ProposedAction(action: "refund", summary: "Refund order #4502", amount: .eur(480), context: "Damaged on arrival, photo attached"),
-            ProposedAction(action: "payout", summary: "Pay out to a new bank account", amount: .eur(900), context: "Customer asked for cash instead"),
+            ProposedAction(action: "refund", summary: Words.Sample.Refunds.refund4471, amount: .eur(40), context: Words.Sample.Refunds.refund4471Why),
+            ProposedAction(action: "credit", summary: Words.Sample.Refunds.credit2290, amount: .eur(25), context: Words.Sample.Refunds.credit2290Why),
+            ProposedAction(action: "refund", summary: Words.Sample.Refunds.refund4502, amount: .eur(480), context: Words.Sample.Refunds.refund4502Why),
+            ProposedAction(action: "payout", summary: Words.Sample.Refunds.payout, amount: .eur(900), context: Words.Sample.Refunds.payoutWhy),
         ]
     )
 
     /// Accounts payable: match, approve and pay routine vendor bills.
     static let billPay = TafTemplate(
-        key: "billpay", name: "Bill pay",
+        key: "billpay", name: Words.Sample.BillPay.name,
         keywords: ["bill", "vendor", "payable", "pay invoice", "supplier"],
-        job: "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
-        tools: ["Accounting", "Email"],
+        job: Words.Sample.BillPay.job,
+        tools: [Words.Sample.Tool.accounting, Words.Sample.Tool.email],
         rules: [
-            CardRule(action: "pay_bill", label: "Bills", perAction: .eur(5_000), perWindow: .eur(25_000), window: .week, nextSteps: ["Pay half now"]),
-            CardRule(action: "wire", label: "Wires", alwaysAsk: true),
-            CardRule(action: "bank_details", label: "Bank detail changes", never: true, outside: .refuse),
-            CardRule(action: "new_payee", label: "New payees", never: true, outside: .refuse),
+            CardRule(action: "pay_bill", label: Words.Sample.BillPay.Rule.bills, perAction: .eur(5_000), perWindow: .eur(25_000), window: .week, nextSteps: [Words.Sample.BillPay.nextStep]),
+            CardRule(action: "wire", label: Words.Sample.BillPay.Rule.wires, alwaysAsk: true),
+            CardRule(action: "bank_details", label: Words.Sample.BillPay.Rule.bankDetails, never: true, outside: .refuse),
+            CardRule(action: "new_payee", label: Words.Sample.BillPay.Rule.newPayees, never: true, outside: .refuse),
         ],
         script: [
-            ProposedAction(action: "pay_bill", summary: "Pay Northwind Packaging", amount: .eur(1_240), context: "Matches PO-3381"),
-            ProposedAction(action: "pay_bill", summary: "Pay Atlas Freight", amount: .eur(8_400), context: "Matches PO-3390, quarterly"),
-            ProposedAction(action: "bank_details", summary: "Update Atlas Freight's bank account", context: "Email from a new address asked for it"),
+            ProposedAction(action: "pay_bill", summary: Words.Sample.BillPay.payNorthwind, amount: .eur(1_240), context: Words.Sample.BillPay.payNorthwindWhy),
+            ProposedAction(action: "pay_bill", summary: Words.Sample.BillPay.payAtlas, amount: .eur(8_400), context: Words.Sample.BillPay.payAtlasWhy),
+            ProposedAction(action: "bank_details", summary: Words.Sample.BillPay.updateBank, context: Words.Sample.BillPay.updateBankWhy),
         ]
     )
 
     /// IT: joiners, movers and leavers across identity, workspace and code.
     static let access = TafTemplate(
-        key: "access", name: "Access",
+        key: "access", name: Words.Sample.Access.name,
         keywords: ["access", "onboard", "offboard", "leaver", "joiner", "provision", "okta"],
-        job: "Give new joiners their apps and remove leavers the day they go. Roles from the approved list only. Deactivate, never delete.",
-        tools: ["Sign-in", "Code"],
+        job: Words.Sample.Access.job,
+        tools: [Words.Sample.Tool.signIn, Words.Sample.Tool.code],
         rules: [
-            CardRule(action: "grant_role", label: "Approved roles", countPerWindow: 40, window: .day),
-            CardRule(action: "deactivate", label: "Deactivations", countPerWindow: 20, window: .day),
-            CardRule(action: "elevate", label: "Elevated access", alwaysAsk: true),
-            CardRule(action: "grant_admin", label: "Admin roles", never: true, outside: .refuse),
-            CardRule(action: "delete_user", label: "Deleting users", never: true, outside: .refuse),
+            CardRule(action: "grant_role", label: Words.Sample.Access.Rule.approvedRoles, countPerWindow: 40, window: .day),
+            CardRule(action: "deactivate", label: Words.Sample.Access.Rule.deactivations, countPerWindow: 20, window: .day),
+            CardRule(action: "elevate", label: Words.Sample.Access.Rule.elevated, alwaysAsk: true),
+            CardRule(action: "grant_admin", label: Words.Sample.Access.Rule.adminRoles, never: true, outside: .refuse),
+            CardRule(action: "delete_user", label: Words.Sample.Access.Rule.deletingUsers, never: true, outside: .refuse),
         ],
         script: [
-            ProposedAction(action: "grant_role", summary: "Give Ana the Sales role", context: "Starts Monday, per HR"),
-            ProposedAction(action: "deactivate", summary: "Deactivate Tom's accounts", context: "Left Friday, per HR"),
-            ProposedAction(action: "elevate", summary: "Production database access for Lee, 8 hours", context: "On call, incident open"),
-            ProposedAction(action: "grant_admin", summary: "Make Lee an admin of the code", context: "Asked in the team chat"),
+            ProposedAction(action: "grant_role", summary: Words.Sample.Access.salesRole, context: Words.Sample.Access.salesRoleWhy),
+            ProposedAction(action: "deactivate", summary: Words.Sample.Access.deactivateTom, context: Words.Sample.Access.deactivateTomWhy),
+            ProposedAction(action: "elevate", summary: Words.Sample.Access.databaseLee, context: Words.Sample.Access.databaseLeeWhy),
+            ProposedAction(action: "grant_admin", summary: Words.Sample.Access.adminLee, context: Words.Sample.Access.adminLeeWhy),
         ]
     )
 
     /// Engineering: ship fixes and roll back, never destroy.
     static let deploys = TafTemplate(
-        key: "deploys", name: "Deploys",
+        key: "deploys", name: Words.Sample.Deploys.name,
         keywords: ["deploy", "production", "release", "migration", "rollback"],
-        job: "Ship merged fixes to production when CI is green, and roll back when errors spike. Never drop or delete production data.",
-        tools: ["Code", "Hosting", "Network"],
+        job: Words.Sample.Deploys.job,
+        tools: [Words.Sample.Tool.code, Words.Sample.Tool.hosting, Words.Sample.Tool.network],
         rules: [
-            CardRule(action: "deploy", label: "Production deploys", countPerWindow: 10, window: .day),
-            CardRule(action: "rollback", label: "Rollbacks", countPerWindow: 20, window: .day),
-            CardRule(action: "migration", label: "Schema migrations", alwaysAsk: true, nextSteps: ["Run it tonight"]),
-            CardRule(action: "destroy_data", label: "Dropping or deleting data", never: true, outside: .refuse),
+            CardRule(action: "deploy", label: Words.Sample.Deploys.Rule.deploys, countPerWindow: 10, window: .day),
+            CardRule(action: "rollback", label: Words.Sample.Deploys.Rule.rollbacks, countPerWindow: 20, window: .day),
+            CardRule(action: "migration", label: Words.Sample.Deploys.Rule.migrations, alwaysAsk: true, nextSteps: [Words.Sample.Deploys.nextStep]),
+            CardRule(action: "destroy_data", label: Words.Sample.Deploys.Rule.destroyData, never: true, outside: .refuse),
         ],
         script: [
-            ProposedAction(action: "deploy", summary: "Deploy api v2.14.1", context: "PR #812 merged, CI green"),
-            ProposedAction(action: "migration", summary: "Run migration 0042_orders_index", context: "Adds an index, 3M rows"),
-            ProposedAction(action: "destroy_data", summary: "DROP TABLE sessions_old", context: "Looks unused"),
+            ProposedAction(action: "deploy", summary: Words.Sample.Deploys.deployApi, context: Words.Sample.Deploys.deployApiWhy),
+            ProposedAction(action: "migration", summary: Words.Sample.Deploys.migration, context: Words.Sample.Deploys.migrationWhy),
+            ProposedAction(action: "destroy_data", summary: "DROP TABLE sessions_old", context: Words.Sample.Deploys.dropTableWhy),
         ]
     )
 
     /// Payments: answer disputes with evidence before the deadline.
     static let chargebacks = TafTemplate(
-        key: "chargebacks", name: "Chargebacks",
+        key: "chargebacks", name: Words.Sample.Chargebacks.name,
         keywords: ["chargeback", "dispute"],
-        job: "Answer card disputes with the order's evidence before the deadline. Accept small ones that can't be won. Share nothing beyond the template.",
-        tools: ["Payments"],
+        job: Words.Sample.Chargebacks.job,
+        tools: [Words.Sample.Tool.payments],
         rules: [
-            CardRule(action: "submit_evidence", label: "Evidence", perAction: .eur(500), countPerWindow: 50, window: .day),
-            CardRule(action: "accept_dispute", label: "Accepting a loss", perAction: .eur(100), perWindow: .eur(500), window: .week),
+            CardRule(action: "submit_evidence", label: Words.Sample.Chargebacks.Rule.evidence, perAction: .eur(500), countPerWindow: 50, window: .day),
+            CardRule(action: "accept_dispute", label: Words.Sample.Chargebacks.Rule.acceptingLoss, perAction: .eur(100), perWindow: .eur(500), window: .week),
         ],
         script: [
-            ProposedAction(action: "submit_evidence", summary: "Answer dispute on #3318", amount: .eur(120), context: "Delivered, signed for"),
-            ProposedAction(action: "accept_dispute", summary: "Accept dispute on #3342", amount: .eur(35), context: "No proof of delivery"),
-            ProposedAction(action: "submit_evidence", summary: "Answer dispute on #3360", amount: .eur(1_800), context: "Due in 2 days"),
+            ProposedAction(action: "submit_evidence", summary: Words.Sample.Chargebacks.answer3318, amount: .eur(120), context: Words.Sample.Chargebacks.answer3318Why),
+            ProposedAction(action: "accept_dispute", summary: Words.Sample.Chargebacks.accept3342, amount: .eur(35), context: Words.Sample.Chargebacks.accept3342Why),
+            ProposedAction(action: "submit_evidence", summary: Words.Sample.Chargebacks.answer3360, amount: .eur(1_800), context: Words.Sample.Chargebacks.answer3360Why),
         ]
     )
 }

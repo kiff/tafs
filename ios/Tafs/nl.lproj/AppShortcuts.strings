@@ -1,0 +1,8 @@
+/* Siri's phrases for Halt all, in Dutch (kiff/tafs#236, item 28). */
+"Stop my ${applicationName}" = "Stop mijn ${applicationName}";
+"Stop all ${applicationName}" = "Stop al mijn ${applicationName}";
+"Stop ${applicationName}" = "Stop ${applicationName}";
+"Pause my ${applicationName}" = "Pauzeer mijn ${applicationName}";
+"Pause ${applicationName}" = "Pauzeer ${applicationName}";
+"Halt my ${applicationName}" = "Zet mijn ${applicationName} stil";
+"Halt all ${applicationName}" = "Zet al mijn ${applicationName} stil";

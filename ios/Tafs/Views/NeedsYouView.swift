@@ -360,7 +360,9 @@ struct HeldCallCard: View {
         let seconds = Int(call.expiresAt.timeIntervalSince(date))
         guard seconds >= 1 else { return Text(Words.NeedsYou.expired) }
         if #available(iOS 16, *) {
-            return Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(" left")
+            // The line's own words sit around the live timer, in the order its language puts them.
+            let parts = Words.NeedsYou.left(time: "\u{1}").components(separatedBy: "\u{1}")
+            return Text(parts.first ?? "") + Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(parts.dropFirst().joined())
         }
         return Text(Words.NeedsYou.left(time: String(format: "%d:%02d", seconds / 60, seconds % 60)))
     }

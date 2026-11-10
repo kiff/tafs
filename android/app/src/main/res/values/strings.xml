@@ -215,6 +215,18 @@
     <string name="calendar_month_name_november">November</string>
     <string name="calendar_month_name_october">October</string>
     <string name="calendar_month_name_september">September</string>
+    <string name="calendar_month_title_april">April</string>
+    <string name="calendar_month_title_august">August</string>
+    <string name="calendar_month_title_december">December</string>
+    <string name="calendar_month_title_february">February</string>
+    <string name="calendar_month_title_january">January</string>
+    <string name="calendar_month_title_july">July</string>
+    <string name="calendar_month_title_june">June</string>
+    <string name="calendar_month_title_march">March</string>
+    <string name="calendar_month_title_may">May</string>
+    <string name="calendar_month_title_november">November</string>
+    <string name="calendar_month_title_october">October</string>
+    <string name="calendar_month_title_september">September</string>
     <string name="calendar_next_day">Next day</string>
     <string name="calendar_next_month">Next month</string>
     <string name="calendar_next_week">Next week</string>
@@ -1582,6 +1594,7 @@
     <string name="sample_access_sales_role_why">Starts Monday, per HR</string>
     <string name="sample_bill_pay_job">Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Pay half now</string>
     <string name="sample_bill_pay_pay_atlas">Pay Atlas Freight</string>
     <string name="sample_bill_pay_pay_atlas_why">Matches PO-3390, quarterly</string>
     <string name="sample_bill_pay_pay_northwind">Pay Northwind Packaging</string>
@@ -1626,6 +1639,7 @@
     <string name="sample_deploys_migration">Run migration 0042_orders_index</string>
     <string name="sample_deploys_migration_why">Adds an index, 3M rows</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">Run it tonight</string>
     <string name="sample_deploys_rule_deploys">Production deploys</string>
     <string name="sample_deploys_rule_destroy_data">Dropping or deleting data</string>
     <string name="sample_deploys_rule_migrations">Schema migrations</string>
@@ -1641,6 +1655,7 @@
     <string name="sample_refunds_credit_2290_why">Billing error last month</string>
     <string name="sample_refunds_job">Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">Return first</string>
     <string name="sample_refunds_payout">Pay out to a new bank account</string>
     <string name="sample_refunds_payout_why">Customer asked for cash instead</string>
     <string name="sample_refunds_refund_4471">Refund order #4471</string>
@@ -1852,6 +1867,21 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Sign in with KIFF</string>
     <string name="sign_in_your_code">Your code</string>
+    <string name="siri_halt_all_description">Stops every taf at once. Nothing new is sent until you resume them in tafs.</string>
+    <string name="siri_halt_all_failed">tafs couldn\'t halt your tafs. %1$s Open tafs to halt them.</string>
+    <plurals name="siri_halt_all_halted">
+        <item quantity="one">Halted %1$s taf. Nothing new is sent until you resume.</item>
+        <item quantity="other">Halted %1$s tafs. Nothing new is sent until you resume.</item>
+    </plurals>
+    <string name="siri_halt_all_halted_all">Halted your tafs. Nothing new is sent until you resume.</string>
+    <plurals name="siri_halt_all_halting">
+        <item quantity="one">Halting %1$s taf: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
+        <item quantity="other">Halting %1$s tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
+    </plurals>
+    <string name="siri_halt_all_halting_all">Halting your tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</string>
+    <string name="siri_halt_all_running">tafs couldn\'t halt your tafs. Open tafs to halt them.</string>
+    <string name="siri_halt_all_signed_out">You\'re signed out of tafs. Sign in to halt your tafs.</string>
+    <string name="siri_halt_all_title">Halt all tafs</string>
     <string name="taf_activity_all_apps">All apps</string>
     <string name="taf_activity_checking_waits">Checking what waits for you…</string>
     <string name="taf_activity_reading_notes">Reading its notes…</string>

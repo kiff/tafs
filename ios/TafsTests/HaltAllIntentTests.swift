@@ -54,7 +54,7 @@ final class HaltAllIntentTests: XCTestCase {
         let cloud = cloud()
         StubProtocol.responses["POST /v1/halt"] = (502, #"{"error":"kiff/agents didn't answer"}"#)
         guard case .needsApp(let said) = await HaltAll.run(cloud: cloud, wait: {}) else { return XCTFail("a failed halt opens tafs") }
-        XCTAssertTrue(said.hasPrefix("tafs couldn't halt your tafs:"), said)
+        XCTAssertTrue(said.hasPrefix("tafs couldn't halt your tafs. "), said)
         XCTAssertTrue(said.hasSuffix("Open tafs to halt them."), said)
     }
 

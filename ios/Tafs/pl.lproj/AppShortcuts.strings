@@ -1,0 +1,8 @@
+/* Siri's phrases for Halt all, in Polish (kiff/tafs#236, item 28). */
+"Stop my ${applicationName}" = "Zatrzymaj moje ${applicationName}";
+"Stop all ${applicationName}" = "Zatrzymaj wszystkie moje ${applicationName}";
+"Stop ${applicationName}" = "Zatrzymaj ${applicationName}";
+"Pause my ${applicationName}" = "Wstrzymaj moje ${applicationName}";
+"Pause ${applicationName}" = "Wstrzymaj ${applicationName}";
+"Halt my ${applicationName}" = "Zablokuj moje ${applicationName}";
+"Halt all ${applicationName}" = "Zablokuj wszystkie moje ${applicationName}";

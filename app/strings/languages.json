@@ -1,4 +1,4 @@
 {
   "all": ["en", "de", "fr", "es", "it", "pt", "nl", "pl"],
-  "shipped": ["en"]
+  "shipped": ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
 }

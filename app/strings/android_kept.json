@@ -82,9 +82,6 @@
     "No words: the app installs its resources at start (Res.install)": "a programming error, never shown"
   },
   "model/TafTemplates.kt": {
-    "Return first": "the sample's templates, written as tafs cloud's",
-    "Pay half now": "the sample's templates, written as tafs cloud's",
-    "Run it tonight": "the sample's templates, written as tafs cloud's",
     "DROP TABLE sessions_old": "the sample's templates, written as tafs cloud's"
   },
   "signing/KeystoreKeys.kt": {

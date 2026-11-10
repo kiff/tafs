@@ -30,6 +30,19 @@
     "not now": "an answer sent to tafs cloud",
     "signed in": "an answer sent to tafs cloud"
   },
+  "Services/HaltAllIntent.swift": {
+    "Stop my \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings",
+    "Stop all \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings",
+    "Stop \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings",
+    "Pause my \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings",
+    "Pause \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings",
+    "Halt my \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings",
+    "Halt all \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings"
+  },
+  "Services/TafTemplates.swift": {
+    "pay invoice": "the sample's keywords, never shown",
+    "DROP TABLE sessions_old": "a SQL statement, the same in every language"
+  },
   "Services/VendorSignIn.swift": {
     "no window": "developer-only",
     "no scene": "developer-only",

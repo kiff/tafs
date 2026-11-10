@@ -29,9 +29,9 @@ on:
         type: boolean
         default: true
       screenshots:
-        description: "Which screenshots: full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) or none."
+        description: "Which screenshots: full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark), languages (the main screens in each of the eight languages) or none."
         type: choice
-        options: [full, key, none]
+        options: [full, key, languages, none]
         default: full
       external:
         description: Also give the build to the external Beta testers (after Apple's review). Off keeps it to Team.
@@ -190,7 +190,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.shots != 'none' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
 
@@ -245,6 +245,31 @@ jobs:
             mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
+          # The languages set: the main screens in each language the app ships, a line cut off
+          # or left in English shows here. The app's language and region come from the launch
+          # arguments, as a phone set to that language gives them. Each language starts from a
+          # fresh install, so a permission asked in one doesn't hang over the next one's screens.
+          if [ "$SET" = languages ]; then
+            for lang in en de fr es it pt nl pl; do
+              xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
+              xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+              region=$(echo "$lang" | tr a-z A-Z); [ "$lang" = en ] && region=US
+              loc=(-AppleLanguages "($lang)" -AppleLocale "${lang}_${region}")
+              shoot "$lang-1-welcome" "${loc[@]}"
+              shoot "$lang-2-tafs" -screenshots YES -tab tafs "${loc[@]}"
+              shoot "$lang-3-needs-you" -screenshots YES -tab needs-you "${loc[@]}"
+              shoot "$lang-4-record" -screenshots YES -tab record "${loc[@]}"
+              shoot "$lang-5-taf" -screenshots YES -tab tafs -screen taf "${loc[@]}"
+              shoot "$lang-5b-cards" -screenshots YES -tab tafs -screen card "${loc[@]}"
+              shoot "$lang-7-chat" -screenshots YES -tab tafs -screen chat "${loc[@]}"
+              shoot "$lang-8-setup" -screenshots YES -tab tafs -screen setup "${loc[@]}"
+              shoot "$lang-9-account" -screenshots YES -tab account "${loc[@]}"
+              shoot "$lang-9b-alerts" -screenshots YES -tab account -screen alerts "${loc[@]}"
+              shoot "$lang-iap-pack" -screenshots YES -screen buy-credits -pack vonk "${loc[@]}"
+            done
+            ls -la "$RUNNER_TEMP/shots"
+            exit 0
+          fi
           # The key set: the screens most changes touch, light and dark.
           if [ "$SET" = key ]; then
             shoot 2-tafs -screenshots YES -tab tafs

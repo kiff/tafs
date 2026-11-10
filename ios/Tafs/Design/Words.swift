@@ -431,6 +431,32 @@ enum Words {
             /// September
             static var september: String { Words.line("calendar.month_name.september") }
         }
+        enum MonthTitle {
+            /// April
+            static var april: String { Words.line("calendar.month_title.april") }
+            /// August
+            static var august: String { Words.line("calendar.month_title.august") }
+            /// December
+            static var december: String { Words.line("calendar.month_title.december") }
+            /// February
+            static var february: String { Words.line("calendar.month_title.february") }
+            /// January
+            static var january: String { Words.line("calendar.month_title.january") }
+            /// July
+            static var july: String { Words.line("calendar.month_title.july") }
+            /// June
+            static var june: String { Words.line("calendar.month_title.june") }
+            /// March
+            static var march: String { Words.line("calendar.month_title.march") }
+            /// May
+            static var may: String { Words.line("calendar.month_title.may") }
+            /// November
+            static var november: String { Words.line("calendar.month_title.november") }
+            /// October
+            static var october: String { Words.line("calendar.month_title.october") }
+            /// September
+            static var september: String { Words.line("calendar.month_title.september") }
+        }
         /// Next day
         static var nextDay: String { Words.line("calendar.next_day") }
         /// Next month
@@ -3104,6 +3130,8 @@ enum Words {
             static var job: String { Words.line("sample.bill_pay.job") }
             /// Bill pay
             static var name: String { Words.line("sample.bill_pay.name") }
+            /// Pay half now
+            static var nextStep: String { Words.line("sample.bill_pay.next_step") }
             /// Pay Atlas Freight
             static var payAtlas: String { Words.line("sample.bill_pay.pay_atlas") }
             /// Matches PO-3390, quarterly
@@ -3206,6 +3234,8 @@ enum Words {
             static var migrationWhy: String { Words.line("sample.deploys.migration_why") }
             /// Deploys
             static var name: String { Words.line("sample.deploys.name") }
+            /// Run it tonight
+            static var nextStep: String { Words.line("sample.deploys.next_step") }
             enum Rule {
                 /// Production deploys
                 static var deploys: String { Words.line("sample.deploys.rule.deploys") }
@@ -3242,6 +3272,8 @@ enum Words {
             static var job: String { Words.line("sample.refunds.job") }
             /// Refunds
             static var name: String { Words.line("sample.refunds.name") }
+            /// Return first
+            static var nextStep: String { Words.line("sample.refunds.next_step") }
             /// Pay out to a new bank account
             static var payout: String { Words.line("sample.refunds.payout") }
             /// Customer asked for cash instead
@@ -3695,6 +3727,28 @@ enum Words {
         static var withKiff: String { Words.line("sign_in.with_kiff") }
         /// Your code
         static var yourCode: String { Words.line("sign_in.your_code") }
+    }
+    enum Siri {
+        enum HaltAll {
+            /// Stops every taf at once. Nothing new is sent until you resume them in tafs.
+            static var description: String { Words.line("siri.halt_all.description") }
+            /// tafs couldn't halt your tafs. {why} Open tafs to halt them.
+            static func failed(why: String) -> String { Words.line("siri.halt_all.failed", why) }
+            /// Halted {count} tafs. Nothing new is sent until you resume.
+            static func halted(count: Int) -> String { Words.count("siri.halt_all.halted", count) }
+            /// Halted your tafs. Nothing new is sent until you resume.
+            static var haltedAll: String { Words.line("siri.halt_all.halted_all") }
+            /// Halting {count} tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.
+            static func halting(count: Int) -> String { Words.count("siri.halt_all.halting", count) }
+            /// Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.
+            static var haltingAll: String { Words.line("siri.halt_all.halting_all") }
+            /// tafs couldn't halt your tafs. Open tafs to halt them.
+            static var running: String { Words.line("siri.halt_all.running") }
+            /// You're signed out of tafs. Sign in to halt your tafs.
+            static var signedOut: String { Words.line("siri.halt_all.signed_out") }
+            /// Halt all tafs
+            static var title: String { Words.line("siri.halt_all.title") }
+        }
     }
     enum Taf {
         enum Activity {
@@ -4401,6 +4455,10 @@ enum Words {
         let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form
         return filled(known ? form : "\(key)|other", [number(count)] + values)
     }
+
+    /// The languages the app's screens are written in, as `languages.json` ships them: what it
+    /// asks the servers for, never a language only Siri's phrases are in.
+    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
 
     /// The language the app's lines are in, as the catalog names it, never the device's region.
     static let locale = Locale(identifier: Bundle.main.localizedString(forKey: "_language", value: "en", table: nil))

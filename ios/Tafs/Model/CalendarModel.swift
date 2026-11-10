@@ -44,6 +44,9 @@ enum CalendarMath {
     }()
 
     static let monthNames = [Words.Calendar.MonthName.january, Words.Calendar.MonthName.february, Words.Calendar.MonthName.march, Words.Calendar.MonthName.april, Words.Calendar.MonthName.may, Words.Calendar.MonthName.june, Words.Calendar.MonthName.july, Words.Calendar.MonthName.august, Words.Calendar.MonthName.september, Words.Calendar.MonthName.october, Words.Calendar.MonthName.november, Words.Calendar.MonthName.december]
+    /// A month named on its own, for the month view's title: in Polish the nominative ("Listopad 2026"),
+    /// where `monthNames` is the form that follows a day ("10 listopada").
+    static let monthTitles = [Words.Calendar.MonthTitle.january, Words.Calendar.MonthTitle.february, Words.Calendar.MonthTitle.march, Words.Calendar.MonthTitle.april, Words.Calendar.MonthTitle.may, Words.Calendar.MonthTitle.june, Words.Calendar.MonthTitle.july, Words.Calendar.MonthTitle.august, Words.Calendar.MonthTitle.september, Words.Calendar.MonthTitle.october, Words.Calendar.MonthTitle.november, Words.Calendar.MonthTitle.december]
     /// Monday first.
     static let weekdayNames = [Words.Calendar.Weekday.mon, Words.Calendar.Weekday.tue, Words.Calendar.Weekday.wed, Words.Calendar.Weekday.thu, Words.Calendar.Weekday.fri, Words.Calendar.Weekday.sat, Words.Calendar.Weekday.sun]
 
@@ -146,27 +149,33 @@ enum CalendarMath {
         return s
     }
 
-    /// The view's title: "Thu 5 November 2026", "2 – 8 November 2026", "November 2026".
+    /// The view's title, in the order the app's language writes a date: "Thu 5 November 2026",
+    /// "2 – 8 November 2026", "November 2026" (German "Do., 5. November 2026", Spanish "noviembre de 2026").
     static func title(_ state: CalendarState) -> String {
         guard let p = parts(state.selected) else { return state.selected }
         switch state.mode {
         case .day:
-            return "\(weekdayNames[weekdayIndex(state.selected)]) \(p.d) \(monthNames[p.m - 1]) \(p.y)"
+            return Words.Calendar.Title.day(weekday: weekdayNames[weekdayIndex(state.selected)], day: "\(p.d)", month: monthNames[p.m - 1], year: "\(p.y)")
         case .week:
             let days = week(state.selected)
             guard let a = parts(days[0]), let b = parts(days[6]) else { return state.selected }
-            if a.y != b.y { return "\(a.d) \(monthNames[a.m - 1]) \(a.y) – \(b.d) \(monthNames[b.m - 1]) \(b.y)" }
-            if a.m != b.m { return "\(a.d) \(monthNames[a.m - 1]) – \(b.d) \(monthNames[b.m - 1]) \(b.y)" }
-            return "\(a.d) – \(b.d) \(monthNames[b.m - 1]) \(b.y)"
+            if a.y != b.y {
+                return Words.Calendar.Title.weekAcrossYears(fromDay: "\(a.d)", fromMonth: monthNames[a.m - 1], fromYear: "\(a.y)",
+                                                            toDay: "\(b.d)", toMonth: monthNames[b.m - 1], toYear: "\(b.y)")
+            }
+            if a.m != b.m {
+                return Words.Calendar.Title.weekAcrossMonths(fromDay: "\(a.d)", fromMonth: monthNames[a.m - 1], toDay: "\(b.d)", toMonth: monthNames[b.m - 1], year: "\(b.y)")
+            }
+            return Words.Calendar.Title.week(fromDay: "\(a.d)", toDay: "\(b.d)", month: monthNames[b.m - 1], year: "\(b.y)")
         case .month:
-            return "\(monthNames[p.m - 1]) \(p.y)"
+            return Words.Calendar.Title.month(month: monthTitles[p.m - 1], year: "\(p.y)")
         }
     }
 
     /// A day as a heading in the agenda: "Thu 5 November".
     static func dayHeading(_ day: String) -> String {
         guard let p = parts(day) else { return day }
-        return "\(weekdayNames[weekdayIndex(day)]) \(p.d) \(monthNames[p.m - 1])"
+        return Words.Calendar.dayHeading(weekday: weekdayNames[weekdayIndex(day)], day: "\(p.d)", month: monthNames[p.m - 1])
     }
 
     /// The events of a day, in time order.

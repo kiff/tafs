@@ -176,7 +176,7 @@ def camel(part, upper=False):
     return f"`{out}`" if out in SWIFT_WORDS else out
 
 
-def ios_swift(source, lines=None):
+def ios_swift(source, lines=None, shipped=("en",)):
     """A typed accessor for each key, nested by the key's parts: Words.NeedsYou.approveOnce. It
     takes a name as it is, and gives the catalog its possessive too where a line wants it."""
     tree = {}
@@ -234,6 +234,10 @@ def ios_swift(source, lines=None):
             "        let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form",
             "        return filled(known ? form : \"\\(key)|other\", [number(count)] + values)",
             "    }",
+            "",
+            "    /// The languages the app's screens are written in, as `languages.json` ships them: what it",
+            "    /// asks the servers for, never a language only Siri's phrases are in.",
+            "    static let languages = [" + ", ".join(f'"{lang}"' for lang in shipped) + "]",
             "",
             "    /// The language the app's lines are in, as the catalog names it, never the device's region.",
             f"    static let locale = Locale(identifier: Bundle.main.localizedString(forKey: \"{IOS_LANGUAGE_KEY}\", value: \"en\", table: nil))",
@@ -296,7 +300,7 @@ def generated(folder=HERE):
     source = load("en", folder)
     lines = {lang: load(lang, folder) for lang in langs["all"]}
     shipped = langs["shipped"]
-    files = {IOS_CATALOG: ios_catalog(source, shipped, lines), IOS_SWIFT: ios_swift(source, lines)}
+    files = {IOS_CATALOG: ios_catalog(source, shipped, lines), IOS_SWIFT: ios_swift(source, lines, shipped)}
     android = android_emitter()
     if android:
         files.update(android.generated(source, lines, langs))

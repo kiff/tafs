@@ -239,6 +239,20 @@ object Words {
       val october: String get() = Res.s(R.string.calendar_month_name_october)
       val september: String get() = Res.s(R.string.calendar_month_name_september)
     }
+    object MonthTitle {
+      val april: String get() = Res.s(R.string.calendar_month_title_april)
+      val august: String get() = Res.s(R.string.calendar_month_title_august)
+      val december: String get() = Res.s(R.string.calendar_month_title_december)
+      val february: String get() = Res.s(R.string.calendar_month_title_february)
+      val january: String get() = Res.s(R.string.calendar_month_title_january)
+      val july: String get() = Res.s(R.string.calendar_month_title_july)
+      val june: String get() = Res.s(R.string.calendar_month_title_june)
+      val march: String get() = Res.s(R.string.calendar_month_title_march)
+      val may: String get() = Res.s(R.string.calendar_month_title_may)
+      val november: String get() = Res.s(R.string.calendar_month_title_november)
+      val october: String get() = Res.s(R.string.calendar_month_title_october)
+      val september: String get() = Res.s(R.string.calendar_month_title_september)
+    }
     val nextDay: String get() = Res.s(R.string.calendar_next_day)
     val nextMonth: String get() = Res.s(R.string.calendar_next_month)
     val nextWeek: String get() = Res.s(R.string.calendar_next_week)
@@ -1680,6 +1694,7 @@ object Words {
     object BillPay {
       val job: String get() = Res.s(R.string.sample_bill_pay_job)
       val name: String get() = Res.s(R.string.sample_bill_pay_name)
+      val nextStep: String get() = Res.s(R.string.sample_bill_pay_next_step)
       val payAtlas: String get() = Res.s(R.string.sample_bill_pay_pay_atlas)
       val payAtlasWhy: String get() = Res.s(R.string.sample_bill_pay_pay_atlas_why)
       val payNorthwind: String get() = Res.s(R.string.sample_bill_pay_pay_northwind)
@@ -1738,6 +1753,7 @@ object Words {
       val migration: String get() = Res.s(R.string.sample_deploys_migration)
       val migrationWhy: String get() = Res.s(R.string.sample_deploys_migration_why)
       val name: String get() = Res.s(R.string.sample_deploys_name)
+      val nextStep: String get() = Res.s(R.string.sample_deploys_next_step)
       object Rule {
         val deploys: String get() = Res.s(R.string.sample_deploys_rule_deploys)
         val destroyData: String get() = Res.s(R.string.sample_deploys_rule_destroy_data)
@@ -1759,6 +1775,7 @@ object Words {
       val credit2290Why: String get() = Res.s(R.string.sample_refunds_credit_2290_why)
       val job: String get() = Res.s(R.string.sample_refunds_job)
       val name: String get() = Res.s(R.string.sample_refunds_name)
+      val nextStep: String get() = Res.s(R.string.sample_refunds_next_step)
       val payout: String get() = Res.s(R.string.sample_refunds_payout)
       val payoutWhy: String get() = Res.s(R.string.sample_refunds_payout_why)
       val refund4471: String get() = Res.s(R.string.sample_refunds_refund_4471)
@@ -2004,6 +2021,19 @@ object Words {
     }
     val withKiff: String get() = Res.s(R.string.sign_in_with_kiff)
     val yourCode: String get() = Res.s(R.string.sign_in_your_code)
+  }
+  object Siri {
+    object HaltAll {
+      val description: String get() = Res.s(R.string.siri_halt_all_description)
+      fun failed(why: String): String = Res.s(R.string.siri_halt_all_failed, why)
+      fun halted(count: Int): String = Res.p(R.plurals.siri_halt_all_halted, count, Res.number(count))
+      val haltedAll: String get() = Res.s(R.string.siri_halt_all_halted_all)
+      fun halting(count: Int): String = Res.p(R.plurals.siri_halt_all_halting, count, Res.number(count))
+      val haltingAll: String get() = Res.s(R.string.siri_halt_all_halting_all)
+      val running: String get() = Res.s(R.string.siri_halt_all_running)
+      val signedOut: String get() = Res.s(R.string.siri_halt_all_signed_out)
+      val title: String get() = Res.s(R.string.siri_halt_all_title)
+    }
   }
   object Taf {
     object Activity {

@@ -7,8 +7,9 @@ import Foundation
 /// unlocked. It never fails silently: it says what happened, and when it can't finish it
 /// says why and opens tafs on Halt all (iOS 17 and later; before, Siri says to open it).
 struct HaltAllTafsIntent: AppIntent {
-    static let title: LocalizedStringResource = "Halt all tafs"
-    static let description = IntentDescription("Stops every taf at once. Nothing new is sent until you resume them in tafs.")
+    // The words are the catalog's (app/strings `siri.halt_all.*`), in the phone's language.
+    static let title = LocalizedStringResource("siri.halt_all.title")
+    static let description = IntentDescription(LocalizedStringResource("siri.halt_all.description"))
     static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     static let openAppWhenRun = false
 
@@ -32,7 +33,8 @@ extension HaltAllTafsIntent: ForegroundContinuableIntent {}
 /// Siri's phrases for it. Resume isn't one: it stays in the app, with Face ID. Each names
 /// the app, as Siri requires; "Stop" and "Pause" are heard where "halt" often isn't, and
 /// the app answers to other spoken names too ("my agents", Info.plist's
-/// INAlternativeAppNames), in English, Spanish and French (kiff/tafs#236, item 28).
+/// INAlternativeAppNames) (kiff/tafs#236, item 28). These English phrases are the keys of
+/// each language's `AppShortcuts.strings`, in the eight languages the app ships.
 struct TafsShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: HaltAllTafsIntent(), phrases: [
@@ -71,11 +73,11 @@ enum HaltAll {
     }
 
     static func run(cloud: TafsCloud?, wait: () async -> Void = { try? await Task.sleep(nanoseconds: 1_000_000_000) }) async -> Outcome {
-        guard let cloud else { return .needsApp("You're signed out of tafs. Sign in to halt your tafs.") }
+        guard let cloud else { return .needsApp(Words.Siri.HaltAll.signedOut) }
         let count = try? await cloud.tafs().count
         var h: TafsCloud.Halt
         do { h = try await cloud.halt(nil) } catch {
-            return .needsApp("tafs couldn't halt your tafs: \(error.localizedDescription) Open tafs to halt them.")
+            return .needsApp(Words.Siri.HaltAll.failed(why: error.localizedDescription))
         }
         // KIFF's gateway and planque confirm in a moment: it says halted once they have.
         var tries = 0
@@ -88,11 +90,10 @@ enum HaltAll {
     }
 
     static func said(_ h: TafsCloud.Halt, count: Int?) -> Outcome {
-        let tafs = count.map { $0 == 1 ? "1 taf" : "\($0) tafs" } ?? "your tafs"
         switch h.state {
-        case .halted: return .done("Halted \(tafs). Nothing new is sent until you resume.")
-        case .halting: return .done("Halting \(tafs): no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.")
-        case .running: return .needsApp("tafs couldn't halt your tafs. Open tafs to halt them.")
+        case .halted: return .done(count.map { Words.Siri.HaltAll.halted(count: $0) } ?? Words.Siri.HaltAll.haltedAll)
+        case .halting: return .done(count.map { Words.Siri.HaltAll.halting(count: $0) } ?? Words.Siri.HaltAll.haltingAll)
+        case .running: return .needsApp(Words.Siri.HaltAll.running)
         }
     }
 }
