@@ -236,6 +236,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
       kredyty: ["kredyt"], wersja: ["wersji", "wersję"], "limit wydatków": ["limitu wydatków"], prośba: ["prośbę", "prośby", "próśb"],
       pukanie: ["zapuka"], "zapytaj coacha": ["poproś coacha"], "spróbuj ponownie": ["spróbuj później"],
       "powiązani nadawcy": ["powiązanych nadawców"],
+      uruchomienie: ["uruchomienia", "uruchomieniu"], // "nie rozpoczęto uruchomienia", "przy następnym uruchomieniu"
     },
   };
 

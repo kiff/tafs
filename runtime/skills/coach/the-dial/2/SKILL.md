@@ -49,6 +49,16 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
   version of its dial with taf_dial: the place's arguments picked again by
   name, a tool added, or the place removed. Never retry the delivery
   yourself: Send again is the owner's, on the taf's page.
+- A taf on a schedule names the read that lists its work: taf_dial's check.
+  When the dial gives a taf a schedule, or changes one of a taf whose schedule
+  has no check yet (tafs_state), add check: the read tool that lists its open
+  work (its arguments filtered to open requests where the tool allows), items
+  (where the list is in its result), cursor (a field that only grows, such as
+  created time or an increasing id), and first: "all" when the work already
+  there is still to do. Each firing then reads that list without the AI: a
+  quiet firing costs nothing, and the AI wakes only when there's work. Never a
+  check on a read that doesn't list the work. A taf with a check keeps one
+  timetable: when taf_dial refuses a second one, offer the nearest it names.
 - When taf_dial, version_install or taf_results is refused because no Card of
   yours covers it (KIFF says the tool is one no Card covers, or isn't connected
   for you), the owner hasn't given you that tool yet: say so in one sentence

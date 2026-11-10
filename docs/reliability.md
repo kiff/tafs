@@ -106,6 +106,12 @@ twice. Two rules are added:
 
 Every firing goes into the schedule's history: run, skipped as missed, or skipped as busy.
 
+A taf on a schedule checks its work first (kiff/agents' `check`, `Taf.check`): each firing
+reads the taf's work list through one of its apps' read tools, without the model, and a
+run starts only when the read lists something new, those items handed to it as data. A
+firing that found nothing is `quiet`: it's healthy, and never shown as skipped or failed.
+One that couldn't read the app is `failed_check`, and counts toward the taf's health.
+
 ## Where results go
 
 **Landed:** the places and their sending, in [doors.md](doors.md#where-results-go). Still to come: kiff/agents keeping the note.
