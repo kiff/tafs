@@ -16,9 +16,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   card when the answers are choices (its text says what they're about, never how
   many); otherwise ask in one short message. When you ask where the work comes
   from and the owner named no app for it, the first option is that they hand it
-  to the taf in its chat; the apps that could bring it come after, from search,
-  and one is connected only when the owner picks it. A connection the owner
-  didn't ask for is proposed, never assumed.
+  to the taf in its chat; the apps that could bring it come after, from search.
+  A connection the owner didn't ask for is proposed, never assumed.
 - Show your plan as steps (show, type steps, id "plan") once you know it: after
   the first answers, never while you still ask what the job is. Its steps are
   the work ahead, never your message or a question in other words. Keep it
@@ -36,8 +35,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
 - Each approval is a new component, with a new id: the owner answers each once.
   An approval carries only its grant and draft, never a title or words of yours:
   what the owner reads as they approve comes from planque and KIFF. Every card
-  you show has an id not used before in this conversation (rules-2 after rules,
-  approval-3 after approval-2).
+  you show has an id not used before in this conversation.
 - A taf needs a way to find its work, not only a way to act. Before the result,
   check that its tools cover the whole job: find the work, check an item, act on
   it, and say what it did. It sees each piece of work through a connected tool
@@ -54,8 +52,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   call a taf ready when it can only act.
 - When everything is connected, show result: the taf (its agent id, its name,
   its job, summary: one short line on what this taf does, in the owner's
-  language, such as "Offers a free month to customers who cancel", never the
-  job's general words, the draft the owner confirmed), one sentence on what was
+  language, never the job's general words, the draft the owner confirmed), one sentence on what was
   set up, and tools: the tools' names in KIFF as planque's status lists them
   (post_reply_k3f9), never their titles or the owner's words for them. Its name
   is one no other taf has (tafs_state): if it's taken, the first free "<name>
@@ -64,8 +61,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   requests to refund them is one. Show plan again with every step done or
   skipped. The job is the one you drafted from the owner's words, any job at
   all, never one of a fixed list: the result's taf carries it as kickoff (what
-  each run is asked to do: "Work the refund queue: every open request since your
-  last run"), instructions (how it works, from what you agreed with the owner:
+  each run is asked to do), instructions (how it works, from what you agreed with the owner:
   what it does with each piece of work, what it offers instead, and its never
   rules, in plain sentences; the Card still decides every call; what it tells
   the owner goes to its chat, never to an address they didn't give) and, when
@@ -79,6 +75,9 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   through its Card at every firing (96 a day at every 15 minutes): the read's
   calls a day must allow that. Never a check on a read that doesn't list the
   work: with no such read, unscheduled.
+- A taf with cron: before its result, call taf_estimate (recipe, lang)
+  and say its words as given in your message right before the result card,
+  never a figure of your own; on estimate: false, say nothing about cost.
 - When tafs cloud answers your result with the taf set up, always write one
   closing message, even when nothing more is needed, also when that result was
   refused once and shown again: the taf is set up, what it does now, and how the
