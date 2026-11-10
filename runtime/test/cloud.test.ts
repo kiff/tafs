@@ -2684,6 +2684,33 @@ describe("a schedule whose runs keep failing to start", () => {
     expect(JSON.parse(page.body ?? "{}").health).toEqual({ level: "failing", lines: ["Its last 4 scheduled runs couldn't start. Open one to see why."] });
   });
 
+  it("stays quiet when the schedule's last counted run failed for our own outage, and speaks for the taf's own failure after it", async () => {
+    const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
+    const { w, deps } = await setUp({ since: SINCE, firings: 3, run: "run_down" });
+    w.agents.runs.length = 0;
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_down", agent: RAE, session: "s", trigger: "schedule", status: "ERROR", code: "ai_unavailable", error: "The AI isn't available right now.", cost_micro_usd: 0, turns: 0, created: at(-10), updated: at(-10) });
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(0);
+    // The outage over, the same run of failures goes on with a failure of the taf's own: said now, once.
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_own", agent: RAE, session: "s", trigger: "schedule", status: "ERROR", error: "the run didn't start", cost_micro_usd: 0, turns: 0, created: at(-1), updated: at(-1) });
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...w.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 4, run: "run_own" } });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.many(4));
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    // A run that can't be found among its latest isn't known to be ours: it's said, as before.
+    const unknown = await setUp({ since: SINCE, firings: 2, run: "run_gone" });
+    unknown.w.agents.runs.length = 0;
+    expect(await sweepFailingSchedules(unknown.deps)).toHaveLength(1);
+    // A follow-up that didn't run won't run again, whatever stopped it: still said.
+    const fu = await setUp();
+    fu.w.agents.runs.length = 0;
+    fu.w.agents.runs.unshift({ tenant: "t_acme", id: "run_fu", agent: RAE, session: "s", trigger: "schedule", status: "ERROR", code: "ai_unavailable", cost_micro_usd: 0, turns: 0, created: at(-10), updated: at(-10) });
+    fu.w.agents.schedules.set(`t_acme|fu-1`, { ...fu.w.agents.schedules.get(`t_acme|${RAE}`)!, id: "fu-1", kind: "once", follow_up: true, enabled: false, failing: { since: SINCE, firings: 1, run: "run_fu" } });
+    expect(await sweepFailingSchedules(fu.deps)).toEqual([{ tenant: "t_acme", schedule: "fu-1" }]);
+    expect(bodyOf(fu.w.pushed[0]!.n)).toBe(FAILING_WORDS.followUp);
+  });
+
   it("doesn't alert for runs started from the taf's chat: whoever asked saw them fail", async () => {
     const at = (m: number) => new Date(AT.getTime() + m * 60_000).toISOString();
     const x = await setUp();

@@ -385,6 +385,10 @@ phones that answer holds, once for each run of failures, opening the taf:
   won't run again by itself. "A follow-up it set for itself didn't run, and won't try again. Open it to
   see why." Not while it's still on (its owner moved it during the run), and never said again a month on.
 - **nothing for a halted taf or account,** which tries nothing until it's resumed; it's said once it is.
+- **nothing for our own outage:** a recurring schedule whose last counted run failed because the AI
+  provider wasn't serving us (`code: "ai_unavailable"`) says nothing, and tries again at its next time. A
+  failure of the taf's own later in the same run of failures is still said. A follow-up or a one-time run
+  that didn't run for it is still said, since its work won't run again.
 
 **A taf whose runs fail one after another** (`sweepHealth`, on the sweep). A taf that turns failing
 ([reliability.md](reliability.md#its-health)) is said once for that bad spell, to the same phones, opening

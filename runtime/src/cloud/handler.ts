@@ -6201,6 +6201,11 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       if (!taf || taf.removing) continue;
       // Halted, or not known not to be: nothing is said now, and the next sweep asks again.
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
+      // Our own outage isn't the owner's to hear of, taf by taf: a recurring schedule whose last counted run
+      // failed because the AI provider wasn't serving us says nothing, and tries again at its next time. The
+      // once-key isn't taken, so a failure of the taf's own later in the same run of failures is still said.
+      // A once schedule's work won't run again, whatever stopped it: that's still said.
+      if (!once && !dropped && f.run && await oursToWatch(deps, tenant, taf.id, f.run)) continue;
       // Once for each run of failures, and again when that run comes to drop work: an owner told its runs
       // couldn't start still hears that what one was working on won't be tried again. Each later partway
       // stop dropped other work, so it's said too, at most once in each DROPPED_AGAIN_MS window of this
@@ -6213,6 +6218,15 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
     }
   }
   return told;
+}
+
+/**
+ * Whether the run failed because the AI provider wasn't serving us (`ai_unavailable`): our outage, not the
+ * taf's. A run that can't be read, or isn't among the taf's latest, isn't known to be ours, and counts.
+ */
+async function oursToWatch(deps: Deps, tenant: string, taf: string, run: string): Promise<boolean> {
+  const runs = await deps.agents.runs(tenant, taf, false, 20).catch(() => [] as Run[]);
+  return runs.find((r) => r.id === run)?.code === "ai_unavailable";
 }
 
 /** The window, counted from the start of a run of failures, in which a partway stop is said once. */
