@@ -276,18 +276,23 @@ final class AppStoreFront: StoreFront {
 
     nonisolated static func unit(_ u: Product.SubscriptionPeriod.Unit) -> String {
         switch u {
-        case .day: return "day"
-        case .week: return "week"
-        case .month: return "month"
-        case .year: return "year"
-        @unknown default: return "period"
+        case .day: return Words.Usage.day
+        case .week: return Words.Usage.week
+        case .month: return Words.Usage.month
+        case .year: return Words.Usage.year
+        @unknown default: return Words.Usage.period
         }
     }
 
     /// "1 week", "2 weeks".
     nonisolated static func length(_ p: Product.SubscriptionPeriod) -> String {
-        let unit = unit(p.unit)
-        return p.value == 1 ? "1 \(unit)" : "\(p.value) \(unit)s"
+        switch p.unit {
+        case .day: return Words.Billing.Length.days(count: p.value)
+        case .week: return Words.Billing.Length.weeks(count: p.value)
+        case .month: return Words.Billing.Length.months(count: p.value)
+        case .year: return Words.Billing.Length.years(count: p.value)
+        @unknown default: return "\(p.value) \(unit(p.unit))"
+        }
     }
 
     enum StoreError: LocalizedError {

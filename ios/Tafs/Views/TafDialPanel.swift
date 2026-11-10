@@ -73,7 +73,7 @@ struct TafDialPanel<Details: View>: View {
                     ForEach(Array((knob.draft?.words ?? []).enumerated()), id: \.offset) { _, line in
                         Text(line).scaledFont(13).foregroundColor(Theme.soft)
                     }
-                    Button(busy ? "Confirming…" : liveLabel) { confirm(pending.version) }
+                    Button(busy ? Words.Common.confirming : liveLabel) { confirm(pending.version) }
                         .buttonStyle(PrimaryButtonStyle()).disabled(busy)
                         .accessibilityIdentifier("knob.makeLive")
                 }
@@ -91,7 +91,7 @@ struct TafDialPanel<Details: View>: View {
 
     private var liveLabel: String {
         let changes = knob.pending?.changes ?? 0
-        return "Make \(changes) change\(changes == 1 ? "" : "s") live with \(Biometry.name)"
+        return Words.Knob.makeLive(count: changes, biometry: Biometry.name)
     }
 
     private func showHeld() {
@@ -210,7 +210,7 @@ struct KnobRequestDetail: View {
                 Button(Words.Common.tryAgain) { Task { await load() } }
             }
         }
-        .navigationTitle("Request").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(Words.Knob.requestTitle).navigationBarTitleDisplayMode(.inline)
         .task(id: run) { await load() }
     }
 

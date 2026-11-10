@@ -170,10 +170,10 @@ struct UsageView: View {
     /// One line on who bills the plan; nil when no plan is billed.
     static func billingLine(_ u: KIFFClient.Usage) -> String? {
         switch u.billing?.source {
-        case "apple": return "Billed by Apple"
-        case "google": return "Billed by Google Play"
-        case "stripe": return "Billed by KIFF"
-        case "contract": return "Managed by your company's agreement"
+        case "apple": return Words.Billing.byApple
+        case "google": return Words.Billing.byGooglePlay
+        case "stripe": return Words.Billing.byKiff
+        case "contract": return Words.Billing.byAgreement
         default: return nil
         }
     }
@@ -200,18 +200,18 @@ struct UsageView: View {
     /// The member's request while it waits, in the lines both apps share (docs/accounts.md ›
     /// In the apps).
     static func askedLine(_ r: KIFFClient.PackRequest, in u: KIFFClient.Usage) -> String {
-        r.kind == "raise" ? "You asked an admin to raise the spend limit." : "You asked an admin for a pack."
+        r.kind == "raise" ? Words.Billing.Ask.askedRaise : Words.Billing.Ask.askedPack
     }
 
     /// The member's latest answered request, in the lines both apps share.
     static func lastAnswer(_ u: KIFFClient.Usage) -> String? {
         guard !u.managesBilling, let r = u.requests?.first else { return nil }
         switch r.status {
-        case "approved": return r.kind == "raise" ? "An admin raised the spend limit." : "An admin added a pack."
+        case "approved": return r.kind == "raise" ? Words.Billing.Ask.raised : Words.Billing.Ask.addedPack
         case "declined":
             if let note = r.note, !note.isEmpty { return Words.Billing.Ask.declinedNote(note: "\(note)") }
             return Words.Billing.Ask.declined
-        case "expired": return "Your request ended with the period."
+        case "expired": return Words.Billing.Ask.expired
         default: return nil
         }
     }
@@ -219,7 +219,7 @@ struct UsageView: View {
     /// An open request, as someone who manages billing reads it, in Android's words: "Someone
     /// asks to raise the spend limit.", "Someone asks for Rayo."
     static func requestLine(_ r: KIFFClient.PackRequest, in u: KIFFClient.Usage?) -> String {
-        r.kind == "raise" ? "Someone asks to raise the spend limit." : "Someone asks for \(packLine(r.pack, in: u))."
+        r.kind == "raise" ? Words.Billing.Ask.someoneRaise : Words.Billing.Ask.someonePack(pack: "\(packLine(r.pack, in: u))")
     }
 
     /// Open requests, for someone who manages billing.

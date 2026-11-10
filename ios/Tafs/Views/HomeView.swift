@@ -210,7 +210,7 @@ struct HomeView: View {
                 Text(Words.Home.notLoaded)
                     .foregroundColor(Theme.dim)
             } else {
-                Text("\(working) \(working == 1 ? "taf" : "tafs") working.")
+                Text(Words.Home.working(count: working))
                     .foregroundColor(Theme.ink)
                 Text(model.needsYouWords)
                     .foregroundColor(Theme.dim)

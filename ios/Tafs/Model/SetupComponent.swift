@@ -300,12 +300,12 @@ struct SetupThread: Equatable {
             return options.first { $0.value == a.text }?.label ?? a.text
         case .approval?:
             if a.failed { return Words.Coach.Answer.approveFailed }
-            return a.text == "declined" ? "Decline" : "Approve"
+            return a.text == "declined" ? Words.Coach.Answer.decline : Words.Approval.approve
         case .signIn?:
             if a.failed { return Words.Coach.Answer.signInFailed }
-            return a.text == "not now" ? "Not now" : "Signed in"
+            return a.text == "not now" ? Words.Coach.notNow : Words.Coach.Answer.signedIn
         case .drive?:
-            return a.text == "declined" ? "Not now" : "Approve"
+            return a.text == "declined" ? Words.Coach.notNow : Words.Approval.approve
         case .questions?:
             let questions = components.first { $0.id == a.id }?.component.questions ?? []
             return QuestionAnswers.words(a.text, questions: questions) ?? a.text

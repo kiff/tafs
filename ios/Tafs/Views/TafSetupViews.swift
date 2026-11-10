@@ -64,7 +64,7 @@ struct StartsWhenView: View {
         Panel {
             Eyebrow(text: Words.Setup.schedule)
             if schedules.isEmpty {
-                Text(cloud?.worksFromChat == true ? "When you tell it, in its chat." : "No schedule starts it.")
+                Text(cloud?.worksFromChat == true ? Words.Setup.noStart : Words.Setup.noSchedule)
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
             ForEach(schedules) { item in
@@ -146,7 +146,7 @@ struct StartsWhenView: View {
                                     .scaledFont(13, weight: .semibold).foregroundColor(Theme.ok)
                                 Spacer()
                                 if manages, let trigger = item.trigger {
-                                    Button("Stop") { change { $0.wakes.removeAll { $0 == trigger } } }
+                                    Button(Words.Setup.stop) { change { $0.wakes.removeAll { $0 == trigger } } }
                                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                                         .disabled(busy || knob.setting == nil)
                                 }
@@ -246,12 +246,12 @@ struct SizeStepper: View {
         HStack(spacing: 12) {
             Button { move(-1) } label: { Image(systemName: "minus").frame(width: 44, height: 36) }
                 .buttonStyle(OutlineButtonStyle()).disabled(!canLower)
-                .accessibilityLabel("Less")
+                .accessibilityLabel(Words.Common.less)
             Text(label).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 .frame(maxWidth: .infinity)
             Button { move(1) } label: { Image(systemName: "plus").frame(width: 44, height: 36) }
                 .buttonStyle(OutlineButtonStyle()).disabled(!canRaise)
-                .accessibilityLabel("More")
+                .accessibilityLabel(Words.Common.more)
         }
         .accessibilityElement(children: .contain)
         .accessibilityValue(label)
@@ -481,7 +481,7 @@ struct KnobPendingPanel: View {
                 ForEach(Array((knob.draft?.words ?? []).enumerated()), id: \.offset) { _, line in
                     Text(line).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
-                Button(busy ? "Confirming…" : liveLabel(pending.changes)) { confirm(pending.version) }
+                Button(busy ? Words.Common.confirming : liveLabel(pending.changes)) { confirm(pending.version) }
                     .buttonStyle(PrimaryButtonStyle()).disabled(busy)
                     .accessibilityIdentifier("setup.makeLive")
             }
@@ -492,7 +492,7 @@ struct KnobPendingPanel: View {
     }
 
     private func liveLabel(_ changes: Int) -> String {
-        "Make \(changes) change\(changes == 1 ? "" : "s") live with \(Biometry.name)"
+        Words.Knob.makeLive(count: changes, biometry: Biometry.name)
     }
 
     private func confirm(_ n: Int) {

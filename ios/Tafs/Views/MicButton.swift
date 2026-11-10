@@ -43,7 +43,7 @@ struct MicButton: View {
                 ? Words.Voice.whatYouSaidStaysMessage
                 : Words.Voice.voiceBecomesTextDeviceNot)
         }
-        .alert("Dictation", isPresented: Binding(get: { blocked != nil }, set: { if !$0 { dictation.dismiss() } })) {
+        .alert(Words.Voice.title, isPresented: Binding(get: { blocked != nil }, set: { if !$0 { dictation.dismiss() } })) {
             if blocked?.contains("Settings") == true, let url = URL(string: UIApplication.openSettingsURLString) {
                 Button(Words.Voice.openSettings) {
                     dictation.dismiss()

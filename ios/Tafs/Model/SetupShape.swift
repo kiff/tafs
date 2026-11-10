@@ -71,8 +71,8 @@ struct SetupShape: Equatable {
                 let vendor = grants.first { $0.id == c.grant }?.vendor ?? c.service
                 let label: String
                 switch c.type {
-                case .approval: label = "Approve " + (vendor ?? Words.Coach.Shape.theConnection)
-                case .signIn: label = Words.Coach.Shape.signInAt + (vendor ?? Words.Coach.theVendor)
+                case .approval: label = Words.Coach.Shape.approveNamed(vendor: vendor ?? Words.Coach.Shape.theConnection)
+                case .signIn: label = vendor.map { Words.Coach.SignIn.at(vendor: $0) } ?? Words.Coach.SignIn.atVendor
                 default: label = c.text ?? c.title ?? Words.NeedsYou.answer
                 }
                 if ask.id == waiting { return Step(label: label, state: .needsYou) }

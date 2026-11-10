@@ -156,6 +156,17 @@
         }
       }
     },
+    "alert.haptics": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haptics"
+          }
+        }
+      }
+    },
     "alert.kiff_did_not_take_refusal": {
       "extractionState": "manual",
       "localizations": {
@@ -640,6 +651,17 @@
         }
       }
     },
+    "approval.biometry_timed_out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ timed out. Try again."
+          }
+        }
+      }
+    },
     "approval.can_not_used_right_try": {
       "extractionState": "manual",
       "localizations": {
@@ -1036,6 +1058,28 @@
         }
       }
     },
+    "approval.settings_path.face_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings → Face ID & Passcode"
+          }
+        }
+      }
+    },
+    "approval.settings_path.touch_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings → Touch ID & Passcode"
+          }
+        }
+      }
+    },
     "approval.state.none_enrolled": {
       "extractionState": "manual",
       "localizations": {
@@ -1212,6 +1256,17 @@
         }
       }
     },
+    "attachment.photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        }
+      }
+    },
     "attachment.photo_could_not_read": {
       "extractionState": "manual",
       "localizations": {
@@ -1219,6 +1274,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "That photo couldn't be read."
+          }
+        }
+      }
+    },
+    "attachment.photo_numbered": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo %1$@"
           }
         }
       }
@@ -1773,6 +1839,28 @@
         }
       }
     },
+    "billing.price_per": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a %2$@"
+          }
+        }
+      }
+    },
+    "billing.request.decline_pack_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline the request for %1$@?"
+          }
+        }
+      }
+    },
     "billing.request.decline_prompt": {
       "extractionState": "manual",
       "localizations": {
@@ -1780,6 +1868,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Decline the request"
+          }
+        }
+      }
+    },
+    "billing.request.decline_raise_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline the request to raise the spend limit?"
           }
         }
       }
@@ -1938,6 +2037,17 @@
         }
       }
     },
+    "billing.try_free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try %1$@ free"
+          }
+        }
+      }
+    },
     "billing.what_credits": {
       "extractionState": "manual",
       "localizations": {
@@ -1967,6 +2077,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose a date"
+          }
+        }
+      }
+    },
+    "calendar.date_picker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
           }
         }
       }
@@ -2422,6 +2543,17 @@
         }
       }
     },
+    "calendar.view_picker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        }
+      }
+    },
     "calendar.weekday.fri": {
       "extractionState": "manual",
       "localizations": {
@@ -2604,7 +2736,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ calls %2$@"
+            "value": "%1$@ call %2$@"
           }
         }
       }
@@ -3049,6 +3181,17 @@
         }
       }
     },
+    "card.hero.left_of_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "left %1$@ of %2$@%3$@"
+          }
+        }
+      }
+    },
     "card.hero.no_currency": {
       "extractionState": "manual",
       "localizations": {
@@ -3100,6 +3243,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "How this is counted"
+          }
+        }
+      }
+    },
+    "card.issue_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issue %1$@'s Card"
           }
         }
       }
@@ -3577,6 +3731,17 @@
         }
       }
     },
+    "card.the_tafs_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The taf's Card"
+          }
+        }
+      }
+    },
     "card.tools|one": {
       "extractionState": "manual",
       "localizations": {
@@ -3617,6 +3782,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Until %1$@"
+          }
+        }
+      }
+    },
+    "card.until_ends": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " until %1$@"
           }
         }
       }
@@ -3738,6 +3914,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "in total"
+          }
+        }
+      }
+    },
+    "card.window.in_total_window": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in total %1$@"
           }
         }
       }
@@ -4171,6 +4358,17 @@
         }
       }
     },
+    "chat.file.could_not_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file couldn't be opened."
+          }
+        }
+      }
+    },
     "chat.file.no_app_opens": {
       "extractionState": "manual",
       "localizations": {
@@ -4534,6 +4732,39 @@
         }
       }
     },
+    "chat.queued.dont_send": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't send"
+          }
+        }
+      }
+    },
+    "chat.queued.sends_when_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends when %1$@ is done"
+          }
+        }
+      }
+    },
+    "chat.queued.this_answer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this answer"
+          }
+        }
+      }
+    },
     "chat.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -4618,6 +4849,94 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send to %1$@ while it works"
+          }
+        }
+      }
+    },
+    "chat.steer.coach_reads_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach reads this at its next step"
+          }
+        }
+      }
+    },
+    "chat.steer.coach_reads_paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach reads this when it carries on"
+          }
+        }
+      }
+    },
+    "chat.steer.it_reads_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It reads this at its next step"
+          }
+        }
+      }
+    },
+    "chat.steer.it_reads_paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It reads this when it carries on"
+          }
+        }
+      }
+    },
+    "chat.steer.not_read_before_end": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It wasn't read before the work ended."
+          }
+        }
+      }
+    },
+    "chat.steer.stopped_before_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You stopped it before it read this."
+          }
+        }
+      }
+    },
+    "chat.steer.taf_reads_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ reads this at its next step"
+          }
+        }
+      }
+    },
+    "chat.steer.taf_reads_paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ reads this when it carries on"
           }
         }
       }
@@ -4776,6 +5095,28 @@
         }
       }
     },
+    "chat.work.tries|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ try"
+          }
+        }
+      }
+    },
+    "chat.work.tries|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tries"
+          }
+        }
+      }
+    },
     "chat.work.worked_for": {
       "extractionState": "manual",
       "localizations": {
@@ -4783,6 +5124,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Worked for %1$@"
+          }
+        }
+      }
+    },
+    "chat.work.worked_for_steps|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worked for %2$@, %1$@ step"
+          }
+        }
+      }
+    },
+    "chat.work.worked_for_steps|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worked for %2$@, %1$@ steps"
           }
         }
       }
@@ -4875,6 +5238,17 @@
         }
       }
     },
+    "chat.writing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Writing…"
+          }
+        }
+      }
+    },
     "chat.you_stopped": {
       "extractionState": "manual",
       "localizations": {
@@ -4893,6 +5267,116 @@
           "stringUnit": {
             "state": "translated",
             "value": "your taf"
+          }
+        }
+      }
+    },
+    "coach.activity.card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing the Card…"
+          }
+        }
+      }
+    },
+    "coach.activity.connection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working on the connection…"
+          }
+        }
+      }
+    },
+    "coach.activity.install_version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installing the new version…"
+          }
+        }
+      }
+    },
+    "coach.activity.kiff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking KIFF…"
+          }
+        }
+      }
+    },
+    "coach.activity.pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausing or resuming a taf…"
+          }
+        }
+      }
+    },
+    "coach.activity.run": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading what a taf did…"
+          }
+        }
+      }
+    },
+    "coach.activity.stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopping a run…"
+          }
+        }
+      }
+    },
+    "coach.activity.tafs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading your tafs…"
+          }
+        }
+      }
+    },
+    "coach.activity.task": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handing the taf its task…"
+          }
+        }
+      }
+    },
+    "coach.activity.try_version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trying the new version…"
           }
         }
       }
@@ -4941,6 +5425,50 @@
         }
       }
     },
+    "coach.answer.approved_connected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved · %1$@ is connected, keys kept sealed"
+          }
+        }
+      }
+    },
+    "coach.answer.approved_more_below": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved · Setup asked for more below"
+          }
+        }
+      }
+    },
+    "coach.answer.approved_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved"
+          }
+        }
+      }
+    },
+    "coach.answer.approved_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved · %1$@"
+          }
+        }
+      }
+    },
     "coach.answer.decline": {
       "extractionState": "manual",
       "localizations": {
@@ -4948,6 +5476,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Decline"
+          }
+        }
+      }
+    },
+    "coach.answer.declined_again_below": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined · Setup asked again below"
+          }
+        }
+      }
+    },
+    "coach.answer.declined_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined"
+          }
+        }
+      }
+    },
+    "coach.answer.declined_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined · %1$@"
           }
         }
       }
@@ -5634,6 +6195,17 @@
         }
       }
     },
+    "coach.driving": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Driving"
+          }
+        }
+      }
+    },
     "coach.each_waits": {
       "extractionState": "manual",
       "localizations": {
@@ -6030,6 +6602,28 @@
         }
       }
     },
+    "coach.plan.fold_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fold"
+          }
+        }
+      }
+    },
+    "coach.plan.progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan · %1$@ of %2$@"
+          }
+        }
+      }
+    },
     "coach.plan.show": {
       "extractionState": "manual",
       "localizations": {
@@ -6092,6 +6686,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Puts its words in the message box"
+          }
+        }
+      }
+    },
+    "coach.questions.answered_of": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ answered"
           }
         }
       }
@@ -6367,6 +6972,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Setup needs"
+          }
+        }
+      }
+    },
+    "coach.shape.approve_named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve %1$@"
           }
         }
       }
@@ -6679,6 +7295,17 @@
         }
       }
     },
+    "coach.tools_eyebrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools"
+          }
+        }
+      }
+    },
     "coach.tools_not_given": {
       "extractionState": "manual",
       "localizations": {
@@ -6844,6 +7471,17 @@
         }
       }
     },
+    "common.confirming": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirming…"
+          }
+        }
+      }
+    },
     "common.continue": {
       "extractionState": "manual",
       "localizations": {
@@ -6884,6 +7522,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ couldn't be read: %2$@"
+          }
+        }
+      }
+    },
+    "common.details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details"
           }
         }
       }
@@ -6932,6 +7581,17 @@
         }
       }
     },
+    "common.less": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less"
+          }
+        }
+      }
+    },
     "common.list_and": {
       "extractionState": "manual",
       "localizations": {
@@ -6939,6 +7599,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ and %2$@"
+          }
+        }
+      }
+    },
+    "common.loading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading…"
+          }
+        }
+      }
+    },
+    "common.more": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
           }
         }
       }
@@ -7126,6 +7808,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "You"
+          }
+        }
+      }
+    },
+    "common.you_signed_out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You signed out."
           }
         }
       }
@@ -7581,6 +8274,17 @@
         }
       }
     },
+    "connect.connected_manage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected. Manage"
+          }
+        }
+      }
+    },
     "connect.connected_tools": {
       "extractionState": "manual",
       "localizations": {
@@ -7797,6 +8501,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disconnect"
+          }
+        }
+      }
+    },
+    "connect.disconnecting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnecting…"
           }
         }
       }
@@ -8098,6 +8813,17 @@
         }
       }
     },
+    "connect.open_browser_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the browser again"
+          }
+        }
+      }
+    },
     "connect.opening_sign_in": {
       "extractionState": "manual",
       "localizations": {
@@ -8182,6 +8908,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Give %1$@ its key for %2$@"
+          }
+        }
+      }
+    },
+    "connect.prompt.keep_sealed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep your tools' sign-ins sealed"
           }
         }
       }
@@ -8549,6 +9286,17 @@
         }
       }
     },
+    "door.add_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        }
+      }
+    },
     "door.anyone_else_today": {
       "extractionState": "manual",
       "localizations": {
@@ -8578,6 +9326,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "The bot still listens, so the door stays. %1$@"
+          }
+        }
+      }
+    },
+    "door.channel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel"
           }
         }
       }
@@ -8688,6 +9447,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "ADD A DOOR"
+          }
+        }
+      }
+    },
+    "door.dial.position_closed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ door, closed, %2$@ of %3$@"
+          }
+        }
+      }
+    },
+    "door.dial.position_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ door, open, %2$@ of %3$@"
           }
         }
       }
@@ -9231,6 +10012,17 @@
         }
       }
     },
+    "door.pair_hint.slack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack member ID, such as U012AB3CD"
+          }
+        }
+      }
+    },
     "door.pair_intro": {
       "extractionState": "manual",
       "localizations": {
@@ -9293,6 +10085,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Press %1$@ to add a door"
+          }
+        }
+      }
+    },
+    "door.press_close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press %1$@ to close %2$@"
+          }
+        }
+      }
+    },
+    "door.press_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press %1$@ to open %2$@"
           }
         }
       }
@@ -9715,6 +10529,17 @@
         }
       }
     },
+    "door.title_plain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Door"
+          }
+        }
+      }
+    },
     "door.unpair": {
       "extractionState": "manual",
       "localizations": {
@@ -9898,6 +10723,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coach drove the app · %1$@"
+          }
+        }
+      }
+    },
+    "drive.declined_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now: Coach didn't drive the app"
           }
         }
       }
@@ -10683,6 +11519,17 @@
         }
       }
     },
+    "export.sign_in_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with KIFF to export your chats."
+          }
+        }
+      }
+    },
     "export.try_again": {
       "extractionState": "manual",
       "localizations": {
@@ -11053,6 +11900,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Halt"
+          }
+        }
+      }
+    },
+    "home.opens_plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens %1$@."
           }
         }
       }
@@ -11761,6 +12619,17 @@
         }
       }
     },
+    "knob.request_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request"
+          }
+        }
+      }
+    },
     "knob.resume": {
       "extractionState": "manual",
       "localizations": {
@@ -11823,6 +12692,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Showing"
+          }
+        }
+      }
+    },
+    "knob.showing_filter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing %1$@"
+          }
+        }
+      }
+    },
+    "knob.showing_filter_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing, %1$@"
           }
         }
       }
@@ -12230,6 +13121,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "iOS asks next. Confirming with %1$@ sets them up for your account."
+          }
+        }
+      }
+    },
+    "needs_you.knocks|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone knocked at its door. Nothing was done."
+          }
+        }
+      }
+    },
+    "needs_you.knocks|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ knocks at its doors. Nothing was done."
           }
         }
       }
@@ -12817,6 +13730,17 @@
         }
       }
     },
+    "people.delete_this_group_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this group?"
+          }
+        }
+      }
+    },
     "people.everyone_in": {
       "extractionState": "manual",
       "localizations": {
@@ -12839,6 +13763,17 @@
         }
       }
     },
+    "people.group_actions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ actions"
+          }
+        }
+      }
+    },
     "people.group_name_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -12857,6 +13792,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ uses %2$@: %3$@."
+          }
+        }
+      }
+    },
+    "people.groups": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groups"
           }
         }
       }
@@ -14016,6 +14962,17 @@
         }
       }
     },
+    "receipt.outcome.done_moved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done. %1$@ moved."
+          }
+        }
+      }
+    },
     "receipt.outcome.moved": {
       "extractionState": "manual",
       "localizations": {
@@ -14474,6 +15431,204 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done, within its Card"
+          }
+        }
+      }
+    },
+    "record.event.a_door": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a door"
+          }
+        }
+      }
+    },
+    "record.event.door_removed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You removed its %1$@ door"
+          }
+        }
+      }
+    },
+    "record.event.door_removed_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its address no longer reaches it"
+          }
+        }
+      }
+    },
+    "record.event.halted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halted"
+          }
+        }
+      }
+    },
+    "record.event.halted_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halted with all your tafs"
+          }
+        }
+      }
+    },
+    "record.event.halted_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing of it runs until you resume it"
+          }
+        }
+      }
+    },
+    "record.event.knock_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You had it act on %1$@'s message"
+          }
+        }
+      }
+    },
+    "record.event.knock_done_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By %1$@, in your words"
+          }
+        }
+      }
+    },
+    "record.event.knock_ignored": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You ignored %1$@'s message"
+          }
+        }
+      }
+    },
+    "record.event.knock_ignored_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By %1$@: nothing was done"
+          }
+        }
+      }
+    },
+    "record.event.knocked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ wrote by %2$@"
+          }
+        }
+      }
+    },
+    "record.event.knocked_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not paired, so nothing was done"
+          }
+        }
+      }
+    },
+    "record.event.paired": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You paired %1$@"
+          }
+        }
+      }
+    },
+    "record.event.paired_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their messages by %1$@ give it work from now on"
+          }
+        }
+      }
+    },
+    "record.event.resumed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resumed"
+          }
+        }
+      }
+    },
+    "record.event.resumed_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resumed with all your tafs"
+          }
+        }
+      }
+    },
+    "record.event.resumed_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It works again as before the halt"
+          }
+        }
+      }
+    },
+    "record.event.someone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone"
           }
         }
       }
@@ -15171,6 +16326,17 @@
         }
       }
     },
+    "report.cant_from_here": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This answer can't be reported from here."
+          }
+        }
+      }
+    },
     "report.menu": {
       "extractionState": "manual",
       "localizations": {
@@ -15607,6 +16773,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Email from a new address asked for it"
+          }
+        }
+      }
+    },
+    "sample.card.read_stripe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read Stripe"
+          }
+        }
+      }
+    },
+    "sample.card.refunds_stripe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refunds · Stripe"
           }
         }
       }
@@ -16476,6 +17664,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Account id"
+          }
+        }
+      }
+    },
+    "settings.account_named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account, %1$@"
           }
         }
       }
@@ -17767,6 +18966,17 @@
         }
       }
     },
+    "setup.no_schedule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No schedule starts it."
+          }
+        }
+      }
+    },
     "setup.no_start": {
       "extractionState": "manual",
       "localizations": {
@@ -18504,6 +19714,28 @@
         }
       }
     },
+    "taf.activity.checking_waits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking what waits for you…"
+          }
+        }
+      }
+    },
+    "taf.activity.reading_notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading its notes…"
+          }
+        }
+      }
+    },
     "taf.app.add_actions": {
       "extractionState": "manual",
       "localizations": {
@@ -18801,6 +20033,17 @@
         }
       }
     },
+    "taf.job_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@'s job"
+          }
+        }
+      }
+    },
     "taf.keys_kept_sealed": {
       "extractionState": "manual",
       "localizations": {
@@ -18863,6 +20106,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%1$@”\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay."
+          }
+        }
+      }
+    },
+    "taf.memory.forget_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget: %1$@"
           }
         }
       }
@@ -19329,6 +20583,50 @@
         }
       }
     },
+    "taf.remove.step_key": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "key"
+          }
+        }
+      }
+    },
+    "taf.remove.step_memory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "memory"
+          }
+        }
+      }
+    },
+    "taf.remove.step_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "name"
+          }
+        }
+      }
+    },
+    "taf.remove.step_schedule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "schedule"
+          }
+        }
+      }
+    },
     "taf.remove_body": {
       "extractionState": "manual",
       "localizations": {
@@ -19747,6 +21045,17 @@
         }
       }
     },
+    "taf.view_picker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        }
+      }
+    },
     "taf.work.show_all_runs": {
       "extractionState": "manual",
       "localizations": {
@@ -19945,6 +21254,17 @@
         }
       }
     },
+    "usage.day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "day"
+          }
+        }
+      }
+    },
     "usage.label": {
       "extractionState": "manual",
       "localizations": {
@@ -20066,6 +21386,17 @@
         }
       }
     },
+    "usage.pack_named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · a pack of credits"
+          }
+        }
+      }
+    },
     "usage.packs_keep": {
       "extractionState": "manual",
       "localizations": {
@@ -20073,6 +21404,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Never expires"
+          }
+        }
+      }
+    },
+    "usage.period": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "period"
           }
         }
       }
@@ -20095,6 +21437,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Raise the spend limit"
+          }
+        }
+      }
+    },
+    "usage.raise_limit.sign_in_first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with KIFF to raise the limit."
           }
         }
       }
@@ -20491,6 +21844,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "use unavailable"
+          }
+        }
+      }
+    },
+    "usage.week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "week"
+          }
+        }
+      }
+    },
+    "usage.year": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "year"
           }
         }
       }
@@ -20898,6 +22273,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Live now"
+          }
+        }
+      }
+    },
+    "version.live_number": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %1$@ · live"
           }
         }
       }
@@ -21866,6 +23252,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "It didn't stop: %1$@"
+          }
+        }
+      }
+    },
+    "work.duration.minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ min %2$@ s"
+          }
+        }
+      }
+    },
+    "work.duration.seconds": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ s"
           }
         }
       }

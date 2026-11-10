@@ -1,13 +1,14 @@
 # The apps' shared words (app/strings): the checks over them, and that every generated file is
-# what the generator writes. Nobody edits a generated file by hand.
+# what the generator writes. Nobody edits a generated file by hand. Any change to the iPhone and iPad
+# app's sources runs them too: English written in code fails them (app/strings/ios_literals.py).
 name: Strings
 
 on:
   push:
     branches: [main]
-    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/Localizable.xcstrings", "ios/Tafs/Design/Words.swift", "android/app/src/main/res/**", "android/app/src/main/kotlin/bot/tafs/app/model/Words.kt", ".github/workflows/strings.yml"]
+    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/**", "android/app/src/main/res/**", "android/app/src/main/kotlin/bot/tafs/app/model/Words.kt", ".github/workflows/strings.yml"]
   pull_request:
-    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/Localizable.xcstrings", "ios/Tafs/Design/Words.swift", "android/app/src/main/res/**", "android/app/src/main/kotlin/bot/tafs/app/model/Words.kt", ".github/workflows/strings.yml"]
+    paths: ["app/strings/**", "docs/languages.md", "ios/Tafs/**", "android/app/src/main/res/**", "android/app/src/main/kotlin/bot/tafs/app/model/Words.kt", ".github/workflows/strings.yml"]
 
 permissions:
   contents: read

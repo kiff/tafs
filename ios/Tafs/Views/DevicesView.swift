@@ -40,7 +40,7 @@ struct DevicesView: View {
         .navigationTitle(Self.title)
         .task { await model.refreshDevices() }
         .refreshable { await model.refreshDevices() }
-        .confirmationDialog(removing.map { "Sign \($0.name ?? "this device") out?" } ?? "",
+        .confirmationDialog(removing.map { $0.name.map { Words.Settings.Devices.signOutNamed(device: $0) } ?? Words.Settings.Devices.signOutThis } ?? "",
                             isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                             titleVisibility: .visible) {
             Button(Words.Settings.Devices.signOut, role: .destructive) {

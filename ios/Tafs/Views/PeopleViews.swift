@@ -20,7 +20,7 @@ struct PeopleGroupsView: View {
             }
             if let account = model.kiffAccount {
                 Section {
-                    Text("\(account.name) · \(model.people.count) \(model.people.count == 1 ? "person" : "people")")
+                    Text("\(account.name) · " + Words.People.count(count: model.people.count))
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
             }
@@ -65,9 +65,9 @@ struct PeopleGroupsView: View {
         }
         .sheet(item: $naming) { n in GroupNameSheet(naming: n).environmentObject(model) }
         .sheet(item: $adding) { g in AddToGroupSheet(group: g).environmentObject(model) }
-        .confirmationDialog("Delete \(deleting?.name ?? "this group")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+        .confirmationDialog(deleting.map { Words.People.deleteGroupTitle(group: $0.name) } ?? Words.People.deleteThisGroupTitle, isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                             titleVisibility: .visible, presenting: deleting) { group in
-            Button("Delete \(group.name)", role: .destructive) {
+            Button(Words.People.deleteGroupButton(group: "\(group.name)"), role: .destructive) {
                 Task { await model.changePeople(Words.People.deleteGroup(group: "\(group.name)")) { try await $0.deleteGroup(group.id) } }
             }
         } message: { group in
@@ -90,7 +90,7 @@ struct PeopleGroupsView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle").foregroundColor(Theme.soft)
                 }
-                .accessibilityLabel("\(group.name) actions")
+                .accessibilityLabel(Words.People.groupActions(group: group.name))
             }
         }
     }
@@ -119,7 +119,7 @@ struct PeopleGroupsView: View {
             if model.canManagePeople {
                 let role = member.isManager ? "member" : "manager"
                 Button(member.isManager ? Words.People.makeMember : Words.People.makeManager) {
-                    Task { await model.changePeople("Make \(person?.label ?? member.subject) a \(role) of \(group.name)") { try await $0.setGroupMember(group.id, subject: member.subject, role: role) } }
+                    Task { await model.changePeople(Words.People.makeRole(who: "\(person?.label ?? member.subject)", role: "\(role)", group: "\(group.name)")) { try await $0.setGroupMember(group.id, subject: member.subject, role: role) } }
                 }
             }
             if mayRemove(member, from: group) {
@@ -139,8 +139,8 @@ struct PeopleGroupsView: View {
     /// "Uses Refunds and Invoices", or that it uses none yet.
     static func uses(_ group: KIFFClient.Group, _ model: AppModel) -> String {
         let names = group.agents.compactMap { model.tafName(agent: $0) }
-        if names.isEmpty { return group.everyone == true ? "Everyone on the account · uses no taf" : "Uses no taf yet" }
-        return "Uses " + ListFormatter.localizedString(byJoining: names.sorted())
+        if names.isEmpty { return group.everyone == true ? Words.People.everyoneUsesNone : Words.People.usesNone }
+        return Words.People.uses(tafs: ListFormatter.localizedString(byJoining: names.sorted()))
     }
 
     static func managersFirst(_ model: AppModel) -> (KIFFClient.GroupMember, KIFFClient.GroupMember) -> Bool {
@@ -178,12 +178,12 @@ struct GroupNameSheet: View {
             }
             .scrollContentBackground(.hidden)
             .screenBackground()
-            .navigationTitle(naming.group == nil ? "New group" : "Rename \(naming.group?.name ?? "")")
+            .navigationTitle(naming.group == nil ? Words.People.newGroup : Words.People.renameGroupTitle(group: naming.group?.name ?? ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(naming.group == nil ? "Create" : "Save") { save() }
+                    Button(naming.group == nil ? Words.People.create : Words.Common.save) { save() }
                         .disabled(trimmed.isEmpty || saving)
                 }
             }
@@ -233,7 +233,7 @@ struct AddToGroupSheet: View {
                         Button {
                             Task {
                                 let role = asManager && model.canManagePeople ? "manager" : "member"
-                                if await model.changePeople("Add \(person.label) to \(group.name)", { try await $0.setGroupMember(group.id, subject: person.subject, role: role) }) {
+                                if await model.changePeople(Words.People.addToGroup(who: "\(person.label)", group: "\(group.name)"), { try await $0.setGroupMember(group.id, subject: person.subject, role: role) }) {
                                     dismiss()
                                 }
                             }

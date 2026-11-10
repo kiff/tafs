@@ -12,7 +12,7 @@ struct DriveCard: View {
         let c = shown.component
         let task = c.text ?? c.title ?? Words.Drive.driveApp
         if let answer = model.setupThread.answer(to: c.id) {
-            OutcomeLine(text: answer.text == "declined" ? "Not now: Coach didn't drive the app" : "Coach drove the app · \(task)",
+            OutcomeLine(text: answer.text == "declined" ? Words.Drive.declinedLine : Words.Drive.coachDroveApp(task: "\(task)"),
                         tone: answer.text == "declined" ? Theme.dim : Theme.ok, mark: answer.text == "declined" ? "minus.circle.fill" : "checkmark.circle.fill")
         } else if model.isAnswered(c) {
             OutcomeLine(text: Words.Drive.coachDroveApp(task: "\(task)"), tone: Theme.ok)

@@ -108,19 +108,19 @@ enum KIFFMapping {
         let count = h.card.ids.count
         // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run
         // has none, and is described by its Cards.
-        var taf = Taf(id: id, name: h.name, job: h.jobSummary ?? "Works under \(count) KIFF Card\(count == 1 ? "" : "s").",
+        var taf = Taf(id: id, name: h.name, job: h.jobSummary ?? Words.Taf.worksUnderCards(count: count),
                       tools: h.card.tools, colorIndex: h.color,
                       card: Card(rules: rules, issuedBy: owner, expires: h.card.expires, revoked: !h.card.active))
         switch h.state {
-        case "waiting": taf.state = .waiting; taf.now = "Waiting on you"
-        case "paused": taf.state = .paused; taf.now = "Paused"
+        case "waiting": taf.state = .waiting; taf.now = Words.Taf.Now.waitingOnYou
+        case "paused": taf.state = .paused; taf.now = Words.Taf.Now.paused
         // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
-        case "halted": taf.state = .halted; taf.now = "Halted · resume it from Halt"
+        case "halted": taf.state = .halted; taf.now = Words.Taf.Now.halted
         // A taf with no schedule isn't at work until it's told something in its chat
         // (kiff/tafs#138, item 55): it reads as ready, not running.
-        case "working" where h.unscheduled == true: taf.state = .idle; taf.now = "Works from its chat"
-        case "working": taf.state = .working; taf.now = h.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
-        case "idle": taf.state = .idle; taf.now = "Acting under KIFF"
+        case "working" where h.unscheduled == true: taf.state = .idle; taf.now = Words.Taf.Now.worksFromChat
+        case "working": taf.state = .working; taf.now = h.nextRun.map { Words.Taf.Now.nextRun(time: "\($0.shortTime)") } ?? Words.Taf.Now.running
+        case "idle": taf.state = .idle; taf.now = Words.Taf.Now.actingUnderKiff
         default: taf.state = .revoked; taf.now = Words.Taf.Now.cardNotActive
         }
         taf.kiffCardIDs = h.card.ids
@@ -171,7 +171,7 @@ enum KIFFMapping {
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
                 entry.refusedByTool = true
-                entry.refusedBy = c.toolOutcome?.refusedBy == "connection" ? "The connection" : vendors[c.actionName]
+                entry.refusedBy = c.toolOutcome?.refusedBy == "connection" ? Words.Record.theConnection : vendors[c.actionName]
             }
             entry.amount = c.amount
             entry.readOnly = c.readOnly
@@ -313,13 +313,13 @@ enum KIFFMapping {
     /// machine's "count limit 0 per calendar_day reached".
     static func countReason(_ e: KIFFClient.CardException) -> String? {
         guard let b = reasonBreach(e), b.outcome == "limit_reached", b.quantity == "count", let limit = b.limit else { return nil }
-        if limit == 0 { return "Each call asks you first" }
+        if limit == 0 { return Words.Card.Held.eachCallAsks }
         let nth = ordinal((b.used ?? limit) + (b.draw ?? 1))
         guard let raw = b.window else { return Words.Card.overLimitCallsWould(limit: "\(limit)", nth: "\(nth)") }
         // A total for each item apart says so, and which item: "… for each invoice id: this would be the 2nd for in_42".
-        let each = b.per.flatMap { $0.isEmpty ? nil : Words.Card.Held.forEachJoin + $0.lowercased().replacingOccurrences(of: "_", with: " ") } ?? ""
-        let item = each.isEmpty ? "" : b.value.flatMap { $0.isEmpty ? nil : " for \($0)" } ?? ""
-        return "\(limit) \(limit == 1 ? "call" : "calls") \(Window(raw).label)\(each): this would be the \(nth)\(item)"
+        let each = b.per.flatMap { $0.isEmpty ? nil : Words.Card.Held.forEach(name: $0.lowercased().replacingOccurrences(of: "_", with: " ")) } ?? ""
+        let item = each.isEmpty ? "" : b.value.flatMap { $0.isEmpty ? nil : Words.Card.Held.forItem(item: $0) } ?? ""
+        return Words.Card.Held.countInWindow(count: Int(limit), window: Window(raw).label, each: each, nth: nth, item: item)
     }
 
     /// 1st, 2nd, 3rd, 11th, 21st.
@@ -338,8 +338,8 @@ enum KIFFMapping {
               let amount = amount(of: e), amount.currency == unit else { return nil }
         let cap = Money(minor: limit, currency: unit, scale: b.scale ?? amount.scale).formatted
         switch b.outcome {
-        case "per_action_exceeded": return "\(amount.formatted) is over the \(cap) limit for one call"
-        case "limit_reached": return "\(amount.formatted) would go over the \(cap) total"
+        case "per_action_exceeded": return Words.Card.Held.overOneCall(amount: "\(amount.formatted)", cap: "\(cap)")
+        case "limit_reached": return Words.Card.Held.overTotal(amount: "\(amount.formatted)", cap: "\(cap)")
         default: return nil
         }
     }
@@ -375,9 +375,9 @@ enum KIFFMapping {
 
     static func outcomeText(_ outcome: String?) -> String {
         switch outcome {
-        case "per_action_exceeded": return "Over the Card's limit for one action"
-        case "limit_reached": return "Over the Card's total"
-        case "resource_not_on_card": return "Not one of the Card's resources"
+        case "per_action_exceeded": return Words.Card.Outcome.overOneAction
+        case "limit_reached": return Words.Card.Outcome.overTotal
+        case "resource_not_on_card": return Words.Card.Outcome.notAResource
         default: return Words.Card.Outcome.outside
         }
     }

@@ -76,7 +76,7 @@ struct DoorsView: View {
         Group {
             if focus != nil {
                 ScrollView { doorDetails.padding(.horizontal, 16).padding(.vertical, 12) }
-                    .navigationTitle(door.map { "\($0.label) door" } ?? "Door")
+                    .navigationTitle(door.map { Words.Door.named(door: $0.label) } ?? Words.Door.titlePlain)
             } else if let knob {
                 TafDialPanel(taf: taf, knob: knob, face: $face, doors: doors, manages: manages,
                              held: held, press: pressKnob, approve: approve, details: doorDetails)
@@ -164,7 +164,7 @@ struct DoorsView: View {
     private var hint: String {
         guard let door else { return Words.Door.pressAddDoor(taf: "\(taf.name)") }
         if let tap = door.words?.tap { return tap }
-        return "Press \(taf.name) to \(door.open ? "close" : "open") \(door.label)"
+        return door.open ? Words.Door.pressClose(taf: taf.name, door: door.label) : Words.Door.pressOpen(taf: taf.name, door: door.label)
     }
 
     private func press() {
@@ -192,7 +192,7 @@ struct DoorsView: View {
                 HStack(spacing: 12) {
                     DoorBadge(app: door.app, open: door.open, size: 34)
                     VStack(alignment: .leading, spacing: 2) {
-                        Eyebrow(text: "\(door.label) door")
+                        Eyebrow(text: Words.Door.named(door: door.label))
                         Text(door.words?.state ?? (door.open ? (door.resting ? Words.Door.Status.resting : Words.Door.Status.`open`) : Words.Door.Status.closed))
                             .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
@@ -230,7 +230,7 @@ struct DoorsView: View {
                                 // The address once, when the name is only the address (kiff/tafs#236, item 20).
                                 // "You" only on this person's own key (the 870 test: the owner's key read "You").
                                 let mine = key.auto && key.id.lowercased() == myEmail?.lowercased()
-                                let name = mine ? "You" : key.name.flatMap { $0.lowercased() == key.id.lowercased() ? nil : $0 }
+                                let name = mine ? Words.Door.Key.you : key.name.flatMap { $0.lowercased() == key.id.lowercased() ? nil : $0 }
                                 Text(name ?? key.id).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                                 if name != nil {
                                     Text(key.id).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
@@ -348,7 +348,7 @@ struct DoorDial: View {
     private var accessibilityValue: String {
         guard selected < doors.count else { return Words.Door.Dial.addPosition(stops: "\(stops)", stops2: "\(stops)") }
         let d = doors[selected]
-        return "\(d.label) door, \(d.open ? "open" : "closed"), \(selected + 1) of \(stops)"
+        return d.open ? Words.Door.Dial.positionOpen(door: d.label, position: "\(selected + 1)", stops: "\(stops)") : Words.Door.Dial.positionClosed(door: d.label, position: "\(selected + 1)", stops: "\(stops)")
     }
 
     private var centerLine: String {
@@ -394,7 +394,7 @@ struct DoorDial: View {
             }
             .offset(x: cos(a) * radius, y: sin(a) * radius)
             .onTapGesture { turn(to: i) }
-            Text((door?.label ?? "Add").uppercased())
+            Text((door?.label ?? Words.Door.addShort).uppercased())
                 .font(Theme.mono(isSelected ? 11 : 9.5, weight: isSelected ? .semibold : .regular))
                 .foregroundColor(isSelected ? Theme.ink : Theme.dim)
                 .fixedSize()
@@ -545,8 +545,8 @@ struct AddDoorSheet: View {
                 .textFieldStyle(.roundedBorder)
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
-                    section("Knows who's writing · can hold keys", doors.addable.filter { $0.proof == "proven" && matches($0) })
-                    section("Can't prove who's writing · knocks only", doors.addable.filter { $0.proof != "proven" && matches($0) })
+                    section(Words.Door.provenSection, doors.addable.filter { $0.proof == "proven" && matches($0) })
+                    section(Words.Door.unprovenSection, doors.addable.filter { $0.proof != "proven" && matches($0) })
                     if doors.addable.filter(matches).isEmpty {
                         Text(query.isEmpty ? Words.Door.noMore : Words.Door.noAppCalled(query: "\(query)"))
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
@@ -614,8 +614,8 @@ struct PairSheet: View {
             Text(Words.Door.pairSomeone).scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text(Words.Door.pairIntro(door: "\(door.label.lowercased())"))
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            DriveField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code"
-                      : door.kind == "slack" ? "Slack member ID, such as U012AB3CD" : "Who, as \(door.label) names them", text: $sender)
+            DriveField(door.kind == "email" ? Words.Door.PairHint.email : door.kind == "whatsapp" ? Words.Door.PairHint.phone
+                      : door.kind == "slack" ? Words.Door.PairHint.slack : Words.Door.PairHint.other(door: "\(door.label)"), text: $sender)
                 .textFieldStyle(.roundedBorder)
                 .disableAutocorrection(true)
             DriveField(Words.Door.nameOptional, text: $name).textFieldStyle(.roundedBorder)
@@ -646,15 +646,15 @@ struct KnockCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("\(knock.paired ? "PAIRED · BY " : "● KNOCK · BY ")\(DoorNames.label(knock.app).uppercased())\(knock.proof == "fail" ? " · DIDN'T CHECK OUT" : "")")
+            Text((knock.paired ? Words.Door.Knock.pairedBy(app: DoorNames.label(knock.app).uppercased()) : Words.Door.Knock.by(app: DoorNames.label(knock.app).uppercased())) + (knock.proof == "fail" ? " · " + Words.Door.Knock.didntCheckOut : ""))
                 .scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(knock.paired ? Theme.soft : Theme.amberText)
             if knock.paired {
                 Text(Words.Door.Knock.pairedLine).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             }
             if let rest = knock.rest {
                 Text(rest == "keys"
-                     ? "This door had its messages from you and paired senders for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped."
-                     : "This door had its messages from people who aren't paired for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped.")
+                     ? Words.Door.Knock.restKeys(count: knock.dropped)
+                     : Words.Door.Knock.restOthers(count: knock.dropped))
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Button(Words.Common.ok) { Task { await doors.answer(knock, "ignore") } }.buttonStyle(OutlineButtonStyle())
             } else {
@@ -662,7 +662,7 @@ struct KnockCard: View {
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Text(knock.text).scaledFont(14).foregroundColor(Theme.soft).lineLimit(compact ? 3 : 8).textSelection(.enabled)
                 if knock.attachments > 0 {
-                    Text("It had \(knock.attachments) attachment\(knock.attachments == 1 ? "" : "s"), not opened.")
+                    Text(Words.Door.Knock.attachments(count: knock.attachments))
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 }
                 if let note = proofNote {
@@ -677,7 +677,7 @@ struct KnockCard: View {
                             .background(Theme.amber).clipShape(Capsule())
                     }
                     if knock.proof == "pass", !knock.paired {
-                        Button("Pair \(knock.name?.components(separatedBy: " ").first ?? "them")") { Task { await doors.answer(knock, "pair") } }
+                        Button(knock.name?.components(separatedBy: " ").first.map { Words.Door.Knock.pair(name: $0) } ?? Words.Door.Knock.pairThem) { Task { await doors.answer(knock, "pair") } }
                             .buttonStyle(.drivablePlain).confirming().scaledFont(14, weight: .medium).foregroundColor(Theme.ink)
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .overlay(Capsule().stroke(Theme.ink.opacity(0.2)))
@@ -701,8 +701,8 @@ struct KnockCard: View {
 
     private var proofNote: String? {
         switch knock.proof {
-        case "fail": return "It says it's from \(knock.from), but it didn't pass the sender check, so it's treated as a stranger's."
-        case "none": return "This door can't prove who wrote it."
+        case "fail": return Words.Door.Knock.proofFailed(from: "\(knock.from)")
+        case "none": return Words.Door.Knock.proofNone
         default: return nil
         }
     }
@@ -770,7 +770,7 @@ struct DoorStamp: View {
             return "BY \(label.uppercased())\(mark.from.map { " · \($0)" } ?? "")"
         }
         switch mark.reply {
-        case "sent": return "↩ SENT BACK BY \(label.uppercased()) · SAME THREAD"
+        case "sent": return Words.Door.Stamp.sentBack(app: "\(label.uppercased())")
         case "not_sent": return mark.why.map { Words.Door.Stamp.notSentBack + " · " + $0 } ?? Words.Door.Stamp.notSentBack
         default: return Words.Door.Stamp.goesBack(app: "\(label.uppercased())")
         }
@@ -871,7 +871,7 @@ struct SlackDoorSheet: View {
                         }
                     }
                     if let grant {
-                        Section("Channel") {
+                        Section(Words.Door.channel) {
                             if let channels {
                                 if channels.isEmpty {
                                     Text(Words.Door.slackBotSeesNoChannel)

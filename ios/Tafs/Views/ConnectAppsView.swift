@@ -22,7 +22,7 @@ struct ConnectAppsView: View {
             if let apps = model.connectApps {
                 ForEach(apps.apps) { app in row(app) }
                 if apps.nextCursor != nil {
-                    Button(loadingMore ? "Loading…" : Words.Connect.moreApps) {
+                    Button(loadingMore ? Words.Common.loading : Words.Connect.moreApps) {
                         loadingMore = true
                         Task { await model.loadMoreConnectApps(); loadingMore = false }
                     }
@@ -49,7 +49,7 @@ struct ConnectAppsView: View {
             guard !Task.isCancelled else { return }
             await model.loadConnectApps(query)
         }
-        .confirmationDialog("Which taf is this for?", isPresented: Binding(get: { choosing != nil }, set: { if !$0 { choosing = nil } }),
+        .confirmationDialog(Words.Connect.whichTaf, isPresented: Binding(get: { choosing != nil }, set: { if !$0 { choosing = nil } }),
                             titleVisibility: .visible, presenting: choosing) { app in
             ForEach(model.connectableTafs) { t in
                 Button(t.name) { start(app, for: t.id) }
@@ -77,7 +77,7 @@ struct ConnectAppsView: View {
                 NavigationLink { AppConnectionsView(app: app) } label: {
                     Label(Words.Connect.Status.connected, systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
                 }
-                .accessibilityLabel("Connected. Manage")
+                .accessibilityLabel(Words.Connect.connectedManage)
                 .accessibilityIdentifier("connect.manage." + app.entry)
             } else if app.connected {
                 Label(Words.Connect.Status.connected, systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
@@ -135,7 +135,7 @@ enum DisconnectWords {
     static func title(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
         let asked = taf.map { Words.Connect.Disconnect.titleFrom(vendor: "\(vendor)", taf: "\($0)") } ?? Words.Connect.Disconnect.title(vendor: "\(vendor)")
         guard !alsoStops.isEmpty else { return asked }
-        return "\(asked) \(alsoStops.joined(separator: " and ")) \(alsoStops.count == 1 ? "stops" : "stop") too."
+        return asked + " " + Words.Connect.Disconnect.alsoStops(count: alsoStops.count, names: alsoStops.joined(separator: " and "))
     }
 
     static func message(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
@@ -172,7 +172,7 @@ enum ConnectionGroupWords {
     /// Cards use them, by tafs cloud's names.
     static func cleared(done: Int, kept: Int, keptFor: [String], left: Int) -> String {
         var parts: [String] = []
-        if done > 0 { parts.append("Cleared \(done).") }
+        if done > 0 { parts.append(Words.Connect.ClearRemoved.cleared(count: done)) }
         if kept > 0 { parts.append(keptLine(kept, distinct(keptFor))) }
         if left > 0 { parts.append(Words.Connect.couldNotClearedTryAgain(left: "\(left)")) }
         return parts.joined(separator: " ")
@@ -181,14 +181,14 @@ enum ConnectionGroupWords {
     /// A connection a live taf's Card still uses, as tafs cloud says (`used_by`): kept, and for whom.
     static func keptLine(_ kept: Int, _ names: [String]) -> String {
         let who = names.isEmpty ? Words.Connect.Kept.anotherTaf : joined(names)
-        return "Kept \(kept) for \(who), whose Card\(names.count > 1 ? "s use" : " uses") \(kept == 1 ? "it" : "them")."
+        return names.count > 1 ? Words.Connect.Kept.forCards(count: kept, who: who) : Words.Connect.Kept.forCard(count: kept, who: who)
     }
 
     /// Under a removed taf's connection that Clear keeps: the tafs whose Cards still use it.
     static func usedBy(_ names: [String]) -> String? {
         let n = distinct(names)
         guard !n.isEmpty else { return nil }
-        return "Kept: " + joined(n) + (n.count == 1 ? "'s Card uses it" : "'s Cards use it")
+        return n.count == 1 ? Words.Connect.UsedBy.one(name: joined(n)) : Words.Connect.UsedBy.many(names: joined(n))
     }
 
     /// The names that aren't blank, each once, in order.
@@ -327,7 +327,7 @@ struct AppConnectionsView: View {
             }
             Spacer()
             if model.canManageCards {
-                Button(busy == g.id ? "Disconnecting…" : g.waitingSignIn ? ConnectionFixWords.cancel : "Disconnect", role: .destructive) {
+                Button(busy == g.id ? Words.Connect.disconnecting : g.waitingSignIn ? ConnectionFixWords.cancel : Words.Connect.disconnectButton, role: .destructive) {
                     if g.waitingSignIn { cancelling = g } else { confirming = g }
                 }
                 .buttonStyle(.borderless)
@@ -446,7 +446,7 @@ struct ConnectApprovalSheet: View {
                 }
                 .padding(20)
             }
-            .navigationTitle(grant.map { "Connect \($0.vendor)" } ?? Words.Connect.Apps.connect)
+            .navigationTitle(grant.map { Words.Coach.connectService(service: "\($0.vendor)") } ?? Words.Connect.Apps.connect)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } } }
         }

@@ -131,7 +131,7 @@ struct TafKnobView: View {
         switch filter {
         case .all: return Words.Knob.allServices
         case .taf: return Words.Knob.thisTaf
-        case .connection(let id): return knob.connections.first { $0.grant == id }?.name ?? "All services"
+        case .connection(let id): return knob.connections.first { $0.grant == id }?.name ?? Words.Knob.allServices
         }
     }
 
@@ -142,12 +142,12 @@ struct TafKnobView: View {
             ForEach(knob.connections) { connection in
                 let count = KnobNavigation.stops(knob, filter: .connection(connection.grant)).count
                 Button { filter = .connection(connection.grant) } label: {
-                    Label("\(connection.name) · \(count) \(count == 1 ? "stop" : "stops")", systemImage: "app.connected.to.app.below.fill")
+                    Label(Words.Knob.withStops(count: count, name: connection.name), systemImage: "app.connected.to.app.below.fill")
                 }
             }
         } label: {
             HStack(spacing: 10) {
-                Text("Showing " + filterName).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Words.Knob.showingFilter(filter: filterName)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.down").foregroundColor(Theme.dim)
             }
@@ -155,7 +155,7 @@ struct TafKnobView: View {
             .background(RoundedRectangle(cornerRadius: 14).fill(Theme.panel))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.line))
         }
-        .accessibilityLabel("Showing, " + filterName).accessibilityIdentifier("knob.showing")
+        .accessibilityLabel(Words.Knob.showingFilterLabel(filter: filterName)).accessibilityIdentifier("knob.showing")
     }
 
     private func items(_ ring: Ring) -> [TafsCloud.Knob.Item] { KnobNavigation.items(knob, ring: ring, filter: filter) }
@@ -353,7 +353,7 @@ struct TafKnobView: View {
         guard chosen != nil else { return Self.tapARing }
         if chosenItem?.ok == "approve" { return Words.Approval.approveWith(biometry: Biometry.name) }
         if let tap = chosenItem?.tap { return tap }
-        return chosenItem?.size != nil ? "Use − and +" : "Ask Coach to change"
+        return chosenItem?.size != nil ? Words.Knob.useSize : Words.Knob.askCoachToChange
     }
 
     private var note: String { heldCall?.reason ?? chosenItem?.words ?? Words.Knob.caption }

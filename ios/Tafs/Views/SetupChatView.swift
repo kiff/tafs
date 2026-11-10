@@ -92,8 +92,8 @@ struct SetupChatView: View {
         .inlineTitle()
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Button(action: newConversation) { Image(systemName: "square.and.pencil") }.accessibilityLabel("New conversation")
-                Menu { Button("Previous conversations") { showingChats = true } } label: { Image(systemName: "ellipsis") }.accessibilityLabel("Coach's conversations")
+                Button(action: newConversation) { Image(systemName: "square.and.pencil") }.accessibilityLabel(Words.Coach.newConversation)
+                Menu { Button(Words.Coach.Chats.previous) { showingChats = true } } label: { Image(systemName: "ellipsis") }.accessibilityLabel(Words.Coach.conversations)
             }
         }
         .setupChrome(wide: sizeClass == .regular)
@@ -248,7 +248,7 @@ struct SetupChatView: View {
                             VStack(alignment: .trailing, spacing: 4) {
                                 ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
                                     .opacity(0.8)
-                                Text("Coach reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                                Text(steering.status == "PAUSED" ? Words.Chat.Steer.coachReadsPaused : Words.Chat.Steer.coachReadsNext)
                                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                             }
                             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -258,7 +258,7 @@ struct SetupChatView: View {
                         }
                     }
                     // tafs cloud holds it, and sends it once Coach is done (docs/chat.md).
-                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer").id("queued").pinnedTop(pinned == "queued") }
+                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: Words.Chat.Queued.thisAnswer).id("queued").pinnedTop(pinned == "queued") }
                     Color.clear.frame(height: 0).threadFoot()
                     // Room under a pinned message, so a short one reaches the top at once (kiff/tafs#243):
                     // the screen less the turn it starts (the 845 test), so the answer grows into it
@@ -473,7 +473,7 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 12) {
             startSwitch
             if let taf = model.setupImproving {
-                Text("Improve \(taf.name)")
+                Text(Words.Coach.improveTaf(taf: "\(taf.name)"))
                     .scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
@@ -525,8 +525,8 @@ struct SetupChatView: View {
         let onScreen = model.tafOnScreen.flatMap { id in model.cloudTaf(for: id).map { (id, $0) } }
         if let name = improving?.name ?? onScreen?.1.name {
             HStack(spacing: 0) {
-                startChoice("New taf", selected: improving == nil) { model.newSetupChat() }
-                startChoice("Improve \(name)", selected: improving != nil) {
+                startChoice(Words.Home.newTaf, selected: improving == nil) { model.newSetupChat() }
+                startChoice(Words.Coach.improveTaf(taf: "\(name)"), selected: improving != nil) {
                     if let id = onScreen?.0 { model.improveTaf(id) }
                 }
             }
@@ -751,7 +751,7 @@ struct SetupChatsList: View {
                 }
                 .listRowBackground(Theme.panel)
             }
-            .confirmationDialog("Archive this conversation?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
+            .confirmationDialog(Words.Coach.Chats.archiveTitle, isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                                 titleVisibility: .visible, presenting: confirming) { chat in
                 Button(Words.Coach.Chats.archive) { archive(chat.session) }
                 Button(Words.Common.cancel, role: .cancel) {}
@@ -920,11 +920,11 @@ struct QueuedBubble: View {
         VStack(alignment: .trailing, spacing: 6) {
             ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .owner, text: text, session: "queued"), taf: nil)
                 .opacity(0.6)
-            Text(unqueue == nil ? Self.heldWords : "Sends when \(who) is done").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            Text(unqueue == nil ? Self.heldWords : Words.Chat.Queued.sendsWhenDone(who: "\(who)")).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
-            if let unqueue { Button("Don't send", role: .destructive, action: unqueue) }
+            if let unqueue { Button(Words.Chat.Queued.dontSend, role: .destructive, action: unqueue) }
         }
         .accessibilityElement(children: .combine)
     }
@@ -1021,7 +1021,7 @@ struct SetupPlan: View {
                 HStack(spacing: 10) {
                     if !open, let now { StepMark(status: now.status) }
                     VStack(alignment: .leading, spacing: 2) {
-                        Eyebrow(text: "Plan · \(done) of \(steps.count)")
+                        Eyebrow(text: Words.Coach.Plan.progress(done: "\(done)", total: "\(steps.count)"))
                         if !open {
                             Text(now?.label ?? (shown.component.title ?? Words.Coach.planTitle))
                                 .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
@@ -1168,13 +1168,13 @@ struct SetupComponentView: View {
                 }
                 Text(c.note ?? Words.Coach.signInNote)
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                Button(state == .working ? model.connectStep ?? "Opening the sign-in…" : state.isFailure ? "Try again" : signedOut != nil ? "Sign in again" : c.yes ?? "Open \(c.service ?? "the sign-in")") {
+                Button(state == .working ? model.connectStep ?? Words.Connect.openingSignIn : state.isFailure ? Words.Common.tryAgain : signedOut != nil ? Words.Connect.signInAgain : c.yes ?? c.service.map { Words.Coach.SignIn.open(service: $0) } ?? Words.Coach.SignIn.openSignIn) {
                     Task { await model.signInAgain(c) }
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(busy || (answered && !state.isFailure))
                 // Where it goes is always the app's own words, whatever the button says.
-                Text("Opens \(c.destination)")
+                Text(Words.Coach.SignIn.opens(destination: "\(c.destination)"))
                     .scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity)
                 if !state.isFailure {
@@ -1243,7 +1243,7 @@ struct SetupComponentView: View {
         let started = c.taf.flatMap { model.taf(forAgent: $0.agent) }.flatMap { model.cloudTaf(for: $0) }
         let name = started?.name ?? c.taf?.name ?? ""
         let renamed = started != nil && started?.name != c.taf?.name
-        let open = renamed ? "Open \(name)" : c.yes ?? Words.Coach.Result.seeIt(taf: "\(name)")
+        let open = renamed ? Words.Coach.Result.`open`(taf: "\(name)") : c.yes ?? Words.Coach.Result.seeIt(taf: "\(name)")
         return Panel(stroke: Theme.ok) {
             Eyebrow(text: Words.Coach.Result.setUp(taf: "\(name)"), color: Theme.ok)
             Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
@@ -1306,8 +1306,8 @@ struct SetupApproval: View {
     private var replacedLine: String {
         let answer = model.setupThread.answer(to: component.id)
         // What happened, then where to look (kiff/tafs#138, item 54).
-        if let a = answer, !a.failed, a.text.hasPrefix("approved") { return "Approved · Setup asked for more below" }
-        if answer?.text == "declined" { return "Declined · Setup asked again below" }
+        if let a = answer, !a.failed, a.text.hasPrefix("approved") { return Words.Coach.Answer.approvedMoreBelow }
+        if answer?.text == "declined" { return Words.Coach.Answer.declinedAgainBelow }
         return Words.Coach.setupChangedRequestSeeBelow
     }
 
@@ -1352,18 +1352,18 @@ struct SetupApproval: View {
         // Signed earlier, not by this tap: said as that.
         if state == .done, model.setupThread.answer(to: component.id)?.text.hasPrefix("already approved") == true {
             let title = component.title?.trimmingCharacters(in: .whitespaces)
-            return "\(AppModel.alreadyApproved) · \(title.flatMap { $0.isEmpty ? nil : $0 } ?? (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? "the vendor")"
+            return "\(AppModel.alreadyApproved) · \(title.flatMap { $0.isEmpty ? nil : $0 } ?? (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? Words.Coach.theVendor)"
         }
         if let title = component.title?.trimmingCharacters(in: .whitespaces), !title.isEmpty {
-            return state == .declined ? "Declined · \(title)" : "Approved · \(title)"
+            return state == .declined ? Words.Coach.Answer.declinedTitle(title: "\(title)") : Words.Coach.Answer.approvedTitle(title: "\(title)")
         }
         let vendor = (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? Words.Coach.theVendor
         // An approval with the taf's Card is the Card's (kiff/tafs#94), not the tool's again.
         if let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true {
-            return state == .declined ? "Declined · \(draft.cardTitle)" : "Approved · \(draft.cardTitle)"
+            return state == .declined ? Words.Coach.Answer.declinedTitle(title: "\(draft.cardTitle)") : Words.Coach.Answer.approvedTitle(title: "\(draft.cardTitle)")
         }
-        if state == .declined { return "Declined · \(vendor)" }
-        if grant?.connected == true { return "Approved · \(vendor) is connected, keys kept sealed" }
+        if state == .declined { return Words.Coach.Answer.declinedTitle(title: "\(vendor)") }
+        if grant?.connected == true { return Words.Coach.Answer.approvedConnected(vendor: "\(vendor)") }
         return Words.Coach.approvedSigned(vendor: "\(vendor)")
     }
 
@@ -1377,8 +1377,8 @@ struct SetupApproval: View {
         let (eyebrow, color): (String, Color) = {
             if replaced { return (Words.Coach.earlierRequest, Theme.dim) }
             switch state {
-            case .done: return ("Approved", Theme.ok)
-            case .declined: return ("Declined", Theme.dim)
+            case .done: return (Words.Coach.Answer.approvedShort, Theme.ok)
+            case .declined: return (Words.Coach.Answer.declinedShort, Theme.dim)
             case .working: return (Words.Approval.approving, Theme.amber)
             case .failed: return (Words.Coach.Answer.failedShort, Theme.no)
             case .needsYou: return (Words.Coach.needsYouApprove, Theme.amber)
@@ -1389,7 +1389,7 @@ struct SetupApproval: View {
                 Eyebrow(text: eyebrow, color: color)
                 Spacer()
                 if open {
-                    Button("Fold") { withMotion(.easeOut(duration: 0.2)) { open = false } }
+                    Button(Words.Coach.Plan.foldShort) { withMotion(.easeOut(duration: 0.2)) { open = false } }
                         .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                 }
             }
@@ -1416,7 +1416,7 @@ struct SetupApproval: View {
                             .driveTerms(grant.vendor)
                             .padding(.top, 6)
                         } label: {
-                            Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
+                            Text(Words.Common.details).scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
                         }
                     }
                     if grant.profile != nil {
@@ -1460,7 +1460,7 @@ struct SetupApproval: View {
                     Button(Words.Coach.Approval.decline) { Task { await model.answer(component, "declined") } }
                         .buttonStyle(OutlineButtonStyle())
                     ApprovalGate {
-                        Button(state == .working ? "Approving…" : state.isFailure ? "Try again" : "Approve") {
+                        Button(state == .working ? Words.Approval.approving : state.isFailure ? Words.Common.tryAgain : Words.Coach.Answer.approve) {
                             Task { await model.approve(component, shown: grant?.digest, shownDraft: draft?.version) }
                         }
                         .buttonStyle(PrimaryButtonStyle())
@@ -1658,7 +1658,7 @@ struct KnobDraftCard: View {
                 }
                 if let tafID, model.manages(tafID) {
                     HStack(spacing: 8) {
-                        Button(busy ? "Confirming…" : Words.Knob.confirmWith(biometry: "\(Biometry.name)")) { confirm(tafID, draft.version) }
+                        Button(busy ? Words.Common.confirming : Words.Knob.confirmWith(biometry: "\(Biometry.name)")) { confirm(tafID, draft.version) }
                             .buttonStyle(PrimaryButtonStyle()).disabled(busy)
                         Button(Words.Knob.change) { model.openCoach() }.buttonStyle(OutlineButtonStyle())
                     }

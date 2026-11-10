@@ -129,7 +129,7 @@ enum FilePrep {
         let jpeg = scaled(image, to: longEdge).jpegData(compressionQuality: 0.85)
         guard let jpeg else { throw FileProblem(message: Words.Chat.Attach.notAPhoto(name: "\(name)")) }
         let base = (name as NSString).deletingPathExtension
-        let named = (base.isEmpty ? "Photo" : base) + ".jpg"
+        let named = (base.isEmpty ? Words.Attachment.photo : base) + ".jpg"
         try check(name: named, size: jpeg.count, mediaType: "image/jpeg")
         return PreparedFile(name: named, mediaType: "image/jpeg", data: jpeg,
                             thumbnail: scaled(image, to: 160).jpegData(compressionQuality: 0.7))

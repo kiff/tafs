@@ -87,22 +87,22 @@ struct CalendarView: View {
                 .disabled(state.selected == today)
                 .accessibilityIdentifier("calendar.today")
             Button { show(CalendarMath.step(state, by: -1)) } label: { Image(systemName: "chevron.left") }
-                .accessibilityLabel("Previous \(state.mode.title.lowercased())")
+                .accessibilityLabel(state.mode == .day ? Words.Calendar.previousDay : state.mode == .week ? Words.Calendar.previousWeek : Words.Calendar.previousMonth)
             Button { show(CalendarMath.step(state, by: 1)) } label: { Image(systemName: "chevron.right") }
-                .accessibilityLabel("Next \(state.mode.title.lowercased())")
+                .accessibilityLabel(state.mode == .day ? Words.Calendar.nextDay : state.mode == .week ? Words.Calendar.nextWeek : Words.Calendar.nextMonth)
             Text(CalendarMath.title(state))
                 .scaledFont(compact ? 16 : 20, weight: .bold, design: .rounded, relativeTo: .headline)
                 .foregroundColor(Theme.ink)
                 .oneLineUnlessLarge()
                 .accessibilityIdentifier("calendar.title")
             Spacer(minLength: 0)
-            DatePicker("Date", selection: dateBinding, displayedComponents: .date)
+            DatePicker(Words.Calendar.datePicker, selection: dateBinding, displayedComponents: .date)
                 .labelsHidden()
                 .environment(\.timeZone, TimeZone(identifier: "UTC")!)
                 .accessibilityLabel(Words.Calendar.chooseDate)
         }
         .tint(Theme.amberText)
-        let picker = Picker("View", selection: Binding(get: { state.mode }, set: { show(CalendarState(mode: $0, selected: state.selected)) })) {
+        let picker = Picker(Words.Calendar.viewPicker, selection: Binding(get: { state.mode }, set: { show(CalendarState(mode: $0, selected: state.selected)) })) {
             ForEach(CalendarMode.allCases, id: \.self) { Text($0.title).tag($0) }
         }
         .pickerStyle(.segmented)
@@ -211,7 +211,7 @@ struct CalendarView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.drivablePlain)
-        .accessibilityLabel("\(CalendarMath.dayHeading(day))\(count > 0 ? ", \(count) scheduled" : "")")
+        .accessibilityLabel(count > 0 ? Words.Calendar.dayScheduled(count: count, day: CalendarMath.dayHeading(day)) : CalendarMath.dayHeading(day))
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
@@ -308,7 +308,7 @@ struct CalendarView: View {
                 .onAppear { proxy.scrollTo(first, anchor: .top) }
                 .onChange(of: first) { proxy.scrollTo($0, anchor: .top) }
             }
-            if read != nil, days.allSatisfy({ CalendarMath.events(events, on: $0).isEmpty }) { empty(days.count == 1 ? "Nothing scheduled on this day." : "Nothing scheduled this week.") }
+            if read != nil, days.allSatisfy({ CalendarMath.events(events, on: $0).isEmpty }) { empty(days.count == 1 ? Words.Calendar.nothingOnDay : Words.Calendar.nothingThisWeek) }
         }
         .accessibilityIdentifier("calendar.slots")
     }
@@ -324,7 +324,7 @@ struct CalendarView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 6).fill(Theme.tafColor(slot.color).opacity(0.16)))
         }
-        .accessibilityLabel("\(slot.name), \(slot.count > 1 ? "\(slot.count) times from" : "at") \(slot.first)")
+        .accessibilityLabel(slot.count > 1 ? Words.Calendar.slotTimes(count: slot.count, name: slot.name, first: slot.first) : Words.Calendar.slotAt(name: slot.name, first: slot.first))
     }
 
     // MARK: Lists: the selected day (compact) and the agenda (wide)
@@ -333,7 +333,7 @@ struct CalendarView: View {
         let on = CalendarMath.events(events, on: day)
         return VStack(alignment: .leading, spacing: 8) {
             Eyebrow(text: CalendarMath.dayHeading(day))
-            if read != nil, on.isEmpty { empty("Nothing scheduled on this day.") }
+            if read != nil, on.isEmpty { empty(Words.Calendar.nothingOnDay) }
             ForEach(on) { eventRow($0) }
         }
         .accessibilityIdentifier("calendar.day")

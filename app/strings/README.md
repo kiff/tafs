@@ -61,3 +61,18 @@ fails when one differs from what the generator writes, and CI runs it.
 - a shipped language's line isn't left in English;
 - a line that is exactly a glossary term is that term in every language
   (`docs/languages.md`, Terms).
+- no English is left in the iPhone and iPad app's code (`ios_literals.py`).
+
+## English left in code
+
+`python3 app/strings/ios_literals.py` lists the string literals in `ios/Tafs` that read as
+English and aren't data. Each literal is judged on its own: one that is compared
+(`== "declined"`) is data, and the words beside it on the same line are not. Both sides of a
+ternary, an array of words and a count made in code (`"\(n) thing\(n == 1 ? "" : "s")"`) are
+all found. The test fails while it lists anything. A single lowercase word with no value beside it (`"installed"`)
+can't be told from an id, so it isn't flagged: review those by eye.
+
+What must stay in code is kept by a rule in `ios_literals.py` (a compared value, a key, a URL, a
+header, a signed message) or by name in `ios_kept.json`, with the reason: the sample's names,
+words for dictation, an answer sent to tafs cloud, a markdown link, a developer-only line. A
+kept entry that is no longer in its file fails the test too.

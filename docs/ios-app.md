@@ -282,6 +282,10 @@ error the screen shows only for itself carries where it came from (`AppModel.fai
 tests read a `Words` accessor in the sources as the English it says (`DriveTests.readable`), so a confirming
 control is still found by its words.
 
+No English is left in the app's code outside that list: `app/strings/ios_literals.py` scans the sources literal by
+literal, and the strings tests fail on any it finds that isn't kept by a rule or by name in `ios_kept.json`, with
+the reason.
+
 A line that differs by platform keeps a key of its own: the device's name (`{device}`, iPhone or iPad), Face ID and
 Touch ID, the App Store and Apple ID, iOS's Settings paths. A few lines stay in code on purpose: the words the app
 reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's Terms line, whose markdown link

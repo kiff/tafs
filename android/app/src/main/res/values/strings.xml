@@ -12,6 +12,7 @@
     <string name="alert_foot_cant_answer_holds">Alerts go to the people who may answer held calls. Your role on this account can\'t.</string>
     <string name="alert_foot_tells_you">When a taf needs you, this phone tells you even with tafs closed. Nothing is sent until you approve.</string>
     <string name="alert_foot_tells_you_device">When a taf needs you, this %1$s tells you even with tafs closed. Nothing is sent until you approve.</string>
+    <string name="alert_haptics">Haptics</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF didn\'t take the refusal. Open tafs to answer it.</string>
     <string name="alert_kiff_doesnt_send">KIFF doesn\'t send alerts to tafs yet on this account.</string>
     <string name="alert_loud_example">Chargebacks needs you · Dispute #4825 · €640 is over its limit</string>
@@ -58,6 +59,7 @@
     <string name="approval_biometry_face">face unlock</string>
     <string name="approval_biometry_fingerprint">your fingerprint</string>
     <string name="approval_biometry_screen_lock">your screen lock</string>
+    <string name="approval_biometry_timed_out">%1$s timed out. Try again.</string>
     <string name="approval_can_not_used_right_try">%1$s can\'t be used right now. Try again in a moment.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Cancelled, so nothing was approved. The request is kept: approve again when you\'re ready.</string>
     <string name="approval_cant_approve_none_enrolled">Approving needs a fingerprint on this phone.</string>
@@ -94,6 +96,8 @@
     <string name="approval_request_kept">" The request is kept."</string>
     <string name="approval_set_a_screen_lock">Set a screen lock on this phone to approve</string>
     <string name="approval_settings_face_id_passcode_touch">Settings → Face ID &amp; Passcode (Touch ID &amp; Passcode on a device with Touch ID)</string>
+    <string name="approval_settings_path_face_id">Settings → Face ID &amp; Passcode</string>
+    <string name="approval_settings_path_touch_id">Settings → Touch ID &amp; Passcode</string>
     <string name="approval_state_none_enrolled">No fingerprint is set up on this phone. Add one in its settings, then come back.</string>
     <string name="approval_state_ready">Approvals are set up on this phone.</string>
     <string name="approval_state_temporarily_unavailable">The fingerprint sensor can\'t be used just now. Wait a moment, or unlock the phone once, then check again.</string>
@@ -110,7 +114,9 @@
     <string name="attachment_kilobytes">%1$s KB</string>
     <string name="attachment_megabytes">%1$s MB</string>
     <string name="attachment_not_taken">tafs can\'t attach this file: it isn\'t a kind or size it takes. Pick another one.</string>
+    <string name="attachment_photo">Photo</string>
     <string name="attachment_photo_could_not_read">That photo couldn\'t be read.</string>
+    <string name="attachment_photo_numbered">Photo %1$s</string>
     <string name="attachment_too_large">%1$s is %2$s; the most is %3$s.</string>
     <string name="attachment_wrong_kind">%1$s can\'t be attached. Photos, PDFs, text, CSV, Markdown, Word and Excel files can.</string>
     <string name="billing_admin_adds_tasks">Only the account\'s admin adds tasks.</string>
@@ -169,7 +175,10 @@
     <string name="billing_play_couldnt_sell_code">Google Play couldn\'t sell it (%1$s).</string>
     <string name="billing_play_doesnt_sell_this">Google Play doesn\'t sell this here.</string>
     <string name="billing_play_unreachable">Couldn\'t reach Google Play. Try again.</string>
+    <string name="billing_price_per">%1$s a %2$s</string>
+    <string name="billing_request_decline_pack_title">Decline the request for %1$s?</string>
     <string name="billing_request_decline_prompt">Decline the request</string>
+    <string name="billing_request_decline_raise_title">Decline the request to raise the spend limit?</string>
     <string name="billing_request_not_declined">The request wasn\'t declined. %1$s</string>
     <string name="billing_request_not_sent">The request didn\'t go. %1$s</string>
     <string name="billing_request_not_withdrawn">The request wasn\'t withdrawn. %1$s</string>
@@ -184,9 +193,11 @@
     <string name="billing_terms_use">Terms of Use</string>
     <string name="billing_test_purchase">Test purchases don\'t add tasks to this account.</string>
     <string name="billing_test_purchase_credits">Test purchases don\'t add credits to this account.</string>
+    <string name="billing_try_free">Try %1$s free</string>
     <string name="billing_what_credits">What the credits are for</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Choose a date</string>
+    <string name="calendar_date_picker">Date</string>
     <string name="calendar_day_heading">%1$s %2$s %3$s</string>
     <plurals name="calendar_day_scheduled">
         <item quantity="one">%2$s, %1$d scheduled</item>
@@ -234,6 +245,7 @@
     <string name="calendar_title_week_across_years">%1$s %2$s %3$s – %4$s %5$s %6$s</string>
     <string name="calendar_today">Today</string>
     <string name="calendar_today_date">Today · %1$s</string>
+    <string name="calendar_view_picker">View</string>
     <string name="calendar_weekday_fri">Fri</string>
     <string name="calendar_weekday_mon">Mon</string>
     <string name="calendar_weekday_sat">Sat</string>
@@ -257,7 +269,7 @@
         <item quantity="other">%2$s of %1$d calls %3$s</item>
     </plurals>
     <plurals name="card_calls_window">
-        <item quantity="one">%1$d calls %2$s</item>
+        <item quantity="one">%1$d call %2$s</item>
         <item quantity="other">%1$d calls %2$s</item>
     </plurals>
     <string name="card_card_confirmed_kiff">Card · confirmed by KIFF</string>
@@ -311,11 +323,13 @@
     <string name="card_hero_left_of">left %1$s of %2$s</string>
     <string name="card_hero_left_of_extra">left %1$s of %2$s + %3$s extra room</string>
     <string name="card_hero_left_of_extra_until">left %1$s of %2$s + %3$s extra room until %4$s</string>
+    <string name="card_hero_left_of_note">left %1$s of %2$s%3$s</string>
     <string name="card_hero_no_currency">no currency</string>
     <string name="card_hero_no_currency_suffix">" · no currency"</string>
     <string name="card_hero_use_unavailable">%1$s · use unavailable</string>
     <string name="card_hero_use_unavailable_note">%1$s · use unavailable%2$s</string>
     <string name="card_how_counted">How this is counted</string>
+    <string name="card_issue_prompt">Issue %1$s\'s Card</string>
     <string name="card_issued_by">Issued by</string>
     <string name="card_issued_by_account">The account</string>
     <string name="card_issued_by_named">Issued by %1$s</string>
@@ -367,12 +381,14 @@
     <string name="card_rule_total_then_asks">%1$s in total %2$s, then it asks you</string>
     <string name="card_rule_up_to_each">up to %1$s each; more asks you first</string>
     <string name="card_rule_line">%1$s %2$s</string>
+    <string name="card_the_tafs_card">The taf\'s Card</string>
     <plurals name="card_tools">
         <item quantity="one">%1$d tools</item>
         <item quantity="other">%1$d tools</item>
     </plurals>
     <string name="card_until">Until</string>
     <string name="card_until_date">Until %1$s</string>
+    <string name="card_until_ends">" until %1$s"</string>
     <string name="card_used_of">%1$s of %2$s %3$s</string>
     <string name="card_window_a_day">a day</string>
     <string name="card_window_a_month">a month</string>
@@ -384,6 +400,7 @@
     <string name="card_window_any_week">in any 7 days</string>
     <string name="card_window_day">a day</string>
     <string name="card_window_in_total">in total</string>
+    <string name="card_window_in_total_window">in total %1$s</string>
     <string name="card_window_last_day">in the last 24 hours</string>
     <string name="card_window_last_hour">in the last hour</string>
     <string name="card_window_last_week">in the last 7 days</string>
@@ -425,6 +442,7 @@
     <string name="chat_file_cant_attach">That file can\'t be attached.</string>
     <string name="chat_file_choose_file">Choose file</string>
     <string name="chat_file_choose_photos">Choose photos</string>
+    <string name="chat_file_could_not_open">The file couldn\'t be opened.</string>
     <string name="chat_file_no_app_opens">No app on this phone opens %1$s.</string>
     <string name="chat_file_no_camera">There\'s no camera app on this phone to take a photo with.</string>
     <string name="chat_file_not_opened">%1$s couldn\'t be opened. %2$s</string>
@@ -460,6 +478,9 @@
     <string name="chat_outcome_refused">%1$s: refused, not sent</string>
     <string name="chat_outcome_sending">%1$s: sent, waiting for the tool</string>
     <string name="chat_outcome_unknown">%1$s: outcome unknown</string>
+    <string name="chat_queued_dont_send">Don\'t send</string>
+    <string name="chat_queued_sends_when_done">Sends when %1$s is done</string>
+    <string name="chat_queued_this_answer">this answer</string>
     <string name="chat_retry">Retry</string>
     <string name="chat_run_started">Run started %1$s</string>
     <string name="chat_run_started_with">Run started %1$s · %2$s</string>
@@ -468,6 +489,14 @@
     <string name="chat_send_files_once_done">Send files once %1$s is done</string>
     <string name="chat_send_once_files_up">Send once the files are up</string>
     <string name="chat_send_while_works">Send to %1$s while it works</string>
+    <string name="chat_steer_coach_reads_next">Coach reads this at its next step</string>
+    <string name="chat_steer_coach_reads_paused">Coach reads this when it carries on</string>
+    <string name="chat_steer_it_reads_next">It reads this at its next step</string>
+    <string name="chat_steer_it_reads_paused">It reads this when it carries on</string>
+    <string name="chat_steer_not_read_before_end">It wasn\'t read before the work ended.</string>
+    <string name="chat_steer_stopped_before_read">You stopped it before it read this.</string>
+    <string name="chat_steer_taf_reads_next">%1$s reads this at its next step</string>
+    <string name="chat_steer_taf_reads_paused">%1$s reads this when it carries on</string>
     <string name="chat_stop">Stop</string>
     <string name="chat_stopped_declined">%1$s stopped: the AI declined to continue. Try asking another way.</string>
     <string name="chat_stopped_out_of_room">%1$s stopped: its reply ran out of room. Ask for something shorter, or for one part at a time.</string>
@@ -484,7 +513,15 @@
     <string name="chat_work_hides_steps">Hides the steps</string>
     <string name="chat_work_not_made_read_first">not made · read first</string>
     <string name="chat_work_shows_steps">Shows the steps</string>
+    <plurals name="chat_work_tries">
+        <item quantity="one">%1$d try</item>
+        <item quantity="other">%1$d tries</item>
+    </plurals>
     <string name="chat_work_worked_for">Worked for %1$s</string>
+    <plurals name="chat_work_worked_for_steps">
+        <item quantity="one">Worked for %2$s, %1$d step</item>
+        <item quantity="other">Worked for %2$s, %1$d steps</item>
+    </plurals>
     <string name="chat_worked">Worked %1$s</string>
     <plurals name="chat_worked_steps">
         <item quantity="one">Worked %2$s · %1$d step</item>
@@ -497,13 +534,31 @@
     <string name="chat_working">Working…</string>
     <string name="chat_working_on">%1$s…</string>
     <string name="chat_write_next">Write the next message</string>
+    <string name="chat_writing">Writing…</string>
     <string name="chat_you_stopped">You stopped %1$s.</string>
     <string name="chat_your_taf">your taf</string>
+    <string name="coach_activity_card">Preparing the Card…</string>
+    <string name="coach_activity_connection">Working on the connection…</string>
+    <string name="coach_activity_install_version">Installing the new version…</string>
+    <string name="coach_activity_kiff">Checking KIFF…</string>
+    <string name="coach_activity_pause">Pausing or resuming a taf…</string>
+    <string name="coach_activity_run">Reading what a taf did…</string>
+    <string name="coach_activity_stop">Stopping a run…</string>
+    <string name="coach_activity_tafs">Reading your tafs…</string>
+    <string name="coach_activity_task">Handing the taf its task…</string>
+    <string name="coach_activity_try_version">Trying the new version…</string>
     <string name="coach_already_approved">Already approved</string>
     <string name="coach_another_approval">Another approval is going through. Approve this one once it\'s done.</string>
     <string name="coach_answer_approve">Approve</string>
     <string name="coach_answer_approve_failed">Approve · it didn\'t go through</string>
+    <string name="coach_answer_approved_connected">Approved · %1$s is connected, keys kept sealed</string>
+    <string name="coach_answer_approved_more_below">Approved · Setup asked for more below</string>
+    <string name="coach_answer_approved_short">Approved</string>
+    <string name="coach_answer_approved_title">Approved · %1$s</string>
     <string name="coach_answer_decline">Decline</string>
+    <string name="coach_answer_declined_again_below">Declined · Setup asked again below</string>
+    <string name="coach_answer_declined_short">Declined</string>
+    <string name="coach_answer_declined_title">Declined · %1$s</string>
     <string name="coach_answer_failed">It didn\'t go through.</string>
     <string name="coach_answer_failed_short">Didn\'t go through</string>
     <string name="coach_answer_failed_why">It didn\'t go through: %1$s</string>
@@ -566,6 +621,7 @@
     <string name="coach_drag_make_wider_narrower">Drag to make it wider or narrower</string>
     <string name="coach_drive_cant">Coach can\'t drive: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Not started: it wasn\'t confirmed.</string>
+    <string name="coach_driving">Driving</string>
     <string name="coach_each_waits">Each connection and each Card waits for %1$s.</string>
     <string name="coach_earlier_request">Earlier request</string>
     <string name="coach_folds_plan">Folds the plan</string>
@@ -602,12 +658,15 @@
     <string name="coach_nothing_to_approve">%1$s is already connected. There\'s nothing new to approve, so nothing was approved.</string>
     <string name="coach_own_answer">Your own answer</string>
     <string name="coach_plan_fold">Fold the plan</string>
+    <string name="coach_plan_fold_short">Fold</string>
+    <string name="coach_plan_progress">Plan · %1$s of %2$s</string>
     <string name="coach_plan_show">Show the whole plan</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Connect your tools</string>
     <string name="coach_prompt_give_card">Give Coach its Card</string>
     <string name="coach_prompt_start">Start Coach</string>
     <string name="coach_puts_words_message_box">Puts its words in the message box</string>
+    <string name="coach_questions_answered_of">%1$s of %2$s answered</string>
     <string name="coach_questions_chat_about">Chat about this</string>
     <string name="coach_questions_in_your_words">In your words</string>
     <string name="coach_questions_own_answer_to">Your own answer to: %1$s</string>
@@ -633,6 +692,7 @@
     <string name="coach_setting_up">Setting up %1$s…</string>
     <string name="coach_setup_changed_request_see_below">Setup changed this request: see below</string>
     <string name="coach_setup_needs">Setup needs</string>
+    <string name="coach_shape_approve_named">Approve %1$s</string>
     <string name="coach_shape_draft_until_approved">A draft until you approve it in the conversation.</string>
     <string name="coach_shape_not_connected">Not connected</string>
     <string name="coach_shape_sign_in_at">"Sign in at "</string>
@@ -661,6 +721,7 @@
     <string name="coach_tools_give">Give Coach its tools</string>
     <string name="coach_tools_giving">Giving…</string>
     <string name="coach_tools_title">Coach\'s tools</string>
+    <string name="coach_tools_eyebrow">Tools</string>
     <string name="coach_tools_not_given">Coach\'s tools weren\'t given. %1$s</string>
     <string name="coach_tools_not_read">Couldn\'t read Coach\'s tools. %1$s</string>
     <string name="coach_tools_unknown">KIFF didn\'t answer about Coach\'s tools. Try again in a moment.</string>
@@ -676,15 +737,20 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_choose">Choose</string>
     <string name="common_close">Close</string>
+    <string name="common_confirming">Confirming…</string>
     <string name="common_continue">Continue</string>
     <string name="common_copied">Copied</string>
     <string name="common_copy">Copy</string>
     <string name="common_could_not_read_why">%1$s couldn\'t be read: %2$s</string>
+    <string name="common_details">Details</string>
     <string name="common_didnt_go_through">%1$s didn\'t go through. %2$s</string>
     <string name="common_didnt_go_through_unconfirmed">%1$s didn\'t go through: it wasn\'t confirmed.</string>
     <string name="common_done">Done</string>
     <string name="common_hide_the_list">Hide the list</string>
+    <string name="common_less">Less</string>
     <string name="common_list_and">%1$s and %2$s</string>
+    <string name="common_loading">Loading…</string>
+    <string name="common_more">More</string>
     <string name="common_next">Next</string>
     <string name="common_not_done">Not done</string>
     <string name="common_not_done_unconfirmed">Not done: it wasn\'t confirmed.</string>
@@ -702,6 +768,7 @@
     <string name="common_starting">Starting…</string>
     <string name="common_try_again">Try again</string>
     <string name="common_you">You</string>
+    <string name="common_you_signed_out">You signed out.</string>
     <string name="connect_another_approval">Another approval is going through. Approve this one once it\'s done.</string>
     <string name="connect_app_not_started">%1$s couldn\'t be started. %2$s</string>
     <string name="connect_app_store_does_not_offer">The App Store doesn\'t offer this right now.</string>
@@ -749,6 +816,7 @@
     <string name="connect_connect_an_app">Connect an app</string>
     <string name="connect_connected_app">%1$s is connected.</string>
     <string name="connect_connected_app_for">%1$s is connected for %2$s.</string>
+    <string name="connect_connected_manage">Connected. Manage</string>
     <string name="connect_connected_tools">Connected tools</string>
     <string name="connect_connecting_again_asks_you_approve">" Connecting again asks you to approve and sign in again."</string>
     <string name="connect_connection_is">This connection is %1$s.</string>
@@ -771,6 +839,7 @@
     <string name="connect_disconnect_app_question">Disconnect %1$s?</string>
     <string name="connect_disconnect_body">Its actions stop working for this taf.</string>
     <string name="connect_disconnect_button">Disconnect</string>
+    <string name="connect_disconnecting">Disconnecting…</string>
     <string name="connect_drive_app">Drive the app</string>
     <string name="connect_from_removed">From removed tafs</string>
     <string name="connect_give_key_with">Give the key with %1$s</string>
@@ -804,6 +873,7 @@
     <string name="connect_not_set_up_here_iphone">Connecting tools isn\'t set up for this account from this phone. Start from tafs on an iPhone.</string>
     <string name="connect_nothing_signed_in">Nothing was signed in. Try again.</string>
     <string name="connect_one_taf">%1$s is connected for one taf, which uses it as its Card allows.</string>
+    <string name="connect_open_browser_again">Open the browser again</string>
     <string name="connect_opening_sign_in">Opening the sign-in…</string>
     <string name="connect_other_connections">Other connections</string>
     <string name="connect_other_connections_stay_connected_no">" Other connections to %1$s stay connected. If no other connection uses this sign-in, it\'s revoked at %2$s."</string>
@@ -812,6 +882,7 @@
     <string name="connect_prompt_connect">Connect %1$s to %2$s</string>
     <string name="connect_prompt_give_card">Give %1$s its Card</string>
     <string name="connect_prompt_give_key">Give %1$s its key for %2$s</string>
+    <string name="connect_prompt_keep_sealed">Keep your tools\' sign-ins sealed</string>
     <string name="connect_reading_asks">Reading what it asks for…</string>
     <string name="connect_reading_request">Reading the request…</string>
     <string name="connect_reconnect_in_coach">Reconnect it in Coach.</string>
@@ -845,9 +916,11 @@
     <string name="connect_words_mismatch">KIFF\'s words for this connection don\'t check out (%1$s). Nothing was approved.</string>
     <string name="door_add_door">Add a door</string>
     <string name="door_add_intro">Give %1$s an address people can write to. It has none until you turn one on, and its Card still decides what it does.</string>
+    <string name="door_add_short">Add</string>
     <string name="door_anyone_else_today">%1$s of %2$s from anyone else today.</string>
     <string name="door_app_email">email</string>
     <string name="door_bot_still_listens">The bot still listens, so the door stays. %1$s</string>
+    <string name="door_channel">Channel</string>
     <string name="door_checks_sender_server_signed_message">It checks the sender\'s server signed the message</string>
     <string name="door_copy_address">Copy address</string>
     <plurals name="door_day_open">
@@ -864,6 +937,8 @@
     </plurals>
     <string name="door_dial_add_position">Add a door, %1$s of %2$s</string>
     <string name="door_dial_add_stamp">ADD A DOOR</string>
+    <string name="door_dial_position_closed">%1$s door, closed, %2$s of %3$s</string>
+    <string name="door_dial_position_open">%1$s door, open, %2$s of %3$s</string>
     <string name="door_do_it_default">Do what it asks, within your Card.</string>
     <string name="door_do_it_intro">%1$s\'s message goes with your words, as information. %2$s acts on what you say, within its Card, and doesn\'t write back to them unless you ask.</string>
     <string name="door_do_it_intro_it">%1$s\'s message goes with your words, as information. It acts on what you say, within its Card, and doesn\'t write back to them unless you ask.</string>
@@ -919,12 +994,15 @@
     <string name="door_pair_hint_email">Email address</string>
     <string name="door_pair_hint_other">Who, as %1$s names them</string>
     <string name="door_pair_hint_phone">Phone number, with its country code</string>
+    <string name="door_pair_hint_slack">Slack member ID, such as U012AB3CD</string>
     <string name="door_pair_intro">Their messages to this %1$s door give work, within the Card. Anyone else\'s only knock.</string>
     <string name="door_pair_someone">Pair someone</string>
     <string name="door_paired">Paired</string>
     <string name="door_paired_senders_today_more_dropped">%1$s of %2$s from you and paired senders today. More are dropped until tomorrow.</string>
     <string name="door_paired_senders_today_text_only">%1$s of %2$s from you and paired senders today. Text only: attachments aren\'t opened, and the reply says so.</string>
     <string name="door_press_add_door">Press %1$s to add a door</string>
+    <string name="door_press_close">Press %1$s to close %2$s</string>
+    <string name="door_press_open">Press %1$s to open %2$s</string>
     <string name="door_proven_section">Knows who\'s writing · can hold keys</string>
     <string name="door_reading_channels">Reading its channels…</string>
     <string name="door_refund_request">Refund request</string>
@@ -963,6 +1041,7 @@
     <string name="door_status_open">Open</string>
     <string name="door_status_resting">Resting until tomorrow</string>
     <string name="door_swipe_up_down_pick_door">Swipe up or down to pick a door. Double-tap to open or close it.</string>
+    <string name="door_title_plain">Door</string>
     <string name="door_unpair">Unpair</string>
     <string name="door_unproven_section">Can\'t prove who\'s writing · knocks only</string>
     <string name="door_what_do">What to do</string>
@@ -980,6 +1059,7 @@
     <string name="drive_card_note_scrolls">Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app or tap Stop to take it back.</string>
     <string name="drive_card_title">Coach asks to drive the app</string>
     <string name="drive_coach_drove_app">Coach drove the app · %1$s</string>
+    <string name="drive_declined_line">Not now: Coach didn\'t drive the app</string>
     <string name="drive_done">Done</string>
     <string name="drive_drive_app">Drive the app</string>
     <string name="drive_ended_done">Coach is done</string>
@@ -1051,6 +1131,7 @@
     <string name="export_preparing">Preparing your chats…</string>
     <string name="export_ready_share_again">Ready: %1$s. Share again</string>
     <string name="export_row">Export my chats</string>
+    <string name="export_sign_in_first">Sign in with KIFF to export your chats.</string>
     <string name="export_try_again">Try again</string>
     <string name="halt_again">Halt again</string>
     <string name="halt_all_now">Halt all now</string>
@@ -1085,6 +1166,7 @@
     <string name="home_not_fully_removed">%1$s isn\'t fully removed yet.</string>
     <string name="home_not_loaded">Couldn\'t load your tafs.</string>
     <string name="home_open_halt">Open Halt</string>
+    <string name="home_opens_plan">Opens %1$s.</string>
     <string name="home_other_agents">Other agents with Cards</string>
     <string name="home_overview_column_card">CARD</string>
     <string name="home_overview_column_last_result">LAST RESULT</string>
@@ -1153,12 +1235,15 @@
     <string name="knob_raise">Raise</string>
     <string name="knob_reading_draft">Reading the dial Coach drafted…</string>
     <string name="knob_replaced">A newer dial replaced this one.</string>
+    <string name="knob_request_title">Request</string>
     <string name="knob_resume">Resume</string>
     <string name="knob_ring_what">What</string>
     <string name="knob_ring_when">When</string>
     <string name="knob_ring_where">Where</string>
     <string name="knob_search">Ask Coach or find anything</string>
     <string name="knob_showing">Showing</string>
+    <string name="knob_showing_filter">Showing %1$s</string>
+    <string name="knob_showing_filter_label">Showing, %1$s</string>
     <string name="knob_subscription_made_dial_has_not">The subscription was made, but the dial hasn\'t recorded it yet. Try again.</string>
     <string name="knob_tap_a_ring">Tap a ring</string>
     <string name="knob_this_taf">This taf</string>
@@ -1200,6 +1285,10 @@
     <string name="needs_you_get_alert_when_call_waits">Get an alert when a call waits for your answer, even with tafs closed.</string>
     <string name="needs_you_install_from_card">Install it from its card: the version goes live, then Coach hears.</string>
     <string name="needs_you_ios_asks_next_confirming_sets">iOS asks next. Confirming with %1$s sets them up for your account.</string>
+    <plurals name="needs_you_knocks">
+        <item quantity="one">Someone knocked at its door. Nothing was done.</item>
+        <item quantity="other">%1$d knocks at its doors. Nothing was done.</item>
+    </plurals>
     <string name="needs_you_know_moment_taf_needs_you">Know the moment a taf needs you</string>
     <string name="needs_you_left">%1$s left</string>
     <string name="needs_you_no_gives_card_room_back">No gives its Card the room back. Answering asks for %1$s.</string>
@@ -1255,10 +1344,13 @@
     <string name="people_delete_group_body">Its people lose the tafs they used through it, unless another group or a share of their own gives them those tafs. Their chats stay theirs.</string>
     <string name="people_delete_group_button">Delete %1$s</string>
     <string name="people_delete_group_title">Delete %1$s?</string>
+    <string name="people_delete_this_group_title">Delete this group?</string>
     <string name="people_everyone_in">Everyone on the account is in %1$s. Invite people from the KIFF dashboard.</string>
     <string name="people_everyone_uses_none">Everyone on the account · uses no taf</string>
+    <string name="people_group_actions">%1$s actions</string>
     <string name="people_group_name_hint">Support, Finance…</string>
     <string name="people_group_uses">%1$s uses %2$s: %3$s.</string>
+    <string name="people_groups">Groups</string>
     <string name="people_last_ran">Last ran at %1$s</string>
     <string name="people_make_manager">Make the manager</string>
     <string name="people_make_member">Make a member</string>
@@ -1364,6 +1456,7 @@
     <string name="receipt_not_signed_yet">KIFF\'s receipt · not signed yet</string>
     <string name="receipt_outcome_card_refused">Not sent. Its Card refused it.</string>
     <string name="receipt_outcome_done">Done.</string>
+    <string name="receipt_outcome_done_moved">Done. %1$s moved.</string>
     <string name="receipt_outcome_moved">Done. %1$s moved.</string>
     <string name="receipt_outcome_refused_by">Not sent. Refused by %1$s.</string>
     <string name="receipt_outcome_waiting">Waiting for your answer.</string>
@@ -1406,6 +1499,24 @@
     <string name="record_did_this_happen_why_refused">The tool refused it, but nothing shows it had no effect.</string>
     <string name="record_did_this_happen_yes">Yes, it did</string>
     <string name="record_done_within_card">Done, within its Card</string>
+    <string name="record_event_a_door">a door</string>
+    <string name="record_event_door_removed">You removed its %1$s door</string>
+    <string name="record_event_door_removed_detail">Its address no longer reaches it</string>
+    <string name="record_event_halted">Halted</string>
+    <string name="record_event_halted_all">Halted with all your tafs</string>
+    <string name="record_event_halted_detail">Nothing of it runs until you resume it</string>
+    <string name="record_event_knock_done">You had it act on %1$s\'s message</string>
+    <string name="record_event_knock_done_detail">By %1$s, in your words</string>
+    <string name="record_event_knock_ignored">You ignored %1$s\'s message</string>
+    <string name="record_event_knock_ignored_detail">By %1$s: nothing was done</string>
+    <string name="record_event_knocked">%1$s wrote by %2$s</string>
+    <string name="record_event_knocked_detail">Not paired, so nothing was done</string>
+    <string name="record_event_paired">You paired %1$s</string>
+    <string name="record_event_paired_detail">Their messages by %1$s give it work from now on</string>
+    <string name="record_event_resumed">Resumed</string>
+    <string name="record_event_resumed_all">Resumed with all your tafs</string>
+    <string name="record_event_resumed_detail">It works again as before the halt</string>
+    <string name="record_event_someone">Someone</string>
     <string name="record_expired">Expired: %1$s</string>
     <string name="record_expired_detail">Nobody answered in time</string>
     <string name="record_extra_room">Extra room by you · %1$s · %2$s</string>
@@ -1473,6 +1584,7 @@
     <string name="record_within_card">%1$s, within the Card</string>
     <string name="record_within_card_alone">Within the Card</string>
     <string name="report_already">You\'ve already reported this answer.</string>
+    <string name="report_cant_from_here">This answer can\'t be reported from here.</string>
     <string name="report_menu">Report this answer</string>
     <string name="report_not_sent">Your report wasn\'t sent. %1$s</string>
     <string name="report_not_sent_why">Not sent: %1$s</string>
@@ -1513,6 +1625,8 @@
     <string name="sample_bill_pay_rule_wires">Wires</string>
     <string name="sample_bill_pay_update_bank">Update Atlas Freight\'s bank account</string>
     <string name="sample_bill_pay_update_bank_why">Email from a new address asked for it</string>
+    <string name="sample_card_read_stripe">Read Stripe</string>
+    <string name="sample_card_refunds_stripe">Refunds · Stripe</string>
     <string name="sample_chargebacks_accept_3342">Accept dispute on #3342</string>
     <string name="sample_chargebacks_accept_3342_why">No proof of delivery</string>
     <string name="sample_chargebacks_answer_3318">Answer dispute on #3318</string>
@@ -1594,6 +1708,7 @@
     <string name="settings_about">About</string>
     <string name="settings_account_actions">Account actions</string>
     <string name="settings_account_id">Account id</string>
+    <string name="settings_account_named">Account, %1$s</string>
     <string name="settings_account_zone_changed_schedules_could">The account\'s zone changed. Its schedules couldn\'t be updated yet: %1$s</string>
     <string name="settings_alerts">Alerts</string>
     <string name="settings_alerts_off_text">They went off when this phone signed out. Turn them on to get an alert when a taf needs you.</string>
@@ -1711,6 +1826,7 @@
     <string name="setup_knob_version_not_read">Version %1$s couldn\'t be read. Try again.</string>
     <string name="setup_listening">Listening</string>
     <string name="setup_next_run">Next run at %1$s</string>
+    <string name="setup_no_schedule">No schedule starts it.</string>
     <string name="setup_no_start">When you tell it, in its chat.</string>
     <string name="setup_not_every_paused">Not every start could be paused. Try again.</string>
     <string name="setup_not_sent">Not sent</string>
@@ -1778,6 +1894,8 @@
     <string name="sign_in_with_kiff">Sign in with KIFF</string>
     <string name="sign_in_your_code">Your code</string>
     <string name="taf_activity_all_apps">All apps</string>
+    <string name="taf_activity_checking_waits">Checking what waits for you…</string>
+    <string name="taf_activity_reading_notes">Reading its notes…</string>
     <string name="taf_app_add_actions">Add actions with Coach</string>
     <string name="taf_app_what_it_may_do">What it may do</string>
     <string name="taf_gone">This taf is gone.</string>
@@ -1805,12 +1923,14 @@
     <string name="taf_halt_title_all">Halt all</string>
     <string name="taf_halt_who_holds">Who holds the halt</string>
     <string name="taf_its_work">Its work</string>
+    <string name="taf_job_label">%1$s\'s job</string>
     <string name="taf_keys_kept_sealed">Keys kept sealed</string>
     <string name="taf_last_run">Last run</string>
     <string name="taf_memory_empty">Nothing yet. It writes down what it learns about how you like the job done.</string>
     <string name="taf_memory_explains">Every run and chat starts with these. They shape how it works, never what its Card allows. Forget removes that one note and its earlier versions; past chats and run reports stay until the taf is removed.</string>
     <string name="taf_memory_forget">Forget</string>
     <string name="taf_memory_forget_body">“%1$s”\n\nIt can\'t be undone: the taf stops working with it from its next run or chat. Other notes stay.</string>
+    <string name="taf_memory_forget_label">Forget: %1$s</string>
     <string name="taf_memory_forget_title">Forget this note?</string>
     <string name="taf_memory_not_forgotten">It wasn\'t forgotten. %1$s</string>
     <string name="taf_memory_not_loaded">Its notes couldn\'t be loaded. %1$s</string>
@@ -1857,6 +1977,10 @@
     <string name="taf_remove_not_finished_after">%1$s Not finished: its %2$s couldn\'t be removed. tafs tries again each time it refreshes.</string>
     <string name="taf_remove_prompt">Remove %1$s for good</string>
     <string name="taf_remove_step_history">runs and chats</string>
+    <string name="taf_remove_step_key">key</string>
+    <string name="taf_remove_step_memory">memory</string>
+    <string name="taf_remove_step_name">name</string>
+    <string name="taf_remove_step_schedule">schedule</string>
     <string name="taf_remove_body">Its Cards are revoked, its schedule stopped, its chats, run reports, memory and key deleted, and its name freed. KIFF\'s receipts stay.</string>
     <string name="taf_remove_named">Remove %1$s</string>
     <string name="taf_remove_title">Remove %1$s for good?</string>
@@ -1895,6 +2019,7 @@
     <string name="taf_trying_resume">Trying v%1$s · Resume</string>
     <string name="taf_unless_you_approve_tools_sign">Unless you approve its tools, the sign-in is revoked %1$s.</string>
     <string name="taf_versions_title">Changes to how it runs</string>
+    <string name="taf_view_picker">View</string>
     <string name="taf_work_show_all_runs">Show all runs</string>
     <string name="taf_work_title">Its work</string>
     <string name="taf_workflow_change_with_coach">Change the workflow with Coach</string>
@@ -1915,6 +2040,7 @@
     <string name="usage_count_of">%1$s of %2$s %3$s</string>
     <string name="usage_credits">Credits</string>
     <string name="usage_credits_not_read">Credits couldn\'t be read. %1$s</string>
+    <string name="usage_day">day</string>
     <string name="usage_label">Usage</string>
     <string name="usage_last_period">Last period</string>
     <string name="usage_last_period_credits_could_not">The last period\'s credits couldn\'t be read. Choose it again to try again.</string>
@@ -1926,9 +2052,12 @@
     <string name="usage_more_runs_not_read">More runs couldn\'t be read. %1$s</string>
     <string name="usage_not_read">Usage couldn\'t be read. %1$s</string>
     <string name="usage_pack_credits">a pack of credits</string>
+    <string name="usage_pack_named">%1$s · a pack of credits</string>
     <string name="usage_packs_keep">Never expires</string>
+    <string name="usage_period">period</string>
     <string name="usage_raise_limit_not_raised">The limit wasn\'t raised. %1$s</string>
     <string name="usage_raise_limit_prompt">Raise the spend limit</string>
+    <string name="usage_raise_limit_sign_in_first">Sign in with KIFF to raise the limit.</string>
     <string name="usage_raise_limit_button">Raise the limit</string>
     <string name="usage_raised_unread">Your tafs can go on. This period\'s credits couldn\'t be read since.</string>
     <string name="usage_raising">Raising…</string>
@@ -1969,6 +2098,8 @@
     <string name="usage_this_period">This period</string>
     <string name="usage_title">Plan &amp; usage</string>
     <string name="usage_use_unavailable">use unavailable</string>
+    <string name="usage_week">week</string>
+    <string name="usage_year">year</string>
     <string name="version_after">After</string>
     <string name="version_brings_new_card">brings a new Card</string>
     <string name="version_cant_any_more">Your taf can\'t do this any more.</string>
@@ -2006,6 +2137,7 @@
     <string name="version_installing_number">Installing version %1$s</string>
     <string name="version_intro">Installing a version makes it the live version, forward or back. One confirmation covers it.</string>
     <string name="version_live_now">Live now</string>
+    <string name="version_live_number">Version %1$s · live</string>
     <string name="version_new_card">A new Card</string>
     <string name="version_no_such">%1$s has no version %2$s.</string>
     <string name="version_not_a_trial_confirmed">KIFF didn\'t start a trial: it issued these Cards as the taf\'s own. Check its Card tab, or install the version you had.</string>
@@ -2100,6 +2232,8 @@
     <string name="voice_what_you_said_stays_message">What you said stays in the message box, unsent.</string>
     <string name="work_asking_kiff_run">Asking KIFF to run %1$s…</string>
     <string name="work_did_not_stop">It didn\'t stop: %1$s</string>
+    <string name="work_duration_minutes">%1$s min %2$s s</string>
+    <string name="work_duration_seconds">%1$s s</string>
     <string name="work_its_runs">Its runs</string>
     <string name="work_not_read">Its work couldn\'t be read. %1$s</string>
     <string name="work_not_sent_again">It wasn\'t sent again. %1$s</string>

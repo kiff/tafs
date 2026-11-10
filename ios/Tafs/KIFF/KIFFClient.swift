@@ -805,7 +805,7 @@ final class KIFFClient {
         var cardTitle: String {
             let name = (label ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             // "Stripe refunds' Card", not "Stripe refunds's" (kiff/tafs#138, item 54).
-            return name.isEmpty ? "The taf's Card" : name.hasSuffix("s") ? "\(name)' Card" : "\(name)'s Card"
+            return name.isEmpty ? Words.Card.theTafsCard : Words.Coach.cardOf(owner: name.hasSuffix("s") ? "\(name)'" : "\(name)'s")
         }
     }
 
@@ -900,7 +900,7 @@ final class KIFFClient {
                 } else if asksPastLimits && a.limit == 0 {
                     out.append(Words.Card.Held.eachCallAsks)
                 } else {
-                    out.append("\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window.label)\(then)")
+                    out.append(Words.Card.Line.callsInWindow(count: Int(a.limit), window: window.label, then: then))
                 }
             }
             return out
@@ -1240,7 +1240,7 @@ final class KIFFClient {
     /// `signedBy` signs this one request, whatever `setupSigner` holds.
     private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true,
                                                    signedBy: (@MainActor (Data) throws -> String)? = nil) async throws -> T {
-        guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: "Bad path") }
+        guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: Words.Error.badPath) }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")

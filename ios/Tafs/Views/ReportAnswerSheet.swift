@@ -100,7 +100,7 @@ struct ReportAnswerSheet: View {
         VStack(spacing: 18) {
             Spacer()
             Image(systemName: "checkmark.circle").scaledFont(40).foregroundColor(Theme.amberText)
-            Text(outcome == .already ? "You've already reported this answer." : "Thanks. Someone at KIFF will read your report.")
+            Text(outcome == .already ? Words.Report.already : Words.Report.thanks)
                 .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                 .multilineTextAlignment(.center)
                 .accessibilityIdentifier("report-done")

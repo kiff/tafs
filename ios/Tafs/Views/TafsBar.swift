@@ -82,7 +82,7 @@ struct TafsBar: View {
     /// The account this is stays in reach (the 870 test): VoiceOver reads it with Account.
     private func label(_ item: Item, count: Int) -> String {
         switch item.tab {
-        case .account: return model.accountLabel.map { "Account, \($0)" } ?? Words.Settings.title
+        case .account: return model.accountLabel.map { Words.Settings.accountNamed(account: "\($0)") } ?? Words.Settings.title
         case .needsYou where count > 0: return Words.NeedsYou.tabLabel(n: "\(count)")
         default: return item.title
         }
@@ -95,11 +95,11 @@ struct TafsBar: View {
                 if rail {
                     VStack(spacing: 3) {
                         Image(systemName: drive.isOn ? "sparkles" : "sparkle").scaledFont(18, weight: .semibold)
-                        Text(drive.isOn ? "Driving" : Words.Coach.title).scaledFont(12, weight: .semibold)
+                        Text(drive.isOn ? Words.Coach.driving : Words.Coach.title).scaledFont(12, weight: .semibold)
                     }
                     .frame(maxWidth: .infinity, minHeight: 56)
                 } else {
-                    Label(drive.isOn ? "Driving" : Words.Coach.title, systemImage: drive.isOn ? "sparkles" : "sparkle").scaledFont(15, weight: .semibold)
+                    Label(drive.isOn ? Words.Coach.driving : Words.Coach.title, systemImage: drive.isOn ? "sparkles" : "sparkle").scaledFont(15, weight: .semibold)
                         .padding(.horizontal, 14).frame(minHeight: 44)
                 }
             }

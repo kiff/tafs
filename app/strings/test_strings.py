@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 import generate
+import ios_literals
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -229,6 +230,54 @@ class Generator(unittest.TestCase):
         self.assertEqual(generate.camel("default"), "`default`")
         self.assertEqual(generate.camel("approve_once"), "approveOnce")
         self.assertEqual(generate.camel("needs_you", upper=True), "NeedsYou")
+
+
+class IOSLiterals(unittest.TestCase):
+    """No English left in the iPhone and iPad app's code, outside what must stay (ios_literals.py)."""
+
+    def test_every_ios_line_reads_through_words(self):
+        left = ios_literals.scan()
+        self.assertEqual(left, [], "English still in code; give it a key in en.json, or keep it in ios_kept.json with why:\n"
+                         + "\n".join(f"  {f}:{n}: {b}" for f, n, b in left))
+
+    def test_the_scan_judges_each_literal_on_its_own(self):
+        swift = "\n".join([
+            'let a = n == 1 ? "One thing waits" : "\\(n) things wait"',
+            'if answer == "declined" { title = "Not now" }',
+            'let b = ["Tried today", counts].joined()',
+            'lines.append("\\(waiting) thing\\(waiting == 1 ? " waits" : "s wait") on you")',
+            'request.setValue("Bearer \\(t)", forHTTPHeaderField: "Authorization")',
+            'let path = "/v1/tafs/\\(id)"',
+            'let x = dict["some key"]',
+            'let id = "knob.showing"',
+            '// "A comment with words"',
+        ])
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "View.swift"), "w") as f:
+                f.write(swift)
+            left = [b for _, _, b in ios_literals.scan(d, kept_path=None)]
+        # Both sides of a ternary, words beside a comparison, an array of words, a count made in code and its parts.
+        self.assertEqual(sorted(left), sorted(["One thing waits", "\\(n) things wait", "Not now", "Tried today",
+                                               '\\(waiting) thing\\(waiting == 1 ? " waits" : "s wait") on you', "s wait"]))
+
+    def test_ci_runs_the_scan_on_every_change_to_the_ios_sources(self):
+        with open(os.path.join(REPO, ".github", "workflows", "strings.yml"), encoding="utf-8") as f:
+            workflow = f.read()
+        sources = os.path.relpath(ios_literals.SOURCES, REPO).replace(os.sep, "/")
+        triggers = re.findall(r"paths: \[(.*)\]", workflow)
+        self.assertEqual(len(triggers), 2, "the push and pull_request paths weren't found")
+        for paths in triggers:
+            self.assertIn(f'"{sources}/**"', paths, f"a change to {sources} doesn't run the strings checks")
+
+    def test_every_kept_literal_is_still_in_its_file(self):
+        with open(ios_literals.KEPT, encoding="utf-8") as f:
+            kept = json.load(f)
+        for rel, bodies in kept.items():
+            with open(os.path.join(ios_literals.SOURCES, rel), encoding="utf-8") as f:
+                found = {b for _, _, b in ios_literals.literals(f.read())}
+            for body, why in bodies.items():
+                self.assertTrue(why, f"{rel}: {body!r} has no reason")
+                self.assertIn(body, found, f"{rel} no longer has {body!r}: remove it from ios_kept.json")
 
 
 if __name__ == "__main__":
