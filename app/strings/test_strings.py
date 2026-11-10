@@ -204,6 +204,10 @@ class Generator(unittest.TestCase):
         self.assertIn('static func keptFor(count: Int, name: String) -> String { Words.count("chat.kept_for", count, name) }', swift)
         # A count always takes its number, to pick the form, even when its words don't show it.
         self.assertIn('static func allOf(count: Int) -> String { Words.count("home.all_of", count) }', swift)
+        # A count's number is written as the app's language writes it, never as plain digits.
+        self.assertIn("[number(count)] + values", swift)
+        self.assertIn("NumberFormatter.localizedString(from: NSNumber(value: n), number: .decimal)", swift)
+        self.assertNotIn("String(count)", swift)
         self.assertIn("enum Chat {", swift)
 
     def test_a_counts_number_always_comes_first(self):
