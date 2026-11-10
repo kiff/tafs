@@ -57,6 +57,16 @@ data class DeviceStart(
   val interval: Int,
 )
 
+/**
+ * The approval page's link in the language the app's lines resolved to (`lang`), so KIFF's page speaks the app's language
+ * whatever the browser's; a link that already names one keeps it.
+ */
+fun DeviceStart.inAppLanguage(language: String = bot.tafs.app.model.Res.language): DeviceStart {
+  val link = verificationUriComplete
+  if (link.isEmpty() || Regex("[?&]lang=").containsMatchIn(link)) return this
+  return copy(verificationUriComplete = link + (if ('?' in link) "&" else "?") + "lang=" + language)
+}
+
 @Serializable
 data class DeviceToken(
   @SerialName("access_token") val accessToken: String,
@@ -229,7 +239,9 @@ class KiffClient(
   }
 
   /** The held call's page in KIFF, where it can be answered today. */
-  fun answerPage(exceptionId: String): String = "$webUrl/needs-you/$exceptionId"
+  /** The held call's page in KIFF, in the language the app's lines resolved to (`lang`); the browser's is KIFF's fallback. */
+  fun answerPage(exceptionId: String, language: String = bot.tafs.app.model.Res.language): String =
+    "$webUrl/needs-you/$exceptionId?lang=$language"
 
   // MARK: Device sign-in
 
@@ -251,7 +263,7 @@ class KiffClient(
       deviceName?.let { put("device_name", it) }
       platform?.let { put("platform", it) }
     }
-    return call("POST", "/v1/auth/device/start", body, authorized = false)
+    return call<DeviceStart>("POST", "/v1/auth/device/start", body, authorized = false).inAppLanguage()
   }
 
   /**
@@ -289,7 +301,7 @@ class KiffClient(
       relinkMessage(account, deviceKey, approvalPublicKey, signedAt)
     }
     val body = mapOf("approval_public_key" to base64(approvalPublicKey), "signed_at" to signedAt, "signature" to signature)
-    return call("POST", RELINK, body, signedBy = signer)
+    return call<DeviceStart>("POST", RELINK, body, signedBy = signer).inAppLanguage()
   }
 
   /**

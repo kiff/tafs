@@ -92,7 +92,7 @@ class RelinkTest {
     m.startRelink()
     runCurrent()
     // The phone shows KIFF's code, to compare with the browser's, while it waits.
-    assertEquals(Relink("WDJB-MJHT", link), m.state.value.relink)
+    assertEquals(Relink("WDJB-MJHT", "$link&lang=en"), m.state.value.relink)
     transport.release(token)
     // The model polls in the background, every 5 seconds as KIFF says, which advanceUntilIdle doesn't wait for.
     advanceTimeBy(30_000)

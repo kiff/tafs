@@ -584,10 +584,17 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val openCoach: (() -> Unit)? = if (state.mayUseCoach) ({
     model.openCoachOn(if (tab == Tab.Tafs) openTaf else null); tab = Tab.Tafs; trialTaf = null; coachOpen = true
   }) else null
+  // A tab tapped again goes back to its start, as a phone's tab bar does: Tafs, from a taf's screen, is the list again.
+  val onTab: (Tab) -> Unit = { t ->
+    if (tappedAgainGoesToStart(tab, t)) {
+      openTaf = null; trialTaf = null; calendarOpen = false; overviewOpen = false; coachOpen = false
+    }
+    tab = t
+  }
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     // Landscape and tablets: the same places as a rail on the left, Coach at its foot.
     if (wide) {
-      TabRail(tab, state, onTab = { tab = it }, onAccount = openAccount, onCoach = openCoach)
+      TabRail(tab, state, onTab = onTab, onAccount = openAccount, onCoach = openCoach)
       Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
     }
   Column(Modifier.weight(1f).fillMaxHeight()) {
@@ -782,7 +789,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     state.tafCredits?.let { CreditsRunsSheet(it, state, account, onClose = model::closeTafCredits) }
     if (!keyboardUp && !wide) {
       HorizontalDivider(color = Theme.line)
-      TabBar(tab, state, onTab = { tab = it }, onAccount = openAccount, onCoach = openCoach)
+      TabBar(tab, state, onTab = onTab, onAccount = openAccount, onCoach = openCoach)
     }
   }
   }
@@ -912,6 +919,9 @@ private fun railColors() = androidx.compose.material3.NavigationRailItemDefaults
   unselectedTextColor = Theme.dim,
   indicatorColor = Theme.amber.copy(alpha = 0.14f),
 )
+
+/** Whether tapping [tapped] while on [current] goes back to its start: Tafs tapped again closes the taf on screen. */
+internal fun tappedAgainGoesToStart(current: Tab, tapped: Tab): Boolean = current == tapped && tapped == Tab.Tafs
 
 /** The bar's two places that open: the account (Settings) and Coach. */
 val ACCOUNT: String get() = Words.Settings.title

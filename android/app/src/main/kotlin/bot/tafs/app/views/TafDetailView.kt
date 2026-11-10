@@ -331,7 +331,7 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
       LaunchedEffect(taf.id) { actions.doors.load(taf.id) }
       KnocksPanel(taf, state, actions.doors)
     }
-    RunsPanel(taf, taf.id in state.runsInFlight, actions)
+    RunsPanel(taf, taf.id in state.runsInFlight, actions, state.runNowQuiet[taf.id])
     WorkPanel(taf, state, actions)
     RunReportPanel(taf.id, state.reports[taf.id], actions)
   }
@@ -372,7 +372,7 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
 
 /** When it runs, with Run now and Pause or Resume; a taf that works from its chat has no schedule to run or pause. */
 @Composable
-internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
+internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions, quiet: String? = null) {
   val scope = rememberCoroutineScope()
   // Set on the tap itself, before the request starts, so a second tap can't send one.
   var tapped by remember { mutableStateOf(false) }
@@ -395,6 +395,8 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
         }, Modifier.weight(1f), enabled = !busy)
         OutlineButton(if (taf.paused) Words.Taf.resume else Words.Taf.pause, { scope.launch { actions.setPaused(taf.id, !taf.paused) } }, Modifier.weight(1f).confirms())
       }
+      // Run now found nothing new: tafs cloud's words, as they are.
+      quiet?.let { Text(it, style = scaled(13, color = Theme.soft)) }
     }
   }
 }

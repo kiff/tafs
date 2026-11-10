@@ -45,6 +45,8 @@ class KiffClientTest {
     val start = client(token = null).startDeviceSignIn(keys.publicKeyDER, keys.approvalPublicKeyDER, "tafs on Android phone", "android")
     assertEquals("ABCD-1234", start.userCode)
     assertEquals(600, start.expiresIn)
+    // KIFF's approval page opens in the app's language, whatever the browser's.
+    assertEquals("https://app.kiff.dev/device?c=ABCD-1234&lang=en", start.verificationUriComplete)
     val request = transport.requests.single()
     assertEquals("https://api.kiff.dev/v1/auth/device/start", request.url)
     assertNull(request.headers["Authorization"])

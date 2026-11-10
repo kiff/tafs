@@ -158,6 +158,23 @@ class TafPageTest {
     assertTrue(m.state.value.runsInFlight.isEmpty())
   }
 
+  @Test fun aRunNowThatFindsNothingNewIsNoFailure() = runTest {
+    reads()
+    // A taf that checks first and finds nothing new starts no run (docs/api.md, POST /v1/tafs/{id}/run).
+    transport.answer("POST /v1/tafs/taf_1/run", 200, """{"session":null,"outcome":"quiet","words":"Nothing new: list_tickets listed nothing since the last run."}""")
+    val m = model()
+    assertNull(m.runNow("refunds-1"))
+    assertNull("nothing failed, so nothing is said wrong", m.state.value.lastError)
+    assertTrue(m.state.value.runsInFlight.isEmpty())
+    // tafs cloud's words, as they are, under Run now; the app makes up none of its own.
+    assertEquals("Nothing new: list_tickets listed nothing since the last run.", m.state.value.runNowQuiet["refunds-1"])
+    // The next Run now clears them, and an older tafs cloud's bare null shows nothing.
+    transport.answer("POST /v1/tafs/taf_1/run", 200, """{"session":null}""")
+    assertNull(m.runNow("refunds-1"))
+    assertNull(m.state.value.runNowQuiet["refunds-1"])
+    assertNull(m.state.value.lastError)
+  }
+
   @Test fun aRunNowKiffAgentsRefusedSaysWhyInTafsCloudsWords() = runTest {
     reads()
     transport.answer("POST /v1/tafs/taf_1/run", 409, """{"error":"refused","code":"ai_fair_use","words":"Your tafs have used this period's AI. It starts again on 1 Nov."}""")

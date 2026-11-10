@@ -160,8 +160,8 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
             // The links sit where the sentence puts them, in any language.
             Words.SignIn.agree(terms = "\u0001", privacy = "\u0002").forEach { c ->
               when (c) {
-                '\u0001' -> link(Words.Settings.terms, "https://kiff.dev/terms#tafs")
-                '\u0002' -> link(Words.Settings.privacyPolicy, "https://kiff.dev/privacy#tafs")
+                '\u0001' -> link(Words.Settings.terms, bot.tafs.app.model.Legal.terms())
+                '\u0002' -> link(Words.Settings.privacyPolicy, bot.tafs.app.model.Legal.privacy())
                 else -> append(c)
               }
             }

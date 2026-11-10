@@ -45,12 +45,12 @@ class HaltTest {
   private fun halt(state: String, runtime: Boolean = false, kiff: Boolean = false, planque: Boolean = false, account: Boolean = false, at: String? = null) =
     """{"halt":{"state":"$state","runtime":$runtime,"kiff":$kiff,"planque":$planque,"account":$account${at?.let { ""","halted_at":"$it"""" } ?: ""}}}"""
 
-  private suspend fun model(keyed: Boolean = true, approvalKey: Boolean = true): AppModel {
+  private suspend fun model(keyed: Boolean = true, approvalKey: Boolean = true, scope: kotlinx.coroutines.CoroutineScope? = null): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     if (keyed) secrets.save("1", AppModel.KEYED)
     if (approvalKey) secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
-    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false).also { it.restore() }
+    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, scope = scope).also { it.restore() }
   }
 
   // MARK: Halting
@@ -74,11 +74,13 @@ class HaltTest {
   @Test fun haltingEveryTafIsTheAccountsHalt() = runTest {
     reads()
     transport.answer("POST /v1/halt", 200, halt("halted", runtime = true, kiff = true, planque = true, account = true, at = "2026-10-28T09:00:00Z"))
-    val m = model()
+    val m = model(scope = backgroundScope)
     m.halt(null)
     assertEquals(1, transport.requestsTo("POST /v1/halt").size)
     assertTrue(m.state.value.haltOf(null).halted)
     assertEquals(t0, m.state.value.haltOf(null).haltedAt)
+    // The list is read again beside the halt, not before it shows: the sheet reads halted without waiting for it.
+    testScheduler.runCurrent()
     assertTrue("the list is read again, so it reads halted at once", transport.requestsTo("GET /v1/home").size >= 2)
   }
 

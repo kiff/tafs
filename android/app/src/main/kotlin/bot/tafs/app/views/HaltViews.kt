@@ -71,9 +71,11 @@ class AccountActions(
   val openCreditsRun: suspend (String, String) -> Unit = { _, _ -> },
 )
 
-/** How often a halt is read again while it is halting, and for how long: every 2 seconds, up to 2 minutes. */
-private const val HALT_POLL_MS = 2_000L
-private const val HALT_POLLS = 60
+/**
+ * When a halt is read again while it is halting: soon at first, since the three holds usually land within a second or two,
+ * then every 2 seconds, for about 2 minutes in all.
+ */
+internal val HALT_POLLS_MS: List<Long> = listOf(500L, 1_000L) + List(59) { 2_000L }
 
 /**
  * A halt of one taf or, with none, of every taf. Halting is one tap, no confirmation: it only takes authority
@@ -91,11 +93,11 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
   val scope = rememberCoroutineScope()
   val latest by rememberUpdatedState(state)
 
-  // Read now, then again every 2 seconds while it is halting, for up to 2 minutes.
+  // Read now, then again while it is halting: after half a second, a second, then every 2 seconds, for about 2 minutes.
   suspend fun follow() {
-    for (i in 0 until HALT_POLLS) {
+    for (wait in HALT_POLLS_MS) {
       if (!latest.haltOf(tafId).halting) return
-      delay(HALT_POLL_MS)
+      delay(wait)
       actions.refreshHalt(tafId)
     }
   }
