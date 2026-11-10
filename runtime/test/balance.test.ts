@@ -108,6 +108,11 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ can_buy: { solo: true, packs: false } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
     // Someone who may buy nothing is offered nothing, whatever KIFF says of the pack.
     expect(balanceView(balance({ can_buy: { solo: false, packs: false, once: true } })).balance.buy).toBeNull();
+    // KIFF sends neither of these, and neither says "Add it once Solo starts.": Solo running with
+    // no packs on offer, and a plan with Solo somehow still offered.
+    expect(balanceView(balance({ can_buy: { solo: true, packs: false, once: true } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    expect(balanceView(balance({ kind: "company", seats: 4, can_buy: { solo: true, packs: false, once: true } })).balance.buy)
+      .toEqual({ solo: true, packs: false, first_month: null });
     // In the person's language.
     const said = (lang: Parameters<typeof balanceView>[1]) =>
       balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } }), lang).balance.buy?.first_month;

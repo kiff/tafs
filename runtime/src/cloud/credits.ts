@@ -339,9 +339,11 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en"): BalanceView {
   const raise = b.kind === "company" && b.can_raise && b.raise_to_cents > 0
     ? { words: w.cr_raise_to(eur(b.raise_to_cents)), from_cents: b.limit_cents } : null;
   // The First month pack is bought once Solo runs, like any pack: before a plan it is shown beside
-  // Solo, waiting, in words.
-  const firstMonth = b.can_buy?.once === true
-    ? (b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null } : { ready: false, words: w.cr_first_month_wait })
+  // Solo, waiting, in words. Anywhere else (Solo running with no packs on offer, or a plan that
+  // buys none) it isn't offered: "Add it once Solo starts." is never said where Solo isn't offered.
+  const firstMonth = b.can_buy?.once !== true ? null
+    : b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null }
+    : b.kind === "none" && b.can_buy.solo === true ? { ready: false, words: w.cr_first_month_wait }
     : null;
   const buy = b.can_buy && (b.can_buy.solo || b.can_buy.packs)
     ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true, first_month: firstMonth } : null;
