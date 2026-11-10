@@ -47,6 +47,8 @@ enum PurchaseOutcome: Equatable {
     case needsSupport(String)
     /// The App Store couldn't sell it.
     case failed(String)
+    /// A restore that found nothing to send: this Apple account bought nothing here.
+    case nothingToRestore
 }
 
 /// The App Store, as the app uses it. `AppStore` is StoreKit's; tests use their own.
@@ -139,8 +141,11 @@ final class Purchases: ObservableObject {
     /// Restores this Apple account's purchases and sends each to KIFF.
     func restore() async -> PurchaseOutcome {
         do {
+            let found = try await front.restore()
+            // Nothing came back: said as it is, never "Purchases restored."
+            guard !found.isEmpty else { return .nothingToRestore }
             var outcome = PurchaseOutcome.done
-            for p in try await front.restore() {
+            for p in found {
                 switch await deliver(p, requestID: nil) {
                 case .needsSupport(let why): outcome = .needsSupport(why)
                 case .notRecorded(let why):
