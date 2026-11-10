@@ -2923,7 +2923,6 @@ final class AppModel: ObservableObject {
         await refreshUsage()
     }
 
-    /// Brings back this Apple account's purchases, and sends each to KIFF.
     /// The packs Plan & usage lists (docs/accounts.md): the First month pack first, only while
     /// tafs cloud says it can be bought, then the packs that can be bought again.
     var offeredPacks: [KIFFClient.Usage.Store.Pack] {
@@ -2934,6 +2933,8 @@ final class AppModel: ObservableObject {
     /// doesn't say or the balance isn't read.
     var showsCreditsPanel: Bool { balance?.balance.creditsPanel != false }
 
+    /// Brings back this Apple account's purchases, and sends each to KIFF. One that finds
+    /// nothing says so.
     func restorePurchases() async {
         planMessage = nil
         guard mode == .kiff else { return }
