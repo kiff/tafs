@@ -338,11 +338,6 @@ the spend limit, which the samples here leave out:
 - `buy` is `null`, or two booleans, `{solo, packs}`: what the app may offer this person
   (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
   while Solo runs. The products and their store ids come from KIFF's usage read (`store`).
-- `buy.first_month` is set while the First month pack can be offered: beside `solo` before a plan,
-  and while Solo runs, until it's bought, else `null`. It's `{ready, words}`: `ready` true, with
-  `words` null, when it can be bought; `ready` false while it waits, since the pack can't be bought
-  before Solo starts, with `words` saying so in the person's language ("Add it once Solo
-  starts.").
 - `plan_line` is Settings' Plan card, such as "Solo · 83% of this period's credits used",
   "Company · 4 seats · 62% of the included credits used", "Company · waiting: the spend limit is
   reached", or "No plan · choose one to start". `plan_tone` is `ok`, `warning` or `waiting`, for
@@ -414,12 +409,6 @@ above. The app shows the words. Builds from before this show `words` as for any 
   price and every term: the period, that it renews until cancelled, how to cancel, and the Terms
   and Privacy Policy.
 - **Packs of credits**, which never expire, offered where `buy.packs` is set.
-- **The First month pack**, 7,000 credits, once per account, shown right under Solo where
-  `buy.first_month` is set, and never with the other packs. KIFF's `store.packs[]` lists it with
-  `"once": true`, and leaves it out once the account has bought it. While it waits on Solo, its row
-  shows the store's price and tafs cloud's `words`, with no button; once Solo is recorded, the
-  balance is read again and the button appears. On Android today; iOS follows once the App Store
-  has the product.
 - **The products and their store ids** come from KIFF's usage read (`store`), with each pack's
   `credits`.
 - **Each purchase goes to KIFF** for this account (Apple's signed transaction, or Google's purchase
