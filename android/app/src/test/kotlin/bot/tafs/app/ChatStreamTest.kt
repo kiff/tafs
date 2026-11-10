@@ -200,6 +200,17 @@ class ChatStreamTest {
     assertEquals("Refunds stopped: this task took more steps than its limit for one task. Ask for something narrower.", AppModel.capWords("turn_cap", "Refunds"))
   }
 
+  @Test fun aReplyOutOfRoomOrDeclinedSaysSoNeverDotDotDot() = runTest {
+    reads()
+    transport.answer(stream, 200, sse("end" to """{"status":"COMPLETED","stop":"max_token"}"""))
+    val m = model()
+    m.deliverChat("Write it all", "refunds-1")
+    settle()
+    assertEquals(ChatEnd.Capped("max_token"), m.state.value.chatEnded["refunds-1"])
+    assertEquals("Refunds stopped: its reply ran out of room. Ask for something shorter, or for one part at a time.", AppModel.capWords("max_token", "Refunds"))
+    assertEquals("Refunds stopped: the AI declined to continue. Try asking another way.", AppModel.capWords("refused", "Refunds"))
+  }
+
   @Test fun withoutTheStreamRouteTheMessageGoesPlainlyAsBefore() = runTest {
     reads()
     transport.answer(stream, 404, """{"error":"not_found"}""")

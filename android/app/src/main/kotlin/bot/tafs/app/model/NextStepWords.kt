@@ -9,7 +9,7 @@ import bot.tafs.app.kiff.NextStep
  */
 object NextStepWords {
   sealed interface Action {
-    /** The connection's vendor signed it out: sign in again, as on its taf's Connected tools. */
+    /** The connection's vendor signed it out: sign in again, as on its taf's Connected apps. */
     data class SignInAgain(val grant: Grant) : Action
     /** Connect apps, where the owner connects that app again (a refused key is replaced there). */
     data object ConnectApps : Action

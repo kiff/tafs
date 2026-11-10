@@ -6,6 +6,7 @@ import re
 import tempfile
 import unittest
 
+import android_literals
 import generate
 import ios_literals
 
@@ -310,6 +311,55 @@ class IOSLiterals(unittest.TestCase):
                 self.assertTrue(why, f"{rel}: {body!r} has no reason")
                 self.assertIn(body, found, f"{rel} no longer has {body!r}: remove it from ios_kept.json")
 
+
+
+class AndroidLiterals(unittest.TestCase):
+    """No English left in the Android app's code, outside what must stay (android_literals.py)."""
+
+    def test_every_android_line_reads_through_words(self):
+        left = android_literals.scan()
+        self.assertEqual(left, [], "English still in code; give it a key in en.json, or keep it in android_kept.json with why:\n"
+                         + "\n".join(f"  {f}:{n}: {b}" for f, n, b in left))
+
+    def test_the_scan_judges_each_literal_on_its_own(self):
+        kotlin = "\n".join([
+            'val a = if (n == 1) "One thing waits" else "$n things wait"',
+            'if (answer == "declined") title = "Not now"',
+            'val b = when (stop) { "cost_cap" -> "Over its limit"; else -> "" }',
+            'lines += "$waiting thing${if (waiting == 1) " waits" else "s wait"} on you"',
+            'request.header("Authorization", "Bearer $t")',
+            'val path = "/v1/tafs/$id"',
+            'val x = map["some key"]',
+            'val id = "knob.showing"',
+            'val c = \'"\'',
+            '// "A comment with words"',
+        ])
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "View.kt"), "w") as f:
+                f.write(kotlin)
+            left = [b for _, _, b in android_literals.scan(d, kept_path=None)]
+        # Both sides of an if, words beside a comparison or a when branch, a count made in code and its parts.
+        self.assertEqual(sorted(left), sorted(["One thing waits", "$n things wait", "Not now", "Over its limit",
+                                               '$waiting thing${if (waiting == 1) " waits" else "s wait"} on you', "s wait"]))
+
+    def test_ci_runs_the_scan_on_every_change_to_the_android_sources(self):
+        with open(os.path.join(REPO, ".github", "workflows", "strings.yml"), encoding="utf-8") as f:
+            workflow = f.read()
+        sources = os.path.relpath(os.path.join(REPO, "android", "app", "src", "main", "kotlin"), REPO).replace(os.sep, "/")
+        triggers = re.findall(r"paths: \[(.*)\]", workflow)
+        self.assertEqual(len(triggers), 2, "the push and pull_request paths weren't found")
+        for paths in triggers:
+            self.assertIn(f'"{sources}/**"', paths, f"a change to {sources} doesn't run the strings checks")
+
+    def test_every_kept_literal_is_still_in_its_file(self):
+        with open(android_literals.KEPT, encoding="utf-8") as f:
+            kept = json.load(f)
+        for rel, bodies in kept.items():
+            with open(os.path.join(android_literals.SOURCES, rel), encoding="utf-8") as f:
+                found = {b for _, _, b in android_literals.literals(f.read())}
+            for body, why in bodies.items():
+                self.assertTrue(why, f"{rel}: {body!r} has no reason")
+                self.assertIn(body, found, f"{rel}: {body!r} is kept but no longer in the file")
 
 if __name__ == "__main__":
     unittest.main()

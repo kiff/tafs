@@ -18,7 +18,6 @@ object Words {
     val byEmail: String get() = Res.s(R.string.alert_by_email)
     object Foot {
       val cantAnswerHolds: String get() = Res.s(R.string.alert_foot_cant_answer_holds)
-      val tellsYou: String get() = Res.s(R.string.alert_foot_tells_you)
       fun tellsYouDevice(device: String): String = Res.s(R.string.alert_foot_tells_you_device, device)
     }
     val haptics: String get() = Res.s(R.string.alert_haptics)
@@ -26,7 +25,6 @@ object Words {
     val kiffDoesntSend: String get() = Res.s(R.string.alert_kiff_doesnt_send)
     val loudExample: String get() = Res.s(R.string.alert_loud_example)
     val needsYou: String get() = Res.s(R.string.alert_needs_you)
-    val noPushToken: String get() = Res.s(R.string.alert_no_push_token)
     fun noPushTokenDevice(device: String): String = Res.s(R.string.alert_no_push_token_device, device)
     val notInBuild: String get() = Res.s(R.string.alert_not_in_build)
     fun notOn(why: String): String = Res.s(R.string.alert_not_on, why)
@@ -34,7 +32,6 @@ object Words {
     val notRefused: String get() = Res.s(R.string.alert_not_refused)
     val notSent: String get() = Res.s(R.string.alert_not_sent)
     fun onThisDevice(device: String): String = Res.s(R.string.alert_on_this_device, device)
-    val onThisPhone: String get() = Res.s(R.string.alert_on_this_phone)
     val openTafsAnswerKiffDid: String get() = Res.s(R.string.alert_open_tafs_answer_kiff_did)
     val openTafsAnswerPhoneCan: String get() = Res.s(R.string.alert_open_tafs_answer_phone_can)
     val prompt: String get() = Res.s(R.string.alert_prompt)
@@ -183,7 +180,6 @@ object Words {
     val onlySomeoneWhoManagesAccount: String get() = Res.s(R.string.billing_only_someone_who_manages_account)
     val openTafsToBuy: String get() = Res.s(R.string.billing_open_tafs_to_buy)
     val packAddsCreditsOnceNever: String get() = Res.s(R.string.billing_pack_adds_credits_once_never)
-    val pending: String get() = Res.s(R.string.billing_pending)
     val pendingCredits: String get() = Res.s(R.string.billing_pending_credits)
     fun planCouldNotReadKiff(why: String): String = Res.s(R.string.billing_plan_could_not_read_kiff, why)
     val playCantSell: String get() = Res.s(R.string.billing_play_cant_sell)
@@ -213,7 +209,6 @@ object Words {
     fun startsFree(trial: String): String = Res.s(R.string.billing_starts_free, trial)
     val tafsKiffOnePersonEvery: String get() = Res.s(R.string.billing_tafs_kiff_one_person_every)
     val termsUse: String get() = Res.s(R.string.billing_terms_use)
-    val testPurchase: String get() = Res.s(R.string.billing_test_purchase)
     val testPurchaseCredits: String get() = Res.s(R.string.billing_test_purchase_credits)
     fun tryFree(trial: String): String = Res.s(R.string.billing_try_free, trial)
     val whatCredits: String get() = Res.s(R.string.billing_what_credits)
@@ -915,6 +910,10 @@ object Words {
     val wordsAnotherConnectionThanOne: String get() = Res.s(R.string.connect_words_another_connection_than_one)
     fun wordsMismatch(what: String): String = Res.s(R.string.connect_words_mismatch, what)
   }
+  object Device {
+    val phone: String get() = Res.s(R.string.device_phone)
+    val tablet: String get() = Res.s(R.string.device_tablet)
+  }
   object Door {
     val addDoor: String get() = Res.s(R.string.door_add_door)
     fun addIntro(taf: String): String = Res.s(R.string.door_add_intro, taf)
@@ -1450,7 +1449,6 @@ object Words {
     val checked: String get() = Res.s(R.string.receipt_checked)
     fun checkedOnDevice(device: String): String = Res.s(R.string.receipt_checked_on_device, device)
     val checkedWhy: String get() = Res.s(R.string.receipt_checked_why)
-    val checking: String get() = Res.s(R.string.receipt_checking)
     fun checkingOnDevice(device: String): String = Res.s(R.string.receipt_checking_on_device, device)
     val copy: String get() = Res.s(R.string.receipt_copy)
     object DecidedBy {
@@ -1628,7 +1626,6 @@ object Words {
     val show: String get() = Res.s(R.string.record_show)
     val showsReceipt: String get() = Res.s(R.string.record_shows_receipt)
     fun signedOnDevice(device: String): String = Res.s(R.string.record_signed_on_device, device)
-    val signedOnPhone: String get() = Res.s(R.string.record_signed_on_phone)
     fun started(taf: String): String = Res.s(R.string.record_started, taf)
     val theConnection: String get() = Res.s(R.string.record_the_connection)
     val theTool: String get() = Res.s(R.string.record_the_tool)
@@ -1807,7 +1804,6 @@ object Words {
     val alerts: String get() = Res.s(R.string.settings_alerts)
     object AlertsOff {
       val text: String get() = Res.s(R.string.settings_alerts_off_text)
-      val title: String get() = Res.s(R.string.settings_alerts_off_title)
       fun titleDevice(device: String): String = Res.s(R.string.settings_alerts_off_title_device, device)
       val turnOn: String get() = Res.s(R.string.settings_alerts_off_turn_on)
     }
@@ -1868,7 +1864,6 @@ object Words {
     val searchTimeZones: String get() = Res.s(R.string.settings_search_time_zones)
     val showSuggestions: String get() = Res.s(R.string.settings_show_suggestions)
     object SignInAgainConfirm {
-      val body: String get() = Res.s(R.string.settings_sign_in_again_confirm_body)
       fun bodyDevice(device: String): String = Res.s(R.string.settings_sign_in_again_confirm_body_device, device)
       val confirm: String get() = Res.s(R.string.settings_sign_in_again_confirm_confirm)
       val title: String get() = Res.s(R.string.settings_sign_in_again_confirm_title)
@@ -1876,7 +1871,6 @@ object Words {
     val signInAgainWhy: String get() = Res.s(R.string.settings_sign_in_again_why)
     val signOut: String get() = Res.s(R.string.settings_sign_out)
     object SignOutOfKiff {
-      val body: String get() = Res.s(R.string.settings_sign_out_of_kiff_body)
       fun bodyDevice(device: String): String = Res.s(R.string.settings_sign_out_of_kiff_body_device, device)
       val title: String get() = Res.s(R.string.settings_sign_out_of_kiff_title)
     }
@@ -1895,7 +1889,6 @@ object Words {
       val usesThis: String get() = Res.s(R.string.settings_time_zone_uses_this)
     }
     object TimeZoneOffer {
-      fun text(current: String): String = Res.s(R.string.settings_time_zone_offer_text, current)
       fun textDevice(device: String, zone: String): String = Res.s(R.string.settings_time_zone_offer_text_device, device, zone, Words.possessive(device))
       fun title(zone: String): String = Res.s(R.string.settings_time_zone_offer_title, zone)
       fun use(zone: String): String = Res.s(R.string.settings_time_zone_offer_use, zone)
@@ -1903,7 +1896,6 @@ object Words {
     val timeZoneTitle: String get() = Res.s(R.string.settings_time_zone_title)
     val title: String get() = Res.s(R.string.settings_title)
     fun useDeviceZone(device: String, identifier: String): String = Res.s(R.string.settings_use_device_zone, device, identifier, Words.possessive(device))
-    fun usePhoneZone(zone: String): String = Res.s(R.string.settings_use_phone_zone, zone)
     val version: String get() = Res.s(R.string.settings_version)
     val yourAccount: String get() = Res.s(R.string.settings_your_account)
     val yourChats: String get() = Res.s(R.string.settings_your_chats)
@@ -2167,8 +2159,6 @@ object Words {
     val buying: String get() = Res.s(R.string.usage_buying)
     val cancelSolo: String get() = Res.s(R.string.usage_cancel_solo)
     fun companyBilledKiffSoloBought(time: String): String = Res.s(R.string.usage_company_billed_kiff_solo_bought, time)
-    fun count(counted: String, unit: String): String = Res.s(R.string.usage_count, counted, unit)
-    fun countOf(counted: String, of: String, unit: String): String = Res.s(R.string.usage_count_of, counted, of, unit)
     val credits: String get() = Res.s(R.string.usage_credits)
     fun creditsNotRead(why: String): String = Res.s(R.string.usage_credits_not_read, why)
     val day: String get() = Res.s(R.string.usage_day)

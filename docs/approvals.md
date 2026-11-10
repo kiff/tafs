@@ -122,7 +122,7 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
   - every request that grants authority asks for its own fingerprint, with the step's
     words. Approve, Resume, sharing a taf, starting a trial and installing a version with
     its Card each take one. Installing Coach's held version takes one too (see above; two
-    with a KIFF that doesn't take the hold with the Card), and starting Coach the first time takes its "Connect your tools"
+    with a KIFF that doesn't take the hold with the Card), and starting Coach the first time takes its "Connect your apps"
     confirmation and a fingerprint for each of its two drafts, then signs the connect batch
     tafs cloud gave and asks a fingerprint for Coach's Card ("Give Coach its Card").
   - a phone with no strong biometric enrolled has no approval key and approves nothing: it

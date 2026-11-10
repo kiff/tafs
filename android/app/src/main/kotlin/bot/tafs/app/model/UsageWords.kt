@@ -62,15 +62,6 @@ object UsageWords {
   /** A taf's counted tasks this period, for its page's Usage row. */
   fun tafCount(n: Int): String = Words.Usage.tasksThisPeriod(count = n)
 
-  /**
-   * "14 of 25 tasks", or "472 tasks" where there is no limit (KIFF's `included: 0`), in the singular where the number it follows
-   * is 1: "1 task", "0 of 1 task". [unit] is the plural; its singular drops the final "s".
-   */
-  fun count(counted: Int, of: Int, unit: String): String {
-    val one = unit.removeSuffix("s")
-    return if (of > 0) Words.Usage.countOf(counted.toString(), of.toString(), if (of == 1) one else unit) else Words.Usage.count(counted.toString(), if (counted == 1) one else unit)
-  }
-
   /** Solo's terms, every one, as Google Play's price says them: "$9.99 a month. Renews every month until cancelled…". */
   fun soloTerms(price: String, period: String?, freeTrial: String?): String {
     val every = period ?: Words.Usage.month

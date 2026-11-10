@@ -625,6 +625,11 @@ data class RecordEntry(
   val refusedByTool: Boolean? = null,
   /** Who refused it at the tool: the vendor as connected, when known. */
   val refusedBy: String? = null,
+  /**
+   * Its title is this phone's own line for the owner's answer ("Refused by you · 08:56 · …"), so the chat shows it as it
+   * is. KIFF's lines, titled by the action, leave it unset.
+   */
+  val byYou: Boolean? = null,
 ) {
   /** "payment …QbstR": what it acted on, by the argument's name, when tafs has its value and it matches KIFF's hash. */
   val onText: String?

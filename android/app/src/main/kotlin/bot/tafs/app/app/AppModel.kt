@@ -2337,7 +2337,7 @@ class AppModel(
       }
       val token = pushToken ?: push.token()?.also { pushToken = it }
       if (token == null) {
-        fail(Words.Alert.noPushToken)
+        fail(Words.Alert.noPushTokenDevice(bot.tafs.app.model.ThisDevice.word))
         return false
       }
       var handoff = pendingHandoff()
@@ -2494,7 +2494,7 @@ class AppModel(
   suspend fun startCoach(): Boolean {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null) {
-      startFailed(Words.SignIn.againToSign)
+      startFailed(Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))
       return false
     }
     if (_state.value.approvalKeyLost) {
@@ -2780,7 +2780,7 @@ class AppModel(
     val tenant = kiffTenant
     val key = call.proposal
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.SignIn.againToSign)) }
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))) }
       return false
     }
     if (_state.value.approvalKeyLost) {
@@ -2826,7 +2826,7 @@ class AppModel(
     val tenant = kiffTenant
     val key = call.proposal
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.SignIn.againToSign)) }
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))) }
       return false
     }
     val generation = accountGeneration
@@ -5171,7 +5171,7 @@ class AppModel(
     if (sw.draft != null) {
       // Nothing shown, nothing signed.
       if (shownDraft == null) return false
-      if (!_state.value.sessionHasKey) return dropSwitch(tafId, Words.SignIn.againToSign)
+      if (!_state.value.sessionHasKey) return dropSwitch(tafId, Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))
       if (_state.value.approvalKeyLost) return dropSwitch(tafId, KiffClient.APPROVAL_KEY_LOST)
       draft = try {
         kiff.draft(sw.draft)
@@ -5515,7 +5515,7 @@ class AppModel(
     try {
       trialError(tafId, null)
       if (!_state.value.sessionHasKey) {
-        trialError(tafId, Words.SignIn.againToSign)
+        trialError(tafId, Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))
         return null
       }
       if (_state.value.approvalKeyLost) {
@@ -5593,7 +5593,7 @@ class AppModel(
         if (generation != accountGeneration) return false
         if (!draft.confirmed) {
           if (!_state.value.sessionHasKey) {
-            trialError(tafId, Words.SignIn.againToSign)
+            trialError(tafId, Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))
             return false
           }
           confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", Words.Version.Prompt.install(n = open.n.toString(), taf = taf.name))
@@ -5861,7 +5861,7 @@ class AppModel(
 
   /** Shares a taf with [add] and stops sharing it with [remove], behind one confirmation for all of it. */
   suspend fun setShares(agent: String, name: String, add: Set<Share>, remove: Set<Share>): Boolean =
-    changePeople("Share $name", grants = add.isNotEmpty()) { kiff ->
+    changePeople(Words.People.Share.title(taf = name), grants = add.isNotEmpty()) { kiff ->
       add.forEach { kiff.share(agent, it) }
       remove.forEach { kiff.unshare(agent, it) }
     }
@@ -5930,7 +5930,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || _state.value.deletingAccount) return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(deleteAccountError = Words.SignIn.againToSign) }
+      _state.update { it.copy(deleteAccountError = Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word)) }
       return false
     }
     val generation = accountGeneration
@@ -5994,7 +5994,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || key == null) return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      haltFailed(Words.SignIn.againToSign)
+      haltFailed(Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))
       return false
     }
     if (_state.value.approvalKeyLost) {
@@ -6123,7 +6123,7 @@ class AppModel(
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || tenant == null) return false
     if (!_state.value.sessionHasKey) {
-      _state.update { it.copy(tasksMessage = Words.SignIn.againToSign) }
+      _state.update { it.copy(tasksMessage = Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word)) }
       return false
     }
     val generation = accountGeneration
@@ -6193,7 +6193,7 @@ class AppModel(
 
   private fun buyWords(o: PurchaseOutcome): String? = when (o) {
     PurchaseOutcome.Done, PurchaseOutcome.Cancelled -> null
-    PurchaseOutcome.Pending -> Words.Billing.pending
+    PurchaseOutcome.Pending -> Words.Billing.pendingCredits
     is PurchaseOutcome.NotRecorded -> Words.Billing.boughtNotRecorded
     is PurchaseOutcome.NotAdded -> o.why
     is PurchaseOutcome.NeedsSupport -> o.why
@@ -6212,7 +6212,7 @@ class AppModel(
     val from = _state.value.balance?.balance?.raise?.fromCents ?: return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      _state.update { it.copy(raiseError = Words.SignIn.againToSign) }
+      _state.update { it.copy(raiseError = Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word)) }
       return false
     }
     val generation = accountGeneration
@@ -6423,7 +6423,7 @@ class AppModel(
   private fun decide(call: HeldCall, kind: RecordEntry.Kind, title: String, detail: String, signature: String?) {
     val key = call.proposalId ?: call.kiffId
     val id = key?.let(KiffMapping::recordId) ?: newId()
-    val line = entry(call.tafId, kind, title, detail, call.proposed, signature).copy(id = id, at = call.heldAt)
+    val line = entry(call.tafId, kind, title, detail, call.proposed, signature).copy(id = id, at = call.heldAt, byYou = true)
     _state.update { s -> s.copy(record = listOf(line) + s.record.filterNot { it.id == id }) }
     if (call.kiffId != null) decided[id] = line
   }
@@ -6500,13 +6500,16 @@ class AppModel(
     const val CHAT_POLL_MS = 2_500L
     const val CHAT_POLL_BUDGET = 150
 
-    /** The stops at a cap of the run's own: it ends with no words for it. */
-    val CAP_STOPS = setOf("cost_cap", "turn_cap")
+    /** The stops of the run's own: it ends with no words for it. */
+    val CAP_STOPS = setOf("cost_cap", "turn_cap", "max_token", "refused")
 
     /** What the chat says when its latest run stopped at a cap, never "…". */
     fun capWords(stop: String, taf: String): String? = when (stop) {
       "cost_cap" -> Words.Chat.Cap.cost(taf = taf)
       "turn_cap" -> Words.Chat.Cap.turns(taf = taf)
+      // A reply cut off at its length limit, and the AI declining to go on (docs/chat.md).
+      "max_token" -> Words.Chat.Stopped.outOfRoom(taf = taf)
+      "refused" -> Words.Chat.Stopped.declined(taf = taf)
       else -> null
     }
 

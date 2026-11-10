@@ -148,7 +148,7 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", counts: .amount).1,
                        "Stripe refused it. Nothing was done, but it still counts against today's total.")
         XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: nil, counts: .nothing).1,
-                       "The tool refused it, and it still counts toward today's limits: charge_already_refunded")
+                       "The app refused it, and it still counts toward today's limits: charge_already_refunded")
     }
 
     /// Only an amount in a currency is money (kiff/tafs#207): a gateway's unit can be a count

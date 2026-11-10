@@ -255,7 +255,7 @@ class HaltTest {
     val halted = HaltWords.explanation(Halt(state = "halted", haltedAt = Instant.parse("2026-10-28T09:00:00Z")), all = false)
     assertTrue(halted, halted.startsWith("Halted since "))
     assertTrue(halted, halted.endsWith("nothing from before the halt picks up again."))
-    assertTrue(HaltWords.explanation(Halt(state = "halted"), all = false).startsWith("Halted. Nothing reaches your tools."))
+    assertTrue(HaltWords.explanation(Halt(state = "halted"), all = false).startsWith("Halted. Nothing reaches your apps."))
   }
 
   @Test fun aTafHaltedWithTheAccountIsResumedWithIt() {

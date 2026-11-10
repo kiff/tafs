@@ -130,7 +130,7 @@ class TafsCloud(
       },
       working = wire.working?.session,
       workingRun = wire.working?.run,
-      capped = wire.capped,
+      capped = wire.stopped ?: wire.capped,
       components = CoachWords.fold(wire.components.orEmpty().mapNotNull { shown(it) }),
       coachLines = wire.coachLines.orEmpty().mapNotNull { runCatching { KiffClient.json.decodeFromJsonElement(CoachLine.serializer(), it) }.getOrNull() },
       // A drive's end the app can't read is left out, never the thread with it.

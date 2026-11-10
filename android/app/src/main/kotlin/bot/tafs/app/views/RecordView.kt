@@ -221,7 +221,7 @@ fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
       Text(parts.joinToString(" · "), style = scaled(13, color = Theme.soft))
       // KIFF says it's signed; the seal is for the receipt's own check.
       if (entry.receipt?.status == "signed") Text(Words.Receipt.kiffReceipt, style = scaled(12, color = Theme.ok))
-      else if (entry.signature != null) Text(Words.Record.signedOnPhone, style = scaled(12, color = Theme.ok))
+      else if (entry.signature != null) Text(Words.Record.signedOnDevice(bot.tafs.app.model.ThisDevice.word), style = scaled(12, color = Theme.ok))
     }
   }
 }

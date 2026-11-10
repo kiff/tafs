@@ -174,7 +174,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
             } else if (state.mode == Mode.kiff) {
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircularProgressIndicator(Modifier.size(14.dp), color = Theme.amber, strokeWidth = 2.dp)
-                Text(Words.Receipt.checking, style = scaled(13, color = Theme.soft))
+                Text(Words.Receipt.checkingOnDevice(bot.tafs.app.model.ThisDevice.word), style = scaled(13, color = Theme.soft))
               }
             }
           }

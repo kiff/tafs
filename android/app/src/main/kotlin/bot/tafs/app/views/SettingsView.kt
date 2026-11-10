@@ -174,7 +174,7 @@ fun SettingsSheet(
           if (state.mode == Mode.kiff) Section(Words.Settings.timeZoneTitle) {
             Value(Words.Settings.timeZoneTitle, state.kiffAccount?.timeZone ?: "UTC")
             Action(Words.Settings.chooseTimeZone, Theme.amberText) { zonePicker = true }
-            Action(Words.Settings.usePhoneZone(java.time.ZoneId.systemDefault().id), Theme.amberText, onUseDeviceZone)
+            Action(Words.Settings.useDeviceZone(bot.tafs.app.model.ThisDevice.word, java.time.ZoneId.systemDefault().id), Theme.amberText, onUseDeviceZone)
             state.timeZoneError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.yourChats) { ExportChatsRow(onExport) }
@@ -230,7 +230,7 @@ enum class SignOut {
   SignOut, SignInAgain;
 
   val title: String get() = when (this) { SignOut -> Words.Settings.SignOutOfKiff.title; SignInAgain -> Words.Settings.SignInAgainConfirm.title }
-  val text: String get() = when (this) { SignOut -> Words.Settings.SignOutOfKiff.body; SignInAgain -> Words.Settings.SignInAgainConfirm.body }
+  val text: String get() = when (this) { SignOut -> Words.Settings.SignOutOfKiff.bodyDevice(bot.tafs.app.model.ThisDevice.word); SignInAgain -> Words.Settings.SignInAgainConfirm.bodyDevice(bot.tafs.app.model.ThisDevice.word) }
   val confirm: String get() = when (this) { SignOut -> Words.Settings.signOut; SignInAgain -> Words.Settings.SignInAgainConfirm.confirm }
 }
 
