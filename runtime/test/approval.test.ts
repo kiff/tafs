@@ -270,7 +270,9 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
   it("a draft that leaves one of the taf's tools uncovered, with no Card in force covering it, isn't signed", async () => {
     const s = services();
     const tools = [{ tool: "create_refund", name: "refund_k3", title: "Refund a payment" }, { tool: "stripe_api_read", name: "get_charge", title: "Read a charge", read_only: true },
-      { tool: "stripe_api_read", name: "read_charge", title: "Check a charge", read_only: true }, { tool: "stripe_api_details", name: "fields_ab", read_only: true, setup_reads: true }];
+      { tool: "stripe_api_read", name: "read_charge", title: "Check a charge", read_only: true }, { tool: "stripe_api_details", name: "fields_ab", read_only: true, setup_reads: true },
+      // Listed with no KIFF name: left out, never compared by the vendor's own name, which no Card covers.
+      { tool: "vendor_only_name", title: "A tool with no KIFF name" }];
     s.grants = [grant({ status: "connected" }, { tools })];
     const card = { id: "c1", subject: "refunds-x", grants: [{ action: "refund_k3" }, { action: " READ_CHARGE " }], on_exceed: "owner", aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] };
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [card] };
@@ -284,7 +286,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     // Another agent's Card, or one no longer in force, covers nothing of this taf's.
     s.mandates = [{ id: "c0", subject: "other-y", active: true, grants: [{ action: "get_charge" }] }, { id: "c9", subject: "refunds-x", active: false, grants: [{ action: "get_charge" }] }];
     expect(await ask()).toMatchObject({ outcome: "answered", note: WORDS.uncovered("Read a charge") });
-    // The draft covering it: signed. Setup's own read (fields_ab) is never asked for.
+    // The draft covering it: signed. Setup's own read (fields_ab) is never asked for, nor the tool with no KIFF name.
     s.mandates = [];
     s.drafts.drf_1.cards = [{ ...card, grants: [...card.grants, { action: "get_charge" }] }];
     expect(await ask()).toMatchObject({ outcome: "sign" });
