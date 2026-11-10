@@ -424,7 +424,7 @@ export const pl: Words = {
   cts_ask: "Dać Coachowi te narzędzia? Podpisujesz jego Card na swoim telefonie.",
   cts_give: "Daj Coachowi narzędzia",
   cts_not_now: "Nie teraz",
-  cts_row: "Coach nie ma jeszcze narzędzi · Daj je",
+  cts_row: "Narzędzia Coacha czekają na Ciebie · Daj je",
   cts_g_watch: "Pilnuj swoich tafów",
   cts_g_watch_line: "Zobacz swoje tafy i ich uruchomienia i znajdź, co poszło nie tak.",
   cts_g_run: "Niech pracują za Ciebie",

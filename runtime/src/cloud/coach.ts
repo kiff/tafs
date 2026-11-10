@@ -226,7 +226,7 @@ export interface CoachToolsStep {
   ask: string;
   give: string;
   not_now: string;
-  /** The one row the Coach screen keeps while the tools are still to give. */
+  /** The one row the Coach screen keeps while any tool is still to give: true with some given or none. */
   row: string;
 }
 
