@@ -415,6 +415,29 @@ under Coach's Cards first.
 
 Answering a held call is never a tool.
 
+### Coach's tools step
+
+A first Start ends on one step that asks for Coach's tools, with their own fingerprint. tafs cloud
+writes its words, in the person's language, on `GET /v1/setup`'s `tools.coach_tools_step` while the
+tools are `to_give` (`coachToolsStep` in `coach.ts`):
+`{title, intro, groups: [{name, line, tools: [{name, does, why}]}], details, ask, give, not_now, row}`.
+
+- **Four groups, always shown:** watch your tafs, run them for you, build new versions, help while you
+  drive. Each group has one line. The thirteen tools sit under them, under `details`, which is folded by
+  default.
+- **Each tool** says what it lets Coach do (`does`) and why it needs the person's yes (`why`).
+- **Limits come from Coach's Cards** (`COACH_CARDS`), never written by hand:
+  - each line ends with its Card's limit for a day;
+  - two tools on one Card are counted together;
+  - "waits for you" appears only where the Card holds (`asks`): after the limit, or for every call;
+  - a tool its Card refuses past the limit says only the limit.
+
+  A test checks each Card's limit in its tool's line in all 8 languages.
+- **One confirmation** gives the tools on either phone. The words never name a biometric (fingerprint,
+  Face ID): the phone knows which it asks for, and tafs cloud doesn't.
+- **Buttons:** `give` and `not_now`. After **Not now**, the Coach screen keeps one line, `row`, which
+  opens the same step. It's never a panel above the conversation.
+
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than
 trust the note, and Coach hears it in its run at work, or at its next turn. kiff/agents

@@ -1,7 +1,7 @@
 import { generateKeyPairSync, sign } from "node:crypto";
-import { wordsIn } from "../src/cloud/words/index.js";
+import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it } from "vitest";
-import { OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, COACH_TOOL_GROUPS, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
@@ -520,5 +520,46 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
     expect(lines[0]).toMatchObject({ taf: "Refunds", said: "Waits for your answer." });
     expect([...w.coach.held.keys()].some((k) => k.startsWith(`${T}#coach-task#`))).toBe(true);
+  });
+});
+
+describe("Coach's tools step, at the end of a first Start", () => {
+  it("groups every tool once, in four groups, with each Card's limit in its line in every language", () => {
+    const grouped = COACH_TOOL_GROUPS.flatMap((g) => g.tools);
+    expect([...grouped].sort()).toEqual(TOOLS.map((t) => t.name).sort());
+    for (const lang of LANGUAGES) {
+      const step = coachToolsStep(lang);
+      expect(step.groups).toHaveLength(4);
+      for (const k of ["title", "intro", "details", "ask", "give", "not_now", "row"] as const) expect(step[k].trim()).not.toBe("");
+      const n = (x: number) => new Intl.NumberFormat(lang === "en" ? "en-GB" : lang).format(x);
+      COACH_TOOL_GROUPS.forEach((g, gi) => {
+        const group = step.groups[gi]!;
+        expect(group.name && group.line).toBeTruthy();
+        g.tools.forEach((tool, ti) => {
+          const line = group.tools[ti]!;
+          expect(line.name && line.does && line.why).toBeTruthy();
+          const card = COACH_CARDS.find((c) => c.actions.includes(tool))!;
+          if (card.limit > 0) expect(line.does, `${lang} ${tool}`).toContain(n(card.limit));
+        });
+      });
+    }
+  });
+
+  it("says a tool waits for you only where its Card holds, and only the limit where it refuses", () => {
+    const step = coachToolsStep("en");
+    const does = Object.fromEntries(COACH_TOOL_GROUPS.flatMap((g, gi) => g.tools.map((t, ti) => [t, step.groups[gi]!.tools[ti]!.does])));
+    for (const card of COACH_CARDS) {
+      for (const tool of card.actions) {
+        expect(/waits for you|waits for your approval/.test(does[tool]!), tool).toBe(card.asks);
+      }
+    }
+    expect(does.tafs_state).toBe("Read each taf, its versions and its open runs. Up to 500 a day, counted with “Read a run”.");
+    expect(does.taf_task).toBe("Hand a taf a task or a message. The taf works under its own Card. Up to 50 a day; after that, each one waits for you.");
+    expect(does.version_install).toBe("Put a version live. Each one waits for your approval.");
+    expect(does.app_look).toContain("Up to 2,000 a day.");
+    expect(does.app_act).toContain("Up to 1,000 a day.");
+    expect(coachToolsStep("de").groups[3]!.tools[0]!.does).toContain("2.000");
+    // No biometric named and no count of confirmations, in any language: the phone knows what it asks for, and it asks once.
+    for (const lang of LANGUAGES) expect(JSON.stringify(coachToolsStep(lang)).toLowerCase(), lang).not.toMatch(/fingerprint|face id|fingerabdruck|empreinte|huella|impronta|impressão digital|vingerafdruck|vingerafdruk|odcisk|twice|zweimal|deux fois|dos veces|due volte|duas vezes|twee keer|dwa razy/);
   });
 });

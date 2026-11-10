@@ -223,6 +223,57 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-estimates", actions: ["taf_estimate"], limit: 200, asks: false },
 ];
 
+/** Coach's tools in the four groups the tools step shows, in TOOLS' order within each. */
+export const COACH_TOOL_GROUPS: Array<{ id: "watch" | "run" | "build" | "drive"; tools: string[] }> = [
+  { id: "watch", tools: ["tafs_state", "taf_run", "taf_check"] },
+  { id: "run", tools: ["taf_task", "run_stop", "taf_pause"] },
+  { id: "build", tools: ["taf_dial", "taf_estimate", "version_try", "version_install", "taf_results"] },
+  { id: "drive", tools: ["app_look", "app_act"] },
+];
+
+/** The tools step's words, as the apps draw them (docs/coach.md, "Coach's tools step"). */
+export interface CoachToolsStep {
+  title: string;
+  intro: string;
+  groups: Array<{ name: string; line: string; tools: Array<{ name: string; does: string; why: string }> }>;
+  /** The label of the fold the tools sit under, closed by default. */
+  details: string;
+  ask: string;
+  give: string;
+  not_now: string;
+  /** The one row the Coach screen keeps while the tools are still to give. */
+  row: string;
+}
+
+/**
+ * The step that asks for Coach's tools at the end of a first Start, in the person's language. Each
+ * tool's limit is its Card's (COACH_CARDS), never written by hand: a Card's limit a day, counted with
+ * the other tools on the same Card, and "waits for you" only where the Card holds past its limit or
+ * holds every call. It never names a biometric: the phone knows which it asks for, not tafs cloud.
+ */
+export function coachToolsStep(lang: Lang = "en"): CoachToolsStep {
+  const w = wordsIn(lang);
+  const all = w as unknown as Record<string, string | undefined>;
+  const word = (key: string) => all[key] ?? "";
+  const n = (x: number) => new Intl.NumberFormat(lang === "en" ? "en-GB" : lang).format(x);
+  const limit = (tool: string): string => {
+    const card = COACH_CARDS.find((c) => c.actions.includes(tool));
+    if (!card) return "";
+    if (card.limit === 0) return card.asks ? w.cts_always_asks : "";
+    const other = card.actions.find((a) => a !== tool);
+    if (card.asks) return w.cts_up_to_asks(n(card.limit));
+    return other ? w.cts_up_to_shared(n(card.limit), word(`cts_${other}`)) : w.cts_up_to(n(card.limit));
+  };
+  return {
+    title: w.cts_title, intro: w.cts_intro, details: w.cts_details, ask: w.cts_ask, give: w.cts_give, not_now: w.cts_not_now, row: w.cts_row,
+    groups: COACH_TOOL_GROUPS.map((g) => ({
+      name: word(`cts_g_${g.id}`),
+      line: word(`cts_g_${g.id}_line`),
+      tools: g.tools.map((t) => ({ name: word(`cts_${t}`), does: [word(`cts_${t}_does`), limit(t)].filter(Boolean).join(" "), why: word(`cts_${t}_why`) })),
+    })),
+  };
+}
+
 /** A connection in KIFF's gateway, as tafs cloud reads it. */
 export interface GatewayConnection { name: string; url?: string; control?: boolean }
 

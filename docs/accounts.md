@@ -352,12 +352,16 @@ the spend limit, which the samples here leave out:
 - `buy` is `null`, or `{solo, packs, first_month}`: what the app may offer this person
   (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
   while Solo runs. The products and their store ids come from KIFF's usage read (`store`).
-  - `first_month` is the First month pack, which an account buys once: `null` when it isn't
-    offered (bought already, or KIFF lists none), else `{ready, words}`. Before a plan, `ready` is
-    false and `words` say why ("Add it once Solo starts."), in the person's language: the app
-    shows the pack's row with its price beside Solo, and no button. While Solo runs, `ready` is
-    true and `words` is `null`: the row has its button. Its row is the entry of KIFF's
-    `store.packs[]` marked `once`, which KIFF drops once the account has bought it.
+  - `first_month` is the First month pack, which an account buys once. It's offered only while
+    Solo runs, among the packs, as `{ready: true, words: null}`. It's `null` otherwise: before a
+    plan (a pack can't be bought then, and a lone pack with no button only read as an upsell),
+    once bought, or when KIFF lists none. Its row is the entry of KIFF's `store.packs[]` marked
+    `once`, which KIFF drops once the account has bought it. (`ready` false with `words` came
+    from tafs cloud before 10 Nov 2026; apps still read it as before.)
+- `credits_panel` is whether Plan & usage shows the Credits panel. It's false only with no plan
+  and no run this period or the last, the two periods the panel shows: an account just made has
+  nothing there. If last period can't be read, it's true. An app that predates the flag shows
+  the panel.
 - `plan_line` is Settings' Plan card, such as "Solo · 83% of this period's credits used",
   "Company · 4 seats · 62% of the included credits used", "Company · waiting: the spend limit is
   reached", or "No plan · choose one to start". `plan_tone` is `ok`, `warning` or `waiting`, for
@@ -385,7 +389,7 @@ above. The app shows the words. Builds from before this show `words` as for any 
 
 - **Plan & usage** opens on the balance: `words`, `detail`, a bar at `meter_pct` (none when it's
   `null`), the `warning`, then **Raise the limit** where `raise` is set, and Solo or packs where
-  `buy` says. The Credits panel follows.
+  `buy` says. The Credits panel follows, where `credits_panel` is true.
 - **Raise the limit** asks once, then the device key signs KIFF's request, with `raise.from_cents`,
   behind Face ID or a fingerprint, as Go on did. While the phone can't approve, its state stands in
   the button's place ([approvals.md](approvals.md#set-up-approvals-on-this-device)).
@@ -429,8 +433,8 @@ above. The app shows the words. Builds from before this show `words` as for any 
   price and every term: the period, that it renews until cancelled, how to cancel, and the Terms
   and Privacy Policy.
 - **Packs of credits**, which never expire, offered where `buy.packs` is set.
-- **The First month pack**, bought once per account, shown beside Solo where `buy.first_month` is
-  set, and bought once Solo runs (`ready`).
+- **The First month pack**, bought once per account, shown first among the packs where
+  `buy.first_month` is set, which is only while Solo runs.
 - **The products and their store ids** come from KIFF's usage read (`store`), with each pack's
   `credits`.
 - **Each purchase goes to KIFF** for this account (Apple's signed transaction, or Google's purchase
