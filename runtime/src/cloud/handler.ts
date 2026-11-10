@@ -23,7 +23,7 @@ import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
-import { noRecipes, recipesFor, type RecipesView, SUGGESTION_WORDS, type Suggestions } from "./recipes.js";
+import { noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions } from "./recipes.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
@@ -645,7 +645,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       if (!deps.coach) throw new HTTPError(503, "the setting can't be kept here");
       await deps.coach.put(suggestionsKey(me.tenantID), { show: body.show, by: me.subject, at: (deps.now?.() ?? new Date()).toISOString() }, new Date((deps.now?.() ?? new Date()).getTime() + SUGGESTIONS_KEPT_MS));
     }
-    return { suggestions: await suggestionsOf(me, deps) };
+    return { suggestions: await suggestionsOf(me, deps, langOf(event)) };
   }
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
@@ -6928,28 +6928,32 @@ const CATALOG_PAGES = 10;
 const suggestionsKey = (tenant: string) => `${tenant}#suggestions`;
 const SUGGESTIONS_KEPT_MS = 10 * 365 * 24 * 3600_000;
 
-/** The account's suggestions setting with its words: off for good, or on until the account's first taf is live. */
-async function suggestionsOf(me: KIFFIdentity, deps: Deps): Promise<Suggestions> {
+/** The account's suggestions setting with its words in lang: off for good, or on until the account's first taf is live. */
+async function suggestionsOf(me: KIFFIdentity, deps: Deps, lang: Lang): Promise<Suggestions> {
+  const words = suggestionWords(lang);
   const kept = deps.coach ? (await deps.coach.get(suggestionsKey(me.tenantID)).catch(() => undefined)) as { show?: unknown } | undefined : undefined;
-  if (kept?.show === false) return { show: false, reason: "off", words: SUGGESTION_WORDS.off };
+  if (kept?.show === false) return { show: false, reason: "off", words: words.off };
   // "Live": a taf on the account, Setup aside, that isn't being removed. A taf made from Coach goes live
   // as it's made, and one paused or stopped is still the owner's: the suggestions are for an account
   // with none yet.
   const live = (await deps.tafs.list(me.tenantID)).some((t) => t.job !== SETUP_JOB && !t.removing);
-  return live ? { show: true, reason: "live", words: SUGGESTION_WORDS.live } : { show: true, reason: "on", words: SUGGESTION_WORDS.on };
+  return live ? { show: true, reason: "live", words: words.live } : { show: true, reason: "on", words: words.on };
 }
 
 /**
  * Recipes (docs/coach.md, "Recipes"): the recipes whose connections the account's catalog can
- * make, read with the person's own session. When the catalog can't be read, every recipe is
- * listed and `filtered` says so: a new person still opens Coach to recipes, and Coach says what it
- * can't connect.
+ * make, read with the person's own session, in their language. When the catalog can't be read, every
+ * recipe is listed and `filtered` says so: a new person still opens Coach to recipes, and Coach says
+ * what it can't connect.
  */
 async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
+  const lang = langOf(event);
+  // Home leads with them only for a person who manages the account's tafs: anyone else can't make one.
+  const manages = me.capabilities.includes("cards.manage");
   // Shown only while the account has no live taf and the setting is on (the owner's decision): else the
   // list is empty and the words say why, so the apps draw only what comes.
-  const suggestions = await suggestionsOf(me, deps);
-  if (suggestions.reason !== "on") return noRecipes(suggestions);
+  const suggestions = await suggestionsOf(me, deps, lang);
+  if (suggestions.reason !== "on") return noRecipes(suggestions, lang, manages);
   let apps: CatalogApp[] | undefined;
   if (deps.planqueBase) {
     try {
@@ -6972,7 +6976,7 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
       apps = undefined;
     }
   }
-  return recipesFor(apps);
+  return recipesFor(apps, lang, manages);
 }
 
 /** The taf's open knocks, for its thread: someone without a key wrote, and waits for the owner. */

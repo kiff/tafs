@@ -3,6 +3,8 @@ id: save-a-customer-who-cancels
 title: Save a customer who cancels
 category: money
 line: When a subscriber cancels, offers a free month or a small discount, within the Card, and records the outcome.
+headline: Keep the customer who's about to leave.
+today: A subscriber who cancels is gone before anyone notices.
 connections:
   - stripe
   - gmail | outlook | intercom

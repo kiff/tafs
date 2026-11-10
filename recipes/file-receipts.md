@@ -3,6 +3,8 @@ id: file-receipts
 title: File receipts
 category: errands
 line: Finds receipts and invoices in the mailbox, saves each to a folder and adds a row to the expenses sheet; deletes nothing.
+headline: No more hunting for receipts at tax time.
+today: Receipts sit in the inbox until the accountant asks for them.
 connections:
   - gmail | outlook
   - googledrive

@@ -3,6 +3,8 @@ id: book-and-move-appointments
 title: Book and move appointments
 category: operations
 line: Books, moves and confirms appointments by email against the calendar; cancelling always asks.
+headline: End the back-and-forth over bookings.
+today: Every booking takes three emails, and a missed one is an empty slot.
 connections:
   - gmail | outlook
   - googlecalendar | outlook
