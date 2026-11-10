@@ -71,7 +71,7 @@ const TOOL_SKILLS: Record<string, string[]> = {
 
 /** The state of the account the first turn starts from, as far as the skills care. */
 export interface CoachState {
-  /** The account has a taf with a live version (not Setup). */
+  /** The account has a taf of its own (not Setup), which can be held or halted. */
   hasTaf?: boolean;
   /** The account is halted, or a taf of it is. */
   halted?: boolean;
@@ -98,11 +98,16 @@ const DELIVERY_NOTE = /^.{1,120} didn't deliver its result to .{1,200}Find out w
 /**
  * The skills a new conversation starts with, in the definition's order: the entry point's, and the
  * state's (a held call opens the holds, a halt the halting). Each is a stored version.
+ *
+ * An account with a taf of its own also starts with the holds and the halting, whatever its state: an
+ * owner of a running taf asks why it did nothing, or to stop everything, in words that never name a skill,
+ * and the model left to read_skill didn't (kiff/agents Eval 42788659962). A first taf, with nothing
+ * running yet, loads neither.
  */
 export function startSkills(entry: CoachEntry, state: CoachState = {}): SkillRef[] {
   const names = new Set(ENTRY_SKILLS[entry]);
-  if (state.heldCall) names.add("cards-and-holds");
-  if (state.halted) names.add("halting");
+  if (state.heldCall || state.hasTaf) names.add("cards-and-holds");
+  if (state.halted || state.hasTaf) names.add("halting");
   return ordered(names);
 }
 
