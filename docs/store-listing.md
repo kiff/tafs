@@ -23,8 +23,9 @@ release.
 - **Search.** Play ranks on the title, the short description and the full description. The short
   description names AI agents in the language's usual form (AI agents, KI-Agenten, agents IA, agentes
   de IA, agenti AI, AI-agents, agenci AI). The full description names them, automation and the jobs
-  where the sentence needs them, never as a repeated keyword. "AI assistant" is fine; "autonomous"
-  only with its limit (a taf never acts past its Card); never "teammate".
+  where the sentence needs them, never as a repeated keyword. "AI teammate" and "AI assistant" appear
+  once each in the full description, beside AI agents, never in the title, the short description or a
+  heading: the Card leads. "Autonomous" only with its limit (a taf never acts past its Card).
 - **`{SOLO_MONTHLY_CREDITS}`** is Solo's monthly credits. The figure lives in KIFF's config, not in
   this repository; put it in when copying a listing into the Console.
 
@@ -37,7 +38,7 @@ release.
 **Full description:**
 
 ```
-tafs is where a business hands jobs to AI agents, called tafs, and gives each one a Card: the limits it works inside.
+tafs is where a business hands jobs to AI agents, or AI teammates, called tafs, and gives each one a Card: the limits it works inside.
 
 Use it to automate refunds, bill pay, access and deploys. Each AI agent works on its own inside its Card, and never past it.
 
@@ -78,7 +79,7 @@ Plans: Solo, with {SOLO_MONTHLY_CREDITS} credits a month, and packs of credits t
 **Full description:**
 
 ```
-Mit tafs übergibt ein Unternehmen Aufgaben an KI-Agenten, die tafs heißen, und gibt jedem eine Card: die Grenzen, in denen er arbeitet.
+Mit tafs übergibt ein Unternehmen Aufgaben an KI-Agenten oder KI-Kollegen, die tafs heißen, und gibt jedem eine Card: die Grenzen, in denen er arbeitet.
 
 Damit automatisierst du Erstattungen, Rechnungszahlungen, Zugänge und Deploys. Jeder KI-Agent arbeitet selbstständig innerhalb seiner Card und nie darüber hinaus.
 
@@ -119,7 +120,7 @@ Tarife: Solo mit {SOLO_MONTHLY_CREDITS} Credits im Monat und Credit-Pakete, die 
 **Full description:**
 
 ```
-tafs, c'est là qu'une entreprise confie des tâches à des agents IA, appelés tafs, et donne à chacun une Card : les limites dans lesquelles il travaille.
+tafs, c'est là qu'une entreprise confie des tâches à des agents IA, ou coéquipiers IA, appelés tafs, et donne à chacun une Card : les limites dans lesquelles il travaille.
 
 Avec tafs, automatisez les remboursements, le paiement des factures, les accès et les déploiements. Chaque agent IA travaille en autonomie dans sa Card, et jamais au-delà.
 
@@ -160,7 +161,7 @@ Forfaits : Solo, avec {SOLO_MONTHLY_CREDITS} crédits par mois, et des packs de 
 **Full description:**
 
 ```
-tafs es donde una empresa encarga tareas a agentes de IA, llamados tafs, y le da a cada uno una Card: los límites dentro de los que trabaja.
+tafs es donde una empresa encarga tareas a agentes de IA, o compañeros de IA, llamados tafs, y le da a cada uno una Card: los límites dentro de los que trabaja.
 
 Úsalo para automatizar reembolsos, pago de facturas, accesos y despliegues. Cada agente de IA trabaja por su cuenta dentro de su Card, y nunca más allá.
 
@@ -201,7 +202,7 @@ Planes: Solo, con {SOLO_MONTHLY_CREDITS} créditos al mes, y paquetes de crédit
 **Full description:**
 
 ```
-tafs è il posto in cui un'azienda affida lavori ad agenti IA, chiamati tafs, e dà a ciascuno una Card: i limiti entro cui lavora.
+tafs è il posto in cui un'azienda affida lavori ad agenti IA, o colleghi IA, chiamati tafs, e dà a ciascuno una Card: i limiti entro cui lavora.
 
 Usalo per automatizzare rimborsi, pagamento delle fatture, accessi e deploy. Ogni agente IA lavora in autonomia dentro la sua Card, e mai oltre.
 
@@ -244,7 +245,7 @@ European Portuguese (`pt-PT`), as [languages.md](languages.md) proposes, address
 **Full description:**
 
 ```
-O tafs é onde uma empresa entrega tarefas a agentes de IA, chamados tafs, e dá a cada um uma Card: os limites dentro dos quais trabalha.
+O tafs é onde uma empresa entrega tarefas a agentes de IA, ou colegas de IA, chamados tafs, e dá a cada um uma Card: os limites dentro dos quais trabalha.
 
 Use-o para automatizar reembolsos, pagamento de faturas, acessos e implementações. Cada agente de IA trabalha de forma autónoma dentro da sua Card, e nunca para além dela.
 
@@ -285,7 +286,7 @@ Planos: Solo, com {SOLO_MONTHLY_CREDITS} créditos por mês, e pacotes de crédi
 **Full description:**
 
 ```
-tafs is waar een bedrijf taken overdraagt aan AI-agents, tafs genoemd, en elk een Card geeft: de grenzen waarbinnen hij werkt.
+tafs is waar een bedrijf taken overdraagt aan AI-agents, of AI-collega's, tafs genoemd, en elk een Card geeft: de grenzen waarbinnen hij werkt.
 
 Automatiseer hiermee terugbetalingen, het betalen van facturen, toegang en deploys. Elke AI-agent werkt zelfstandig binnen zijn Card, en nooit daarbuiten.
 
@@ -326,7 +327,7 @@ Abonnementen: Solo, met {SOLO_MONTHLY_CREDITS} credits per maand, en creditpakke
 **Full description:**
 
 ```
-tafs to miejsce, w którym firma powierza zadania agentom AI, nazywanym tafs, i daje każdemu Card: granice, w których pracuje.
+tafs to miejsce, w którym firma powierza zadania agentom AI lub współpracownikom AI, nazywanym tafs, i daje każdemu Card: granice, w których pracuje.
 
 Zautomatyzujesz nim zwroty, opłacanie faktur, nadawanie dostępów i wdrożenia. Każdy agent AI działa samodzielnie w ramach swojej Card i nigdy poza nią.
 
