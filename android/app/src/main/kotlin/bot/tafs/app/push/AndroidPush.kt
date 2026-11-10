@@ -24,7 +24,7 @@ class AlertNotifier(private val context: Context) {
   init {
     if (Build.VERSION.SDK_INT >= 26) {
       val manager = context.getSystemService(NotificationManager::class.java)
-      manager.createNotificationChannel(NotificationChannel(HOLDS, Words.Push.aTafNeedsYou, NotificationManager.IMPORTANCE_HIGH).apply {
+      manager.createNotificationChannel(NotificationChannel(HOLDS, Words.Alert.needsYou, NotificationManager.IMPORTANCE_HIGH).apply {
         description = Words.Push.Channel.holdsDescription
       })
       manager.createNotificationChannel(NotificationChannel(QUIET, Words.Push.Channel.other, NotificationManager.IMPORTANCE_LOW).apply {

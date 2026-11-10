@@ -381,7 +381,7 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
     if (taf.worksFromChat) {
       Text(Words.Taf.worksFromChat, style = scaled(15, color = Theme.ink))
     } else {
-      Text(if (taf.paused) Words.Taf.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule, style = scaled(15, color = Theme.ink))
+      Text(if (taf.paused) Words.Taf.State.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule, style = scaled(15, color = Theme.ink))
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         val busy = inFlight || tapped
         OutlineButton(if (busy) Words.Taf.startingRun else Words.Taf.runNow, {

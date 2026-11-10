@@ -491,7 +491,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
           Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
         } else {
           Text(
-            c.no ?: Words.Coach.notNow,
+            c.no ?: Words.Common.notNow,
             style = scaled(14, color = Theme.dim),
             modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { actions.answer("sign_in", c.id, "not now") },
           )
@@ -659,7 +659,7 @@ private fun DriveCard(shown: ShownComponent, state: AppState, answered: String?,
         Modifier.weight(1f).confirms(),
         enabled = state.driveStarting == null,
       )
-      OutlineButton(Words.Coach.notNow, { actions.answer("drive", c.id, "declined") }, Modifier.weight(1f), color = Theme.soft, enabled = !starting)
+      OutlineButton(Words.Common.notNow, { actions.answer("drive", c.id, "declined") }, Modifier.weight(1f), color = Theme.soft, enabled = !starting)
     }
     state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
     error?.let { Text(it, style = scaled(13, color = Theme.no)) }

@@ -3665,17 +3665,6 @@
         }
       }
     },
-    "card.rule.each_call_asks": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Each call asks you first"
-          }
-        }
-      }
-    },
     "card.rule.in_total": {
       "extractionState": "manual",
       "localizations": {
@@ -3841,28 +3830,6 @@
         }
       }
     },
-    "card.window.any_24_hours": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in any 24 hours"
-          }
-        }
-      }
-    },
-    "card.window.any_7_days": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in any 7 days"
-          }
-        }
-      }
-    },
     "card.window.any_day": {
       "extractionState": "manual",
       "localizations": {
@@ -3892,17 +3859,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "in any 7 days"
-          }
-        }
-      }
-    },
-    "card.window.day": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "a day"
           }
         }
       }
@@ -4006,17 +3962,6 @@
         }
       }
     },
-    "card.window.total": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in total"
-          }
-        }
-      }
-    },
     "card.within_card": {
       "extractionState": "manual",
       "localizations": {
@@ -4024,28 +3969,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "within the Card"
-          }
-        }
-      }
-    },
-    "chat.answer.copied": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copied"
-          }
-        }
-      }
-    },
-    "chat.answer.copy": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy"
           }
         }
       }
@@ -4798,17 +4721,6 @@
         }
       }
     },
-    "chat.seconds": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ s"
-          }
-        }
-      }
-    },
     "chat.send_again": {
       "extractionState": "manual",
       "localizations": {
@@ -5388,17 +5300,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Already approved"
-          }
-        }
-      }
-    },
-    "coach.another_approval": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Another approval is going through. Approve this one once it's done."
           }
         }
       }
@@ -6316,17 +6217,6 @@
         }
       }
     },
-    "coach.jump_latest_something_new": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jump to the latest, something new"
-          }
-        }
-      }
-    },
     "coach.kiff_counts_way": {
       "extractionState": "manual",
       "localizations": {
@@ -6349,17 +6239,6 @@
         }
       }
     },
-    "coach.name": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach"
-          }
-        }
-      }
-    },
     "coach.name_tool_taf_should_work": {
       "extractionState": "manual",
       "localizations": {
@@ -6378,17 +6257,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Needs you · approve"
-          }
-        }
-      }
-    },
-    "coach.needs_you_let_coach_drive": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Needs you · let Coach drive"
           }
         }
       }
@@ -6503,17 +6371,6 @@
         }
       }
     },
-    "coach.not_now": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not now"
-          }
-        }
-      }
-    },
     "coach.not_put_back_try_again": {
       "extractionState": "manual",
       "localizations": {
@@ -6543,17 +6400,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ wasn't set up: %2$@."
-          }
-        }
-      }
-    },
-    "coach.not_set_up_here": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone."
           }
         }
       }
@@ -6822,28 +6668,6 @@
         }
       }
     },
-    "coach.reading_request": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reading the request…"
-          }
-        }
-      }
-    },
-    "coach.request_does_not_match_what": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This request doesn't match what it shows, so it can't be approved."
-          }
-        }
-      }
-    },
     "coach.result.new_version": {
       "extractionState": "manual",
       "localizations": {
@@ -6917,17 +6741,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Version %1$@ is made."
-          }
-        }
-      }
-    },
-    "coach.send_once_files_up": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send once the files are up"
           }
         }
       }
@@ -8032,17 +7845,6 @@
         }
       }
     },
-    "connect.cancel_sign_in_confirm": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel the sign-in"
-          }
-        }
-      }
-    },
     "connect.cards_not_issued": {
       "extractionState": "manual",
       "localizations": {
@@ -8450,17 +8252,6 @@
         }
       }
     },
-    "connect.drive_app": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drive the app"
-          }
-        }
-      }
-    },
     "connect.from_removed": {
       "extractionState": "manual",
       "localizations": {
@@ -8479,17 +8270,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Give the key with %1$@"
-          }
-        }
-      }
-    },
-    "connect.keep_waiting": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep waiting"
           }
         }
       }
@@ -11464,17 +11244,6 @@
         }
       }
     },
-    "export.try_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try again"
-          }
-        }
-      }
-    },
     "halt.again": {
       "extractionState": "manual",
       "localizations": {
@@ -11570,39 +11339,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Halting stops %1$@: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
-          }
-        }
-      }
-    },
-    "halt.headline.halted": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halted"
-          }
-        }
-      }
-    },
-    "halt.headline.halting": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halting…"
-          }
-        }
-      }
-    },
-    "halt.headline.running": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Running"
           }
         }
       }
@@ -12025,17 +11761,6 @@
         }
       }
     },
-    "home.tafs": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tafs"
-          }
-        }
-      }
-    },
     "home.tafs_shared_you_show": {
       "extractionState": "manual",
       "localizations": {
@@ -12190,17 +11915,6 @@
         }
       }
     },
-    "knob.approve_with": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Approve with %1$@"
-          }
-        }
-      }
-    },
     "knob.ask_coach_to_change": {
       "extractionState": "manual",
       "localizations": {
@@ -12208,17 +11922,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ask Coach to change"
-          }
-        }
-      }
-    },
-    "knob.back": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back"
           }
         }
       }
@@ -12428,17 +12131,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Make %1$@ changes live with %2$@"
-          }
-        }
-      }
-    },
-    "knob.next": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next"
           }
         }
       }
@@ -14291,17 +13983,6 @@
         }
       }
     },
-    "push.a_taf_needs_you": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A taf needs you"
-          }
-        }
-      }
-    },
     "push.channel.holds_description": {
       "extractionState": "manual",
       "localizations": {
@@ -14496,17 +14177,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "The receipt couldn't be read."
-          }
-        }
-      }
-    },
-    "receipt.check_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check again"
           }
         }
       }
@@ -14991,17 +14661,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done."
-          }
-        }
-      }
-    },
-    "receipt.outcome.done_moved": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done. %1$@ moved."
           }
         }
       }
@@ -16080,17 +15739,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "not done"
-          }
-        }
-      }
-    },
-    "record.result.nothing_sent": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "nothing sent"
           }
         }
       }
@@ -18350,17 +17998,6 @@
         }
       }
     },
-    "settings.sign_in_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in again"
-          }
-        }
-      }
-    },
     "settings.sign_in_again_confirm.body": {
       "extractionState": "manual",
       "localizations": {
@@ -18988,17 +18625,6 @@
         }
       }
     },
-    "setup.next_run": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next run at %1$@"
-          }
-        }
-      }
-    },
     "setup.no_schedule": {
       "extractionState": "manual",
       "localizations": {
@@ -19578,17 +19204,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "The sign-in didn't come back to tafs."
-          }
-        }
-      }
-    },
-    "sign_in.signed_out_of_kiff": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signed out of KIFF. Sign in again."
           }
         }
       }
@@ -20319,17 +19934,6 @@
         }
       }
     },
-    "taf.now.paused": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paused"
-          }
-        }
-      }
-    },
     "taf.now.paused_by_you": {
       "extractionState": "manual",
       "localizations": {
@@ -20436,17 +20040,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pause"
-          }
-        }
-      }
-    },
-    "taf.paused": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paused"
           }
         }
       }
@@ -21067,17 +20660,6 @@
         }
       }
     },
-    "taf.versions.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Changes to how it runs"
-          }
-        }
-      }
-    },
     "taf.view_picker": {
       "extractionState": "manual",
       "localizations": {
@@ -21085,28 +20667,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "View"
-          }
-        }
-      }
-    },
-    "taf.work.show_all_runs": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show all runs"
-          }
-        }
-      }
-    },
-    "taf.work.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Its work"
           }
         }
       }
@@ -23344,17 +22904,6 @@
         }
       }
     },
-    "work.request.ask_coach": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ask Coach"
-          }
-        }
-      }
-    },
     "work.request.try_reply_now": {
       "extractionState": "manual",
       "localizations": {
@@ -23362,17 +22911,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Try the reply now"
-          }
-        }
-      }
-    },
-    "work.request.what_happened": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What happened"
           }
         }
       }

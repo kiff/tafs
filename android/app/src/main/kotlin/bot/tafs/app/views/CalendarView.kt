@@ -108,7 +108,7 @@ fun CalendarView(
       if (onBack != null) {
         Row(Modifier.clickable(onClick = onBack).semantics { contentDescription = Words.Common.back }, verticalAlignment = Alignment.CenterVertically) {
           Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.amber, modifier = Modifier.size(20.dp))
-          Text(Words.Home.tafs, style = scaled(16, color = Theme.amber))
+          Text(Words.Home.title, style = scaled(16, color = Theme.amber))
         }
       }
       Text(Words.Calendar.heading, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))

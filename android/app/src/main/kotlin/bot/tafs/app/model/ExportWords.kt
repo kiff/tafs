@@ -4,7 +4,7 @@ package bot.tafs.app.model
 object ExportWords {
   val ROW get() = Words.Export.row
   val PREPARING get() = Words.Export.preparing
-  val TRY_AGAIN get() = Words.Export.tryAgain
+  val TRY_AGAIN get() = Words.Common.tryAgain
 
   /** The two files: the data, and the same as text. */
   const val JSON_FILE = "tafs-chats.json"

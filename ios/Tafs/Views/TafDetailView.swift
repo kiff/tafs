@@ -217,7 +217,7 @@ struct TafDetailView: View {
                     Text(Words.Taf.worksFromChat)
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text(cloud.paused ? Words.Taf.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
+                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
                         .scaledFont(15).foregroundColor(Theme.ink)
                     Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
                         guard !runTapped else { return }

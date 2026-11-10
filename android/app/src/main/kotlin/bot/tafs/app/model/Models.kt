@@ -201,7 +201,7 @@ data class CardRule(
         perAction?.let { parts += Words.Card.Rule.upToEach(it.formatted) }
         ownTotal?.let { parts += Words.Card.Rule.totalThenAsks(it.formatted, window.label) }
         roomWords?.let { parts += it }
-        countPerWindow?.let { parts += if (it == 0) Words.Card.Rule.eachCallAsks else Words.Card.Rule.callsThenAsks(count = it, window = window.label) }
+        countPerWindow?.let { parts += if (it == 0) Words.Card.Held.eachCallAsks else Words.Card.Rule.callsThenAsks(count = it, window = window.label) }
         return parts.joinToString(" · ")
       }
       perAction?.let { parts += Words.Card.Rule.atMostEach(it.formatted) }
@@ -672,7 +672,7 @@ data class RecordEntry(
   val resultLine: String
     get() = when (kind) {
       Kind.done, Kind.approved -> Words.Record.Result.done
-      Kind.refused, Kind.revoked -> Words.Record.Result.nothingSent
+      Kind.refused, Kind.revoked -> Words.Record.nothingSent
       Kind.notDone -> Words.Record.Result.notDone
       Kind.held -> Words.Record.Result.nothingSentYet
       Kind.sending -> Words.Record.Result.noAnswerYet

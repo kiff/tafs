@@ -122,7 +122,7 @@ fun SettingsSheet(
             if (state.mode == Mode.sample) Action(Words.SignIn.withKiff, Theme.ink, onSignIn)
             if (state.approvalKeyLost) {
               Text(Words.Settings.signInAgainWhy, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(12.dp))
-              Action(Words.Settings.signInAgain, Theme.amberText) { confirming = SignOut.SignInAgain }
+              Action(Words.Connect.signInAgain, Theme.amberText) { confirming = SignOut.SignInAgain }
             }
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.peopleApps) {

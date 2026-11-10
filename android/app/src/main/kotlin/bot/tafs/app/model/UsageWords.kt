@@ -8,9 +8,9 @@ import java.time.Instant
 /** What the Halt screen says, in the words iOS's has. */
 object HaltWords {
   fun headline(h: Halt): String = when {
-    h.running -> Words.Halt.Headline.running
-    h.halted -> Words.Halt.Headline.halted
-    else -> Words.Halt.Headline.halting
+    h.running -> Words.Taf.Now.running
+    h.halted -> Words.Taf.State.halted
+    else -> Words.Taf.Halt.halting
   }
 
   fun explanation(h: Halt, all: Boolean): String {

@@ -616,7 +616,7 @@ struct ReceiptView: View {
 
     private var outcome: String {
         switch entry.kind {
-        case .done, .approved: return entry.amount == nil ? Words.Receipt.Outcome.done : entry.amountText.map { Words.Receipt.Outcome.doneMoved(amount: $0) } ?? Words.Receipt.Outcome.done
+        case .done, .approved: return entry.amount == nil ? Words.Receipt.Outcome.done : entry.amountText.map { Words.Receipt.Outcome.moved(amount: $0) } ?? Words.Receipt.Outcome.done
         case .refused: return entry.answer?.decision == "refused" ? Words.Receipt.Outcome.refusedBy(who: "\(entry.answerer)") : Words.Receipt.Outcome.cardRefused
         case .held: return Words.Receipt.Outcome.waiting
         default: return entry.detail

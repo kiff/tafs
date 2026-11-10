@@ -627,7 +627,7 @@ data class AppState(
   }
 
   private fun coach(cloudId: String?) =
-    Taf(id = COACH_CHAT, name = Words.Coach.name, job = "", tools = emptyList(), colorIndex = 2, card = Card(rules = emptyList(), issuedBy = ""), now = "", cloudId = cloudId)
+    Taf(id = COACH_CHAT, name = Words.Coach.title, job = "", tools = emptyList(), colorIndex = 2, card = Card(rules = emptyList(), issuedBy = ""), now = "", cloudId = cloudId)
 
   /**
    * Who holds a call, as the owner reads it: its taf, or Coach for a call from Coach's own KIFF agent, which no taf in the list
@@ -1082,7 +1082,7 @@ class AppModel(
       // KIFF ended this session: signed out, with the words to sign in again.
       if (generation == accountGeneration) {
         signOut(tellKiff = false)
-        fail(KiffError.Unauthorized.message ?: Words.SignIn.signedOutOfKiff)
+        fail(KiffError.Unauthorized.message ?: Words.Error.signedOut)
       }
       return
     } catch (_: CloudError) {

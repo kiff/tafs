@@ -319,7 +319,7 @@ object Chat {
   /** How long a taf worked and how many steps it took, with those that failed. Which steps, only in tafs cloud's words ([steps]). */
   fun workLine(work: Work): String {
     val seconds = work.ms / 1000.0
-    val took = Words.Chat.seconds(if (seconds < 10) "%.1f".format(java.util.Locale.ROOT, seconds) else "${Math.round(seconds)}")
+    val took = Words.Work.Duration.seconds(if (seconds < 10) "%.1f".format(java.util.Locale.ROOT, seconds) else "${Math.round(seconds)}")
     val n = work.steps.size
     if (n == 0) return Words.Chat.worked(took)
     val failed = work.steps.count { it.error }

@@ -315,7 +315,7 @@ struct SetupChatView: View {
                                     if unseen { Circle().fill(Theme.amber).frame(width: 10, height: 10).offset(x: 1, y: -1) }
                                 }
                         }
-                        .accessibilityLabel(unseen ? Words.Coach.jumpLatestSomethingNew : Words.Chat.jumpToLatest)
+                        .accessibilityLabel(unseen ? Words.Chat.jumpLatestSomethingNew : Words.Chat.jumpToLatest)
                     }
                 }
                 .padding(.bottom, 10)
@@ -658,7 +658,7 @@ struct SetupChatView: View {
                 }
                 .disabled(empty || held)
                 .shortcut(.send)
-                .accessibilityLabel(held && uploading ? Words.Coach.sendOnceFilesUp : thinking ? Words.Coach.sendWhenAnswerDone : Words.Common.send)
+                .accessibilityLabel(held && uploading ? Words.Chat.sendOnceFilesUp : thinking ? Words.Coach.sendWhenAnswerDone : Words.Common.send)
             }
         }
             }.padding(.horizontal, 8).padding(.bottom, 8)
@@ -896,7 +896,7 @@ struct UnsentBubble: View {
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
-            Button(Words.Chat.Answer.copy) { Clipboard.copy(message.text) }
+            Button(Words.Common.copy) { Clipboard.copy(message.text) }
             Button(Words.Chat.delete, role: .destructive, action: discard)
         }
         .accessibilityElement(children: .combine)
@@ -968,7 +968,7 @@ struct NeedsYouBar: View {
         switch c.type {
         case .approval: return Words.Coach.needsYouApprove + (vendor.map { " \($0)" } ?? "")
         case .signIn: return Words.Coach.SignIn.eyebrow + (vendor.map { " at \($0)" } ?? "")
-        case .drive: return Words.Coach.needsYouLetCoachDrive
+        case .drive: return Words.Drive.needsYouLetCoachDrive
         default: return Words.Coach.needsYouQuestion
         }
     }
@@ -1178,7 +1178,7 @@ struct SetupComponentView: View {
                     .scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity)
                 if !state.isFailure {
-                    Button(c.no ?? Words.Coach.notNow) { Task { await model.answer(c, Words.Coach.Answer.notNowLower) } }
+                    Button(c.no ?? Words.Common.notNow) { Task { await model.answer(c, Words.Coach.Answer.notNowLower) } }
                         .scaledFont(14).foregroundColor(Theme.dim)
                         .frame(maxWidth: .infinity)
                         .disabled(busy || answered)
@@ -1424,12 +1424,12 @@ struct SetupApproval: View {
                             .task(id: grant.digest) { await model.loadProfileWords(for: grant) }
                     }
                     if !grant.digestMatches {
-                        Text(Words.Coach.requestDoesNotMatchWhat)
+                        Text(Words.Connect.requestDoesNotMatchWhat)
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                     }
                 }
             } else {
-                Text(Words.Coach.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
+                Text(Words.Connect.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
             }
             if let draft, draft.cards != nil {
                 VStack(alignment: .leading, spacing: 6) {

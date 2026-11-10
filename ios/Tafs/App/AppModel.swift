@@ -1585,7 +1585,7 @@ final class AppModel: ObservableObject {
     /// Coach's own agent, which no taf in the list is; nil when neither.
     func holderName(_ tafID: UUID) -> String? {
         if let name = taf(tafID)?.name { return name }
-        return holderIDs[Self.setupAgent] == tafID ? Words.Coach.name : nil
+        return holderIDs[Self.setupAgent] == tafID ? Words.Coach.title : nil
     }
 
     /// Whether `tafID` is Coach's own agent.
@@ -4927,7 +4927,7 @@ final class AppModel: ObservableObject {
 
     private func notifyHeld() {
         // Coach's own holds are named Coach where no taf names them.
-        let coach = holderIDs[Self.setupAgent].map { [$0: Words.Coach.name] } ?? [:]
+        let coach = holderIDs[Self.setupAgent].map { [$0: Words.Coach.title] } ?? [:]
         onHeldChanged?(held, tafs + otherAgents, coach)
     }
 
@@ -6918,7 +6918,7 @@ final class AppModel: ObservableObject {
         }
         let ref = cardRef(component.id)
         guard let session = setupThread.components.last(where: { $0.ref == ref })?.session ?? setupChat else { return }
-        let task = component.text ?? component.title ?? Words.Connect.driveApp
+        let task = component.text ?? component.title ?? Words.Drive.driveApp
         let body = TafsCloud.driveStartBody(session: session, task: task, component: component.id)
         let signedAt = SigningTime.next()
         let message = KIFFClient.requestMessage(tenant: tenant, method: "POST", uri: TafsCloud.drivePath, body: body, signedAt: signedAt)

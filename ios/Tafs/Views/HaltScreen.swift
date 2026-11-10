@@ -42,7 +42,7 @@ struct HaltScreen: View {
                 }
                 switch h.state {
                 case .running:
-                    Button(busy ? Words.Halt.Headline.halting : (tafID == nil ? Words.Halt.allNow : Words.Halt.now)) { halt() }
+                    Button(busy ? Words.Taf.Halt.halting : (tafID == nil ? Words.Halt.allNow : Words.Halt.now)) { halt() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                         .confirming()
                         .disabled(busy)
@@ -101,9 +101,9 @@ struct HaltScreen: View {
 
     static func headline(_ h: TafsCloud.Halt) -> String {
         switch h.state {
-        case .running: return Words.Halt.Headline.running
+        case .running: return Words.Taf.Now.running
         case .halting: return Words.Taf.Halt.halting
-        case .halted: return Words.Halt.Headline.halted
+        case .halted: return Words.Taf.State.halted
         }
     }
 

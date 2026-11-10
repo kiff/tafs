@@ -674,8 +674,6 @@ enum Words {
             static func calls(count: Int, window: String) -> String { Words.count("card.rule.calls", count, window) }
             /// {count} calls {window}, then it asks you
             static func callsThenAsks(count: Int, window: String) -> String { Words.count("card.rule.calls_then_asks", count, window) }
-            /// Each call asks you first
-            static var eachCallAsks: String { Words.line("card.rule.each_call_asks") }
             /// {amount} in total {window}
             static func inTotal(amount: String, window: String) -> String { Words.line("card.rule.in_total", amount, window) }
             /// never
@@ -707,17 +705,11 @@ enum Words {
             /// a week
             static var aWeek: String { Words.line("card.window.a_week") }
             /// in any 24 hours
-            static var any24Hours: String { Words.line("card.window.any_24_hours") }
-            /// in any 7 days
-            static var any7Days: String { Words.line("card.window.any_7_days") }
-            /// in any 24 hours
             static var anyDay: String { Words.line("card.window.any_day") }
             /// in any hour
             static var anyHour: String { Words.line("card.window.any_hour") }
             /// in any 7 days
             static var anyWeek: String { Words.line("card.window.any_week") }
-            /// a day
-            static var day: String { Words.line("card.window.day") }
             /// in total
             static var inTotal: String { Words.line("card.window.in_total") }
             /// in total {window}
@@ -736,18 +728,12 @@ enum Words {
             static var thisWeek: String { Words.line("card.window.this_week") }
             /// today
             static var today: String { Words.line("card.window.today") }
-            /// in total
-            static var total: String { Words.line("card.window.total") }
         }
         /// within the Card
         static var withinCard: String { Words.line("card.within_card") }
     }
     enum Chat {
         enum Answer {
-            /// Copied
-            static var copied: String { Words.line("chat.answer.copied") }
-            /// Copy
-            static var copy: String { Words.line("chat.answer.copy") }
             /// Copy this answer
             static var copyLabel: String { Words.line("chat.answer.copy_label") }
             /// More actions
@@ -893,8 +879,6 @@ enum Words {
         static func runStarted(time: String) -> String { Words.line("chat.run_started", time) }
         /// Run started {time} · {text}
         static func runStartedWith(time: String, text: String) -> String { Words.line("chat.run_started_with", time, text) }
-        /// {seconds} s
-        static func seconds(seconds: String) -> String { Words.line("chat.seconds", seconds) }
         /// Send again
         static var sendAgain: String { Words.line("chat.send_again") }
         /// Send files once {taf} is done
@@ -1001,8 +985,6 @@ enum Words {
         }
         /// Already approved
         static var alreadyApproved: String { Words.line("coach.already_approved") }
-        /// Another approval is going through. Approve this one once it's done.
-        static var anotherApproval: String { Words.line("coach.another_approval") }
         enum Answer {
             /// Approve
             static var approve: String { Words.line("coach.answer.approve") }
@@ -1179,20 +1161,14 @@ enum Words {
         static func improveTaf(taf: String) -> String { Words.line("coach.improve_taf", taf) }
         /// Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it.
         static var intro: String { Words.line("coach.intro") }
-        /// Jump to the latest, something new
-        static var jumpLatestSomethingNew: String { Words.line("coach.jump_latest_something_new") }
         /// KIFF counts it this way
         static var kiffCountsWay: String { Words.line("coach.kiff_counts_way") }
         /// Making it live…
         static var makingLive: String { Words.line("coach.making_live") }
-        /// Coach
-        static var name: String { Words.line("coach.name") }
         /// Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for {biometry}.
         static func nameToolTafShouldWork(biometry: String) -> String { Words.line("coach.name_tool_taf_should_work", biometry) }
         /// Needs you · approve
         static var needsYouApprove: String { Words.line("coach.needs_you_approve") }
-        /// Needs you · let Coach drive
-        static var needsYouLetCoachDrive: String { Words.line("coach.needs_you_let_coach_drive") }
         /// Needs you · a question
         static var needsYouQuestion: String { Words.line("coach.needs_you_question") }
         /// New conversation
@@ -1213,16 +1189,12 @@ enum Words {
         static func notImproved(owner: String, why: String) -> String { Words.line("coach.not_improved", owner, why, Words.possessive(owner)) }
         /// Not now: no sign-in at {vendor}
         static func notNoSign(vendor: String) -> String { Words.line("coach.not_no_sign", vendor) }
-        /// Not now
-        static var notNow: String { Words.line("coach.not_now") }
         /// Not put back. Try again.
         static var notPutBackTryAgain: String { Words.line("coach.not_put_back_try_again") }
         /// Coach couldn't be reached. {why}
         static func notReached(why: String) -> String { Words.line("coach.not_reached", why) }
         /// {name} wasn't set up: {why}.
         static func notSetUp(name: String, why: String) -> String { Words.line("coach.not_set_up", name, why) }
-        /// Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.
-        static var notSetUpHere: String { Words.line("coach.not_set_up_here") }
         /// Nothing reaches it until you resume it. Then send this again.
         static var nothingReachesUntilYouResume: String { Words.line("coach.nothing_reaches_until_you_resume") }
         /// {vendor} is already connected. There's nothing new to approve, so nothing was approved.
@@ -1277,10 +1249,6 @@ enum Words {
         static var readingKiffWords: String { Words.line("coach.reading_kiff_words") }
         /// Reading KIFF's words…
         static var readingKiffWordsShort: String { Words.line("coach.reading_kiff_words_short") }
-        /// Reading the request…
-        static var readingRequest: String { Words.line("coach.reading_request") }
-        /// This request doesn't match what it shows, so it can't be approved.
-        static var requestDoesNotMatchWhat: String { Words.line("coach.request_does_not_match_what") }
         enum Result {
             /// New version · {taf}
             static func newVersion(taf: String) -> String { Words.line("coach.result.new_version", taf) }
@@ -1297,8 +1265,6 @@ enum Words {
             /// Version {version} is made.
             static func versionMade(version: String) -> String { Words.line("coach.result.version_made", version) }
         }
-        /// Send once the files are up
-        static var sendOnceFilesUp: String { Words.line("coach.send_once_files_up") }
         /// Send when this answer is done
         static var sendWhenAnswerDone: String { Words.line("coach.send_when_answer_done") }
         /// Setting up {name}…
@@ -1515,8 +1481,6 @@ enum Words {
             /// Cancel the sign-in to {vendor}?
             static func title(vendor: String) -> String { Words.line("connect.cancel_sign_in.title", vendor) }
         }
-        /// Cancel the sign-in
-        static var cancelSignInConfirm: String { Words.line("connect.cancel_sign_in_confirm") }
         /// KIFF didn't issue the taf's Cards. {why}
         static func cardsNotIssued(why: String) -> String { Words.line("connect.cards_not_issued", why) }
         /// Your chats weren't exported. Check your connection and try again.
@@ -1587,14 +1551,10 @@ enum Words {
         static var disconnectButton: String { Words.line("connect.disconnect_button") }
         /// Disconnecting…
         static var disconnecting: String { Words.line("connect.disconnecting") }
-        /// Drive the app
-        static var driveApp: String { Words.line("connect.drive_app") }
         /// From removed tafs
         static var fromRemoved: String { Words.line("connect.from_removed") }
         /// Give the key with {biometry}
         static func giveKeyWith(biometry: String) -> String { Words.line("connect.give_key_with", biometry) }
-        /// Keep waiting
-        static var keepWaiting: String { Words.line("connect.keep_waiting") }
         enum Kept {
             /// another taf
             static var anotherTaf: String { Words.line("connect.kept.another_taf") }
@@ -2157,8 +2117,6 @@ enum Words {
         static var row: String { Words.line("export.row") }
         /// Sign in with KIFF to export your chats.
         static var signInFirst: String { Words.line("export.sign_in_first") }
-        /// Try again
-        static var tryAgain: String { Words.line("export.try_again") }
     }
     enum Halt {
         /// Halt again
@@ -2181,14 +2139,6 @@ enum Words {
         static func haltedNothingReachesYourTools(since: String) -> String { Words.line("halt.halted_nothing_reaches_your_tools", since) }
         /// Halting stops {who}: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone.
         static func haltingStopsNoRunStarts(who: String) -> String { Words.line("halt.halting_stops_no_run_starts", who) }
-        enum Headline {
-            /// Halted
-            static var halted: String { Words.line("halt.headline.halted") }
-            /// Halting…
-            static var halting: String { Words.line("halt.headline.halting") }
-            /// Running
-            static var running: String { Words.line("halt.headline.running") }
-        }
         /// Halt now
         static var now: String { Words.line("halt.now") }
         /// Stop it until you resume
@@ -2271,8 +2221,6 @@ enum Words {
         static var status: String { Words.line("home.status") }
         /// {words} · trying again
         static func statusRetrying(words: String) -> String { Words.line("home.status_retrying", words) }
-        /// Tafs
-        static var tafs: String { Words.line("home.tafs") }
         /// Tafs shared with you show here.
         static var tafsSharedYouShow: String { Words.line("home.tafs_shared_you_show") }
         /// They taf. You kiff.
@@ -2303,12 +2251,8 @@ enum Words {
         static var approveEvent: String { Words.line("knob.approve_event") }
         /// Tap to approve once
         static var approveOnce: String { Words.line("knob.approve_once") }
-        /// Approve with {biometry}
-        static func approveWith(biometry: String) -> String { Words.line("knob.approve_with", biometry) }
         /// Ask Coach to change
         static var askCoachToChange: String { Words.line("knob.ask_coach_to_change") }
-        /// Back
-        static var back: String { Words.line("knob.back") }
         /// ‹ Why
         static var backToWhy: String { Words.line("knob.back_to_why") }
         /// When starts it, What it does in order, Where the result goes.
@@ -2345,8 +2289,6 @@ enum Words {
         static var lower: String { Words.line("knob.lower") }
         /// Make {count} changes live with {biometry}
         static func makeLive(count: Int, biometry: String) -> String { Words.count("knob.make_live", count, biometry) }
-        /// Next
-        static var next: String { Words.line("knob.next") }
         /// No requests yet.
         static var noRequests: String { Words.line("knob.no_requests") }
         /// , no stops
@@ -2697,8 +2639,6 @@ enum Words {
         static var usesNone: String { Words.line("people.uses_none") }
     }
     enum Push {
-        /// A taf needs you
-        static var aTafNeedsYou: String { Words.line("push.a_taf_needs_you") }
         enum Channel {
             /// A call is held for your answer. Nothing is sent until you approve it.
             static var holdsDescription: String { Words.line("push.channel.holds_description") }
@@ -2741,8 +2681,6 @@ enum Words {
             /// The receipt couldn't be read.
             static var unreadable: String { Words.line("receipt.check.unreadable") }
         }
-        /// Check again
-        static var checkAgain: String { Words.line("receipt.check_again") }
         /// ✓ KIFF's receipt · checked on this phone
         static var checked: String { Words.line("receipt.checked") }
         /// KIFF's receipt · checked on this {device}
@@ -2840,8 +2778,6 @@ enum Words {
             static var cardRefused: String { Words.line("receipt.outcome.card_refused") }
             /// Done.
             static var done: String { Words.line("receipt.outcome.done") }
-            /// Done. {amount} moved.
-            static func doneMoved(amount: String) -> String { Words.line("receipt.outcome.done_moved", amount) }
             /// Done. {amount} moved.
             static func moved(amount: String) -> String { Words.line("receipt.outcome.moved", amount) }
             /// Not sent. Refused by {who}.
@@ -3054,8 +2990,6 @@ enum Words {
             static var noAnswerYet: String { Words.line("record.result.no_answer_yet") }
             /// not done
             static var notDone: String { Words.line("record.result.not_done") }
-            /// nothing sent
-            static var nothingSent: String { Words.line("record.result.nothing_sent") }
             /// nothing sent yet
             static var nothingSentYet: String { Words.line("record.result.nothing_sent_yet") }
             /// started
@@ -3511,8 +3445,6 @@ enum Words {
         static var searchTimeZones: String { Words.line("settings.search_time_zones") }
         /// Show suggestions
         static var showSuggestions: String { Words.line("settings.show_suggestions") }
-        /// Sign in again
-        static var signInAgain: String { Words.line("settings.sign_in_again") }
         enum SignInAgainConfirm {
             /// This phone signs out of KIFF first, then you sign in again in your browser.
             static var body: String { Words.line("settings.sign_in_again_confirm.body") }
@@ -3641,8 +3573,6 @@ enum Words {
         }
         /// Listening
         static var listening: String { Words.line("setup.listening") }
-        /// Next run at {time}
-        static func nextRun(time: String) -> String { Words.line("setup.next_run", time) }
         /// No schedule starts it.
         static var noSchedule: String { Words.line("setup.no_schedule") }
         /// When you tell it, in its chat.
@@ -3755,8 +3685,6 @@ enum Words {
         }
         /// The sign-in didn't come back to tafs.
         static var signDidNotComeBack: String { Words.line("sign_in.sign_did_not_come_back") }
-        /// Signed out of KIFF. Sign in again.
-        static var signedOutOfKiff: String { Words.line("sign_in.signed_out_of_kiff") }
         /// tafs had no window on screen to open the sign-in over. Open tafs and try again.
         static var tafsHadNoWindowScreen: String { Words.line("sign_in.tafs_had_no_window_screen") }
         /// Waiting for your approval…
@@ -3902,8 +3830,6 @@ enum Words {
             static var halted: String { Words.line("taf.now.halted") }
             /// Next run {time}
             static func nextRun(time: String) -> String { Words.line("taf.now.next_run", time) }
-            /// Paused
-            static var paused: String { Words.line("taf.now.paused") }
             /// Paused by you
             static var pausedByYou: String { Words.line("taf.now.paused_by_you") }
             /// Refused · {summary}
@@ -3925,8 +3851,6 @@ enum Words {
         static var onItsSchedule: String { Words.line("taf.on_its_schedule") }
         /// Pause
         static var pause: String { Words.line("taf.pause") }
-        /// Paused
-        static var paused: String { Words.line("taf.paused") }
         /// Refresh
         static var refresh: String { Words.line("taf.refresh") }
         enum Remove {
@@ -4045,18 +3969,8 @@ enum Words {
         static func tryingResume(n: String) -> String { Words.line("taf.trying_resume", n) }
         /// Unless you approve its tools, the sign-in is revoked {time}.
         static func unlessYouApproveToolsSign(time: String) -> String { Words.line("taf.unless_you_approve_tools_sign", time) }
-        enum Versions {
-            /// Changes to how it runs
-            static var title: String { Words.line("taf.versions.title") }
-        }
         /// View
         static var viewPicker: String { Words.line("taf.view_picker") }
-        enum Work {
-            /// Show all runs
-            static var showAllRuns: String { Words.line("taf.work.show_all_runs") }
-            /// Its work
-            static var title: String { Words.line("taf.work.title") }
-        }
         enum Workflow {
             /// Change the workflow with Coach
             static var changeWithCoach: String { Words.line("taf.workflow.change_with_coach") }
@@ -4482,12 +4396,8 @@ enum Words {
         /// It wasn't sent again. {why}
         static func notSentAgain(why: String) -> String { Words.line("work.not_sent_again", why) }
         enum Request {
-            /// Ask Coach
-            static var askCoach: String { Words.line("work.request.ask_coach") }
             /// Try the reply now
             static var tryReplyNow: String { Words.line("work.request.try_reply_now") }
-            /// What happened
-            static var whatHappened: String { Words.line("work.request.what_happened") }
         }
         /// {count} requests need you
         static func requestsNeedYou(count: Int) -> String { Words.count("work.requests_need_you", count) }

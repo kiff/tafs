@@ -376,7 +376,6 @@
         <item quantity="one">%1$s call %2$s, then it asks you</item>
         <item quantity="other">%1$s calls %2$s, then it asks you</item>
     </plurals>
-    <string name="card_rule_each_call_asks">Each call asks you first</string>
     <string name="card_rule_in_total">%1$s in total %2$s</string>
     <string name="card_rule_never">never</string>
     <string name="card_rule_total_then_asks">%1$s in total %2$s, then it asks you</string>
@@ -394,12 +393,9 @@
     <string name="card_window_a_day">a day</string>
     <string name="card_window_a_month">a month</string>
     <string name="card_window_a_week">a week</string>
-    <string name="card_window_any_24_hours">in any 24 hours</string>
-    <string name="card_window_any_7_days">in any 7 days</string>
     <string name="card_window_any_day">in any 24 hours</string>
     <string name="card_window_any_hour">in any hour</string>
     <string name="card_window_any_week">in any 7 days</string>
-    <string name="card_window_day">a day</string>
     <string name="card_window_in_total">in total</string>
     <string name="card_window_in_total_window">in total %1$s</string>
     <string name="card_window_last_day">in the last 24 hours</string>
@@ -409,10 +405,7 @@
     <string name="card_window_this_month">this month</string>
     <string name="card_window_this_week">this week</string>
     <string name="card_window_today">today</string>
-    <string name="card_window_total">in total</string>
     <string name="card_within_card">within the Card</string>
-    <string name="chat_answer_copied">Copied</string>
-    <string name="chat_answer_copy">Copy</string>
     <string name="chat_answer_copy_label">Copy this answer</string>
     <string name="chat_answer_more">More actions</string>
     <string name="chat_answered_card_above">Answered the card above</string>
@@ -485,7 +478,6 @@
     <string name="chat_retry">Retry</string>
     <string name="chat_run_started">Run started %1$s</string>
     <string name="chat_run_started_with">Run started %1$s · %2$s</string>
-    <string name="chat_seconds">%1$s s</string>
     <string name="chat_send_again">Send again</string>
     <string name="chat_send_files_once_done">Send files once %1$s is done</string>
     <string name="chat_send_once_files_up">Send once the files are up</string>
@@ -549,7 +541,6 @@
     <string name="coach_activity_task">Handing the taf its task…</string>
     <string name="coach_activity_try_version">Trying the new version…</string>
     <string name="coach_already_approved">Already approved</string>
-    <string name="coach_another_approval">Another approval is going through. Approve this one once it\'s done.</string>
     <string name="coach_answer_approve">Approve</string>
     <string name="coach_answer_approve_failed">Approve · it didn\'t go through</string>
     <string name="coach_answer_approved_connected">Approved · %1$s is connected, keys kept sealed</string>
@@ -633,13 +624,10 @@
     <string name="coach_improve_line">Say what should change, or ask how it\'s going. Coach mode starts from what %1$s did and what its Card allows.</string>
     <string name="coach_improve_taf">Improve %1$s</string>
     <string name="coach_intro">Name a tool a taf should work with, like your payment provider. You sign in on the tool\'s own page, and your sign-in is kept sealed: no taf ever sees it.</string>
-    <string name="coach_jump_latest_something_new">Jump to the latest, something new</string>
     <string name="coach_kiff_counts_way">KIFF counts it this way</string>
     <string name="coach_making_live">Making it live…</string>
-    <string name="coach_name">Coach</string>
     <string name="coach_name_tool_taf_should_work">Name a tool a taf should work with, like your payment provider. You sign in on the tool\'s own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for %1$s.</string>
     <string name="coach_needs_you_approve">Needs you · approve</string>
-    <string name="coach_needs_you_let_coach_drive">Needs you · let Coach drive</string>
     <string name="coach_needs_you_question">Needs you · a question</string>
     <string name="coach_new_conversation">New conversation</string>
     <string name="coach_newer_request_connection_below">A newer request for this connection is below.</string>
@@ -650,11 +638,9 @@
     <string name="coach_not_connected">The sign-in at %1$s didn\'t connect: the connection is %2$s. Nothing was connected. Try signing in again.</string>
     <string name="coach_not_improved">%3$s new version wasn\'t made: %2$s.</string>
     <string name="coach_not_no_sign">Not now: no sign-in at %1$s</string>
-    <string name="coach_not_now">Not now</string>
     <string name="coach_not_put_back_try_again">Not put back. Try again.</string>
     <string name="coach_not_reached">Coach couldn\'t be reached. %1$s</string>
     <string name="coach_not_set_up">%1$s wasn\'t set up: %2$s.</string>
-    <string name="coach_not_set_up_here">Connecting tools isn\'t set up for this account from this phone. Start from tafs on an iPhone.</string>
     <string name="coach_nothing_reaches_until_you_resume">Nothing reaches it until you resume it. Then send this again.</string>
     <string name="coach_nothing_to_approve">%1$s is already connected. There\'s nothing new to approve, so nothing was approved.</string>
     <string name="coach_own_answer">Your own answer</string>
@@ -679,8 +665,6 @@
     <string name="coach_questions_your_answers">"Your answers · "</string>
     <string name="coach_reading_kiff_words">Reading KIFF\'s words for this connection…</string>
     <string name="coach_reading_kiff_words_short">Reading KIFF\'s words…</string>
-    <string name="coach_reading_request">Reading the request…</string>
-    <string name="coach_request_does_not_match_what">This request doesn\'t match what it shows, so it can\'t be approved.</string>
     <string name="coach_result_new_version">New version · %1$s</string>
     <string name="coach_result_open">Open %1$s</string>
     <string name="coach_result_preparing">Preparing the new version…</string>
@@ -688,7 +672,6 @@
     <string name="coach_result_see_version">See version %1$s</string>
     <string name="coach_result_set_up">Set up · %1$s</string>
     <string name="coach_result_version_made">Version %1$s is made.</string>
-    <string name="coach_send_once_files_up">Send once the files are up</string>
     <string name="coach_send_when_answer_done">Send when this answer is done</string>
     <string name="coach_setting_up">Setting up %1$s…</string>
     <string name="coach_setup_changed_request_see_below">Setup changed this request: see below</string>
@@ -789,7 +772,6 @@
     <string name="connect_cancel_sign_in_button">Cancel the sign-in</string>
     <string name="connect_cancel_sign_in_keep_waiting">Keep waiting</string>
     <string name="connect_cancel_sign_in_title">Cancel the sign-in to %1$s?</string>
-    <string name="connect_cancel_sign_in_confirm">Cancel the sign-in</string>
     <string name="connect_cards_not_issued">KIFF didn\'t issue the taf\'s Cards. %1$s</string>
     <string name="connect_chats_were_not_exported_check">Your chats weren\'t exported. Check your connection and try again.</string>
     <string name="connect_choose_actions">Choose its actions</string>
@@ -835,10 +817,8 @@
     <string name="connect_disconnect_body">Its actions stop working for this taf.</string>
     <string name="connect_disconnect_button">Disconnect</string>
     <string name="connect_disconnecting">Disconnecting…</string>
-    <string name="connect_drive_app">Drive the app</string>
     <string name="connect_from_removed">From removed tafs</string>
     <string name="connect_give_key_with">Give the key with %1$s</string>
-    <string name="connect_keep_waiting">Keep waiting</string>
     <string name="connect_kept_another_taf">another taf</string>
     <plurals name="connect_kept_for_card">
         <item quantity="one">Kept %1$s for %2$s, whose Card uses it.</item>
@@ -1127,7 +1107,6 @@
     <string name="export_ready_share_again">Ready: %1$s. Share again</string>
     <string name="export_row">Export my chats</string>
     <string name="export_sign_in_first">Sign in with KIFF to export your chats.</string>
-    <string name="export_try_again">Try again</string>
     <string name="halt_again">Halt again</string>
     <string name="halt_all_now">Halt all now</string>
     <string name="halt_explain_halted">Halted. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again.</string>
@@ -1137,9 +1116,6 @@
     <string name="halt_explain_running_one">Halting stops it: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone.</string>
     <string name="halt_halted_nothing_reaches_your_tools">Halted%1$s. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again.</string>
     <string name="halt_halting_stops_no_run_starts">Halting stops %1$s: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone.</string>
-    <string name="halt_headline_halted">Halted</string>
-    <string name="halt_headline_halting">Halting…</string>
-    <string name="halt_headline_running">Running</string>
     <string name="halt_now">Halt now</string>
     <string name="halt_row_running">Stop it until you resume</string>
     <string name="halt_your_tafs_lower">your tafs</string>
@@ -1178,7 +1154,6 @@
     <string name="home_start_new_taf">Start a new taf</string>
     <string name="home_status">Status</string>
     <string name="home_status_retrying">%1$s · trying again</string>
-    <string name="home_tafs">Tafs</string>
     <string name="home_tafs_shared_you_show">Tafs shared with you show here.</string>
     <string name="home_tagline">They taf. You kiff.</string>
     <string name="home_title">Tafs</string>
@@ -1195,9 +1170,7 @@
     <string name="knob_all_services">All services</string>
     <string name="knob_approve_event">Approve event</string>
     <string name="knob_approve_once">Tap to approve once</string>
-    <string name="knob_approve_with">Approve with %1$s</string>
     <string name="knob_ask_coach_to_change">Ask Coach to change</string>
-    <string name="knob_back">Back</string>
     <string name="knob_back_to_why">‹ Why</string>
     <string name="knob_caption">When starts it, What it does in order, Where the result goes.</string>
     <string name="knob_change">Change</string>
@@ -1219,7 +1192,6 @@
         <item quantity="one">Make %1$s change live with %2$s</item>
         <item quantity="other">Make %1$s changes live with %2$s</item>
     </plurals>
-    <string name="knob_next">Next</string>
     <string name="knob_no_requests">No requests yet.</string>
     <string name="knob_no_stops">, no stops</string>
     <string name="knob_not_live">DRAFT · V%1$s · NOT LIVE</string>
@@ -1396,7 +1368,6 @@
     <string name="people_title">People &amp; groups</string>
     <string name="people_uses">Uses %1$s</string>
     <string name="people_uses_none">Uses no taf yet</string>
-    <string name="push_a_taf_needs_you">A taf needs you</string>
     <string name="push_channel_holds_description">A call is held for your answer. Nothing is sent until you approve it.</string>
     <string name="push_channel_other">Other alerts</string>
     <string name="push_channel_other_description">Requests for tasks and their answers, with no sound.</string>
@@ -1415,7 +1386,6 @@
     <string name="receipt_check_signature_mismatch">The signature doesn\'t match these steps.</string>
     <string name="receipt_check_unknown_signature">It\'s signed in a way this app doesn\'t know.</string>
     <string name="receipt_check_unreadable">The receipt couldn\'t be read.</string>
-    <string name="receipt_check_again">Check again</string>
     <string name="receipt_checked">✓ KIFF\'s receipt · checked on this phone</string>
     <string name="receipt_checked_on_device">KIFF\'s receipt · checked on this %1$s</string>
     <string name="receipt_checked_why">KIFF signed this when it decided. The signature matches KIFF\'s address and none of its steps has changed since.</string>
@@ -1460,7 +1430,6 @@
     <string name="receipt_not_signed_yet">KIFF\'s receipt · not signed yet</string>
     <string name="receipt_outcome_card_refused">Not sent. Its Card refused it.</string>
     <string name="receipt_outcome_done">Done.</string>
-    <string name="receipt_outcome_done_moved">Done. %1$s moved.</string>
     <string name="receipt_outcome_moved">Done. %1$s moved.</string>
     <string name="receipt_outcome_refused_by">Not sent. Refused by %1$s.</string>
     <string name="receipt_outcome_waiting">Waiting for your answer.</string>
@@ -1561,7 +1530,6 @@
     <string name="record_result_done">done</string>
     <string name="record_result_no_answer_yet">sent, no answer yet</string>
     <string name="record_result_not_done">not done</string>
-    <string name="record_result_nothing_sent">nothing sent</string>
     <string name="record_result_nothing_sent_yet">nothing sent yet</string>
     <string name="record_result_started">started</string>
     <string name="record_result_unknown">result unknown</string>
@@ -1771,7 +1739,6 @@
     <string name="settings_refunds_answered_maria">Refunds answered maria@…</string>
     <string name="settings_search_time_zones">Search time zones</string>
     <string name="settings_show_suggestions">Show suggestions</string>
-    <string name="settings_sign_in_again">Sign in again</string>
     <string name="settings_sign_in_again_confirm_body">This phone signs out of KIFF first, then you sign in again in your browser.</string>
     <string name="settings_sign_in_again_confirm_body_device">This %1$s signs out of KIFF first, then you sign in again in your browser.</string>
     <string name="settings_sign_in_again_confirm_confirm">Sign out and sign in</string>
@@ -1829,7 +1796,6 @@
     <string name="setup_knob_not_removed">Not removed. %1$s</string>
     <string name="setup_knob_version_not_read">Version %1$s couldn\'t be read. Try again.</string>
     <string name="setup_listening">Listening</string>
-    <string name="setup_next_run">Next run at %1$s</string>
     <string name="setup_no_schedule">No schedule starts it.</string>
     <string name="setup_no_start">When you tell it, in its chat.</string>
     <string name="setup_not_every_paused">Not every start could be paused. Try again.</string>
@@ -1883,7 +1849,6 @@
     <string name="sign_in_relink_not_approved_in_browser">It wasn\'t approved in the browser.</string>
     <string name="sign_in_relink_prompt">Approve again with this fingerprint</string>
     <string name="sign_in_sign_did_not_come_back">The sign-in didn\'t come back to tafs.</string>
-    <string name="sign_in_signed_out_of_kiff">Signed out of KIFF. Sign in again.</string>
     <string name="sign_in_tafs_had_no_window_screen">tafs had no window on screen to open the sign-in over. Open tafs and try again.</string>
     <string name="sign_in_waiting">Waiting for your approval…</string>
     <string name="sign_in_waiting_for_browser">Waiting for your browser… Check that it shows %1$s, and approve only with this %2$s in your hands.</string>
@@ -1950,7 +1915,6 @@
     <string name="taf_now_card_revoked">Stopped: Card revoked</string>
     <string name="taf_now_halted">Halted · resume it from Halt</string>
     <string name="taf_now_next_run">Next run %1$s</string>
-    <string name="taf_now_paused">Paused</string>
     <string name="taf_now_paused_by_you">Paused by you</string>
     <string name="taf_now_refused">Refused · %1$s</string>
     <string name="taf_now_removed">Removed</string>
@@ -1961,7 +1925,6 @@
     <string name="taf_now_works_from_chat">Works from its chat</string>
     <string name="taf_on_its_schedule">On its schedule</string>
     <string name="taf_pause">Pause</string>
-    <string name="taf_paused">Paused</string>
     <string name="taf_refresh">Refresh</string>
     <string name="taf_remove_button">Remove</string>
     <plurals name="taf_remove_cards_left">
@@ -2022,10 +1985,7 @@
     <string name="taf_try_version_first_you_chat">Try a version first: you chat with it under a Card of its own, while the live version keeps working. Installing one makes it the live version.</string>
     <string name="taf_trying_resume">Trying v%1$s · Resume</string>
     <string name="taf_unless_you_approve_tools_sign">Unless you approve its tools, the sign-in is revoked %1$s.</string>
-    <string name="taf_versions_title">Changes to how it runs</string>
     <string name="taf_view_picker">View</string>
-    <string name="taf_work_show_all_runs">Show all runs</string>
-    <string name="taf_work_title">Its work</string>
     <string name="taf_workflow_change_with_coach">Change the workflow with Coach</string>
     <string name="taf_workflow_title">Workflow</string>
     <string name="taf_works_from_chat">It works when you tell it, in its chat: no schedule runs it.</string>
@@ -2241,9 +2201,7 @@
     <string name="work_its_runs">Its runs</string>
     <string name="work_not_read">Its work couldn\'t be read. %1$s</string>
     <string name="work_not_sent_again">It wasn\'t sent again. %1$s</string>
-    <string name="work_request_ask_coach">Ask Coach</string>
     <string name="work_request_try_reply_now">Try the reply now</string>
-    <string name="work_request_what_happened">What happened</string>
     <plurals name="work_requests_need_you">
         <item quantity="one">%1$s request needs you</item>
         <item quantity="other">%1$s requests need you</item>
