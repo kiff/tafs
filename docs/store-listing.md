@@ -50,7 +50,7 @@ JOBS A TAF CAN TAKE, FOR EXAMPLE
 • Chargebacks: answers card disputes with evidence.
 
 HOW IT WORKS
-• Coach: say the job in your own words. Coach connects your tools, drafts the taf and its Card, and you confirm.
+• Coach: say the job in your own words. Coach connects your apps, drafts the taf and its Card, and you confirm.
 • Needs you: when a taf wants to go past its Card, the call is held. Approve it once or refuse it, with your fingerprint or face unlock.
 • Chat: ask a taf what it did, or tell it what to do differently, and watch its work as it goes.
 • Record: everything your tafs did, newest first, with a receipt for each action that went through.
