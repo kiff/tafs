@@ -37,8 +37,10 @@ class PlayOffersTest {
       {"id":"credits-firstmonth","name":"First month pack","line":"First month pack · 7,000 credits","credits":7000,"once":true${if (google) ""","google_product":"bot.tafs.credits.firstmonth"""" else ""}}]}}""",
   )
 
+  private val coachIncluded = "Coach is included: enough to set up about 4 new jobs a month."
+
   private fun balance(solo: Boolean, packs: Boolean, firstMonth: String = "null", creditsPanel: Boolean = true) = KiffClient.json.decodeFromString<Balance>(
-    """{"balance":{"state":"ok","words":"Solo · 260 of 500 credits left this period","buy":{"solo":$solo,"packs":$packs,"first_month":$firstMonth},"credits_panel":$creditsPanel},"plan_line":"Solo · 260 credits left"}""",
+    """{"balance":{"state":"ok","words":"Solo · 260 of 500 credits left this period","buy":{"solo":$solo,"packs":$packs,"first_month":$firstMonth,"coach":"$coachIncluded"},"credits_panel":$creditsPanel},"plan_line":"Solo · 260 credits left"}""",
   )
 
   /** This period's credits, as tafs cloud words them for someone who ran nothing yet. */
@@ -76,6 +78,18 @@ class PlayOffersTest {
     rule.onNodeWithText("CHOOSE A PLAN").assertExists()
     assertEquals(0, rule.onAllNodesWithTextCount("ADD CREDITS"))
     assertEquals(0, rule.onAllNodesWithTextCount("Restore purchases"))
+  }
+
+  @Test fun whatCoachIncludesShowsUnderTheSoloOffer() {
+    show(google = true, solo = true, packs = false)
+    val terms = rule.onNodeWithText(UsageWords.soloTerms("€4.99", "month", "1 week")).performScrollTo().fetchSemanticsNode().boundsInRoot
+    val coach = rule.onNodeWithText(coachIncluded).assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+    assertEquals(true, coach.top > terms.top)
+  }
+
+  @Test fun withNoSoloOfferThereIsNoLineAboutCoach() {
+    show(google = true, solo = false, packs = true)
+    assertEquals(0, rule.onAllNodesWithTextCount(coachIncluded))
   }
 
   @Test fun onceSoloRunsThePanelAddsCredits() {
