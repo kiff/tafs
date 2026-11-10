@@ -78,7 +78,7 @@ struct TafChatView: View {
                     // went blank. Every row is laid out, so a scroll lands where it says.
                     VStack(alignment: .leading, spacing: 12) {
                         if items.isEmpty && state.unsent.isEmpty {
-                            Text("Ask \(taf?.name ?? "it") what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.")
+                            Text(Words.Chat.emptyNamed(taf: taf?.name ?? Words.Chat.itLower))
                                 .scaledFont(14).foregroundColor(Theme.dim)
                                 .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 30)
                         }
@@ -144,7 +144,7 @@ struct TafChatView: View {
                                          edit: {
                                              if let words = model.editUnsentChat(unsent, from: tafID) { draft = words; typing = true }
                                          },
-                                         taf: (tafID, taf?.name ?? "This taf"))
+                                         taf: (tafID, taf?.name ?? Words.Knob.thisTaf))
                                 .id(unsent.id.uuidString)
                                 .pinnedTop(unsent.id.uuidString == pinned)
                         }
@@ -162,7 +162,7 @@ struct TafChatView: View {
                                 VStack(alignment: .trailing, spacing: 4) {
                                     ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
                                         .opacity(0.8)
-                                    Text("\(taf?.name ?? "It") reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                                    Text(taf.map { steering.status == "PAUSED" ? Words.Chat.Steer.tafReadsPaused(taf: $0.name) : Words.Chat.Steer.tafReadsNext(taf: $0.name) } ?? (steering.status == "PAUSED" ? Words.Chat.Steer.itReadsPaused : Words.Chat.Steer.itReadsNext))
                                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -174,7 +174,7 @@ struct TafChatView: View {
                         if !thinking { ended(taf) }
                         if let queued = state.queued {
                             // tafs cloud holds it, and sends it once the taf is done (docs/chat.md).
-                            QueuedBubble(text: queued, who: taf?.name ?? "your taf")
+                            QueuedBubble(text: queued, who: taf?.name ?? Words.Chat.yourTaf)
                                 .id("queued")
                                 .pinnedTop(pinned == "queued")
                         }
@@ -226,7 +226,7 @@ struct TafChatView: View {
                 VStack(spacing: 8) {
                     // The held call waiting for the owner, when it's out of view.
                     if let waiting, !heldInView.contains(waiting.id) {
-                        NeedsYouPill(text: "Needs you · " + waiting.proposed.summary) {
+                        NeedsYouPill(text: Words.Chat.needsYou + waiting.proposed.summary) {
                             following = false
                             withMotion(.easeOut(duration: 0.25)) { proxy.scrollTo("k|" + AppModel.heldKey(waiting), anchor: .center) }
                         }
@@ -249,7 +249,7 @@ struct TafChatView: View {
                                     if unseen { Circle().fill(Theme.amber).frame(width: 10, height: 10).offset(x: 1, y: -1) }
                                 }
                         }
-                        .accessibilityLabel(unseen ? "Jump to the latest, something new" : "Jump to the latest")
+                        .accessibilityLabel(unseen ? Words.Chat.jumpLatestSomethingNew : Words.Chat.jumpToLatest)
                     }
                 }
                 .padding(.bottom, 10)
@@ -402,10 +402,10 @@ struct TafChatView: View {
         switch model.chatState(tafID).ended {
         case .failed?:
             HStack(spacing: 10) {
-                Text(model.failedWords(tafID, taf: taf?.name ?? "The taf"))
+                Text(model.failedWords(tafID, taf: taf?.name ?? Words.Chat.theTaf))
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer()
-                Button("Retry") { Task { await model.retryChatRun(tafID) } }
+                Button(Words.Chat.retry) { Task { await model.retryChatRun(tafID) } }
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                     .disabled(model.chatSending.contains(tafID))
             }
@@ -415,7 +415,7 @@ struct TafChatView: View {
         // Stopped needs no line: the chat is simply ready again (the owner's call, 755 retest).
         case .stopped?, nil:
             // Stopped at its own cap, with no words: the chat says why (the 793 retest).
-            if let stop = model.chatState(tafID).capped, let words = AppModel.capWords(stop, taf: taf?.name ?? "The taf") {
+            if let stop = model.chatState(tafID).capped, let words = AppModel.capWords(stop, taf: taf?.name ?? Words.Chat.theTaf) {
                 Text(words)
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -436,11 +436,11 @@ struct TafChatView: View {
         // Files go with a message of their own, once the taf is done; and nothing goes while a file
         // is still going up, so a message never leaves one behind (kiff/tafs#209).
         let held = model.holdsSend(key, thinking: thinking)
-        let name = model.taf(tafID)?.name ?? "your taf"
+        let name = model.taf(tafID)?.name ?? Words.Chat.yourTaf
         return VStack(spacing: 0) {
         FileTray(key: key)
         VStack(alignment: .leading, spacing: 4) {
-            ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft, cursor: { model.dictation.cursor = $0 })
+            ChatField(title: thinking ? Words.Chat.writeNext : Words.Chat.messageTaf(taf: "\(name)"), text: $draft, cursor: { model.dictation.cursor = $0 })
                 .accessibilityIdentifier("chat-field")
                 .focused($typing)
                 .scaledFont(16)
@@ -460,7 +460,7 @@ struct TafChatView: View {
                         .background(Theme.ink)
                         .clipShape(Circle())
                 }
-                .accessibilityLabel("Stop")
+                .accessibilityLabel(Words.Chat.stop)
                 .shortcut(.stop)
             } else {
                 // While the taf works, what's written goes to its run, which reads it at its
@@ -477,8 +477,8 @@ struct TafChatView: View {
                 .disabled(empty || held)
                 .accessibilityIdentifier("chat-send")
                 .shortcut(.send)
-                .accessibilityLabel(held ? (uploading ? "Send once the files are up" : "Send files once \(name) is done")
-                                    : thinking ? "Send to \(name) while it works" : "Send")
+                .accessibilityLabel(held ? (uploading ? Words.Chat.sendOnceFilesUp : Words.Chat.sendFilesOnceDone(taf: "\(name)"))
+                                    : thinking ? Words.Chat.sendWhileWorks(taf: "\(name)") : Words.Common.send)
             }
         }
             }.padding(.horizontal, 8).padding(.bottom, 8)
@@ -500,9 +500,9 @@ struct TafChatView: View {
     /// A sent message's menu (kiff/tafs#285): send it again, change it first, or copy it.
     @ViewBuilder private func askAgain(_ text: String) -> some View {
         // Its words only: files picked for the next message stay in the tray (kiff/tafs#209).
-        Button { draft = text; send(files: false) } label: { Label("Send again", systemImage: "arrow.clockwise") }
-        Button { draft = text; typing = true } label: { Label("Edit and send", systemImage: "pencil") }
-        Button { Clipboard.copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
+        Button { draft = text; send(files: false) } label: { Label(Words.Chat.sendAgain, systemImage: "arrow.clockwise") }
+        Button { draft = text; typing = true } label: { Label(Words.Chat.editAndSend, systemImage: "pencil") }
+        Button { Clipboard.copy(text) } label: { Label(Words.Common.copy, systemImage: "doc.on.doc") }
     }
 
     /// Sends what's in the box; with `files`, the tray's ready files go with it.
@@ -566,7 +566,7 @@ struct ChatBubble: View {
     @ViewBuilder
     private var bubble: some View {
         if message.kind == .kickoff {
-            Text("Run started \(message.at.shortTime) · \(message.text)")
+            Text(Words.Chat.runStartedWith(time: "\(message.at.shortTime)", text: "\(message.text)"))
                 .scaledFont(12).foregroundColor(Theme.dim).lineLimit(2)
                 .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 4)
         } else if message.from == .owner {
@@ -627,7 +627,7 @@ struct TypingBubble: View {
         if fullWidth {
             // The dots sit where the words will, with no bubble.
             dots.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement().accessibilityLabel("Answering")
+                .accessibilityElement().accessibilityLabel(Words.Chat.answering)
         } else {
             bubble
         }
@@ -655,7 +655,7 @@ struct TypingBubble: View {
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             Spacer()
         }
-        .accessibilityLabel("\(taf?.name ?? "The taf") is answering")
+        .accessibilityLabel(Words.Chat.tafIsAnswering(taf: taf?.name ?? Words.Chat.theTaf))
     }
 }
 
@@ -664,12 +664,16 @@ extension TafChatView {
     static func outcomeText(_ entry: RecordEntry) -> String {
         switch entry.kind {
         // Why, as the Record says it: a vendor's refusal still counts (kiff/tafs#206 6.13).
-        case .notDone: return "\(entry.title): \(entry.detail)"
-        case .sending: return "\(entry.title): sent, waiting for the tool"
-        case .unknown: return "\(entry.title): outcome unknown"
+        case .notDone: return Words.Chat.Outcome.notDone(title: entry.title, detail: entry.detail)
+        case .sending: return Words.Chat.Outcome.sending(title: "\(entry.title)")
+        case .unknown: return Words.Chat.Outcome.unknown(title: "\(entry.title)")
         // KIFF's own record of a held call, after a restart: what the owner decided (kiff/tafs#138).
-        case .refused where !entry.title.hasPrefix("Refused by you"): return "\(entry.title): refused, not sent"
-        case .approved where !entry.title.hasPrefix("Approved once by you"): return "\(entry.title): approved by you, done"
+        // The phone's own line is shown as it is; KIFF's, titled by the action, gets the outcome.
+        case .refused where entry.byYou != true: return Words.Chat.Outcome.refused(title: entry.title)
+        // "By you" only when KIFF says the reader answered it (`answer.you`); anyone else's, or one
+        // KIFF doesn't say, reads as approved.
+        case .approved where entry.byYou != true:
+            return entry.answer?.you == true ? Words.Chat.Outcome.approved(title: entry.title) : Words.Chat.Outcome.approvedDone(title: entry.title)
         default: return entry.title
         }
     }
@@ -759,7 +763,7 @@ extension View {
 /// Under an owner's message written while a card waited: their words were the card's answer.
 struct AnsweredCardLine: View {
     var body: some View {
-        Text("Answered the card above").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+        Text(Words.Chat.answeredCardAbove).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }
@@ -769,7 +773,7 @@ struct AnsweredCardLine: View {
 /// written or changed. Nothing is sent. Someone who can't change the taf reads it alone.
 struct AskCoachCardView: View {
     /// Its button, the same as Android's.
-    static let askWord = "Ask Coach"
+    static let askWord = Words.Coach.ask
     let text: String
     let ask: (() -> Void)?
     var body: some View {

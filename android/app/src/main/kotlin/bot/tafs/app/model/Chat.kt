@@ -76,8 +76,11 @@ data class LiveState(val state: String, val words: String? = null)
 
 /** How the latest run of a chat ended, when the chat says so under it. */
 sealed interface ChatEnd {
-  /** It stopped part-way: Retry sends [retry] again; [done] is what went through before it stopped, from the run's own record. */
-  data class Failed(val retry: String, val done: List<bot.tafs.app.kiff.DoneCall>) : ChatEnd
+  /**
+   * It stopped part-way: Retry sends [retry] again; [done] is what went through before it stopped, from the run's own record.
+   * [words]: why, in tafs cloud's words, when it sends them.
+   */
+  data class Failed(val retry: String, val done: List<bot.tafs.app.kiff.DoneCall>, val words: String? = null) : ChatEnd
   /** The owner stopped it. */
   data object Stopped : ChatEnd
   /** It stopped at its cost or turn cap (`cost_cap`, `turn_cap`), and wrote nothing for it. */
@@ -218,7 +221,7 @@ object Chat {
   const val LIMIT = 2000
 
   /** Under an owner's message that answered a card they wrote it while (`answers`). */
-  const val ANSWERED_CARD = "Answered the card above"
+  val ANSWERED_CARD get() = Words.Chat.answeredCardAbove
 
   /** A row of a taf's work: a request, or a scheduled run that was skipped. */
   sealed interface WorkRow {
@@ -298,7 +301,7 @@ object Chat {
   fun liveLine(live: LiveAnswer): String? = when {
     live.state != null -> stateLine(live.state)
     live.activity != null -> live.activity
-    live.text.isBlank() -> "Thinking…"
+    live.text.isBlank() -> Words.Chat.thinking
     else -> null
   }
 
@@ -308,19 +311,19 @@ object Chat {
    */
   fun stateLine(s: LiveState): String? = when (s.state) {
     "done" -> null
-    "working" -> s.words?.let { "$it…" } ?: "Working…"
-    "waiting_for_you" -> "Waiting for you"
-    else -> "Thinking…"
+    "working" -> s.words?.let { Words.Chat.workingOn(it) } ?: Words.Chat.working
+    "waiting_for_you" -> Words.Chat.waitingForYou
+    else -> Words.Chat.thinking
   }
 
   /** How long a taf worked and how many steps it took, with those that failed. Which steps, only in tafs cloud's words ([steps]). */
   fun workLine(work: Work): String {
     val seconds = work.ms / 1000.0
-    val took = if (seconds < 10) "%.1f s".format(java.util.Locale.ROOT, seconds) else "${Math.round(seconds)} s"
+    val took = Words.Work.Duration.seconds(if (seconds < 10) "%.1f".format(java.util.Locale.ROOT, seconds) else "${Math.round(seconds)}")
     val n = work.steps.size
-    if (n == 0) return "Worked $took"
+    if (n == 0) return Words.Chat.worked(took)
     val failed = work.steps.count { it.error }
-    return "Worked $took · $n ${if (n == 1) "step" else "steps"}" + if (failed > 0) ", $failed failed" else ""
+    return if (failed > 0) Words.Chat.workedStepsFailed(count = n, took = took, failed = failed.toString()) else Words.Chat.workedSteps(count = n, took = took)
   }
 
   /**
@@ -340,16 +343,24 @@ object Chat {
 
   /** The sample taf's first words. */
   fun hello(taf: Taf): String =
-    "Hi, I'm ${taf.name}. I'm on it: ${taf.now.lowercase()}. Ask me what I did, or tell me what to do differently. I stay inside my Card either way."
+    Words.Sample.hello(taf.name, taf.now)
 
   /** What a held call's outcome says in the chat. */
   fun outcomeText(entry: RecordEntry): String = when (entry.kind) {
     // Why, as the Record says it: a vendor's refusal still counts (kiff/tafs#206 6.13).
-    RecordEntry.Kind.notDone -> "${entry.title}: ${entry.detail}"
-    RecordEntry.Kind.sending -> "${entry.title}: sent, waiting for the tool"
-    RecordEntry.Kind.unknown -> "${entry.title}: outcome unknown"
-    RecordEntry.Kind.refused -> if (!entry.title.startsWith("Refused by you")) "${entry.title}: refused, not sent" else entry.title
-    RecordEntry.Kind.approved -> if (!entry.title.startsWith("Approved once by you")) "${entry.title}: approved by you, done" else entry.title
+    RecordEntry.Kind.notDone -> Words.Chat.Outcome.notDone(entry.title, entry.detail)
+    RecordEntry.Kind.sending -> Words.Chat.Outcome.sending(entry.title)
+    RecordEntry.Kind.unknown -> Words.Chat.Outcome.unknown(entry.title)
+    // KIFF's own record of a held call, after a restart: what was decided. The phone's own line (`byYou`) is shown as it
+    // is; KIFF's, titled by the action, gets the outcome.
+    RecordEntry.Kind.refused -> if (entry.byYou != true) Words.Chat.Outcome.refused(entry.title) else entry.title
+    // "By you" only when KIFF says the reader answered it (`answer.you`); anyone else's, or one KIFF doesn't say, reads as
+    // approved.
+    RecordEntry.Kind.approved -> when {
+      entry.byYou == true -> entry.title
+      entry.answer?.you == true -> Words.Chat.Outcome.approved(entry.title)
+      else -> Words.Chat.Outcome.approvedDone(entry.title)
+    }
     else -> entry.title
   }
 }

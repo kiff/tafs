@@ -10,26 +10,26 @@ struct DriveCard: View {
 
     var body: some View {
         let c = shown.component
-        let task = c.text ?? c.title ?? "Drive the app"
+        let task = c.text ?? c.title ?? Words.Drive.driveApp
         if let answer = model.setupThread.answer(to: c.id) {
-            OutcomeLine(text: answer.text == "declined" ? "Not now: Coach didn't drive the app" : "Coach drove the app · \(task)",
+            OutcomeLine(text: answer.text == "declined" ? Words.Drive.declinedLine : Words.Drive.coachDroveApp(task: "\(task)"),
                         tone: answer.text == "declined" ? Theme.dim : Theme.ok, mark: answer.text == "declined" ? "minus.circle.fill" : "checkmark.circle.fill")
         } else if model.isAnswered(c) {
-            OutcomeLine(text: "Coach drove the app · \(task)", tone: Theme.ok)
+            OutcomeLine(text: Words.Drive.coachDroveApp(task: "\(task)"), tone: Theme.ok)
         } else {
             Panel(stroke: Theme.amber) {
-                Eyebrow(text: "Needs you · let Coach drive", color: Theme.amber)
+                Eyebrow(text: Words.Drive.needsYouLetCoachDrive, color: Theme.amber)
                 Text(task).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app or tap Stop to take it back.")
+                Text(Words.Drive.cardNoteScrolls)
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 10) {
-                    Button("Not now") {
+                    Button(Words.Common.notNow) {
                         Task { await model.answer(c, "declined") }
                     }
                     .buttonStyle(OutlineButtonStyle())
                     ApprovalGate {
-                        Button(busy ? "Approving…" : "Approve with \(Biometry.name)") {
+                        Button(busy ? Words.Approval.approving : Words.Approval.approveWith(biometry: "\(Biometry.name)")) {
                             busy = true
                             Task { await model.approveDrive(c); busy = false }
                         }
@@ -49,11 +49,11 @@ struct DriveRecapCard: View {
 
     var body: some View {
         Panel {
-            Eyebrow(text: "What I did", color: Theme.amber)
+            Eyebrow(text: Words.Drive.whatIDid, color: Theme.amber)
             Text(recap.task).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
             if recap.steps.isEmpty {
-                Text("No step was done.").scaledFont(14).foregroundColor(Theme.soft)
+                Text(Words.Drive.noStepDone).scaledFont(14).foregroundColor(Theme.soft)
             }
             ForEach(Array(recap.steps.enumerated()), id: \.offset) { _, step in
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -68,6 +68,6 @@ struct DriveRecapCard: View {
 
     private var words: String {
         if let w = recap.words, !w.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return DriveSession.sentence(w) }
-        return recap.why.flatMap { DriveLines.ended[$0] } ?? "Coach stopped"
+        return recap.why.flatMap { DriveLines.ended[$0] } ?? Words.Drive.Ended.other
     }
 }

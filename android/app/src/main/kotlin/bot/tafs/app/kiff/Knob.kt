@@ -3,6 +3,7 @@ package bot.tafs.app.kiff
 import bot.tafs.app.model.Knob
 import bot.tafs.app.model.KnobRim
 import bot.tafs.app.model.KnobRing
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.KnobStop
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -168,7 +169,7 @@ data class KnobWire(
    * grant), the taf's own ([THIS_TAF]), or all of them (null).
    */
   fun knob(showing: String? = null): Knob {
-    val names = rings.ifEmpty { listOf(RingName("wakes", "When"), RingName("what", "What"), RingName("results", "Where")) }
+    val names = rings.ifEmpty { listOf(RingName("wakes", Words.Knob.Ring.`when`), RingName("what", Words.Knob.Ring.what), RingName("results", Words.Knob.Ring.where)) }
     fun keep(i: Item) = when (showing) {
       null -> true
       THIS_TAF -> i.grant == null
@@ -210,7 +211,29 @@ data class ConnectApps(
   val provider: String? = null,
   /** The next page's cursor; none on the last page. */
   @SerialName("next_cursor") val nextCursor: String? = null,
+  /**
+   * The tafs removed since, as tafs cloud names them from KIFF's archived agents, newest first: a grant whose `request.agent` is one
+   * is from a removed taf. Only for someone who manages Cards; empty otherwise, or from a tafs cloud without it.
+   */
+  @SerialName("removed_tafs") val removedTafs: List<RemovedTaf> = emptyList(),
 ) {
+  @Serializable
+  data class RemovedTaf(
+    val agent: String,
+    @SerialName("removed_at") val removedAt: String? = null,
+    /**
+     * Its live connections, each with the live tafs whose Card in force still uses one of its actions, which Clear keeps. Only with
+     * this phone's signed grants read, and only when tafs cloud could read planque and KIFF's Cards: null means no Clear.
+     */
+    val grants: List<RemovedGrant>? = null,
+  )
+
+  @Serializable
+  data class RemovedGrant(val grant: String, @SerialName("used_by") val usedBy: List<UsedBy> = emptyList())
+
+  @Serializable
+  data class UsedBy(val taf: String = "", val name: String = "")
+
   @Serializable
   data class App(
     val entry: String,

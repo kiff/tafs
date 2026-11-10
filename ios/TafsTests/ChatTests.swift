@@ -610,6 +610,21 @@ final class ChatTests: XCTestCase {
         XCTAssertNotNil(AppModel.capWords("turn_cap", taf: "Rae"))
         XCTAssertNil(AppModel.capWords("answered", taf: "Rae"))
 
+        // tafs cloud's `stopped` names every stop, the two caps among them, and wins over `capped`.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"stopped":{"run":"r7","stop":"max_token"},"capped":null}
+        """)
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).capped, "max_token")
+        XCTAssertEqual(AppModel.capWords("max_token", taf: "Rae"),
+                       "Rae stopped: its reply ran out of room. Ask for something shorter, or for one part at a time.")
+        XCTAssertEqual(AppModel.capWords("refused", taf: "Rae"), "Rae stopped: the AI declined to continue. Try asking another way.")
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"stopped":{"run":"r7","stop":"turn_cap"},"capped":{"run":"r7","stop":"turn_cap"}}
+        """)
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).capped, "turn_cap")
+
         // A cap the app can't read leaves the thread loading, and shows nothing.
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
         {"messages":[],"capped":{"stop":7}}
@@ -1069,12 +1084,34 @@ final class ChatTests: XCTestCase {
     func testKIFFsOutcomeKeepsTheOwnersWords() {
         let id = KIFFMapping.recordID("p7")
         let tafID = UUID()
-        let mine = RecordEntry(id: id, tafID: tafID, kind: .refused, title: "Refused by you · 08:56 · Refund a charge", detail: "", at: Date())
+        var mine = RecordEntry(id: id, tafID: tafID, kind: .refused, title: "Refused by you · 08:56 · Refund a charge", detail: "", at: Date())
+        mine.byYou = true
         let kiffs = RecordEntry(id: id, tafID: tafID, kind: .refused, title: "Refund a charge", detail: "", at: Date())
         let (out, settled) = AppModel.merge([kiffs], decided: [id: mine])
         XCTAssertEqual(out.first?.title, "Refused by you · 08:56 · Refund a charge")
+        XCTAssertEqual(out.first?.byYou, true, "the flag goes with the owner's words")
         XCTAssertTrue(settled.isEmpty, "kept, so the next refresh keeps it too")
         XCTAssertEqual(TafChatView.outcomeText(out[0]), "Refused by you · 08:56 · Refund a charge")
+    }
+
+    /// Which line the chat shows as it is comes from a flag, not from its words: the owner's
+    /// own line in any wording, and KIFF's line gets its outcome even when the reader answered.
+    func testTheOwnersOwnLineIsAFlagNotItsWords() {
+        var own = RecordEntry(tafID: UUID(), kind: .refused, title: "Rechazado por ti · 08:56 · Reembolso", detail: "", at: Date())
+        own.byYou = true
+        XCTAssertEqual(TafChatView.outcomeText(own), "Rechazado por ti · 08:56 · Reembolso", "a translated line is still the owner's own")
+        var kiffs = RecordEntry(tafID: UUID(), kind: .refused, title: "Refund a charge", detail: "", at: Date())
+        kiffs.answer = .init(decision: "refused", you: true)
+        XCTAssertEqual(TafChatView.outcomeText(kiffs), "Refund a charge: refused, not sent", "KIFF's own line, after a restart")
+        let approved = RecordEntry(tafID: UUID(), kind: .approved, title: "Refused by you · looks like the owner's", detail: "", at: Date())
+        XCTAssertEqual(TafChatView.outcomeText(approved), "Refused by you · looks like the owner's: approved, done",
+                       "words alone don't make a line the owner's")
+        // KIFF's approved line says "by you" only when the reader answered it.
+        var mine = RecordEntry(tafID: UUID(), kind: .approved, title: "Refund a charge", detail: "", at: Date())
+        mine.answer = .init(decision: "approved", you: true)
+        XCTAssertEqual(TafChatView.outcomeText(mine), "Refund a charge: approved by you, done")
+        mine.answer = .init(decision: "approved", you: false)
+        XCTAssertEqual(TafChatView.outcomeText(mine), "Refund a charge: approved, done", "someone else approved it")
     }
 
     func testOneMessageAtATimePerTaf() async throws {

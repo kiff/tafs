@@ -8,9 +8,9 @@ enum Biometry {
         let context = LAContext()
         _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
         switch context.biometryType {
-        case .faceID: return "Face ID"
-        case .touchID: return "Touch ID"
-        default: return "your passcode"
+        case .faceID: return Words.Approval.faceId
+        case .touchID: return Words.Approval.touchId
+        default: return Words.Approval.yourPasscode
         }
     }()
 
@@ -40,7 +40,7 @@ enum ApprovalReadiness: Equatable {
     /// No Face ID or Touch ID on this device: approvals need another one.
     case unsupported
 
-    static let title = "Set up approvals on this device"
+    static let title = Words.Approval.title
 
     /// The state, from what `canEvaluatePolicy` said: no error is ready.
     static func from(_ code: LAError.Code?, biometry: LABiometryType) -> ApprovalReadiness {
@@ -79,36 +79,36 @@ enum ApprovalReadiness: Equatable {
     /// The setup screen's words for the state, `device` "iPhone" or "iPad", `kind` "Face ID"
     /// or "Touch ID" (nil when the device doesn't say).
     func words(device: String, kind: String?) -> String {
-        let either = kind ?? "Face ID or Touch ID"
+        let either = kind ?? Words.Approval.faceIdTouchId
         switch self {
         case .ready:
-            return "This \(device) is ready to approve with \(either)."
+            return Words.Approval.readyApprove(device: "\(device)", either: "\(either)")
         case .noneEnrolled:
-            return "Approving asks for \(either), and none is set up on this \(device) yet. Set it up in \(Self.path(kind)), then come back."
+            return Words.Approval.approvingAsksNoneSetUp(either: "\(either)", device: "\(device)", kind: "\(Self.path(kind))")
         case .noPasscode:
-            return "This \(device) has no passcode, and \(either) needs one. Set a passcode in \(Self.path(kind)), then add \(either), then come back."
+            return Words.Approval.hasNoPasscodeNeedsOne(device: "\(device)", either: "\(either)", kind: "\(Self.path(kind))", either2: "\(either)")
         case .offForTafs:
-            return "\(either) is turned off for tafs. Open Settings and turn on \(either) for tafs."
+            return Words.Approval.turnedOffTafsOpenSettings(either: "\(either)", either2: "\(either)")
         case .unavailable(lockedOut: true):
-            return "\(either) is locked after too many tries. Lock this \(device), unlock it with its passcode, then check again."
+            return Words.Approval.lockedAfterTooManyTries(either: "\(either)", device: "\(device)")
         case .unavailable(lockedOut: false):
-            return "\(either) can't be used right now. Try again in a moment."
+            return Words.Approval.canNotUsedRightTry(either: "\(either)")
         case .unsupported:
-            return "This \(device) has no Face ID or Touch ID, so it can't approve. Approve on another iPhone, iPad or Android phone signed in to your account."
+            return Words.Approval.hasNoFaceIdTouch(device: "\(device)")
         }
     }
 
     /// A line for an approval's place when it can't be made here.
     func short(kind: String?) -> String {
-        let either = kind ?? "Face ID or Touch ID"
+        let either = kind ?? Words.Approval.faceIdTouchId
         switch self {
         case .ready: return ""
-        case .noneEnrolled: return "Approving needs \(either), and none is set up. Set it up in \(Self.path(kind))."
-        case .noPasscode: return "Approving needs a passcode and \(either). Set a passcode in \(Self.path(kind)), then add \(either)."
-        case .offForTafs: return "\(either) is turned off for tafs. Turn it on in tafs' settings to approve."
-        case .unavailable(lockedOut: true): return "\(either) is locked after too many tries. Unlock this device with its passcode, then try again."
-        case .unavailable(lockedOut: false): return "\(either) can't be used right now. Try again in a moment."
-        case .unsupported: return "This device can't approve. Approve on another device signed in to your account."
+        case .noneEnrolled: return Words.Approval.approvingNeedsNoneSetUp(either: "\(either)", kind: "\(Self.path(kind))")
+        case .noPasscode: return Words.Approval.approvingNeedsPasscodeSetPasscode(either: "\(either)", kind: "\(Self.path(kind))", either2: "\(either)")
+        case .offForTafs: return Words.Approval.turnedOffTafsTurnTafs(either: "\(either)")
+        case .unavailable(lockedOut: true): return Words.Approval.lockedUnlockDevice(either: "\(either)")
+        case .unavailable(lockedOut: false): return Words.Approval.canNotUsedRightTry(either: "\(either)")
+        case .unsupported: return Words.Approval.deviceCanNotApproveApprove
         }
     }
 
@@ -116,9 +116,9 @@ enum ApprovalReadiness: Equatable {
     /// this page, so the path is said instead.
     static func path(_ kind: String?) -> String {
         switch kind {
-        case "Touch ID": return "Settings → Touch ID & Passcode"
-        case "Face ID": return "Settings → Face ID & Passcode"
-        default: return "Settings → Face ID & Passcode (Touch ID & Passcode on a device with Touch ID)"
+        case "Touch ID": return Words.Approval.SettingsPath.touchId
+        case "Face ID": return Words.Approval.SettingsPath.faceId
+        default: return Words.Approval.settingsFaceIdPasscodeTouch
         }
     }
 
@@ -128,13 +128,13 @@ enum ApprovalReadiness: Equatable {
     var opensSettings: Bool { self == .offForTafs }
 
     /// Said on the setup screen: a new face or fingerprint ends the approval key.
-    static let newBiometricsNote = "Adding a face or fingerprint later ends this device's approval key, so you approve this device again then."
+    static let newBiometricsNote = Words.Approval.addingFaceFingerprintLaterEnds
 
     /// The words for a prompt the person closed, nil for any other error.
     static func cancelled(_ error: Error) -> String? {
         switch (error as? LAError)?.code {
         case .userCancel?, .systemCancel?, .appCancel?, .userFallback?:
-            return "Cancelled, so nothing was approved. The request is kept: approve again when you're ready."
+            return Words.Approval.cancelledNothingApprovedRequestKept
         default:
             return nil
         }
@@ -144,15 +144,15 @@ enum ApprovalReadiness: Equatable {
     /// or the device's state. The request is kept.
     static func notApproved(_ error: Error, kind: String?) -> String {
         if let words = cancelled(error) { return words }
-        let either = kind ?? "Face ID or Touch ID"
+        let either = kind ?? Words.Approval.faceIdTouchId
         switch (error as? LAError)?.code {
         case .authenticationFailed?:
-            return "\(either) didn't recognise you, so nothing was approved. The request is kept: approve again when you're ready."
+            return Words.Approval.didNotRecogniseYouNothing(either: "\(either)")
         default:
             // The device couldn't ask (locked, turned off, none enrolled): the state says why.
             let now = current()
-            return now.isReady ? "Nothing was approved. The request is kept: approve again when you're ready."
-                               : now.short(kind: kind) + " The request is kept."
+            return now.isReady ? Words.Approval.nothingApprovedRequestKeptApprove
+                               : now.short(kind: kind) + Words.Approval.requestKept
         }
     }
 }

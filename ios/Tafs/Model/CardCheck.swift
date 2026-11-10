@@ -13,25 +13,25 @@ enum Decision: Equatable {
 /// a tool; this copy drives the demo and lets the app explain a decision offline.
 enum CardCheck {
     static func decide(_ proposed: ProposedAction, for taf: Taf) -> Decision {
-        if taf.card.revoked { return .refused(reason: "Card revoked") }
+        if taf.card.revoked { return .refused(reason: Words.Card.cardRevoked) }
         guard let rule = taf.card.rules.first(where: { $0.action == proposed.action }) else {
-            return .refused(reason: "Not on this taf's Card")
+            return .refused(reason: Words.Card.Check.notOnCard)
         }
-        if rule.never { return .refused(reason: "\(rule.label): never allowed") }
-        if rule.alwaysAsk { return .held(reason: "\(rule.label): always asks you") }
+        if rule.never { return .refused(reason: Words.Card.Check.neverAllowed(rule: "\(rule.label)")) }
+        if rule.alwaysAsk { return .held(reason: Words.Card.Check.alwaysAsks(rule: "\(rule.label)")) }
 
         var breaches: [String] = []
         if let perAction = rule.perAction, let amount = proposed.amount, amount > perAction {
-            breaches.append("Over \(perAction.formatted) each")
+            breaches.append(Words.Card.Check.overEach(amount: "\(perAction.formatted)"))
         }
         if let perWindow = rule.perWindow, let amount = proposed.amount {
             let used = taf.used[rule.action] ?? .zero
             if used + amount > perWindow {
-                breaches.append("Over \(perWindow.formatted) \(rule.window.label)")
+                breaches.append(Words.Card.Check.overTotal(amount: "\(perWindow.formatted)", window: "\(rule.window.label)"))
             }
         }
         if let count = rule.countPerWindow, (taf.counted[rule.action] ?? 0) + 1 > count {
-            breaches.append("Over \(count) \(rule.window.label)")
+            breaches.append(Words.Card.Check.overCount(count: count, window: rule.window.label))
         }
         guard !breaches.isEmpty else { return .allowed }
 

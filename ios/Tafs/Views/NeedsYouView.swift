@@ -7,7 +7,7 @@ struct NeedsYouView: View {
         ScrollViewReader { reader in
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Needs you").scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(Words.NeedsYou.title).scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
                     AlertsCard()
                 }
@@ -18,8 +18,8 @@ struct NeedsYouView: View {
                 ForEach(model.cardUnitExceptions) { ask in CardUnitExceptionPanel(ask: ask).id(ask.id) }
                 if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty {
                     Panel {
-                        Text("Nothing is waiting.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                        Text("When a taf asks for something outside its Card, it shows up here and on your lock screen.")
+                        Text(Words.NeedsYou.nothingWaiting).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                        Text(Words.NeedsYou.emptyHint)
                             .scaledFont(14).foregroundColor(Theme.soft)
                     }
                 } else {
@@ -32,7 +32,7 @@ struct NeedsYouView: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(taf.name).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                                         let n = knocks(taf)
-                                        Text(n == 1 ? "Someone knocked at its door. Nothing was done." : "\(n) knocks at its doors. Nothing was done.")
+                                        Text(Words.NeedsYou.knocks(count: n))
                                             .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                                     }
                                     Spacer()
@@ -42,7 +42,7 @@ struct NeedsYouView: View {
                             }
                         }
                         .buttonStyle(.drivablePlain)
-                        .accessibilityHint("Opens \(taf.name), where you answer it")
+                        .accessibilityHint(Words.NeedsYou.opensWhereYouAnswer(taf: "\(taf.name)"))
                     }
                 }
             }
@@ -84,7 +84,7 @@ struct DidThisHappenCard: View {
     var body: some View {
         Panel(stroke: Theme.amber.opacity(0.4)) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Did this happen?").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.amberText)
+                Text(Words.Record.DidThisHappen.title).scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.amberText)
                 // KIFF's own words for the call and for why it asks, as they are; before KIFF
                 // sent them, its title and amount.
                 Text(call.words ?? call.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
@@ -97,14 +97,14 @@ struct DidThisHappenCard: View {
                 if model.mayAnswerHolds {
                     HStack(spacing: 10) {
                         ApprovalGate {
-                            Button("No") { answer(false) }.buttonStyle(OutlineButtonStyle())
+                            Button(Words.Record.DidThisHappen.no) { answer(false) }.buttonStyle(OutlineButtonStyle())
                         }
                         ApprovalGate {
-                            Button("Yes, it did") { answer(true) }.buttonStyle(PrimaryButtonStyle())
+                            Button(Words.Record.DidThisHappen.yes) { answer(true) }.buttonStyle(PrimaryButtonStyle())
                         }
                     }
                     .disabled(sending)
-                    Text("No gives its Card the room back. Answering asks for \(Biometry.name).")
+                    Text(Words.NeedsYou.noGivesCardRoomBack(biometry: "\(Biometry.name)"))
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 }
             }
@@ -135,7 +135,7 @@ struct HeldCallCard: View {
     @ViewBuilder private func answers(refuseOnly: Bool) -> some View {
         if !model.mayAnswerHolds {
             // A viewer uses the taf but doesn't answer for the account (the 870 test).
-            Text("Someone who approves on this account answers this. Their answer shows here.")
+            Text(Words.NeedsYou.someoneAnswers)
                 .scaledFont(13).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         } else if model.canAnswer(call) {
@@ -145,7 +145,7 @@ struct HeldCallCard: View {
                         model.improveTaf(call.tafID)
                         model.coachOpen = true
                     } label: {
-                        Label("Change the limit in Coach mode", systemImage: "sparkle")
+                        Label(Words.NeedsYou.changeLimit, systemImage: "sparkle")
                     }
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(sending)
@@ -158,7 +158,7 @@ struct HeldCallCard: View {
                     Button {
                         if call.install != nil { install() } else { send(.approveOnce) }
                     } label: {
-                        Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
+                        Label(call.install == nil ? Words.NeedsYou.approveOnceWith(biometry: "\(Biometry.name)") : Words.Version.installWith(biometry: "\(Biometry.name)"), systemImage: Biometry.symbol)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(sending)
@@ -168,8 +168,8 @@ struct HeldCallCard: View {
                 // (kiff/tafs#138, item 49). Extra room can, for this call, until that total
                 // resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
                 Text(model.canManageCards
-                     ? "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was."
-                     : "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.")
+                     ? Words.NeedsYou.overTotalManager
+                     : Words.NeedsYou.overTotal)
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
                 // What of the total is from calls the tool refused, in KIFF's words.
@@ -181,7 +181,7 @@ struct HeldCallCard: View {
                 if model.canManageCards {
                     ApprovalGate {
                         Button { send(.extraRoom) } label: {
-                            Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                            Label(Words.NeedsYou.extraRoomWith(biometry: "\(Biometry.name)"), systemImage: Biometry.symbol)
                         }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(sending)
@@ -192,7 +192,7 @@ struct HeldCallCard: View {
                         model.improveTaf(call.tafID)
                         model.coachOpen = true
                     } label: {
-                        Label("Change the limit in Coach mode", systemImage: "sparkle")
+                        Label(Words.NeedsYou.changeLimit, systemImage: "sparkle")
                     }
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(sending)
@@ -204,19 +204,19 @@ struct HeldCallCard: View {
                     Button(step) { send(.nextStep(step)) }
                         .buttonStyle(OutlineButtonStyle())
                 }
-                Button("Refuse") { send(.refuse) }
+                Button(Words.NeedsYou.refuse) { send(.refuse) }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
                     .confirming()
             }
             .disabled(sending)
         } else {
-            Text("Answering from the phone arrives once KIFF checks the phone's signature. Until then, answer in KIFF.")
+            Text(Words.NeedsYou.answerInKiffUntil)
                 .scaledFont(13).foregroundColor(Theme.soft)
             if let page = model.answerPage(for: call) {
                 Button {
                     openURL(page)
                 } label: {
-                    Label("Answer in KIFF", systemImage: "arrow.up.right.square")
+                    Label(Words.NeedsYou.answerInKiffButton, systemImage: "arrow.up.right.square")
                 }
                 .buttonStyle(PrimaryButtonStyle())
             }
@@ -236,7 +236,7 @@ struct HeldCallCard: View {
                     Image(systemName: "sparkle").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.onFill)
                         .frame(width: 32, height: 32).background(Circle().fill(Theme.coach))
                 }
-                Text(model.holderName(call.tafID) ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                Text(model.holderName(call.tafID) ?? Words.NeedsYou.aTaf).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
                 // The system counts it down, every second, wherever the card is (kiff/tafs#236,
                 // item 8); the timeline only turns it to "expired" at the end.
@@ -275,7 +275,7 @@ struct HeldCallCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 4)
                 } label: {
-                    Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
+                    Text(Words.Common.details).scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
                 }
             }
 
@@ -283,10 +283,10 @@ struct HeldCallCard: View {
             // work (the 789 retest).
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 if context.date >= call.expiresAt {
-                    Text("Expired. Nobody answered in time, so KIFF refused it and nothing was sent.")
+                    Text(Words.NeedsYou.expiredLine)
                         .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 } else if let code = model.unanswerable[call.id], !AppModel.refusesOnly(code) {
-                    Text(AppModel.refusalWords(code) ?? "KIFF doesn't take your answer to this one.")
+                    Text(AppModel.refusalWords(code) ?? Words.NeedsYou.answerNotTaken)
                         .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 } else {
                     VStack(alignment: .leading, spacing: 12) {
@@ -312,13 +312,13 @@ struct HeldCallCard: View {
 
     /// While a call waits: nothing the call asks for happens until someone approves it. The
     /// card, its alert and VoiceOver say it, so the taf's own words don't have to.
-    static let nothingSent = "Nothing is sent until you approve."
+    static let nothingSent = Words.NeedsYou.nothingSent
 
     /// The hold as VoiceOver reads it: "Rae asks: Refund order 42, €150.00. Over €50 each.
     /// It lapses at 14:05. Nothing is sent until you approve."
     static func sentence(_ call: HeldCall, taf: String?) -> String {
         let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
-        return "\(taf ?? "A taf") asks: \(what). \(call.reason). It lapses at \(call.expiresAt.shortTime). \(nothingSent)"
+        return Words.NeedsYou.asksLapses(taf: taf ?? Words.NeedsYou.aTaf, what: what, reason: call.reason, time: call.expiresAt.shortTime, nothingSent: nothingSent)
     }
 
     private func takeRequest() {
@@ -358,11 +358,13 @@ struct HeldCallCard: View {
 
     private func remaining(at date: Date) -> Text {
         let seconds = Int(call.expiresAt.timeIntervalSince(date))
-        guard seconds >= 1 else { return Text("expired") }
+        guard seconds >= 1 else { return Text(Words.NeedsYou.expired) }
         if #available(iOS 16, *) {
-            return Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(" left")
+            // The line's own words sit around the live timer, in the order its language puts them.
+            let parts = Words.NeedsYou.left(time: "\u{1}").components(separatedBy: "\u{1}")
+            return Text(parts.first ?? "") + Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(parts.dropFirst().joined())
         }
-        return Text(String(format: "%d:%02d left", seconds / 60, seconds % 60))
+        return Text(Words.NeedsYou.left(time: String(format: "%d:%02d", seconds / 60, seconds % 60)))
     }
 }
 
@@ -373,10 +375,10 @@ struct AlertsCard: View {
 
     var body: some View {
         Panel {
-            Text("Know the moment a taf needs you").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-            Text("Get an alert when a call waits for your answer, even with tafs closed.")
+            Text(Words.NeedsYou.knowMomentTafNeedsYou).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+            Text(Words.NeedsYou.getAlertWhenCallWaits)
                 .scaledFont(14).foregroundColor(Theme.soft)
-            Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
+            Button(model.turningOnAlerts ? Words.NeedsYou.turningOn : Words.NeedsYou.turnAlerts) {
                 Task { await model.turnOnAlerts() }
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -394,20 +396,20 @@ struct AlertsOfferSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: "bell.badge").scaledFont(40, weight: .semibold).foregroundColor(Theme.amber)
                 .accessibilityHidden(true)
-            Text("Alerts are off on this \(ThisDevice.kind)").scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
-            Text("When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this \(ThisDevice.kind) and its lock screen, even with tafs closed.")
+            Text(Words.Settings.AlertsOff.titleDevice(device: "\(ThisDevice.kind)")).scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
+            Text(Words.NeedsYou.whenTafAsksSomethingOutside(device: "\(ThisDevice.kind)"))
                 .scaledFont(16).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            Text("iOS asks next. Confirming with \(Biometry.name) sets them up for your account.")
+            Text(Words.NeedsYou.iosAsksNextConfirmingSets(biometry: "\(Biometry.name)"))
                 .scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
             if let error = model.lastError, !model.turningOnAlerts {
                 Text(error).scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
-            Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
+            Button(model.turningOnAlerts ? Words.NeedsYou.turningOn : Words.NeedsYou.turnAlerts) {
                 Task { if await model.turnOnAlerts() { model.answerAlertsOffer() } }
             }
             .buttonStyle(PrimaryButtonStyle())
             .disabled(model.turningOnAlerts)
-            Button("Not now") { model.answerAlertsOffer() }
+            Button(Words.Common.notNow) { model.answerAlertsOffer() }
                 .scaledFont(15).foregroundColor(Theme.soft)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .disabled(model.turningOnAlerts)

@@ -1,0 +1,8 @@
+/* Siri's phrases for Halt all, in Portuguese (kiff/tafs#236, item 28). */
+"Stop my ${applicationName}" = "Para os meus ${applicationName}";
+"Stop all ${applicationName}" = "Para todos os meus ${applicationName}";
+"Stop ${applicationName}" = "Para ${applicationName}";
+"Pause my ${applicationName}" = "Pausa os meus ${applicationName}";
+"Pause ${applicationName}" = "Pausa ${applicationName}";
+"Halt my ${applicationName}" = "Bloqueia os meus ${applicationName}";
+"Halt all ${applicationName}" = "Bloqueia todos os meus ${applicationName}";

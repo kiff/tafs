@@ -21,7 +21,7 @@ object Decisions {
         out[i].kind == RecordEntry.Kind.held -> out[i] = mine
         // KIFF's outcome says what the owner decided: the line keeps the owner's words for it
         // ("Refused by you · 08:56 · …"), so it doesn't change on screen (kiff/tafs#206).
-        out[i].kind == mine.kind -> out[i] = out[i].copy(title = mine.title)
+        out[i].kind == mine.kind -> out[i] = out[i].copy(title = mine.title, byYou = mine.byYou)
         else -> settled += id
       }
     }

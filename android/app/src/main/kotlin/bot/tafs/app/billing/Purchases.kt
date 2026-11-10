@@ -1,5 +1,6 @@
 package bot.tafs.app.billing
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.kiff.KiffError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -76,20 +77,30 @@ class Purchases(private val store: PlayStore) {
 
   val updates: Flow<StorePurchase> get() = store.updates
 
+  /** Whether Play has been asked yet, and why its last answer failed: null once it answered. */
+  private val _loaded = MutableStateFlow(false)
+  val loaded: StateFlow<Boolean> = _loaded
+  private val _loadFailed = MutableStateFlow<String?>(null)
+  val loadFailed: StateFlow<String?> = _loadFailed
+
   /** Reads the products' names and prices from Play. */
   suspend fun load(ids: List<String>) {
     if (ids.isEmpty()) return
     // Read again each time, never kept from an earlier read: what Play offers changes with the Google account and its history
-    // (a trial used, the Play Store switched to another account). Unreadable: what was read before stays.
+    // (a trial used, the Play Store switched to another account). Unreadable: what was read before stays, and why is kept.
     val read = try {
       store.products(ids)
     } catch (e: CancellationException) {
       throw e
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+      _loadFailed.value = e.message ?: PLAY_CANT_SELL
+      _loaded.value = true
       return
     }
     // A product Play doesn't list now isn't offered.
     _products.update { it - ids.toSet() + read.associateBy { p -> p.id } }
+    _loadFailed.value = null
+    _loaded.value = true
   }
 
   /** Buys a product for the account, answering a member's request when there is one. */
@@ -102,7 +113,7 @@ class Purchases(private val store: PlayStore) {
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      return PurchaseOutcome.Failed(e.message ?: "Google Play couldn't sell it.")
+      return PurchaseOutcome.Failed(e.message ?: Words.Billing.playCouldntSell)
     } finally {
       _buying.value = null
     }
@@ -120,7 +131,7 @@ class Purchases(private val store: PlayStore) {
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      return PurchaseOutcome.Failed(e.message ?: "Google Play couldn't be read.")
+      return PurchaseOutcome.Failed(e.message ?: Words.Billing.playCouldntRead)
     }
     var outcome: PurchaseOutcome = PurchaseOutcome.Done
     for (p in list) {
@@ -136,7 +147,7 @@ class Purchases(private val store: PlayStore) {
 
   /** Sends a purchase to KIFF and finishes it once KIFF recorded it. */
   suspend fun deliver(p: StorePurchase, requestId: String?): PurchaseOutcome {
-    val record = record ?: return PurchaseOutcome.NotRecorded("Not signed in.")
+    val record = record ?: return PurchaseOutcome.NotRecorded(Words.Billing.notSignedIn)
     try {
       record(p.productId, p.token, requestId)
     } catch (e: CancellationException) {
@@ -151,7 +162,7 @@ class Purchases(private val store: PlayStore) {
         e.status == 403 && code == "not_this_account" -> { p.finish(); PurchaseOutcome.NotAdded(ANOTHER_ACCOUNT) }
         // Paid for, but KIFF can't add it, and a retry won't change that: kept for support.
         (e.status == 409 && code == "billed_elsewhere") || (e.status == 422 && code == "unknown_product") -> PurchaseOutcome.NeedsSupport(CONTACT_SUPPORT)
-        else -> PurchaseOutcome.NotRecorded(e.message ?: "KIFF answered ${e.status}")
+        else -> PurchaseOutcome.NotRecorded(e.message ?: Words.Error.kiffAnswered(status = e.status.toString()))
       }
     } catch (e: Exception) {
       return PurchaseOutcome.NotRecorded(e.message ?: e.javaClass.simpleName)
@@ -162,11 +173,20 @@ class Purchases(private val store: PlayStore) {
   }
 
   companion object {
-    const val TEST_PURCHASE = "Test purchases don't add tasks to this account."
+    val TEST_PURCHASE: String get() = Words.Billing.testPurchaseCredits
     /** Play couldn't be read just now: no network, or its service down. Not "doesn't sell this". */
-    const val PLAY_UNREACHABLE = "Couldn't reach Google Play. Try again."
-    const val ANOTHER_ACCOUNT = "This purchase belongs to another tafs account on this Google account, so nothing was added here."
-    const val CONTACT_SUPPORT = "KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out."
+    val PLAY_UNREACHABLE: String get() = Words.Billing.playUnreachable
+    /** Play answered, but sells none of it to this app on this phone (Play billing off here, or nothing listed for this account). */
+    val PLAY_CANT_SELL: String get() = Words.Billing.playCantSell
+
+    /**
+     * The line the Buy panel says when Play lists nothing it offers: null while Play hasn't been asked, or once it lists one.
+     * Why Play's read failed when it did, else that Play can't sell here.
+     */
+    fun buyNote(offered: List<String>, listed: Set<String>, loaded: Boolean, failed: String?): String? =
+      if (!loaded || offered.isEmpty() || offered.any { it in listed }) null else failed ?: PLAY_CANT_SELL
+    val ANOTHER_ACCOUNT: String get() = Words.Billing.anotherAccount
+    val CONTACT_SUPPORT: String get() = Words.Billing.contactSupport
     /** Play's own page for this Google account's subscriptions. */
     const val MANAGE_SUBSCRIPTIONS = "https://play.google.com/store/account/subscriptions"
   }

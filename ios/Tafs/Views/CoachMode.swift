@@ -15,14 +15,14 @@ struct CoachView: View {
             SetupChatView()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button { model.coachOpen = false } label: { Label("Back", systemImage: "chevron.left") }.shortcut(.close)
+                        Button { model.coachOpen = false } label: { Label(Words.Common.back, systemImage: "chevron.left") }.shortcut(.close)
                     }
                     if let fullScreen {
                         ToolbarItem(placement: .navigationBarLeading) {
                             Button { fullScreen.wrappedValue.toggle() } label: {
                                 Image(systemName: fullScreen.wrappedValue ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
                             }
-                            .accessibilityLabel(fullScreen.wrappedValue ? "Back to its width" : "Full screen")
+                            .accessibilityLabel(fullScreen.wrappedValue ? Words.Coach.backWidth : Words.Coach.fullScreen)
                         }
                     }
                 }
@@ -61,7 +61,7 @@ struct CoachPanel: View {
                         .onTapGesture { model.coachOpen = false }
                         .allowsHitTesting(!full)
                         .transition(.opacity)
-                        .accessibilityLabel("Close Coach mode")
+                        .accessibilityLabel(Words.Coach.closeCoachMode)
                         .accessibilityAddTraits(.isButton)
                     HStack(spacing: 0) {
                         handle(screen: screen)
@@ -108,8 +108,8 @@ struct CoachPanel: View {
                 full = chosen >= screen - 40
                 if !full { share = min(1, max(Self.narrowest, chosen / screen)) }
             })
-        .accessibilityLabel("Coach mode's width")
-        .accessibilityHint("Drag to make it wider or narrower")
+        .accessibilityLabel(Words.Coach.coachModeWidth)
+        .accessibilityHint(Words.Coach.dragMakeWiderNarrower)
     }
 }
 

@@ -264,6 +264,23 @@ enum Legal {
     static let privacy = URL(string: "https://kiff.dev/privacy#tafs")!
     /// KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't.
     static let status = URL(string: "https://status.kiff.dev")!
+
+    /// "By signing in, you agree to KIFF's Terms … and its Privacy policy.", in the line's
+    /// language, with the two names linked wherever that language puts them.
+    static func agreement(_ line: String = Words.SignIn.agree(terms: "\u{1}", privacy: "\u{2}")) -> AttributedString {
+        var out = AttributedString()
+        var rest = Substring(line)
+        while let i = rest.firstIndex(where: { $0 == "\u{1}" || $0 == "\u{2}" }) {
+            out += AttributedString(String(rest[..<i]))
+            let isTerms = rest[i] == "\u{1}"
+            var link = AttributedString(isTerms ? Words.Settings.terms : Words.Settings.privacyPolicy)
+            link.link = isTerms ? terms : privacy
+            out += link
+            rest = rest[rest.index(after: i)...]
+        }
+        out += AttributedString(String(rest))
+        return out
+    }
 }
 
 /// While a refresh can't get through (the 930 test): one quiet line under the account's name,
@@ -276,8 +293,8 @@ struct UnreachableLine: View {
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(Theme.amber).frame(width: 7, height: 7)
-            Text(retrying ? "\(words) · trying again" : words).scaledFont(12).foregroundColor(Theme.dim)
-            Link("Status", destination: Legal.status).scaledFont(12, weight: .semibold)
+            Text(retrying ? Words.Home.statusRetrying(words: "\(words)") : words).scaledFont(12).foregroundColor(Theme.dim)
+            Link(Words.Home.status, destination: Legal.status).scaledFont(12, weight: .semibold)
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("unreachable")
@@ -292,22 +309,22 @@ enum SignOutWay {
 
     var title: String {
         switch self {
-        case .signOut: return "Sign out of KIFF?"
-        case .signInAgain: return "Sign in again?"
+        case .signOut: return Words.Settings.SignOutOfKiff.title
+        case .signInAgain: return Words.Settings.SignInAgainConfirm.title
         }
     }
 
     var message: String {
         switch self {
-        case .signOut: return "This \(ThisDevice.kind) stops working for your account until you sign in again. Your tafs keep working."
-        case .signInAgain: return "This \(ThisDevice.kind) signs out of KIFF first, then you sign in again in your browser."
+        case .signOut: return Words.Settings.SignOutOfKiff.bodyDevice(device: "\(ThisDevice.kind)")
+        case .signInAgain: return Words.Settings.SignInAgainConfirm.bodyDevice(device: "\(ThisDevice.kind)")
         }
     }
 
     var confirm: String {
         switch self {
-        case .signOut: return "Sign out"
-        case .signInAgain: return "Sign out and sign in"
+        case .signOut: return Words.Settings.signOut
+        case .signInAgain: return Words.Settings.SignInAgainConfirm.confirm
         }
     }
 }
@@ -319,7 +336,7 @@ extension View {
         alert(way.wrappedValue?.title ?? "", isPresented: Binding(get: { way.wrappedValue != nil }, set: { if !$0 { way.wrappedValue = nil } }),
               presenting: way.wrappedValue) { w in
             Button(w.confirm, role: .destructive) { go(w) }
-            Button("Cancel", role: .cancel) {}
+            Button(Words.Common.cancel, role: .cancel) {}
         } message: { w in
             Text(w.message)
         }
@@ -346,7 +363,7 @@ struct PlanLine: View {
             }
             .buttonStyle(.drivablePlain)
             .accessibilityElement(children: .combine)
-            .accessibilityHint("Opens \(UsageView.title).")
+            .accessibilityHint(Words.Home.opensPlan(title: "\(UsageView.title)"))
             .accessibilityIdentifier("plan-line")
         }
     }
@@ -366,13 +383,13 @@ struct ApprovalKeyLostLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let relink = model.relink {
-                Text("Waiting for your browser… Check that it shows \(relink.userCode), and approve only with this \(ThisDevice.kind) in your hands.")
+                Text(Words.SignIn.waitingForBrowser(userCode: "\(relink.userCode)", device: "\(ThisDevice.kind)"))
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
-                    Button("Open the browser again") { openURL(relink.url) }
+                    Button(Words.Connect.openBrowserAgain) { openURL(relink.url) }
                         .buttonStyle(OutlineButtonStyle())
-                    Button("Cancel") { model.cancelRelink() }
+                    Button(Words.Common.cancel) { model.cancelRelink() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 }
             } else {
@@ -386,7 +403,7 @@ struct ApprovalKeyLostLine: View {
                         starting = false
                     }
                 } label: {
-                    Label("Approve again in your browser", systemImage: Biometry.symbol)
+                    Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .confirming()
@@ -394,7 +411,7 @@ struct ApprovalKeyLostLine: View {
                 Button {
                     confirming = .signInAgain
                 } label: {
-                    Text("Sign in again instead").scaledFont(13)
+                    Text(Words.NeedsYou.signInAgainInstead).scaledFont(13)
                 }
                 .buttonStyle(.drivablePlain)
                 .foregroundColor(Theme.soft)

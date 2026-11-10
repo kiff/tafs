@@ -392,5 +392,7 @@ class KiffClientTest {
     assertEquals("en", KiffClient.acceptLanguage(listOf("en")))
     assertEquals("fr-CA, de;q=0.9, en;q=0.8", KiffClient.acceptLanguage(listOf("fr_CA", "de")))
     assertEquals("en-GB, fr;q=0.9", KiffClient.acceptLanguage(listOf("en-GB", "fr")))
+    // The app's own: the language its lines resolved to (English in unit tests), never the phone's setting.
+    assertEquals("en", KiffClient.screenLanguage())
   }
 }

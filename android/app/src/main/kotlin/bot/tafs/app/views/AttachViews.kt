@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveMenu
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -97,10 +98,10 @@ fun AttachButton(tafId: String, state: AppState, files: FileActions) {
       val file = try {
         withContext(Dispatchers.IO) { prepare() }
       } catch (e: FileProblem) {
-        files.refuse(e.message ?: "That file can't be attached.", tafId)
+        files.refuse(e.message ?: Words.Chat.File.cantAttach, tafId)
         return@launch
       } catch (e: Exception) {
-        files.refuse("That file couldn't be read.", tafId)
+        files.refuse(Words.Chat.File.unreadable, tafId)
         return@launch
       }
       files.attach(file, tafId)
@@ -142,14 +143,14 @@ fun AttachButton(tafId: String, state: AppState, files: FileActions) {
         .alpha(if (room == 0) 0.4f else 1f)
         .clickable(enabled = room > 0) { menu = true }
         .semantics {
-          contentDescription = if (room == 0) "Attach: ${FilePrep.PER_MESSAGE} files is the most a message carries" else "Attach a photo or file"
+          contentDescription = if (room == 0) Words.Chat.File.attachFull(count = FilePrep.PER_MESSAGE) else Words.Chat.File.attach
         },
       contentAlignment = Alignment.Center,
     ) {
       Icon(painterResource(R.drawable.ic_paperclip), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(18.dp))
     }
     DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
-      if (hasCamera) DropdownMenuItem(text = { Text("Take photo") }, onClick = {
+      if (hasCamera) DropdownMenuItem(text = { Text(Words.Chat.File.takePhoto) }, onClick = {
         menu = false
         val file = File(File(context.cacheDir, "camera").apply { mkdirs() }, "${UUID.randomUUID()}.jpg")
         shot = file
@@ -157,14 +158,14 @@ fun AttachButton(tafId: String, state: AppState, files: FileActions) {
           camera.launch(FileProvider.getUriForFile(context, "${context.packageName}.files", file))
         } catch (_: ActivityNotFoundException) {
           shot = null
-          files.refuse("There's no camera app on this phone to take a photo with.", tafId)
+          files.refuse(Words.Chat.File.noCamera, tafId)
         }
       })
-      DropdownMenuItem(text = { Text("Choose photos") }, onClick = {
+      DropdownMenuItem(text = { Text(Words.Chat.File.choosePhotos) }, onClick = {
         menu = false
         photos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
       })
-      DropdownMenuItem(text = { Text("Choose file") }, onClick = {
+      DropdownMenuItem(text = { Text(Words.Chat.File.chooseFile) }, onClick = {
         menu = false
         documents.launch(FilePrep.PICKABLE)
       })
@@ -203,14 +204,14 @@ private fun FileChip(file: PendingFile, remove: () -> Unit) {
       when (val s = file.state) {
         PendingFile.State.Uploading -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
           CircularProgressIndicator(Modifier.size(10.dp), color = Theme.dim, strokeWidth = 1.5.dp)
-          Text("Uploading", style = scaled(12, color = Theme.dim))
+          Text(Words.Chat.File.uploading, style = scaled(12, color = Theme.dim))
         }
-        is PendingFile.State.Ready -> Text("Ready", style = scaled(12, color = Theme.dim))
+        is PendingFile.State.Ready -> Text(Words.Chat.File.ready, style = scaled(12, color = Theme.dim))
         is PendingFile.State.Failed -> Text(s.why, style = scaled(12, color = Theme.no), maxLines = 2, overflow = TextOverflow.Ellipsis)
       }
     }
     Box(
-      Modifier.size(28.dp).clip(CircleShape).clickable(onClick = remove).semantics { contentDescription = "Remove ${file.name}" },
+      Modifier.size(28.dp).clip(CircleShape).clickable(onClick = remove).semantics { contentDescription = Words.Chat.File.remove(file.name) },
       contentAlignment = Alignment.Center,
     ) {
       Icon(painterResource(R.drawable.ic_close), contentDescription = null, tint = Theme.dim, modifier = Modifier.size(12.dp))
@@ -257,19 +258,19 @@ fun MessageFiles(files: List<AttachmentRef>, tafId: String, actions: FileActions
               val copy = actions.open(file, tafId)
               opening = null
               if (copy != null && !openWith(context, copy, file.mediaType)) {
-                actions.refuse("No app on this phone opens ${file.name}.", tafId)
+                actions.refuse(Words.Chat.File.noAppOpens(file.name), tafId)
               }
             }
           }
           .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp)
-          .semantics { contentDescription = "Open ${file.name}" },
+          .semantics { contentDescription = Words.Chat.File.open(file.name) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         FileIcon(file.mediaType)
         Column(Modifier.widthIn(max = 200.dp)) {
           Text(file.name, style = scaled(13, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
-          Text(if (opening == file.id) "Opening…" else FilePrep.sizeWords(file.size), style = scaled(12, color = Theme.dim))
+          Text(if (opening == file.id) Words.Common.opening else FilePrep.sizeWords(file.size), style = scaled(12, color = Theme.dim))
         }
       }
     }

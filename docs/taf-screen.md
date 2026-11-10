@@ -40,7 +40,7 @@ Each tab has one job.
 - **Setup**: how it runs, in sections:
   - **The job**, with **Improve in Coach**;
   - **Starts when** and **Results go to** (below), each opened with **Open**;
-  - **Connected tools**, a ring of apps around the taf's plain letter tile, with a
+  - **Connected apps**, a ring of apps around the taf's plain letter tile, with a
     dashed + for another app (see [connect-apps.md](connect-apps.md));
   - **Workflow**, folded by default;
   - **What it remembers**, a summary with **See all**, and **Remove for good**.
@@ -88,7 +88,7 @@ Two examples at the top show what alerts look like on the lock screen: one with 
 - **Alerts on this phone** is a switch; Off unregisters only this phone. **Sound**
   controls a hold or a halt's sound.
 - **What alerts you** is four switches while alerts are on, as tafs cloud sends it:
-  - **A taf needs you** and **Every taf halted**: with sound when Sound is on;
+  - **A taf needs you** and **All your tafs halted**: with sound when Sound is on;
   - **A taf answered someone**: silent, from the tafs whose Results go to includes
     Alert our phones;
   - **A reply wasn't sent**: silent.
@@ -116,7 +116,7 @@ paging. Its work previews three runs and pages recent runs on its secondary
 screen. The upstream runs API currently exposes the latest 100 runs; older
 history is not available through this view.
 
-Connected tools shows a ring: a plain letter tile opens the job, app nodes show
+Connected apps shows a ring: a plain letter tile opens the job, app nodes show
 cloud-provided names and action counts, and the dashed + opens Connect apps.
 An active-step arc uses cloud state. Each app's draggable sheet shows actions,
 Card limits, workflow steps and seven-day statistics; its statistics link to

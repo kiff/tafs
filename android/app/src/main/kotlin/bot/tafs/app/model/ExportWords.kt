@@ -2,18 +2,18 @@ package bot.tafs.app.model
 
 /** Exporting the person's own chats (docs/data.md, Your own copy): the row, the wait, and a failure. */
 object ExportWords {
-  const val ROW = "Export my chats"
-  const val PREPARING = "Preparing your chats…"
-  const val TRY_AGAIN = "Try again"
+  val ROW get() = Words.Export.row
+  val PREPARING get() = Words.Export.preparing
+  val TRY_AGAIN get() = Words.Common.tryAgain
 
   /** The two files: the data, and the same as text. */
   const val JSON_FILE = "tafs-chats.json"
   const val TEXT_FILE = "tafs-chats.txt"
 
   /** The files couldn't be written on the phone or handed to another app. */
-  const val NOT_OFFERED = "The files couldn't be saved on this phone. Free up some space, then try again."
+  val NOT_OFFERED get() = Words.Export.notOffered
 
-  fun notExported(why: String) = "Your chats weren't exported. $why"
+  fun notExported(why: String) = Words.Export.notExported(why)
 }
 
 /**

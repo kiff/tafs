@@ -59,7 +59,7 @@ struct TafKnobView: View {
     var body: some View {
         VStack(spacing: 14) {
             Button(action: askCoach) {
-                Label("Ask Coach or find anything", systemImage: "magnifyingglass")
+                Label(Words.Knob.search, systemImage: "magnifyingglass")
                     .scaledFont(14).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 46)
                     .padding(.horizontal, 14)
@@ -91,12 +91,12 @@ struct TafKnobView: View {
                     .scaledFont(12, weight: .medium, design: .monospaced).foregroundColor(Theme.dim)
             }
             if held.contains(where: \.approvableOnce) {
-                Button("Needs you") {
+                Button(Words.NeedsYou.title) {
                     if let call = held.first(where: \.approvableOnce) { face = .held(call.id) }
                 }.scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
             }
             if face != .overview {
-                Button("‹ Why") { withMotion { face = .overview } }
+                Button(Words.Knob.backToWhy) { withMotion { face = .overview } }
                     .scaledFont(12).foregroundColor(Theme.dim).frame(minHeight: 36)
                     .accessibilityIdentifier("knob.overview")
             }
@@ -129,25 +129,25 @@ struct TafKnobView: View {
 
     private var filterName: String {
         switch filter {
-        case .all: return "All services"
-        case .taf: return "This taf"
-        case .connection(let id): return knob.connections.first { $0.grant == id }?.name ?? "All services"
+        case .all: return Words.Knob.allServices
+        case .taf: return Words.Knob.thisTaf
+        case .connection(let id): return knob.connections.first { $0.grant == id }?.name ?? Words.Knob.allServices
         }
     }
 
     private var serviceMenu: some View {
         Menu {
-            Button { filter = .all } label: { Label("All services", systemImage: "circle.grid.2x2") }
-            Button { filter = .taf } label: { Label("This taf", systemImage: "circle") }
+            Button { filter = .all } label: { Label(Words.Knob.allServices, systemImage: "circle.grid.2x2") }
+            Button { filter = .taf } label: { Label(Words.Knob.thisTaf, systemImage: "circle") }
             ForEach(knob.connections) { connection in
                 let count = KnobNavigation.stops(knob, filter: .connection(connection.grant)).count
                 Button { filter = .connection(connection.grant) } label: {
-                    Label("\(connection.name) · \(count) \(count == 1 ? "stop" : "stops")", systemImage: "app.connected.to.app.below.fill")
+                    Label(Words.Knob.withStops(count: count, name: connection.name), systemImage: "app.connected.to.app.below.fill")
                 }
             }
         } label: {
             HStack(spacing: 10) {
-                Text("Showing " + filterName).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Words.Knob.showingFilter(filter: filterName)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.down").foregroundColor(Theme.dim)
             }
@@ -155,7 +155,7 @@ struct TafKnobView: View {
             .background(RoundedRectangle(cornerRadius: 14).fill(Theme.panel))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.line))
         }
-        .accessibilityLabel("Showing, " + filterName).accessibilityIdentifier("knob.showing")
+        .accessibilityLabel(Words.Knob.showingFilterLabel(filter: filterName)).accessibilityIdentifier("knob.showing")
     }
 
     private func items(_ ring: Ring) -> [TafsCloud.Knob.Item] { KnobNavigation.items(knob, ring: ring, filter: filter) }
@@ -194,7 +194,7 @@ struct TafKnobView: View {
                 .frame(width: mid * 2 * k, height: mid * 2 * k)
             if items.isEmpty {
                 Text("—").foregroundColor(Self.color(ring).opacity(0.4)).offset(y: -mid * k)
-                    .accessibilityLabel(knob.title(ring) + ", no stops")
+                    .accessibilityLabel(knob.title(ring) + Words.Knob.noStops)
             }
             ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                 stop(item, ring: ring, index: i, count: items.count, k: k)
@@ -351,12 +351,12 @@ struct TafKnobView: View {
     private var hint: String {
         if let call = heldCall { return call.approvableOnce ? Self.approveOnce : "" }
         guard chosen != nil else { return Self.tapARing }
-        if chosenItem?.ok == "approve" { return "Approve with " + Biometry.name }
+        if chosenItem?.ok == "approve" { return Words.Approval.approveWith(biometry: Biometry.name) }
         if let tap = chosenItem?.tap { return tap }
-        return chosenItem?.size != nil ? "Use − and +" : "Ask Coach to change"
+        return chosenItem?.size != nil ? Words.Knob.useSize : Words.Knob.askCoachToChange
     }
 
-    private var note: String { heldCall?.reason ?? chosenItem?.words ?? "When starts it, What it does in order, Where the result goes." }
+    private var note: String { heldCall?.reason ?? chosenItem?.words ?? Words.Knob.caption }
 
     private func choose(_ ring: Ring, _ item: TafsCloud.Knob.Item?) {
         guard let item else { return }
@@ -371,7 +371,7 @@ struct TafKnobView: View {
     }
 
     /// The dial's own words, the same on iPhone, iPad and Android.
-    static let why = "WHY"
-    static let tapARing = "Tap a ring"
-    static let approveOnce = "Tap to approve once"
+    static let why = Words.Knob.why
+    static let tapARing = Words.Knob.tapARing
+    static let approveOnce = Words.Knob.approveOnce
 }

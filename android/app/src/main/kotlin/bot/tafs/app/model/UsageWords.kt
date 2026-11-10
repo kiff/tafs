@@ -8,26 +8,21 @@ import java.time.Instant
 /** What the Halt screen says, in the words iOS's has. */
 object HaltWords {
   fun headline(h: Halt): String = when {
-    h.running -> "Running"
-    h.halted -> "Halted"
-    else -> "Halting…"
+    h.running -> Words.Taf.Now.running
+    h.halted -> Words.Taf.State.halted
+    else -> Words.Taf.Halt.halting
   }
 
   fun explanation(h: Halt, all: Boolean): String {
-    val who = if (all) "your tafs" else "it"
     return when {
-      h.running ->
-        "Halting stops $who: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
-      h.halted -> {
-        val since = h.haltedAt?.let { " since ${shortTime(it)}" } ?: ""
-        "Halted$since. Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
-      }
-      else -> "Nothing new starts. Halted shows once KIFF and the connection both confirm."
+      h.running -> if (all) Words.Halt.Explain.runningAll else Words.Halt.Explain.runningOne
+      h.halted -> h.haltedAt?.let { Words.Halt.Explain.haltedSince(shortTime(it)) } ?: Words.Halt.Explain.halted
+      else -> Words.Halt.Explain.halting
     }
   }
 
   /** The row on a taf's page, or Home, under "Halt": where it stands. */
-  fun rowLine(h: Halt): String = if (h.running) "Stop it until you resume" else headline(h)
+  fun rowLine(h: Halt): String = if (h.running) Words.Halt.rowRunning else headline(h)
 
   /** A taf halted with the whole account is resumed with it, not on its own. */
   fun resumesWithAccount(h: Halt, tafId: String?): Boolean = h.account && tafId != null
@@ -36,59 +31,49 @@ object HaltWords {
 /** What the Usage screens say, in the words iOS's has. */
 object UsageWords {
   /** The account's screen: its plan, and what the period used. */
-  const val TITLE = "Plan & usage"
+  val TITLE get() = Words.Usage.title
 
   /** The balance's panel and buying's: their labels. The balance's lines are tafs cloud's (`GET /v1/usage/balance`). */
-  const val BALANCE = "Balance"
-  const val BUY = "Add credits"
+  val BALANCE get() = Words.Usage.balance
+  val BUY get() = Words.Usage.buy
 
   /** Under a pack of credits on sale: its credits never expire. */
-  const val PACKS_KEEP = "Never expires"
+  val PACKS_KEEP get() = Words.Usage.packsKeep
 
   /** A raise from a limit that changed meanwhile (KIFF's `limit_changed`), and one past what the phone can raise (`limit_ceiling`), as iPhone says them. */
   /** On an open request for a raise, for who manages billing. */
-  const val RAISE_LIMIT = "Raise the limit"
+  val RAISE_LIMIT get() = Words.Usage.raiseLimitButton
 
-  const val LIMIT_CHANGED = "The limit changed meanwhile. Here it is now: raise it again if it's still needed."
-  const val LIMIT_CEILING = "The limit is as high as it can be raised from the app. Contact KIFF to raise it further."
+  val LIMIT_CHANGED get() = Words.Usage.limitChanged
+  val LIMIT_CEILING get() = Words.Usage.limitCeiling
 
   /** After a raise that went through, while the balance couldn't be read since: never a second raise. */
-  const val RAISED_UNREAD = "Your tafs can go on. This period's credits couldn't be read since."
+  val RAISED_UNREAD get() = Words.Usage.raisedUnread
 
   /** The Credits panel, and its switch between this period and the one before; the rest of it is tafs cloud's words. */
-  const val CREDITS = "Credits"
-  const val LAST_PERIOD = "Last period"
-  const val THIS_PERIOD = "This period"
-  const val MORE_RUNS = "More runs"
+  val CREDITS get() = Words.Usage.credits
+  val LAST_PERIOD get() = Words.Usage.lastPeriod
+  val THIS_PERIOD get() = Words.Usage.thisPeriod
+  val MORE_RUNS get() = Words.Usage.moreRuns
 
   /** "1 task", "8 tasks". */
-  fun tasks(n: Int): String = if (n == 1) "1 task" else "$n tasks"
+  fun tasks(n: Int): String = Words.Usage.tasks(count = n)
 
   /** A taf's counted tasks this period, for its page's Usage row. */
-  fun tafCount(n: Int): String = "${tasks(n)} this period"
-
-  /**
-   * "14 of 25 tasks", or "472 tasks" where there is no limit (KIFF's `included: 0`), in the singular where the number it follows
-   * is 1: "1 task", "0 of 1 task". [unit] is the plural; its singular drops the final "s".
-   */
-  fun count(counted: Int, of: Int, unit: String): String {
-    val one = unit.removeSuffix("s")
-    return if (of > 0) "$counted of $of ${if (of == 1) one else unit}" else "$counted ${if (counted == 1) one else unit}"
-  }
+  fun tafCount(n: Int): String = Words.Usage.tasksThisPeriod(count = n)
 
   /** Solo's terms, every one, as Google Play's price says them: "$9.99 a month. Renews every month until cancelled…". */
   fun soloTerms(price: String, period: String?, freeTrial: String?): String {
-    val every = period ?: "month"
-    val start = freeTrial?.let { "Free for $it, then $price a $every. " } ?: "$price a $every. "
-    return start + "Renews every $every until cancelled. Cancel any time in Google Play's subscriptions, at least a day before it renews."
+    val every = period ?: Words.Usage.month
+    return freeTrial?.let { Words.Usage.soloTermsTrial(it, price, every) } ?: Words.Usage.soloTerms(price, every)
   }
 
   /** One line on who bills the plan; null when no plan is billed. */
   fun billingLine(u: Usage): String? = when (u.billing?.source) {
-    "apple" -> "Billed by Apple"
-    "google" -> "Billed by Google Play"
-    "stripe" -> "Billed by KIFF"
-    "contract" -> "Managed by your company's agreement"
+    "apple" -> Words.Billing.byApple
+    "google" -> Words.Billing.byGooglePlay
+    "stripe" -> Words.Billing.byKiff
+    "contract" -> Words.Billing.byAgreement
     else -> null
   }
 
@@ -109,16 +94,16 @@ object UsageWords {
   fun waiting(u: Usage, managesBilling: Boolean): PackRequest? = if (managesBilling) null else u.requests?.firstOrNull { it.status == "open" }
 
   /** "You asked an admin to raise the spend limit.", or for a pack. */
-  fun asked(r: PackRequest): String = if (r.isRaise) "You asked an admin to raise the spend limit." else "You asked an admin for a pack."
+  fun asked(r: PackRequest): String = if (r.isRaise) Words.Billing.Ask.askedRaise else Words.Billing.Ask.askedPack
 
   /** The person's latest answered request, said plainly. */
   fun lastAnswer(u: Usage, managesBilling: Boolean): String? {
     if (managesBilling) return null
     val r = u.requests?.firstOrNull() ?: return null
     return when (r.status) {
-      "approved" -> if (r.isRaise) "An admin raised the spend limit." else "An admin added a pack."
-      "declined" -> r.note?.takeIf { it.isNotEmpty() }?.let { "An admin declined: $it" } ?: "An admin declined."
-      "expired" -> "Your request ended with the period."
+      "approved" -> if (r.isRaise) Words.Billing.Ask.raised else Words.Billing.Ask.addedPack
+      "declined" -> r.note?.takeIf { it.isNotEmpty() }?.let { Words.Billing.Ask.declinedNote(it) } ?: Words.Billing.Ask.declined
+      "expired" -> Words.Billing.Ask.expired
       else -> null
     }
   }
@@ -128,10 +113,9 @@ object UsageWords {
 
   /** An open request, as an admin reads it. */
   fun requestLine(r: PackRequest, u: Usage): String =
-    if (r.isRaise) "Someone asks to raise the spend limit." else "Someone asks for ${packLine(r.pack.orEmpty(), u)}."
+    if (r.isRaise) Words.Billing.Ask.someoneRaise else Words.Billing.Ask.someonePack(packLine(r.pack.orEmpty(), u))
 
   /** Under Ask an admin: what happens next. */
   fun askLine(kind: String): String =
-    if (kind == PackRequest.RAISE) "Your account's admins get your request. When one raises the spend limit, your tafs go on."
-    else "Your account's admins get your request. When one adds the pack, your tafs go on."
+    if (kind == PackRequest.RAISE) Words.Billing.Ask.lineRaise else Words.Billing.Ask.linePack
 }

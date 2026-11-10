@@ -1,5 +1,6 @@
 package bot.tafs.app.signing
 
+import bot.tafs.app.model.Words
 import android.os.Build
 import android.util.Log
 import android.security.keystore.KeyGenParameterSpec
@@ -48,7 +49,7 @@ class KeystoreKeys : SigningKeys {
 
   override fun sign(message: ByteArray): ByteArray {
     try {
-      val key = store.getKey(SIGNING_ALIAS, null) as? PrivateKey ?: throw SignerException("No key to sign with")
+      val key = store.getKey(SIGNING_ALIAS, null) as? PrivateKey ?: throw SignerException(Words.Approval.noKey)
       return Signature.getInstance(ALGORITHM).run {
         initSign(key)
         update(message)
@@ -57,7 +58,7 @@ class KeystoreKeys : SigningKeys {
     } catch (e: SignerException) {
       throw e
     } catch (e: Exception) {
-      throw SignerException("The key could not sign", e)
+      throw SignerException(Words.Approval.keyCouldNotSign, e)
     }
   }
 
@@ -65,7 +66,7 @@ class KeystoreKeys : SigningKeys {
     val key = try {
       store.getKey(APPROVAL_ALIAS, null) as? PrivateKey
     } catch (e: Exception) {
-      throw SignerException("The key could not sign", e)
+      throw SignerException(Words.Approval.keyCouldNotSign, e)
     } ?: throw SignerException(DeviceSigner.NO_FINGERPRINT)
     val signature = Signature.getInstance(ALGORITHM)
     try {
@@ -76,7 +77,7 @@ class KeystoreKeys : SigningKeys {
       runCatching { ensure(APPROVAL_ALIAS, approval = true) }
       throw ApprovalKeyRenewed(e)
     } catch (e: Exception) {
-      throw SignerException("The key could not sign", e)
+      throw SignerException(Words.Approval.keyCouldNotSign, e)
     }
     return signature
   }

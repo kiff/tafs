@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import java.security.MessageDigest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,15 +11,15 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /** planque's refusal, or the reason nothing was sent. */
-sealed class PlanqueError(message: String) : Exception(message) {
+sealed class PlanqueError(message: String?) : Exception(message) {
   /** No signer is set: this step needs the owner's confirmation first. */
-  data object NotSigning : PlanqueError("This step needs your confirmation first.")
+  data object NotSigning : PlanqueError(null) { override val message: String get() = Words.Error.needsConfirmationFirst }
 
   /** This device's id in KIFF couldn't be read: planque takes no signature without it, so nothing is sent. */
-  data object NoDevice : PlanqueError("Couldn't reach KIFF to name this device. Check the connection and try again.")
+  data object NoDevice : PlanqueError(null) { override val message: String get() = Words.Error.noDeviceName }
 
   /** The grant's digest isn't the hash of the request shown: nothing is approved. */
-  data object DigestMismatch : PlanqueError("This request doesn't match what it asks for. Nothing was approved.")
+  data object DigestMismatch : PlanqueError(null) { override val message: String get() = Words.Error.requestMismatch }
 
   class Server(val status: Int, message: String) : PlanqueError(message)
 
@@ -127,6 +128,8 @@ data class Grant(
   @SerialName("vendor") val vendorName: String? = null,
   /** The catalog entry it was connected from, such as `connector:composio:slackbot`. */
   val entry: String? = null,
+  /** The name of the taf it was made for, as planque keeps it: what a removed taf's connection is still called. */
+  @SerialName("agent_name") val agentName: String? = null,
   /** The connection's provider, as planque names it; a bot door lists the connections whose provider it names. */
   val provider: String? = null,
   /** The bot a bot connection's token is, once given, as planque shows it: its @username names it. */
@@ -394,9 +397,9 @@ class PlanqueClient(
       val said = runCatching { fields?.get("error")?.jsonPrimitive?.content }.getOrNull()
       if (response.status == 403 && held != null && runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull() == KiffClient.WINDOW_REQUIRED) {
         if (window == held) window = null
-        throw PlanqueError.WindowRequired(said ?: "The approval window has ended.")
+        throw PlanqueError.WindowRequired(said ?: Words.Error.approvalWindowEnded)
       }
-      throw PlanqueError.Server(response.status, said ?: "The connection answered ${response.status}")
+      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()))
     }
     return response.body
   }

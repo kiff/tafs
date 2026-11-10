@@ -11,13 +11,13 @@ struct SetupShapePanel: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow(text: "Taking shape")
+                    Eyebrow(text: Words.Coach.Shape.takingShape)
                     if let heading = shape.name ?? shape.title {
                         Text(heading).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if shape.isEmpty {
-                        Text("As the conversation goes, the plan, the tools being connected and the taf's Card show here.")
+                        Text(Words.Billing.conversationGoesPlanToolsBeing)
                             .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -33,7 +33,7 @@ struct SetupShapePanel: View {
 
     private func plan(_ steps: [SetupShape.Step]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: "Plan · \(steps.filter { $0.state == .done }.count) of \(steps.count)")
+            Eyebrow(text: Words.Coach.Plan.progress(done: "\(steps.filter { $0.state == .done }.count)", total: "\(steps.count)"))
             ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
                 HStack(alignment: .top, spacing: 10) {
                     StepMark(status: Self.mark(step.state)).padding(.top, 1)
@@ -45,7 +45,7 @@ struct SetupShapePanel: View {
                             .foregroundColor(step.state == .toDo || step.state == .skipped ? Theme.dim : Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         if step.state == .needsYou {
-                            Text("Needs you").scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.amberText)
+                            Text(Words.NeedsYou.title).scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.amberText)
                         }
                     }
                 }
@@ -65,7 +65,7 @@ struct SetupShapePanel: View {
 
     private func tools(_ tools: [SetupShape.Tool]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: "Tools")
+            Eyebrow(text: Words.Coach.toolsEyebrow)
             ForEach(tools) { tool in
                 let status = Self.status(tool.state)
                 VStack(alignment: .leading, spacing: 3) {
@@ -89,30 +89,30 @@ struct SetupShapePanel: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .accessibilityElement(children: .combine)
             }
-            Text("Sign-ins are kept sealed: no taf ever sees them.")
+            Text(Words.Connect.signInsKeptSealedNo)
                 .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
         }
     }
 
     private static func status(_ state: SetupShape.Tool.State) -> (String, Color) {
         switch state {
-        case .connected: return ("Connected", Theme.ok)
-        case .signedIn: return ("Signed in", Theme.amberText)
-        case .waiting: return ("Waiting for you", Theme.amberText)
-        case .failed: return ("Not connected", Theme.no)
+        case .connected: return (Words.Connect.Status.connected, Theme.ok)
+        case .signedIn: return (Words.Coach.Answer.signedIn, Theme.amberText)
+        case .waiting: return (Words.Chat.waitingForYou, Theme.amberText)
+        case .failed: return (Words.Coach.Shape.notConnected, Theme.no)
         }
     }
 
     private func card(_ card: SetupShape.Card) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: card.confirmed ? "Card · confirmed by KIFF" : "Card · draft · by KIFF")
+            Eyebrow(text: card.confirmed ? Words.Card.cardConfirmedKiff : Words.Card.cardDraftKiff)
             VStack(alignment: .leading, spacing: 6) {
                 Text(card.title).scaledFont(13, weight: .semibold, design: .monospaced, relativeTo: .caption)
                 ForEach(Array(card.lines.enumerated()), id: \.offset) { _, line in
                     Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                if card.lines.isEmpty { Text("no actions yet").scaledFont(12, design: .monospaced, relativeTo: .caption) }
+                if card.lines.isEmpty { Text(Words.Card.noActionsShort).scaledFont(12, design: .monospaced, relativeTo: .caption) }
             }
             .foregroundColor(Theme.ink)
             .padding(14)
@@ -122,7 +122,7 @@ struct SetupShapePanel: View {
                 .stroke(card.confirmed ? Theme.ok : Theme.ink.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: card.confirmed ? [] : [5, 4])))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             if !card.confirmed {
-                Text("A draft until you approve it in the conversation.")
+                Text(Words.Coach.Shape.draftUntilApproved)
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             }
         }

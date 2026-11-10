@@ -173,6 +173,23 @@ class ChatStreamTest {
     assertEquals("Refunds stopped part-way, after this went through: create refund on ch_1.", AppModel.failedWords("Refunds", listOf(DoneCall("create_refund", "ch_1"))))
   }
 
+  @Test fun aRunTafsCloudNamesSaysItsWordsWithRetry() = runTest {
+    reads()
+    val words = "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later."
+    transport.answer(stream, 200, sse(
+      "session" to """{"session":"s1","run":"run_1"}""",
+      "end" to """{"status":"ERROR","stop":"error","done":[],"code":"ai_unavailable","words":"$words"}""",
+    ))
+    val m = model()
+    m.deliverChat("Refund Ana", "refunds-1")
+    settle()
+    val end = m.state.value.chatEnded["refunds-1"] as ChatEnd.Failed
+    assertEquals(ChatEnd.Failed("Refund Ana", emptyList(), words), end)
+    assertEquals(words, AppModel.failedWords("Refunds", end.done, end.words))
+    // What went through before it stopped still follows the words.
+    assertEquals("$words This went through: create refund on ch_1.", AppModel.failedWords("Refunds", listOf(DoneCall("create_refund", "ch_1")), words))
+  }
+
   @Test fun aRunStoppedAtACapSaysWhy() = runTest {
     reads()
     transport.answer(stream, 200, sse("end" to """{"status":"COMPLETED","stop":"turn_cap"}"""))
@@ -183,6 +200,17 @@ class ChatStreamTest {
     assertEquals("Refunds stopped: this task took more steps than its limit for one task. Ask for something narrower.", AppModel.capWords("turn_cap", "Refunds"))
   }
 
+  @Test fun aReplyOutOfRoomOrDeclinedSaysSoNeverDotDotDot() = runTest {
+    reads()
+    transport.answer(stream, 200, sse("end" to """{"status":"COMPLETED","stop":"max_token"}"""))
+    val m = model()
+    m.deliverChat("Write it all", "refunds-1")
+    settle()
+    assertEquals(ChatEnd.Capped("max_token"), m.state.value.chatEnded["refunds-1"])
+    assertEquals("Refunds stopped: its reply ran out of room. Ask for something shorter, or for one part at a time.", AppModel.capWords("max_token", "Refunds"))
+    assertEquals("Refunds stopped: the AI declined to continue. Try asking another way.", AppModel.capWords("refused", "Refunds"))
+  }
+
   @Test fun withoutTheStreamRouteTheMessageGoesPlainlyAsBefore() = runTest {
     reads()
     transport.answer(stream, 404, """{"error":"not_found"}""")
@@ -190,6 +218,8 @@ class ChatStreamTest {
     val m = model()
     assertTrue(m.deliverChat("hello", "refunds-1"))
     assertEquals(1, transport.requestsTo("POST /v1/tafs/taf_1/messages").size)
+    // tafs cloud words its lines for people in the app's language.
+    assertEquals("en", transport.requestsTo("POST /v1/tafs/taf_1/messages").single().headers["Accept-Language"])
     assertNull(m.state.value.chatLive["refunds-1"])
   }
 

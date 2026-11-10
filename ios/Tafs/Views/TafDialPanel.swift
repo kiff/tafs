@@ -54,7 +54,7 @@ struct TafDialPanel<Details: View>: View {
     private var content: some View {
         VStack(spacing: 14) {
             if let pending = knob.pending {
-                Text("DRAFT · V\(pending.version) · NOT LIVE").scaledFont(10, weight: .semibold, design: .monospaced)
+                Text(Words.Knob.notLive(version: "\(pending.version)")).scaledFont(10, weight: .semibold, design: .monospaced)
                     .foregroundColor(Theme.amberText).frame(maxWidth: .infinity, alignment: .leading)
             }
             TafKnobView(knob: knob, face: $face, held: held, press: { _, item in
@@ -73,14 +73,14 @@ struct TafDialPanel<Details: View>: View {
                     ForEach(Array((knob.draft?.words ?? []).enumerated()), id: \.offset) { _, line in
                         Text(line).scaledFont(13).foregroundColor(Theme.soft)
                     }
-                    Button(busy ? "Confirming…" : liveLabel) { confirm(pending.version) }
+                    Button(busy ? Words.Common.confirming : liveLabel) { confirm(pending.version) }
                         .buttonStyle(PrimaryButtonStyle()).disabled(busy)
                         .accessibilityIdentifier("knob.makeLive")
                 }
             }
             Button { requests = true } label: {
                 HStack(spacing: 4) {
-                    Text(knob.rim.line ?? "\(knob.rim.done) done today").scaledFont(12)
+                    Text(knob.rim.line ?? Words.Knob.doneToday(done: "\(knob.rim.done)")).scaledFont(12)
                     Image(systemName: "chevron.right").font(.caption2)
                 }.foregroundColor(Theme.dim).frame(minHeight: 44)
             }
@@ -91,7 +91,7 @@ struct TafDialPanel<Details: View>: View {
 
     private var liveLabel: String {
         let changes = knob.pending?.changes ?? 0
-        return "Make \(changes) change\(changes == 1 ? "" : "s") live with \(Biometry.name)"
+        return Words.Knob.makeLive(count: changes, biometry: Biometry.name)
     }
 
     private func showHeld() {
@@ -151,11 +151,11 @@ struct KnobRequestsSheet: View {
                     }
                 }
                 if let work = model.works[tafID], work.requests.isEmpty {
-                    Text("No requests yet.").foregroundColor(Theme.dim)
+                    Text(Words.Knob.noRequests).foregroundColor(Theme.dim)
                 }
             }
-            .navigationTitle("Its work").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .navigationTitle(Words.Taf.itsWork).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { dismiss() } } }
             .navigationDestination(for: String.self) { run in KnobRequestDetail(tafID: tafID, run: run) }
             .task(id: tafID) {
                 await model.loadWork(tafID)
@@ -193,7 +193,7 @@ struct KnobRequestDetail: View {
                 }
                 ForEach(Array(detail.deliveries.enumerated()), id: \.offset) { _, delivery in
                     if delivery.sendAgain, model.manages(tafID) {
-                        Button(sending ? "Sending again…" : "Try the reply now") {
+                        Button(sending ? Words.Work.sendingAgain : Words.Work.Request.tryReplyNow) {
                             sending = true
                             Task {
                                 defer { sending = false }
@@ -203,14 +203,14 @@ struct KnobRequestDetail: View {
                         }.disabled(sending)
                     }
                 }
-                Button("Ask Coach") { model.openCoach() }
+                Button(Words.Coach.ask) { model.openCoach() }
             } else if error == nil { ProgressView() }
             if let error {
                 Text(error).foregroundColor(Theme.no)
-                Button("Try again") { Task { await load() } }
+                Button(Words.Common.tryAgain) { Task { await load() } }
             }
         }
-        .navigationTitle("Request").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(Words.Knob.requestTitle).navigationBarTitleDisplayMode(.inline)
         .task(id: run) { await load() }
     }
 

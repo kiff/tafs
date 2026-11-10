@@ -24,13 +24,13 @@ final class KIFFClient {
 
         var errorDescription: String? {
             switch self {
-            case .authorizationPending: return "Waiting for you to approve the sign-in."
-            case .slowDown: return "Asked KIFF too often; slowing down."
-            case .expired: return "The sign-in code expired. Start again."
-            case .unauthorized: return "Signed out of KIFF. Sign in again."
+            case .authorizationPending: return Words.Error.signInPending
+            case .slowDown: return Words.Error.slowDown
+            case .expired: return Words.Error.signInCodeExpired
+            case .unauthorized: return Words.Error.signedOut
             case .server(_, let message, _): return message
             case .approvalKeyRequired: return KIFFClient.approvalKeyLost
-            case .approvalKeyExists: return "KIFF holds an approval key for this session already."
+            case .approvalKeyExists: return Words.Error.approvalKeyExists
             }
         }
     }
@@ -163,9 +163,9 @@ final class KIFFClient {
     }
 
     /// What the person reads when this phone can't approve until they sign in again.
-    nonisolated static let approvalKeyLost = "Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you approve it again in your browser."
+    nonisolated static let approvalKeyLost = Words.Approval.keyGoneFaceId
     /// What they read when an approval's prompt closed unrecognized while the key is still good.
-    nonisolated static let notRecognized = "Try again, or sign in again if your Face ID or fingerprints changed."
+    nonisolated static let notRecognized = Words.Approval.notRecognizedFaceId
 
     /// A key's fingerprint as KIFF shows it: the first 8 bytes of the SHA-256 of its SPKI
     /// DER, in hex, in groups of four ("ab12 cd34 ef56 7890").
@@ -805,7 +805,7 @@ final class KIFFClient {
         var cardTitle: String {
             let name = (label ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             // "Stripe refunds' Card", not "Stripe refunds's" (kiff/tafs#138, item 54).
-            return name.isEmpty ? "The taf's Card" : name.hasSuffix("s") ? "\(name)' Card" : "\(name)'s Card"
+            return name.isEmpty ? Words.Card.theTafsCard : Words.Coach.cardOf(owner: name)
         }
     }
 
@@ -884,23 +884,23 @@ final class KIFFClient {
                 let name = KIFFMapping.name(g.action, title: g.title)
                 let caps = (g.perActionMax ?? []).map { cap in
                     KIFFMapping.isSum(cap.quantity)
-                        ? "up to \(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted) each"
-                        : "up to \(cap.max) each"
+                        ? Words.Card.Line.upToEach(amount: "\(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted)")
+                        : Words.Card.Line.upToEach(amount: "\(cap.max)")
                 }
                 let action = alike.contains(name.lowercased()) ? "\(name) · \(KIFFMapping.toolWords(g.action))" : name
-                let more = asksPastLimits ? "; more asks you first" : ""
+                let more = asksPastLimits ? Words.Card.Line.moreAsks : ""
                 out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", ") + more)
             }
-            let then = asksPastLimits ? ", then it asks you" : ""
+            let then = asksPastLimits ? Words.Card.Line.thenAsks : ""
             for a in aggregates ?? [] {
                 // KIFF's own window, exactly: never a lifetime or hourly total read as a day's.
                 let window = Window(a.window)
                 if KIFFMapping.isSum(a.quantity) {
                     out.append("\(KIFFMapping.money(a.limit, unit: a.unit, scale: a.scale).formatted) \(window.sumLabel)\(then)")
                 } else if asksPastLimits && a.limit == 0 {
-                    out.append("Each call asks you first")
+                    out.append(Words.Card.Held.eachCallAsks)
                 } else {
-                    out.append("\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window.label)\(then)")
+                    out.append(Words.Card.Line.callsInWindow(count: Int(a.limit), window: window.label, then: then))
                 }
             }
             return out
@@ -1215,15 +1215,26 @@ final class KIFFClient {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
-    /// The languages to ask KIFF for, most preferred first, so KIFF writes what it says to the
-    /// owner (a held call's reason, a Record line's) in the app's language at its source, never
-    /// translated by the app (kiff/tafs#75). English is the last fallback.
     /// The languages the app's own screens are written in, most preferred first: what it asks
-    /// the servers for, so their words always match the screen's (docs/languages.md). English
-    /// only until the app ships its other languages. `Bundle.main.preferredLocalizations` isn't
-    /// that yet: it answers Spanish or French on such a phone, because Siri's phrases
-    /// (`AppShortcuts.strings`) are in those two, while every screen is still in English.
-    static let screenLanguages = ["en"]
+    /// KIFF and tafs cloud for, so their words (a held call's reason, a Record line, a run's
+    /// line) match the screen's (docs/languages.md, kiff/tafs#75). The language the screens
+    /// resolved to comes first, then the phone's other languages the app ships, at most four;
+    /// `acceptLanguage` adds English last.
+    static var screenLanguages: [String] {
+        screenLanguages(resolved: Bundle.main.preferredLocalizations.first, preferred: Locale.preferredLanguages, shipped: Words.languages)
+    }
+
+    /// Each language by its code as the app ships it ("pt-BR" is "pt"), once, and only one the
+    /// app ships: a language only Siri's phrases are in never counts.
+    static func screenLanguages(resolved: String?, preferred: [String], shipped: [String]) -> [String] {
+        var out: [String] = []
+        for tag in [resolved].compactMap({ $0 }) + preferred {
+            let code = tag.lowercased().split(whereSeparator: { $0 == "-" || $0 == "_" }).first.map(String.init) ?? ""
+            if shipped.contains(code), !out.contains(code) { out.append(code) }
+            if out.count == 4 { break }
+        }
+        return out.isEmpty ? ["en"] : out
+    }
 
     static func acceptLanguage(_ preferred: [String]) -> String {
         var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
@@ -1240,7 +1251,7 @@ final class KIFFClient {
     /// `signedBy` signs this one request, whatever `setupSigner` holds.
     private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true,
                                                    signedBy: (@MainActor (Data) throws -> String)? = nil) async throws -> T {
-        guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: "Bad path") }
+        guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: Words.Error.badPath) }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -1289,7 +1300,7 @@ final class KIFFClient {
             if status == 409, base == nil, path == "/v1/me/device/approval-key" {
                 throw KIFFError.approvalKeyExists(fingerprint: body?["fingerprint"])
             }
-            throw KIFFError.server(status: status, message: body?["error"] ?? "KIFF answered \(status)", reason: body?["reason"])
+            throw KIFFError.server(status: status, message: body?["error"] ?? Words.Error.kiffAnswered(status: "\(status)"), reason: body?["reason"])
         }
         if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }

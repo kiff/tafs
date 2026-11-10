@@ -10,7 +10,7 @@ struct HaltScreen: View {
     let tafID: UUID?
     @State private var busy = false
 
-    private var name: String { tafID.flatMap { model.taf($0)?.name } ?? "All your tafs" }
+    private var name: String { tafID.flatMap { model.taf($0)?.name } ?? Words.Taf.Halt.allTafs }
 
     var body: some View {
         let h = model.haltState(tafID)
@@ -30,35 +30,35 @@ struct HaltScreen: View {
                 }
                 if h.state != .running {
                     Panel {
-                        Eyebrow(text: "Who holds the halt")
-                        HoldRow(text: "No run starts", held: h.runtime)
-                        HoldRow(text: "KIFF refuses its calls", held: h.kiff)
-                        HoldRow(text: "The connection sends nothing to your tools", held: h.planque)
+                        Eyebrow(text: Words.Taf.Halt.whoHolds)
+                        HoldRow(text: Words.Taf.Halt.noRunStarts, held: h.runtime)
+                        HoldRow(text: Words.Taf.Halt.kiffRefuses, held: h.kiff)
+                        HoldRow(text: Words.Taf.Halt.connectionSendsNothing, held: h.planque)
                         if h.account && tafID != nil {
-                            Text("Halted with all your tafs. Resume them all to let it run.")
+                            Text(Words.Taf.Halt.haltedWithAll)
                                 .scaledFont(13).foregroundColor(Theme.dim)
                         }
                     }
                 }
                 switch h.state {
                 case .running:
-                    Button(busy ? "Halting…" : (tafID == nil ? "Halt all now" : "Halt now")) { halt() }
+                    Button(busy ? Words.Taf.Halt.halting : (tafID == nil ? Words.Halt.allNow : Words.Halt.now)) { halt() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                         .confirming()
                         .disabled(busy)
                 case .halting:
                     HStack(spacing: 8) {
                         ProgressView()
-                        Text("Halting… waiting for every part to confirm.").scaledFont(14).foregroundColor(Theme.dim)
+                        Text(Words.Taf.Halt.haltingWait).scaledFont(14).foregroundColor(Theme.dim)
                     }
                     // Halt again: a part that didn't take it the first time is asked again.
-                    Button("Halt again") { halt() }
+                    Button(Words.Halt.again) { halt() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                         .confirming()
                         .disabled(busy)
                 case .halted:
                     if !(h.account && tafID != nil) {
-                        Button(busy ? "Resuming…" : "Resume with \(Biometry.name)") {
+                        Button(busy ? Words.Taf.Halt.resuming : Words.Taf.Halt.resumeWith(biometry: "\(Biometry.name)")) {
                             busy = true
                             Task { await model.resumeHalt(tafID); busy = false }
                         }
@@ -75,7 +75,7 @@ struct HaltScreen: View {
             .padding(.vertical, 12)
         }
         .screenBackground()
-        .navigationTitle(tafID == nil ? "Halt all" : "Halt")
+        .navigationTitle(tafID == nil ? Words.Taf.Halt.titleAll : Words.Taf.Halt.title)
         .inlineTitle()
         // Read now, then again every 2 seconds while it is halting, for up to 2 minutes.
         .task(id: tafID) {
@@ -101,22 +101,21 @@ struct HaltScreen: View {
 
     static func headline(_ h: TafsCloud.Halt) -> String {
         switch h.state {
-        case .running: return "Running"
-        case .halting: return "Halting…"
-        case .halted: return "Halted"
+        case .running: return Words.Taf.Now.running
+        case .halting: return Words.Taf.Halt.halting
+        case .halted: return Words.Taf.State.halted
         }
     }
 
     static func explanation(_ h: TafsCloud.Halt, all: Bool) -> String {
-        let who = all ? "your tafs" : "it"
+        let who = all ? Words.Halt.yourTafsLower : Words.Record.On.it
         switch h.state {
         case .running:
-            return "Halting stops \(who): no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
+            return Words.Halt.haltingStopsNoRunStarts(who: "\(who)")
         case .halting:
-            return "Nothing new starts. Halted shows once KIFF and the connection both confirm."
+            return Words.Halt.Explain.halting
         case .halted:
-            let since = h.haltedAt.map { " since \($0.shortTime)" } ?? ""
-            return "Halted\(since). Nothing reaches your tools. When you resume, only new work runs: nothing from before the halt picks up again."
+            return h.haltedAt.map { Words.Halt.Explain.haltedSince(time: $0.shortTime) } ?? Words.Halt.Explain.halted
         }
     }
 }
@@ -132,7 +131,7 @@ private struct HoldRow: View {
                 .foregroundColor(held ? Theme.ok : Theme.dim)
             Text(text).scaledFont(15).foregroundColor(Theme.ink)
             Spacer()
-            Text(held ? "Done" : "Waiting").scaledFont(13).foregroundColor(Theme.dim)
+            Text(held ? Words.Taf.Halt.partHeld : Words.Taf.Halt.partWaiting).scaledFont(13).foregroundColor(Theme.dim)
         }
     }
 }
@@ -162,8 +161,8 @@ struct HaltRow: View {
             Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill")
                 .scaledFont(16, weight: .semibold).foregroundColor(Theme.no)
             VStack(alignment: .leading, spacing: 2) {
-                Text(tafID == nil ? "Halt all" : "Halt").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                Text(h.state == .running ? "Stop it until you resume" : HaltScreen.headline(h))
+                Text(tafID == nil ? Words.Taf.Halt.titleAll : Words.Taf.Halt.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(h.state == .running ? Words.Halt.rowRunning : HaltScreen.headline(h))
                     .scaledFont(13).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
             }
             Spacer()

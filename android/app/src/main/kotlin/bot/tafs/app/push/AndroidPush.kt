@@ -1,5 +1,6 @@
 package bot.tafs.app.push
 
+import bot.tafs.app.model.Words
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,11 +24,11 @@ class AlertNotifier(private val context: Context) {
   init {
     if (Build.VERSION.SDK_INT >= 26) {
       val manager = context.getSystemService(NotificationManager::class.java)
-      manager.createNotificationChannel(NotificationChannel(HOLDS, "A taf needs you", NotificationManager.IMPORTANCE_HIGH).apply {
-        description = "A call is held for your answer. Nothing is sent until you approve it."
+      manager.createNotificationChannel(NotificationChannel(HOLDS, Words.Alert.needsYou, NotificationManager.IMPORTANCE_HIGH).apply {
+        description = Words.Push.Channel.holdsDescription
       })
-      manager.createNotificationChannel(NotificationChannel(QUIET, "Other alerts", NotificationManager.IMPORTANCE_LOW).apply {
-        description = "Requests for tasks and their answers, with no sound."
+      manager.createNotificationChannel(NotificationChannel(QUIET, Words.Push.Channel.other, NotificationManager.IMPORTANCE_LOW).apply {
+        description = Words.Push.Channel.otherDescription
       })
     }
   }

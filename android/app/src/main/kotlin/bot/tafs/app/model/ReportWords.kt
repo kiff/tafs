@@ -3,16 +3,19 @@ package bot.tafs.app.model
 /** Reporting an answer Coach or a taf wrote, from inside the app (docs/chat.md): its reasons and what the sheet says. */
 object ReportWords {
   /** tafs cloud's reasons, by value, with the words the sheet shows for each. */
-  val REASONS = listOf("offensive" to "Offensive", "harmful" to "Harmful", "wrong" to "Wrong", "other" to "Other")
+  val REASONS get() = listOf(
+    "offensive" to Words.Report.Reason.offensive, "harmful" to Words.Report.Reason.harmful,
+    "wrong" to Words.Report.Reason.wrong, "other" to Words.Report.Reason.other,
+  )
 
   /** The longest note tafs cloud takes. */
   const val NOTE_MAX = 1000
 
-  const val MENU = "Report this answer"
-  const val THANKS = "Thanks. Someone at KIFF will read your report."
-  const val ALREADY = "You've already reported this answer."
+  val MENU get() = Words.Report.menu
+  val THANKS get() = Words.Report.thanks
+  val ALREADY get() = Words.Report.already
 
-  fun notSent(why: String) = "Your report wasn't sent. $why"
+  fun notSent(why: String) = Words.Report.notSent(why)
 }
 
 /** How a report went: sent (for the first time, or again), or not sent, with why. */
@@ -23,9 +26,9 @@ sealed interface ReportResult {
 
 /** Under a finished answer from Coach or a taf: Copy, and More actions (which holds Report this answer). */
 object AnswerWords {
-  const val COPY = "Copy"
-  const val COPIED = "Copied"
+  val COPY get() = Words.Common.copy
+  val COPIED get() = Words.Common.copied
   /** What TalkBack says Copy does. */
-  const val COPY_LABEL = "Copy this answer"
-  const val MORE = "More actions"
+  val COPY_LABEL get() = Words.Chat.Answer.copyLabel
+  val MORE get() = Words.Chat.Answer.more
 }

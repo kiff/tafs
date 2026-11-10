@@ -40,7 +40,7 @@ struct Money: Hashable, Comparable, Codable {
     /// The amount as shown: with its unit, or saying it has none (kiff/tafs#309). An amount
     /// with no currency is the vendor's own number, often its smallest unit (cents), so it
     /// never stands alone where money would.
-    var formatted: String { hasUnit ? figure : "\(figure) (no currency)" }
+    var formatted: String { hasUnit ? figure : Words.Card.noCurrency(amount: "\(figure)") }
 
     /// The amount without the "no currency" note: for a figure whose words say it once.
     var figure: String {
@@ -90,12 +90,12 @@ struct Window: Hashable, Codable, Sendable {
     static let week = Window("week")
 
     private static let known: [String: (each: String, now: String)] = [
-        "calendar_day": ("a day", "today"),
-        "week": ("a week", "this week"),
-        "rolling_24h": ("in any 24 hours", "in the last 24 hours"),
-        "rolling_7d": ("in any 7 days", "in the last 7 days"),
-        "rolling_1h": ("in any hour", "in the last hour"),
-        "lifetime": ("in total", "so far"),
+        "calendar_day": (Words.Card.Window.aDay, Words.Card.Window.today),
+        "week": (Words.Card.Window.aWeek, Words.Card.Window.thisWeek),
+        "rolling_24h": (Words.Card.Window.anyDay, Words.Card.Window.lastDay),
+        "rolling_7d": (Words.Card.Window.anyWeek, Words.Card.Window.lastWeek),
+        "rolling_1h": (Words.Card.Window.anyHour, Words.Card.Window.lastHour),
+        "lifetime": (Words.Card.Window.inTotal, Words.Card.Window.soFar),
     ]
 
     /// The window `raw`, in `words` when the server sent them.
@@ -109,7 +109,7 @@ struct Window: Hashable, Codable, Sendable {
 
     /// Ends an amount's total: "in total a day" for a day's, so a bare number reads apart from
     /// a count; any other window's words already say it ("in any hour", "in total").
-    var sumLabel: String { raw == "calendar_day" ? "in total \(label)" : label }
+    var sumLabel: String { raw == "calendar_day" ? Words.Card.Window.inTotalWindow(window: "\(label)") : label }
 
     init(from decoder: Decoder) throws {
         self.init(try decoder.singleValueContainer().decode(String.self))
@@ -157,7 +157,7 @@ struct CardRule: Identifiable, Hashable, Codable {
     /// room ends on a later day, as a week's or a month's does.
     var roomWords: String? {
         guard let extraRoom, baseLimit != nil else { return nil }
-        return "+\(extraRoom.formatted) extra room " + (roomEnds.map { "until \($0.endsWords)" } ?? window.current)
+        return roomEnds.map { Words.Card.extraRoomUntil(extra: extraRoom.formatted, ends: $0.endsWords) } ?? Words.Card.extraRoom(extra: extraRoom.formatted, window: window.current)
     }
 
     /// What's left of its total this window ("€800 left today"), given what it has used,
@@ -165,30 +165,30 @@ struct CardRule: Identifiable, Hashable, Codable {
     func left(used: Money?) -> String? {
         guard let total = perWindow, let used, total.currency == used.currency, total.scale == used.scale else { return nil }
         let left = Money(minor: max(0, total.minor - used.minor), currency: total.currency, scale: total.scale)
-        return "\(left.formatted) left \(window.current)"
+        return Words.Card.left(amount: left.formatted, window: window.current)
     }
 
     var summary: String {
-        if never { return "never" }
-        if alwaysAsk { return "always asks you" }
+        if never { return Words.Card.Rule.never }
+        if alwaysAsk { return Words.Card.Rule.alwaysAsks }
         var parts: [String] = []
         if outside == .hold {
             // Past a limit the call asks the owner, in the words KIFF's Cards use, the same on
             // both apps: "up to $40 each; more asks you first".
-            if let perAction { parts.append("up to \(perAction.formatted) each; more asks you first") }
-            if let own = ownTotal { parts.append("\(own.formatted) \(window.sumLabel), then it asks you") }
+            if let perAction { parts.append(Words.Card.Rule.upToEach(amount: "\(perAction.formatted)")) }
+            if let own = ownTotal { parts.append(Words.Card.asksYou(formatted: "\(own.formatted)", sumLabel: "\(window.sumLabel)")) }
             if let roomWords { parts.append(roomWords) }
             if let countPerWindow {
-                parts.append(countPerWindow == 0 ? "Each call asks you first"
-                             : "\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label), then it asks you")
+                parts.append(countPerWindow == 0 ? Words.Card.Held.eachCallAsks
+                             : Words.Card.Rule.callsThenAsks(count: countPerWindow, window: window.label))
             }
             return parts.joined(separator: " · ")
         }
-        if let perAction { parts.append("≤ \(perAction.formatted) each") }
+        if let perAction { parts.append(Words.Card.Rule.atMostEach(amount: "\(perAction.formatted)")) }
         // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
         if let own = ownTotal { parts.append(own.hasUnit ? "\(own.formatted) \(window.label)" : "\(own.formatted) \(window.sumLabel)") }
         if let roomWords { parts.append(roomWords) }
-        if let countPerWindow { parts.append("\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label)") }
+        if let countPerWindow { parts.append(Words.Card.callsWindow(count: countPerWindow, window: window.label)) }
         return parts.joined(separator: " · ")
     }
 }
@@ -267,23 +267,23 @@ struct TafCard: Identifiable, Hashable, Codable {
             // bare beside it: "30 000 left today of 30 000 · no currency" (kiff/tafs#309).
             let unitless = !t.limit.hasUnit
             let shown = { (m: Money) in unitless ? m.figure : m.formatted }
-            let note = unitless ? " · no currency" : ""
+            let note = unitless ? Words.Card.Hero.noCurrencySuffix : ""
             if let used = t.used, used.currency == t.limit.currency, used.scale == t.limit.scale {
                 let left = Money(minor: max(0, t.limit.minor - used.minor), currency: t.limit.currency, scale: t.limit.scale)
                 // The Card's own total and the extra room apart, as KIFF says them (the 755 retest):
                 // "of 300 US$ + 30 US$ extra room until 00:00".
                 if let extra = t.extra, let own = t.base {
-                    let until = t.roomEnds.map { " until \($0.endsWords)" } ?? ""
-                    return (shown(left), "left \(t.window.current) of \(shown(own)) + \(shown(extra)) extra room\(until)\(note)")
+                    let until = t.roomEnds.map { Words.Card.untilEnds(ends: $0.endsWords) } ?? ""
+                    return (shown(left), Words.Card.leftExtraRoom(current: "\(t.window.current)", own: "\(shown(own))", extra: "\(shown(extra))", until: "\(until)", note: "\(note)"))
                 }
-                return (shown(left), "left \(t.window.current) of \(shown(t.limit))\(note)")
+                return (shown(left), Words.Card.Hero.leftOfNote(window: "\(t.window.current)", limit: "\(shown(t.limit))", note: "\(note)"))
             }
-            return (shown(t.limit), "\(t.window.label) · use unavailable\(note)")
+            return (shown(t.limit), Words.Card.Hero.useUnavailableNote(label: "\(t.window.label)", note: "\(note)"))
         }
         if let c = calls {
-            guard let used = c.used else { return ("\(c.limit)", "calls \(c.window.label) · use unavailable") }
+            guard let used = c.used else { return ("\(c.limit)", Words.Card.Hero.callsUseUnavailable(window: "\(c.window.label)")) }
             let left = max(0, c.limit - used)
-            return ("\(left)", "\(left == 1 ? "call" : "calls") left \(c.window.current) of \(c.limit)")
+            return ("\(left)", Words.Card.Hero.callsLeftOf(count: left, window: c.window.current, limit: "\(c.limit)"))
         }
         return nil
     }
@@ -293,10 +293,10 @@ struct TafCard: Identifiable, Hashable, Codable {
     var leftLine: String? {
         guard let hero else { return nil }
         if let t = total {
-            let figure = t.limit.hasUnit ? hero.figure : "\(hero.figure) (no currency)"
-            return hero.words.hasPrefix("left") ? "\(figure) left" : figure
+            let figure = t.limit.hasUnit ? hero.figure : Words.Card.noCurrency(amount: "\(hero.figure)")
+            return hero.words.hasPrefix("left") ? Words.Card.figureLeft(figure: figure) : figure
         }
-        if let c = calls, c.used != nil { return "\(hero.figure) \(hero.figure == "1" ? "call" : "calls") left" }
+        if let c = calls, c.used != nil { return Int(hero.figure).map { Words.Card.callsLeft(count: $0) } ?? Words.Card.figureLeft(figure: hero.figure) }
         return nil
     }
 
@@ -307,13 +307,13 @@ struct TafCard: Identifiable, Hashable, Codable {
         var out: [String] = []
         if hero == nil {
             out = rules.prefix(2).map { "\($0.label.lowercased()) \($0.summary)" }
-            if rules.count > 2 { out.append("\(rules.count - 2) more") }
+            if rules.count > 2 { out.append(Words.Card.more(count: rules.count - 2)) }
             return out
         }
         if let rule = rules.first(where: { $0.perAction != nil }), let each = rule.perAction {
-            out.append(rule.outside == .hold ? "up to \(each.formatted) each; more asks you first" : "≤ \(each.formatted) each · refused above")
+            out.append(rule.outside == .hold ? Words.Card.Rule.upToEach(amount: "\(each.formatted)") : Words.Card.Rule.atMostEachRefusedAbove(amount: "\(each.formatted)"))
         }
-        if rules.count > 1 { out.append("\(rules.count) tools") }
+        if rules.count > 1 { out.append(Words.Card.tools(count: rules.count)) }
         return out
     }
 
@@ -349,12 +349,12 @@ enum TafState: String, Codable {
 
     var label: String {
         switch self {
-        case .working: return "Working"
-        case .waiting: return "Waiting"
-        case .idle: return "Ready"
-        case .paused: return "Paused"
-        case .revoked: return "Stopped"
-        case .halted: return "Halted"
+        case .working: return Words.Taf.State.working
+        case .waiting: return Words.Taf.State.waiting
+        case .idle: return Words.Taf.State.ready
+        case .paused: return Words.Taf.State.paused
+        case .revoked: return Words.Taf.State.stopped
+        case .halted: return Words.Taf.State.halted
         }
     }
 }
@@ -367,7 +367,7 @@ struct Taf: Identifiable, Hashable, Codable {
     var colorIndex: Int
     var card: Card
     var state: TafState = .idle
-    var now: String = "Ready"
+    var now: String = Words.Taf.State.ready
     /// Spent so far in the current window, per rule action.
     var used: [String: Money] = [:]
     /// Rule actions whose use KIFF could not read: shown as unknown, never as zero.
@@ -532,6 +532,9 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var refusedByTool: Bool?
     /// Who refused it at the tool: the vendor as connected, when known.
     var refusedBy: String?
+    /// Its title is this phone's own line for the owner's answer ("Refused by you · 08:56 ·
+    /// …"), so the chat shows it as it is. KIFF's lines, titled by the action, leave it unset.
+    var byYou: Bool? = nil
 }
 
 struct AvatarRim: Codable, Hashable { let visible: Bool; let tint: String; let length: Double }

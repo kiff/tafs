@@ -289,9 +289,9 @@ extension TafsCloud {
             /// The dial's own words, the same on iPhone, iPad and Android.
             var title: String {
                 switch self {
-                case .wakes: return "When"
-                case .what: return "What"
-                case .results: return "Where"
+                case .wakes: return Words.Knob.Ring.when
+                case .what: return Words.Knob.Ring.what
+                case .results: return Words.Knob.Ring.`where`
                 }
             }
         }

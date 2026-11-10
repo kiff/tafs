@@ -10,8 +10,8 @@ struct BuyCreditsView: View {
         BuyCreditsContent(purchases: model.purchases, done: { dismiss() }).environmentObject(model)
     }
 
-    static let title = "Add credits"
-    static let explain = "A pack adds credits once, and they never expire. Each period's included credits are used first, then the packs'."
+    static let title = Words.Usage.buy
+    static let explain = Words.Billing.packAddsCreditsOnceNever
 }
 
 private struct BuyCreditsContent: View {
@@ -48,7 +48,7 @@ private struct BuyCreditsContent: View {
                     if let message = model.planMessage {
                         Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     }
-                    Button("Restore purchases") { Task { await model.restorePurchases() } }
+                    Button(Words.Usage.restorePurchases) { Task { await model.restorePurchases() } }
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 .padding(16)
@@ -56,7 +56,7 @@ private struct BuyCreditsContent: View {
             .screenBackground()
             .navigationTitle(BuyCreditsView.title)
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { done() }.keyboardShortcut(.cancelAction) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.close) { done() }.keyboardShortcut(.cancelAction) } }
         }
     }
 }
@@ -81,7 +81,7 @@ struct AskAdminView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     if raise == false {
                         Panel {
-                            Eyebrow(text: "Which pack")
+                            Eyebrow(text: Words.Usage.Requests.whichPack)
                             ForEach(model.usage?.store?.packs ?? []) { p in
                                 Button { pack = p.id } label: {
                                     HStack {
@@ -97,14 +97,14 @@ struct AskAdminView: View {
                         }
                     }
                     Panel {
-                        Eyebrow(text: "Why (optional)")
-                        DriveField("What the credits are for", text: $reason)
+                        Eyebrow(text: Words.Usage.Requests.whyOptional)
+                        DriveField(Words.Billing.whatCredits, text: $reason)
                             .scaledFont(15)
                     }
                     if let message = model.planMessage {
                         Text(message).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                     }
-                    Button(sending ? "Asking…" : "Ask") {
+                    Button(sending ? Words.Usage.Requests.asking : Words.Usage.Requests.ask) {
                         guard let raise else { return }
                         let chosen = model.usage?.store?.packs.first { $0.id == pack }
                         guard raise || chosen != nil else { return }
@@ -123,12 +123,12 @@ struct AskAdminView: View {
             .screenBackground()
             .navigationTitle(UsageView.askAdmin)
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
     }
 
-    static let forRaise = "Your account's admins get your request. When one raises the spend limit, your tafs go on."
-    static let forPack = "Your account's admins get your request. When one adds the pack, your tafs go on."
+    static let forRaise = Words.Billing.Ask.lineRaise
+    static let forPack = Words.Billing.Ask.linePack
 }
 
 /// Declining a member's request, with a note they'll read.
@@ -146,13 +146,13 @@ struct DeclineRequestView: View {
                     .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Panel {
-                    Eyebrow(text: "Note (optional)")
-                    DriveField("Why, for them", text: $note).scaledFont(15)
+                    Eyebrow(text: Words.Usage.Requests.noteOptional)
+                    DriveField(Words.Usage.Requests.noteHint, text: $note).scaledFont(15)
                 }
                 if let message = model.planMessage {
                     Text(message).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                 }
-                Button(sending ? "Declining…" : "Decline") {
+                Button(sending ? Words.Usage.Requests.declining : Words.Coach.Approval.decline) {
                     sending = true
                     Task {
                         let done = await model.declineRequest(request, note: String(note.prefix(500)))
@@ -166,9 +166,9 @@ struct DeclineRequestView: View {
             }
             .padding(16)
             .screenBackground()
-            .navigationTitle("Decline")
+            .navigationTitle(Words.Coach.Approval.decline)
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
     }
 }
@@ -176,7 +176,7 @@ struct DeclineRequestView: View {
 extension DeclineRequestView {
     /// "Decline the request to raise the spend limit?", "Decline the request for Rayo?"
     static func question(_ r: KIFFClient.PackRequest, in u: KIFFClient.Usage?) -> String {
-        r.kind == "raise" ? "Decline the request to raise the spend limit?" : "Decline the request for \(UsageView.packLine(r.pack, in: u))?"
+        r.kind == "raise" ? Words.Billing.Request.declineRaiseTitle : Words.Billing.Request.declinePackTitle(pack: "\(UsageView.packLine(r.pack, in: u))")
     }
 }
 
@@ -200,10 +200,10 @@ private struct SoloContent: View {
             VStack(alignment: .leading, spacing: 16) {
                 if let store = model.usage?.store, let product = purchases.products[store.soloProduct] {
                     Panel {
-                        Eyebrow(text: "Solo")
+                        Eyebrow(text: Words.Usage.solo)
                         Text(SoloView.price(product)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                         if let trial = product.subscription?.freeTrial {
-                            Text("Starts with \(trial) free.").scaledFont(15).foregroundColor(Theme.ok)
+                            Text(Words.Billing.startsFree(trial: "\(trial)")).scaledFont(15).foregroundColor(Theme.ok)
                         }
                         Text(SoloView.about)
                             .scaledFont(15).foregroundColor(Theme.soft)
@@ -216,53 +216,53 @@ private struct SoloContent: View {
                     Text(SoloView.terms(product)).scaledFont(13).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 16) {
-                        Link("Terms of Use", destination: Legal.terms)
-                        Link("Privacy Policy", destination: Legal.privacy)
+                        Link(Words.Billing.termsUse, destination: Legal.terms)
+                        Link(Words.Settings.privacyPolicy, destination: Legal.privacy)
                     }
                     .scaledFont(13)
                     .foregroundColor(Theme.soft)
                 } else {
-                    Panel { Text("Solo isn't available from the App Store right now.").scaledFont(15).foregroundColor(Theme.soft) }
+                    Panel { Text(Words.Billing.soloNotAvailableAppStore).scaledFont(15).foregroundColor(Theme.soft) }
                 }
                 if let message = model.planMessage {
                     Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
-                Button("Restore purchases") { Task { await model.restorePurchases() } }
+                Button(Words.Usage.restorePurchases) { Task { await model.restorePurchases() } }
                     .scaledFont(14).foregroundColor(Theme.soft)
             }
             .padding(16)
         }
         .screenBackground()
-        .navigationTitle("Solo")
+        .navigationTitle(Words.Usage.solo)
         .inlineTitle()
     }
 }
 
 extension SoloView {
     /// Under Solo's row in Plan & usage.
-    static let line = "Tafs and KIFF for one person, every month."
-    static let about = "One person: tafs, and KIFF for your own agents, with credits included each period."
+    static let line = Words.Billing.tafsKiffOnePersonEvery
+    static let about = Words.Billing.onePersonTafsKiffYour
 
     /// "$9.99 a month".
     static func price(_ p: StoreProduct) -> String {
-        "\(p.displayPrice) a \(p.subscription?.period ?? "month")"
+        Words.Billing.pricePer(price: p.displayPrice, period: p.subscription?.period ?? Words.Usage.month)
     }
 
     /// The button: the free trial when this person can have it.
     static func action(_ p: StoreProduct) -> String {
-        if let trial = p.subscription?.freeTrial { return "Try \(trial) free" }
-        return "Subscribe for \(price(p))"
+        if let trial = p.subscription?.freeTrial { return Words.Billing.tryFree(trial: "\(trial)") }
+        return Words.Billing.Solo.subscribeFor(price: "\(price(p))")
     }
 
     /// The subscription's terms, shown with every offer.
     static func terms(_ p: StoreProduct) -> String {
-        let period = p.subscription?.period ?? "month"
+        let period = p.subscription?.period ?? Words.Usage.month
         var lines: [String] = []
         if let trial = p.subscription?.freeTrial {
-            lines.append("Free for \(trial), then \(p.displayPrice) a \(period).")
+            lines.append(Words.Billing.Solo.freeThen(trial: "\(trial)", price: "\(p.displayPrice)", period: "\(period)"))
         }
-        lines.append("Solo is a subscription of one \(period) at \(p.displayPrice), charged to your Apple account. It renews every \(period) until you cancel.")
-        lines.append("Cancel any time, at least a day before it renews, in your Apple account's Subscriptions.")
+        lines.append(Words.Billing.soloSubscriptionOneChargedYour(period: "\(period)", price: "\(p.displayPrice)", period2: "\(period)"))
+        lines.append(Words.Billing.cancelAnyTimeLeastDay)
         return lines.joined(separator: " ")
     }
 }

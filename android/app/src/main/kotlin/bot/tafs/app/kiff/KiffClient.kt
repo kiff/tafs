@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import java.net.URI
 import java.security.MessageDigest
 import java.util.Locale
@@ -15,11 +16,11 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-sealed class KiffError(message: String) : Exception(message) {
-  data object AuthorizationPending : KiffError("Waiting for you to approve the sign-in.")
-  data object SlowDown : KiffError("Asked KIFF too often; slowing down.")
-  data object Expired : KiffError("The sign-in code expired. Start again.")
-  data object Unauthorized : KiffError("Signed out of KIFF. Sign in again.")
+sealed class KiffError(message: String?) : Exception(message) {
+  data object AuthorizationPending : KiffError(null) { override val message: String get() = Words.Error.signInPending }
+  data object SlowDown : KiffError(null) { override val message: String get() = Words.Error.slowDown }
+  data object Expired : KiffError(null) { override val message: String get() = Words.Error.signInCodeExpired }
+  data object Unauthorized : KiffError(null) { override val message: String get() = Words.Error.signedOut }
 
   /**
    * [reason] is KIFF's machine-readable why, when it gives one ("card_revised"); [code] its `code` where a route names one
@@ -34,7 +35,7 @@ sealed class KiffError(message: String) : Exception(message) {
    * KIFF takes this act only signed by the session's approval key, and this phone doesn't hold it
    * (kiff/tafs#233): approving waits for a new sign-in.
    */
-  data object ApprovalKeyRequired : KiffError(KiffClient.APPROVAL_KEY_LOST)
+  data object ApprovalKeyRequired : KiffError(null) { override val message: String get() = KiffClient.APPROVAL_KEY_LOST }
 
   /**
    * Refused inside an approval window (kiff/tafs#494): [code] is KIFF's, `critical_key_required` (the act takes the approval key
@@ -43,7 +44,7 @@ sealed class KiffError(message: String) : Exception(message) {
   class WindowRefused(val code: String, message: String) : KiffError(message)
 
   /** The session has an approval key already: KIFF's fingerprint of it. */
-  class ApprovalKeyExists(val fingerprint: String?) : KiffError("KIFF holds an approval key for this session already.")
+  class ApprovalKeyExists(val fingerprint: String?) : KiffError(null) { override val message: String get() = Words.Error.approvalKeyExists }
 }
 
 @Serializable
@@ -171,8 +172,11 @@ class KiffClient(
   /** KIFF's MCP gateway, which lists the account's connected tools. */
   val gatewayUrl: String = "https://mcp.kiff.dev",
   var token: String? = null,
-  /** The language the app shows, so KIFF writes what it says to the owner in it, at its source (kiff/tafs#75). */
-  private val acceptLanguage: String = acceptLanguage(listOf("en")),
+  /**
+   * The language the app's lines are in, so KIFF writes what it says to the owner in it, at its source (kiff/tafs#75): read
+   * at each request, as Android resolved it ([bot.tafs.app.model.Res.language]), never the phone's own setting.
+   */
+  private val acceptLanguage: () -> String = { screenLanguage() },
   private val signingTime: SigningTime = SigningTime(),
 ) {
   /** The account the phone signed in to, for signed setup calls. */
@@ -212,7 +216,7 @@ class KiffClient(
       put("expires", expires)
       put("nonce", nonce)
     }
-    val opened = json.decodeFromString<WindowRead>(String(sendJson("POST", WINDOW, body))).window ?: throw KiffError.Server(0, "KIFF opened no window")
+    val opened = json.decodeFromString<WindowRead>(String(sendJson("POST", WINDOW, body))).window ?: throw KiffError.Server(0, Words.Error.kiffOpenedNoWindow)
     window = opened
     return opened
   }
@@ -294,7 +298,7 @@ class KiffClient(
    */
   suspend fun pollRelink(deviceCode: String): String? {
     val answer = pollToken<Relinked>(deviceCode)
-    if (answer.status != "relinked") throw KiffError.Server(200, "KIFF didn't say this phone may approve again")
+    if (answer.status != "relinked") throw KiffError.Server(200, Words.Error.kiffNoRelink)
     return answer.fingerprint
   }
 
@@ -490,7 +494,7 @@ class KiffClient(
       put("roles", kotlinx.serialization.json.buildJsonArray { add(JsonPrimitive("connector")) })
     }
     return json.parseToJsonElement(String(sendJson("POST", "/v1/keys", body))).jsonObject["plaintext"]?.jsonPrimitive?.contentOrNull
-      ?: throw KiffError.Server(502, "KIFF didn't answer with the key.")
+      ?: throw KiffError.Server(502, Words.Error.kiffNoKey)
   }
 
   /** The account's tool connections in KIFF's gateway. */
@@ -652,11 +656,11 @@ class KiffClient(
     inWindow: Boolean = true,
   ): ByteArray {
     val url = (if (gateway) gatewayUrl else baseUrl) + path
-    val uri = try { URI.create(url) } catch (_: IllegalArgumentException) { throw KiffError.Server(0, "Bad path") }
+    val uri = try { URI.create(url) } catch (_: IllegalArgumentException) { throw KiffError.Server(0, Words.Error.badPath) }
     val headers = linkedMapOf(
       "Accept" to "application/json",
       "User-Agent" to "tafs-android",
-      "Accept-Language" to acceptLanguage,
+      "Accept-Language" to acceptLanguage(),
     )
     val payload = body?.let { json.encodeToString(JsonObject.serializer(), it).toByteArray() }
     if (payload != null) headers["Content-Type"] = "application/json"
@@ -707,7 +711,7 @@ class KiffClient(
         throw KiffError.ApprovalKeyRequired
       }
       if (status == 409 && path == "/v1/me/device/approval-key") throw KiffError.ApprovalKeyExists(fields["fingerprint"])
-      throw KiffError.Server(status, fields["error"] ?: "KIFF answered $status", fields["reason"], fields["code"], fields["words"] ?: fields["message"])
+      throw KiffError.Server(status, fields["error"] ?: Words.Error.kiffAnswered(status = status.toString()), fields["reason"], fields["code"], fields["words"] ?: fields["message"])
     }
     return response.body
   }
@@ -723,7 +727,7 @@ class KiffClient(
 
   companion object {
     /** What the person reads when this phone can't approve until they sign in again. */
-    const val APPROVAL_KEY_LOST = "Sign in with KIFF again to approve from this phone."
+    val APPROVAL_KEY_LOST: String get() = Words.Approval.keyLost
 
     private val WRITES = setOf("POST", "PUT", "PATCH", "DELETE")
 
@@ -854,6 +858,9 @@ class KiffClient(
      * held call's reason, a Record line's) in the app's language at its source, never translated by the
      * app (kiff/tafs#75). English is the last fallback.
      */
+    /** `Accept-Language` for the language the app's lines resolved to, English after it: "de, en;q=0.9". */
+    fun screenLanguage(): String = acceptLanguage(listOf(bot.tafs.app.model.Res.language))
+
     fun acceptLanguage(preferred: List<String>): String {
       val tags = preferred.take(4).map { it.replace('_', '-') }.toMutableList()
       if (tags.none { it == "en" || it.startsWith("en-") }) tags += "en"

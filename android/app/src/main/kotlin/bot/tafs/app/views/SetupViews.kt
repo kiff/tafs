@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.BorderStroke
@@ -87,7 +88,7 @@ fun SetupTab(
     Eyebrow(SetupWords.JOB)
     Text(taf.job, style = scaled(15, color = Theme.ink))
     LocalImproveInCoach.current?.takeIf { signedIn && manages }?.let { improve ->
-      OutlineButton("Improve in Coach", { improve(taf.id) }, Modifier.fillMaxWidth())
+      OutlineButton(Words.Setup.improveInCoach, { improve(taf.id) }, Modifier.fillMaxWidth())
     }
   }
   // When it starts: one line per start, opening the sheet that changes them.
@@ -105,9 +106,9 @@ fun SetupTab(
   if (signedIn) MemorySummaryPanel(taf, state, actions) else if (state.mode == Mode.sample) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
   // In the sample, Pause is its own; signed in, it's every start, in Starts when.
   if (state.mode == Mode.sample && taf.state != bot.tafs.app.model.TafState.revoked) {
-    OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) "Resume" else "Pause", { actions.togglePause(taf.id) }, Modifier.fillMaxWidth().confirms())
+    OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) Words.Taf.resume else Words.Taf.pause, { actions.togglePause(taf.id) }, Modifier.fillMaxWidth().confirms())
   }
-  onRemove?.let { OutlineButton("Remove for good", it, Modifier.fillMaxWidth().confirms(), color = Theme.no) }
+  onRemove?.let { OutlineButton(Words.Setup.removeForGood, it, Modifier.fillMaxWidth().confirms(), color = Theme.no) }
 
   if (startsOpen && knob != null) StartsWhenSheet(taf, knob, state, actions) { startsOpen = false }
   if (resultsOpen && knob != null) ResultsSheet(taf, knob, state, actions) { resultsOpen = false }
@@ -116,7 +117,7 @@ fun SetupTab(
 /** A section of Setup in one panel: its title, what it is now in a line or two, and Open ›. */
 @Composable
 private fun SectionRow(title: String, lines: List<String>, onOpen: () -> Unit) {
-  Panel(Modifier.clickable(onClick = onOpen).semantics { contentDescription = "$title. ${lines.joinToString(". ")}. Open" }) {
+  Panel(Modifier.clickable(onClick = onOpen).semantics { contentDescription = Words.Setup.sectionDescription(title, lines.joinToString(". ")) }) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
       Eyebrow(title)
       androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
@@ -131,7 +132,7 @@ internal fun startsSummary(taf: Taf, knob: KnobWire?): List<String> {
   val starts = knob?.wakes.orEmpty().filter { it.kind != "add_door" && it.kind != "run_now" }.map { it.words.ifBlank { it.label } }
   if (starts.isNotEmpty()) return starts
   if (taf.worksFromChat) return listOf(SetupWords.NO_START)
-  return listOfNotNull(if (taf.paused) "Paused" else taf.nextRun?.let { "Next run at ${shortTime(it)}" } ?: "On its schedule")
+  return listOfNotNull(if (taf.paused) Words.Taf.State.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule)
 }
 
 /** Where its results go now: the places on, by their titles. */
@@ -269,7 +270,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
         }
       }
 
-      if (manages) improve?.let { change -> androidx.compose.material3.TextButton({ onClose(); change(taf.id) }) { Text("Change when it starts with Coach", color = Theme.amberText) } }
+      if (manages) improve?.let { change -> androidx.compose.material3.TextButton({ onClose(); change(taf.id) }) { Text(Words.Setup.changeStarts, color = Theme.amberText) } }
       state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       // Every start at once: off for a taf that works from its chat (tafs cloud's `can_pause`).
       if (manages) {
@@ -360,7 +361,7 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
               // A place of the taf's own says which, in tafs cloud's words; the door reply is the request's line.
               d.name?.let { Text(it, style = scaled(13, color = Theme.soft)) }
               OutlineButton(
-                if (r.id in state.sendingAgain) "Sending again…" else SetupWords.SEND_AGAIN,
+                if (r.id in state.sendingAgain) Words.Work.sendingAgain else SetupWords.SEND_AGAIN,
                 { scope.launch { actions.sendAgain(taf.id, r.id, d.sendPlace) } },
                 Modifier.fillMaxWidth(),
                 enabled = r.id !in state.sendingAgain,
@@ -453,8 +454,15 @@ private fun PlaceRow(title: String, words: String, on: Boolean, enabled: Boolean
 }
 
 /** Activity's Record filters: what happened to each call. */
-internal enum class ActivityFilter(val title: String) {
-  All("All"), Done("Done"), Held("Held"), Refused("Refused");
+internal enum class ActivityFilter {
+  All, Done, Held, Refused;
+
+  val title: String get() = when (this) {
+    All -> Words.Record.Filter.all
+    Done -> Words.Record.Filter.done
+    Held -> Words.Record.Filter.held
+    Refused -> Words.Record.Filter.refused
+  }
 
   fun keeps(e: RecordEntry): Boolean = when (this) {
     All -> true
@@ -472,7 +480,7 @@ internal fun ActivityRecord(entries: List<RecordEntry>, state: AppState) {
     ActivityFilter.entries.forEach { f -> Choice(f.title, selected = filter == f, enabled = true) { filter = f } }
   }
   val kept = entries.filter(filter::keeps).sortedByDescending { it.at }
-  if (kept.isEmpty()) Text("Nothing yet.", style = scaled(15, color = Theme.dim))
+  if (kept.isEmpty()) Text(Words.Common.nothingYet, style = scaled(15, color = Theme.dim))
   kept.groupBy { localDate(it.at) }.forEach { (day, lines) ->
     val spent = spentOn(lines)
     Text(

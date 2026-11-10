@@ -158,7 +158,7 @@ final class Purchases: ObservableObject {
 
     /// Sends a purchase to KIFF and finishes it once KIFF recorded it.
     func deliver(_ p: StorePurchase, requestID: String?) async -> PurchaseOutcome {
-        guard let record else { return .notRecorded("Not signed in.") }
+        guard let record else { return .notRecorded(Words.Billing.notSignedIn) }
         do {
             try await record(p.signed, requestID)
         } catch KIFFClient.KIFFError.server(403, "test_purchase", _) {
@@ -184,11 +184,11 @@ final class Purchases: ObservableObject {
     }
 
     /// What the person reads when KIFF refused a test purchase.
-    static let testPurchase = "Test purchases don't add credits to this account."
+    static let testPurchase = Words.Billing.testPurchaseCredits
     /// What the person reads when the purchase is another tafs account's.
-    static let anotherAccount = "This purchase belongs to another tafs account on this Apple ID, so nothing was added here."
+    static let anotherAccount = Words.Billing.anotherAccountAppleId
     /// What the person reads when KIFF can't add what they paid for.
-    static let contactSupport = "KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out."
+    static let contactSupport = Words.Billing.contactSupport
 
     /// Opens the App Store's page for this Apple account's subscriptions.
     static func manageSubscriptions() async {
@@ -276,26 +276,31 @@ final class AppStoreFront: StoreFront {
 
     nonisolated static func unit(_ u: Product.SubscriptionPeriod.Unit) -> String {
         switch u {
-        case .day: return "day"
-        case .week: return "week"
-        case .month: return "month"
-        case .year: return "year"
-        @unknown default: return "period"
+        case .day: return Words.Usage.day
+        case .week: return Words.Usage.week
+        case .month: return Words.Usage.month
+        case .year: return Words.Usage.year
+        @unknown default: return Words.Usage.period
         }
     }
 
     /// "1 week", "2 weeks".
     nonisolated static func length(_ p: Product.SubscriptionPeriod) -> String {
-        let unit = unit(p.unit)
-        return p.value == 1 ? "1 \(unit)" : "\(p.value) \(unit)s"
+        switch p.unit {
+        case .day: return Words.Billing.Length.days(count: p.value)
+        case .week: return Words.Billing.Length.weeks(count: p.value)
+        case .month: return Words.Billing.Length.months(count: p.value)
+        case .year: return Words.Billing.Length.years(count: p.value)
+        @unknown default: return "\(p.value) \(unit(p.unit))"
+        }
     }
 
     enum StoreError: LocalizedError {
         case unavailable, unverified
         var errorDescription: String? {
             switch self {
-            case .unavailable: return "The App Store doesn't offer this right now."
-            case .unverified: return "The App Store couldn't confirm the purchase."
+            case .unavailable: return Words.Connect.appStoreDoesNotOffer
+            case .unverified: return Words.Billing.appStoreCouldNotConfirm
             }
         }
     }

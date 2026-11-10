@@ -51,7 +51,7 @@ screens, with what each shows, are in [android-app.md](android-app.md).
 
 <p>
   <img src="screenshots/android/tafs.png" width="200" alt="Tafs: three working, two need you">
-  <img src="screenshots/android/needs-you.png" width="200" alt="Needs you: a migration and an $8,400 payment held, each with Approve once with your screen lock, an alternative and Refuse">
+  <img src="screenshots/android/needs-you.png" width="200" alt="Needs you: a migration and an €8,400 payment held, each with Approve once with your screen lock, an alternative and Refuse">
   <img src="screenshots/android/setup.png" width="200" alt="Refunds' Setup: the job, when it starts, and what it remembers, each note with Forget">
   <img src="screenshots/android/coach.png" width="200" alt="Coach on a new conversation: Ask anything about your tafs, with Improve for each taf">
   <img src="screenshots/android/record.png" width="200" alt="Record: a chip for each taf and a filter by kind, today's entries newest first">

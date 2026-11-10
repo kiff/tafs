@@ -169,13 +169,14 @@ extension TafsCloud {
     /// The drive's requests as they come, on the streaming function's address.
     func driveStream(_ drive: String) async throws -> AsyncThrowingStream<DriveEvent, Error> {
         guard let url = URL(string: Self.drivePath + "/\(escaped(drive))/stream", relativeTo: streamURL), let token else {
-            throw CloudError(status: 401, message: "Sign in with KIFF first.")
+            throw CloudError(status: 401, message: Words.Error.signInFirst)
         }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
         let (bytes, response) = try await session.bytes(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else {

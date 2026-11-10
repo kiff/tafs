@@ -35,6 +35,13 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
 
   Polish has `one`, `few`, `many` and `other`.
 
+- **A possessive** is `{name|possessive}`: `"Also on {taf|possessive} Card"`. The app passes
+  the name as it is, and the line gets its possessive by the rule of the language it's in
+  (`POSSESSIVE` in `generate.py`: "Refunds'", "Rae's"; German "Klaus'", "Raes"). Only
+  English and German have a rule. Any other language writes `{taf}` and words the line around
+  it ("la Carte de {taf}"); a test fails if it writes `|possessive`. Both apps give a line its
+  own values first, then each possessive (`possessives(key)`), in the same order everywhere.
+
 ## The generated files
 
 `python3 app/strings/generate.py` writes:
@@ -42,6 +49,8 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
 - **iPhone and iPad:** `ios/Tafs/Localizable.xcstrings`, and `ios/Tafs/Design/Words.swift`
   with a typed accessor for each key (`Words.NeedsYou.approveOnce`,
   `Words.Work.requestsNeedYou(count:)`). A key that isn't here doesn't compile.
+  A count has one catalog entry per plural form (`work.requests_need_you|one`), and the
+  catalog's own `_plural` entry says which form a number takes in the app's language.
 - **Android:** its resources and typed accessors, written by `android.py` beside the
   generator. A key that isn't here doesn't compile there either.
 
@@ -56,6 +65,24 @@ fails when one differs from what the generator writes, and CI runs it.
 - a shipped language has every key, and no language has a key `en.json` lacks;
 - a line has the same placeholders in every language;
 - a count has the plural forms its language needs, and `other`;
-- a shipped language's line isn't left in English;
+- a shipped language's line isn't left in English, unless `same_as_english.json` keeps it, on purpose (a name, a
+  unit, a line that is only its values, a word the language shares), and a line kept there still is English;
 - a line that is exactly a glossary term is that term in every language
-  (`docs/languages.md`, Terms).
+  (`docs/languages.md`, Terms), or its plural where the line names a group, as the Record's
+  "Done" filter does beside "Held" and "Refused" (`TERM_AS_PLURAL` in the test).
+- no English is left in the iPhone and iPad app's code (`ios_literals.py`), nor in the Android app's
+  (`android_literals.py`, with `android_kept.json`).
+
+## English left in code
+
+`python3 app/strings/ios_literals.py` lists the string literals in `ios/Tafs` that read as
+English and aren't data. Each literal is judged on its own: one that is compared
+(`== "declined"`) is data, and the words beside it on the same line are not. Both sides of a
+ternary, an array of words and a count made in code (`"\(n) thing\(n == 1 ? "" : "s")"`) are
+all found. The test fails while it lists anything. A single lowercase word with no value beside it (`"installed"`)
+can't be told from an id, so it isn't flagged: review those by eye.
+
+What must stay in code is kept by a rule in `ios_literals.py` (a compared value, a key, a URL, a
+header, a signed message) or by name in `ios_kept.json`, with the reason: the sample's names,
+words for dictation, an answer sent to tafs cloud, a markdown link, a developer-only line. A
+kept entry that is no longer in its file fails the test too.

@@ -35,8 +35,8 @@ final class LockScreen {
             }
             for call in fresh {
                 let content = UNMutableNotificationContent()
-                let name = tafs.first { $0.id == call.tafID }?.name ?? names[call.tafID] ?? "A taf"
-                content.title = "\(name) needs you"
+                let name = tafs.first { $0.id == call.tafID }?.name ?? names[call.tafID] ?? Words.NeedsYou.aTaf
+                content.title = Words.Alert.tafNeedsYou(taf: "\(name)")
                 content.body = [call.proposed.amount?.formatted, call.proposed.summary, "·", call.reason]
                     .compactMap { $0 }.joined(separator: " ")
                 content.sound = .default
@@ -70,7 +70,7 @@ final class LockScreen {
         }
         let taf = tafs.first { $0.id == first.tafID }
         let state = HeldActivityAttributes.ContentState(
-            tafName: taf?.name ?? names[first.tafID] ?? "A taf",
+            tafName: taf?.name ?? names[first.tafID] ?? Words.NeedsYou.aTaf,
             tafInitial: taf?.initial ?? "t",
             summary: first.proposed.summary,
             amount: first.proposed.amount?.formatted,

@@ -20,10 +20,10 @@ struct ExportChatsSection: View {
                 if preparing {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("Preparing your chats…").foregroundColor(Theme.dim)
+                        Text(Words.Export.preparing).foregroundColor(Theme.dim)
                     }
                 } else {
-                    Text(why == nil ? "Export my chats" : "Try again")
+                    Text(why == nil ? Words.Export.row : Words.Common.tryAgain)
                 }
             }
             .disabled(preparing)
@@ -37,13 +37,13 @@ struct ExportChatsSection: View {
                 Button {
                     files = made
                 } label: {
-                    Text("Ready: \(made.urls.map(\.lastPathComponent).joined(separator: ", ")). Share again")
+                    Text(Words.Export.readyShareAgain(files: made.urls.map(\.lastPathComponent).joined(separator: ", ")))
                         .scaledFont(13).foregroundColor(Theme.dim)
                 }
                 .accessibilityIdentifier("export-files")
             }
         } footer: {
-            Text("Your own chats with each taf, Coach's included, the names of the files you attached, and your notes, as a readable file and as JSON. Only you can export them.")
+            Text(Words.Export.ownChatsEachTafCoach)
         }
     }
 

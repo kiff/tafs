@@ -25,7 +25,7 @@ struct MicButton: View {
                         .overlay(Capsule().stroke(Theme.line))
                 }
                 .frame(minWidth: 40, minHeight: 40)
-                .accessibilityLabel("Dictation in \(dictation.language.name). Switch language")
+                .accessibilityLabel(Words.Voice.dictationIn(language: "\(dictation.language.name)"))
             }
             Button {
                 Task { await dictation.toggle(text: text, hints: model.dictationHints) { text = $0 } }
@@ -38,19 +38,19 @@ struct MicButton: View {
                     .overlay(Circle().stroke(Theme.line))
                     .clipShape(Circle())
             }
-            .accessibilityLabel(dictation.listening ? "Stop dictating" : "Dictate a message")
+            .accessibilityLabel(dictation.listening ? Words.Voice.stop : Words.Voice.dictate)
             .accessibilityHint(dictation.listening
-                ? "What you said stays in the message box, unsent."
-                : "Your voice becomes text on this device. It isn't sent until you send it.")
+                ? Words.Voice.whatYouSaidStaysMessage
+                : Words.Voice.voiceBecomesTextDeviceNot)
         }
-        .alert("Dictation", isPresented: Binding(get: { blocked != nil }, set: { if !$0 { dictation.dismiss() } })) {
+        .alert(Words.Voice.title, isPresented: Binding(get: { blocked != nil }, set: { if !$0 { dictation.dismiss() } })) {
             if blocked?.contains("Settings") == true, let url = URL(string: UIApplication.openSettingsURLString) {
-                Button("Open Settings") {
+                Button(Words.Voice.openSettings) {
                     dictation.dismiss()
                     UIApplication.shared.open(url)
                 }
             }
-            Button("OK", role: .cancel) { dictation.dismiss() }
+            Button(Words.Common.ok, role: .cancel) { dictation.dismiss() }
         } message: {
             Text(blocked ?? "")
         }
@@ -80,12 +80,12 @@ struct DictationBar: View {
                         .background(Theme.panel)
                         .clipShape(Circle())
                 }
-                .accessibilityLabel("Cancel dictating")
-                .accessibilityHint("Puts the message box back as it was.")
+                .accessibilityLabel(Words.Voice.cancelDictating)
+                .accessibilityHint(Words.Voice.putsMessageBoxBack)
                 Waveform(levels: dictation.levels)
                     .frame(height: 28)
                     .accessibilityElement()
-                    .accessibilityLabel("Listening in \(dictation.language.name)")
+                    .accessibilityLabel(Words.Voice.listeningIn(name: "\(dictation.language.name)"))
                 // One stop: the mic's, in the message bar (kiff/tafs#236, item 24).
             }
             .padding(.horizontal, 10).padding(.vertical, 6)

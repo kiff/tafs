@@ -3,7 +3,7 @@ import SwiftUI
 struct ThemePicker: View {
     @AppStorage(ThemePreference.key) private var choice = ThemePreference.system.rawValue
     var body: some View {
-        Picker("Theme", selection: $choice) {
+        Picker(Words.Settings.themeTitle, selection: $choice) {
             ForEach(ThemePreference.allCases) { theme in Label(theme.title, systemImage: theme.icon).tag(theme.rawValue) }
         }.pickerStyle(.segmented)
     }
@@ -15,7 +15,7 @@ struct TimeZonePicker: View {
     var body: some View {
         List {
             Section {
-                Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") { Task { await model.useThisDevicesTimeZone() } }
+                Button(Words.Settings.useDeviceZone(device: "\(ThisDevice.kind)", identifier: "\(TimeZone.current.identifier)")) { Task { await model.useThisDevicesTimeZone() } }
                 if let error = model.timeZoneError { Text(error).foregroundColor(Theme.no) }
             }
             Section {
@@ -26,12 +26,12 @@ struct TimeZonePicker: View {
                 }
             }
         }
-        .searchable(text: $query, prompt: "Find a time zone")
+        .searchable(text: $query, prompt: Words.Settings.findTimeZone)
         .task(id: query) {
             do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return }
             await model.loadTimeZones(query)
         }
-        .navigationTitle("Time zone")
+        .navigationTitle(Words.Settings.timeZoneTitle)
         .screenBackground()
     }
 }

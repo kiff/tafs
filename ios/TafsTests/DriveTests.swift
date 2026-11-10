@@ -376,7 +376,53 @@ final class DriveTests: XCTestCase {
     private static let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
 
     private func source(_ path: String) throws -> String {
-        try String(contentsOf: Self.sources.appendingPathComponent(path), encoding: .utf8)
+        Self.readable(try String(contentsOf: Self.sources.appendingPathComponent(path), encoding: .utf8))
+    }
+
+    /// The app's words in English, by their accessor as the sources write it ("Words.NeedsYou.approveOnce"),
+    /// from Words.swift and the shared en.json.
+    static let english: [String: String] = {
+        let root = DriveTests.sources.deletingLastPathComponent().deletingLastPathComponent()
+        guard let data = try? Data(contentsOf: root.appendingPathComponent("app/strings/en.json")),
+              let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let swift = try? String(contentsOf: DriveTests.sources.appendingPathComponent("Design/Words.swift"), encoding: .utf8) else { return [:] }
+        let accessor = try! NSRegularExpression(pattern: #"static (?:var|func) (`?\w+`?).*Words\.(?:line|count)\("([^"]+)""#)
+        var out: [String: String] = [:]
+        var path: [String] = []
+        for line in swift.components(separatedBy: "\n") {
+            let t = line.trimmingCharacters(in: .whitespaces)
+            if t.hasPrefix("enum "), t.hasSuffix(" {") { path.append(String(t.dropFirst(5).dropLast(2))); continue }
+            if t == "}" { _ = path.popLast(); continue }
+            guard let m = accessor.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+                  let name = Range(m.range(at: 1), in: line), let key = Range(m.range(at: 2), in: line) else { continue }
+            let value = json[String(line[key])]
+            out[(path + [String(line[name])]).joined(separator: ".")] = (value as? String) ?? (value as? [String: String])?["other"]
+        }
+        return out
+    }()
+
+    /// A source with each of the app's words written where it's used, as the English literal it reads as, so
+    /// these tests read a control's words whether they're a literal or a `Words` accessor.
+    static func readable(_ text: String) -> String {
+        let use = try! NSRegularExpression(pattern: #"Words(?:\.`?[A-Za-z_][A-Za-z0-9_]*`?)+"#)
+        var out = text
+        for m in use.matches(in: text, range: NSRange(text.startIndex..., in: text)).reversed() {
+            guard let r = Range(m.range, in: text) else { continue }
+            var path = String(text[r])
+            while english[path] == nil, let dot = path.lastIndex(of: ".") { path = String(path[..<dot]) }
+            guard let words = english[path],
+                  let at = Range(NSRange(location: m.range.location, length: (path as NSString).length), in: out) else { continue }
+            out.replaceSubrange(at, with: "\"\(words)\"")
+        }
+        return out
+    }
+
+    func testTheSourcesReadTheAppsWordsAsEnglish() {
+        XCTAssertGreaterThan(Self.english.count, 1000, "Words.swift or en.json wasn't read")
+        XCTAssertEqual(Self.english["Words.NeedsYou.approveOnce"], "Approve once")
+        XCTAssertEqual(Self.readable("Button(Words.NeedsYou.approveOnce) {"), #"Button("Approve once") {"#)
+        XCTAssertEqual(Self.readable("Text(Words.Work.requestsNeedYou(count: n))"), #"Text("{count} requests need you"(count: n))"#)
+        XCTAssertEqual(Self.readable("Words.line(key)"), "Words.line(key)", "only an accessor is read")
     }
 
     /// Every control docs/drive.md lists as confirming carries the confirm mark: approve, disconnect,
@@ -417,7 +463,7 @@ final class DriveTests: XCTestCase {
         XCTAssertEqual(gate.components(separatedBy: "button().confirming()").count - 1, 2, "ApprovalGate doesn't mark its approvals")
         let gated = try ["Views/NeedsYouView.swift", "Views/DriveViews.swift", "Views/SetupChatView.swift", "Views/AppEventApprovalSheet.swift", "Views/ConnectAppsView.swift"]
             .map { try source($0) }.joined()
-        for words in [#"Button("Yes, it did")"#, #"Button("No")"#, "Approve once with", "Extra room with", #""Approve with \(Biometry.name)""#] {
+        for words in [#"Button("Yes, it did")"#, #"Button("No")"#, "Approve once with", "Extra room with", #""Approve with {biometry}""#] {
             let at = try XCTUnwrap(gated.range(of: words), words)
             let before = gated[..<at.lowerBound].suffix(400)
             XCTAssertTrue(before.contains("ApprovalGate {"), "\(words) isn't in an ApprovalGate")
@@ -449,7 +495,7 @@ final class DriveTests: XCTestCase {
         var constants: [String] = []
         let constant = try NSRegularExpression(pattern: #"static (?:let|var) ([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*String)?\s*=\s*(".*")"#)
         for url in files {
-            let text = try String(contentsOf: url, encoding: .utf8)
+            let text = Self.readable(try String(contentsOf: url, encoding: .utf8))
             for m in constant.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
                 guard let name = Range(m.range(at: 1), in: text), let value = Range(m.range(at: 2), in: text) else { continue }
                 let v = String(text[value])
@@ -462,7 +508,7 @@ final class DriveTests: XCTestCase {
         }
         var checked = 0
         for url in files {
-            let lines = try String(contentsOf: url, encoding: .utf8).components(separatedBy: "\n")
+            let lines = Self.readable(try String(contentsOf: url, encoding: .utf8)).components(separatedBy: "\n")
             func indent(_ l: String) -> Int { l.prefix { $0 == " " }.count }
             for (i, line) in lines.enumerated() {
                 let t = line.trimmingCharacters(in: .whitespaces)
@@ -493,7 +539,7 @@ final class DriveTests: XCTestCase {
             .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
         XCTAssertGreaterThan(files.count, 50)
         for url in files where url.lastPathComponent != "DriveFields.swift" {
-            let s = try String(contentsOf: url, encoding: .utf8)
+            let s = Self.readable(try String(contentsOf: url, encoding: .utf8))
             for raw in ["TextField(", "SecureField(", "TextEditor("] {
                 XCTAssertFalse(s.contains(raw), "\(url.lastPathComponent) has a raw \(raw): use DriveField")
             }

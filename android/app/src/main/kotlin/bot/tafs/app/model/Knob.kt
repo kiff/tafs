@@ -20,7 +20,11 @@ data class Knob(
 
 /** One ring, inner to outer: When (what starts it), What (the recipe), Where (where results go), named as tafs cloud names it. */
 data class KnobRing(val kind: Kind, val stops: List<KnobStop>, val name: String = kind.title) {
-  enum class Kind(val title: String) { WakesIt("When"), What("What"), ResultsGo("Where") }
+  enum class Kind {
+    WakesIt, What, ResultsGo;
+
+    val title: String get() = when (this) { WakesIt -> Words.Knob.Ring.`when`; What -> Words.Knob.Ring.what; ResultsGo -> Words.Knob.Ring.where }
+  }
 }
 
 /** A stop on a ring: Email, 1 · Check, Sender… */
@@ -55,54 +59,54 @@ sealed interface KnobFace {
 
 /** The dial's own words, the same on iPhone, iPad and Android; every stop's words are tafs cloud's. */
 object KnobWords {
-  const val WHY = "WHY"
-  const val APPROVE_ONCE = "Tap to approve once"
-  const val SEARCH = "Ask Coach or find anything"
-  const val SHOWING = "Showing"
-  const val ALL = "All services"
-  const val THIS_TAF = "This taf"
-  const val CAPTION = "When starts it, What it does in order, Where the result goes."
-  const val ASK_COACH = "Ask Coach"
-  const val ASK_COACH_TO_CHANGE = "Ask Coach to change"
-  const val TAP_A_RING = "Tap a ring"
-  const val USE_SIZE = "Use − and +"
-  const val BACK_TO_WHY = "‹ Why"
-  const val BACK = "Back"
-  const val LOWER = "Lower"
-  const val PAUSE = "Pause"
-  const val RESUME = "Resume"
-  const val RAISE = "Raise"
-  const val NEXT = "Next"
-  const val NOT_READ_BACK = "The change was made but couldn't be read back. Tap to read the dial again."
-  const val DRAFT = "The dial Coach drafted"
-  const val READING_DRAFT = "Reading the dial Coach drafted…"
-  const val REPLACED = "A newer dial replaced this one."
-  const val LIVE = "This dial is live."
-  const val CHANGE = "Change"
-  const val ONE_CONFIRMATION = "One confirmation sets all three rings."
-  const val EVENT_FILTERS = "It listens for"
-  const val EVENT_CHANGED = "This event changed. It's shown again as it is now: approve that one."
-  const val CONNECT_FIRST = "Connect this app for the taf before approving its event."
-  const val NOT_RECORDED = "The connection is listening, but the dial hasn't recorded it yet. Approve again to record it."
+  val WHY get() = Words.Knob.why
+  val APPROVE_ONCE get() = Words.Knob.approveOnce
+  val SEARCH get() = Words.Knob.search
+  val SHOWING get() = Words.Knob.showing
+  val ALL get() = Words.Knob.allServices
+  val THIS_TAF get() = Words.Knob.thisTaf
+  val CAPTION get() = Words.Knob.caption
+  val ASK_COACH get() = Words.Coach.ask
+  val ASK_COACH_TO_CHANGE get() = Words.Knob.askCoachToChange
+  val TAP_A_RING get() = Words.Knob.tapARing
+  val USE_SIZE get() = Words.Knob.useSize
+  val BACK_TO_WHY get() = Words.Knob.backToWhy
+  val BACK get() = Words.Common.back
+  val LOWER get() = Words.Knob.lower
+  val PAUSE get() = Words.Knob.pause
+  val RESUME get() = Words.Knob.resume
+  val RAISE get() = Words.Knob.raise
+  val NEXT get() = Words.Common.next
+  val NOT_READ_BACK get() = Words.Knob.notReadBack
+  val DRAFT get() = Words.Knob.draft
+  val READING_DRAFT get() = Words.Knob.readingDraft
+  val REPLACED get() = Words.Knob.replaced
+  val LIVE get() = Words.Knob.live
+  val CHANGE get() = Words.Knob.change
+  val ONE_CONFIRMATION get() = Words.Knob.oneConfirmation
+  val EVENT_FILTERS get() = Words.Knob.eventFilters
+  val EVENT_CHANGED get() = Words.Knob.eventChanged
+  val CONNECT_FIRST get() = Words.Knob.connectFirst
+  val NOT_RECORDED get() = Words.Knob.notRecorded
 
   /** The approval's button, with this phone's own prompt: "Approve with your fingerprint". */
-  fun approveWith(biometry: String): String = "Approve with $biometry"
+  fun approveWith(biometry: String): String = Words.Approval.approveWith(biometry)
 
   /** Over Coach's dial card: "Refunds will work like this". */
-  fun draftTitle(taf: String): String = "$taf will work like this"
+  fun draftTitle(taf: String): String = Words.Knob.draftTitle(taf)
 
   /** The card's confirmation, with this phone's own prompt: "Confirm with your fingerprint". */
-  fun confirmWith(biometry: String): String = "Confirm with $biometry"
+  fun confirmWith(biometry: String): String = Words.Knob.confirmWith(biometry)
 
   /** The changes collected from − and +, made live in one switch: "Make 2 changes live with your fingerprint". */
   fun makeLive(changes: Int, biometry: String): String =
-    "Make ${if (changes == 1) "1 change" else "$changes changes"} live with $biometry"
+    Words.Knob.makeLive(count = changes, biometry = biometry)
 
   /** Over the dial while a change waits to go live: "DRAFT · V9 · NOT LIVE". */
-  fun notLive(version: Int): String = "DRAFT · V$version · NOT LIVE"
+  fun notLive(version: Int): String = Words.Knob.notLive(version.toString())
 
   /** A connection in "Showing ▾", with its stops: "Slack · 2 stops". */
-  fun withStops(name: String, stops: Int): String = "$name · $stops ${if (stops == 1) "stop" else "stops"}"
+  fun withStops(name: String, stops: Int): String = Words.Knob.withStops(count = stops, name = name)
 
   /** The face's top line for a chosen stop: "WHEN · SLACK". */
   fun chosen(ring: KnobRing, stop: KnobStop): String = "${ring.name} · ${stop.label}".uppercase()

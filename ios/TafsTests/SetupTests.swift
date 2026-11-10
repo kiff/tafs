@@ -1591,7 +1591,7 @@ final class SetupTests: XCTestCase {
         let refused = await model.archiveSetupChat("s_1")
         XCTAssertFalse(refused)
         XCTAssertEqual(model.setupChats.map(\.session), ["s_1"], "still listed")
-        XCTAssertEqual(model.lastError, "Not archived: tafs cloud is down")
+        XCTAssertEqual(model.lastError, "Not archived. tafs cloud is down")
         model.lastError = nil
 
         // Archived lists it, and Put back returns it to the list (#97).

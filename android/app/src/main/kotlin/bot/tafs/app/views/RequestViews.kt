@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,9 +32,9 @@ import bot.tafs.app.kiff.RequestStep
 
 /** A request's own words in the app; every line and time in it is tafs cloud's. */
 object RequestWords {
-  const val WHAT_HAPPENED = "What happened"
-  const val TRY_REPLY_NOW = "Try the reply now"
-  const val ASK_COACH = "Ask Coach"
+  val WHAT_HAPPENED get() = Words.Receipt.whatHappened
+  val TRY_REPLY_NOW get() = Words.Work.Request.tryReplyNow
+  val ASK_COACH get() = Words.Coach.ask
 
   /** A step's mark, by its state. */
   fun mark(step: RequestStep): String = when (step.state) {
@@ -93,7 +94,7 @@ fun RequestSheet(
           }
         }
       }
-      onTryReply?.let { OutlineButton(if (sending) "Sending…" else RequestWords.TRY_REPLY_NOW, it, Modifier.fillMaxWidth(), enabled = !sending) }
+      onTryReply?.let { OutlineButton(if (sending) Words.Common.sending else RequestWords.TRY_REPLY_NOW, it, Modifier.fillMaxWidth(), enabled = !sending) }
       onAskCoach?.let {
         Text(
           RequestWords.ASK_COACH,

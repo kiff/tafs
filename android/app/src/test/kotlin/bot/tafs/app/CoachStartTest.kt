@@ -105,7 +105,7 @@ class CoachStartTest {
     assertFalse(m.state.value.planqueReady)
     assertTrue(m.startCoach())
     // Yes before anything is made, then a fingerprint for each of Coach's drafts, which grant authority.
-    assertEquals(listOf("Connect your tools", "Start Coach", "Give Coach its Card"), auth.asked)
+    assertEquals(listOf("Connect your apps", "Start Coach", "Give Coach its Card"), auth.asked)
     assertEquals("setup_1", m.state.value.coachCloudId)
     assertEquals("setup-acme", m.state.value.coachAgent)
     assertTrue(m.state.value.planqueReady)
@@ -230,7 +230,7 @@ class CoachStartTest {
     startAnswers(keys = 403 to """{"error":"forbidden"}""")
     val m = model()
     assertFalse(m.startCoach())
-    assertEquals("Only an admin of this KIFF account can connect tools.", m.state.value.coachStartError)
+    assertEquals("Only an admin of this KIFF account can connect apps.", m.state.value.coachStartError)
     assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
   }
 
@@ -239,7 +239,7 @@ class CoachStartTest {
     startAnswers(enrol = 409 to """{"error":"enrolled"}""")
     val m = model()
     assertFalse(m.startCoach())
-    assertEquals("Another device connects this account's tools for now. Connect them from that one.", m.state.value.coachStartError)
+    assertEquals("Another device connects this account's apps for now. Connect them from that one.", m.state.value.coachStartError)
   }
 
   @Test fun planqueNotRecognizingThePhoneAtEnrolmentIsntASignOut() = runTest {

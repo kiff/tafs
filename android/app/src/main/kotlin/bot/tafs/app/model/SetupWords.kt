@@ -2,53 +2,53 @@ package bot.tafs.app.model
 
 /** A taf's Setup tab, in the app's words where tafs cloud sends none yet: how it runs, where its results go. */
 object SetupWords {
-  const val TITLE = "Setup"
-  const val JOB = "The job"
-  const val STARTS_WHEN = "Starts when"
-  const val CONNECTED_APPS = "Connected apps"
-  const val RESULTS_GO_TO = "Results go to"
-  const val OPEN = "Open"
-  const val EDIT = "Edit"
-  const val ADD_DOOR = "Add a door…"
-  const val CONNECT_APP = "Connect an app…"
-  const val CHOOSE_ACTIONS = "Choose actions"
-  const val NO_START = "When you tell it, in its chat."
+  val TITLE get() = Words.Setup.title
+  val JOB get() = Words.Setup.job
+  val STARTS_WHEN get() = Words.Setup.startsWhen
+  val CONNECTED_APPS get() = Words.Setup.connectedApps
+  val RESULTS_GO_TO get() = Words.Setup.resultsGoTo
+  val OPEN get() = Words.Setup.open
+  val EDIT get() = Words.Setup.edit
+  val ADD_DOOR get() = Words.Setup.addDoor
+  val CONNECT_APP get() = Words.Setup.connectApp
+  val CHOOSE_ACTIONS get() = Words.Setup.chooseActions
+  val NO_START get() = Words.Setup.noStart
 
-  const val SCHEDULE = "Its schedule"
-  const val IF_BUSY = "If it is still working when the next start comes"
-  const val SKIP_IT = "Skip it"
-  const val RUN_AFTER = "Run after"
-  const val APP_EVENTS = "App events"
-  const val APPROVE = "Approve"
-  const val LISTENING = "Listening"
-  const val STOP = "Stop"
-  const val APPROVE_NOTE = "Approve signs on this phone; the app starts telling the taf only after that."
-  const val DOORS = "Doors"
-  const val FOLLOW_UPS = "Follow-ups it set itself"
-  const val REMOVE = "Remove"
-  const val PAUSE_EVERY = "Pause every start"
-  const val RESUME_EVERY = "Resume every start"
-  const val NOT_EVERY_PAUSED = "Not every start could be paused. Try again."
+  val SCHEDULE get() = Words.Setup.schedule
+  val IF_BUSY get() = Words.Setup.ifBusy
+  val SKIP_IT get() = Words.Setup.skipIt
+  val RUN_AFTER get() = Words.Setup.runAfter
+  val APP_EVENTS get() = Words.Setup.appEvents
+  val APPROVE get() = Words.Setup.approve
+  val LISTENING get() = Words.Setup.listening
+  val STOP get() = Words.Setup.stop
+  val APPROVE_NOTE get() = Words.Setup.approveNote
+  val DOORS get() = Words.Setup.doors
+  val FOLLOW_UPS get() = Words.Setup.followUps
+  val REMOVE get() = Words.Setup.remove
+  val PAUSE_EVERY get() = Words.Setup.pauseEvery
+  val RESUME_EVERY get() = Words.Setup.resumeEvery
+  val NOT_EVERY_PAUSED get() = Words.Setup.notEveryPaused
 
-  const val AT_LEAST_ONE = "At least one place stays on."
-  const val FROM_TAFS = "From tafs"
-  const val IN_APPS = "In your connected apps"
-  const val ADD_PLACE = "Add a place from a connected app…"
-  const val NOT_SENT = "Not sent"
-  const val SEND_AGAIN = "Send again"
+  val AT_LEAST_ONE get() = Words.Setup.atLeastOne
+  val FROM_TAFS get() = Words.Setup.fromTafs
+  val IN_APPS get() = Words.Setup.inApps
+  val ADD_PLACE get() = Words.Setup.addPlace
+  val NOT_SENT get() = Words.Setup.notSent
+  val SEND_AGAIN get() = Words.Setup.sendAgain
 
   /** tafs' own places, by `place`: what each is called, and what it sends. */
   fun placeTitle(place: String): String = when (place) {
-    "door_reply" -> "Reply to the sender"
-    "app" -> "Alert our phones"
-    "owner_email" -> "Email me"
+    "door_reply" -> Words.Setup.Place.replyTitle
+    "app" -> Words.Setup.Place.appTitle
+    "owner_email" -> Words.Setup.Place.emailTitle
     else -> place
   }
 
   fun placeWords(place: String, ownerEmail: String?): String = when (place) {
-    "door_reply" -> "On the same thread, through the door it came in on"
-    "app" -> "Who was answered and through which door, never its words"
-    "owner_email" -> "Its answer to ${ownerEmail ?: "your email"}; not when you wrote the message"
+    "door_reply" -> Words.Setup.Place.replyWords
+    "app" -> Words.Setup.Place.appWords
+    "owner_email" -> ownerEmail?.let { Words.Setup.Place.emailWords(it) } ?: Words.Setup.Place.emailWordsYours
     else -> ""
   }
 
@@ -56,5 +56,5 @@ object SetupWords {
   val TAFS_PLACES = listOf("door_reply", "app", "owner_email")
 
   /** Under its schedule: "Next run at 13:00 · Europe/Paris". */
-  fun nextRun(time: String, zone: String?): String = "Next run at $time" + (zone?.let { " · $it" } ?: "")
+  fun nextRun(time: String, zone: String?): String = Words.Taf.nextRunAt(time) + (zone?.let { " · $it" } ?: "")
 }

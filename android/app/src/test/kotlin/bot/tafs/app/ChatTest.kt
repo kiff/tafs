@@ -5,6 +5,7 @@ import bot.tafs.app.model.Answer
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
+import bot.tafs.app.model.RecordAnswer
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.TafState
 import java.time.Instant
@@ -105,7 +106,7 @@ class ChatTest {
     m.loadChat(id)
     val before = m.messages(id).size
     assertFalse(m.deliverChat("x".repeat(Chat.LIMIT + 1), id))
-    assertEquals("That's longer than 2000 characters. Say it in fewer words.", m.state.value.chatErrors[id])
+    assertEquals("That's longer than 2,000 characters. Say it in fewer words.", m.state.value.chatErrors[id])
     assertEquals(before, m.messages(id).size)
     // The next one that goes clears it.
     assertTrue(m.deliverChat("hi", id))
@@ -182,11 +183,16 @@ class ChatTest {
 
   @Test fun anOutcomeSaysWhatBecameOfTheCall() {
     fun entry(kind: RecordEntry.Kind, title: String, detail: String = "") = RecordEntry(tafId = "t", kind = kind, title = title, detail = detail, at = t0)
-    assertEquals("Approved once by you · Refund", Chat.outcomeText(entry(RecordEntry.Kind.approved, "Approved once by you · Refund")))
-    assertEquals("Refund: approved by you, done", Chat.outcomeText(entry(RecordEntry.Kind.approved, "Refund")))
+    // The phone's own line for the owner's answer is a flag, never its words: it shows as it is.
+    assertEquals("Approved once by you · Refund", Chat.outcomeText(entry(RecordEntry.Kind.approved, "Approved once by you · Refund").copy(byYou = true)))
+    assertEquals("Refused by you · Refund", Chat.outcomeText(entry(RecordEntry.Kind.refused, "Refused by you · Refund").copy(byYou = true)))
+    // KIFF's line: "by you" only when KIFF says the reader answered it.
+    assertEquals("Refund: approved by you, done", Chat.outcomeText(entry(RecordEntry.Kind.approved, "Refund").copy(answer = RecordAnswer("approve", you = true))))
+    assertEquals("Refund: approved, done", Chat.outcomeText(entry(RecordEntry.Kind.approved, "Refund").copy(answer = RecordAnswer("approve", by = "admin"))))
+    assertEquals("Refund: approved, done", Chat.outcomeText(entry(RecordEntry.Kind.approved, "Refund")))
     assertEquals("Refund: refused, not sent", Chat.outcomeText(entry(RecordEntry.Kind.refused, "Refund")))
     assertEquals("Refund: the tool refused", Chat.outcomeText(entry(RecordEntry.Kind.notDone, "Refund", "the tool refused")))
-    assertEquals("Refund: sent, waiting for the tool", Chat.outcomeText(entry(RecordEntry.Kind.sending, "Refund")))
+    assertEquals("Refund: sent, waiting for the app", Chat.outcomeText(entry(RecordEntry.Kind.sending, "Refund")))
     assertEquals("Refund: outcome unknown", Chat.outcomeText(entry(RecordEntry.Kind.unknown, "Refund")))
   }
 }

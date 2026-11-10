@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.confirms
@@ -194,7 +195,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         } else if (items.isEmpty()) {
           item(key = "empty") {
             Text(
-              "Ask ${taf?.name ?: "it"} what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.",
+              taf?.name?.let { Words.Chat.emptyNamed(it) } ?: Words.Chat.emptyUnnamed,
               style = scaled(14, color = Theme.dim),
               textAlign = TextAlign.Center,
               modifier = Modifier.fillMaxWidth().padding(vertical = 30.dp),
@@ -266,7 +267,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         state.chatSteering[tafId]?.held?.let { held -> item(key = "held") { SteeredWords(held.text, ChatWords.HELD) } }
         // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
         if (!thinking) state.chatEnded[tafId]?.let { end ->
-          item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId, false) { } }) }
+          item(key = "ended") { EndedLine(end, taf?.name ?: Words.Chat.itFallback, onRetry = { text -> following = true; actions.sendChat(text, tafId, false) { } }) }
         }
       }
 
@@ -277,7 +278,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
           val index = items.indexOf(waiting)
           val visible = listState.layoutInfo.visibleItemsInfo.any { it.key == waiting.id }
           if (!visible) {
-            NeedsYouPill("Needs you · " + waiting.call.proposed.summary) {
+            NeedsYouPill(Words.NeedsYou.title + " · " + waiting.call.proposed.summary) {
               following = false
               scope.launch { listState.animateScrollToItem(index) }
             }
@@ -295,7 +296,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                 following = true
                 scope.launch { listState.animateScrollToItem(max(0, total - 1)) }
               }
-              .semantics { contentDescription = "Jump to the latest" },
+              .semantics { contentDescription = Words.Chat.jumpToLatest },
             contentAlignment = Alignment.Center,
           ) {
             Icon(painterResource(R.drawable.ic_arrow_down), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(16.dp))
@@ -310,7 +311,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
     val canAttach = state.canAttach(tafId)
     if (canAttach) FileTray(tafId, state, actions.files)
     Composer(
-      name = taf?.name ?: "your taf",
+      name = taf?.name,
       draft = draft,
       onDraft = { setDraft(it) },
       // A message is on its way: one at a time. While the taf works, what's written goes to its run.
@@ -338,7 +339,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
 
 @Composable
 private fun Composer(
-  name: String,
+  name: String?,
   draft: String,
   onDraft: (String) -> Unit,
   sending: Boolean,
@@ -375,7 +376,7 @@ private fun Composer(
         modifier = Modifier.fillMaxWidth(),
         decorationBox = { field ->
           Box(Modifier.padding(horizontal = 10.dp, vertical = 8.dp).heightIn(min = 20.dp)) {
-            if (draft.isEmpty()) Text(if (thinking) "Write the next message" else "Message $name", style = scaled(16, color = Theme.dim))
+            if (draft.isEmpty()) Text(if (thinking) Words.Chat.writeNext else name?.let { Words.Chat.messageTaf(it) } ?: Words.Chat.messageYourTaf, style = scaled(16, color = Theme.dim))
             field()
           }
         },
@@ -387,7 +388,7 @@ private fun Composer(
       if (onStop != null && empty) {
         // While the taf works and the box is empty, Send is Stop: its run is cancelled.
         Box(
-          Modifier.size(40.dp).clip(CircleShape).background(Theme.ink).clickable(onClick = onStop).semantics { contentDescription = "Stop" },
+          Modifier.size(40.dp).clip(CircleShape).background(Theme.ink).clickable(onClick = onStop).semantics { contentDescription = Words.Chat.stop },
           contentAlignment = Alignment.Center,
         ) {
           Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Theme.background))
@@ -404,7 +405,7 @@ private fun Composer(
             focus.clearFocus()
             onSend()
           }
-          .semantics { contentDescription = "Send" },
+          .semantics { contentDescription = Words.Common.send },
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_arrow_up), contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -478,9 +479,9 @@ private fun MessageBody(
         )
         // A sent message's menu (kiff/tafs#285): send it again (its words only), change it first, or copy it.
         DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
-          DropdownMenuItem(text = { Text("Send again") }, onClick = { menu = false; onResend(message.text) })
-          DropdownMenuItem(text = { Text("Edit and send") }, onClick = { menu = false; onEdit(message.text) })
-          DropdownMenuItem(text = { Text("Copy") }, onClick = {
+          DropdownMenuItem(text = { Text(Words.Chat.sendAgain) }, onClick = { menu = false; onResend(message.text) })
+          DropdownMenuItem(text = { Text(Words.Chat.editAndSend) }, onClick = { menu = false; onEdit(message.text) })
+          DropdownMenuItem(text = { Text(Words.Common.copy) }, onClick = {
             menu = false
             scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("message", message.text))) }
           })
@@ -494,7 +495,7 @@ private fun MessageBody(
   } else if (message.kind == ChatMessage.Kind.kickoff) {
     // A run's kickoff shows as a small note, not a bubble.
     Text(
-      "Run started ${shortTime(message.at)} · ${message.text}",
+      Words.Chat.runStarted(shortTime(message.at)) + " · ${message.text}",
       style = scaled(12, color = Theme.dim),
       textAlign = TextAlign.Center,
       maxLines = 2,
@@ -529,7 +530,7 @@ private fun WorkSummary(work: Work) {
     )
     // A failed step in the failure colour, with tafs cloud's reason under it when it sent one; nothing of the app's own.
     if (open) steps.forEach { step ->
-      Text("• " + step.words + if (step.notMade) " · not made" else "", style = scaled(12, color = if (step.failed) Theme.no else Theme.soft))
+      Text("• " + step.words + if (step.notMade) " · " + Words.Chat.notMade else "", style = scaled(12, color = if (step.failed) Theme.no else Theme.soft))
       step.why?.let { Text(it, style = scaled(12, color = Theme.dim), modifier = Modifier.padding(start = 10.dp)) }
     }
   }
@@ -561,14 +562,14 @@ private fun LiveWork(live: LiveAnswer) {
 @Composable
 private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
   val words = when (end) {
-    is ChatEnd.Failed -> AppModel.failedWords(taf, end.done)
-    ChatEnd.Stopped -> "You stopped $taf."
+    is ChatEnd.Failed -> AppModel.failedWords(taf, end.done, end.words)
+    ChatEnd.Stopped -> Words.Chat.youStopped(taf)
     is ChatEnd.Capped -> AppModel.capWords(end.stop, taf) ?: return
   }
   Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
     Text(words, style = scaled(14, color = Theme.ink))
     if (end is ChatEnd.Failed) {
-      Text("Retry", style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { onRetry(end.retry) }.padding(vertical = 6.dp))
+      Text(Words.Chat.retry, style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { onRetry(end.retry) }.padding(vertical = 6.dp))
     }
   }
 }
@@ -584,7 +585,7 @@ private fun TypingDots() {
     label = "phase",
   )
   Row(
-    Modifier.fillMaxWidth().padding(vertical = 6.dp).semantics { contentDescription = "Answering" },
+    Modifier.fillMaxWidth().padding(vertical = 6.dp).semantics { contentDescription = Words.Chat.answering },
     horizontalArrangement = Arrangement.spacedBy(5.dp),
   ) {
     repeat(3) { i ->

@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.Card
 import bot.tafs.app.model.CardRule
 import bot.tafs.app.model.CardTotal
@@ -141,23 +142,23 @@ object KiffMapping {
       id = h.kiffAgent,
       name = h.name,
       // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run has none, and is described by its Cards.
-      job = h.jobSummary ?: "Works under $count KIFF Card${if (count == 1) "" else "s"}.",
+      job = h.jobSummary ?: Words.Taf.worksUnderCards(count = count),
       tools = h.card.tools,
       colorIndex = h.color,
       card = Card(h.card.rules.map(::rule), owner, h.card.expires, revoked = !h.card.active),
     )
     taf = when {
-      h.state == "waiting" -> taf.copy(state = TafState.waiting, now = "Waiting on you")
-      h.state == "paused" -> taf.copy(state = TafState.paused, now = "Paused")
+      h.state == "waiting" -> taf.copy(state = TafState.waiting, now = Words.Taf.Now.waitingOnYou)
+      h.state == "paused" -> taf.copy(state = TafState.paused, now = Words.Taf.State.paused)
       // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
-      h.state == "halted" -> taf.copy(state = TafState.halted, now = "Halted · resume it from Halt")
+      h.state == "halted" -> taf.copy(state = TafState.halted, now = Words.Taf.Now.halted)
       // Its run waits for a connected app's event (the slow-tools design): not the owner's, in the connection's words.
       h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = h.work.line)
       // A taf with no schedule isn't at work until it's told something in its chat (kiff/tafs#138, item 55).
-      h.state == "working" && h.unscheduled == true -> taf.copy(state = TafState.idle, now = "Works from its chat")
-      h.state == "working" -> taf.copy(state = TafState.working, now = h.nextRun?.let { "Next run ${shortTime(it)}" } ?: "Running")
-      h.state == "idle" -> taf.copy(state = TafState.idle, now = "Acting under KIFF")
-      h.state == "stopped" -> taf.copy(state = TafState.revoked, now = "Card not active")
+      h.state == "working" && h.unscheduled == true -> taf.copy(state = TafState.idle, now = Words.Taf.Now.worksFromChat)
+      h.state == "working" -> taf.copy(state = TafState.working, now = h.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.running)
+      h.state == "idle" -> taf.copy(state = TafState.idle, now = Words.Taf.Now.actingUnderKiff)
+      h.state == "stopped" -> taf.copy(state = TafState.revoked, now = Words.Taf.Now.cardNotActive)
       // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
       else -> taf.copy(state = TafState.idle, now = h.work?.line.orEmpty())
     }
@@ -220,14 +221,14 @@ object KiffMapping {
       if (actor !in holders) return@mapNotNull null
       val (kind, detail) = when (c.outcome) {
         "allowed" -> executed(c.toolOutcome, approved = c.held, vendor = vendors[c.actionName], counts = counted(c))
-        "owner_required", "approval_required" -> RecordEntry.Kind.held to "Waiting for you"
+        "owner_required", "approval_required" -> RecordEntry.Kind.held to Words.Record.waitingForYou
         // KIFF's own words for why, when it has them (kiff/tafs#138).
-        else -> RecordEntry.Kind.refused to (c.reason?.let { "Not sent · $it" } ?: "Not sent")
+        else -> RecordEntry.Kind.refused to (c.reason?.let { Words.Record.notSentBecause(reason = it) } ?: Words.Record.notSent)
       }
       val refusedByTool = c.outcome == "allowed" && c.toolOutcome?.status == "refused_by_tool"
       // Typed by KIFF as the connection's refusal: KIFF's words, or the plain fact, never the tool's raw message.
       val byConnection = refusedByTool && c.toolOutcome.refusedBy == "connection"
-      val shown = if (byConnection && c.toolOutcome.code != null) c.detail ?: "The connection refused it before sending. Nothing was sent." else detail
+      val shown = if (byConnection && c.toolOutcome.code != null) c.detail ?: Words.Record.connectionRefusedBeforeSending else detail
       RecordEntry(
         id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
@@ -235,7 +236,7 @@ object KiffMapping {
         entityId = c.entityId, action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
         madeAt = c.madeAt, reason = c.reason,
         refusedByTool = if (refusedByTool) true else null,
-        refusedBy = if (byConnection) "The connection" else if (refusedByTool) vendors[c.actionName] else null,
+        refusedBy = if (byConnection) Words.Record.theConnection else if (refusedByTool) vendors[c.actionName] else null,
       )
     }
 
@@ -246,22 +247,22 @@ object KiffMapping {
    */
   fun executed(o: ToolOutcome?, approved: Boolean, vendor: String? = null, counts: Counted = Counted.nothing): Pair<RecordEntry.Kind, String> {
     val why = o?.message?.takeIf { it.isNotEmpty() }?.let { ": $it" } ?: ""
-    val allowed = if (approved) "Approved by you" else "Allowed by its Card"
+    val allowed = if (approved) Words.Record.approvedByYou else Words.Record.allowedByCard
     return when (o?.status) {
-      "done" -> if (approved) RecordEntry.Kind.approved to "Approved by you, then done" else RecordEntry.Kind.done to "Done, within its Card"
+      "done" -> if (approved) RecordEntry.Kind.approved to Words.Record.approvedThenDone else RecordEntry.Kind.done to Words.Record.doneWithinCard
       "refused_by_tool" -> {
-        val who = vendor ?: "The tool"
+        val who = vendor ?: Words.Record.theTool
         RecordEntry.Kind.notDone to when (counts) {
-          Counted.money -> "$who refused it. No money moved, but it still counts against today's total."
-          Counted.amount -> "$who refused it. Nothing was done, but it still counts against today's total."
-          Counted.nothing -> "$who refused it, and it still counts toward today's limits$why"
+          Counted.money -> Words.Record.toolRefusedMoney(who = who)
+          Counted.amount -> Words.Record.toolRefusedAmount(who = who)
+          Counted.nothing -> Words.Record.toolRefusedCounts(who = who) + why
         }
       }
-      "not_sent" -> RecordEntry.Kind.notDone to "$allowed, but it couldn't be sent: nothing reached the tool$why"
-      "sending" -> RecordEntry.Kind.sending to "$allowed, and sent: waiting for the tool's answer"
-      "unknown" -> RecordEntry.Kind.unknown to "$allowed, and sent, but the tool's answer was lost: check the tool's own records"
+      "not_sent" -> RecordEntry.Kind.notDone to Words.Record.notSentNothingReached(allowed = allowed) + why
+      "sending" -> RecordEntry.Kind.sending to Words.Record.sentWaiting(allowed = allowed)
+      "unknown" -> RecordEntry.Kind.unknown to Words.Record.answerLost(allowed = allowed)
       // not_recorded, none, or one this app doesn't know yet.
-      else -> RecordEntry.Kind.unknown to "$allowed, but whether the tool did it wasn't recorded: check the tool's own records"
+      else -> RecordEntry.Kind.unknown to Words.Record.notRecorded(allowed = allowed)
     }
   }
 
@@ -345,8 +346,8 @@ object KiffMapping {
     if (amount.currency != unit) return null
     val cap = Money.of(limit, unit, b.scale ?: amount.scale).formatted
     return when (b.outcome) {
-      "per_action_exceeded" -> "${amount.formatted} is over the $cap limit for one call"
-      "limit_reached" -> "${amount.formatted} would go over the $cap total"
+      "per_action_exceeded" -> Words.Card.Held.overOneCall(amount = amount.formatted, cap = cap)
+      "limit_reached" -> Words.Card.Held.overTotal(amount = amount.formatted, cap = cap)
       else -> null
     }
   }
@@ -360,35 +361,27 @@ object KiffMapping {
     val b = reasonBreach(e) ?: return null
     if (b.outcome != "limit_reached" || b.quantity != "count") return null
     val limit = b.limit ?: return null
-    if (limit == 0L) return "Each call asks you first"
+    if (limit == 0L) return Words.Card.Held.eachCallAsks
     val nth = ordinal((b.used ?: limit) + (b.draw ?: 1))
-    val window = b.window ?: return "Over its limit of $limit calls: this would be the $nth"
+    val window = b.window ?: return Words.Card.Held.overCount(count = limit.toInt(), nth = nth)
     // A total for each item apart says so, and which item: "1 call in any 7 days for each invoice id: this would be the 2nd for in_42".
-    val each = b.per?.takeIf { it.isNotBlank() }?.let { " for each " + it.lowercase().replace('_', ' ') }.orEmpty()
-    val item = if (each.isNotEmpty()) b.value?.takeIf { it.isNotBlank() }?.let { " for $it" }.orEmpty() else ""
-    return "$limit ${if (limit == 1L) "call" else "calls"} ${windowWords(window)}$each: this would be the $nth$item"
+    val each = b.per?.takeIf { it.isNotBlank() }?.let { Words.Card.Held.forEach(name = it.lowercase().replace('_', ' ')) }.orEmpty()
+    val item = if (each.isNotEmpty()) b.value?.takeIf { it.isNotBlank() }?.let { Words.Card.Held.forItem(item = it) }.orEmpty() else ""
+    return Words.Card.Held.countInWindow(count = limit.toInt(), window = windowWords(window), each = each, nth = nth, item = item)
   }
 
   /** A KIFF window in the words a Card's totals use (docs/tafs.md); one KIFF adds later shows as it is sent, never as a day. */
   fun windowWords(window: String): String = when (window) {
-    "calendar_day" -> "a day"
-    "rolling_24h" -> "in any 24 hours"
-    "rolling_1h" -> "in any hour"
-    "rolling_7d" -> "in any 7 days"
-    "lifetime" -> "in total"
+    "calendar_day" -> Words.Card.Window.aDay
+    "rolling_24h" -> Words.Card.Window.anyDay
+    "rolling_1h" -> Words.Card.Window.anyHour
+    "rolling_7d" -> Words.Card.Window.anyWeek
+    "lifetime" -> Words.Card.Window.inTotal
     else -> window
   }
 
-  /** 1st, 2nd, 3rd, 11th, 21st. */
-  fun ordinal(n: Long): String {
-    if (n % 100 in 11..13) return "${n}th"
-    return when (n % 10) {
-      1L -> "${n}st"
-      2L -> "${n}nd"
-      3L -> "${n}rd"
-      else -> "${n}th"
-    }
-  }
+  /** 1st, 2nd, 3rd, 11th, 21st: as the lines' language writes a number in order. */
+  fun ordinal(n: Long): String = bot.tafs.app.model.Res.ordinal(n)
 
   /**
    * What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent: pi_…"). The
@@ -432,9 +425,9 @@ object KiffMapping {
   }
 
   fun outcomeText(outcome: String?): String = when (outcome) {
-    "per_action_exceeded" -> "Over the Card's limit for one action"
-    "limit_reached" -> "Over the Card's total"
-    "resource_not_on_card" -> "Not one of the Card's resources"
-    else -> "Outside the Card"
+    "per_action_exceeded" -> Words.Card.Outcome.overOneAction
+    "limit_reached" -> Words.Card.Outcome.overTotal
+    "resource_not_on_card" -> Words.Card.Outcome.notAResource
+    else -> Words.Card.Outcome.outside
   }
 }

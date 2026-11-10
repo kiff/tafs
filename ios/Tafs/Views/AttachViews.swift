@@ -22,10 +22,10 @@ struct AttachButton: View {
         let room = max(0, FilePrep.perMessage - model.files(key).count)
         Menu {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button { takingPhoto = true } label: { Label("Take photo", systemImage: "camera") }
+                Button { takingPhoto = true } label: { Label(Words.Chat.File.takePhoto, systemImage: "camera") }
             }
-            Button { choosingPhotos = true } label: { Label("Choose photos", systemImage: "photo.on.rectangle") }
-            Button { choosingFile = true } label: { Label("Choose file", systemImage: "doc") }
+            Button { choosingPhotos = true } label: { Label(Words.Chat.File.choosePhotos, systemImage: "photo.on.rectangle") }
+            Button { choosingFile = true } label: { Label(Words.Chat.File.chooseFile, systemImage: "doc") }
         } label: {
             Image(systemName: "paperclip")
                 .font(.system(size: 17, weight: .semibold))
@@ -36,7 +36,7 @@ struct AttachButton: View {
                 .clipShape(Circle())
         }
         .disabled(room == 0)
-        .accessibilityLabel(room == 0 ? "Attach: \(FilePrep.perMessage) files is the most a message carries" : "Attach a photo or file")
+        .accessibilityLabel(room == 0 ? Words.Chat.File.attachFull(count: FilePrep.perMessage) : Words.Chat.File.attach)
         .photosPicker(isPresented: $choosingPhotos, selection: $photos, maxSelectionCount: max(room, 1), matching: .images)
         .onChange(of: photos) { picked in
             guard !picked.isEmpty else { return }
@@ -44,10 +44,10 @@ struct AttachButton: View {
             for (n, item) in picked.enumerated() {
                 Task {
                     guard let data = try? await item.loadTransferable(type: Data.self) else {
-                        model.refuseFile(FileProblem(message: "That photo couldn't be read."), in: key)
+                        model.refuseFile(FileProblem(message: Words.Attachment.photoCouldNotRead), in: key)
                         return
                     }
-                    await add { try FilePrep.photo(data, name: "Photo \(n + 1)") }
+                    await add { try FilePrep.photo(data, name: Words.Attachment.photoNumbered(n: "\(n + 1)")) }
                 }
             }
         }
@@ -59,7 +59,7 @@ struct AttachButton: View {
         }
         .sheet(isPresented: $takingPhoto) {
             CameraPicker { image in
-                Task { await add { try FilePrep.photo(image, name: "Photo") } }
+                Task { await add { try FilePrep.photo(image, name: Words.Attachment.photo) } }
             }
             .ignoresSafeArea()
         }
@@ -82,7 +82,7 @@ struct AttachButton: View {
         let name = url.lastPathComponent
         // Over every limit: refused before it's read into memory.
         if size > 25 << 20, !type.conforms(to: .image) {
-            throw FileProblem(message: "\(name) is \(FilePrep.megabytes(size)); the most is \(FilePrep.megabytes(25 << 20)).")
+            throw FileProblem(message: Words.Attachment.tooLarge(name: "\(name)", size: "\(FilePrep.megabytes(size))", limit: "\(FilePrep.megabytes(25 << 20))"))
         }
         return try FilePrep.file(name: name, data: try Data(contentsOf: url), type: type)
     }
@@ -168,10 +168,10 @@ struct FileChip: View {
                 case .uploading:
                     HStack(spacing: 4) {
                         ProgressView().controlSize(.mini)
-                        Text("Uploading").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        Text(Words.Chat.File.uploading).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     }
                 case .ready:
-                    Text("Ready").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    Text(Words.Chat.File.ready).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 case .failed(let why):
                     Text(why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.no).lineLimit(2)
                 }
@@ -183,7 +183,7 @@ struct FileChip: View {
                     .foregroundColor(Theme.dim)
                     .frame(width: 28, height: 28)
             }
-            .accessibilityLabel("Remove \(name)")
+            .accessibilityLabel(Words.Chat.File.remove(name: "\(name)"))
         }
         .padding(.leading, 6).padding(.trailing, 2).padding(.vertical, 6)
         .background(Theme.panel)
@@ -259,7 +259,7 @@ struct MessageFiles: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.drivablePlain)
-                .accessibilityLabel("Open \(file.name)")
+                .accessibilityLabel(Words.Chat.File.`open`(name: "\(file.name)"))
             }
         }
         .quickLookPreview($shown)

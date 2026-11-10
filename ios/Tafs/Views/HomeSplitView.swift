@@ -64,8 +64,8 @@ struct HomeSplitView: View {
                 case nil:
                     VStack(spacing: 12) {
                         Mascot(size: 72)
-                        Text(model.loadingList ? "Loading your tafs…" : model.listUnread ? "Couldn't load your tafs."
-                             : model.tafs.isEmpty ? "No tafs yet." : "Choose a taf.")
+                        Text(model.loadingList ? Words.Home.loading : model.listUnread ? Words.Home.notLoaded
+                             : model.tafs.isEmpty ? Words.Home.noTafs : Words.Home.chooseTaf)
                             .scaledFont(16).foregroundColor(Theme.dim)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -110,7 +110,7 @@ struct HomeSplitView: View {
         let h = model.haltState(nil)
         return Label {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Halt all").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Words.Taf.Halt.titleAll).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 if h.state != .running {
                     Text(HaltScreen.headline(h)).scaledFont(13).foregroundColor(Theme.no)
                 }
@@ -125,7 +125,7 @@ struct HomeSplitView: View {
     /// one a call waits on first, then the one used last (the 859 test). CI's screenshots open
     /// Refunds, as on the phone.
     static func opening(_ listed: [Taf], screenshot: Bool) -> HomeSelection? {
-        let refunds = screenshot ? listed.first(where: { $0.name == "Refunds" })?.id : nil
+        let refunds = screenshot ? listed.first(where: { $0.name == TafTemplates.refunds.name })?.id : nil
         return (refunds ?? listed.first?.id).map { .taf($0) }
     }
 
@@ -138,13 +138,13 @@ struct HomeSplitView: View {
                     // Today across the tafs, one line each.
                     if !model.tafs.isEmpty {
                         NavigationLink(value: HomeSelection.overview) {
-                            Label("Overview", systemImage: "square.grid.2x2").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                            Label(Words.Home.Overview.title, systemImage: "square.grid.2x2").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         }
                     }
                     // Every taf at once, from its own screen, as on the phone's home.
                     // The owner looked for it here (kiff/tafs#138).
                     if !model.cloudTafs.isEmpty, model.canManageCards {
-                        NavigationLink(value: HomeSelection.haltAll) { haltAllRow.modifier(drives("Halt all", .haltAll)) }
+                        NavigationLink(value: HomeSelection.haltAll) { haltAllRow.modifier(drives(Words.Taf.Halt.titleAll, .haltAll)) }
                     }
                 }
             }
@@ -155,7 +155,7 @@ struct HomeSplitView: View {
                             NavigationLink(value: HomeSelection.held(call.id, taf: taf.id)) { heldRow(call, taf).modifier(drives(taf.name, .held(call.id, taf: taf.id))) }
                         }
                     }
-                } header: { Eyebrow(text: "Needs you", color: Theme.amber) }
+                } header: { Eyebrow(text: Words.NeedsYou.title, color: Theme.amber) }
             }
             let sections = model.tafSections
             // Theirs, then the ones shared with them (kiff/tafs#306); someone with only shared
@@ -164,16 +164,16 @@ struct HomeSplitView: View {
                 Section {
                     ForEach(sections.own) { taf in tafLinks(taf) }
                     if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
-                        Text(model.mayUseCoach ? "Connect a tool to set up your first taf." : "Tafs shared with you show here.")
+                        Text(model.mayUseCoach ? Words.Home.connectToolSetUpYour : Words.Home.tafsSharedYouShow)
                             .scaledFont(13).foregroundColor(Theme.dim)
                             .listRowBackground(Color.clear)
                     }
-                } header: { Eyebrow(text: "Your tafs") }
+                } header: { Eyebrow(text: Words.Home.yourTafs) }
             }
             if !sections.shared.isEmpty {
                 Section {
                     ForEach(sections.shared) { taf in tafLinks(taf) }
-                } header: { Eyebrow(text: "Shared with you") }
+                } header: { Eyebrow(text: Words.Home.sharedYou) }
             }
             if !model.otherAgents.isEmpty {
                 // Agents made through KIFF's API, not run by tafs: their Cards, apart.
@@ -181,7 +181,7 @@ struct HomeSplitView: View {
                     ForEach(model.otherAgents) { taf in
                         NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
                     }
-                } header: { Eyebrow(text: "Other agents with Cards") }
+                } header: { Eyebrow(text: Words.Home.otherAgents) }
             }
         }
         .listStyle(.sidebar)
@@ -189,7 +189,7 @@ struct HomeSplitView: View {
         .background(Theme.raised.ignoresSafeArea())
         .refreshable { await model.refresh() }
         .safeAreaInset(edge: .bottom) { footer }
-        .navigationTitle("tafs")
+        .navigationTitle(Words.App.name)
     }
 
     /// A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59). The sample has
@@ -243,7 +243,7 @@ struct HomeSplitView: View {
             Circle().fill(Theme.amber).frame(width: 8, height: 8)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(taf.name): \(call.proposed.summary)").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
-                Text("\(call.reason) · answer by \(call.expiresAt.zonedShortTime)")
+                Text(Words.Home.reasonAnswerBy(why: "\(call.reason)", time: "\(call.expiresAt.zonedShortTime)"))
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.soft).oneLineUnlessLarge()
             }
         }
@@ -254,7 +254,7 @@ struct HomeSplitView: View {
     private var footer: some View {
         VStack(spacing: 8) {
             if model.canStartTafs {
-                Button { startNewTaf() } label: { Label("Start a new taf", systemImage: "plus") }
+                Button { startNewTaf() } label: { Label(Words.Home.startNewTaf, systemImage: "plus") }
                     .buttonStyle(PrimaryButtonStyle())
             }
             // The account this is, always in sight (the 870 test); its settings are the

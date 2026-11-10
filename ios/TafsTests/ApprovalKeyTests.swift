@@ -262,7 +262,7 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertFalse(added)
         XCTAssertEqual(model.groups.map(\.name), ["Support"], "read again after the failure")
         let error = try XCTUnwrap(model.peopleError, "the reason survives the reread")
-        XCTAssertTrue(error.hasPrefix("Make ana@acme.test a manager didn't go through: "), error)
+        XCTAssertTrue(error.hasPrefix("Make ana@acme.test a manager didn't go through. "), error)
     }
 
     func testWhatGrantsAuthority() {

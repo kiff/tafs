@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.ChatExport
@@ -88,7 +89,7 @@ class TafsCloud(
   /** Starts the account's Coach from a confirmed no-tools KIFF draft: tafs cloud claims the agent's key with the claim secret, as for a taf. */
   suspend fun startSetup(draft: String, claimSecret: String): CloudSetup =
     KiffClient.json.decodeFromString<SetupResponse>(String(send("POST", "/v1/setup", jsonBody("draft_id" to draft, "claim_secret" to claimSecret)))).setup
-      ?: throw CloudError(502, "tafs cloud didn't answer with Coach.")
+      ?: throw CloudError(502, Words.Error.cloudNoCoach)
 
   private fun jsonBody(vararg fields: Pair<String, String>): ByteArray =
     KiffClient.json.encodeToString(
@@ -129,7 +130,7 @@ class TafsCloud(
       },
       working = wire.working?.session,
       workingRun = wire.working?.run,
-      capped = wire.capped,
+      capped = wire.stopped ?: wire.capped,
       components = CoachWords.fold(wire.components.orEmpty().mapNotNull { shown(it) }),
       coachLines = wire.coachLines.orEmpty().mapNotNull { runCatching { KiffClient.json.decodeFromJsonElement(CoachLine.serializer(), it) }.getOrNull() },
       // A drive's end the app can't read is left out, never the thread with it.
@@ -241,14 +242,14 @@ class TafsCloud(
   /** Uploads a file's bytes where [attach] said: no KIFF session goes with them. */
   suspend fun upload(data: ByteArray, to: Upload) {
     val response = transport.send(HttpRequest(to.method, to.url, to.headers, data))
-    if (response.status !in 200..299) throw bot.tafs.app.model.OwnWords("The file didn't upload. Try attaching it again.")
+    if (response.status !in 200..299) throw bot.tafs.app.model.OwnWords(Words.Error.fileNotUploaded)
   }
 
   /** A file the person attached, downloaded: only their own; another's is a 404. */
   suspend fun attachment(id: String, file: String): ByteArray {
     val url = get<Download>("/v1/tafs/${escaped(id)}/attachments/${escaped(file)}").url
     val response = transport.send(HttpRequest("GET", url))
-    if (response.status !in 200..299) throw bot.tafs.app.model.OwnWords("Nothing to do on your side; we're on it.")
+    if (response.status !in 200..299) throw bot.tafs.app.model.OwnWords(Words.Error.onOurSide)
     return response.body
   }
 
@@ -529,14 +530,18 @@ class TafsCloud(
   /** Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval. */
   suspend fun startConnect(entry: String, taf: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", mapOf("taf" to taf))
 
-  /** Connect apps: the catalog, filtered by [q] when given. */
-  suspend fun connectApps(q: String? = null, provider: String? = null, cursor: String? = null): ConnectApps {
+  /**
+   * Connect apps: the catalog, filtered by [q] when given. With [proof], this phone's signed grants read, tafs cloud also lists each
+   * removed taf's connections with the live tafs whose Cards still use them (`removed_tafs[].grants`).
+   */
+  suspend fun connectApps(q: String? = null, provider: String? = null, cursor: String? = null, proof: String? = null): ConnectApps {
     val query = listOfNotNull(
       q?.takeIf { it.isNotBlank() }?.let { "q=" + escaped(it) },
       provider?.let { "provider=" + escaped(it) },
       cursor?.let { "cursor=" + escaped(it) },
     )
-    return get("/v1/connect/apps" + if (query.isEmpty()) "" else "?" + query.joinToString("&"))
+    val path = "/v1/connect/apps" + if (query.isEmpty()) "" else "?" + query.joinToString("&")
+    return KiffClient.json.decodeFromString(String(send("GET", path, extra = proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())))
   }
 
   /**
@@ -700,18 +705,20 @@ class TafsCloud(
 
   /** Conditional reads keep already-read pages on this phone. A 304 carries no replacement data. */
   internal suspend fun representation(path: String, etag: String? = null, extra: Map<String, String> = emptyMap()): HttpResponse {
-    val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
+    val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
     require(path.startsWith("/v1/"))
-    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer")
+    // The lines tafs cloud words for people come in the app's language (docs/api.md, The person's language).
+    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     etag?.let { headers["If-None-Match"] = it }; headers.putAll(extra)
     val response = transport.send(HttpRequest("GET", baseUrl + path, headers))
-    if (response.status != 304 && response.status !in 200..299) throw CloudError(response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}")
+    if (response.status != 304 && response.status !in 200..299) throw CloudError(response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()))
     return response
   }
 
   internal suspend fun send(method: String, path: String, body: ByteArray? = null, extra: Map<String, String> = emptyMap()): ByteArray {
-    val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
-    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer")
+    val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
+    // The lines tafs cloud words for people come in the app's language (docs/api.md, The person's language).
+    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     if (body != null) headers["Content-Type"] = "application/json"
     headers.putAll(extra)
     val response = transport.send(HttpRequest(method, baseUrl + path, headers, body))
@@ -719,7 +726,7 @@ class TafsCloud(
       // Kept for Coach's diagnostics by the route's template and status only (docs/drive.md).
       bot.tafs.app.drive.DriveDiagnostics.failed(method, path, response.status)
       throw CloudError(
-        response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}", blockingRuns(response.body), field(response.body, "words"),
+        response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.body), field(response.body, "words"),
         field(response.body, "code"),
       )
     }
@@ -758,11 +765,11 @@ class TafsCloud(
   }
 
   private suspend fun events(method: String, path: String, body: ByteArray?): kotlinx.coroutines.flow.Flow<StreamEvent> {
-    val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
-    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer")
+    val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
+    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     if (body != null) headers["Content-Type"] = "application/json"
     val response = transport.stream(HttpRequest(method, streamUrl + path, headers, body))
-    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: "tafs cloud answered ${response.status}", blockingRuns(response.refusal), field(response.refusal, "words"), field(response.refusal, "code"))
+    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.refusal), field(response.refusal, "words"), field(response.refusal, "code"))
     return StreamEvent.parse(response.lines)
   }
 
@@ -795,10 +802,10 @@ class TafsCloud(
 
   /** The drive's requests, on the streaming function's address (a stream lives 14 minutes, longer than a CDN waits). */
   override suspend fun driveStream(drive: String): kotlinx.coroutines.flow.Flow<bot.tafs.app.drive.DriveEvent> {
-    val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
-    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer")
+    val bearer = token ?: throw CloudError(401, Words.Error.signInFirst)
+    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     val response = transport.stream(HttpRequest("GET", streamUrl + "/v1/coach/drive/${escaped(drive)}/stream", headers))
-    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: "tafs cloud answered ${response.status}")
+    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: Words.Error.cloudAnswered(status = response.status.toString()))
     return bot.tafs.app.drive.DriveEvent.parse(response.lines)
   }
 

@@ -6,14 +6,14 @@ struct NotificationSettingsView: View {
     @EnvironmentObject private var model: AppModel
     @AppStorage(Haptics.key) private var haptics = true
 
-    static let title = "Alerts"
+    static let title = Words.Settings.alerts
 
     var body: some View {
         List {
             Section {
                 VStack(spacing: 10) {
-                    LockScreenAlert(title: "Chargebacks needs you", line: "Dispute #4825 · €640 is over its limit", loud: true)
-                    LockScreenAlert(title: "Refunds answered maria@…", line: "By email", loud: false)
+                    LockScreenAlert(title: Words.Settings.chargebacksNeedsYou, line: Words.Settings.disputeOverLimit, loud: true)
+                    LockScreenAlert(title: Words.Settings.refundsAnsweredMaria, line: Words.Alert.byEmail, loud: false)
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
@@ -21,22 +21,22 @@ struct NotificationSettingsView: View {
             // Alerts come from tafs cloud, which a signed-in account has.
             if model.mode == .kiff {
                 Section {
-                    Toggle("Alerts on this \(ThisDevice.kind)", isOn: Binding(
+                    Toggle(Words.Alert.onThisDevice(device: "\(ThisDevice.kind)"), isOn: Binding(
                         get: { model.phoneAlerts?.enabled ?? (model.alertsReady == true) },
                         set: { enabled in Task { if enabled { await model.turnOnAlerts() } else { await model.turnOffAlerts() } } }))
                         .disabled(model.phoneAlertsBusy || model.turningOnAlerts)
                     Toggle(isOn: Binding(get: { model.alertSound }, set: { model.alertSound = $0 })) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Sound")
-                            Text("For a hold or a halt only").scaledFont(13).foregroundColor(Theme.dim)
+                            Text(Words.Alert.sound)
+                            Text(Words.Alert.soundWords).scaledFont(13).foregroundColor(Theme.dim)
                         }
                     }
                 } footer: {
                     Text(model.canAnswerHolds == false
-                         ? "Alerts go to the people who may answer held calls. Your role on this account can't."
-                         : "When a taf needs you, this \(ThisDevice.kind) tells you even with tafs closed. Nothing is sent until you approve.")
+                         ? Words.Alert.Foot.cantAnswerHolds
+                         : Words.Alert.Foot.tellsYouDevice(device: "\(ThisDevice.kind)"))
                 }
-                Section("What alerts you") {
+                Section(Words.Alert.whatAlerts) {
                     ForEach(model.phoneAlerts?.kinds ?? []) { choice in
                         Toggle(isOn: Binding(get: { choice.enabled }, set: { enabled in Task { await model.setAlertKind(choice.id, enabled: enabled) } })) {
                             VStack(alignment: .leading) { Text(choice.title); Text(choice.words).scaledFont(13).foregroundColor(Theme.dim) }
@@ -49,10 +49,10 @@ struct NotificationSettingsView: View {
                 }
             }
             Section {
-                Toggle("Haptics", isOn: $haptics)
-                    .drivable("Haptics", role: .toggle, id: "haptics") { haptics.toggle() }
+                Toggle(Words.Alert.haptics, isOn: $haptics)
+                    .drivable(Words.Alert.haptics, role: .toggle, id: "haptics") { haptics.toggle() }
             } footer: {
-                Text("The light taps when you send or answer.")
+                Text(Words.Settings.lightTapsWhenYouSend)
             }
         }
         .scrollContentBackground(.hidden)
@@ -65,7 +65,7 @@ struct NotificationSettingsView: View {
     private func level(_ title: String, sound: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).foregroundColor(Theme.ink)
-            Label(sound ? "Sound, always" : "Silent", systemImage: sound ? "speaker.wave.2" : "bell.slash")
+            Label(sound ? Words.Alert.always : Words.Alert.silent, systemImage: sound ? "speaker.wave.2" : "bell.slash")
                 .scaledFont(13).foregroundColor(Theme.dim)
         }
         .accessibilityElement(children: .combine)
@@ -95,7 +95,7 @@ private struct LockScreenAlert: View {
         .background(Theme.raised)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(loud ? "With sound" : "Silent"): \(title). \(line)")
+        .accessibilityLabel("\(loud ? Words.Alert.withSound : Words.Alert.silent): \(title). \(line)")
     }
 }
 
@@ -118,14 +118,14 @@ private struct AlertingTafsView: View {
                     }
                 }
                 if tafs.isEmpty {
-                    Text("No taf alerts the phones when it answers.").foregroundColor(Theme.dim)
+                    Text(Words.Settings.noTafAlertsPhonesWhen).foregroundColor(Theme.dim)
                 }
             } footer: {
-                Text("Each sends who was answered and through which door, never its words. Turn it off in the taf's Setup › Results go to.")
+                Text(Words.Settings.eachSendsWhoAnsweredThrough)
             }
         }
         .scrollContentBackground(.hidden)
         .screenBackground()
-        .navigationTitle("A taf answered someone")
+        .navigationTitle(Words.Alert.answered)
     }
 }

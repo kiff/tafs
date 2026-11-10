@@ -188,7 +188,7 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {
             NavigationStack {
                 UsageView()
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false }.keyboardShortcut(.cancelAction) } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { model.usageRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)
         }
@@ -196,27 +196,27 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { model.signedIn && model.haltRequested }, set: { model.haltRequested = $0 })) {
             NavigationStack {
                 HaltScreen(tafID: model.haltRequestedTaf)
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.haltRequested = false }.keyboardShortcut(.cancelAction) } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { model.haltRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)
         }
         .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
         .onAppear { showRequestedTab(model.requestedTab) }
         // The device's time zone, asked once (kiff/tafs#206 6.11).
-        .alert("Use \(model.timeZoneOffer ?? "") for times in tafs?", isPresented: Binding(
+        .alert(Words.Settings.TimeZoneOffer.title(zone: model.timeZoneOffer ?? ""), isPresented: Binding(
             get: { model.timeZoneOffer != nil && model.lastError == nil },
             set: { _ in }
         )) {
-            Button("Use \(model.timeZoneOffer ?? "")") { Task { await model.answerTimeZoneOffer(use: true) } }
-            Button("Not now", role: .cancel) { Task { await model.answerTimeZoneOffer(use: false) } }
+            Button(Words.Settings.TimeZoneOffer.use(zone: model.timeZoneOffer ?? "")) { Task { await model.answerTimeZoneOffer(use: true) } }
+            Button(Words.Common.notNow, role: .cancel) { Task { await model.answerTimeZoneOffer(use: false) } }
         } message: {
-            Text("Holds' deadlines, Activity, the Record and what your tafs write would use this \(ThisDevice.kind)'s time zone. Your account uses \(model.kiffAccount?.timeZone ?? "UTC") now.")
+            Text(Words.Settings.TimeZoneOffer.textDevice(device: ThisDevice.kind, zone: model.kiffAccount?.timeZone ?? "UTC"))
         }
-        .alert("Not done", isPresented: Binding(
+        .alert(Words.Common.notDone, isPresented: Binding(
             get: { model.lastError != nil },
             set: { if !$0 { model.lastError = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(Words.Common.ok, role: .cancel) {}
         } message: {
             Text(model.lastError ?? "")
         }

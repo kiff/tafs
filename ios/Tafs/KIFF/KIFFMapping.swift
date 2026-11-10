@@ -108,20 +108,20 @@ enum KIFFMapping {
         let count = h.card.ids.count
         // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run
         // has none, and is described by its Cards.
-        var taf = Taf(id: id, name: h.name, job: h.jobSummary ?? "Works under \(count) KIFF Card\(count == 1 ? "" : "s").",
+        var taf = Taf(id: id, name: h.name, job: h.jobSummary ?? Words.Taf.worksUnderCards(count: count),
                       tools: h.card.tools, colorIndex: h.color,
                       card: Card(rules: rules, issuedBy: owner, expires: h.card.expires, revoked: !h.card.active))
         switch h.state {
-        case "waiting": taf.state = .waiting; taf.now = "Waiting on you"
-        case "paused": taf.state = .paused; taf.now = "Paused"
+        case "waiting": taf.state = .waiting; taf.now = Words.Taf.Now.waitingOnYou
+        case "paused": taf.state = .paused; taf.now = Words.Taf.State.paused
         // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
-        case "halted": taf.state = .halted; taf.now = "Halted · resume it from Halt"
+        case "halted": taf.state = .halted; taf.now = Words.Taf.Now.halted
         // A taf with no schedule isn't at work until it's told something in its chat
         // (kiff/tafs#138, item 55): it reads as ready, not running.
-        case "working" where h.unscheduled == true: taf.state = .idle; taf.now = "Works from its chat"
-        case "working": taf.state = .working; taf.now = h.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
-        case "idle": taf.state = .idle; taf.now = "Acting under KIFF"
-        default: taf.state = .revoked; taf.now = "Card not active"
+        case "working" where h.unscheduled == true: taf.state = .idle; taf.now = Words.Taf.Now.worksFromChat
+        case "working": taf.state = .working; taf.now = h.nextRun.map { Words.Taf.Now.nextRun(time: "\($0.shortTime)") } ?? Words.Taf.Now.running
+        case "idle": taf.state = .idle; taf.now = Words.Taf.Now.actingUnderKiff
+        default: taf.state = .revoked; taf.now = Words.Taf.Now.cardNotActive
         }
         taf.kiffCardIDs = h.card.ids
         // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.
@@ -158,20 +158,20 @@ enum KIFFMapping {
             case "allowed":
                 (kind, detail) = executed(c.toolOutcome, approved: c.held, vendor: vendors[c.actionName], counts: counted(c))
             case "owner_required", "approval_required":
-                kind = .held; detail = "Waiting for you"
+                kind = .held; detail = Words.Record.waitingForYou
             default:
                 // KIFF's own words for why, when it has them (kiff/tafs#138).
-                kind = .refused; detail = c.reason.map { "Not sent · \($0)" } ?? "Not sent"
+                kind = .refused; detail = c.reason.map { Words.Record.notSentBecause(reason: "\($0)") } ?? Words.Record.notSent
             }
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool", c.toolOutcome?.refusedBy == "connection", c.toolOutcome?.code != nil {
-                entry.detail = c.detail ?? "The connection refused it before sending. Nothing was sent."
+                entry.detail = c.detail ?? Words.Record.connectionRefusedBeforeSending
             }
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
                 entry.refusedByTool = true
-                entry.refusedBy = c.toolOutcome?.refusedBy == "connection" ? "The connection" : vendors[c.actionName]
+                entry.refusedBy = c.toolOutcome?.refusedBy == "connection" ? Words.Record.theConnection : vendors[c.actionName]
             }
             entry.amount = c.amount
             entry.readOnly = c.readOnly
@@ -209,26 +209,26 @@ enum KIFFMapping {
     /// says so plainly, naming the vendor as connected.
     static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, counts: Counted = .nothing) -> (RecordEntry.Kind, String) {
         let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
-        let allowed = approved ? "Approved by you" : "Allowed by its Card"
+        let allowed = approved ? Words.Record.approvedByYou : Words.Record.allowedByCard
         switch o?.status {
         case "done"?:
-            return approved ? (.approved, "Approved by you, then done") : (.done, "Done, within its Card")
+            return approved ? (.approved, Words.Record.approvedThenDone) : (.done, Words.Record.doneWithinCard)
         case "refused_by_tool"?:
-            let who = vendor ?? "The tool"
+            let who = vendor ?? Words.Record.theTool
             switch counts {
-            case .money: return (.notDone, "\(who) refused it. No money moved, but it still counts against today's total.")
-            case .amount: return (.notDone, "\(who) refused it. Nothing was done, but it still counts against today's total.")
-            case .nothing: return (.notDone, "\(who) refused it, and it still counts toward today's limits\(why)")
+            case .money: return (.notDone, Words.Record.toolRefusedMoney(who: "\(who)"))
+            case .amount: return (.notDone, Words.Record.toolRefusedAmount(who: "\(who)"))
+            case .nothing: return (.notDone, Words.Record.toolRefusedCountsWhy(who: "\(who)", why: "\(why)"))
             }
         case "not_sent"?:
-            return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
+            return (.notDone, Words.Record.notSentNothingReachedWhy(allowed: "\(allowed)", why: "\(why)"))
         case "sending"?:
-            return (.sending, "\(allowed), and sent: waiting for the tool's answer")
+            return (.sending, Words.Record.sentWaiting(allowed: "\(allowed)"))
         case "unknown"?:
-            return (.unknown, "\(allowed), and sent, but the tool's answer was lost: check the tool's own records")
+            return (.unknown, Words.Record.answerLost(allowed: "\(allowed)"))
         default:
             // not_recorded, none, or one this app doesn't know yet.
-            return (.unknown, "\(allowed), but whether the tool did it wasn't recorded: check the tool's own records")
+            return (.unknown, Words.Record.notRecorded(allowed: "\(allowed)"))
         }
     }
 
@@ -313,24 +313,18 @@ enum KIFFMapping {
     /// machine's "count limit 0 per calendar_day reached".
     static func countReason(_ e: KIFFClient.CardException) -> String? {
         guard let b = reasonBreach(e), b.outcome == "limit_reached", b.quantity == "count", let limit = b.limit else { return nil }
-        if limit == 0 { return "Each call asks you first" }
+        if limit == 0 { return Words.Card.Held.eachCallAsks }
         let nth = ordinal((b.used ?? limit) + (b.draw ?? 1))
-        guard let raw = b.window else { return "Over its limit of \(limit) calls: this would be the \(nth)" }
+        guard let raw = b.window else { return Words.Card.overLimitCallsWould(limit: "\(limit)", nth: "\(nth)") }
         // A total for each item apart says so, and which item: "… for each invoice id: this would be the 2nd for in_42".
-        let each = b.per.flatMap { $0.isEmpty ? nil : " for each " + $0.lowercased().replacingOccurrences(of: "_", with: " ") } ?? ""
-        let item = each.isEmpty ? "" : b.value.flatMap { $0.isEmpty ? nil : " for \($0)" } ?? ""
-        return "\(limit) \(limit == 1 ? "call" : "calls") \(Window(raw).label)\(each): this would be the \(nth)\(item)"
+        let each = b.per.flatMap { $0.isEmpty ? nil : Words.Card.Held.forEach(name: $0.lowercased().replacingOccurrences(of: "_", with: " ")) } ?? ""
+        let item = each.isEmpty ? "" : b.value.flatMap { $0.isEmpty ? nil : Words.Card.Held.forItem(item: $0) } ?? ""
+        return Words.Card.Held.countInWindow(count: Int(limit), window: Window(raw).label, each: each, nth: nth, item: item)
     }
 
     /// 1st, 2nd, 3rd, 11th, 21st.
     static func ordinal(_ n: Int64) -> String {
-        if (11...13).contains(n % 100) { return "\(n)th" }
-        switch n % 10 {
-        case 1: return "\(n)st"
-        case 2: return "\(n)nd"
-        case 3: return "\(n)rd"
-        default: return "\(n)th"
-        }
+        Words.ordinal(Int(n))
     }
 
     static func moneyReason(_ e: KIFFClient.CardException) -> String? {
@@ -338,8 +332,8 @@ enum KIFFMapping {
               let amount = amount(of: e), amount.currency == unit else { return nil }
         let cap = Money(minor: limit, currency: unit, scale: b.scale ?? amount.scale).formatted
         switch b.outcome {
-        case "per_action_exceeded": return "\(amount.formatted) is over the \(cap) limit for one call"
-        case "limit_reached": return "\(amount.formatted) would go over the \(cap) total"
+        case "per_action_exceeded": return Words.Card.Held.overOneCall(amount: "\(amount.formatted)", cap: "\(cap)")
+        case "limit_reached": return Words.Card.Held.overTotal(amount: "\(amount.formatted)", cap: "\(cap)")
         default: return nil
         }
     }
@@ -375,10 +369,10 @@ enum KIFFMapping {
 
     static func outcomeText(_ outcome: String?) -> String {
         switch outcome {
-        case "per_action_exceeded": return "Over the Card's limit for one action"
-        case "limit_reached": return "Over the Card's total"
-        case "resource_not_on_card": return "Not one of the Card's resources"
-        default: return "Outside the Card"
+        case "per_action_exceeded": return Words.Card.Outcome.overOneAction
+        case "limit_reached": return Words.Card.Outcome.overTotal
+        case "resource_not_on_card": return Words.Card.Outcome.notAResource
+        default: return Words.Card.Outcome.outside
         }
     }
 }

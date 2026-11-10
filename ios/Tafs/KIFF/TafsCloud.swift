@@ -25,7 +25,7 @@ final class TafsCloud {
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
         struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
-        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [], words: body?.words,
+        return CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
                           code: body?.code)
     }
 
@@ -90,10 +90,11 @@ final class TafsCloud {
 
     /// Keeps the server's representation validator; 304 leaves cached pages intact.
     func representation(_ path: String, etag: String? = nil, headers: [String: String] = [:]) async throws -> (Data?, String?) {
-        guard let url = URL(string: path, relativeTo: baseURL), let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        guard let url = URL(string: path, relativeTo: baseURL), let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
         request.setValue(etag, forHTTPHeaderField: "If-None-Match")
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         let (data, response) = try await session.data(for: request)
@@ -807,7 +808,7 @@ final class TafsCloud {
         let (_, response) = try await session.upload(for: request, from: data)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            throw CloudError(status: status, message: "The file didn't upload. Try attaching it again.")
+            throw CloudError(status: status, message: Words.Error.fileNotUploaded)
         }
     }
 
@@ -817,7 +818,7 @@ final class TafsCloud {
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/attachments/\(escaped(file))")
         let (data, response) = try await session.data(from: r.url)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        guard (200..<300).contains(status) else { throw CloudError(status: status, message: "The file couldn't be opened.") }
+        guard (200..<300).contains(status) else { throw CloudError(status: status, message: Words.Chat.File.couldNotOpen) }
         return data
     }
 
@@ -861,8 +862,8 @@ final class TafsCloud {
         var workingRun: String? = nil
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says.
         var steering: Steering? = nil
-        /// The latest run stopped at a cap of its own (`cost_cap` or `turn_cap`), with no
-        /// words for it: the app says why.
+        /// The latest run stopped without finishing (`cost_cap`, `turn_cap`, `max_token` or
+        /// `refused`), with no words for it: the app says why.
         var capped: Capped? = nil
         /// The taf's `ask_coach` cards, the settings it hands to Coach (kiff/tafs#476, gap 15):
         /// the only cards of a taf's own thread the app draws.
@@ -965,11 +966,14 @@ final class TafsCloud {
         }
         struct Response: Decodable {
             let messages: [ChatMessage]; let working: Working?; let steering: Lenient?; let capped: LenientCap?
+            /// Where the latest run stopped without finishing, any stop tafs cloud names (`turn_cap`,
+            /// `cost_cap`, `max_token`, `refused`); `capped` carries the two caps alone, for older apps.
+            var stopped: LenientCap? = nil
             var components: [AskCoachCard.Lenient]? = nil
         }
         let r: Response = try await send("GET", path)
         return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering,
-                      capped: r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card))
+                      capped: r.stopped?.capped ?? r.capped?.capped, askCoach: (r.components ?? []).compactMap(\.card))
     }
 
     /// What tafs cloud did with a message written to the run at work.
@@ -1176,10 +1180,10 @@ final class TafsCloud {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .offensive: return "Offensive"
-            case .harmful: return "Harmful"
-            case .wrong: return "Wrong"
-            case .other: return "Other"
+            case .offensive: return Words.Report.Reason.offensive
+            case .harmful: return Words.Report.Reason.harmful
+            case .wrong: return Words.Report.Reason.wrong
+            case .other: return Words.Report.Reason.other
             }
         }
     }
@@ -1213,7 +1217,7 @@ final class TafsCloud {
     /// Splits tafs cloud's export into its two files.
     static func splitExport(_ data: Data) throws -> (json: Data, text: String) {
         guard var body = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw CloudError(status: 0, message: "The export isn't what tafs cloud sends.")
+            throw CloudError(status: 0, message: Words.Chat.exportNotWhatTafsCloud)
         }
         let text = body.removeValue(forKey: "readable") as? String ?? ""
         let json = try JSONSerialization.data(withJSONObject: body, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
@@ -1312,16 +1316,17 @@ final class TafsCloud {
     /// with the run's events to follow. A refusal throws, as `sendMessage` does.
     func streamMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         guard let url = URL(string: "/v1/tafs/\(escaped(id))/messages/stream", relativeTo: streamURL) else {
-            throw CloudError(status: 0, message: "Bad path")
+            throw CloudError(status: 0, message: Words.Error.badPath)
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         // A run can think for minutes between two words.
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(MessageBody(text, target, files: files))
-        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         return try await events(request)
@@ -1331,13 +1336,14 @@ final class TafsCloud {
     /// as it goes, until it stops. Only their own run; another's is a 404.
     func resumeRun(_ id: String, run: String, after: Int = 0) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         guard let url = URL(string: "/v1/tafs/\(escaped(id))/runs/\(escaped(run))/stream?after=\(max(0, after))", relativeTo: streamURL) else {
-            throw CloudError(status: 0, message: "Bad path")
+            throw CloudError(status: 0, message: Words.Error.badPath)
         }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return try await events(request)
     }
@@ -1943,18 +1949,19 @@ final class TafsCloud {
 
     /// The answer's body as tafs cloud sent it, for one kept as it is (the person's export).
     func sendData<B: Encodable>(_ method: String, _ path: String, body: B?, headers: [String: String] = [:]) async throws -> Data {
-        guard let url = URL(string: path, relativeTo: baseURL) else { throw CloudError(status: 0, message: "Bad path") }
+        guard let url = URL(string: path, relativeTo: baseURL) else { throw CloudError(status: 0, message: Words.Error.badPath) }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.timeoutInterval = 70
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             // Bytes already encoded are sent as they are: a signed request's signature covers exactly them.
             request.httpBody = try (body as? KIFFClient.RawJSON)?.data ?? JSONEncoder().encode(body)
         }
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
-        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await session.data(for: request)

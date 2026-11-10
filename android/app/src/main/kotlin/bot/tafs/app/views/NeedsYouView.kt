@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.model.SecondStep
 import bot.tafs.app.model.shortTime
@@ -64,7 +65,7 @@ import java.time.Instant
 import kotlinx.coroutines.delay
 
 /** While a call waits: nothing the call asks for happens until someone approves it. */
-const val NOTHING_SENT = "Nothing is sent until you approve."
+val NOTHING_SENT get() = Words.NeedsYou.nothingSent
 
 /** Where a held call is answered in KIFF today, for a call KIFF holds; null for the sample's, which this phone answers. */
 val LocalAnswerPage = staticCompositionLocalOf<(HeldCall) -> String?> { { null } }
@@ -101,7 +102,7 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
   Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     if (again == null) {
       Text(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
-      signInAgain?.let { OutlineButton("Sign in again", it, Modifier.fillMaxWidth(), color = Theme.amberText) }
+      signInAgain?.let { OutlineButton(Words.Connect.signInAgain, it, Modifier.fillMaxWidth(), color = Theme.amberText) }
       return@Column
     }
     Text(bot.tafs.app.signing.ApprovalKeyRenewed.APPROVE_AGAIN_WORDS, style = scaled(14, color = Theme.amberText))
@@ -111,7 +112,7 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
       // The way that always works: a new sign-in, which ends this session first.
       signInAgain?.let {
         Text(
-          "Sign in again instead",
+          Words.NeedsYou.signInAgainInstead,
           style = scaled(13, FontWeight.SemiBold, Theme.dim),
           modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = it).padding(vertical = 12.dp),
         )
@@ -121,24 +122,24 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
       // Back from approving in the browser: ask KIFF at once.
       LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { again.nudge() }
       Panel(stroke = Theme.amber.copy(alpha = 0.4f)) {
-        Eyebrow("Your code")
+        Eyebrow(Words.SignIn.yourCode)
         SelectionContainer { Text(relink.userCode, style = scaled(28, FontWeight.SemiBold, Theme.ink, mono = true)) }
-        Text("Check that KIFF shows the same code, and approve only with this phone in your hands.", style = scaled(13, color = Theme.dim))
+        Text(Words.NeedsYou.checkCode, style = scaled(13, color = Theme.dim))
       }
-      PrimaryButton("Open KIFF to approve", { uri.openUri(relink.link) })
+      PrimaryButton(Words.SignIn.openKiff, { uri.openUri(relink.link) })
       Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         CircularProgressIndicator(Modifier.size(18.dp), color = Theme.amber, strokeWidth = 2.dp)
         Text(WAITING_FOR_BROWSER, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
         // A 44 dp target, its word level with the line beside it.
-        Text("Cancel", style = scaled(14, FontWeight.SemiBold, Theme.amber), modifier = Modifier.clickable(onClick = again.cancel).padding(horizontal = 4.dp, vertical = 12.dp))
+        Text(Words.Common.cancel, style = scaled(14, FontWeight.SemiBold, Theme.amber), modifier = Modifier.clickable(onClick = again.cancel).padding(horizontal = 4.dp, vertical = 12.dp))
       }
     }
     again.problem?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
 
-const val APPROVE_AGAIN = "Approve again in your browser"
-const val WAITING_FOR_BROWSER = "Waiting for your browser…"
+val APPROVE_AGAIN get() = Words.NeedsYou.approveAgain
+val WAITING_FOR_BROWSER get() = Words.NeedsYou.waitingForBrowser
 
 /**
  * Coach's held installs (kiff/tafs#206): approving one is installing its version. The switch begins, what's in the way stopped;
@@ -185,15 +186,15 @@ fun NeedsYouView(
     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
-    item { ScreenTitle("Needs you") }
+    item { ScreenTitle(Words.NeedsYou.title) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty()) {
       item {
         Panel {
-          Text("Nothing is waiting.", style = scaled(15, FontWeight.SemiBold, Theme.ink))
+          Text(Words.NeedsYou.nothingWaiting, style = scaled(15, FontWeight.SemiBold, Theme.ink))
           Text(
-            "When a taf asks for something outside its Card, it shows up here and on your lock screen.",
+            Words.NeedsYou.emptyHint,
             style = scaled(14, color = Theme.soft),
           )
         }
@@ -260,7 +261,7 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (taf != null) TafAvatar(taf, 32.dp)
-        Text(taf?.name ?: "A taf", style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
+        Text(taf?.name ?: Words.NeedsYou.aTaf, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
         Text(remaining(call, now), style = scaled(12, color = Theme.amberText, mono = true))
       }
       call.proposed.amount?.let { Text(it.formatted, style = scaled(44, FontWeight.Bold, Theme.ink, display = true)) }
@@ -278,10 +279,10 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
 
     val lasting = state.unanswerable[call.id]
     if (expired) {
-      Text("Expired. Nobody answered in time, so KIFF refused it and nothing was sent.", style = scaled(14, color = Theme.soft))
+      Text(Words.NeedsYou.expiredLine, style = scaled(14, color = Theme.soft))
     } else if (lasting != null && !AnswerRefusals.refusesOnly(lasting)) {
       // KIFF says this person may never answer it: words, not buttons that can't work.
-      Text(AnswerRefusals.refusalWords(lasting) ?: "KIFF doesn't take your answer to this one.", style = scaled(14, color = Theme.soft))
+      Text(AnswerRefusals.refusalWords(lasting) ?: Words.NeedsYou.answerNotTaken, style = scaled(14, color = Theme.soft))
     } else {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Said here, where the owner answers, so the taf's words needn't say it.
@@ -331,54 +332,54 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
   Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     if (!state.mayAnswerHolds) {
       // A viewer uses the taf but doesn't answer for the account.
-      Text("Someone who approves on this account answers this. Their answer shows here.", style = scaled(13, color = Theme.soft))
+      Text(Words.NeedsYou.someoneAnswers, style = scaled(13, color = Theme.soft))
     } else if (state.canAnswer(call)) {
       if (refuseOnly) {
         // KIFF takes this person's refusal but not their approval (they asked for the call): Refuse and the next
         // steps stay, approving and extra room go. Over a total, the limit itself can still be changed with Coach.
         if (!call.approvableOnce) improveInCoach?.let { improve ->
-          OutlineButton("Change the limit in Coach mode", { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)
+          OutlineButton(Words.NeedsYou.changeLimit, { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)
         }
       } else if (call.install != null) {
         // Installing is approving: the version goes live, then Coach hears. Not offered where it can't be done.
-        if (install != null) ApprovalGate { PrimaryButton(if (sending) "Installing…" else "Install with $biometry", install, enabled = !sending) }
+        if (install != null) ApprovalGate { PrimaryButton(if (sending) Words.Version.installing else Words.Version.installWith(biometry), install, enabled = !sending) }
       } else if (call.approvableOnce) {
         // Back after extra room: the first step went through, and this is the second, said plainly with KIFF's reason.
         if (call.kiffId != null && call.kiffId in state.roomGiven) {
           Text(SecondStep.words(call.reason), style = scaled(13, color = Theme.amberText))
         }
-        ApprovalGate { PrimaryButton("Approve once with $biometry", { send(Answer.ApproveOnce) }, enabled = !sending) }
+        ApprovalGate { PrimaryButton(Words.NeedsYou.approveOnceWith(biometry), { send(Answer.ApproveOnce) }, enabled = !sending) }
       } else {
         // Over a total the Card keeps across calls: approving once can't pass it (kiff/tafs#138, item 49). Extra room
         // can, for this call, until that total resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
         Text(
           if (state.canManageCards) {
-            "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was."
+            Words.NeedsYou.overTotalManager
           } else {
-            "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it."
+            Words.NeedsYou.overTotal
           },
           style = scaled(13, color = Theme.soft),
         )
         // How much of its totals is from calls the tool refused, in KIFF's words: they count until KIFF confirms nothing moved.
         state.taf(call.tafId)?.let(::pendingLines)?.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
-        if (state.canManageCards) ApprovalGate { PrimaryButton("Extra room with $biometry", { send(Answer.ExtraRoom) }, enabled = !sending) }
+        if (state.canManageCards) ApprovalGate { PrimaryButton(Words.NeedsYou.extraRoomWith(biometry), { send(Answer.ExtraRoom) }, enabled = !sending) }
         // A lasting change is Coach's: a new conversation about this taf (kiff/tafs#107).
         improveInCoach?.let { improve ->
-          OutlineButton("Change the limit in Coach mode", { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)
+          OutlineButton(Words.NeedsYou.changeLimit, { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)
         }
       }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         call.nextSteps.forEach { step -> OutlineButton(step, { send(Answer.NextStep(step)) }, Modifier.weight(1f).confirms(), enabled = !sending) }
-        OutlineButton("Refuse", { send(Answer.Refuse) }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !sending)
+        OutlineButton(Words.NeedsYou.refuse, { send(Answer.Refuse) }, Modifier.weight(1f).confirms(), color = Theme.no, enabled = !sending)
       }
     } else {
       Text(
-        "Answering from the phone arrives once KIFF checks the phone's signature. Until then, answer in KIFF.",
+        Words.NeedsYou.answerInKiffUntil,
         style = scaled(13, color = Theme.soft),
       )
       LocalAnswerPage.current(call)?.let { page ->
         val uri = LocalUriHandler.current
-        PrimaryButton("Answer in KIFF", { uri.openUri(page) })
+        PrimaryButton(Words.NeedsYou.answerInKiffButton, { uri.openUri(page) })
       }
     }
   }
@@ -390,7 +391,7 @@ private fun Details(lines: List<String>) {
   var open by remember { mutableStateOf(false) }
   Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
     Text(
-      if (open) "Details ▾" else "Details ▸",
+      if (open) Words.NeedsYou.detailsOpen else Words.NeedsYou.detailsClosed,
       style = scaled(13, FontWeight.SemiBold, Theme.blue),
       modifier = Modifier.clickable { open = !open }.padding(vertical = 4.dp),
     )
@@ -419,6 +420,6 @@ fun pendingOf(card: bot.tafs.app.model.TafCard): List<String> = listOfNotNull(ca
 
 private fun remaining(call: HeldCall, now: Instant): String {
   val seconds = Duration.between(now, call.expiresAt).seconds
-  if (seconds < 1) return "expired"
-  return "%d:%02d left".format(seconds / 60, seconds % 60)
+  if (seconds < 1) return Words.NeedsYou.expired
+  return Words.NeedsYou.left("%d:%02d".format(seconds / 60, seconds % 60))
 }

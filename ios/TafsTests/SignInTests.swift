@@ -106,4 +106,19 @@ final class SignInTests: XCTestCase {
             XCTAssertEqual(error as? KIFFClient.KIFFError, .server(status: 400, message: "bad public key"))
         }
     }
+
+    /// The agreement under the sign-in reads the line in its language and links the two names
+    /// wherever that language puts them, not only in English's order.
+    func testTheAgreementLinksTheTermsAndPrivacyWhereTheLineSaysSo() {
+        let english = Legal.agreement()
+        XCTAssertEqual(String(english.characters), "By signing in, you agree to KIFF's Terms, which cover tafs, and its Privacy policy.")
+        let links = english.runs.compactMap { run in run.link.map { (String(english[run.range].characters), $0) } }
+        XCTAssertEqual(links.map(\.0), ["Terms", "Privacy policy"])
+        XCTAssertEqual(links.map(\.1), [Legal.terms, Legal.privacy])
+
+        let reordered = Legal.agreement("\u{2} and \u{1} apply.")
+        let order = reordered.runs.compactMap { $0.link }
+        XCTAssertEqual(order, [Legal.privacy, Legal.terms])
+        XCTAssertEqual(String(reordered.characters), "Privacy policy and Terms apply.")
+    }
 }

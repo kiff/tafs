@@ -15,11 +15,11 @@ struct QuestionsCard: View {
 
     var body: some View {
         if let answer = model.setupThread.answer(to: component.id) {
-            OutcomeLine(text: "Your answers · " + (answer.words ?? QuestionAnswers.words(answer.text, questions: questions) ?? answer.text), tone: Theme.ok)
+            OutcomeLine(text: Words.Coach.Questions.yourAnswers + (answer.words ?? QuestionAnswers.words(answer.text, questions: questions) ?? answer.text), tone: Theme.ok)
         } else if chatting {
             HStack(spacing: 8) {
-                Text("You're talking these questions through with Setup.").scaledFont(13).foregroundColor(Theme.soft)
-                Button("Show them again") { chatting = false }.scaledFont(13, weight: .semibold).foregroundColor(Theme.coach)
+                Text(Words.Coach.Questions.talking).scaledFont(13).foregroundColor(Theme.soft)
+                Button(Words.Coach.Questions.showAgain) { chatting = false }.scaledFont(13, weight: .semibold).foregroundColor(Theme.coach)
             }
         } else {
             Panel {
@@ -27,23 +27,23 @@ struct QuestionsCard: View {
                     Text(text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 }
                 HStack {
-                    Eyebrow(text: component.title ?? "Setup needs")
+                    Eyebrow(text: component.title ?? Words.Coach.setupNeeds)
                     Spacer()
-                    Text("\(answeredCount) of \(questions.count) answered").scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
+                    Text(Words.Coach.Questions.answeredOf(answered: "\(answeredCount)", total: "\(questions.count)")).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
                 ForEach(Array(questions.enumerated()), id: \.element.id) { i, q in
                     question(q, number: i + 1)
                 }
                 Divider()
                 WrapRow(spacing: 12) {
-                    Button { send() } label: { Text("Send answers") }
+                    Button { send() } label: { Text(Words.Coach.Questions.send) }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(answeredCount < questions.count || busy)
                     Button {
                         chatting = true
                         Haptics.tap()
                     } label: {
-                        Label("Chat about this", systemImage: "bubble.left")
+                        Label(Words.Coach.Questions.chatAbout, systemImage: "bubble.left")
                             .scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
                     }
                     .buttonStyle(.drivablePlain)
@@ -65,15 +65,15 @@ struct QuestionsCard: View {
                 ForEach(q.options, id: \.self) { o in
                     choice(o.label, detail: o.description, on: selection.picked[q.id]?.contains(o.value) == true) { selection.pick(q, o.value) }
                 }
-                choice("Something else…", detail: nil, on: selection.ownOpen.contains(q.id)) { selection.toggleOwn(q) }
+                choice(Words.Coach.Questions.somethingElse, detail: nil, on: selection.ownOpen.contains(q.id)) { selection.toggleOwn(q) }
             }
             if selection.ownOpen.contains(q.id) {
-                DriveField("Your own answer", text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))
+                DriveField(Words.Coach.ownAnswer, text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))
                     .scaledFont(15)
                     .padding(.horizontal, 14).padding(.vertical, 12)
                     .background(Theme.panel)
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.coach))
-                    .accessibilityLabel("Your own answer to: \(q.text)")
+                    .accessibilityLabel(Words.Coach.Questions.ownAnswerTo(text: "\(q.text)"))
             }
             if let note = q.note, !note.isEmpty {
                 Text(note).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)

@@ -601,7 +601,7 @@ class ChatKiffTest {
     assertFalse(m.deliverChat("   ", "refunds-1"))
     assertFalse(m.deliverChat("x".repeat(2001), "refunds-1"))
     assertTrue(transport.requests.none { it.method == "POST" && it.url.contains("/tafs/") })
-    assertEquals("That's longer than 2000 characters. Say it in fewer words.", m.state.value.chatErrors["refunds-1"])
+    assertEquals("That's longer than 2,000 characters. Say it in fewer words.", m.state.value.chatErrors["refunds-1"])
   }
 
   @Test fun anAgentTafsDoesNotRunCannotBeMessaged() = runTest {

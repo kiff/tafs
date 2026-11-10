@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.InstantAsString
 import java.time.Instant
 import kotlinx.serialization.SerialName
@@ -99,7 +100,7 @@ data class SetupComponent(
   val knobTaf: String? get() = tafId ?: (tafValue as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
 
   /** Where a sign-in goes, as the app shows it: from the card's service, never from Coach's words, so a label can't stand in for the destination. */
-  val destination: String get() = service ?: "the vendor's page"
+  val destination: String get() = service ?: Words.Connect.theVendorsPage
 
   companion object {
     val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob", "drive",

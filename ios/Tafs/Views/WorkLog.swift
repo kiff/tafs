@@ -32,7 +32,7 @@ enum WorkLog {
     /// "12 s", "1 min 5 s".
     static func duration(ms: Int) -> String {
         let s = Swift.max(1, Int((Double(ms) / 1000).rounded()))
-        return s < 60 ? "\(s) s" : "\(s / 60) min \(s % 60) s"
+        return s < 60 ? Words.Work.Duration.seconds(seconds: "\(s)") : Words.Work.Duration.minutes(minutes: "\(s / 60)", seconds: "\(s % 60)")
     }
 }
 
@@ -87,9 +87,9 @@ struct StepList: View {
                     Text(Self.past(row.words)).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                     if row.status == .notMade {
-                        Text("not made · read first").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        Text(Words.Chat.Work.notMadeReadFirst).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     } else if row.tries > 1 {
-                        Text("\(row.tries) tries").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        Text(Words.Chat.Work.tries(count: row.tries)).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -131,14 +131,14 @@ struct WorkSummary: View {
         VStack(alignment: .leading, spacing: 6) {
             Button { withMotion(.easeOut(duration: 0.25)) { open.toggle() } } label: {
                 HStack(spacing: 4) {
-                    Text("Worked for \(WorkLog.duration(ms: work.ms))")
+                    Text(Words.Chat.Work.workedFor(ms: "\(WorkLog.duration(ms: work.ms))"))
                     Image(systemName: "chevron.right").rotationEffect(.degrees(open ? 90 : 0))
                 }
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
             .buttonStyle(.drivablePlain)
-            .accessibilityLabel("Worked for \(WorkLog.duration(ms: work.ms)), \(rows.count == 1 ? "1 step" : "\(rows.count) steps")")
-            .accessibilityHint(open ? "Hides the steps" : "Shows the steps")
+            .accessibilityLabel(Words.Chat.Work.workedForSteps(count: rows.count, took: WorkLog.duration(ms: work.ms)))
+            .accessibilityHint(open ? Words.Chat.Work.hidesSteps : Words.Chat.Work.showsSteps)
             if open { StepList(rows: rows).transition(.opacity) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -96,7 +96,7 @@ struct SetupComponent: Decodable, Equatable {
 
     /// Where a sign-in goes, as the app shows it: from the card's service, never from
     /// Setup's words (kiff/agents#112), so a label can't stand in for the destination.
-    var destination: String { service ?? "the vendor's page" }
+    var destination: String { service ?? Words.Connect.theVendorsPage }
 }
 
 /// A component as the thread holds it: where it first appeared, its latest version
@@ -299,13 +299,13 @@ struct SetupThread: Equatable {
             let options = components.first { $0.id == a.id }?.component.options ?? []
             return options.first { $0.value == a.text }?.label ?? a.text
         case .approval?:
-            if a.failed { return "Approve · it didn't go through" }
-            return a.text == "declined" ? "Decline" : "Approve"
+            if a.failed { return Words.Coach.Answer.approveFailed }
+            return a.text == "declined" ? Words.Coach.Answer.decline : Words.Approval.approve
         case .signIn?:
-            if a.failed { return "Sign in · it didn't go through" }
-            return a.text == "not now" ? "Not now" : "Signed in"
+            if a.failed { return Words.Coach.Answer.signInFailed }
+            return a.text == "not now" ? Words.Common.notNow : Words.Coach.Answer.signedIn
         case .drive?:
-            return a.text == "declined" ? "Not now" : "Approve"
+            return a.text == "declined" ? Words.Common.notNow : Words.Approval.approve
         case .questions?:
             let questions = components.first { $0.id == a.id }?.component.questions ?? []
             return QuestionAnswers.words(a.text, questions: questions) ?? a.text
@@ -365,8 +365,7 @@ struct SetupThread: Equatable {
 
     /// "Refunds' new version wasn't made: why."
     static func notImproved(_ name: String, _ why: String) -> String {
-        let whose = name.hasSuffix("s") ? "\(name)'" : "\(name)'s"
-        return "\(whose) new version wasn't made: \(why.trimmingCharacters(in: CharacterSet(charactersIn: ". ")))."
+        return Words.Coach.notImproved(owner: name, why: why.trimmingCharacters(in: CharacterSet(charactersIn: ". ")))
     }
 
     /// The components that ask the owner to act, in the thread's order: an approval, a

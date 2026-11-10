@@ -34,7 +34,7 @@ struct TafDetailView: View {
     static let chatAtLeast: CGFloat = 430
 
     /// Under a Card total with no currency: Coach connects the tool again.
-    static let reconnect = "Reconnect it in Coach."
+    static let reconnect = Words.Connect.reconnectInCoach
 
     /// Reconnecting is offered to whoever manages the taf and may use Coach, signed in.
     static func offersReconnect(manages: Bool, mayUseCoach: Bool, mode: AppModel.Mode) -> Bool {
@@ -56,11 +56,11 @@ struct TafDetailView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     header(taf)
                     if !folded { headerLine(taf) }
-                    Picker("View", selection: $section) {
-                        if model.canChat(taf.id) { Text("Chat").tag(0) }
-                        Text("Activity").tag(1)
-                        Text("Card").tag(2)
-                        Text("Setup").tag(3)
+                    Picker(Words.Taf.viewPicker, selection: $section) {
+                        if model.canChat(taf.id) { Text(Words.Taf.Section.chat).tag(0) }
+                        Text(Words.Taf.Section.activity).tag(1)
+                        Text(Words.Taf.Section.card).tag(2)
+                        Text(Words.Taf.Section.setup).tag(3)
                     }
                     .pickerStyle(.segmented)
                     // Without the side column, the Cards are one line above the chat or the
@@ -115,23 +115,23 @@ struct TafDetailView: View {
             .onDisappear { if model.tafOnScreen == tafID { model.tafOnScreen = nil } }
             .navigationDestination(isPresented: $openStarts) { StartsWhenView(tafID: tafID) }
             .navigationDestination(isPresented: $openResults) { ResultsGoToView(tafID: tafID) }
-            .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
-                Button("Revoke and stop", role: .destructive) { Task { await model.revoke(tafID) } }
+            .confirmationDialog(Words.Taf.revokeTitle(taf: "\(taf.name)"), isPresented: $confirmRevoke, titleVisibility: .visible) {
+                Button(Words.Taf.revokeAndStop, role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
-                Text("No new action goes through. Anything already done stays done.")
+                Text(Words.Taf.revokeBody)
             }
-            .confirmationDialog("Remove \(taf.name) for good?", isPresented: $confirmRemove, titleVisibility: .visible) {
-                Button("Remove", role: .destructive) { Task { removal = await model.removeTaf(tafID) } }
+            .confirmationDialog(Words.Taf.removeTitle(taf: "\(taf.name)"), isPresented: $confirmRemove, titleVisibility: .visible) {
+                Button(Words.Taf.Remove.button, role: .destructive) { Task { removal = await model.removeTaf(tafID) } }
             } message: {
-                Text("Its Cards are revoked, its schedule stopped, its chats, run reports, memory and key deleted, and its name freed. KIFF's receipts stay.")
+                Text(Words.Taf.removeBody)
             }
-            .alert("Remove \(taf.name)", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
-                Button("OK", role: .cancel) {}
+            .alert(Words.Taf.removeNamed(taf: "\(taf.name)"), isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
+                Button(Words.Common.ok, role: .cancel) {}
             } message: {
                 Text(removal ?? "")
             }
         } else {
-            LateNote(text: "This taf is gone.").screenBackground()
+            LateNote(text: Words.Taf.gone).screenBackground()
         }
     }
 
@@ -180,12 +180,12 @@ struct TafDetailView: View {
             HStack(spacing: 10) {
                 NavigationLink { VersionsScreen(tafID: taf.id) } label: {
                     let live = model.versions[taf.id]?.first(where: \.live)?.n
-                    Text(live.map { "Version \($0) · live" } ?? "Versions")
+                    Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
                         .scaledFont(13, weight: .semibold)
                 }
                 if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {
                     OpenTrialLink(chatID: chat, tafID: taf.id) {
-                        Text("Trying v\(trial.n) · Resume").scaledFont(13, weight: .semibold).foregroundColor(Theme.amber)
+                        Text(Words.Taf.tryingResume(n: "\(trial.n)")).scaledFont(13, weight: .semibold).foregroundColor(Theme.amber)
                     }
                 }
             }
@@ -203,7 +203,7 @@ struct TafDetailView: View {
         if !sideColumn {
             let held = model.heldCalls(for: taf.id)
             if !held.isEmpty {
-                Eyebrow(text: "Needs you", color: Theme.amber)
+                Eyebrow(text: Words.NeedsYou.title, color: Theme.amber)
                 ForEach(held) { HeldCallCard(call: $0) }
             }
         }
@@ -211,15 +211,15 @@ struct TafDetailView: View {
         if let cloud = model.cloudTaf(for: taf.id) {
             let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
             Panel {
-                Eyebrow(text: "Runs")
+                Eyebrow(text: Words.Taf.runs)
                 if cloud.worksFromChat {
                     // Its tools can't find its work by themselves (kiff/tafs#138): no schedule.
-                    Text("It works when you tell it, in its chat: no schedule runs it.")
+                    Text(Words.Taf.worksFromChat)
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
+                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
                         .scaledFont(15).foregroundColor(Theme.ink)
-                    Button(inFlight ? "Starting a run…" : "Run now") {
+                    Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
                         guard !runTapped else { return }
                         runTapped = true
                         Task {
@@ -250,7 +250,7 @@ struct TafDetailView: View {
         }
         let entries = model.entries(for: taf.id).filter(activityFilter.keeps)
         if entries.isEmpty {
-            Text(activityFilter == .all ? "Nothing yet." : "Nothing here.").foregroundColor(Theme.dim)
+            Text(activityFilter == .all ? Words.Common.nothingYet : Words.Record.nothingHere).foregroundColor(Theme.dim)
         }
         let calendar = AccountTime.calendar
         let days = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.at) }
@@ -272,10 +272,10 @@ struct TafDetailView: View {
         let screenshot = Screenshots.enabled && model.mode == .sample
         ForEach(model.tafSetups[taf.id]?.card_unit_exceptions ?? []) { ask in CardUnitExceptionPanel(ask: ask) }
         Panel {
-            Eyebrow(text: "The job")
+            Eyebrow(text: Words.Setup.job)
             Text(taf.job).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             if model.mode == .kiff, manages, model.mayUseCoach, cloud != nil {
-                Button("Improve in Coach") {
+                Button(Words.Setup.improveInCoach) {
                     model.improveTaf(taf.id)
                     model.coachOpen = true
                 }
@@ -286,7 +286,7 @@ struct TafDetailView: View {
             PanelLink { StartsWhenView(tafID: taf.id) } label: {
                 Label(StartsWhenView.title, systemImage: "clock").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 Spacer()
-                Text("Open").scaledFont(14).foregroundColor(Theme.soft)
+                Text(Words.Setup.`open`).scaledFont(14).foregroundColor(Theme.soft)
             }
             .accessibilityIdentifier("setup.startsWhen")
         }
@@ -296,7 +296,7 @@ struct TafDetailView: View {
             PanelLink { ResultsGoToView(tafID: taf.id) } label: {
                 Label(ResultsGoToView.title, systemImage: "paperplane").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 Spacer()
-                Text("Open").scaledFont(14).foregroundColor(Theme.soft)
+                Text(Words.Setup.`open`).scaledFont(14).foregroundColor(Theme.soft)
             }
             .accessibilityIdentifier("setup.resultsGoTo")
         }
@@ -304,12 +304,12 @@ struct TafDetailView: View {
         if model.mode == .kiff, cloud != nil { MemorySummaryPanel(tafID: taf.id) }
         else if model.mode == .sample { MemoryPanel(tafID: taf.id) }
         if model.mode == .sample, taf.state != .revoked {
-            Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
+            Button(taf.state == .paused ? Words.Taf.resume : Words.Taf.pause) { model.togglePause(taf.id) }
                 .buttonStyle(OutlineButtonStyle())
                 .confirming()
         }
         if model.mode == .kiff, cloud != nil, manages {
-            Button("Remove for good") { confirmRemove = true }
+            Button(Words.Setup.removeForGood) { confirmRemove = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 .confirming()
         }
@@ -320,14 +320,14 @@ struct TafDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             let held = model.heldCalls(for: taf.id)
             if !held.isEmpty {
-                Eyebrow(text: "Needs you", color: Theme.amber)
+                Eyebrow(text: Words.NeedsYou.title, color: Theme.amber)
                 ForEach(held) { HeldCallCard(call: $0) }
             }
             let cards = taf.shownCards
-            Eyebrow(text: cards.count == 1 ? "Card" : "Cards")
+            Eyebrow(text: Words.Card.heading(count: cards.count))
             CardStack(cards: cards, issuedBy: model.issuer(of: taf), color: Theme.tafColor(taf.colorIndex),
                       revoked: taf.card.revoked, front: $frontCard)
-            Button(cards.count == 1 ? "All of the Card" : "All of the Cards") { section = 2 }
+            Button(Words.Card.allOf(count: cards.count)) { section = 2 }
                 .buttonStyle(OutlineButtonStyle())
         }
     }
@@ -391,7 +391,7 @@ struct TafDetailView: View {
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
             PanelLink { VersionsScreen(tafID: taf.id) } label: {
                 VStack(alignment: .leading, spacing: 4) {
-                    Label(model.tafSetups[taf.id]?.versions.title ?? "Changes to how it runs", systemImage: "square.stack.3d.up")
+                    Label(model.tafSetups[taf.id]?.versions.title ?? Words.Version.changesRow, systemImage: "square.stack.3d.up")
                         .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                     if let summary = model.tafSetups[taf.id]?.versions.summary { Text(summary).scaledFont(13).foregroundColor(Theme.soft) }
                 }
@@ -400,12 +400,12 @@ struct TafDetailView: View {
         // Its Usage row opens its credits this period, its runs, as on Android.
         if model.mode == .kiff, model.manages(taf.id), let cloud = model.cloudTaf(for: taf.id) {
             PanelLink { TafCreditsView(taf: cloud.id, previous: false).environmentObject(model) } label: {
-                Label("Usage", systemImage: "chart.bar").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                Label(Words.Usage.label, systemImage: "chart.bar").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 Spacer()
             }
         }
         if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
-            Button("Revoke") { confirmRevoke = true }
+            Button(Words.Taf.revoke) { confirmRevoke = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 .confirming()
         }
@@ -426,7 +426,7 @@ struct WorkPanel: View {
         Group {
             if work != nil || error != nil {
                 Panel {
-                    Eyebrow(text: "Its work")
+                    Eyebrow(text: Words.Taf.itsWork)
                     if let line = work?.summary?.line, !line.isEmpty {
                         Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                     }
@@ -459,7 +459,7 @@ struct WorkPanel: View {
                     .fixedSize(horizontal: false, vertical: true)
                 if d.sendAgain, model.manages(tafID) {
                     let sending = model.sendingAgain.contains(r.id)
-                    Button(sending ? "Sending again…" : "Send again") { Task { await model.sendAgain(tafID, run: r.id) } }
+                    Button(sending ? Words.Work.sendingAgain : Words.Work.sendAgain) { Task { await model.sendAgain(tafID, run: r.id) } }
                         .buttonStyle(OutlineButtonStyle())
                         .disabled(sending)
                 }
@@ -486,12 +486,12 @@ struct ConnectionsPanel: View {
         // and an empty box read as something broken (the 870 test).
         if model.mode == .kiff, !connections.isEmpty || manages {
             Panel {
-                Eyebrow(text: "Connected apps")
+                Eyebrow(text: Words.Setup.connectedApps)
                 ForEach(connections) { grant in
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(KIFFMapping.vendorWords(grant.vendor)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                            Text("Keys kept sealed\(grant.account.map { " · \($0)" } ?? "")")
+                            Text(grant.account.map { Words.Taf.keysKeptSealed + " · " + $0 } ?? Words.Taf.keysKeptSealed)
                                 .scaledFont(12).foregroundColor(Theme.dim)
                             if grant.needsReconnect {
                                 // Its vendor signed it out: planque's words, and the owner signs in again.
@@ -505,7 +505,7 @@ struct ConnectionsPanel: View {
                                 if model.leftOver(grant, of: tafID) {
                                     // Left over after a version moved its Card (kiff/tafs#138). An older version may still
                                     // run on it, so the words don't say to remove it.
-                                    Text("Not on the live version's Card: the taf doesn't use it now. Going back to an older version may need it.")
+                                    Text(Words.Taf.notLiveVersionCardTaf)
                                         .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
@@ -515,18 +515,18 @@ struct ConnectionsPanel: View {
                                     .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                             } else {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
-                                Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
+                                Text(grant.listed ? Words.Taf.signedToolsBeingChosen : Words.Taf.signedToolsWaitingYourApproval)
                                     .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                 // None chosen yet: Coach chooses them with the owner.
                                 if grant.listed, manages, model.mayUseCoach {
-                                    Button("Choose actions") {
+                                    Button(Words.Setup.chooseActions) {
                                         model.improveTaf(tafID)
                                         model.coachOpen = true
                                     }
                                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                                 }
                                 if let end = grant.heldUntilDate {
-                                    Text("Unless you approve its tools, the sign-in is revoked \(end.shown(date: .abbreviated, time: .shortened)).")
+                                    Text(Words.Taf.unlessYouApproveToolsSign(time: "\(end.shown(date: .abbreviated, time: .shortened))"))
                                         .scaledFont(12).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
                                 }
                             }
@@ -536,7 +536,7 @@ struct ConnectionsPanel: View {
                             }
                         }
                         Spacer(minLength: 0)
-                        Button(grant.waitingSignIn ? ConnectionFixWords.cancel : "Disconnect") {
+                        Button(grant.waitingSignIn ? ConnectionFixWords.cancel : Words.Connect.disconnectButton) {
                             if grant.waitingSignIn { cancelling = grant } else { confirming = grant }
                         }
                             .confirming()
@@ -544,7 +544,7 @@ struct ConnectionsPanel: View {
                             .foregroundColor(Theme.no)
                     }
                     if grant.needsReconnect {
-                        Button(model.connecting == grant.id ? model.connectStep ?? "Opening the sign-in…" : "Sign in again") {
+                        Button(model.connecting == grant.id ? model.connectStep ?? Words.Connect.openingSignIn : Words.Connect.signInAgain) {
                             Task { await model.reconnect(grant) }
                         }
                         .buttonStyle(OutlineButtonStyle(color: Theme.ink))
@@ -555,14 +555,14 @@ struct ConnectionsPanel: View {
                     }
                 }
                 if manages {
-                    NavigationLink("Connect an app…") { ConnectAppsView().environmentObject(model) }
+                    NavigationLink(Words.Setup.connectApp) { ConnectAppsView().environmentObject(model) }
                         .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 }
             }
             .confirmationDialog(confirming.map { DisconnectWords.title($0.vendor, taf: model.tafOf($0), alsoStops: model.alsoStops($0)) } ?? "",
                                 isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                                 titleVisibility: .visible) {
-                Button("Disconnect", role: .destructive) {
+                Button(Words.Connect.disconnectButton, role: .destructive) {
                     if let id = confirming?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
             } message: {
@@ -571,10 +571,10 @@ struct ConnectionsPanel: View {
             .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0.vendor) } ?? "",
                                 isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
                                 titleVisibility: .visible) {
-                Button("Cancel the sign-in", role: .destructive) {
+                Button(Words.Connect.CancelSignIn.button, role: .destructive) {
                     if let id = cancelling?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
-                Button("Keep waiting", role: .cancel) { cancelling = nil }
+                Button(Words.Connect.CancelSignIn.keepWaiting, role: .cancel) { cancelling = nil }
             } message: {
                 if let g = cancelling { Text(ConnectionFixWords.cancelBody(g.vendor)) }
             }
@@ -591,7 +591,7 @@ struct VersionsScreen: View {
             VersionsPanel(tafID: tafID).padding(.horizontal, 16).padding(.vertical, 12)
         }
         .screenBackground()
-        .navigationTitle("Versions")
+        .navigationTitle(Words.Version.title)
         .inlineTitle()
     }
 }
@@ -622,17 +622,17 @@ struct VersionsPanel: View {
 
     var body: some View {
         Panel {
-            Eyebrow(text: "Versions")
-            Text("Try a version first: you chat with it under a Card of its own, while the live version keeps working. Installing one makes it the live version.")
+            Eyebrow(text: Words.Version.title)
+            Text(Words.Taf.tryVersionFirstYouChat)
                 .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             if let sw = model.switches[tafID] { switchUnderWay(sw) }
             if let n = model.staleVersionCards[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
-                Button("Draft its Card again") { use(v, redraft: true) }
+                Button(Words.Version.redraft) { use(v, redraft: true) }
                     .buttonStyle(OutlineButtonStyle())
             }
             if let list = model.versions[tafID] {
                 if list.isEmpty {
-                    Text("One version so far. When you improve it, each change is kept here.")
+                    Text(Words.Version.firstOnly)
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 ForEach(list.reversed()) { row($0) }
@@ -645,7 +645,7 @@ struct VersionsPanel: View {
             if let n = model.blockedInstalls[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
                 // One step: what's in the way stops (a held call withdrawn, nothing sent), then
                 // the install begins (kiff/tafs#206).
-                Button("Stop it and install") { use(v, stopBlocking: true) }
+                Button(Words.Version.stopAndInstall) { use(v, stopBlocking: true) }
                     .buttonStyle(OutlineButtonStyle())
             }
             if let error = model.trialErrors[tafID] {
@@ -677,13 +677,13 @@ struct VersionsPanel: View {
         let trial = model.openTrials[tafID]
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text("Version \(v.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Words.Version.number(version: "\(v.n)")).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 if v.live {
-                    Text("Live now").scaledFont(11, weight: .bold).foregroundColor(.white)
+                    Text(Words.Version.liveNow).scaledFont(11, weight: .bold).foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(Theme.ok).clipShape(Capsule())
                 } else if trial?.n == v.n {
-                    Text("Trying").scaledFont(11, weight: .bold).foregroundColor(.white)
+                    Text(Words.Version.trying).scaledFont(11, weight: .bold).foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(Theme.amber).clipShape(Capsule())
                 }
@@ -701,17 +701,17 @@ struct VersionsPanel: View {
                 if !v.live {
                     if trial?.n == v.n, let chat = model.trialChat(of: tafID) {
                         OpenTrialLink(chatID: chat, tafID: tafID) {
-                            Text("Resume the trial")
+                            Text(Words.Version.resumeTrial)
                         }
                         .buttonStyle(OutlineButtonStyle())
                         .confirming()
                     } else {
                         // One trial per taf: another waits for the open one to end.
-                        Button("Try it") { starting = v }
+                        Button(Words.Version.tryIt) { starting = v }
                             .buttonStyle(OutlineButtonStyle())
                             .disabled(trial != nil || model.trialBusy.contains(tafID))
                     }
-                    Button(switching == v.n ? "Installing…" : "Install this version") {
+                    Button(switching == v.n ? Words.Version.installing : Words.Version.installThis) {
                         use(v)
                     }
                     .buttonStyle(OutlineButtonStyle())
@@ -726,17 +726,17 @@ struct VersionsPanel: View {
 
     /// One ended trial, in a line: "Tried 21 Oct · 3 calls, 1 held · went back".
     static func tried(_ t: TafsCloud.TrialSummary) -> String {
-        var counts = "\(t.calls) call\(t.calls == 1 ? "" : "s")"
-        if t.held > 0 { counts += ", \(t.held) held" }
-        if t.refused > 0 { counts += ", \(t.refused) refused" }
+        let counts = [Words.Version.Tried.calls(count: t.calls),
+                      t.held > 0 ? Words.Version.Tried.held(count: t.held) : nil,
+                      t.refused > 0 ? Words.Version.Tried.refused(count: t.refused) : nil].compactMap { $0 }.joined(separator: ", ")
         let how: String
         switch t.why {
-        case "installed": how = "installed"
-        case "back": how = "went back"
-        case "idle": how = "ended unused"
-        default: how = "ended"
+        case "installed": how = Words.Version.Tried.installed
+        case "back": how = Words.Version.Tried.wentBack
+        case "idle": how = Words.Version.Tried.endedUnused
+        default: how = Words.Version.Tried.ended
         }
-        return ["Tried \(t.started.formatted(date: .abbreviated, time: .omitted))", counts, how].joined(separator: " · ")
+        return [Words.Version.Tried.on(date: t.started.formatted(date: .abbreviated, time: .omitted)), counts, how].joined(separator: " · ")
     }
 
     /// A switch that didn't finish: the taf doesn't run until it's finished or cancelled.
@@ -744,16 +744,16 @@ struct VersionsPanel: View {
         let version = model.versions[tafID]?.first { $0.n == sw.n }
         let working = model.switchingVersion[tafID] != nil
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Installing version \(sw.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-            Text("Your taf doesn't run until it's installed or you cancel.")
+            Text(Words.Version.installingNumber(version: "\(sw.n)")).scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+            Text(Words.Version.doesntRunUntil)
                 .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
                 if let version {
-                    Button(working ? "Installing…" : "Finish") { use(version) }
+                    Button(working ? Words.Version.installing : Words.Version.finish) { use(version) }
                         .buttonStyle(OutlineButtonStyle())
                         .disabled(working)
                 }
-                Button("Cancel") { Task { await model.cancelSwitch(tafID) } }
+                Button(Words.Common.cancel) { Task { await model.cancelSwitch(tafID) } }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
                     .disabled(working)
             }
@@ -764,7 +764,7 @@ struct VersionsPanel: View {
     /// Who made it, in tafs cloud's words, when, and whether it brings a new Card. A version
     /// kiff/agents wrote itself (the first, or an Upgrade's) names no one.
     static func byline(_ v: TafsCloud.Version) -> String {
-        return [v.byWords, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
+        return [v.byWords, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : Words.Version.bringsNewCard]
             .compactMap { $0 }.joined(separator: " · ")
     }
 }
@@ -787,18 +787,18 @@ struct VersionCardSheet: View {
         NavStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
+                    Text(version.note.map { Words.Version.numberNote(version: "\(version.n)", note: $0) } ?? Words.Version.number(version: "\(version.n)"))
                         .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     if let draft, draft.cards != nil {
                         DraftCardsView(draft: draft)
                         Text(draft.retires?.isEmpty == false
-                             ? "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
-                             : "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF, then this version goes live.")
+                             ? Words.Version.CardNote.removesBiometry(biometry: "\(Biometry.name)")
+                             : Words.Version.CardNote.issuesBiometry(biometry: "\(Biometry.name)"))
                             .scaledFont(12).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         ApprovalNotice()
                     } else if loaded {
-                        Text(model.versionErrors[tafID] ?? "This version's Card couldn't be read.")
+                        Text(model.versionErrors[tafID] ?? Words.Version.cardUnreadable)
                             .scaledFont(13).foregroundColor(Theme.no)
                     } else {
                         ProgressView().tint(Theme.amber)
@@ -807,18 +807,18 @@ struct VersionCardSheet: View {
                 .padding(16)
             }
             .screenBackground()
-            .navigationTitle("Its Card")
+            .navigationTitle(Words.Card.itsCard)
             .inlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     // Not now: the switch it began is dropped, and the taf runs as it was.
-                    Button("Cancel") {
+                    Button(Words.Common.cancel) {
                         dismiss()
                         Task { await model.cancelSwitch(tafID) }
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Install this version") {
+                    Button(Words.Version.installThis) {
                         let shown = draft?.version
                         dismiss()
                         Task { await model.useVersion(version, of: tafID, shownDraft: shown, approving: approving) }
@@ -856,11 +856,11 @@ struct DraftCardsView: View {
     /// A Card this version doesn't have: confirming removes it, so what it allows stops.
     private func retiredView(_ card: KIFFClient.AgentDraft.Retired) -> some View {
         Panel {
-            Eyebrow(text: "Removes a Card")
+            Eyebrow(text: Words.Version.removesCard)
             ForEach(card.current?.lines ?? [], id: \.self) {
                 Text($0).strikethrough().scaledFont(14).foregroundColor(Theme.soft)
             }
-            Text("Your taf can't do this any more.").scaledFont(12).foregroundColor(Theme.dim)
+            Text(Words.Version.cantAnyMore).scaledFont(12).foregroundColor(Theme.dim)
         }
     }
 
@@ -870,15 +870,15 @@ struct DraftCardsView: View {
         Panel {
             if card.isUnchanged {
                 // Re-issued as it is (kiff/tafs#138): its terms once, not a now and after.
-                Eyebrow(text: "Unchanged")
+                Eyebrow(text: Words.Version.unchanged)
                 ForEach(lines, id: \.self) { Text($0).scaledFont(14).foregroundColor(Theme.soft) }
             } else if let current = card.current {
-                Eyebrow(text: "Changes a Card")
-                Text("Now").scaledFont(12, weight: .semibold).foregroundColor(Theme.dim)
+                Eyebrow(text: Words.Version.changesCard)
+                Text(Words.Version.now).scaledFont(12, weight: .semibold).foregroundColor(Theme.dim)
                 ForEach(current.lines, id: \.self) { Text($0).scaledFont(14).foregroundColor(Theme.soft) }
-                Text("After").scaledFont(12, weight: .semibold).foregroundColor(Theme.dim)
+                Text(Words.Version.after).scaledFont(12, weight: .semibold).foregroundColor(Theme.dim)
             } else {
-                Eyebrow(text: "A new Card")
+                Eyebrow(text: Words.Version.newCard)
             }
             if !card.isUnchanged {
                 ForEach(lines, id: \.self) { Text($0).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink) }
@@ -897,10 +897,10 @@ struct MemoryPanel: View {
 
     var body: some View {
         Panel {
-            Eyebrow(text: "What it remembers")
+            Eyebrow(text: Words.Taf.Memory.title)
             if let notes = model.memories[tafID] {
                 if notes.isEmpty {
-                    Text("Nothing yet. It writes down what it learns about how you like the job done.")
+                    Text(Words.Taf.Memory.empty)
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 ForEach(notes) { note in
@@ -911,15 +911,15 @@ struct MemoryPanel: View {
                             Text("\(note.title) · \(note.updatedAt.shortTime)").scaledFont(12).foregroundColor(Theme.soft)
                         }
                         Spacer(minLength: 0)
-                        Button("Forget") { forgetting = note }
+                        Button(Words.Taf.Memory.forget) { forgetting = note }
                             .confirming()
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.soft)
                             .frame(minHeight: 44)
-                            .accessibilityLabel("Forget: \(note.content)")
+                            .accessibilityLabel(Words.Taf.Memory.forgetLabel(note: "\(note.content)"))
                     }
                 }
-                Text("Every run and chat starts with these. They shape how it works, never what its Card allows. Forget removes that one note and its earlier versions; past chats and run reports stay until the taf is removed.")
+                Text(Words.Taf.Memory.explains)
                     .scaledFont(12).foregroundColor(Theme.soft)
             } else if model.memoryErrors[tafID] == nil {
                 ProgressView().tint(Theme.amber)
@@ -929,12 +929,12 @@ struct MemoryPanel: View {
             }
         }
         .task(id: tafID) { if loadAll { await model.loadAllMemory(tafID) } else { await model.loadMemory(tafID) } }
-        .confirmationDialog("Forget this note?", isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }),
+        .confirmationDialog(Words.Taf.Memory.forgetTitle, isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }),
                             titleVisibility: .visible, presenting: forgetting) { note in
-            Button("Forget", role: .destructive) { Task { _ = await model.forget(note, from: tafID) } }
-            Button("Cancel", role: .cancel) {}
+            Button(Words.Taf.Memory.forget, role: .destructive) { Task { _ = await model.forget(note, from: tafID) } }
+            Button(Words.Common.cancel, role: .cancel) {}
         } message: { note in
-            Text("\u{201C}\(note.content)\u{201D}\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.")
+            Text(Words.Taf.Memory.forgetBody(note: note.content))
         }
     }
 }
@@ -947,22 +947,22 @@ struct RunReportPanel: View {
     var body: some View {
         Panel {
             HStack {
-                Eyebrow(text: "Last run")
+                Eyebrow(text: Words.Taf.lastRun)
                 Spacer()
-                Button("Refresh", action: reload).scaledFont(13).foregroundColor(Theme.amberText)
+                Button(Words.Taf.refresh, action: reload).scaledFont(13).foregroundColor(Theme.amberText)
             }
             if let report {
                 if let at = report.at {
-                    Text("\(at.shortTime) · \(report.finished ? "finished" : report.status == "running" ? "still running" : "no session")")
+                    Text("\(at.shortTime) · \(report.finished ? Words.Taf.Report.finished : report.status == "running" ? Words.Taf.Report.stillRunning : Words.Taf.Report.noSession)")
                         .scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
                 if !report.text.isEmpty {
                     // A taf writes markdown: shown as the chat shows it, never raw (kiff/tafs#96).
                     MarkdownText(report.text, size: 14).foregroundColor(Theme.ink).textSelection(.enabled)
                 } else if report.session == nil && report.error == nil {
-                    Text("No run yet.").scaledFont(14).foregroundColor(Theme.dim)
+                    Text(Words.Taf.Report.noRunYet).scaledFont(14).foregroundColor(Theme.dim)
                 } else if !report.finished && report.error == nil {
-                    Text("Its report shows here when the run ends.").scaledFont(14).foregroundColor(Theme.dim)
+                    Text(Words.Taf.Report.whenRunEnds).scaledFont(14).foregroundColor(Theme.dim)
                 }
                 if let error = report.error {
                     Text(error).scaledFont(13).foregroundColor(Theme.no)
@@ -1033,10 +1033,10 @@ struct TafCardFace: View {
         if let hero = card.hero { parts.append("\(hero.figure) \(hero.words)") }
         parts.append([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))
         parts += card.facts
-        if card.rules.isEmpty { parts.append("No actions yet") }
-        parts.append("Issued by \(issuedBy)")
+        if card.rules.isEmpty { parts.append(Words.Card.noActions) }
+        parts.append(Words.Card.issuedByNamed(who: "\(issuedBy)"))
         let end = card.expires?.formatted(date: .abbreviated, time: .omitted)
-        parts.append(revoked ? "Revoked" : !card.active ? "Ended \(end ?? "")" : end.map { "Until \($0)" } ?? "No end date")
+        parts.append(revoked ? Words.Card.revoked : !card.active ? end.map { Words.Card.endedOn(date: $0) } ?? Words.Card.ended : end.map { Words.Card.untilDate(date: "\($0)") } ?? Words.Card.noEndDate)
         return parts.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: ". ") + "."
     }
 
@@ -1058,19 +1058,19 @@ struct TafCardFace: View {
             ForEach(card.facts, id: \.self) { fact in
                 Text(fact).scaledFont(11, design: .monospaced).opacity(0.92).oneLineUnlessLarge().minimumScaleFactor(0.8)
             }
-            if card.rules.isEmpty { Text("no actions yet").scaledFont(12, design: .monospaced) }
+            if card.rules.isEmpty { Text(Words.Card.noActionsShort).scaledFont(12, design: .monospaced) }
             Spacer(minLength: 0)
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Issued by").scaledFont(10).opacity(0.75)
+                    Text(Words.Card.issuedBy).scaledFont(10).opacity(0.75)
                     Text(issuedBy).scaledFont(12, weight: .semibold).oneLineUnlessLarge()
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
                     // A Card with no end says so, never a far-off date (kiff/tafs#96).
-                    Text(revoked ? "Revoked" : !card.active ? "Ended" : card.expires == nil ? "Ends" : "Until")
+                    Text(revoked ? Words.Card.revoked : !card.active ? Words.Card.ended : card.expires == nil ? Words.Card.ends : Words.Card.until)
                         .scaledFont(10).opacity(0.75)
-                    Text(card.expires?.shown(date: .abbreviated, time: .omitted) ?? "No end date")
+                    Text(card.expires?.shown(date: .abbreviated, time: .omitted) ?? Words.Card.noEndDate)
                         .scaledFont(12, weight: .semibold)
                 }
             }
@@ -1111,7 +1111,7 @@ struct CardBar: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.drivablePlain)
-        .accessibilityHint("Shows the Cards")
+        .accessibilityHint(Words.Taf.showsCards)
     }
 
     /// "Refunds · 3 Cards": the Card's name, its environment when it isn't production, and the
@@ -1119,7 +1119,7 @@ struct CardBar: View {
     private var details: String {
         var parts = [card.title]
         if let environment = card.environmentLabel { parts.append(environment.capitalized) }
-        if count > 1 { parts.append("\(count) Cards") }
+        if count > 1 { parts.append(Words.Card.count(count: count)) }
         return parts.joined(separator: " · ")
     }
 }
@@ -1136,7 +1136,7 @@ struct CardLines: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(rule.label).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                        Text(rule.outside == .hold ? "Outside: held for you" : "Outside: refused")
+                        Text(rule.outside == .hold ? Words.Card.outsideHeld : Words.Card.outsideRefused)
                             .scaledFont(12).foregroundColor(Theme.dim)
                     }
                     Spacer()
@@ -1192,7 +1192,7 @@ struct CardStack: View {
                         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(Color.black.opacity(Self.shade(depth: ordered.count - 1 - index))))
                         .shadow(color: .black.opacity(0.16), radius: 4, y: -2)
-                }.buttonStyle(.drivablePlain).accessibilityLabel("\(card.title). Show this Card")
+                }.buttonStyle(.drivablePlain).accessibilityLabel(Words.Taf.showCard(title: "\(card.title)"))
             }
         }
         .frame(maxWidth: TafCardFace.width)
@@ -1203,7 +1203,7 @@ struct CardStack: View {
 /// approved, KIFF's words for how it's counted, the same lines approved, under the tool's
 /// title. The app adds no words of its own.
 struct CountedView: View {
-    static let title = "How this is counted"
+    static let title = Words.Card.howCounted
     let card: String
     let counted: [CardCounted]
 
@@ -1229,10 +1229,10 @@ enum ActivityFilter: CaseIterable {
 
     var title: String {
         switch self {
-        case .all: return "All"
-        case .done: return "Done"
-        case .held: return "Held"
-        case .refused: return "Refused"
+        case .all: return Words.Record.Filter.all
+        case .done: return Words.Taf.Halt.partHeld
+        case .held: return Words.Record.Filter.held
+        case .refused: return Words.Record.Filter.refused
         }
     }
 

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,18 +43,18 @@ fun OnboardingView(onSignIn: () -> Unit, onSample: () -> Unit, modifier: Modifie
     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
       Mascot(96.dp)
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("They taf.\nYou kiff.", style = scaled(48, FontWeight.Bold, Theme.ink, display = true))
-        Text("Hand a job to a taf. It works inside a Card you set, and asks you when it needs more.", style = scaled(16, color = Theme.soft))
+        Text(Words.SignIn.Welcome.title, style = scaled(48, FontWeight.Bold, Theme.ink, display = true))
+        Text(Words.SignIn.Welcome.lead, style = scaled(16, color = Theme.soft))
       }
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Point("Inside the Card", "it acts, and every action has a receipt.", Theme.ok)
-        Point("Outside it", "it waits for you, right here.", Theme.amber)
-        Point("Revoked", "no new action goes through.", Theme.no)
+        Point(Words.SignIn.Welcome.insideLead, Words.SignIn.Welcome.insideRest, Theme.ok)
+        Point(Words.SignIn.Welcome.outsideLead, Words.SignIn.Welcome.outsideRest, Theme.amber)
+        Point(Words.SignIn.Welcome.revokedLead, Words.SignIn.Welcome.revokedRest, Theme.no)
       }
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      PrimaryButton("Sign in with KIFF", onSignIn)
-      OutlineButton("Try it with sample data", onSample, Modifier.fillMaxWidth())
+      PrimaryButton(Words.SignIn.withKiff, onSignIn)
+      OutlineButton(Words.Sample.tryIt, onSample, Modifier.fillMaxWidth())
     }
   }
 }

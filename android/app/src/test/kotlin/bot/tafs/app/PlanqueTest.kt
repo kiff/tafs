@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.kiff.InMemorySecretStore
@@ -1106,7 +1107,7 @@ class PlanqueTest {
     assertEquals("Disconnect Stripe from Refunds? Chargebacks stops too.", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Refunds", listOf("Chargebacks")))
     val shared = bot.tafs.app.model.ConnectionWords.disconnectBody(g, "Refunds", listOf("Chargebacks"))
     assertTrue(shared, shared.contains("Chargebacks' Card also uses these tools, so it stops too."))
-    assertEquals("Coach's", bot.tafs.app.model.ConnectionWords.possessive("Coach"))
+    assertEquals("Coach's", bot.tafs.app.model.Words.possessive("Coach"))
     assertTrue(bot.tafs.app.model.ConnectionWords.disconnectBody(g, null).startsWith("No taf uses this Stripe connection now."))
     // The fingerprint prompt: the taf the connection was set up for, by name.
     reads()

@@ -16,7 +16,7 @@ extension View {
                 Button {
                     reporting.wrappedValue = ReportedAnswer(message: message, chatID: chatID)
                 } label: {
-                    Label("Report this answer", systemImage: "flag")
+                    Label(Words.Report.menu, systemImage: "flag")
                 }
             }
         }
@@ -45,13 +45,13 @@ struct ReportAnswerSheet: View {
             }
             .hiddenScrollBackground()
             .screenBackground()
-            .navigationTitle("Report this answer")
+            .navigationTitle(Words.Report.menu)
             .inlineTitle()
             .toolbar {
                 if done == nil {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                    ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Send") { send() }
+                        Button(Words.Common.send) { send() }
                             .accessibilityIdentifier("report-send")
                             .disabled(reason == nil || sending || note.count > Self.noteLimit)
                     }
@@ -77,19 +77,19 @@ struct ReportAnswerSheet: View {
                     .accessibilityAddTraits(reason == r ? .isSelected : [])
                 }
             } header: {
-                Text("What's wrong with it?")
+                Text(Words.Report.whatWrong)
             }
             Section {
-                ChatField(title: "Add a note (optional)", text: $note)
+                ChatField(title: Words.Report.noteHint, text: $note)
                     .accessibilityIdentifier("report-note")
                 if note.count > Self.noteLimit {
-                    Text("A note is at most 1,000 characters.").scaledFont(13).foregroundColor(Theme.no)
+                    Text(Words.Report.noteMostCharacters).scaledFont(13).foregroundColor(Theme.no)
                 }
             } footer: {
-                Text("A person at KIFF reads your report, with the answer as it was written.")
+                Text(Words.Report.personKiffReadsYourReport)
             }
             if let failed {
-                Text("Not sent: \(failed)")
+                Text(Words.Report.notSentWhy(failed: "\(failed)"))
                     .scaledFont(14).foregroundColor(Theme.no)
                     .accessibilityIdentifier("report-failed")
             }
@@ -100,12 +100,12 @@ struct ReportAnswerSheet: View {
         VStack(spacing: 18) {
             Spacer()
             Image(systemName: "checkmark.circle").scaledFont(40).foregroundColor(Theme.amberText)
-            Text(outcome == .already ? "You've already reported this answer." : "Thanks. Someone at KIFF will read your report.")
+            Text(outcome == .already ? Words.Report.already : Words.Report.thanks)
                 .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                 .multilineTextAlignment(.center)
                 .accessibilityIdentifier("report-done")
             Spacer()
-            Button("Done") { dismiss() }
+            Button(Words.Common.done) { dismiss() }
                 .buttonStyle(PrimaryButtonStyle())
         }
         .padding(24)

@@ -65,7 +65,7 @@ final class DoorsModel: ObservableObject {
                 do { try await Task.sleep(nanoseconds: retryDelays[attempt]) } catch { return }
             }
         }
-        error = "The doors couldn't be read just now. They're tried again when you come back here."
+        error = Words.Door.notRead
     }
 
     /// Turns a door on: email at once; WhatsApp after its signup.
@@ -76,7 +76,7 @@ final class DoorsModel: ObservableObject {
             guard let page = cloud.whatsappSignupURL(tafID) else { return nil }
             let back = try await self.signIn.signIn(at: page)
             let q = Self.query(back)
-            guard let code = q["code"], !code.isEmpty else { throw DoorsError("WhatsApp's signup didn't finish.") }
+            guard let code = q["code"], !code.isEmpty else { throw DoorsError(Words.Door.whatsappSignupDidNotFinish) }
             return try await cloud.addDoor(tafID, app: app.id, extra: [
                 "code": code, "phone_number_id": q["phone_number_id"] ?? "", "waba_id": q["waba_id"] ?? "",
             ])
@@ -127,7 +127,7 @@ final class DoorsModel: ObservableObject {
             error = nil
         } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
             // In the app's words, as the chat says it, not tafs cloud's (the 755 retest).
-            self.error = "That's a lot of messages in a few minutes. Wait a little, then send it again: nothing was sent."
+            self.error = Words.Door.Knock.tooMany
         } catch {
             self.error = error.localizedDescription
         }
@@ -161,14 +161,14 @@ extension DoorsModel {
     /// The docs' screenshot (`-screen doors`): an email door at an address no one owns, the
     /// owner paired, and one stranger's knock waiting.
     static let sample = TafsCloud.Doors(
-        doors: [TafsCloud.Door(id: "door_sample", app: "email", kind: "email", label: "Email", open: true,
+        doors: [TafsCloud.Door(id: "door_sample", app: "email", kind: "email", label: Words.Sample.Tool.email, open: true,
                                address: "refunds@tafs.example", proof: "proven",
-                               how: "It checks the sender's server signed the message",
-                               keys: [.init(id: "you@company.example", name: "You", auto: true), .init(id: "ana@company.example", name: "Ana")],
+                               how: Words.Door.checksSenderServerSignedMessage,
+                               keys: [.init(id: "you@company.example", name: Words.Door.Key.you, auto: true), .init(id: "ana@company.example", name: "Ana")],
                                today: 3, limit: 20, resting: false, othersToday: 1, othersLimit: 10)],
-        apps: [TafsCloud.DoorApp(id: "email", label: "Email", kind: "email", proof: "proven", how: "It checks the sender's server signed the message")],
+        apps: [TafsCloud.DoorApp(id: "email", label: Words.Sample.Tool.email, kind: "email", proof: "proven", how: Words.Door.checksSenderServerSignedMessage)],
         knocks: [TafsCloud.Knock(id: "knock_sample", door: "door_sample", app: "email", from: "mara@customer.example", name: "Mara",
-                                 proof: "pass", subject: "Refund request", text: "Hi, I'd like $15 back on order T-3001.",
+                                 proof: "pass", subject: Words.Door.refundRequest, text: Words.Door.hiLikeBackOrder,
                                  at: Date().addingTimeInterval(-600))])
 }
 

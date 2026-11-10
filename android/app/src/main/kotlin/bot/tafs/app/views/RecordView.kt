@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.model.shortTime
 import bot.tafs.app.model.dayTitle
 import bot.tafs.app.model.localDate
@@ -44,8 +45,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 
 /** The Record's filters (kiff/tafs#167). */
-enum class RecordFilter(val title: String) {
-  All("All"), MoneyMoved("Money moved"), Stopped("Stopped"), Waiting("Waiting");
+enum class RecordFilter {
+  All, MoneyMoved, Stopped, Waiting;
+
+  val title: String get() = when (this) {
+    All -> Words.Record.Filter.all
+    MoneyMoved -> Words.Record.Filter.moneyMoved
+    Stopped -> Words.Record.Filter.stopped
+    Waiting -> Words.Record.Filter.waiting
+  }
 
   fun keeps(e: RecordEntry): Boolean = when (this) {
     All -> true
@@ -100,8 +108,8 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
-    item { ScreenTitle("Record") }
-    item { Text("Everything your tafs did, were refused, or asked you. Newest first.", style = scaled(14, color = Theme.soft)) }
+    item { ScreenTitle(Words.Record.title) }
+    item { Text(Words.Record.lead, style = scaled(14, color = Theme.soft)) }
     // Which taf, above what kind: the two combine.
     if (state.tafs.size > 1) {
       item {
@@ -134,7 +142,7 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
         item(key = "reads-$key") {
           val n = day.reads.size
           Text(
-            "· ${if (n == 1) "1 read" else "$n reads"} of data, within its Card · ${if (open) "Hide" else "Show"}",
+            "· " + Words.Record.reads(count = n) + " · " + (if (open) Words.Record.hide else Words.Record.show),
             style = scaled(13, color = Theme.ok),
             modifier = Modifier.clickable { openReads = if (open) openReads - key else openReads + key }.padding(horizontal = 4.dp),
           )
@@ -142,7 +150,7 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
       }
     }
     if (days.isEmpty()) {
-      item { Text(if (filter == RecordFilter.All) "Nothing yet." else "Nothing here.", style = scaled(14, color = Theme.dim), modifier = Modifier.padding(top = 6.dp)) }
+      item { Text(if (filter == RecordFilter.All) Words.Common.nothingYet else Words.Record.nothingHere, style = scaled(14, color = Theme.dim), modifier = Modifier.padding(top = 6.dp)) }
     }
   }
 }
@@ -167,7 +175,7 @@ private fun Chip(title: String, selected: Boolean, dot: Color? = null, onClick: 
 }
 
 /** The taf chips' first: every taf's Record. */
-const val ALL_TAFS = "All tafs"
+val ALL_TAFS get() = Words.Record.allTafs
 
 @Composable
 fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
@@ -205,15 +213,15 @@ fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
         entry.onText?.let { add(it) }
         when {
           // Held, and KIFF no longer holds it: it may have expired, or been withdrawn when its run stopped.
-          entry.kind == Kind.held && !state.isWaiting(entry) -> { add("no longer waiting"); add("nothing sent") }
+          entry.kind == Kind.held && !state.isWaiting(entry) -> { add(Words.Record.noLongerWaiting); add(Words.Record.nothingSent) }
           entry.receipt != null || entry.answer != null -> { add(entry.decidedLine); add(entry.resultLine) }
           else -> add(entry.detail)
         }
       }
       Text(parts.joinToString(" · "), style = scaled(13, color = Theme.soft))
       // KIFF says it's signed; the seal is for the receipt's own check.
-      if (entry.receipt?.status == "signed") Text("KIFF receipt", style = scaled(12, color = Theme.ok))
-      else if (entry.signature != null) Text("Signed on this phone", style = scaled(12, color = Theme.ok))
+      if (entry.receipt?.status == "signed") Text(Words.Receipt.kiffReceipt, style = scaled(12, color = Theme.ok))
+      else if (entry.signature != null) Text(Words.Record.signedOnDevice(bot.tafs.app.model.ThisDevice.word), style = scaled(12, color = Theme.ok))
     }
   }
 }
