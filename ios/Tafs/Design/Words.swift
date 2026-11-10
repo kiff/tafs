@@ -4525,7 +4525,7 @@ enum Words {
         return formatter.string(from: NSNumber(value: n)) ?? String(n)
     }
 
-    /// Names joined as the lines' language joins them: "Refunds and Bills", "A, B and C".
+    /// Names joined as the lines' language joins them: "Refunds and Bills", "A, B, and C".
     static func list(_ names: [String]) -> String {
         let formatter = ListFormatter()
         formatter.locale = locale
