@@ -2,6 +2,7 @@
 id: answer-questions-about-orders
 title: Answer questions about orders
 category: customers
+order: 1
 line: Answers "where is my order" questions from the help desk by reading the shop, and passes anything about money to you.
 headline: Stop answering "where is my order?"
 today: The same question fills the help desk every day and pushes the real problems down the queue.

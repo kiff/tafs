@@ -2,6 +2,7 @@
 id: ship-when-green
 title: Ship when green, roll back when red
 category: operations
+order: 3
 line: Deploys merged, green and approved changes, watches them, and rolls back a failing one; migrations always ask.
 headline: Stop babysitting deploys.
 today: Someone watches every release, and a bad one stays up until they notice.

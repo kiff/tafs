@@ -2,1358 +2,10 @@
 /** The recipes, as recipes/README.md describes them. */
 export const RECIPES = [
   {
-    "id": "access-for-joiners-and-leavers",
-    "title": "Access for joiners and leavers",
-    "category": "operations",
-    "line": "Gives joiners the apps their team's template lists and removes leavers on their last day; elevated access always asks.",
-    "headline": "A leaver's access ends the day they leave.",
-    "today": "Old accounts stay open for weeks, and new hires wait days for their apps.",
-    "say": "Manage access in my workspace and team chat. For each joiner, give the roles their team's template lists. For each leaver, deactivate every account on their last day. Admin or elevated access always waits for me. Never delete a user.",
-    "connections": [
-      [
-        "googleworkspace",
-        "google_workspace",
-        "googleadmin"
-      ],
-      [
-        "slack"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "Template roles granted, up to 20 a day",
-        "Accounts deactivated, up to 10 a day"
-      ],
-      "holds": [
-        "Admin or elevated access, every time",
-        "A grant past 20, or a deactivation past 10, in a day"
-      ],
-      "never": [
-        "Deleting a user"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Zugänge für Neue und Ausscheidende",
-        "headline": "Der Zugang endet am letzten Arbeitstag.",
-        "today": "Alte Konten bleiben wochenlang offen, und Neue warten tagelang auf ihre Apps.",
-        "line": "Gibt Neuen die Apps, die ihre Teamvorlage vorsieht, und entfernt Ausscheidende an ihrem letzten Tag; erweiterte Rechte fragen immer.",
-        "say": "Verwalte die Zugänge in meinem Workspace und Team-Chat. Gib jeder neuen Person die Rollen, die ihre Teamvorlage vorsieht. Deaktiviere bei jeder ausscheidenden Person an ihrem letzten Tag alle Konten. Admin- oder erweiterte Rechte warten immer auf mich. Lösche nie einen Nutzer.",
-        "card": {
-          "allows": [
-            "Vorlagenrollen vergeben, bis zu 20 am Tag",
-            "Konten deaktiviert, bis zu 10 am Tag"
-          ],
-          "holds": [
-            "Admin- oder erweiterte Rechte, jedes Mal",
-            "Eine Vergabe über 20 oder eine Deaktivierung über 10 an einem Tag"
-          ],
-          "never": [
-            "Einen Nutzer löschen"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Accès des arrivées et des départs",
-        "headline": "Les accès d'un départ s'arrêtent le jour même.",
-        "today": "Les anciens comptes restent ouverts des semaines, et les nouveaux attendent leurs applis des jours.",
-        "line": "Donne aux arrivées les applis prévues par le modèle de leur équipe et retire les départs leur dernier jour ; les accès étendus demandent toujours.",
-        "say": "Gère les accès dans mon espace de travail et ma messagerie d'équipe. Pour chaque arrivée, attribue les rôles prévus par le modèle de son équipe. Pour chaque départ, désactive tous ses comptes son dernier jour. Un accès admin ou étendu attend toujours mon accord. Ne supprime jamais un utilisateur.",
-        "card": {
-          "allows": [
-            "Rôles du modèle attribués, jusqu'à 20 par jour",
-            "Comptes désactivés, jusqu'à 10 par jour"
-          ],
-          "holds": [
-            "Un accès admin ou étendu, à chaque fois",
-            "Une attribution au-delà de 20, ou une désactivation au-delà de 10, dans la journée"
-          ],
-          "never": [
-            "Supprimer un utilisateur"
-          ]
-        }
-      },
-      "es": {
-        "title": "Accesos para altas y bajas",
-        "headline": "El acceso de quien se va termina el día que se va.",
-        "today": "Las cuentas antiguas siguen abiertas durante semanas y las personas nuevas esperan días sus apps.",
-        "line": "Da a las altas las apps que indica la plantilla de su equipo y quita a las bajas en su último día; el acceso elevado siempre pregunta.",
-        "say": "Gestiona los accesos en mi espacio de trabajo y el chat de mi equipo. A cada alta, dale los roles que indica la plantilla de su equipo. A cada baja, desactívale todas las cuentas en su último día. El acceso de administrador o elevado siempre me espera. Nunca elimines un usuario.",
-        "card": {
-          "allows": [
-            "Roles de la plantilla asignados, hasta 20 al día",
-            "Cuentas desactivadas, hasta 10 al día"
-          ],
-          "holds": [
-            "Acceso de administrador o elevado, siempre",
-            "Una asignación por encima de 20, o una desactivación por encima de 10, en un día"
-          ],
-          "never": [
-            "Eliminar un usuario"
-          ]
-        }
-      },
-      "it": {
-        "title": "Accessi per chi entra e chi esce",
-        "headline": "L'accesso di chi se ne va finisce il giorno stesso.",
-        "today": "I vecchi account restano aperti per settimane e i nuovi aspettano giorni le loro app.",
-        "line": "Dà a chi entra le app previste dal modello del suo team e toglie chi esce nel suo ultimo giorno; l'accesso esteso chiede sempre.",
-        "say": "Gestisci gli accessi nel mio spazio di lavoro e nella chat del mio team. A ogni nuovo ingresso, assegna i ruoli previsti dal modello del suo team. A ogni uscita, disattiva tutti i suoi account nel suo ultimo giorno. L'accesso da amministratore o esteso aspetta sempre me. Non eliminare mai un utente.",
-        "card": {
-          "allows": [
-            "Ruoli del modello assegnati, fino a 20 al giorno",
-            "Account disattivati, fino a 10 al giorno"
-          ],
-          "holds": [
-            "Accesso da amministratore o esteso, ogni volta",
-            "Un'assegnazione oltre 20, o una disattivazione oltre 10, in un giorno"
-          ],
-          "never": [
-            "Eliminare un utente"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Acessos para quem entra e quem sai",
-        "headline": "O acesso de quem sai termina no próprio dia.",
-        "today": "Contas antigas ficam abertas durante semanas e quem chega espera dias pelas suas apps.",
-        "line": "Dá a quem entra as apps previstas no modelo da sua equipa e remove quem sai no último dia; o acesso elevado pergunta sempre.",
-        "say": "Gere os acessos no meu espaço de trabalho e no chat da minha equipa. A cada pessoa que entra, atribui as funções previstas no modelo da sua equipa. A cada pessoa que sai, desativa todas as suas contas no último dia. O acesso de administrador ou elevado espera sempre por mim. Nunca elimines um utilizador.",
-        "card": {
-          "allows": [
-            "Funções do modelo atribuídas, até 20 por dia",
-            "Contas desativadas, até 10 por dia"
-          ],
-          "holds": [
-            "Acesso de administrador ou elevado, sempre",
-            "Uma atribuição acima de 20, ou uma desativação acima de 10, num dia"
-          ],
-          "never": [
-            "Eliminar um utilizador"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Toegang voor nieuwe en vertrekkende collega's",
-        "headline": "De toegang van wie vertrekt, stopt op de dag zelf.",
-        "today": "Oude accounts blijven wekenlang open, en nieuwe collega's wachten dagen op hun apps.",
-        "line": "Geeft nieuwe collega's de apps uit het sjabloon van hun team en haalt vertrekkers weg op hun laatste dag; verhoogde rechten vragen altijd.",
-        "say": "Beheer de toegang in mijn werkruimte en teamchat. Geef elke nieuwe collega de rollen uit het sjabloon van het team. Deactiveer bij elke vertrekker op de laatste dag alle accounts. Beheerders- of verhoogde rechten wachten altijd op mij. Verwijder nooit een gebruiker.",
-        "card": {
-          "allows": [
-            "Sjabloonrollen toegekend, tot 20 per dag",
-            "Accounts gedeactiveerd, tot 10 per dag"
-          ],
-          "holds": [
-            "Beheerders- of verhoogde rechten, elke keer",
-            "Een toekenning boven 20, of een deactivering boven 10, op één dag"
-          ],
-          "never": [
-            "Een gebruiker verwijderen"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Dostępy dla nowych i odchodzących",
-        "headline": "Dostęp osoby odchodzącej kończy się w dniu odejścia.",
-        "today": "Stare konta zostają otwarte tygodniami, a nowe osoby czekają dniami na swoje aplikacje.",
-        "line": "Daje nowym osobom aplikacje z szablonu ich zespołu i odbiera dostęp odchodzącym w ostatnim dniu; rozszerzone uprawnienia zawsze pytają.",
-        "say": "Zarządzaj dostępami w mojej przestrzeni roboczej i na czacie zespołu. Każdej nowej osobie przypisz role z szablonu jej zespołu. Każdej odchodzącej osobie wyłącz wszystkie konta w jej ostatnim dniu. Uprawnienia administratora lub rozszerzone zawsze czekają na mnie. Nigdy nie usuwaj użytkownika.",
-        "card": {
-          "allows": [
-            "Role z szablonu przypisane, do 20 dziennie",
-            "Konta wyłączone, do 10 dziennie"
-          ],
-          "holds": [
-            "Uprawnienia administratora lub rozszerzone, za każdym razem",
-            "Przypisanie powyżej 20 lub wyłączenie powyżej 10 w ciągu dnia"
-          ],
-          "never": [
-            "Usunięcie użytkownika"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "answer-questions-about-orders",
-    "title": "Answer questions about orders",
-    "category": "customers",
-    "line": "Answers \"where is my order\" questions from the help desk by reading the shop, and passes anything about money to you.",
-    "headline": "Stop answering \"where is my order?\"",
-    "today": "The same question fills the help desk every day and pushes the real problems down the queue.",
-    "say": "Answer customer questions about their orders from my help desk, using my shop to look them up. Reply up to 50 times a day. Never change an order and never refund; pass those to me.",
-    "connections": [
-      [
-        "gorgias",
-        "intercom",
-        "gmail"
-      ],
-      [
-        "shopify"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "Replies up to 50 a day"
-      ],
-      "holds": [
-        "A reply past 50 in a day"
-      ],
-      "never": [
-        "An order edit or cancellation",
-        "A refund"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Fragen zu Bestellungen beantworten",
-        "headline": "Schluss mit „Wo ist meine Bestellung?“",
-        "today": "Jeden Tag füllt dieselbe Frage den Helpdesk und schiebt die echten Probleme nach hinten.",
-        "line": "Beantwortet Fragen wie „Wo ist meine Bestellung?“ aus dem Helpdesk mit Blick in den Shop und gibt alles, was Geld betrifft, an dich weiter.",
-        "say": "Beantworte Kundenfragen zu ihren Bestellungen aus meinem Helpdesk und schau dazu in meinem Shop nach. Antworte bis zu 50 Mal am Tag. Ändere nie eine Bestellung und erstatte nie etwas; gib das an mich weiter.",
-        "card": {
-          "allows": [
-            "Antworten, bis zu 50 am Tag"
-          ],
-          "holds": [
-            "Eine Antwort über 50 an einem Tag"
-          ],
-          "never": [
-            "Eine Bestellung ändern oder stornieren",
-            "Eine Erstattung"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Répondre aux questions sur les commandes",
-        "headline": "Fini le « où est ma commande ? »",
-        "today": "La même question remplit le support chaque jour et repousse les vrais problèmes au fond de la file.",
-        "line": "Répond aux questions « où est ma commande » du support en consultant la boutique, et vous transmet tout ce qui touche à l'argent.",
-        "say": "Réponds aux questions des clients sur leurs commandes depuis mon support, en consultant ma boutique. Réponds jusqu'à 50 fois par jour. Ne modifie jamais une commande et ne rembourse jamais ; transmets-moi ces demandes.",
-        "card": {
-          "allows": [
-            "Réponses, jusqu'à 50 par jour"
-          ],
-          "holds": [
-            "Une réponse au-delà de 50 dans la journée"
-          ],
-          "never": [
-            "Modifier ou annuler une commande",
-            "Un remboursement"
-          ]
-        }
-      },
-      "es": {
-        "title": "Responder preguntas sobre pedidos",
-        "headline": "Deja de responder «¿dónde está mi pedido?»",
-        "today": "La misma pregunta llena el servicio de atención cada día y deja los problemas reales al final de la cola.",
-        "line": "Responde las preguntas de «dónde está mi pedido» del servicio de atención consultando la tienda y te pasa todo lo que tenga que ver con dinero.",
-        "say": "Responde las preguntas de los clientes sobre sus pedidos desde mi servicio de atención, consultando mi tienda. Responde hasta 50 veces al día. Nunca cambies un pedido ni reembolses; pásame eso a mí.",
-        "card": {
-          "allows": [
-            "Respuestas, hasta 50 al día"
-          ],
-          "holds": [
-            "Una respuesta por encima de 50 en un día"
-          ],
-          "never": [
-            "Modificar o cancelar un pedido",
-            "Un reembolso"
-          ]
-        }
-      },
-      "it": {
-        "title": "Rispondere alle domande sugli ordini",
-        "headline": "Basta rispondere a «dov'è il mio ordine?»",
-        "today": "La stessa domanda riempie l'assistenza ogni giorno e spinge in fondo alla coda i problemi veri.",
-        "line": "Risponde alle domande «dov'è il mio ordine» dall'assistenza controllando il negozio e ti passa tutto ciò che riguarda i soldi.",
-        "say": "Rispondi alle domande dei clienti sui loro ordini dalla mia assistenza, controllando il mio negozio. Rispondi fino a 50 volte al giorno. Non modificare mai un ordine e non rimborsare mai; passa a me queste richieste.",
-        "card": {
-          "allows": [
-            "Risposte, fino a 50 al giorno"
-          ],
-          "holds": [
-            "Una risposta oltre 50 in un giorno"
-          ],
-          "never": [
-            "Modificare o annullare un ordine",
-            "Un rimborso"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Responder a perguntas sobre encomendas",
-        "headline": "Deixe de responder a «onde está a minha encomenda?»",
-        "today": "A mesma pergunta enche o apoio ao cliente todos os dias e empurra os problemas reais para o fim da fila.",
-        "line": "Responde às perguntas «onde está a minha encomenda» do apoio ao cliente consultando a loja e passa-lhe tudo o que envolva dinheiro.",
-        "say": "Responde às perguntas dos clientes sobre as suas encomendas a partir do meu apoio ao cliente, consultando a minha loja. Responde até 50 vezes por dia. Nunca alteres uma encomenda nem reembolses; passa-me esses pedidos.",
-        "card": {
-          "allows": [
-            "Respostas, até 50 por dia"
-          ],
-          "holds": [
-            "Uma resposta acima de 50 num dia"
-          ],
-          "never": [
-            "Alterar ou cancelar uma encomenda",
-            "Um reembolso"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Vragen over bestellingen beantwoorden",
-        "headline": "Nooit meer „waar is mijn bestelling?” beantwoorden.",
-        "today": "Elke dag vult dezelfde vraag de helpdesk en duwt de echte problemen naar achteren.",
-        "line": "Beantwoordt vragen als „waar is mijn bestelling” uit de helpdesk door in de winkel te kijken en geeft alles wat met geld te maken heeft aan jou door.",
-        "say": "Beantwoord vragen van klanten over hun bestellingen uit mijn helpdesk en kijk daarvoor in mijn winkel. Antwoord tot 50 keer per dag. Wijzig nooit een bestelling en betaal nooit iets terug; geef dat aan mij door.",
-        "card": {
-          "allows": [
-            "Antwoorden, tot 50 per dag"
-          ],
-          "holds": [
-            "Een antwoord boven 50 op één dag"
-          ],
-          "never": [
-            "Een bestelling wijzigen of annuleren",
-            "Een terugbetaling"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Odpowiadanie na pytania o zamówienia",
-        "headline": "Koniec z odpowiadaniem na „gdzie jest moje zamówienie?”",
-        "today": "Codziennie to samo pytanie zapycha helpdesk i spycha prawdziwe problemy na koniec kolejki.",
-        "line": "Odpowiada na pytania „gdzie jest moje zamówienie” z helpdesku, sprawdzając sklep, a wszystko, co dotyczy pieniędzy, przekazuje tobie.",
-        "say": "Odpowiadaj na pytania klientów o ich zamówienia z mojego helpdesku, sprawdzając mój sklep. Odpowiadaj do 50 razy dziennie. Nigdy nie zmieniaj zamówienia i nie zwracaj pieniędzy; przekaż to mnie.",
-        "card": {
-          "allows": [
-            "Odpowiedzi, do 50 dziennie"
-          ],
-          "holds": [
-            "Odpowiedź powyżej 50 w ciągu dnia"
-          ],
-          "never": [
-            "Zmiana lub anulowanie zamówienia",
-            "Zwrot pieniędzy"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "book-and-move-appointments",
-    "title": "Book and move appointments",
-    "category": "operations",
-    "line": "Books, moves and confirms appointments by email against the calendar; cancelling always asks.",
-    "headline": "End the back-and-forth over bookings.",
-    "today": "Every booking takes three emails, and a missed one is an empty slot.",
-    "say": "Handle appointment requests that come to my email: book a free slot in my calendar, confirm by email, and move one when a customer asks. Up to 20 changes a day. Cancelling always waits for me.",
-    "connections": [
-      [
-        "gmail",
-        "outlook"
-      ],
-      [
-        "googlecalendar",
-        "outlook"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "Events booked or moved, up to 20 a day",
-        "Confirmations by email, up to 20 a day"
-      ],
-      "holds": [
-        "A cancellation, every time",
-        "A change past 20 in a day"
-      ],
-      "never": [
-        "Deleting an event"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Termine buchen und verschieben",
-        "headline": "Schluss mit dem Hin und Her bei Terminen.",
-        "today": "Jede Buchung kostet drei E-Mails, und eine verpasste ist ein leerer Termin.",
-        "line": "Bucht, verschiebt und bestätigt Termine per E-Mail anhand des Kalenders; Absagen fragen immer.",
-        "say": "Kümmere dich um Terminanfragen, die per E-Mail kommen: buche einen freien Termin in meinem Kalender, bestätige per E-Mail und verschiebe einen Termin, wenn ein Kunde darum bittet. Bis zu 20 Änderungen am Tag. Absagen warten immer auf mich.",
-        "card": {
-          "allows": [
-            "Termine gebucht oder verschoben, bis zu 20 am Tag",
-            "Bestätigungen per E-Mail, bis zu 20 am Tag"
-          ],
-          "holds": [
-            "Eine Absage, jedes Mal",
-            "Eine Änderung über 20 an einem Tag"
-          ],
-          "never": [
-            "Einen Termin löschen"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Réserver et déplacer des rendez-vous",
-        "headline": "Fini les allers-retours pour un rendez-vous.",
-        "today": "Chaque réservation coûte trois e-mails, et un e-mail manqué, c'est un créneau vide.",
-        "line": "Réserve, déplace et confirme les rendez-vous par e-mail selon l'agenda ; une annulation demande toujours.",
-        "say": "Gère les demandes de rendez-vous qui arrivent dans mes e-mails : réserve un créneau libre dans mon agenda, confirme par e-mail et déplace un rendez-vous quand un client le demande. Jusqu'à 20 changements par jour. Une annulation attend toujours mon accord.",
-        "card": {
-          "allows": [
-            "Rendez-vous réservés ou déplacés, jusqu'à 20 par jour",
-            "Confirmations par e-mail, jusqu'à 20 par jour"
-          ],
-          "holds": [
-            "Une annulation, à chaque fois",
-            "Un changement au-delà de 20 dans la journée"
-          ],
-          "never": [
-            "Supprimer un événement"
-          ]
-        }
-      },
-      "es": {
-        "title": "Reservar y mover citas",
-        "headline": "Se acabó el ir y venir para reservar.",
-        "today": "Cada reserva cuesta tres correos, y uno perdido es un hueco vacío.",
-        "line": "Reserva, mueve y confirma citas por correo según el calendario; cancelar siempre pregunta.",
-        "say": "Gestiona las solicitudes de cita que llegan a mi correo: reserva un hueco libre en mi calendario, confirma por correo y mueve una cita cuando un cliente lo pida. Hasta 20 cambios al día. Cancelar siempre me espera.",
-        "card": {
-          "allows": [
-            "Citas reservadas o movidas, hasta 20 al día",
-            "Confirmaciones por correo, hasta 20 al día"
-          ],
-          "holds": [
-            "Una cancelación, siempre",
-            "Un cambio por encima de 20 en un día"
-          ],
-          "never": [
-            "Eliminar un evento"
-          ]
-        }
-      },
-      "it": {
-        "title": "Prenotare e spostare appuntamenti",
-        "headline": "Basta con l'avanti e indietro per prenotare.",
-        "today": "Ogni prenotazione costa tre email, e una persa è un posto vuoto.",
-        "line": "Prenota, sposta e conferma gli appuntamenti via email in base al calendario; una cancellazione chiede sempre.",
-        "say": "Gestisci le richieste di appuntamento che arrivano nella mia email: prenota un orario libero nel mio calendario, conferma via email e sposta un appuntamento quando un cliente lo chiede. Fino a 20 modifiche al giorno. Una cancellazione aspetta sempre me.",
-        "card": {
-          "allows": [
-            "Appuntamenti prenotati o spostati, fino a 20 al giorno",
-            "Conferme via email, fino a 20 al giorno"
-          ],
-          "holds": [
-            "Una cancellazione, ogni volta",
-            "Una modifica oltre 20 in un giorno"
-          ],
-          "never": [
-            "Eliminare un evento"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Marcar e mudar marcações",
-        "headline": "Acabe com o vaivém das marcações.",
-        "today": "Cada marcação custa três emails, e um perdido é um horário vazio.",
-        "line": "Marca, muda e confirma marcações por email com base no calendário; um cancelamento pergunta sempre.",
-        "say": "Trata dos pedidos de marcação que chegam ao meu email: marca um horário livre no meu calendário, confirma por email e muda uma marcação quando um cliente pedir. Até 20 alterações por dia. Um cancelamento espera sempre por mim.",
-        "card": {
-          "allows": [
-            "Marcações feitas ou mudadas, até 20 por dia",
-            "Confirmações por email, até 20 por dia"
-          ],
-          "holds": [
-            "Um cancelamento, sempre",
-            "Uma alteração acima de 20 num dia"
-          ],
-          "never": [
-            "Eliminar um evento"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Afspraken boeken en verzetten",
-        "headline": "Klaar met het heen-en-weer over afspraken.",
-        "today": "Elke afspraak kost drie e-mails, en een gemiste is een leeg tijdslot.",
-        "line": "Boekt, verzet en bevestigt afspraken per e-mail aan de hand van de agenda; annuleren vraagt altijd.",
-        "say": "Handel afspraakverzoeken af die in mijn e-mail binnenkomen: boek een vrij tijdslot in mijn agenda, bevestig per e-mail en verzet een afspraak als een klant daarom vraagt. Tot 20 wijzigingen per dag. Een annulering wacht altijd op mij.",
-        "card": {
-          "allows": [
-            "Afspraken geboekt of verzet, tot 20 per dag",
-            "Bevestigingen per e-mail, tot 20 per dag"
-          ],
-          "holds": [
-            "Een annulering, elke keer",
-            "Een wijziging boven 20 op één dag"
-          ],
-          "never": [
-            "Een afspraak verwijderen"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Umawianie i przesuwanie wizyt",
-        "headline": "Koniec z przepychankami o terminy.",
-        "today": "Każda rezerwacja to trzy e-maile, a jeden przeoczony to pusty termin.",
-        "line": "Umawia, przesuwa i potwierdza wizyty e-mailem na podstawie kalendarza; odwołanie zawsze pyta.",
-        "say": "Obsługuj prośby o wizyty, które przychodzą na mój e-mail: zarezerwuj wolny termin w moim kalendarzu, potwierdź e-mailem i przesuń wizytę, gdy klient o to poprosi. Do 20 zmian dziennie. Odwołanie zawsze czeka na mnie.",
-        "card": {
-          "allows": [
-            "Wizyty umówione lub przesunięte, do 20 dziennie",
-            "Potwierdzenia e-mailem, do 20 dziennie"
-          ],
-          "holds": [
-            "Odwołanie, za każdym razem",
-            "Zmiana powyżej 20 w ciągu dnia"
-          ],
-          "never": [
-            "Usunięcie wydarzenia"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "chargebacks-with-evidence",
-    "title": "Chargebacks with evidence",
-    "category": "money",
-    "line": "Answers card disputes with the order, delivery proof and the customer's messages before the deadline; accepts small ones with weak evidence.",
-    "headline": "Stop losing disputes you could win.",
-    "today": "A dispute nobody answers before the deadline is lost, with the money and the fee.",
-    "say": "Answer the card disputes at my payment provider with evidence before each deadline, using my shop or help desk for the order, delivery proof and messages. Submit evidence for disputes up to 500 EUR; accept a loss only up to 100 EUR. Over that, wait for me. Never contact the customer or their bank.",
-    "connections": [
-      [
-        "stripe"
-      ],
-      [
-        "shopify",
-        "gorgias"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "Evidence submitted for disputes up to 500 EUR",
-        "A loss accepted up to 100 EUR each and 300 EUR a day"
-      ],
-      "holds": [
-        "Evidence for a dispute over 500 EUR",
-        "A loss over 100 EUR, or past 300 EUR in a day"
-      ],
-      "never": [
-        "A message to the customer or their bank"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Chargebacks mit Belegen",
-        "headline": "Verlier keine Streitfälle mehr, die du gewinnen könntest.",
-        "today": "Ein Streitfall, den niemand vor der Frist beantwortet, ist verloren, mit dem Geld und der Gebühr.",
-        "line": "Beantwortet Kartenstreitfälle vor der Frist mit der Bestellung, dem Liefernachweis und den Nachrichten des Kunden; kleine Fälle mit schwachen Belegen akzeptiert er.",
-        "say": "Beantworte die Kartenstreitfälle bei meinem Zahlungsanbieter vor jeder Frist mit Belegen und nimm dafür die Bestellung, den Liefernachweis und die Nachrichten aus meinem Shop oder Helpdesk. Reiche Belege für Streitfälle bis 500 EUR ein; akzeptiere einen Verlust nur bis 100 EUR. Darüber wartest du auf mich. Kontaktiere nie den Kunden oder seine Bank.",
-        "card": {
-          "allows": [
-            "Belege eingereicht für Streitfälle bis 500 EUR",
-            "Ein Verlust akzeptiert bis 100 EUR pro Fall und 300 EUR am Tag"
-          ],
-          "holds": [
-            "Belege für einen Streitfall über 500 EUR",
-            "Ein Verlust über 100 EUR oder über 300 EUR an einem Tag"
-          ],
-          "never": [
-            "Eine Nachricht an den Kunden oder seine Bank"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Litiges avec preuves",
-        "headline": "Arrêtez de perdre des litiges que vous pourriez gagner.",
-        "today": "Un litige sans réponse avant l'échéance est perdu, avec l'argent et les frais.",
-        "line": "Répond aux litiges sur carte avant l'échéance avec la commande, la preuve de livraison et les messages du client ; accepte les petits litiges aux preuves faibles.",
-        "say": "Réponds aux litiges sur carte chez mon prestataire de paiement avec des preuves avant chaque échéance, en prenant dans ma boutique ou mon support la commande, la preuve de livraison et les messages. Envoie des preuves pour les litiges jusqu'à 500 EUR ; n'accepte une perte que jusqu'à 100 EUR. Au-delà, attends mon accord. Ne contacte jamais le client ni sa banque.",
-        "card": {
-          "allows": [
-            "Preuves envoyées pour les litiges jusqu'à 500 EUR",
-            "Une perte acceptée jusqu'à 100 EUR chacune et 300 EUR par jour"
-          ],
-          "holds": [
-            "Des preuves pour un litige de plus de 500 EUR",
-            "Une perte de plus de 100 EUR, ou au-delà de 300 EUR dans la journée"
-          ],
-          "never": [
-            "Un message au client ou à sa banque"
-          ]
-        }
-      },
-      "es": {
-        "title": "Contracargos con pruebas",
-        "headline": "Deja de perder disputas que podrías ganar.",
-        "today": "Una disputa que nadie responde antes del plazo se pierde, con el dinero y la comisión.",
-        "line": "Responde las disputas de tarjeta antes del plazo con el pedido, la prueba de entrega y los mensajes del cliente; acepta las pequeñas con pruebas débiles.",
-        "say": "Responde las disputas de tarjeta en mi proveedor de pagos con pruebas antes de cada plazo, tomando de mi tienda o mi servicio de atención el pedido, la prueba de entrega y los mensajes. Envía pruebas para disputas de hasta 500 EUR; acepta una pérdida solo hasta 100 EUR. Por encima de eso, espérame. Nunca contactes al cliente ni a su banco.",
-        "card": {
-          "allows": [
-            "Pruebas enviadas para disputas de hasta 500 EUR",
-            "Una pérdida aceptada de hasta 100 EUR cada una y 300 EUR al día"
-          ],
-          "holds": [
-            "Pruebas para una disputa de más de 500 EUR",
-            "Una pérdida de más de 100 EUR, o por encima de 300 EUR en un día"
-          ],
-          "never": [
-            "Un mensaje al cliente o a su banco"
-          ]
-        }
-      },
-      "it": {
-        "title": "Chargeback con prove",
-        "headline": "Smetti di perdere contestazioni che potresti vincere.",
-        "today": "Una contestazione a cui nessuno risponde entro la scadenza è persa, con i soldi e la commissione.",
-        "line": "Risponde alle contestazioni sulle carte entro la scadenza con l'ordine, la prova di consegna e i messaggi del cliente; accetta quelle piccole con prove deboli.",
-        "say": "Rispondi alle contestazioni sulle carte nel mio fornitore di pagamenti con le prove prima di ogni scadenza, prendendo dal mio negozio o dalla mia assistenza l'ordine, la prova di consegna e i messaggi. Invia prove per contestazioni fino a 500 EUR; accetta una perdita solo fino a 100 EUR. Oltre, aspetta me. Non contattare mai il cliente o la sua banca.",
-        "card": {
-          "allows": [
-            "Prove inviate per contestazioni fino a 500 EUR",
-            "Una perdita accettata fino a 100 EUR ciascuna e 300 EUR al giorno"
-          ],
-          "holds": [
-            "Prove per una contestazione oltre 500 EUR",
-            "Una perdita oltre 100 EUR, o oltre 300 EUR in un giorno"
-          ],
-          "never": [
-            "Un messaggio al cliente o alla sua banca"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Chargebacks com provas",
-        "headline": "Deixe de perder disputas que podia ganhar.",
-        "today": "Uma disputa que ninguém responde dentro do prazo está perdida, com o dinheiro e a taxa.",
-        "line": "Responde às disputas de cartão dentro do prazo com a encomenda, a prova de entrega e as mensagens do cliente; aceita as pequenas com provas fracas.",
-        "say": "Responde às disputas de cartão no meu fornecedor de pagamentos com provas antes de cada prazo, tirando da minha loja ou do meu apoio ao cliente a encomenda, a prova de entrega e as mensagens. Envia provas para disputas até 500 EUR; aceita uma perda só até 100 EUR. Acima disso, espera por mim. Nunca contactes o cliente nem o seu banco.",
-        "card": {
-          "allows": [
-            "Provas enviadas para disputas até 500 EUR",
-            "Uma perda aceite até 100 EUR cada e 300 EUR por dia"
-          ],
-          "holds": [
-            "Provas para uma disputa acima de 500 EUR",
-            "Uma perda acima de 100 EUR, ou acima de 300 EUR num dia"
-          ],
-          "never": [
-            "Uma mensagem ao cliente ou ao seu banco"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Chargebacks met bewijs",
-        "headline": "Verlies geen geschillen meer die je kunt winnen.",
-        "today": "Een geschil dat niemand voor de deadline beantwoordt, is verloren, met het geld en de kosten.",
-        "line": "Beantwoordt kaartgeschillen voor de deadline met de bestelling, het afleverbewijs en de berichten van de klant; accepteert kleine geschillen met zwak bewijs.",
-        "say": "Beantwoord kaartgeschillen bij mijn betaalprovider met bewijs voor elke deadline, en haal de bestelling, het afleverbewijs en de berichten uit mijn winkel of helpdesk. Dien bewijs in voor geschillen tot 500 EUR; accepteer een verlies alleen tot 100 EUR. Daarboven wacht je op mij. Neem nooit contact op met de klant of diens bank.",
-        "card": {
-          "allows": [
-            "Bewijs ingediend voor geschillen tot 500 EUR",
-            "Een verlies geaccepteerd tot 100 EUR per stuk en 300 EUR per dag"
-          ],
-          "holds": [
-            "Bewijs voor een geschil boven 500 EUR",
-            "Een verlies boven 100 EUR, of boven 300 EUR op één dag"
-          ],
-          "never": [
-            "Een bericht aan de klant of diens bank"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Chargebacki z dowodami",
-        "headline": "Przestań przegrywać spory, które możesz wygrać.",
-        "today": "Spór, na który nikt nie odpowie przed terminem, jest przegrany, razem z pieniędzmi i opłatą.",
-        "line": "Odpowiada na spory kartowe przed terminem, dołączając zamówienie, dowód dostawy i wiadomości klienta; małe spory ze słabymi dowodami akceptuje.",
-        "say": "Odpowiadaj na spory kartowe u mojego operatora płatności z dowodami przed każdym terminem, biorąc z mojego sklepu lub helpdesku zamówienie, dowód dostawy i wiadomości. Wysyłaj dowody w sporach do 500 EUR; akceptuj stratę tylko do 100 EUR. Powyżej tego czekaj na mnie. Nigdy nie kontaktuj się z klientem ani jego bankiem.",
-        "card": {
-          "allows": [
-            "Dowody wysłane w sporach do 500 EUR",
-            "Zaakceptowana strata do 100 EUR każda i 300 EUR dziennie"
-          ],
-          "holds": [
-            "Dowody w sporze powyżej 500 EUR",
-            "Strata powyżej 100 EUR lub powyżej 300 EUR w ciągu dnia"
-          ],
-          "never": [
-            "Wiadomość do klienta lub jego banku"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "chase-overdue-invoices",
-    "title": "Chase overdue invoices",
-    "category": "money",
-    "line": "Reminds customers of overdue invoices on a schedule and reports who hasn't paid; moves no money.",
-    "headline": "Get paid without chasing.",
-    "today": "Late payers stay late until someone finds the time to remind them.",
-    "say": "Each weekday morning, find my overdue invoices in my accounting app and send a polite reminder to each customer from my email, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.",
-    "connections": [
-      [
-        "quickbooks",
-        "zohobooks",
-        "moneybird"
-      ],
-      [
-        "gmail",
-        "outlook"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "Reminders up to 20 a day, at most one a week per invoice"
-      ],
-      "holds": [
-        "A reminder past 20 in a day"
-      ],
-      "never": [
-        "Editing an invoice",
-        "A credit note or a discount"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Überfällige Rechnungen anmahnen",
-        "headline": "Werde bezahlt, ohne hinterherzulaufen.",
-        "today": "Wer spät zahlt, bleibt spät, bis jemand Zeit findet, ihn zu erinnern.",
-        "line": "Erinnert Kunden nach Plan an überfällige Rechnungen und meldet, wer nicht gezahlt hat; bewegt kein Geld.",
-        "say": "Suche jeden Werktag morgens meine überfälligen Rechnungen in meiner Buchhaltungs-App und schicke jedem Kunden von meiner E-Mail eine höfliche Erinnerung, höchstens eine pro Woche und Rechnung und 20 am Tag. Ändere nie eine Rechnung und biete keinen Rabatt an. Sag mir, wer mehr als 30 Tage im Verzug ist.",
-        "card": {
-          "allows": [
-            "Erinnerungen bis zu 20 am Tag, höchstens eine pro Woche und Rechnung"
-          ],
-          "holds": [
-            "Eine Erinnerung über 20 an einem Tag"
-          ],
-          "never": [
-            "Eine Rechnung ändern",
-            "Eine Gutschrift oder ein Rabatt"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Relancer les factures impayées",
-        "headline": "Soyez payé sans relancer.",
-        "today": "Les mauvais payeurs restent en retard jusqu'à ce que quelqu'un trouve le temps de les relancer.",
-        "line": "Relance les clients pour les factures en retard selon un calendrier et indique qui n'a pas payé ; ne déplace aucun argent.",
-        "say": "Chaque matin de semaine, trouve mes factures en retard dans mon logiciel de comptabilité et envoie à chaque client une relance polie depuis mon e-mail, au plus une par semaine et par facture et 20 par jour. Ne modifie jamais une facture et ne propose pas de remise. Dis-moi qui a plus de 30 jours de retard.",
-        "card": {
-          "allows": [
-            "Relances jusqu'à 20 par jour, au plus une par semaine et par facture"
-          ],
-          "holds": [
-            "Une relance au-delà de 20 dans la journée"
-          ],
-          "never": [
-            "Modifier une facture",
-            "Un avoir ou une remise"
-          ]
-        }
-      },
-      "es": {
-        "title": "Reclamar facturas vencidas",
-        "headline": "Cobra sin perseguir a nadie.",
-        "today": "Quien paga tarde sigue pagando tarde hasta que alguien encuentra tiempo para recordárselo.",
-        "line": "Recuerda a los clientes sus facturas vencidas según un calendario e informa de quién no ha pagado; no mueve dinero.",
-        "say": "Cada mañana de lunes a viernes, busca mis facturas vencidas en mi app de contabilidad y envía a cada cliente un recordatorio amable desde mi correo, como mucho uno por semana y factura y 20 al día. Nunca cambies una factura ni ofrezcas un descuento. Dime quién lleva más de 30 días de retraso.",
-        "card": {
-          "allows": [
-            "Recordatorios hasta 20 al día, como mucho uno por semana y factura"
-          ],
-          "holds": [
-            "Un recordatorio por encima de 20 en un día"
-          ],
-          "never": [
-            "Modificar una factura",
-            "Una nota de crédito o un descuento"
-          ]
-        }
-      },
-      "it": {
-        "title": "Sollecitare le fatture scadute",
-        "headline": "Fatti pagare senza rincorrere nessuno.",
-        "today": "Chi paga in ritardo resta in ritardo finché qualcuno non trova il tempo di ricordarglielo.",
-        "line": "Ricorda ai clienti le fatture scadute secondo un calendario e segnala chi non ha pagato; non muove denaro.",
-        "say": "Ogni mattina dei giorni feriali, trova le mie fatture scadute nella mia app di contabilità e invia a ogni cliente un sollecito cortese dalla mia email, al massimo uno a settimana per fattura e 20 al giorno. Non modificare mai una fattura e non offrire sconti. Dimmi chi è in ritardo di oltre 30 giorni.",
-        "card": {
-          "allows": [
-            "Solleciti fino a 20 al giorno, al massimo uno a settimana per fattura"
-          ],
-          "holds": [
-            "Un sollecito oltre 20 in un giorno"
-          ],
-          "never": [
-            "Modificare una fattura",
-            "Una nota di credito o uno sconto"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Cobrar faturas em atraso",
-        "headline": "Receba sem andar atrás de ninguém.",
-        "today": "Quem paga tarde continua a pagar tarde até alguém ter tempo para lembrar.",
-        "line": "Lembra os clientes das faturas em atraso segundo um calendário e indica quem não pagou; não movimenta dinheiro.",
-        "say": "Todas as manhãs de dias úteis, encontra as minhas faturas em atraso na minha app de contabilidade e envia a cada cliente um lembrete simpático a partir do meu email, no máximo um por semana e por fatura e 20 por dia. Nunca alteres uma fatura nem ofereças um desconto. Diz-me quem tem mais de 30 dias de atraso.",
-        "card": {
-          "allows": [
-            "Lembretes até 20 por dia, no máximo um por semana e por fatura"
-          ],
-          "holds": [
-            "Um lembrete acima de 20 num dia"
-          ],
-          "never": [
-            "Alterar uma fatura",
-            "Uma nota de crédito ou um desconto"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Achterstallige facturen opvolgen",
-        "headline": "Krijg betaald zonder achter mensen aan te gaan.",
-        "today": "Wie laat betaalt, blijft laat tot iemand tijd vindt om een herinnering te sturen.",
-        "line": "Herinnert klanten volgens een schema aan achterstallige facturen en meldt wie niet heeft betaald; verplaatst geen geld.",
-        "say": "Zoek elke werkdagochtend mijn achterstallige facturen in mijn boekhoudapp en stuur elke klant een vriendelijke herinnering vanuit mijn e-mail, hoogstens één per week per factuur en 20 per dag. Wijzig nooit een factuur en bied geen korting aan. Vertel me wie meer dan 30 dagen achterloopt.",
-        "card": {
-          "allows": [
-            "Herinneringen tot 20 per dag, hoogstens één per week per factuur"
-          ],
-          "holds": [
-            "Een herinnering boven 20 op één dag"
-          ],
-          "never": [
-            "Een factuur wijzigen",
-            "Een creditnota of een korting"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Upominanie się o zaległe faktury",
-        "headline": "Dostawaj pieniądze bez ganiania za nikim.",
-        "today": "Kto płaci późno, płaci późno dalej, dopóki ktoś nie znajdzie czasu, żeby mu przypomnieć.",
-        "line": "Przypomina klientom o zaległych fakturach według harmonogramu i zgłasza, kto nie zapłacił; nie przelewa pieniędzy.",
-        "say": "W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.",
-        "card": {
-          "allows": [
-            "Przypomnienia do 20 dziennie, najwyżej jedno na tydzień i fakturę"
-          ],
-          "holds": [
-            "Przypomnienie powyżej 20 w ciągu dnia"
-          ],
-          "never": [
-            "Zmiana faktury",
-            "Nota kredytowa lub rabat"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "file-receipts",
-    "title": "File receipts",
-    "category": "errands",
-    "line": "Finds receipts and invoices in the mailbox, saves each to a folder and adds a row to the expenses sheet; deletes nothing.",
-    "headline": "No more hunting for receipts at tax time.",
-    "today": "Receipts sit in the inbox until the accountant asks for them.",
-    "say": "Each evening, find receipts and invoices in my email, save each PDF to my Receipts folder in my file storage and add a row to my Expenses sheet with the date, vendor, amount and currency. Up to 50 a day. Never delete or move an email.",
-    "connections": [
-      [
-        "gmail",
-        "outlook"
-      ],
-      [
-        "googledrive"
-      ],
-      [
-        "googlesheets"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "Files saved and rows added, up to 50 a day each"
-      ],
-      "holds": [
-        "A file or a row past 50 in a day"
-      ],
-      "never": [
-        "Deleting or moving an email"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Belege ablegen",
-        "headline": "Nie mehr Belege suchen, wenn die Steuer fällig ist.",
-        "today": "Belege liegen im Posteingang, bis die Buchhaltung nach ihnen fragt.",
-        "line": "Findet Belege und Rechnungen im Postfach, legt jede Datei in einem Ordner ab und ergänzt eine Zeile in der Ausgabentabelle; löscht nichts.",
-        "say": "Suche jeden Abend Belege und Rechnungen in meiner E-Mail, speichere jedes PDF in meinem Ordner Belege in meinem Dateispeicher und ergänze in meiner Tabelle Ausgaben eine Zeile mit Datum, Anbieter, Betrag und Währung. Bis zu 50 am Tag. Lösche oder verschiebe nie eine E-Mail.",
-        "card": {
-          "allows": [
-            "Dateien abgelegt und Zeilen ergänzt, je bis zu 50 am Tag"
-          ],
-          "holds": [
-            "Eine Datei oder Zeile über 50 an einem Tag"
-          ],
-          "never": [
-            "Eine E-Mail löschen oder verschieben"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Classer les justificatifs",
-        "headline": "Plus de chasse aux justificatifs au moment des impôts.",
-        "today": "Les justificatifs dorment dans la boîte de réception jusqu'à ce que le comptable les demande.",
-        "line": "Trouve les reçus et factures dans la boîte mail, enregistre chacun dans un dossier et ajoute une ligne au tableau des dépenses ; ne supprime rien.",
-        "say": "Chaque soir, trouve les reçus et factures dans mes e-mails, enregistre chaque PDF dans mon dossier Justificatifs de mon stockage de fichiers et ajoute une ligne à mon tableau Dépenses avec la date, le fournisseur, le montant et la devise. Jusqu'à 50 par jour. Ne supprime ni ne déplace jamais un e-mail.",
-        "card": {
-          "allows": [
-            "Fichiers enregistrés et lignes ajoutées, jusqu'à 50 de chaque par jour"
-          ],
-          "holds": [
-            "Un fichier ou une ligne au-delà de 50 dans la journée"
-          ],
-          "never": [
-            "Supprimer ou déplacer un e-mail"
-          ]
-        }
-      },
-      "es": {
-        "title": "Archivar recibos",
-        "headline": "Se acabó buscar recibos cuando llegan los impuestos.",
-        "today": "Los recibos se quedan en la bandeja de entrada hasta que el contable los pide.",
-        "line": "Encuentra recibos y facturas en el buzón, guarda cada uno en una carpeta y añade una fila a la hoja de gastos; no borra nada.",
-        "say": "Cada tarde, busca recibos y facturas en mi correo, guarda cada PDF en mi carpeta Recibos de mi almacenamiento de archivos y añade una fila a mi hoja Gastos con la fecha, el proveedor, el importe y la moneda. Hasta 50 al día. Nunca borres ni muevas un correo.",
-        "card": {
-          "allows": [
-            "Archivos guardados y filas añadidas, hasta 50 de cada al día"
-          ],
-          "holds": [
-            "Un archivo o una fila por encima de 50 en un día"
-          ],
-          "never": [
-            "Borrar o mover un correo"
-          ]
-        }
-      },
-      "it": {
-        "title": "Archiviare le ricevute",
-        "headline": "Basta cercare ricevute quando arrivano le tasse.",
-        "today": "Le ricevute restano nella posta in arrivo finché il commercialista non le chiede.",
-        "line": "Trova ricevute e fatture nella casella di posta, salva ciascuna in una cartella e aggiunge una riga al foglio spese; non elimina nulla.",
-        "say": "Ogni sera, trova ricevute e fatture nella mia email, salva ogni PDF nella mia cartella Ricevute del mio archivio file e aggiungi una riga al mio foglio Spese con data, fornitore, importo e valuta. Fino a 50 al giorno. Non eliminare né spostare mai un'email.",
-        "card": {
-          "allows": [
-            "File salvati e righe aggiunte, fino a 50 di ciascuno al giorno"
-          ],
-          "holds": [
-            "Un file o una riga oltre 50 in un giorno"
-          ],
-          "never": [
-            "Eliminare o spostare un'email"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Arquivar recibos",
-        "headline": "Acabou a caça aos recibos na altura dos impostos.",
-        "today": "Os recibos ficam na caixa de entrada até o contabilista os pedir.",
-        "line": "Encontra recibos e faturas na caixa de correio, guarda cada um numa pasta e acrescenta uma linha à folha de despesas; não apaga nada.",
-        "say": "Todas as noites, encontra recibos e faturas no meu email, guarda cada PDF na minha pasta Recibos do meu armazenamento de ficheiros e acrescenta uma linha à minha folha Despesas com a data, o fornecedor, o valor e a moeda. Até 50 por dia. Nunca apagues nem movas um email.",
-        "card": {
-          "allows": [
-            "Ficheiros guardados e linhas acrescentadas, até 50 de cada por dia"
-          ],
-          "holds": [
-            "Um ficheiro ou uma linha acima de 50 num dia"
-          ],
-          "never": [
-            "Apagar ou mover um email"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Bonnetjes archiveren",
-        "headline": "Nooit meer bonnetjes zoeken bij de belastingaangifte.",
-        "today": "Bonnetjes blijven in de inbox staan tot de boekhouder erom vraagt.",
-        "line": "Vindt bonnetjes en facturen in de mailbox, bewaart elk in een map en voegt een regel toe aan de uitgavenlijst; verwijdert niets.",
-        "say": "Zoek elke avond bonnetjes en facturen in mijn e-mail, bewaar elke pdf in mijn map Bonnetjes in mijn bestandsopslag en voeg in mijn spreadsheet Uitgaven een regel toe met de datum, de leverancier, het bedrag en de valuta. Tot 50 per dag. Verwijder of verplaats nooit een e-mail.",
-        "card": {
-          "allows": [
-            "Bestanden bewaard en regels toegevoegd, tot 50 van elk per dag"
-          ],
-          "holds": [
-            "Een bestand of regel boven 50 op één dag"
-          ],
-          "never": [
-            "Een e-mail verwijderen of verplaatsen"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Archiwizowanie paragonów",
-        "headline": "Koniec z szukaniem paragonów przed rozliczeniem podatku.",
-        "today": "Paragony leżą w skrzynce odbiorczej, dopóki księgowy o nie nie poprosi.",
-        "line": "Znajduje paragony i faktury w skrzynce, zapisuje każdy w folderze i dodaje wiersz do arkusza wydatków; niczego nie usuwa.",
-        "say": "Każdego wieczoru znajdź paragony i faktury w moim e-mailu, zapisz każdy PDF w moim folderze Paragony w moim magazynie plików i dodaj wiersz do mojego arkusza Wydatki z datą, dostawcą, kwotą i walutą. Do 50 dziennie. Nigdy nie usuwaj ani nie przenoś e-maila.",
-        "card": {
-          "allows": [
-            "Pliki zapisane i wiersze dodane, do 50 każdego dziennie"
-          ],
-          "holds": [
-            "Plik lub wiersz powyżej 50 w ciągu dnia"
-          ],
-          "never": [
-            "Usunięcie lub przeniesienie e-maila"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "follow-up-new-leads",
-    "title": "Follow up new leads within the hour",
-    "category": "customers",
-    "line": "Turns each new form entry into a CRM deal and sends a first reply within the hour, so no lead waits a day.",
-    "headline": "Never lose a lead to a slow reply.",
-    "today": "A lead who waits a day for an answer may already have asked someone else.",
-    "say": "When someone fills in my form, add them as a deal in my CRM and send them a short reply from my email within the hour. Up to 30 a day. Never change or delete an existing deal.",
-    "connections": [
-      [
-        "typeform"
-      ],
-      [
-        "pipedrive"
-      ],
-      [
-        "gmail",
-        "outlook"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "New deals up to 30 a day",
-        "Replies up to 30 a day"
-      ],
-      "holds": [
-        "A deal or a reply past 30 in a day"
-      ],
-      "never": [
-        "Changing or deleting an existing deal"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Neue Leads innerhalb einer Stunde nachfassen",
-        "headline": "Verlier keinen Lead mehr an eine langsame Antwort.",
-        "today": "Ein Lead, der einen Tag auf eine Antwort wartet, hat vielleicht schon jemand anderen gefragt.",
-        "line": "Macht aus jedem neuen Formulareintrag einen Deal im CRM und schickt innerhalb einer Stunde eine erste Antwort, damit kein Lead einen Tag wartet.",
-        "say": "Wenn jemand mein Formular ausfüllt, leg die Person als Deal in meinem CRM an und schick ihr innerhalb einer Stunde eine kurze Antwort von meiner E-Mail. Bis zu 30 am Tag. Ändere oder lösche nie einen bestehenden Deal.",
-        "card": {
-          "allows": [
-            "Neue Deals, bis zu 30 am Tag",
-            "Antworten, bis zu 30 am Tag"
-          ],
-          "holds": [
-            "Ein Deal oder eine Antwort über 30 an einem Tag"
-          ],
-          "never": [
-            "Einen bestehenden Deal ändern oder löschen"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Relancer les nouveaux prospects dans l'heure",
-        "headline": "Ne perdez plus un prospect à cause d'une réponse lente.",
-        "today": "Un prospect qui attend une réponse un jour entier a peut-être déjà demandé ailleurs.",
-        "line": "Transforme chaque nouvelle entrée de formulaire en affaire dans le CRM et envoie une première réponse dans l'heure, pour qu'aucun prospect n'attende un jour.",
-        "say": "Quand quelqu'un remplit mon formulaire, ajoute-le comme affaire dans mon CRM et envoie-lui une courte réponse depuis mon e-mail dans l'heure. Jusqu'à 30 par jour. Ne modifie ni ne supprime jamais une affaire existante.",
-        "card": {
-          "allows": [
-            "Nouvelles affaires, jusqu'à 30 par jour",
-            "Réponses, jusqu'à 30 par jour"
-          ],
-          "holds": [
-            "Une affaire ou une réponse au-delà de 30 dans la journée"
-          ],
-          "never": [
-            "Modifier ou supprimer une affaire existante"
-          ]
-        }
-      },
-      "es": {
-        "title": "Atender a los nuevos contactos en menos de una hora",
-        "headline": "No pierdas ni un contacto por responder tarde.",
-        "today": "Un contacto que espera un día una respuesta quizá ya le haya preguntado a otro.",
-        "line": "Convierte cada nueva entrada del formulario en una oportunidad en el CRM y envía una primera respuesta en menos de una hora, para que ningún contacto espere un día.",
-        "say": "Cuando alguien rellene mi formulario, añádelo como oportunidad en mi CRM y envíale una respuesta breve desde mi correo en menos de una hora. Hasta 30 al día. Nunca cambies ni elimines una oportunidad existente.",
-        "card": {
-          "allows": [
-            "Nuevas oportunidades, hasta 30 al día",
-            "Respuestas, hasta 30 al día"
-          ],
-          "holds": [
-            "Una oportunidad o una respuesta por encima de 30 en un día"
-          ],
-          "never": [
-            "Cambiar o eliminar una oportunidad existente"
-          ]
-        }
-      },
-      "it": {
-        "title": "Ricontattare i nuovi contatti entro un'ora",
-        "headline": "Non perdere più un contatto per una risposta lenta.",
-        "today": "Un contatto che aspetta un giorno una risposta potrebbe aver già chiesto a qualcun altro.",
-        "line": "Trasforma ogni nuova compilazione del modulo in un'opportunità nel CRM e invia una prima risposta entro un'ora, così nessun contatto aspetta un giorno.",
-        "say": "Quando qualcuno compila il mio modulo, aggiungilo come opportunità nel mio CRM e inviagli una breve risposta dalla mia email entro un'ora. Fino a 30 al giorno. Non modificare né eliminare mai un'opportunità esistente.",
-        "card": {
-          "allows": [
-            "Nuove opportunità, fino a 30 al giorno",
-            "Risposte, fino a 30 al giorno"
-          ],
-          "holds": [
-            "Un'opportunità o una risposta oltre 30 in un giorno"
-          ],
-          "never": [
-            "Modificare o eliminare un'opportunità esistente"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Responder a novos contactos em menos de uma hora",
-        "headline": "Nunca perca um contacto por responder tarde.",
-        "today": "Um contacto que espera um dia por uma resposta pode já ter perguntado a outra pessoa.",
-        "line": "Transforma cada novo preenchimento do formulário numa oportunidade no CRM e envia uma primeira resposta em menos de uma hora, para que nenhum contacto espere um dia.",
-        "say": "Quando alguém preencher o meu formulário, acrescenta-o como oportunidade no meu CRM e envia-lhe uma resposta curta a partir do meu email em menos de uma hora. Até 30 por dia. Nunca alteres nem elimines uma oportunidade existente.",
-        "card": {
-          "allows": [
-            "Novas oportunidades, até 30 por dia",
-            "Respostas, até 30 por dia"
-          ],
-          "holds": [
-            "Uma oportunidade ou uma resposta acima de 30 num dia"
-          ],
-          "never": [
-            "Alterar ou eliminar uma oportunidade existente"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Nieuwe leads binnen een uur opvolgen",
-        "headline": "Verlies nooit meer een lead door een trage reactie.",
-        "today": "Een lead die een dag op antwoord wacht, heeft misschien al iemand anders gevraagd.",
-        "line": "Maakt van elke nieuwe formulierinzending een deal in het CRM en stuurt binnen een uur een eerste antwoord, zodat geen lead een dag wacht.",
-        "say": "Als iemand mijn formulier invult, voeg die persoon toe als deal in mijn CRM en stuur binnen een uur een kort antwoord vanuit mijn e-mail. Tot 30 per dag. Wijzig of verwijder nooit een bestaande deal.",
-        "card": {
-          "allows": [
-            "Nieuwe deals, tot 30 per dag",
-            "Antwoorden, tot 30 per dag"
-          ],
-          "holds": [
-            "Een deal of antwoord boven 30 op één dag"
-          ],
-          "never": [
-            "Een bestaande deal wijzigen of verwijderen"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Kontakt z nowymi leadami w ciągu godziny",
-        "headline": "Nie trać leadów przez wolną odpowiedź.",
-        "today": "Lead, który czeka dzień na odpowiedź, mógł już zapytać kogoś innego.",
-        "line": "Z każdego nowego zgłoszenia z formularza tworzy szansę sprzedaży w CRM i wysyła pierwszą odpowiedź w ciągu godziny, żeby żaden lead nie czekał dnia.",
-        "say": "Gdy ktoś wypełni mój formularz, dodaj go jako szansę sprzedaży w moim CRM i wyślij mu krótką odpowiedź z mojego e-maila w ciągu godziny. Do 30 dziennie. Nigdy nie zmieniaj ani nie usuwaj istniejącej szansy sprzedaży.",
-        "card": {
-          "allows": [
-            "Nowe szanse sprzedaży, do 30 dziennie",
-            "Odpowiedzi, do 30 dziennie"
-          ],
-          "holds": [
-            "Szansa sprzedaży lub odpowiedź powyżej 30 w ciągu dnia"
-          ],
-          "never": [
-            "Zmiana lub usunięcie istniejącej szansy sprzedaży"
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "pay-matching-bills",
-    "title": "Pay bills that match a purchase order",
-    "category": "money",
-    "line": "Matches each vendor bill to its purchase order and what was received, and pays the exact matches within the Card.",
-    "headline": "Pay the right bills on time. Never the wrong ones.",
-    "today": "Bills get paid late, or paid without anyone checking them against the order.",
-    "say": "Pay my vendor bills from my accounting app when the bill matches its purchase order and what we received, up to 5,000 EUR each and 25,000 EUR a week, only to payees already on file. A wire always waits for me. Never add a payee or change bank details; if a bill asks for that, stop and tell me.",
-    "connections": [
-      [
-        "quickbooks",
-        "xero",
-        "moneybird"
-      ],
-      [
-        "wise",
-        "revolut"
-      ]
-    ],
-    "card": {
-      "allows": [
-        "A payment up to 5,000 EUR each and 25,000 EUR a week, to a payee already on file"
-      ],
-      "holds": [
-        "A payment over 5,000 EUR, or past 25,000 EUR in a week",
-        "A wire, every time"
-      ],
-      "never": [
-        "A new payee, or a change to a payee's bank details"
-      ]
-    },
-    "languages": {
-      "de": {
-        "title": "Rechnungen bezahlen, die zur Bestellung passen",
-        "headline": "Die richtigen Rechnungen pünktlich zahlen. Nie die falschen.",
-        "today": "Rechnungen werden zu spät bezahlt oder ohne dass jemand sie mit der Bestellung abgleicht.",
-        "line": "Gleicht jede Lieferantenrechnung mit ihrer Bestellung und dem Wareneingang ab und bezahlt genaue Treffer innerhalb der Card.",
-        "say": "Bezahle meine Lieferantenrechnungen aus meiner Buchhaltungs-App, wenn die Rechnung zur Bestellung und zum Wareneingang passt, bis 5.000 EUR pro Stück und 25.000 EUR pro Woche, nur an bereits hinterlegte Empfänger. Eine Überweisung per Wire wartet immer auf mich. Lege nie einen Empfänger an und ändere nie Bankdaten; verlangt eine Rechnung das, hör auf und sag es mir.",
-        "card": {
-          "allows": [
-            "Eine Zahlung bis 5.000 EUR pro Stück und 25.000 EUR pro Woche, an einen bereits hinterlegten Empfänger"
-          ],
-          "holds": [
-            "Eine Zahlung über 5.000 EUR oder über 25.000 EUR in einer Woche",
-            "Eine Überweisung per Wire, jedes Mal"
-          ],
-          "never": [
-            "Ein neuer Empfänger oder eine Änderung seiner Bankdaten"
-          ]
-        }
-      },
-      "fr": {
-        "title": "Payer les factures conformes à la commande",
-        "headline": "Payez les bonnes factures à temps. Jamais les mauvaises.",
-        "today": "Les factures sont payées en retard, ou sans que personne ne les compare à la commande.",
-        "line": "Rapproche chaque facture fournisseur de son bon de commande et de la réception, et paie celles qui correspondent exactement, dans les limites de la Card.",
-        "say": "Paie mes factures fournisseurs depuis mon logiciel de comptabilité quand la facture correspond à son bon de commande et à ce que nous avons reçu, jusqu'à 5 000 EUR chacune et 25 000 EUR par semaine, seulement à des bénéficiaires déjà enregistrés. Un virement wire attend toujours mon accord. N'ajoute jamais de bénéficiaire et ne change jamais de coordonnées bancaires ; si une facture le demande, arrête-toi et préviens-moi.",
-        "card": {
-          "allows": [
-            "Un paiement jusqu'à 5 000 EUR chacun et 25 000 EUR par semaine, à un bénéficiaire déjà enregistré"
-          ],
-          "holds": [
-            "Un paiement de plus de 5 000 EUR, ou au-delà de 25 000 EUR dans la semaine",
-            "Un virement wire, à chaque fois"
-          ],
-          "never": [
-            "Un nouveau bénéficiaire, ou un changement de ses coordonnées bancaires"
-          ]
-        }
-      },
-      "es": {
-        "title": "Pagar facturas que coinciden con el pedido",
-        "headline": "Paga a tiempo las facturas correctas. Nunca las equivocadas.",
-        "today": "Las facturas se pagan tarde, o sin que nadie las compare con el pedido.",
-        "line": "Cruza cada factura de proveedor con su orden de compra y lo recibido, y paga las que coinciden exactamente, dentro de la Card.",
-        "say": "Paga mis facturas de proveedores desde mi app de contabilidad cuando la factura coincida con su orden de compra y con lo que hemos recibido, hasta 5.000 EUR cada una y 25.000 EUR a la semana, solo a beneficiarios ya registrados. Una transferencia wire siempre me espera. Nunca añadas un beneficiario ni cambies datos bancarios; si una factura lo pide, detente y avísame.",
-        "card": {
-          "allows": [
-            "Un pago de hasta 5.000 EUR cada uno y 25.000 EUR a la semana, a un beneficiario ya registrado"
-          ],
-          "holds": [
-            "Un pago de más de 5.000 EUR, o por encima de 25.000 EUR en una semana",
-            "Una transferencia wire, siempre"
-          ],
-          "never": [
-            "Un beneficiario nuevo, o un cambio en sus datos bancarios"
-          ]
-        }
-      },
-      "it": {
-        "title": "Pagare le fatture che corrispondono all'ordine",
-        "headline": "Paga in tempo le fatture giuste. Mai quelle sbagliate.",
-        "today": "Le fatture vengono pagate in ritardo, o senza che nessuno le confronti con l'ordine.",
-        "line": "Confronta ogni fattura del fornitore con il suo ordine d'acquisto e con la merce ricevuta, e paga quelle che corrispondono esattamente, nei limiti della Card.",
-        "say": "Paga le fatture dei miei fornitori dalla mia app di contabilità quando la fattura corrisponde al suo ordine d'acquisto e a ciò che abbiamo ricevuto, fino a 5.000 EUR ciascuna e 25.000 EUR a settimana, solo a beneficiari già registrati. Un bonifico wire aspetta sempre me. Non aggiungere mai un beneficiario né modificare coordinate bancarie; se una fattura lo chiede, fermati e dimmelo.",
-        "card": {
-          "allows": [
-            "Un pagamento fino a 5.000 EUR ciascuno e 25.000 EUR a settimana, a un beneficiario già registrato"
-          ],
-          "holds": [
-            "Un pagamento oltre 5.000 EUR, o oltre 25.000 EUR in una settimana",
-            "Un bonifico wire, ogni volta"
-          ],
-          "never": [
-            "Un nuovo beneficiario, o una modifica alle sue coordinate bancarie"
-          ]
-        }
-      },
-      "pt": {
-        "title": "Pagar faturas que batem certo com a encomenda",
-        "headline": "Pague a tempo as faturas certas. Nunca as erradas.",
-        "today": "As faturas são pagas tarde, ou sem que ninguém as compare com a encomenda.",
-        "line": "Confere cada fatura de fornecedor com a sua nota de encomenda e com o que foi recebido, e paga as que batem certo exatamente, dentro da Card.",
-        "say": "Paga as faturas dos meus fornecedores a partir da minha app de contabilidade quando a fatura bater certo com a sua nota de encomenda e com o que recebemos, até 5000 EUR cada e 25 000 EUR por semana, só a beneficiários já registados. Uma transferência wire espera sempre por mim. Nunca acrescentes um beneficiário nem alteres dados bancários; se uma fatura o pedir, para e avisa-me.",
-        "card": {
-          "allows": [
-            "Um pagamento até 5000 EUR cada e 25 000 EUR por semana, a um beneficiário já registado"
-          ],
-          "holds": [
-            "Um pagamento acima de 5000 EUR, ou acima de 25 000 EUR numa semana",
-            "Uma transferência wire, sempre"
-          ],
-          "never": [
-            "Um beneficiário novo, ou uma alteração dos seus dados bancários"
-          ]
-        }
-      },
-      "nl": {
-        "title": "Facturen betalen die bij de bestelling passen",
-        "headline": "Betaal de juiste facturen op tijd. Nooit de verkeerde.",
-        "today": "Facturen worden te laat betaald, of zonder dat iemand ze met de bestelling vergelijkt.",
-        "line": "Vergelijkt elke leveranciersfactuur met de inkooporder en de ontvangst, en betaalt de facturen die precies kloppen, binnen de Card.",
-        "say": "Betaal mijn leveranciersfacturen vanuit mijn boekhoudapp als de factuur klopt met de inkooporder en met wat we ontvangen hebben, tot 5.000 EUR per stuk en 25.000 EUR per week, alleen aan al bekende begunstigden. Een wire-overboeking wacht altijd op mij. Voeg nooit een begunstigde toe en wijzig nooit bankgegevens; als een factuur daarom vraagt, stop dan en laat het me weten.",
-        "card": {
-          "allows": [
-            "Een betaling tot 5.000 EUR per stuk en 25.000 EUR per week, aan een al bekende begunstigde"
-          ],
-          "holds": [
-            "Een betaling boven 5.000 EUR, of boven 25.000 EUR in één week",
-            "Een wire-overboeking, elke keer"
-          ],
-          "never": [
-            "Een nieuwe begunstigde, of een wijziging van diens bankgegevens"
-          ]
-        }
-      },
-      "pl": {
-        "title": "Płacenie faktur zgodnych z zamówieniem",
-        "headline": "Płać właściwe faktury na czas. Nigdy niewłaściwe.",
-        "today": "Faktury są płacone za późno albo bez sprawdzenia, czy zgadzają się z zamówieniem.",
-        "line": "Porównuje każdą fakturę dostawcy z jej zamówieniem i przyjęciem towaru, a te, które dokładnie się zgadzają, opłaca w ramach Card.",
-        "say": "Opłacaj faktury moich dostawców z mojej aplikacji księgowej, gdy faktura zgadza się z zamówieniem i z tym, co otrzymaliśmy, do 5000 EUR każda i 25 000 EUR tygodniowo, tylko na rzecz już zapisanych odbiorców. Przelew wire zawsze czeka na mnie. Nigdy nie dodawaj odbiorcy ani nie zmieniaj danych bankowych; jeśli faktura o to prosi, zatrzymaj się i daj mi znać.",
-        "card": {
-          "allows": [
-            "Płatność do 5000 EUR każda i 25 000 EUR tygodniowo, na rzecz już zapisanego odbiorcy"
-          ],
-          "holds": [
-            "Płatność powyżej 5000 EUR lub powyżej 25 000 EUR w ciągu tygodnia",
-            "Przelew wire, za każdym razem"
-          ],
-          "never": [
-            "Nowy odbiorca lub zmiana jego danych bankowych"
-          ]
-        }
-      }
-    }
-  },
-  {
     "id": "refunds-within-a-limit",
     "title": "Refunds within a limit",
     "category": "money",
+    "order": 1,
     "line": "Answers refund requests from the support queue and refunds in the payment provider, within the Card.",
     "headline": "No refund waits overnight.",
     "today": "A refund that waits can turn into a chargeback, with a fee you pay even if you win.",
@@ -1533,9 +185,520 @@ export const RECIPES = [
     }
   },
   {
+    "id": "chargebacks-with-evidence",
+    "title": "Chargebacks with evidence",
+    "category": "money",
+    "order": 2,
+    "line": "Answers card disputes with the order, delivery proof and the customer's messages before the deadline; accepts small ones with weak evidence.",
+    "headline": "Stop losing disputes you could win.",
+    "today": "A dispute nobody answers before the deadline is lost, with the money and the fee.",
+    "say": "Answer the card disputes at my payment provider with evidence before each deadline, using my shop or help desk for the order, delivery proof and messages. Submit evidence for disputes up to 500 EUR; accept a loss only up to 100 EUR. Over that, wait for me. Never contact the customer or their bank.",
+    "connections": [
+      [
+        "stripe"
+      ],
+      [
+        "shopify",
+        "gorgias"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Evidence submitted for disputes up to 500 EUR",
+        "A loss accepted up to 100 EUR each and 300 EUR a day"
+      ],
+      "holds": [
+        "Evidence for a dispute over 500 EUR",
+        "A loss over 100 EUR, or past 300 EUR in a day"
+      ],
+      "never": [
+        "A message to the customer or their bank"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Chargebacks mit Belegen",
+        "headline": "Verlier keine Streitfälle mehr, die du gewinnen könntest.",
+        "today": "Ein Streitfall, den niemand vor der Frist beantwortet, ist verloren, mit dem Geld und der Gebühr.",
+        "line": "Beantwortet Kartenstreitfälle vor der Frist mit der Bestellung, dem Liefernachweis und den Nachrichten des Kunden; kleine Fälle mit schwachen Belegen akzeptiert er.",
+        "say": "Beantworte die Kartenstreitfälle bei meinem Zahlungsanbieter vor jeder Frist mit Belegen und nimm dafür die Bestellung, den Liefernachweis und die Nachrichten aus meinem Shop oder Helpdesk. Reiche Belege für Streitfälle bis 500 EUR ein; akzeptiere einen Verlust nur bis 100 EUR. Darüber wartest du auf mich. Kontaktiere nie den Kunden oder seine Bank.",
+        "card": {
+          "allows": [
+            "Belege eingereicht für Streitfälle bis 500 EUR",
+            "Ein Verlust akzeptiert bis 100 EUR pro Fall und 300 EUR am Tag"
+          ],
+          "holds": [
+            "Belege für einen Streitfall über 500 EUR",
+            "Ein Verlust über 100 EUR oder über 300 EUR an einem Tag"
+          ],
+          "never": [
+            "Eine Nachricht an den Kunden oder seine Bank"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Litiges avec preuves",
+        "headline": "Arrêtez de perdre des litiges que vous pourriez gagner.",
+        "today": "Un litige sans réponse avant l'échéance est perdu, avec l'argent et les frais.",
+        "line": "Répond aux litiges sur carte avant l'échéance avec la commande, la preuve de livraison et les messages du client ; accepte les petits litiges aux preuves faibles.",
+        "say": "Réponds aux litiges sur carte chez mon prestataire de paiement avec des preuves avant chaque échéance, en prenant dans ma boutique ou mon support la commande, la preuve de livraison et les messages. Envoie des preuves pour les litiges jusqu'à 500 EUR ; n'accepte une perte que jusqu'à 100 EUR. Au-delà, attends mon accord. Ne contacte jamais le client ni sa banque.",
+        "card": {
+          "allows": [
+            "Preuves envoyées pour les litiges jusqu'à 500 EUR",
+            "Une perte acceptée jusqu'à 100 EUR chacune et 300 EUR par jour"
+          ],
+          "holds": [
+            "Des preuves pour un litige de plus de 500 EUR",
+            "Une perte de plus de 100 EUR, ou au-delà de 300 EUR dans la journée"
+          ],
+          "never": [
+            "Un message au client ou à sa banque"
+          ]
+        }
+      },
+      "es": {
+        "title": "Contracargos con pruebas",
+        "headline": "Deja de perder disputas que podrías ganar.",
+        "today": "Una disputa que nadie responde antes del plazo se pierde, con el dinero y la comisión.",
+        "line": "Responde las disputas de tarjeta antes del plazo con el pedido, la prueba de entrega y los mensajes del cliente; acepta las pequeñas con pruebas débiles.",
+        "say": "Responde las disputas de tarjeta en mi proveedor de pagos con pruebas antes de cada plazo, tomando de mi tienda o mi servicio de atención el pedido, la prueba de entrega y los mensajes. Envía pruebas para disputas de hasta 500 EUR; acepta una pérdida solo hasta 100 EUR. Por encima de eso, espérame. Nunca contactes al cliente ni a su banco.",
+        "card": {
+          "allows": [
+            "Pruebas enviadas para disputas de hasta 500 EUR",
+            "Una pérdida aceptada de hasta 100 EUR cada una y 300 EUR al día"
+          ],
+          "holds": [
+            "Pruebas para una disputa de más de 500 EUR",
+            "Una pérdida de más de 100 EUR, o por encima de 300 EUR en un día"
+          ],
+          "never": [
+            "Un mensaje al cliente o a su banco"
+          ]
+        }
+      },
+      "it": {
+        "title": "Chargeback con prove",
+        "headline": "Smetti di perdere contestazioni che potresti vincere.",
+        "today": "Una contestazione a cui nessuno risponde entro la scadenza è persa, con i soldi e la commissione.",
+        "line": "Risponde alle contestazioni sulle carte entro la scadenza con l'ordine, la prova di consegna e i messaggi del cliente; accetta quelle piccole con prove deboli.",
+        "say": "Rispondi alle contestazioni sulle carte nel mio fornitore di pagamenti con le prove prima di ogni scadenza, prendendo dal mio negozio o dalla mia assistenza l'ordine, la prova di consegna e i messaggi. Invia prove per contestazioni fino a 500 EUR; accetta una perdita solo fino a 100 EUR. Oltre, aspetta me. Non contattare mai il cliente o la sua banca.",
+        "card": {
+          "allows": [
+            "Prove inviate per contestazioni fino a 500 EUR",
+            "Una perdita accettata fino a 100 EUR ciascuna e 300 EUR al giorno"
+          ],
+          "holds": [
+            "Prove per una contestazione oltre 500 EUR",
+            "Una perdita oltre 100 EUR, o oltre 300 EUR in un giorno"
+          ],
+          "never": [
+            "Un messaggio al cliente o alla sua banca"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Chargebacks com provas",
+        "headline": "Deixe de perder disputas que podia ganhar.",
+        "today": "Uma disputa que ninguém responde dentro do prazo está perdida, com o dinheiro e a taxa.",
+        "line": "Responde às disputas de cartão dentro do prazo com a encomenda, a prova de entrega e as mensagens do cliente; aceita as pequenas com provas fracas.",
+        "say": "Responde às disputas de cartão no meu fornecedor de pagamentos com provas antes de cada prazo, tirando da minha loja ou do meu apoio ao cliente a encomenda, a prova de entrega e as mensagens. Envia provas para disputas até 500 EUR; aceita uma perda só até 100 EUR. Acima disso, espera por mim. Nunca contactes o cliente nem o seu banco.",
+        "card": {
+          "allows": [
+            "Provas enviadas para disputas até 500 EUR",
+            "Uma perda aceite até 100 EUR cada e 300 EUR por dia"
+          ],
+          "holds": [
+            "Provas para uma disputa acima de 500 EUR",
+            "Uma perda acima de 100 EUR, ou acima de 300 EUR num dia"
+          ],
+          "never": [
+            "Uma mensagem ao cliente ou ao seu banco"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Chargebacks met bewijs",
+        "headline": "Verlies geen geschillen meer die je kunt winnen.",
+        "today": "Een geschil dat niemand voor de deadline beantwoordt, is verloren, met het geld en de kosten.",
+        "line": "Beantwoordt kaartgeschillen voor de deadline met de bestelling, het afleverbewijs en de berichten van de klant; accepteert kleine geschillen met zwak bewijs.",
+        "say": "Beantwoord kaartgeschillen bij mijn betaalprovider met bewijs voor elke deadline, en haal de bestelling, het afleverbewijs en de berichten uit mijn winkel of helpdesk. Dien bewijs in voor geschillen tot 500 EUR; accepteer een verlies alleen tot 100 EUR. Daarboven wacht je op mij. Neem nooit contact op met de klant of diens bank.",
+        "card": {
+          "allows": [
+            "Bewijs ingediend voor geschillen tot 500 EUR",
+            "Een verlies geaccepteerd tot 100 EUR per stuk en 300 EUR per dag"
+          ],
+          "holds": [
+            "Bewijs voor een geschil boven 500 EUR",
+            "Een verlies boven 100 EUR, of boven 300 EUR op één dag"
+          ],
+          "never": [
+            "Een bericht aan de klant of diens bank"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Chargebacki z dowodami",
+        "headline": "Przestań przegrywać spory, które możesz wygrać.",
+        "today": "Spór, na który nikt nie odpowie przed terminem, jest przegrany, razem z pieniędzmi i opłatą.",
+        "line": "Odpowiada na spory kartowe przed terminem, dołączając zamówienie, dowód dostawy i wiadomości klienta; małe spory ze słabymi dowodami akceptuje.",
+        "say": "Odpowiadaj na spory kartowe u mojego operatora płatności z dowodami przed każdym terminem, biorąc z mojego sklepu lub helpdesku zamówienie, dowód dostawy i wiadomości. Wysyłaj dowody w sporach do 500 EUR; akceptuj stratę tylko do 100 EUR. Powyżej tego czekaj na mnie. Nigdy nie kontaktuj się z klientem ani jego bankiem.",
+        "card": {
+          "allows": [
+            "Dowody wysłane w sporach do 500 EUR",
+            "Zaakceptowana strata do 100 EUR każda i 300 EUR dziennie"
+          ],
+          "holds": [
+            "Dowody w sporze powyżej 500 EUR",
+            "Strata powyżej 100 EUR lub powyżej 300 EUR w ciągu dnia"
+          ],
+          "never": [
+            "Wiadomość do klienta lub jego banku"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "chase-overdue-invoices",
+    "title": "Chase overdue invoices",
+    "category": "money",
+    "order": 3,
+    "line": "Reminds customers of overdue invoices on a schedule and reports who hasn't paid; moves no money.",
+    "headline": "Get paid without chasing.",
+    "today": "Late payers stay late until someone finds the time to remind them.",
+    "say": "Each weekday morning, find my overdue invoices in my accounting app and send a polite reminder to each customer from my email, at most one a week per invoice and 20 a day. Never change an invoice or offer a discount. Tell me who is more than 30 days late.",
+    "connections": [
+      [
+        "quickbooks",
+        "zohobooks",
+        "moneybird"
+      ],
+      [
+        "gmail",
+        "outlook"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Reminders up to 20 a day, at most one a week per invoice"
+      ],
+      "holds": [
+        "A reminder past 20 in a day"
+      ],
+      "never": [
+        "Editing an invoice",
+        "A credit note or a discount"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Überfällige Rechnungen anmahnen",
+        "headline": "Werde bezahlt, ohne hinterherzulaufen.",
+        "today": "Wer spät zahlt, bleibt spät, bis jemand Zeit findet, ihn zu erinnern.",
+        "line": "Erinnert Kunden nach Plan an überfällige Rechnungen und meldet, wer nicht gezahlt hat; bewegt kein Geld.",
+        "say": "Suche jeden Werktag morgens meine überfälligen Rechnungen in meiner Buchhaltungs-App und schicke jedem Kunden von meiner E-Mail eine höfliche Erinnerung, höchstens eine pro Woche und Rechnung und 20 am Tag. Ändere nie eine Rechnung und biete keinen Rabatt an. Sag mir, wer mehr als 30 Tage im Verzug ist.",
+        "card": {
+          "allows": [
+            "Erinnerungen bis zu 20 am Tag, höchstens eine pro Woche und Rechnung"
+          ],
+          "holds": [
+            "Eine Erinnerung über 20 an einem Tag"
+          ],
+          "never": [
+            "Eine Rechnung ändern",
+            "Eine Gutschrift oder ein Rabatt"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Relancer les factures impayées",
+        "headline": "Soyez payé sans relancer.",
+        "today": "Les mauvais payeurs restent en retard jusqu'à ce que quelqu'un trouve le temps de les relancer.",
+        "line": "Relance les clients pour les factures en retard selon un calendrier et indique qui n'a pas payé ; ne déplace aucun argent.",
+        "say": "Chaque matin de semaine, trouve mes factures en retard dans mon logiciel de comptabilité et envoie à chaque client une relance polie depuis mon e-mail, au plus une par semaine et par facture et 20 par jour. Ne modifie jamais une facture et ne propose pas de remise. Dis-moi qui a plus de 30 jours de retard.",
+        "card": {
+          "allows": [
+            "Relances jusqu'à 20 par jour, au plus une par semaine et par facture"
+          ],
+          "holds": [
+            "Une relance au-delà de 20 dans la journée"
+          ],
+          "never": [
+            "Modifier une facture",
+            "Un avoir ou une remise"
+          ]
+        }
+      },
+      "es": {
+        "title": "Reclamar facturas vencidas",
+        "headline": "Cobra sin perseguir a nadie.",
+        "today": "Quien paga tarde sigue pagando tarde hasta que alguien encuentra tiempo para recordárselo.",
+        "line": "Recuerda a los clientes sus facturas vencidas según un calendario e informa de quién no ha pagado; no mueve dinero.",
+        "say": "Cada mañana de lunes a viernes, busca mis facturas vencidas en mi app de contabilidad y envía a cada cliente un recordatorio amable desde mi correo, como mucho uno por semana y factura y 20 al día. Nunca cambies una factura ni ofrezcas un descuento. Dime quién lleva más de 30 días de retraso.",
+        "card": {
+          "allows": [
+            "Recordatorios hasta 20 al día, como mucho uno por semana y factura"
+          ],
+          "holds": [
+            "Un recordatorio por encima de 20 en un día"
+          ],
+          "never": [
+            "Modificar una factura",
+            "Una nota de crédito o un descuento"
+          ]
+        }
+      },
+      "it": {
+        "title": "Sollecitare le fatture scadute",
+        "headline": "Fatti pagare senza rincorrere nessuno.",
+        "today": "Chi paga in ritardo resta in ritardo finché qualcuno non trova il tempo di ricordarglielo.",
+        "line": "Ricorda ai clienti le fatture scadute secondo un calendario e segnala chi non ha pagato; non muove denaro.",
+        "say": "Ogni mattina dei giorni feriali, trova le mie fatture scadute nella mia app di contabilità e invia a ogni cliente un sollecito cortese dalla mia email, al massimo uno a settimana per fattura e 20 al giorno. Non modificare mai una fattura e non offrire sconti. Dimmi chi è in ritardo di oltre 30 giorni.",
+        "card": {
+          "allows": [
+            "Solleciti fino a 20 al giorno, al massimo uno a settimana per fattura"
+          ],
+          "holds": [
+            "Un sollecito oltre 20 in un giorno"
+          ],
+          "never": [
+            "Modificare una fattura",
+            "Una nota di credito o uno sconto"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Cobrar faturas em atraso",
+        "headline": "Receba sem andar atrás de ninguém.",
+        "today": "Quem paga tarde continua a pagar tarde até alguém ter tempo para lembrar.",
+        "line": "Lembra os clientes das faturas em atraso segundo um calendário e indica quem não pagou; não movimenta dinheiro.",
+        "say": "Todas as manhãs de dias úteis, encontra as minhas faturas em atraso na minha app de contabilidade e envia a cada cliente um lembrete simpático a partir do meu email, no máximo um por semana e por fatura e 20 por dia. Nunca alteres uma fatura nem ofereças um desconto. Diz-me quem tem mais de 30 dias de atraso.",
+        "card": {
+          "allows": [
+            "Lembretes até 20 por dia, no máximo um por semana e por fatura"
+          ],
+          "holds": [
+            "Um lembrete acima de 20 num dia"
+          ],
+          "never": [
+            "Alterar uma fatura",
+            "Uma nota de crédito ou um desconto"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Achterstallige facturen opvolgen",
+        "headline": "Krijg betaald zonder achter mensen aan te gaan.",
+        "today": "Wie laat betaalt, blijft laat tot iemand tijd vindt om een herinnering te sturen.",
+        "line": "Herinnert klanten volgens een schema aan achterstallige facturen en meldt wie niet heeft betaald; verplaatst geen geld.",
+        "say": "Zoek elke werkdagochtend mijn achterstallige facturen in mijn boekhoudapp en stuur elke klant een vriendelijke herinnering vanuit mijn e-mail, hoogstens één per week per factuur en 20 per dag. Wijzig nooit een factuur en bied geen korting aan. Vertel me wie meer dan 30 dagen achterloopt.",
+        "card": {
+          "allows": [
+            "Herinneringen tot 20 per dag, hoogstens één per week per factuur"
+          ],
+          "holds": [
+            "Een herinnering boven 20 op één dag"
+          ],
+          "never": [
+            "Een factuur wijzigen",
+            "Een creditnota of een korting"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Upominanie się o zaległe faktury",
+        "headline": "Dostawaj pieniądze bez ganiania za nikim.",
+        "today": "Kto płaci późno, płaci późno dalej, dopóki ktoś nie znajdzie czasu, żeby mu przypomnieć.",
+        "line": "Przypomina klientom o zaległych fakturach według harmonogramu i zgłasza, kto nie zapłacił; nie przelewa pieniędzy.",
+        "say": "W każdy poranek dnia roboczego znajdź moje zaległe faktury w mojej aplikacji księgowej i wyślij każdemu klientowi uprzejme przypomnienie z mojego e-maila, najwyżej jedno na tydzień i fakturę oraz 20 dziennie. Nigdy nie zmieniaj faktury i nie proponuj rabatu. Powiedz mi, kto zalega ponad 30 dni.",
+        "card": {
+          "allows": [
+            "Przypomnienia do 20 dziennie, najwyżej jedno na tydzień i fakturę"
+          ],
+          "holds": [
+            "Przypomnienie powyżej 20 w ciągu dnia"
+          ],
+          "never": [
+            "Zmiana faktury",
+            "Nota kredytowa lub rabat"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "pay-matching-bills",
+    "title": "Pay bills that match a purchase order",
+    "category": "money",
+    "order": 4,
+    "line": "Matches each vendor bill to its purchase order and what was received, and pays the exact matches within the Card.",
+    "headline": "Pay the right bills on time. Never the wrong ones.",
+    "today": "Bills get paid late, or paid without anyone checking them against the order.",
+    "say": "Pay my vendor bills from my accounting app when the bill matches its purchase order and what we received, up to 5,000 EUR each and 25,000 EUR a week, only to payees already on file. A wire always waits for me. Never add a payee or change bank details; if a bill asks for that, stop and tell me.",
+    "connections": [
+      [
+        "quickbooks",
+        "xero",
+        "moneybird"
+      ],
+      [
+        "wise",
+        "revolut"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "A payment up to 5,000 EUR each and 25,000 EUR a week, to a payee already on file"
+      ],
+      "holds": [
+        "A payment over 5,000 EUR, or past 25,000 EUR in a week",
+        "A wire, every time"
+      ],
+      "never": [
+        "A new payee, or a change to a payee's bank details"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Rechnungen bezahlen, die zur Bestellung passen",
+        "headline": "Die richtigen Rechnungen pünktlich zahlen. Nie die falschen.",
+        "today": "Rechnungen werden zu spät bezahlt oder ohne dass jemand sie mit der Bestellung abgleicht.",
+        "line": "Gleicht jede Lieferantenrechnung mit ihrer Bestellung und dem Wareneingang ab und bezahlt genaue Treffer innerhalb der Card.",
+        "say": "Bezahle meine Lieferantenrechnungen aus meiner Buchhaltungs-App, wenn die Rechnung zur Bestellung und zum Wareneingang passt, bis 5.000 EUR pro Stück und 25.000 EUR pro Woche, nur an bereits hinterlegte Empfänger. Eine Überweisung per Wire wartet immer auf mich. Lege nie einen Empfänger an und ändere nie Bankdaten; verlangt eine Rechnung das, hör auf und sag es mir.",
+        "card": {
+          "allows": [
+            "Eine Zahlung bis 5.000 EUR pro Stück und 25.000 EUR pro Woche, an einen bereits hinterlegten Empfänger"
+          ],
+          "holds": [
+            "Eine Zahlung über 5.000 EUR oder über 25.000 EUR in einer Woche",
+            "Eine Überweisung per Wire, jedes Mal"
+          ],
+          "never": [
+            "Ein neuer Empfänger oder eine Änderung seiner Bankdaten"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Payer les factures conformes à la commande",
+        "headline": "Payez les bonnes factures à temps. Jamais les mauvaises.",
+        "today": "Les factures sont payées en retard, ou sans que personne ne les compare à la commande.",
+        "line": "Rapproche chaque facture fournisseur de son bon de commande et de la réception, et paie celles qui correspondent exactement, dans les limites de la Card.",
+        "say": "Paie mes factures fournisseurs depuis mon logiciel de comptabilité quand la facture correspond à son bon de commande et à ce que nous avons reçu, jusqu'à 5 000 EUR chacune et 25 000 EUR par semaine, seulement à des bénéficiaires déjà enregistrés. Un virement wire attend toujours mon accord. N'ajoute jamais de bénéficiaire et ne change jamais de coordonnées bancaires ; si une facture le demande, arrête-toi et préviens-moi.",
+        "card": {
+          "allows": [
+            "Un paiement jusqu'à 5 000 EUR chacun et 25 000 EUR par semaine, à un bénéficiaire déjà enregistré"
+          ],
+          "holds": [
+            "Un paiement de plus de 5 000 EUR, ou au-delà de 25 000 EUR dans la semaine",
+            "Un virement wire, à chaque fois"
+          ],
+          "never": [
+            "Un nouveau bénéficiaire, ou un changement de ses coordonnées bancaires"
+          ]
+        }
+      },
+      "es": {
+        "title": "Pagar facturas que coinciden con el pedido",
+        "headline": "Paga a tiempo las facturas correctas. Nunca las equivocadas.",
+        "today": "Las facturas se pagan tarde, o sin que nadie las compare con el pedido.",
+        "line": "Cruza cada factura de proveedor con su orden de compra y lo recibido, y paga las que coinciden exactamente, dentro de la Card.",
+        "say": "Paga mis facturas de proveedores desde mi app de contabilidad cuando la factura coincida con su orden de compra y con lo que hemos recibido, hasta 5.000 EUR cada una y 25.000 EUR a la semana, solo a beneficiarios ya registrados. Una transferencia wire siempre me espera. Nunca añadas un beneficiario ni cambies datos bancarios; si una factura lo pide, detente y avísame.",
+        "card": {
+          "allows": [
+            "Un pago de hasta 5.000 EUR cada uno y 25.000 EUR a la semana, a un beneficiario ya registrado"
+          ],
+          "holds": [
+            "Un pago de más de 5.000 EUR, o por encima de 25.000 EUR en una semana",
+            "Una transferencia wire, siempre"
+          ],
+          "never": [
+            "Un beneficiario nuevo, o un cambio en sus datos bancarios"
+          ]
+        }
+      },
+      "it": {
+        "title": "Pagare le fatture che corrispondono all'ordine",
+        "headline": "Paga in tempo le fatture giuste. Mai quelle sbagliate.",
+        "today": "Le fatture vengono pagate in ritardo, o senza che nessuno le confronti con l'ordine.",
+        "line": "Confronta ogni fattura del fornitore con il suo ordine d'acquisto e con la merce ricevuta, e paga quelle che corrispondono esattamente, nei limiti della Card.",
+        "say": "Paga le fatture dei miei fornitori dalla mia app di contabilità quando la fattura corrisponde al suo ordine d'acquisto e a ciò che abbiamo ricevuto, fino a 5.000 EUR ciascuna e 25.000 EUR a settimana, solo a beneficiari già registrati. Un bonifico wire aspetta sempre me. Non aggiungere mai un beneficiario né modificare coordinate bancarie; se una fattura lo chiede, fermati e dimmelo.",
+        "card": {
+          "allows": [
+            "Un pagamento fino a 5.000 EUR ciascuno e 25.000 EUR a settimana, a un beneficiario già registrato"
+          ],
+          "holds": [
+            "Un pagamento oltre 5.000 EUR, o oltre 25.000 EUR in una settimana",
+            "Un bonifico wire, ogni volta"
+          ],
+          "never": [
+            "Un nuovo beneficiario, o una modifica alle sue coordinate bancarie"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Pagar faturas que batem certo com a encomenda",
+        "headline": "Pague a tempo as faturas certas. Nunca as erradas.",
+        "today": "As faturas são pagas tarde, ou sem que ninguém as compare com a encomenda.",
+        "line": "Confere cada fatura de fornecedor com a sua nota de encomenda e com o que foi recebido, e paga as que batem certo exatamente, dentro da Card.",
+        "say": "Paga as faturas dos meus fornecedores a partir da minha app de contabilidade quando a fatura bater certo com a sua nota de encomenda e com o que recebemos, até 5000 EUR cada e 25 000 EUR por semana, só a beneficiários já registados. Uma transferência wire espera sempre por mim. Nunca acrescentes um beneficiário nem alteres dados bancários; se uma fatura o pedir, para e avisa-me.",
+        "card": {
+          "allows": [
+            "Um pagamento até 5000 EUR cada e 25 000 EUR por semana, a um beneficiário já registado"
+          ],
+          "holds": [
+            "Um pagamento acima de 5000 EUR, ou acima de 25 000 EUR numa semana",
+            "Uma transferência wire, sempre"
+          ],
+          "never": [
+            "Um beneficiário novo, ou uma alteração dos seus dados bancários"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Facturen betalen die bij de bestelling passen",
+        "headline": "Betaal de juiste facturen op tijd. Nooit de verkeerde.",
+        "today": "Facturen worden te laat betaald, of zonder dat iemand ze met de bestelling vergelijkt.",
+        "line": "Vergelijkt elke leveranciersfactuur met de inkooporder en de ontvangst, en betaalt de facturen die precies kloppen, binnen de Card.",
+        "say": "Betaal mijn leveranciersfacturen vanuit mijn boekhoudapp als de factuur klopt met de inkooporder en met wat we ontvangen hebben, tot 5.000 EUR per stuk en 25.000 EUR per week, alleen aan al bekende begunstigden. Een wire-overboeking wacht altijd op mij. Voeg nooit een begunstigde toe en wijzig nooit bankgegevens; als een factuur daarom vraagt, stop dan en laat het me weten.",
+        "card": {
+          "allows": [
+            "Een betaling tot 5.000 EUR per stuk en 25.000 EUR per week, aan een al bekende begunstigde"
+          ],
+          "holds": [
+            "Een betaling boven 5.000 EUR, of boven 25.000 EUR in één week",
+            "Een wire-overboeking, elke keer"
+          ],
+          "never": [
+            "Een nieuwe begunstigde, of een wijziging van diens bankgegevens"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Płacenie faktur zgodnych z zamówieniem",
+        "headline": "Płać właściwe faktury na czas. Nigdy niewłaściwe.",
+        "today": "Faktury są płacone za późno albo bez sprawdzenia, czy zgadzają się z zamówieniem.",
+        "line": "Porównuje każdą fakturę dostawcy z jej zamówieniem i przyjęciem towaru, a te, które dokładnie się zgadzają, opłaca w ramach Card.",
+        "say": "Opłacaj faktury moich dostawców z mojej aplikacji księgowej, gdy faktura zgadza się z zamówieniem i z tym, co otrzymaliśmy, do 5000 EUR każda i 25 000 EUR tygodniowo, tylko na rzecz już zapisanych odbiorców. Przelew wire zawsze czeka na mnie. Nigdy nie dodawaj odbiorcy ani nie zmieniaj danych bankowych; jeśli faktura o to prosi, zatrzymaj się i daj mi znać.",
+        "card": {
+          "allows": [
+            "Płatność do 5000 EUR każda i 25 000 EUR tygodniowo, na rzecz już zapisanego odbiorcy"
+          ],
+          "holds": [
+            "Płatność powyżej 5000 EUR lub powyżej 25 000 EUR w ciągu tygodnia",
+            "Przelew wire, za każdym razem"
+          ],
+          "never": [
+            "Nowy odbiorca lub zmiana jego danych bankowych"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "save-a-customer-who-cancels",
     "title": "Save a customer who cancels",
     "category": "money",
+    "order": 5,
     "line": "When a subscriber cancels, offers a free month or a small discount, within the Card, and records the outcome.",
     "headline": "Keep the customer who's about to leave.",
     "today": "A subscriber who cancels is gone before anyone notices.",
@@ -1707,9 +870,696 @@ export const RECIPES = [
     }
   },
   {
+    "id": "answer-questions-about-orders",
+    "title": "Answer questions about orders",
+    "category": "customers",
+    "order": 1,
+    "line": "Answers \"where is my order\" questions from the help desk by reading the shop, and passes anything about money to you.",
+    "headline": "Stop answering \"where is my order?\"",
+    "today": "The same question fills the help desk every day and pushes the real problems down the queue.",
+    "say": "Answer customer questions about their orders from my help desk, using my shop to look them up. Reply up to 50 times a day. Never change an order and never refund; pass those to me.",
+    "connections": [
+      [
+        "gorgias",
+        "intercom",
+        "gmail"
+      ],
+      [
+        "shopify"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Replies up to 50 a day"
+      ],
+      "holds": [
+        "A reply past 50 in a day"
+      ],
+      "never": [
+        "An order edit or cancellation",
+        "A refund"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Fragen zu Bestellungen beantworten",
+        "headline": "Schluss mit „Wo ist meine Bestellung?“",
+        "today": "Jeden Tag füllt dieselbe Frage den Helpdesk und schiebt die echten Probleme nach hinten.",
+        "line": "Beantwortet Fragen wie „Wo ist meine Bestellung?“ aus dem Helpdesk mit Blick in den Shop und gibt alles, was Geld betrifft, an dich weiter.",
+        "say": "Beantworte Kundenfragen zu ihren Bestellungen aus meinem Helpdesk und schau dazu in meinem Shop nach. Antworte bis zu 50 Mal am Tag. Ändere nie eine Bestellung und erstatte nie etwas; gib das an mich weiter.",
+        "card": {
+          "allows": [
+            "Antworten, bis zu 50 am Tag"
+          ],
+          "holds": [
+            "Eine Antwort über 50 an einem Tag"
+          ],
+          "never": [
+            "Eine Bestellung ändern oder stornieren",
+            "Eine Erstattung"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Répondre aux questions sur les commandes",
+        "headline": "Fini le « où est ma commande ? »",
+        "today": "La même question remplit le support chaque jour et repousse les vrais problèmes au fond de la file.",
+        "line": "Répond aux questions « où est ma commande » du support en consultant la boutique, et vous transmet tout ce qui touche à l'argent.",
+        "say": "Réponds aux questions des clients sur leurs commandes depuis mon support, en consultant ma boutique. Réponds jusqu'à 50 fois par jour. Ne modifie jamais une commande et ne rembourse jamais ; transmets-moi ces demandes.",
+        "card": {
+          "allows": [
+            "Réponses, jusqu'à 50 par jour"
+          ],
+          "holds": [
+            "Une réponse au-delà de 50 dans la journée"
+          ],
+          "never": [
+            "Modifier ou annuler une commande",
+            "Un remboursement"
+          ]
+        }
+      },
+      "es": {
+        "title": "Responder preguntas sobre pedidos",
+        "headline": "Deja de responder «¿dónde está mi pedido?»",
+        "today": "La misma pregunta llena el servicio de atención cada día y deja los problemas reales al final de la cola.",
+        "line": "Responde las preguntas de «dónde está mi pedido» del servicio de atención consultando la tienda y te pasa todo lo que tenga que ver con dinero.",
+        "say": "Responde las preguntas de los clientes sobre sus pedidos desde mi servicio de atención, consultando mi tienda. Responde hasta 50 veces al día. Nunca cambies un pedido ni reembolses; pásame eso a mí.",
+        "card": {
+          "allows": [
+            "Respuestas, hasta 50 al día"
+          ],
+          "holds": [
+            "Una respuesta por encima de 50 en un día"
+          ],
+          "never": [
+            "Modificar o cancelar un pedido",
+            "Un reembolso"
+          ]
+        }
+      },
+      "it": {
+        "title": "Rispondere alle domande sugli ordini",
+        "headline": "Basta rispondere a «dov'è il mio ordine?»",
+        "today": "La stessa domanda riempie l'assistenza ogni giorno e spinge in fondo alla coda i problemi veri.",
+        "line": "Risponde alle domande «dov'è il mio ordine» dall'assistenza controllando il negozio e ti passa tutto ciò che riguarda i soldi.",
+        "say": "Rispondi alle domande dei clienti sui loro ordini dalla mia assistenza, controllando il mio negozio. Rispondi fino a 50 volte al giorno. Non modificare mai un ordine e non rimborsare mai; passa a me queste richieste.",
+        "card": {
+          "allows": [
+            "Risposte, fino a 50 al giorno"
+          ],
+          "holds": [
+            "Una risposta oltre 50 in un giorno"
+          ],
+          "never": [
+            "Modificare o annullare un ordine",
+            "Un rimborso"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Responder a perguntas sobre encomendas",
+        "headline": "Deixe de responder a «onde está a minha encomenda?»",
+        "today": "A mesma pergunta enche o apoio ao cliente todos os dias e empurra os problemas reais para o fim da fila.",
+        "line": "Responde às perguntas «onde está a minha encomenda» do apoio ao cliente consultando a loja e passa-lhe tudo o que envolva dinheiro.",
+        "say": "Responde às perguntas dos clientes sobre as suas encomendas a partir do meu apoio ao cliente, consultando a minha loja. Responde até 50 vezes por dia. Nunca alteres uma encomenda nem reembolses; passa-me esses pedidos.",
+        "card": {
+          "allows": [
+            "Respostas, até 50 por dia"
+          ],
+          "holds": [
+            "Uma resposta acima de 50 num dia"
+          ],
+          "never": [
+            "Alterar ou cancelar uma encomenda",
+            "Um reembolso"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Vragen over bestellingen beantwoorden",
+        "headline": "Nooit meer „waar is mijn bestelling?” beantwoorden.",
+        "today": "Elke dag vult dezelfde vraag de helpdesk en duwt de echte problemen naar achteren.",
+        "line": "Beantwoordt vragen als „waar is mijn bestelling” uit de helpdesk door in de winkel te kijken en geeft alles wat met geld te maken heeft aan jou door.",
+        "say": "Beantwoord vragen van klanten over hun bestellingen uit mijn helpdesk en kijk daarvoor in mijn winkel. Antwoord tot 50 keer per dag. Wijzig nooit een bestelling en betaal nooit iets terug; geef dat aan mij door.",
+        "card": {
+          "allows": [
+            "Antwoorden, tot 50 per dag"
+          ],
+          "holds": [
+            "Een antwoord boven 50 op één dag"
+          ],
+          "never": [
+            "Een bestelling wijzigen of annuleren",
+            "Een terugbetaling"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Odpowiadanie na pytania o zamówienia",
+        "headline": "Koniec z odpowiadaniem na „gdzie jest moje zamówienie?”",
+        "today": "Codziennie to samo pytanie zapycha helpdesk i spycha prawdziwe problemy na koniec kolejki.",
+        "line": "Odpowiada na pytania „gdzie jest moje zamówienie” z helpdesku, sprawdzając sklep, a wszystko, co dotyczy pieniędzy, przekazuje tobie.",
+        "say": "Odpowiadaj na pytania klientów o ich zamówienia z mojego helpdesku, sprawdzając mój sklep. Odpowiadaj do 50 razy dziennie. Nigdy nie zmieniaj zamówienia i nie zwracaj pieniędzy; przekaż to mnie.",
+        "card": {
+          "allows": [
+            "Odpowiedzi, do 50 dziennie"
+          ],
+          "holds": [
+            "Odpowiedź powyżej 50 w ciągu dnia"
+          ],
+          "never": [
+            "Zmiana lub anulowanie zamówienia",
+            "Zwrot pieniędzy"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "follow-up-new-leads",
+    "title": "Follow up new leads within the hour",
+    "category": "customers",
+    "order": 2,
+    "line": "Turns each new form entry into a CRM deal and sends a first reply within the hour, so no lead waits a day.",
+    "headline": "Never lose a lead to a slow reply.",
+    "today": "A lead who waits a day for an answer may already have asked someone else.",
+    "say": "When someone fills in my form, add them as a deal in my CRM and send them a short reply from my email within the hour. Up to 30 a day. Never change or delete an existing deal.",
+    "connections": [
+      [
+        "typeform"
+      ],
+      [
+        "pipedrive"
+      ],
+      [
+        "gmail",
+        "outlook"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "New deals up to 30 a day",
+        "Replies up to 30 a day"
+      ],
+      "holds": [
+        "A deal or a reply past 30 in a day"
+      ],
+      "never": [
+        "Changing or deleting an existing deal"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Neue Leads innerhalb einer Stunde nachfassen",
+        "headline": "Verlier keinen Lead mehr an eine langsame Antwort.",
+        "today": "Ein Lead, der einen Tag auf eine Antwort wartet, hat vielleicht schon jemand anderen gefragt.",
+        "line": "Macht aus jedem neuen Formulareintrag einen Deal im CRM und schickt innerhalb einer Stunde eine erste Antwort, damit kein Lead einen Tag wartet.",
+        "say": "Wenn jemand mein Formular ausfüllt, leg die Person als Deal in meinem CRM an und schick ihr innerhalb einer Stunde eine kurze Antwort von meiner E-Mail. Bis zu 30 am Tag. Ändere oder lösche nie einen bestehenden Deal.",
+        "card": {
+          "allows": [
+            "Neue Deals, bis zu 30 am Tag",
+            "Antworten, bis zu 30 am Tag"
+          ],
+          "holds": [
+            "Ein Deal oder eine Antwort über 30 an einem Tag"
+          ],
+          "never": [
+            "Einen bestehenden Deal ändern oder löschen"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Relancer les nouveaux prospects dans l'heure",
+        "headline": "Ne perdez plus un prospect à cause d'une réponse lente.",
+        "today": "Un prospect qui attend une réponse un jour entier a peut-être déjà demandé ailleurs.",
+        "line": "Transforme chaque nouvelle entrée de formulaire en affaire dans le CRM et envoie une première réponse dans l'heure, pour qu'aucun prospect n'attende un jour.",
+        "say": "Quand quelqu'un remplit mon formulaire, ajoute-le comme affaire dans mon CRM et envoie-lui une courte réponse depuis mon e-mail dans l'heure. Jusqu'à 30 par jour. Ne modifie ni ne supprime jamais une affaire existante.",
+        "card": {
+          "allows": [
+            "Nouvelles affaires, jusqu'à 30 par jour",
+            "Réponses, jusqu'à 30 par jour"
+          ],
+          "holds": [
+            "Une affaire ou une réponse au-delà de 30 dans la journée"
+          ],
+          "never": [
+            "Modifier ou supprimer une affaire existante"
+          ]
+        }
+      },
+      "es": {
+        "title": "Atender a los nuevos contactos en menos de una hora",
+        "headline": "No pierdas ni un contacto por responder tarde.",
+        "today": "Un contacto que espera un día una respuesta quizá ya le haya preguntado a otro.",
+        "line": "Convierte cada nueva entrada del formulario en una oportunidad en el CRM y envía una primera respuesta en menos de una hora, para que ningún contacto espere un día.",
+        "say": "Cuando alguien rellene mi formulario, añádelo como oportunidad en mi CRM y envíale una respuesta breve desde mi correo en menos de una hora. Hasta 30 al día. Nunca cambies ni elimines una oportunidad existente.",
+        "card": {
+          "allows": [
+            "Nuevas oportunidades, hasta 30 al día",
+            "Respuestas, hasta 30 al día"
+          ],
+          "holds": [
+            "Una oportunidad o una respuesta por encima de 30 en un día"
+          ],
+          "never": [
+            "Cambiar o eliminar una oportunidad existente"
+          ]
+        }
+      },
+      "it": {
+        "title": "Ricontattare i nuovi contatti entro un'ora",
+        "headline": "Non perdere più un contatto per una risposta lenta.",
+        "today": "Un contatto che aspetta un giorno una risposta potrebbe aver già chiesto a qualcun altro.",
+        "line": "Trasforma ogni nuova compilazione del modulo in un'opportunità nel CRM e invia una prima risposta entro un'ora, così nessun contatto aspetta un giorno.",
+        "say": "Quando qualcuno compila il mio modulo, aggiungilo come opportunità nel mio CRM e inviagli una breve risposta dalla mia email entro un'ora. Fino a 30 al giorno. Non modificare né eliminare mai un'opportunità esistente.",
+        "card": {
+          "allows": [
+            "Nuove opportunità, fino a 30 al giorno",
+            "Risposte, fino a 30 al giorno"
+          ],
+          "holds": [
+            "Un'opportunità o una risposta oltre 30 in un giorno"
+          ],
+          "never": [
+            "Modificare o eliminare un'opportunità esistente"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Responder a novos contactos em menos de uma hora",
+        "headline": "Nunca perca um contacto por responder tarde.",
+        "today": "Um contacto que espera um dia por uma resposta pode já ter perguntado a outra pessoa.",
+        "line": "Transforma cada novo preenchimento do formulário numa oportunidade no CRM e envia uma primeira resposta em menos de uma hora, para que nenhum contacto espere um dia.",
+        "say": "Quando alguém preencher o meu formulário, acrescenta-o como oportunidade no meu CRM e envia-lhe uma resposta curta a partir do meu email em menos de uma hora. Até 30 por dia. Nunca alteres nem elimines uma oportunidade existente.",
+        "card": {
+          "allows": [
+            "Novas oportunidades, até 30 por dia",
+            "Respostas, até 30 por dia"
+          ],
+          "holds": [
+            "Uma oportunidade ou uma resposta acima de 30 num dia"
+          ],
+          "never": [
+            "Alterar ou eliminar uma oportunidade existente"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Nieuwe leads binnen een uur opvolgen",
+        "headline": "Verlies nooit meer een lead door een trage reactie.",
+        "today": "Een lead die een dag op antwoord wacht, heeft misschien al iemand anders gevraagd.",
+        "line": "Maakt van elke nieuwe formulierinzending een deal in het CRM en stuurt binnen een uur een eerste antwoord, zodat geen lead een dag wacht.",
+        "say": "Als iemand mijn formulier invult, voeg die persoon toe als deal in mijn CRM en stuur binnen een uur een kort antwoord vanuit mijn e-mail. Tot 30 per dag. Wijzig of verwijder nooit een bestaande deal.",
+        "card": {
+          "allows": [
+            "Nieuwe deals, tot 30 per dag",
+            "Antwoorden, tot 30 per dag"
+          ],
+          "holds": [
+            "Een deal of antwoord boven 30 op één dag"
+          ],
+          "never": [
+            "Een bestaande deal wijzigen of verwijderen"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Kontakt z nowymi leadami w ciągu godziny",
+        "headline": "Nie trać leadów przez wolną odpowiedź.",
+        "today": "Lead, który czeka dzień na odpowiedź, mógł już zapytać kogoś innego.",
+        "line": "Z każdego nowego zgłoszenia z formularza tworzy szansę sprzedaży w CRM i wysyła pierwszą odpowiedź w ciągu godziny, żeby żaden lead nie czekał dnia.",
+        "say": "Gdy ktoś wypełni mój formularz, dodaj go jako szansę sprzedaży w moim CRM i wyślij mu krótką odpowiedź z mojego e-maila w ciągu godziny. Do 30 dziennie. Nigdy nie zmieniaj ani nie usuwaj istniejącej szansy sprzedaży.",
+        "card": {
+          "allows": [
+            "Nowe szanse sprzedaży, do 30 dziennie",
+            "Odpowiedzi, do 30 dziennie"
+          ],
+          "holds": [
+            "Szansa sprzedaży lub odpowiedź powyżej 30 w ciągu dnia"
+          ],
+          "never": [
+            "Zmiana lub usunięcie istniejącej szansy sprzedaży"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "book-and-move-appointments",
+    "title": "Book and move appointments",
+    "category": "operations",
+    "order": 1,
+    "line": "Books, moves and confirms appointments by email against the calendar; cancelling always asks.",
+    "headline": "End the back-and-forth over bookings.",
+    "today": "Every booking takes three emails, and a missed one is an empty slot.",
+    "say": "Handle appointment requests that come to my email: book a free slot in my calendar, confirm by email, and move one when a customer asks. Up to 20 changes a day. Cancelling always waits for me.",
+    "connections": [
+      [
+        "gmail",
+        "outlook"
+      ],
+      [
+        "googlecalendar",
+        "outlook"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Events booked or moved, up to 20 a day",
+        "Confirmations by email, up to 20 a day"
+      ],
+      "holds": [
+        "A cancellation, every time",
+        "A change past 20 in a day"
+      ],
+      "never": [
+        "Deleting an event"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Termine buchen und verschieben",
+        "headline": "Schluss mit dem Hin und Her bei Terminen.",
+        "today": "Jede Buchung kostet drei E-Mails, und eine verpasste ist ein leerer Termin.",
+        "line": "Bucht, verschiebt und bestätigt Termine per E-Mail anhand des Kalenders; Absagen fragen immer.",
+        "say": "Kümmere dich um Terminanfragen, die per E-Mail kommen: buche einen freien Termin in meinem Kalender, bestätige per E-Mail und verschiebe einen Termin, wenn ein Kunde darum bittet. Bis zu 20 Änderungen am Tag. Absagen warten immer auf mich.",
+        "card": {
+          "allows": [
+            "Termine gebucht oder verschoben, bis zu 20 am Tag",
+            "Bestätigungen per E-Mail, bis zu 20 am Tag"
+          ],
+          "holds": [
+            "Eine Absage, jedes Mal",
+            "Eine Änderung über 20 an einem Tag"
+          ],
+          "never": [
+            "Einen Termin löschen"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Réserver et déplacer des rendez-vous",
+        "headline": "Fini les allers-retours pour un rendez-vous.",
+        "today": "Chaque réservation coûte trois e-mails, et un e-mail manqué, c'est un créneau vide.",
+        "line": "Réserve, déplace et confirme les rendez-vous par e-mail selon l'agenda ; une annulation demande toujours.",
+        "say": "Gère les demandes de rendez-vous qui arrivent dans mes e-mails : réserve un créneau libre dans mon agenda, confirme par e-mail et déplace un rendez-vous quand un client le demande. Jusqu'à 20 changements par jour. Une annulation attend toujours mon accord.",
+        "card": {
+          "allows": [
+            "Rendez-vous réservés ou déplacés, jusqu'à 20 par jour",
+            "Confirmations par e-mail, jusqu'à 20 par jour"
+          ],
+          "holds": [
+            "Une annulation, à chaque fois",
+            "Un changement au-delà de 20 dans la journée"
+          ],
+          "never": [
+            "Supprimer un événement"
+          ]
+        }
+      },
+      "es": {
+        "title": "Reservar y mover citas",
+        "headline": "Se acabó el ir y venir para reservar.",
+        "today": "Cada reserva cuesta tres correos, y uno perdido es un hueco vacío.",
+        "line": "Reserva, mueve y confirma citas por correo según el calendario; cancelar siempre pregunta.",
+        "say": "Gestiona las solicitudes de cita que llegan a mi correo: reserva un hueco libre en mi calendario, confirma por correo y mueve una cita cuando un cliente lo pida. Hasta 20 cambios al día. Cancelar siempre me espera.",
+        "card": {
+          "allows": [
+            "Citas reservadas o movidas, hasta 20 al día",
+            "Confirmaciones por correo, hasta 20 al día"
+          ],
+          "holds": [
+            "Una cancelación, siempre",
+            "Un cambio por encima de 20 en un día"
+          ],
+          "never": [
+            "Eliminar un evento"
+          ]
+        }
+      },
+      "it": {
+        "title": "Prenotare e spostare appuntamenti",
+        "headline": "Basta con l'avanti e indietro per prenotare.",
+        "today": "Ogni prenotazione costa tre email, e una persa è un posto vuoto.",
+        "line": "Prenota, sposta e conferma gli appuntamenti via email in base al calendario; una cancellazione chiede sempre.",
+        "say": "Gestisci le richieste di appuntamento che arrivano nella mia email: prenota un orario libero nel mio calendario, conferma via email e sposta un appuntamento quando un cliente lo chiede. Fino a 20 modifiche al giorno. Una cancellazione aspetta sempre me.",
+        "card": {
+          "allows": [
+            "Appuntamenti prenotati o spostati, fino a 20 al giorno",
+            "Conferme via email, fino a 20 al giorno"
+          ],
+          "holds": [
+            "Una cancellazione, ogni volta",
+            "Una modifica oltre 20 in un giorno"
+          ],
+          "never": [
+            "Eliminare un evento"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Marcar e mudar marcações",
+        "headline": "Acabe com o vaivém das marcações.",
+        "today": "Cada marcação custa três emails, e um perdido é um horário vazio.",
+        "line": "Marca, muda e confirma marcações por email com base no calendário; um cancelamento pergunta sempre.",
+        "say": "Trata dos pedidos de marcação que chegam ao meu email: marca um horário livre no meu calendário, confirma por email e muda uma marcação quando um cliente pedir. Até 20 alterações por dia. Um cancelamento espera sempre por mim.",
+        "card": {
+          "allows": [
+            "Marcações feitas ou mudadas, até 20 por dia",
+            "Confirmações por email, até 20 por dia"
+          ],
+          "holds": [
+            "Um cancelamento, sempre",
+            "Uma alteração acima de 20 num dia"
+          ],
+          "never": [
+            "Eliminar um evento"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Afspraken boeken en verzetten",
+        "headline": "Klaar met het heen-en-weer over afspraken.",
+        "today": "Elke afspraak kost drie e-mails, en een gemiste is een leeg tijdslot.",
+        "line": "Boekt, verzet en bevestigt afspraken per e-mail aan de hand van de agenda; annuleren vraagt altijd.",
+        "say": "Handel afspraakverzoeken af die in mijn e-mail binnenkomen: boek een vrij tijdslot in mijn agenda, bevestig per e-mail en verzet een afspraak als een klant daarom vraagt. Tot 20 wijzigingen per dag. Een annulering wacht altijd op mij.",
+        "card": {
+          "allows": [
+            "Afspraken geboekt of verzet, tot 20 per dag",
+            "Bevestigingen per e-mail, tot 20 per dag"
+          ],
+          "holds": [
+            "Een annulering, elke keer",
+            "Een wijziging boven 20 op één dag"
+          ],
+          "never": [
+            "Een afspraak verwijderen"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Umawianie i przesuwanie wizyt",
+        "headline": "Koniec z przepychankami o terminy.",
+        "today": "Każda rezerwacja to trzy e-maile, a jeden przeoczony to pusty termin.",
+        "line": "Umawia, przesuwa i potwierdza wizyty e-mailem na podstawie kalendarza; odwołanie zawsze pyta.",
+        "say": "Obsługuj prośby o wizyty, które przychodzą na mój e-mail: zarezerwuj wolny termin w moim kalendarzu, potwierdź e-mailem i przesuń wizytę, gdy klient o to poprosi. Do 20 zmian dziennie. Odwołanie zawsze czeka na mnie.",
+        "card": {
+          "allows": [
+            "Wizyty umówione lub przesunięte, do 20 dziennie",
+            "Potwierdzenia e-mailem, do 20 dziennie"
+          ],
+          "holds": [
+            "Odwołanie, za każdym razem",
+            "Zmiana powyżej 20 w ciągu dnia"
+          ],
+          "never": [
+            "Usunięcie wydarzenia"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "access-for-joiners-and-leavers",
+    "title": "Access for joiners and leavers",
+    "category": "operations",
+    "order": 2,
+    "line": "Gives joiners the apps their team's template lists and removes leavers on their last day; elevated access always asks.",
+    "headline": "A leaver's access ends the day they leave.",
+    "today": "Old accounts stay open for weeks, and new hires wait days for their apps.",
+    "say": "Manage access in my workspace and team chat. For each joiner, give the roles their team's template lists. For each leaver, deactivate every account on their last day. Admin or elevated access always waits for me. Never delete a user.",
+    "connections": [
+      [
+        "googleworkspace",
+        "google_workspace",
+        "googleadmin"
+      ],
+      [
+        "slack"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Template roles granted, up to 20 a day",
+        "Accounts deactivated, up to 10 a day"
+      ],
+      "holds": [
+        "Admin or elevated access, every time",
+        "A grant past 20, or a deactivation past 10, in a day"
+      ],
+      "never": [
+        "Deleting a user"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Zugänge für Neue und Ausscheidende",
+        "headline": "Der Zugang endet am letzten Arbeitstag.",
+        "today": "Alte Konten bleiben wochenlang offen, und Neue warten tagelang auf ihre Apps.",
+        "line": "Gibt Neuen die Apps, die ihre Teamvorlage vorsieht, und entfernt Ausscheidende an ihrem letzten Tag; erweiterte Rechte fragen immer.",
+        "say": "Verwalte die Zugänge in meinem Workspace und Team-Chat. Gib jeder neuen Person die Rollen, die ihre Teamvorlage vorsieht. Deaktiviere bei jeder ausscheidenden Person an ihrem letzten Tag alle Konten. Admin- oder erweiterte Rechte warten immer auf mich. Lösche nie einen Nutzer.",
+        "card": {
+          "allows": [
+            "Vorlagenrollen vergeben, bis zu 20 am Tag",
+            "Konten deaktiviert, bis zu 10 am Tag"
+          ],
+          "holds": [
+            "Admin- oder erweiterte Rechte, jedes Mal",
+            "Eine Vergabe über 20 oder eine Deaktivierung über 10 an einem Tag"
+          ],
+          "never": [
+            "Einen Nutzer löschen"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Accès des arrivées et des départs",
+        "headline": "Les accès d'un départ s'arrêtent le jour même.",
+        "today": "Les anciens comptes restent ouverts des semaines, et les nouveaux attendent leurs applis des jours.",
+        "line": "Donne aux arrivées les applis prévues par le modèle de leur équipe et retire les départs leur dernier jour ; les accès étendus demandent toujours.",
+        "say": "Gère les accès dans mon espace de travail et ma messagerie d'équipe. Pour chaque arrivée, attribue les rôles prévus par le modèle de son équipe. Pour chaque départ, désactive tous ses comptes son dernier jour. Un accès admin ou étendu attend toujours mon accord. Ne supprime jamais un utilisateur.",
+        "card": {
+          "allows": [
+            "Rôles du modèle attribués, jusqu'à 20 par jour",
+            "Comptes désactivés, jusqu'à 10 par jour"
+          ],
+          "holds": [
+            "Un accès admin ou étendu, à chaque fois",
+            "Une attribution au-delà de 20, ou une désactivation au-delà de 10, dans la journée"
+          ],
+          "never": [
+            "Supprimer un utilisateur"
+          ]
+        }
+      },
+      "es": {
+        "title": "Accesos para altas y bajas",
+        "headline": "El acceso de quien se va termina el día que se va.",
+        "today": "Las cuentas antiguas siguen abiertas durante semanas y las personas nuevas esperan días sus apps.",
+        "line": "Da a las altas las apps que indica la plantilla de su equipo y quita a las bajas en su último día; el acceso elevado siempre pregunta.",
+        "say": "Gestiona los accesos en mi espacio de trabajo y el chat de mi equipo. A cada alta, dale los roles que indica la plantilla de su equipo. A cada baja, desactívale todas las cuentas en su último día. El acceso de administrador o elevado siempre me espera. Nunca elimines un usuario.",
+        "card": {
+          "allows": [
+            "Roles de la plantilla asignados, hasta 20 al día",
+            "Cuentas desactivadas, hasta 10 al día"
+          ],
+          "holds": [
+            "Acceso de administrador o elevado, siempre",
+            "Una asignación por encima de 20, o una desactivación por encima de 10, en un día"
+          ],
+          "never": [
+            "Eliminar un usuario"
+          ]
+        }
+      },
+      "it": {
+        "title": "Accessi per chi entra e chi esce",
+        "headline": "L'accesso di chi se ne va finisce il giorno stesso.",
+        "today": "I vecchi account restano aperti per settimane e i nuovi aspettano giorni le loro app.",
+        "line": "Dà a chi entra le app previste dal modello del suo team e toglie chi esce nel suo ultimo giorno; l'accesso esteso chiede sempre.",
+        "say": "Gestisci gli accessi nel mio spazio di lavoro e nella chat del mio team. A ogni nuovo ingresso, assegna i ruoli previsti dal modello del suo team. A ogni uscita, disattiva tutti i suoi account nel suo ultimo giorno. L'accesso da amministratore o esteso aspetta sempre me. Non eliminare mai un utente.",
+        "card": {
+          "allows": [
+            "Ruoli del modello assegnati, fino a 20 al giorno",
+            "Account disattivati, fino a 10 al giorno"
+          ],
+          "holds": [
+            "Accesso da amministratore o esteso, ogni volta",
+            "Un'assegnazione oltre 20, o una disattivazione oltre 10, in un giorno"
+          ],
+          "never": [
+            "Eliminare un utente"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Acessos para quem entra e quem sai",
+        "headline": "O acesso de quem sai termina no próprio dia.",
+        "today": "Contas antigas ficam abertas durante semanas e quem chega espera dias pelas suas apps.",
+        "line": "Dá a quem entra as apps previstas no modelo da sua equipa e remove quem sai no último dia; o acesso elevado pergunta sempre.",
+        "say": "Gere os acessos no meu espaço de trabalho e no chat da minha equipa. A cada pessoa que entra, atribui as funções previstas no modelo da sua equipa. A cada pessoa que sai, desativa todas as suas contas no último dia. O acesso de administrador ou elevado espera sempre por mim. Nunca elimines um utilizador.",
+        "card": {
+          "allows": [
+            "Funções do modelo atribuídas, até 20 por dia",
+            "Contas desativadas, até 10 por dia"
+          ],
+          "holds": [
+            "Acesso de administrador ou elevado, sempre",
+            "Uma atribuição acima de 20, ou uma desativação acima de 10, num dia"
+          ],
+          "never": [
+            "Eliminar um utilizador"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Toegang voor nieuwe en vertrekkende collega's",
+        "headline": "De toegang van wie vertrekt, stopt op de dag zelf.",
+        "today": "Oude accounts blijven wekenlang open, en nieuwe collega's wachten dagen op hun apps.",
+        "line": "Geeft nieuwe collega's de apps uit het sjabloon van hun team en haalt vertrekkers weg op hun laatste dag; verhoogde rechten vragen altijd.",
+        "say": "Beheer de toegang in mijn werkruimte en teamchat. Geef elke nieuwe collega de rollen uit het sjabloon van het team. Deactiveer bij elke vertrekker op de laatste dag alle accounts. Beheerders- of verhoogde rechten wachten altijd op mij. Verwijder nooit een gebruiker.",
+        "card": {
+          "allows": [
+            "Sjabloonrollen toegekend, tot 20 per dag",
+            "Accounts gedeactiveerd, tot 10 per dag"
+          ],
+          "holds": [
+            "Beheerders- of verhoogde rechten, elke keer",
+            "Een toekenning boven 20, of een deactivering boven 10, op één dag"
+          ],
+          "never": [
+            "Een gebruiker verwijderen"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Dostępy dla nowych i odchodzących",
+        "headline": "Dostęp osoby odchodzącej kończy się w dniu odejścia.",
+        "today": "Stare konta zostają otwarte tygodniami, a nowe osoby czekają dniami na swoje aplikacje.",
+        "line": "Daje nowym osobom aplikacje z szablonu ich zespołu i odbiera dostęp odchodzącym w ostatnim dniu; rozszerzone uprawnienia zawsze pytają.",
+        "say": "Zarządzaj dostępami w mojej przestrzeni roboczej i na czacie zespołu. Każdej nowej osobie przypisz role z szablonu jej zespołu. Każdej odchodzącej osobie wyłącz wszystkie konta w jej ostatnim dniu. Uprawnienia administratora lub rozszerzone zawsze czekają na mnie. Nigdy nie usuwaj użytkownika.",
+        "card": {
+          "allows": [
+            "Role z szablonu przypisane, do 20 dziennie",
+            "Konta wyłączone, do 10 dziennie"
+          ],
+          "holds": [
+            "Uprawnienia administratora lub rozszerzone, za każdym razem",
+            "Przypisanie powyżej 20 lub wyłączenie powyżej 10 w ciągu dnia"
+          ],
+          "never": [
+            "Usunięcie użytkownika"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "ship-when-green",
     "title": "Ship when green, roll back when red",
     "category": "operations",
+    "order": 3,
     "line": "Deploys merged, green and approved changes, watches them, and rolls back a failing one; migrations always ask.",
     "headline": "Stop babysitting deploys.",
     "today": "Someone watches every release, and a bad one stays up until they notice.",
@@ -1870,6 +1720,167 @@ export const RECIPES = [
           ],
           "never": [
             "Usunięcie danych lub infrastruktury"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "file-receipts",
+    "title": "File receipts",
+    "category": "errands",
+    "order": 1,
+    "line": "Finds receipts and invoices in the mailbox, saves each to a folder and adds a row to the expenses sheet; deletes nothing.",
+    "headline": "No more hunting for receipts at tax time.",
+    "today": "Receipts sit in the inbox until the accountant asks for them.",
+    "say": "Each evening, find receipts and invoices in my email, save each PDF to my Receipts folder in my file storage and add a row to my Expenses sheet with the date, vendor, amount and currency. Up to 50 a day. Never delete or move an email.",
+    "connections": [
+      [
+        "gmail",
+        "outlook"
+      ],
+      [
+        "googledrive"
+      ],
+      [
+        "googlesheets"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Files saved and rows added, up to 50 a day each"
+      ],
+      "holds": [
+        "A file or a row past 50 in a day"
+      ],
+      "never": [
+        "Deleting or moving an email"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Belege ablegen",
+        "headline": "Nie mehr Belege suchen, wenn die Steuer fällig ist.",
+        "today": "Belege liegen im Posteingang, bis die Buchhaltung nach ihnen fragt.",
+        "line": "Findet Belege und Rechnungen im Postfach, legt jede Datei in einem Ordner ab und ergänzt eine Zeile in der Ausgabentabelle; löscht nichts.",
+        "say": "Suche jeden Abend Belege und Rechnungen in meiner E-Mail, speichere jedes PDF in meinem Ordner Belege in meinem Dateispeicher und ergänze in meiner Tabelle Ausgaben eine Zeile mit Datum, Anbieter, Betrag und Währung. Bis zu 50 am Tag. Lösche oder verschiebe nie eine E-Mail.",
+        "card": {
+          "allows": [
+            "Dateien abgelegt und Zeilen ergänzt, je bis zu 50 am Tag"
+          ],
+          "holds": [
+            "Eine Datei oder Zeile über 50 an einem Tag"
+          ],
+          "never": [
+            "Eine E-Mail löschen oder verschieben"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Classer les justificatifs",
+        "headline": "Plus de chasse aux justificatifs au moment des impôts.",
+        "today": "Les justificatifs dorment dans la boîte de réception jusqu'à ce que le comptable les demande.",
+        "line": "Trouve les reçus et factures dans la boîte mail, enregistre chacun dans un dossier et ajoute une ligne au tableau des dépenses ; ne supprime rien.",
+        "say": "Chaque soir, trouve les reçus et factures dans mes e-mails, enregistre chaque PDF dans mon dossier Justificatifs de mon stockage de fichiers et ajoute une ligne à mon tableau Dépenses avec la date, le fournisseur, le montant et la devise. Jusqu'à 50 par jour. Ne supprime ni ne déplace jamais un e-mail.",
+        "card": {
+          "allows": [
+            "Fichiers enregistrés et lignes ajoutées, jusqu'à 50 de chaque par jour"
+          ],
+          "holds": [
+            "Un fichier ou une ligne au-delà de 50 dans la journée"
+          ],
+          "never": [
+            "Supprimer ou déplacer un e-mail"
+          ]
+        }
+      },
+      "es": {
+        "title": "Archivar recibos",
+        "headline": "Se acabó buscar recibos cuando llegan los impuestos.",
+        "today": "Los recibos se quedan en la bandeja de entrada hasta que el contable los pide.",
+        "line": "Encuentra recibos y facturas en el buzón, guarda cada uno en una carpeta y añade una fila a la hoja de gastos; no borra nada.",
+        "say": "Cada tarde, busca recibos y facturas en mi correo, guarda cada PDF en mi carpeta Recibos de mi almacenamiento de archivos y añade una fila a mi hoja Gastos con la fecha, el proveedor, el importe y la moneda. Hasta 50 al día. Nunca borres ni muevas un correo.",
+        "card": {
+          "allows": [
+            "Archivos guardados y filas añadidas, hasta 50 de cada al día"
+          ],
+          "holds": [
+            "Un archivo o una fila por encima de 50 en un día"
+          ],
+          "never": [
+            "Borrar o mover un correo"
+          ]
+        }
+      },
+      "it": {
+        "title": "Archiviare le ricevute",
+        "headline": "Basta cercare ricevute quando arrivano le tasse.",
+        "today": "Le ricevute restano nella posta in arrivo finché il commercialista non le chiede.",
+        "line": "Trova ricevute e fatture nella casella di posta, salva ciascuna in una cartella e aggiunge una riga al foglio spese; non elimina nulla.",
+        "say": "Ogni sera, trova ricevute e fatture nella mia email, salva ogni PDF nella mia cartella Ricevute del mio archivio file e aggiungi una riga al mio foglio Spese con data, fornitore, importo e valuta. Fino a 50 al giorno. Non eliminare né spostare mai un'email.",
+        "card": {
+          "allows": [
+            "File salvati e righe aggiunte, fino a 50 di ciascuno al giorno"
+          ],
+          "holds": [
+            "Un file o una riga oltre 50 in un giorno"
+          ],
+          "never": [
+            "Eliminare o spostare un'email"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Arquivar recibos",
+        "headline": "Acabou a caça aos recibos na altura dos impostos.",
+        "today": "Os recibos ficam na caixa de entrada até o contabilista os pedir.",
+        "line": "Encontra recibos e faturas na caixa de correio, guarda cada um numa pasta e acrescenta uma linha à folha de despesas; não apaga nada.",
+        "say": "Todas as noites, encontra recibos e faturas no meu email, guarda cada PDF na minha pasta Recibos do meu armazenamento de ficheiros e acrescenta uma linha à minha folha Despesas com a data, o fornecedor, o valor e a moeda. Até 50 por dia. Nunca apagues nem movas um email.",
+        "card": {
+          "allows": [
+            "Ficheiros guardados e linhas acrescentadas, até 50 de cada por dia"
+          ],
+          "holds": [
+            "Um ficheiro ou uma linha acima de 50 num dia"
+          ],
+          "never": [
+            "Apagar ou mover um email"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Bonnetjes archiveren",
+        "headline": "Nooit meer bonnetjes zoeken bij de belastingaangifte.",
+        "today": "Bonnetjes blijven in de inbox staan tot de boekhouder erom vraagt.",
+        "line": "Vindt bonnetjes en facturen in de mailbox, bewaart elk in een map en voegt een regel toe aan de uitgavenlijst; verwijdert niets.",
+        "say": "Zoek elke avond bonnetjes en facturen in mijn e-mail, bewaar elke pdf in mijn map Bonnetjes in mijn bestandsopslag en voeg in mijn spreadsheet Uitgaven een regel toe met de datum, de leverancier, het bedrag en de valuta. Tot 50 per dag. Verwijder of verplaats nooit een e-mail.",
+        "card": {
+          "allows": [
+            "Bestanden bewaard en regels toegevoegd, tot 50 van elk per dag"
+          ],
+          "holds": [
+            "Een bestand of regel boven 50 op één dag"
+          ],
+          "never": [
+            "Een e-mail verwijderen of verplaatsen"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Archiwizowanie paragonów",
+        "headline": "Koniec z szukaniem paragonów przed rozliczeniem podatku.",
+        "today": "Paragony leżą w skrzynce odbiorczej, dopóki księgowy o nie nie poprosi.",
+        "line": "Znajduje paragony i faktury w skrzynce, zapisuje każdy w folderze i dodaje wiersz do arkusza wydatków; niczego nie usuwa.",
+        "say": "Każdego wieczoru znajdź paragony i faktury w moim e-mailu, zapisz każdy PDF w moim folderze Paragony w moim magazynie plików i dodaj wiersz do mojego arkusza Wydatki z datą, dostawcą, kwotą i walutą. Do 50 dziennie. Nigdy nie usuwaj ani nie przenoś e-maila.",
+        "card": {
+          "allows": [
+            "Pliki zapisane i wiersze dodane, do 50 każdego dziennie"
+          ],
+          "holds": [
+            "Plik lub wiersz powyżej 50 w ciągu dnia"
+          ],
+          "never": [
+            "Usunięcie lub przeniesienie e-maila"
           ]
         }
       }

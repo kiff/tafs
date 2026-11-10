@@ -15,6 +15,7 @@ One file per recipe, `<id>.md`, with a front matter and the words to say to Coac
 id: refunds-within-a-limit
 title: Refunds within a limit
 category: money
+order: 1
 line: Answers refund requests from the support queue and refunds within the Card.
 headline: No refund waits overnight.
 today: A refund that waits can turn into a chargeback, with a fee you pay even if you win.
@@ -33,6 +34,8 @@ Handle refund requests from my help desk. Refund in my payment provider up to 15
 ```
 
 - `id` is the file's name. `category` is `money`, `customers`, `operations` or `errands`.
+- `order` is the recipe's place in its category, from 1: the apps and kiff.dev/tafs show them
+  in that order (refunds leads Money). Two recipes in one category never share a place.
 - `line` says in one line what the taf does. `title` and `line` are what the apps show.
 - `headline` names the problem the taf ends, in the person's terms: Home leads with it for an
   account with no taf. `today` says in one line what that problem costs today, in words, never a
