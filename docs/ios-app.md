@@ -226,6 +226,37 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 - **From removed tafs** comes between the tafs and Other connections. It holds the connections whose `request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (the grant's `agent_name`). The app sends its signed grants read with the read (`connectApps(proof:)`). A connection a live taf's Card still uses says so (“Kept: Chargebacks' Card uses it”). **Clear these connections** shows only when at least one listed connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2 connections from removed tafs?”), then one Face ID, and the device key signs each disconnect. The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). With no `grants`, the section shows with no Clear. Which to keep is tafs cloud's word, never the phone's (`clearPlan`, `clearRemovedConnections`; the words are `ConnectionGroupWords`, the same as Android's).
 - **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that isn't a taf, so nothing there says it was removed.
 
+## Home with no taf
+
+An account with no taf sees the jobs a taf can take on Home, where tafs cloud says so
+(`GET /v1/recipes`, its `home`; [coach.md](coach.md)), as on Android
+([android-app.md](android-app.md#home-with-no-taf)). Every word is tafs cloud's, in the person's
+language: the app has none of its own for it.
+- **The list** (`HomeRecipes`): `home.words` leads it, then a chip per category to narrow it
+  (picked again, every recipe shows), then each recipe led by its `headline`, the problem it
+  ends, with its `line` under it. While it shows, Home's own "0 tafs working" line doesn't.
+- **Only when `home.shown`** is true and the sheet's `labels` came with it
+  (`AppModel.homeListsRecipes`). Otherwise Home shows `home.words` alone, its empty line. A tafs
+  cloud from before `home`, or recipes that couldn't be read, leave Home's own "No tafs yet."
+- **On iPad** the sidebar is narrow for a headline, so the list takes the pane beside it while
+  nothing is open, and the sidebar says `home.words`.
+- **A recipe's sheet** (`RecipeSheet`): the headline, the line, `today` (what it costs today),
+  then its Card in zones titled by `labels` (`allows`, `holds`, `never`), a zone with nothing
+  left out (`Recipes.zones(of:)`), and one button, `labels.hand`. Someone who can't use Coach
+  gets no button.
+- **Hand it to Coach** (`AppModel.handRecipeToCoach`): a new Coach conversation with the
+  recipe's `say` in the message box, to edit and send. Nothing is sent.
+- **Words first.** On a phone where Coach isn't started, a handed recipe shows the message box
+  with its words where the Start button would be, and Send starts Coach, then sends
+  (`AppModel.submitSetup`). Start asks for Face ID once: the same unlock signs the phone's
+  enrolment and Coach's draft. A Start that's cancelled sends nothing, and the words stay.
+  A phone that can't approve yet gets no box: the intro keeps the words that say why
+  (`ApprovalNotReady`), nothing is started or asked, and the handed words wait in the draft
+  until it can. While Coach isn't started, that Send confirms: a drive's touch on it is
+  refused (docs/drive.md).
+- **When it's read:** with each refresh that finds no taf, as well as when Coach opens
+  (`HomeRecipesTests`).
+
 ## The calendar
 
 The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
