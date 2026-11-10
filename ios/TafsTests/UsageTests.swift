@@ -196,4 +196,59 @@ final class UsageTests: XCTestCase {
         }
         XCTAssertNil(model.usage?.store, "the sample sells nothing")
     }
+
+    // MARK: Plan & usage on a new account (docs/accounts.md › The balance read)
+
+    private func store(_ packs: String) throws -> KIFFClient.Usage.Store {
+        try KIFFClient.decoder.decode(KIFFClient.Usage.Store.self, from: Data(#"{"solo_product":"bot.tafs.solo.monthly","packs":\#(packs)}"#.utf8))
+    }
+
+    private func line(_ balance: String) throws -> TafsCloud.Balance.Line {
+        try KIFFClient.decoder.decode(TafsCloud.Balance.self, from: Data(#"{"balance":\#(balance)}"#.utf8)).balance
+    }
+
+    /// The Credits panel follows tafs cloud's flag: left out only where it says false. A tafs
+    /// cloud from before the flag, or a value the app can't read, shows the panel.
+    func testTheCreditsPanelFollowsTafsCloudsFlag() throws {
+        XCTAssertFalse(try line(#"{"words":"No plan","credits_panel":false}"#).creditsPanel)
+        XCTAssertTrue(try line(#"{"words":"Solo","credits_panel":true}"#).creditsPanel)
+        XCTAssertTrue(try line(#"{"words":"Solo"}"#).creditsPanel, "a tafs cloud from before the flag shows it")
+        XCTAssertTrue(try line(#"{"words":"Solo","credits_panel":"no"}"#).creditsPanel, "unreadable: shown")
+    }
+
+    /// The First month pack is offered only where tafs cloud says it can be bought.
+    func testTheFirstMonthOfferIsReadFromTheBalance() throws {
+        let running = try line(#"{"words":"Solo","buy":{"solo":false,"packs":true,"first_month":{"ready":true,"words":null}}}"#)
+        XCTAssertEqual(running.buy?.firstMonthReady, true)
+        // Before a plan, tafs cloud sends null; one from before sent it not ready, with words.
+        let none = try line(#"{"words":"No plan","buy":{"solo":true,"packs":false,"first_month":null}}"#)
+        XCTAssertNil(none.buy?.firstMonth)
+        XCTAssertEqual(none.buy?.firstMonthReady, false)
+        let before = try line(#"{"words":"No plan","buy":{"solo":true,"first_month":{"ready":false,"words":"Once Solo starts"}}}"#)
+        XCTAssertEqual(before.buy?.firstMonthReady, false, "not ready: not shown, never alone or greyed")
+        let older = try line(#"{"words":"Solo","buy":{"solo":false,"packs":true}}"#)
+        XCTAssertEqual(older.buy?.firstMonthReady, false, "a tafs cloud that doesn't say offers none")
+    }
+
+    /// The packs as listed: the First month pack first while it can be bought, then the packs
+    /// that can be bought again; otherwise it isn't listed at all.
+    func testTheFirstMonthPackLeadsThePacksOnlyWhileItCanBeBought() throws {
+        let s = try store(#"""
+        [{"id":"rayo","name":"Rayo","line":"Rayo · 1,000 credits","credits":1000,"apple_product":"bot.tafs.pack.rayo"},
+         {"id":"first","name":"First month","line":"First month pack","credits":5000,"apple_product":"bot.tafs.pack.first","once":true},
+         {"id":"trueno","name":"Trueno","line":"Trueno · 5,000 credits","credits":5000,"apple_product":"bot.tafs.pack.trueno"}]
+        """#)
+        XCTAssertEqual(s.packs.map(\.once), [false, true, false])
+        XCTAssertEqual(s.offered(firstMonth: true).map(\.id), ["first", "rayo", "trueno"], "first among the packs")
+        XCTAssertEqual(s.offered(firstMonth: false).map(\.id), ["rayo", "trueno"], "not offered: not listed")
+        // KIFF lists the pack with no App Store product: the app can't sell it, so it isn't there.
+        let unsold = try store(#"""
+        [{"id":"first","name":"First month","line":"First month pack","once":true},
+         {"id":"rayo","name":"Rayo","line":"Rayo · 1,000 credits","apple_product":"bot.tafs.pack.rayo"}]
+        """#)
+        XCTAssertEqual(unsold.offered(firstMonth: true).map(\.id), ["rayo"])
+        // Bought once: KIFF drops it, and nothing leads.
+        let bought = try store(#"[{"id":"rayo","name":"Rayo","line":"Rayo","apple_product":"bot.tafs.pack.rayo"}]"#)
+        XCTAssertEqual(bought.offered(firstMonth: true).map(\.id), ["rayo"])
+    }
 }

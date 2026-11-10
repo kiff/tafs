@@ -97,6 +97,17 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(log.lines, ["kiff jws-3 -", "finish 3", "kiff jws-4 -", "finish 4"])
     }
 
+    /// A restore that finds nothing says so: nothing is sent to KIFF, and it never reads as
+    /// "Purchases restored."
+    func testARestoreThatFindsNothingSaysSo() async {
+        let log = StoreLog()
+        let (p, store) = purchases(recording: log)
+        store.restored = []
+        let outcome = await p.restore()
+        XCTAssertEqual(outcome, .nothingToRestore)
+        XCTAssertEqual(log.lines, [], "nothing to send")
+    }
+
     /// From launch, what the App Store reports reaches KIFF; and what wasn't finished before
     /// goes once signed in.
     func testUpdatesAndUnfinishedPurchasesReachKIFF() async {
@@ -507,5 +518,23 @@ final class PurchasesTests: XCTestCase {
         XCTAssertTrue(KIFFClient.signsSetup("/v1/me/pack-requests/pr_1/decline"))
         XCTAssertFalse(KIFFClient.signsSetup("/v1/me/pack-requests/pr_1/withdraw"))
         XCTAssertFalse(KIFFClient.signsSetup("/v1/me/pack-requests"))
+    }
+
+    /// Restore purchases on an account that bought nothing: "Nothing to restore.", never
+    /// "Purchases restored." With a purchase to send, it's restored as before.
+    func testRestoreSaysNothingToRestoreWhenNothingCameBack() async throws {
+        let log = StoreLog()
+        let (model, store, _) = await signedIn(log)
+        store.restored = []
+        await model.restorePurchases()
+        XCTAssertEqual(model.planMessage, Words.Billing.nothingToRestore)
+        XCTAssertNotEqual(model.planMessage, Words.Billing.restored)
+        XCTAssertNil(sent("POST", "/v1/me/billing/apple/transactions"), "nothing goes to KIFF")
+
+        StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (200, #"{"recorded":true,"action":"pack"}"#)
+        store.restored = [store.purchaseNamed(21)]
+        await model.restorePurchases()
+        XCTAssertEqual(model.planMessage, Words.Billing.restored)
+        XCTAssertEqual(log.lines, ["finish 21"])
     }
 }

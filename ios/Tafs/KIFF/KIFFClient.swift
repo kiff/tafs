@@ -476,7 +476,23 @@ final class KIFFClient {
                 /// The pack's credits, from a KIFF that says.
                 var credits: Int? = nil
                 let appleProduct: String
-                enum CodingKeys: String, CodingKey { case id, name, line, credits, appleProduct = "apple_product" }
+                /// The First month pack: bought once per account. KIFF drops it once bought.
+                var once = false
+                enum CodingKeys: String, CodingKey { case id, name, line, credits, appleProduct = "apple_product", once }
+
+                init(id: String, name: String, line: String, credits: Int? = nil, appleProduct: String, once: Bool = false) {
+                    self.id = id; self.name = name; self.line = line; self.credits = credits; self.appleProduct = appleProduct; self.once = once
+                }
+
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    id = try c.decode(String.self, forKey: .id)
+                    name = try c.decode(String.self, forKey: .name)
+                    line = try c.decode(String.self, forKey: .line)
+                    credits = (try? c.decodeIfPresent(Int.self, forKey: .credits)) ?? nil
+                    appleProduct = try c.decode(String.self, forKey: .appleProduct)
+                    once = ((try? c.decodeIfPresent(Bool.self, forKey: .once)) ?? nil) ?? false
+                }
             }
             var appAccountToken: UUID? = nil
             let soloProduct: String
@@ -496,6 +512,16 @@ final class KIFFClient {
 
             /// Every product the App Store is asked for.
             var products: [String] { [soloProduct] + packs.map(\.appleProduct) }
+
+            /// The packs the app lists (docs/accounts.md): the First month pack first, and only
+            /// while tafs cloud says it can be bought (`firstMonth`); then the packs that can be
+            /// bought again. Never the First month pack alone or greyed.
+            func offered(firstMonth: Bool) -> [Pack] {
+                var listed: [Pack] = []
+                if firstMonth, let first = packs.first(where: \.once) { listed.append(first) }
+                listed.append(contentsOf: packs.filter { !$0.once })
+                return listed
+            }
         }
         /// KIFF's plan: "solo", "team" (Company), "company" (an agreement), "internal", or none.
         var plan: String? = nil
