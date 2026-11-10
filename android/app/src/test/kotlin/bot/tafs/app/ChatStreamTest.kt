@@ -218,6 +218,8 @@ class ChatStreamTest {
     val m = model()
     assertTrue(m.deliverChat("hello", "refunds-1"))
     assertEquals(1, transport.requestsTo("POST /v1/tafs/taf_1/messages").size)
+    // tafs cloud words its lines for people in the app's language.
+    assertEquals("en", transport.requestsTo("POST /v1/tafs/taf_1/messages").single().headers["Accept-Language"])
     assertNull(m.state.value.chatLive["refunds-1"])
   }
 

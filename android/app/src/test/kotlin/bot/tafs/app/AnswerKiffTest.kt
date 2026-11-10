@@ -117,6 +117,7 @@ class AnswerKiffTest {
     assertFalse("not by the signing key", verifies(signer.publicKeyDER, message("approve-once", at = at), value(sent)))
     assertNull("the signature is in the body, not a header", transport.requestsTo("POST /v1/me/card-exceptions/ce_1/approve-once").single().headers["KIFF-Device-Signature"])
     assertEquals("Bearer at_1", transport.requestsTo("POST /v1/me/card-exceptions/ce_1/approve-once").single().headers["Authorization"])
+    assertEquals("en", transport.requestsTo("POST /v1/me/card-exceptions/ce_1/approve-once").single().headers["Accept-Language"])
   }
 
   @Test fun theOwnerIsAskedFirstNamingWhatTheyAnswer() = runTest {

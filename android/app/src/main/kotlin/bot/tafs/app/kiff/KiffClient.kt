@@ -172,8 +172,11 @@ class KiffClient(
   /** KIFF's MCP gateway, which lists the account's connected tools. */
   val gatewayUrl: String = "https://mcp.kiff.dev",
   var token: String? = null,
-  /** The language the app shows, so KIFF writes what it says to the owner in it, at its source (kiff/tafs#75). */
-  private val acceptLanguage: String = acceptLanguage(listOf("en")),
+  /**
+   * The language the app's lines are in, so KIFF writes what it says to the owner in it, at its source (kiff/tafs#75): read
+   * at each request, as Android resolved it ([bot.tafs.app.model.Res.language]), never the phone's own setting.
+   */
+  private val acceptLanguage: () -> String = { screenLanguage() },
   private val signingTime: SigningTime = SigningTime(),
 ) {
   /** The account the phone signed in to, for signed setup calls. */
@@ -657,7 +660,7 @@ class KiffClient(
     val headers = linkedMapOf(
       "Accept" to "application/json",
       "User-Agent" to "tafs-android",
-      "Accept-Language" to acceptLanguage,
+      "Accept-Language" to acceptLanguage(),
     )
     val payload = body?.let { json.encodeToString(JsonObject.serializer(), it).toByteArray() }
     if (payload != null) headers["Content-Type"] = "application/json"
@@ -855,6 +858,9 @@ class KiffClient(
      * held call's reason, a Record line's) in the app's language at its source, never translated by the
      * app (kiff/tafs#75). English is the last fallback.
      */
+    /** `Accept-Language` for the language the app's lines resolved to, English after it: "de, en;q=0.9". */
+    fun screenLanguage(): String = acceptLanguage(listOf(bot.tafs.app.model.Res.language))
+
     fun acceptLanguage(preferred: List<String>): String {
       val tags = preferred.take(4).map { it.replace('_', '-') }.toMutableList()
       if (tags.none { it == "en" || it.startsWith("en-") }) tags += "en"
