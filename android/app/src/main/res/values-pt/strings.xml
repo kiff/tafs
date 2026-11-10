@@ -1594,6 +1594,7 @@
     <string name="sample_access_sales_role_why">Começa na segunda-feira, segundo os RH</string>
     <string name="sample_bill_pay_job">Pagar faturas habituais de fornecedores que correspondam a uma nota de encomenda. Só fornecedores existentes. Nunca alterar dados bancários nem adicionar um beneficiário.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Pagar metade agora</string>
     <string name="sample_bill_pay_pay_atlas">Pagar à Atlas Freight</string>
     <string name="sample_bill_pay_pay_atlas_why">Corresponde à PO-3390, trimestral</string>
     <string name="sample_bill_pay_pay_northwind">Pagar à Northwind Packaging</string>
@@ -1638,6 +1639,7 @@
     <string name="sample_deploys_migration">Executar a migração 0042_orders_index</string>
     <string name="sample_deploys_migration_why">Adiciona um índice, 3 M de linhas</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">Executar esta noite</string>
     <string name="sample_deploys_rule_deploys">Implementações em produção</string>
     <string name="sample_deploys_rule_destroy_data">Apagar ou eliminar dados</string>
     <string name="sample_deploys_rule_migrations">Migrações de esquema</string>
@@ -1653,6 +1655,7 @@
     <string name="sample_refunds_credit_2290_why">Erro de faturação no mês passado</string>
     <string name="sample_refunds_job">Resolver pedidos de reembolso e de crédito da fila de suporte. Nunca reembolsar mais do que a cobrança original, nunca duas vezes, nunca numa cobrança em disputa.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">Primeiro a devolução</string>
     <string name="sample_refunds_payout">Pagar para uma nova conta bancária</string>
     <string name="sample_refunds_payout_why">O cliente pediu dinheiro em vez disso</string>
     <string name="sample_refunds_refund_4471">Reembolsar a encomenda n.º 4471</string>

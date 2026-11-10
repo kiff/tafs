@@ -1594,6 +1594,7 @@
     <string name="sample_access_sales_role_why">Inizia lunedì, secondo le risorse umane</string>
     <string name="sample_bill_pay_job">Paga le fatture ordinarie dei fornitori che corrispondono a un ordine d\'acquisto. Solo fornitori esistenti. Non cambiare mai le coordinate bancarie e non aggiungere beneficiari.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Paga metà ora</string>
     <string name="sample_bill_pay_pay_atlas">Paga Atlas Freight</string>
     <string name="sample_bill_pay_pay_atlas_why">Corrisponde a PO-3390, trimestrale</string>
     <string name="sample_bill_pay_pay_northwind">Paga Northwind Packaging</string>
@@ -1638,6 +1639,7 @@
     <string name="sample_deploys_migration">Esegui la migrazione 0042_orders_index</string>
     <string name="sample_deploys_migration_why">Aggiunge un indice, 3M di righe</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">Eseguila stanotte</string>
     <string name="sample_deploys_rule_deploys">Rilasci in produzione</string>
     <string name="sample_deploys_rule_destroy_data">Eliminare o cancellare dati</string>
     <string name="sample_deploys_rule_migrations">Migrazioni dello schema</string>
@@ -1653,6 +1655,7 @@
     <string name="sample_refunds_credit_2290_why">Errore di fatturazione il mese scorso</string>
     <string name="sample_refunds_job">Gestisci le richieste di rimborso e di credito dalla coda dell\'assistenza. Non rimborsare mai più dell\'addebito originale, mai due volte, mai su un addebito contestato.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">Prima il reso</string>
     <string name="sample_refunds_payout">Paga su un nuovo conto bancario</string>
     <string name="sample_refunds_payout_why">Il cliente ha chiesto invece contanti</string>
     <string name="sample_refunds_refund_4471">Rimborsa l\'ordine n. 4471</string>

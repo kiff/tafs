@@ -1594,6 +1594,7 @@
     <string name="sample_access_sales_role_why">Begint maandag, volgens HR</string>
     <string name="sample_bill_pay_job">Betaal gewone leveranciersrekeningen die bij een inkooporder passen. Alleen bestaande leveranciers. Wijzig nooit bankgegevens en voeg nooit een begunstigde toe.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Nu de helft betalen</string>
     <string name="sample_bill_pay_pay_atlas">Atlas Freight betalen</string>
     <string name="sample_bill_pay_pay_atlas_why">Past bij PO-3390, per kwartaal</string>
     <string name="sample_bill_pay_pay_northwind">Northwind Packaging betalen</string>
@@ -1638,6 +1639,7 @@
     <string name="sample_deploys_migration">Migratie 0042_orders_index uitvoeren</string>
     <string name="sample_deploys_migration_why">Voegt een index toe, 3M rijen</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">Vannacht uitvoeren</string>
     <string name="sample_deploys_rule_deploys">Productiedeploys</string>
     <string name="sample_deploys_rule_destroy_data">Data droppen of verwijderen</string>
     <string name="sample_deploys_rule_migrations">Schemamigraties</string>
@@ -1653,6 +1655,7 @@
     <string name="sample_refunds_credit_2290_why">Factuurfout vorige maand</string>
     <string name="sample_refunds_job">Handel verzoeken om terugbetaling en tegoed uit de supportwachtrij af. Betaal nooit meer terug dan de oorspronkelijke betaling, nooit twee keer en nooit bij een betwiste betaling.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">Eerst retour</string>
     <string name="sample_refunds_payout">Uitbetalen naar een nieuwe bankrekening</string>
     <string name="sample_refunds_payout_why">Klant vroeg in plaats daarvan om contant geld</string>
     <string name="sample_refunds_refund_4471">Bestelling #4471 terugbetalen</string>

@@ -1696,6 +1696,7 @@
     <string name="sample_access_sales_role_why">Zaczyna w poniedziałek, według HR</string>
     <string name="sample_bill_pay_job">Opłacaj rutynowe faktury dostawców zgodne z zamówieniem. Tylko istniejący dostawcy. Nigdy nie zmieniaj danych bankowych ani nie dodawaj odbiorcy.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Zapłać teraz połowę</string>
     <string name="sample_bill_pay_pay_atlas">Zapłać Atlas Freight</string>
     <string name="sample_bill_pay_pay_atlas_why">Zgodne z PO-3390, kwartalnie</string>
     <string name="sample_bill_pay_pay_northwind">Zapłać Northwind Packaging</string>
@@ -1740,6 +1741,7 @@
     <string name="sample_deploys_migration">Uruchom migrację 0042_orders_index</string>
     <string name="sample_deploys_migration_why">Dodaje indeks, 3 mln wierszy</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">Uruchom dziś w nocy</string>
     <string name="sample_deploys_rule_deploys">Wdrożenia produkcyjne</string>
     <string name="sample_deploys_rule_destroy_data">Usuwanie danych</string>
     <string name="sample_deploys_rule_migrations">Migracje schematu</string>
@@ -1755,6 +1757,7 @@
     <string name="sample_refunds_credit_2290_why">Błąd w rozliczeniu w zeszłym miesiącu</string>
     <string name="sample_refunds_job">Rozpatruj prośby o zwrot i uznanie z kolejki wsparcia. Nigdy nie zwracaj więcej niż pierwotne obciążenie, nigdy dwa razy i nigdy przy spornym obciążeniu.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">Najpierw zwrot</string>
     <string name="sample_refunds_payout">Wypłata na nowe konto bankowe</string>
     <string name="sample_refunds_payout_why">Klient poprosił zamiast tego o gotówkę</string>
     <string name="sample_refunds_refund_4471">Zwrot za zamówienie #4471</string>

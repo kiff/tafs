@@ -1594,6 +1594,7 @@
     <string name="sample_access_sales_role_why">Commence lundi, selon les RH</string>
     <string name="sample_bill_pay_job">Payer les factures courantes des fournisseurs qui correspondent à un bon de commande. Fournisseurs existants uniquement. Ne jamais modifier les coordonnées bancaires ni ajouter de bénéficiaire.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Payer la moitié maintenant</string>
     <string name="sample_bill_pay_pay_atlas">Payer Atlas Freight</string>
     <string name="sample_bill_pay_pay_atlas_why">Correspond à PO-3390, trimestriel</string>
     <string name="sample_bill_pay_pay_northwind">Payer Northwind Packaging</string>
@@ -1638,6 +1639,7 @@
     <string name="sample_deploys_migration">Lancer la migration 0042_orders_index</string>
     <string name="sample_deploys_migration_why">Ajoute un index, 3 M de lignes</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">L\'exécuter ce soir</string>
     <string name="sample_deploys_rule_deploys">Déploiements en production</string>
     <string name="sample_deploys_rule_destroy_data">Suppression de données</string>
     <string name="sample_deploys_rule_migrations">Migrations de schéma</string>
@@ -1653,6 +1655,7 @@
     <string name="sample_refunds_credit_2290_why">Erreur de facturation le mois dernier</string>
     <string name="sample_refunds_job">Traiter les demandes de remboursement et d\'avoir de la file du support. Ne jamais rembourser plus que le paiement d\'origine, jamais deux fois, jamais sur un paiement contesté.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">D\'abord le retour</string>
     <string name="sample_refunds_payout">Verser sur un nouveau compte bancaire</string>
     <string name="sample_refunds_payout_why">Le client a demandé de l\'argent à la place</string>
     <string name="sample_refunds_refund_4471">Rembourser la commande n° 4471</string>

@@ -1594,6 +1594,7 @@
     <string name="sample_access_sales_role_why">Fängt Montag an, laut HR</string>
     <string name="sample_bill_pay_job">Bezahle routinemäßige Lieferantenrechnungen, die zu einer Bestellung passen. Nur bestehende Lieferanten. Ändere nie Bankdaten und füge keinen Zahlungsempfänger hinzu.</string>
     <string name="sample_bill_pay_name">Bill pay</string>
+    <string name="sample_bill_pay_next_step">Jetzt die Hälfte zahlen</string>
     <string name="sample_bill_pay_pay_atlas">Atlas Freight bezahlen</string>
     <string name="sample_bill_pay_pay_atlas_why">Passt zu PO-3390, vierteljährlich</string>
     <string name="sample_bill_pay_pay_northwind">Northwind Packaging bezahlen</string>
@@ -1638,6 +1639,7 @@
     <string name="sample_deploys_migration">Migration 0042_orders_index ausführen</string>
     <string name="sample_deploys_migration_why">Fügt einen Index hinzu, 3 Mio. Zeilen</string>
     <string name="sample_deploys_name">Deploys</string>
+    <string name="sample_deploys_next_step">Heute Nacht ausführen</string>
     <string name="sample_deploys_rule_deploys">Produktions-Deploys</string>
     <string name="sample_deploys_rule_destroy_data">Daten verwerfen oder löschen</string>
     <string name="sample_deploys_rule_migrations">Schemamigrationen</string>
@@ -1653,6 +1655,7 @@
     <string name="sample_refunds_credit_2290_why">Abrechnungsfehler im letzten Monat</string>
     <string name="sample_refunds_job">Erledige Erstattungs- und Gutschriftanfragen aus der Support-Warteschlange. Nie mehr als die ursprüngliche Zahlung erstatten, nie zweimal, nie bei einer reklamierten Zahlung.</string>
     <string name="sample_refunds_name">Refunds</string>
+    <string name="sample_refunds_next_step">Erst zurücksenden</string>
     <string name="sample_refunds_payout">Auszahlung auf ein neues Bankkonto</string>
     <string name="sample_refunds_payout_why">Kunde wollte stattdessen Bargeld</string>
     <string name="sample_refunds_refund_4471">Bestellung #4471 erstatten</string>
