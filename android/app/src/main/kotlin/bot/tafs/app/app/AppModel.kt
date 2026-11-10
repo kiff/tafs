@@ -2661,15 +2661,11 @@ class AppModel(
       val started = setup ?: return false
       if (generation != accountGeneration) return false
       _state.update { it.copy(coachCloudId = started.id, coachAgent = started.kiffAgent, coachChecked = true) }
-      // A Coach this Start made took its one fingerprint, the draft's: its Card is another draft, signed over its own bytes, so
-      // it's given from the tools panel, behind its own fingerprint, in its own words. A Coach already there gives its tools within
-      // the step the owner just confirmed, as tafs cloud says they're still to give.
-      if (claim == null) giveCoachTools()
-      else {
-        loadCoachTools()
-        // The step that ends a first Start: Coach's tools, asked in a sheet, behind their own fingerprint.
-        if (generation == accountGeneration && _state.value.coachTools?.toGive == true) _state.update { it.copy(coachToolsAsked = true) }
-      }
+      // Coach's tools are given in one place only, their own step, in tafs cloud's words, behind their own fingerprint: never
+      // inside another confirmation. Still to give, the step is asked: at the end of a first Start, or on a phone that just
+      // enrolled for a Coach already there.
+      loadCoachTools()
+      if (generation == accountGeneration && _state.value.coachTools?.toGive == true) _state.update { it.copy(coachToolsAsked = true) }
     } finally {
       planque.signer = null
       kiff.setupSigner = null
@@ -5335,8 +5331,8 @@ class AppModel(
         }
         return false
       }
-      // Within the step the owner just confirmed: Coach's tools, if this phone hasn't given them yet.
-      if (_state.value.coachTools?.toGive == true) giveCoachTools()
+      // Coach's tools are never given inside another confirmation: still to give, their own step is asked.
+      if (_state.value.coachTools?.toGive == true) _state.update { it.copy(coachToolsAsked = true) }
     } else if (held != null && holdAnswered(held.call) != null) {
       // Coach's install with no Card: approving Coach's held call is the confirmation, signed now, before the version goes
       // live, and sent once it is. One fingerprint, and nothing goes live unless the owner gave it.
