@@ -2883,7 +2883,8 @@ describe("halting", () => {
   it("says a halt and a resume of every taf in the plural, in a language whose words agree in number", async () => {
     const w = world();
     w.phones.push({ token: "f".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "fr" },
-      { token: "d".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "de" });
+      { token: "d".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "de" },
+      { token: "e".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "", lang: "es" });
     const titles = (token: string) => w.pushed.filter((p) => p.token === token)
       .map((p) => (p.n.payload as { aps: { alert?: { title: string; body: string } } }).aps.alert).filter((a) => a !== undefined);
     w.account.acksAtOnce = true;
@@ -2900,6 +2901,8 @@ describe("halting", () => {
       { title: "Rae repris", body: "Il fonctionne à nouveau comme avant le blocage." },
       { title: "Tous vos tafs repris", body: "Ils fonctionnent à nouveau comme avant le blocage." },
     ]);
+    // Spanish: "reanudado" takes the plural too.
+    expect(titles("e".repeat(64)).map((a) => a.title)).toEqual(["Todos tus tafs bloqueados", "Rae bloqueado", "Rae reanudado", "Todos tus tafs reanudados"]);
     // German: one taf is "er", all of them "sie".
     expect(titles("d".repeat(64)).slice(2)).toEqual([
       { title: "Rae fortgesetzt", body: "Er arbeitet wieder wie vor dem Anhalten." },
