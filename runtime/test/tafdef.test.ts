@@ -70,6 +70,8 @@ describe("a taf's definition on kiff/agents", () => {
   // turn that acted, so the number is one the taf read, not one it made.
   it("tells every taf to take a report's numbers of calls from the runner's count", () => {
     expect(SHARED_INSTRUCTIONS).toContain("is the one in the count you\nread after your tool results (\"Count so far of this run's calls that act\"),\nfor that tool: copy it, never total calls in your head, and it matches the\nitems you name. A run with no such count changed nothing.");
+    // Every kind of call the count can show is in the rule's list, the ones whose effect isn't known too.
+    expect(SHARED_INSTRUCTIONS).toContain("(how many were\ndone or sent, are waiting, were refused, failed, or were sent with no word on\nwhether they took effect)");
     expect(SHARED_INSTRUCTIONS).not.toContain("count of the calls your record shows");
   });
 
