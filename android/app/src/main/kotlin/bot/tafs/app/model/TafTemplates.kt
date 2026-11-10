@@ -25,7 +25,7 @@ object TafTemplates {
     job = Words.Sample.Refunds.job,
     tools = listOf(Words.Sample.Tool.payments, Words.Sample.Tool.store, Words.Sample.Tool.email),
     rules = listOf(
-      CardRule(action = "refund", label = Words.Sample.Refunds.Rule.refunds, perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day, nextSteps = listOf("Return first")),
+      CardRule(action = "refund", label = Words.Sample.Refunds.Rule.refunds, perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day, nextSteps = listOf(Words.Sample.Refunds.nextStep)),
       CardRule(action = "credit", label = Words.Sample.Refunds.Rule.credits, perAction = Money.eur(100.0), perWindow = Money.eur(1_000.0), window = Window.day),
       CardRule(action = "payout", label = Words.Sample.Refunds.Rule.payouts, never = true, outside = Outside.refuse),
     ),
@@ -43,7 +43,7 @@ object TafTemplates {
     job = Words.Sample.BillPay.job,
     tools = listOf(Words.Sample.Tool.accounting, Words.Sample.Tool.email),
     rules = listOf(
-      CardRule(action = "pay_bill", label = Words.Sample.BillPay.Rule.bills, perAction = Money.eur(5_000.0), perWindow = Money.eur(25_000.0), window = Window.week, nextSteps = listOf("Pay half now")),
+      CardRule(action = "pay_bill", label = Words.Sample.BillPay.Rule.bills, perAction = Money.eur(5_000.0), perWindow = Money.eur(25_000.0), window = Window.week, nextSteps = listOf(Words.Sample.BillPay.nextStep)),
       CardRule(action = "wire", label = Words.Sample.BillPay.Rule.wires, alwaysAsk = true),
       CardRule(action = "bank_details", label = Words.Sample.BillPay.Rule.bankDetails, never = true, outside = Outside.refuse),
       CardRule(action = "new_payee", label = Words.Sample.BillPay.Rule.newPayees, never = true, outside = Outside.refuse),
@@ -83,7 +83,7 @@ object TafTemplates {
     rules = listOf(
       CardRule(action = "deploy", label = Words.Sample.Deploys.Rule.deploys, countPerWindow = 10, window = Window.day),
       CardRule(action = "rollback", label = Words.Sample.Deploys.Rule.rollbacks, countPerWindow = 20, window = Window.day),
-      CardRule(action = "migration", label = Words.Sample.Deploys.Rule.migrations, alwaysAsk = true, nextSteps = listOf("Run it tonight")),
+      CardRule(action = "migration", label = Words.Sample.Deploys.Rule.migrations, alwaysAsk = true, nextSteps = listOf(Words.Sample.Deploys.nextStep)),
       CardRule(action = "destroy_data", label = Words.Sample.Deploys.Rule.destroyData, never = true, outside = Outside.refuse),
     ),
     script = listOf(

@@ -80307,6 +80307,17 @@
         }
       }
     },
+    "sample.bill_pay.next_step": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pay half now"
+          }
+        }
+      }
+    },
     "sample.bill_pay.pay_atlas": {
       "extractionState": "manual",
       "localizations": {
@@ -82639,6 +82650,17 @@
         }
       }
     },
+    "sample.deploys.next_step": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run it tonight"
+          }
+        }
+      }
+    },
     "sample.deploys.rule.deploys": {
       "extractionState": "manual",
       "localizations": {
@@ -83430,6 +83452,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Refunds"
+          }
+        }
+      }
+    },
+    "sample.refunds.next_step": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return first"
           }
         }
       }

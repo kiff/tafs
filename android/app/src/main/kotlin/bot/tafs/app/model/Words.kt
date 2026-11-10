@@ -1694,6 +1694,7 @@ object Words {
     object BillPay {
       val job: String get() = Res.s(R.string.sample_bill_pay_job)
       val name: String get() = Res.s(R.string.sample_bill_pay_name)
+      val nextStep: String get() = Res.s(R.string.sample_bill_pay_next_step)
       val payAtlas: String get() = Res.s(R.string.sample_bill_pay_pay_atlas)
       val payAtlasWhy: String get() = Res.s(R.string.sample_bill_pay_pay_atlas_why)
       val payNorthwind: String get() = Res.s(R.string.sample_bill_pay_pay_northwind)
@@ -1752,6 +1753,7 @@ object Words {
       val migration: String get() = Res.s(R.string.sample_deploys_migration)
       val migrationWhy: String get() = Res.s(R.string.sample_deploys_migration_why)
       val name: String get() = Res.s(R.string.sample_deploys_name)
+      val nextStep: String get() = Res.s(R.string.sample_deploys_next_step)
       object Rule {
         val deploys: String get() = Res.s(R.string.sample_deploys_rule_deploys)
         val destroyData: String get() = Res.s(R.string.sample_deploys_rule_destroy_data)
@@ -1773,6 +1775,7 @@ object Words {
       val credit2290Why: String get() = Res.s(R.string.sample_refunds_credit_2290_why)
       val job: String get() = Res.s(R.string.sample_refunds_job)
       val name: String get() = Res.s(R.string.sample_refunds_name)
+      val nextStep: String get() = Res.s(R.string.sample_refunds_next_step)
       val payout: String get() = Res.s(R.string.sample_refunds_payout)
       val payoutWhy: String get() = Res.s(R.string.sample_refunds_payout_why)
       val refund4471: String get() = Res.s(R.string.sample_refunds_refund_4471)

@@ -3130,6 +3130,8 @@ enum Words {
             static var job: String { Words.line("sample.bill_pay.job") }
             /// Bill pay
             static var name: String { Words.line("sample.bill_pay.name") }
+            /// Pay half now
+            static var nextStep: String { Words.line("sample.bill_pay.next_step") }
             /// Pay Atlas Freight
             static var payAtlas: String { Words.line("sample.bill_pay.pay_atlas") }
             /// Matches PO-3390, quarterly
@@ -3232,6 +3234,8 @@ enum Words {
             static var migrationWhy: String { Words.line("sample.deploys.migration_why") }
             /// Deploys
             static var name: String { Words.line("sample.deploys.name") }
+            /// Run it tonight
+            static var nextStep: String { Words.line("sample.deploys.next_step") }
             enum Rule {
                 /// Production deploys
                 static var deploys: String { Words.line("sample.deploys.rule.deploys") }
@@ -3268,6 +3272,8 @@ enum Words {
             static var job: String { Words.line("sample.refunds.job") }
             /// Refunds
             static var name: String { Words.line("sample.refunds.name") }
+            /// Return first
+            static var nextStep: String { Words.line("sample.refunds.next_step") }
             /// Pay out to a new bank account
             static var payout: String { Words.line("sample.refunds.payout") }
             /// Customer asked for cash instead
