@@ -3,7 +3,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
-import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Held, Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
@@ -1483,6 +1483,48 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.agents.runs.filter((x) => x.agent === NEW)).toEqual([]);
     // Its kept tools are what Coach's taf_dial may check against.
     expect(w.tafs.held.get(`t_acme#${NEW}`)?.tools).toEqual([WORK_TOOL]);
+  });
+
+  // kiff/agents answers a by-hand firing that started no run with its outcome: each one in words, never "nothing new"
+  // but for quiet, and a check that couldn't read with its reason, for Coach to fix the check it drafted.
+  it("answers Run now with kiff/agents' outcome in words for every firing that starts no run, and a failed read's reason", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY })).status).toBe(200);
+    const runs = w.agents.runs.length;
+    const reason = 'schedule: the check\'s items have no "created" field';
+    for (const [outcome, en, fr] of [
+      ["skipped_too_large", "Its work was too big for one run: no run started.", "Son travail était trop grand pour une exécution : aucune exécution lancée."],
+      ["skipped_halted", "It's halted, or your account is: nothing was read.", "Il est bloqué, ou votre compte l'est : rien n'a été lu."],
+      ["skipped_switching", "It's switching versions: it checks at the next run.", "Il change de version : il vérifiera à la prochaine exécution."],
+      ["skipped_credits", "Your account's tafs wait for credits: no run started.", "Les tafs de votre compte attendent des crédits : aucune exécution lancée."],
+      ["failed_check", "Its check couldn't read the work list: no run started.", "La vérification n'a pas pu lire la liste du travail : aucune exécution lancée."],
+      ["skipped_new_kind", "Checked for new work: no run started.", "Vérifié s'il y a du nouveau travail : aucune exécution lancée."],
+    ] as const) {
+      w.agents.outcomes.set(NEW, outcome === "failed_check" ? { outcome, reason } : { outcome });
+      const r = await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana" });
+      expect(r.status, outcome).toBe(200);
+      expect(r.body, outcome).toEqual({ session: null, outcome, words: en, ...(outcome === "failed_check" ? { reason } : {}) });
+      expect(r.body.words).not.toContain("nothing new");
+      const inFr = await call(w, "POST", `/v1/tafs/${NEW}/run`, { token: "ana", headers: { "accept-language": "fr" } });
+      expect(inFr.body.words, outcome).toBe(fr);
+    }
+    expect(w.agents.runs.length).toBe(runs);
+  });
+
+  it("makes the taf whatever its first firing came to, saying so, and tells Coach a failed read's reason", async () => {
+    for (const [outcome, words] of [["quiet", "Checked for new work: nothing new."], ["skipped_halted", "It's halted, or your account is: nothing was read."],
+      ["failed_check", "Its check couldn't read the work list: no run started."]] as const) {
+      const w = world();
+      w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+      const reason = 'schedule: the check\'s items have no "created" field';
+      if (outcome === "quiet") w.agents.quiet.add(NEW); else w.agents.outcomes.set(NEW, outcome === "failed_check" ? { outcome, reason } : { outcome });
+      const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
+      expect(r.status, outcome).toBe(200);
+      expect(r.body, outcome).toMatchObject({ session: null, outcome, words, taf: { id: NEW } });
+      expect(r.body.reason).toBe(outcome === "failed_check" ? reason : undefined);
+      expect(w.tafs.held.has(`t_acme#${NEW}`)).toBe(true);
+    }
   });
 
   // Run now fires the schedule: a check that hands items answers the run it started; a quiet one starts nothing,
@@ -3350,6 +3392,19 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.agents.calls.length = 0;
     await note();
     expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toEqual([]);
+  });
+
+  // A result's answer carries only the taf's id: a first check that couldn't read reaches Coach as a line it reads
+  // with the owner's next message, with the read's reason, so it fixes the check it drafted.
+  it("tells Coach when the taf's first check couldn't read, with the reason, and still answers the taf as set up", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: 'schedule: the check\'s items have no "created" field' });
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    const lines = (await deps.coach.get(coachKeys.notes("t_acme", "u_ana"))) as Array<{ text: string; taf: string; said: string }>;
+    expect(lines.map((l) => l.text)).toEqual(['[taf Refunds first check] The taf is set up, but its first check couldn\'t read: schedule: the check\'s items have no "created" field; fix the check with taf_dial.']);
+    expect(lines[0]!.said).toBe("Its check couldn't read the work list: no run started.");
   });
 
   it("makes a taf with the job Coach drafted, outside the five, and runs it (kiff/tafs#476)", async () => {

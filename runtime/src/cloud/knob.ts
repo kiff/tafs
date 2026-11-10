@@ -5,7 +5,7 @@
  */
 import type { Schedule } from "./agents.js";
 import type { ResultPlace } from "./handler.js";
-import { type Check, type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
+import { type Check, plannedOf, type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
 import { placeWords, type VendorPlace } from "./places.js";
 import { timeIn } from "./work.js";
 import { type Lang, plural, wordsIn } from "./words/index.js";
@@ -199,7 +199,9 @@ export function knobOf(k: KnobInput): Knob {
   // The dial's triggers: as the live version set them, or the taf's own schedule read back.
   const fromSchedule = !k.unscheduled && k.schedule ? triggerOf(k.schedule, k.zone) : undefined;
   const timed = k.setting ? k.setting.wakes.filter((t) => t.kind === "schedule" || t.kind === "app_check") : [];
-  const check = k.setting?.check ?? k.check;
+  // The taf's check, unless the live version has none of its own and more than one timetable: that version was
+  // written unchecked (applyKnob), so its schedules don't check first and the words don't say they do.
+  const check = k.setting?.check ?? (k.check && (!k.setting || takesCheck(k.setting, k.check)) ? k.check : undefined);
   if (!k.unscheduled && k.schedule && (!k.setting || timed.length)) {
     const s = k.schedule;
     const next = s.enabled && s.next ? w.dial_next(time(s.next)) : "";
@@ -406,6 +408,11 @@ export function ringWords(k: KnobSetting, lang: Lang = "en"): { wakes: string[];
 export function settingWords(k: KnobSetting, lang: Lang = "en"): string[] {
   const r = ringWords(k, lang);
   return [...r.wakes, ...r.when, ...r.results];
+}
+
+/** Whether a dial's triggers make one timetable, so its schedules can carry the check (triggers.ts, plannedOf). */
+function takesCheck(s: KnobSetting, check: Check): boolean {
+  try { plannedOf(s.wakes, s.busy, check); return true; } catch { return false; }
 }
 
 /** A trigger's line, and that it checks first when it's a schedule of a taf with a check: "Weekdays at 09:00 · checks for new work first". */

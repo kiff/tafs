@@ -305,6 +305,13 @@ export const en = {
   dial_checks_first: "checks for new work first",
   // Run now, or a new taf's first firing, whose check found nothing new: no run started (POST …/run, POST /v1/tafs).
   checked_nothing_new: "Checked for new work: nothing new.",
+  // The same, when it started no run for another reason (kiff/agents' outcome): never "nothing new".
+  checked_too_large: "Its work was too big for one run: no run started.",
+  checked_halted: "It's halted, or your account is: nothing was read.",
+  checked_switching: "It's switching versions: it checks at the next run.",
+  checked_credits: "Your account's tafs wait for credits: no run started.",
+  checked_failed: "Its check couldn't read the work list: no run started.",
+  checked_no_run: "Checked for new work: no run started.",
   dial_wakes_before: "Wakes before a calendar event",
   dial_wakes_on: (event: string) => `Wakes on ${event}`,
   dial_an_app_event: "an app's event",

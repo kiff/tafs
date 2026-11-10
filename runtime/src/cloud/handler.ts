@@ -845,10 +845,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
-    const run = await agentsCall(() => deps.agents.trigger(me.tenantID, taf.id));
-    if (run?.session) return { session: run.session };
-    // Its check found nothing new, so no run started: said so in words the apps show as they are.
-    return quietFiring(langOf(event));
+    const fired = await agentsCall(() => fireNow(me.tenantID, taf.id, deps));
+    if ("session" in fired) return { session: fired.session };
+    // Its check started no run (it found nothing new, the taf is halted, its check couldn't read…): said so in
+    // words the apps show as they are, with kiff/agents' outcome, and the read's reason when it failed.
+    return noRun(fired, langOf(event));
   }
   if (parts.length === 4 && method === "GET" && action === "runs") {
     return { runs: (await jobRuns(me, taf, deps)).map((r) => ({ session: r.session, at: iso(r.created), error: r.error || null })) };
@@ -1268,7 +1269,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
 }
 
 /** POST /v1/tafs's work, for the person me: from their request, or from a result tafs cloud hands over for them. */
-async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang): Promise<{ taf: unknown; session: string | null; outcome?: "quiet"; words?: string }> {
+async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang): Promise<{ taf: unknown; session: string | null; outcome?: string; words?: string; reason?: string }> {
   let name = str(body.name).trim();
   if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   // Setup's word that the taf's tools can't find its work (kiff/tafs#138): no
@@ -1442,21 +1443,45 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // once, through kiff/agents' trigger: a checked taf's first check hands it the open queue (`first: "all"`),
   // and an empty queue starts no run, which is no failure: the answer then has no session.
   if (unscheduled) return { taf: await view(taf, me, deps), session: null };
-  let run: Awaited<ReturnType<AgentsAPI["trigger"]>>;
-  try { run = await deps.agents.trigger(me.tenantID, tafID); } catch (err) {
+  let fired: Fired_;
+  try { fired = await fireNow(me.tenantID, tafID, deps); } catch (err) {
     throw new HTTPError(502, `${name} is started, but its first ${workCheck ? "check" : "run"} didn't start (${(err as Error).message}). Run it now from the app`);
   }
-  // A quiet first check says so, so no client reads a missing session as anything else.
-  if (!run?.session) return { taf: await view(taf, me, deps), ...quietFiring(lang ?? ownerLang) };
-  return { taf: await view(taf, me, deps), session: run.session };
+  // A first check that started no run says why (quiet, halted, a read that failed…): the taf is made all the same.
+  if (!("session" in fired)) return { taf: await view(taf, me, deps), ...noRun(fired, lang ?? ownerLang) };
+  return { taf: await view(taf, me, deps), session: fired.session };
+}
+
+/** What firing a schedule by hand came to: the run it started, or kiff/agents' outcome, with the read's reason when it failed. */
+type Fired_ = { session: string } | { outcome: string; reason?: string };
+
+/**
+ * Fires the schedule now (kiff/agents' `POST /schedules/{id}/trigger`). A checked schedule's firing that starts
+ * no run answers its outcome (`quiet`, `skipped_halted`…), and a check that couldn't read is a 409 `failed_check`
+ * whose words are the read's reason, for whoever drafted the check to fix.
+ */
+async function fireNow(tenant: string, id: string, deps: Deps): Promise<Fired_> {
+  let r: Awaited<ReturnType<AgentsAPI["trigger"]>>;
+  try { r = await deps.agents.trigger(tenant, id); } catch (err) {
+    if (err instanceof AgentsError && err.status === 409 && err.code === "failed_check") return { outcome: "failed_check", reason: oneLine(err.message, 500) };
+    throw err;
+  }
+  if (r?.session) return { session: r.session };
+  return { outcome: typeof r?.outcome === "string" && r.outcome ? r.outcome : "quiet" };
 }
 
 /**
- * A firing whose check found nothing new: no run, and a line the apps show as it is. tafs cloud doesn't know
- * which app a tool belongs to, so the line names none, and never the tool.
+ * A firing that started no run: kiff/agents' outcome and a line the apps show as it is, in the person's language.
+ * tafs cloud doesn't know which app a tool belongs to, so the line names none, and never the tool. Only `quiet`
+ * says nothing new was found.
  */
-function quietFiring(lang: Lang): { session: null; outcome: "quiet"; words: string } {
-  return { session: null, outcome: "quiet", words: wordsIn(lang).checked_nothing_new };
+function noRun(f: { outcome: string; reason?: string }, lang: Lang): { session: null; outcome: string; words: string; reason?: string } {
+  const w = wordsIn(lang);
+  const words = ({
+    quiet: w.checked_nothing_new, skipped_too_large: w.checked_too_large, skipped_halted: w.checked_halted,
+    skipped_switching: w.checked_switching, skipped_credits: w.checked_credits, failed_check: w.checked_failed,
+  } as Record<string, string>)[f.outcome] ?? w.checked_no_run;
+  return { session: null, outcome: f.outcome, words, ...(f.reason ? { reason: f.reason } : {}) };
 }
 
 /** Why a job of its own on a schedule is refused without a check, in words Coach can act on. */
@@ -6609,7 +6634,16 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       ...(typeof taf.writes_for === "string" ? { writes_for: taf.writes_for } : {}),
       ...(taf.tools ? { tools: taf.tools } : {}),
     }, me, deps);
-    return { taf_id: (out.taf as { id: string }).id };
+    const id = (out.taf as { id: string }).id;
+    // The answer to a result carries only the taf's id, so a first check that couldn't read reaches Coach as a line
+    // it reads with the owner's next message: Coach drafted that check, and fixes it.
+    if (out.outcome === "failed_check" && deps.coach) {
+      const at = deps.now?.() ?? new Date();
+      const line = `[taf ${taf.name ?? id} first check] The taf is set up, but its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`;
+      await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, said: out.words ?? "" },
+        new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
+    }
+    return { taf_id: id };
   } catch (err) {
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
       // Made meanwhile by an app, under this draft: done, not failed.

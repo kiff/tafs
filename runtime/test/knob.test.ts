@@ -217,6 +217,12 @@ describe("the dial", () => {
     expect(ac.wakes.find((w) => w.kind === "app_check")!.words).not.toContain("first");
     // A taf with no check reads as before.
     expect(knobOf(base).wakes[1]!.words).toBe("Weekdays at 09:00, next Tue 09:00");
+    // A version from before with two timetables and no check of its own was written unchecked: its stops don't say it checks.
+    const two = knobOf({ ...base, check, setting: { wakes: [{ kind: "schedule", form: "daily", at: "08:00" }, { kind: "schedule", form: "daily", at: "15:30" }], busy: "skip", results: ["app"] } });
+    expect(two.wakes.filter((w) => w.kind === "schedule").map((w) => w.words)).toEqual(["Every day at 08:00, next Tue 09:00", "Every day at 15:30"]);
+    // One timetable from before takes the taf's check, as applyKnob writes it.
+    const one = knobOf({ ...base, check, setting: { wakes: [{ kind: "schedule", form: "daily", at: "08:00" }], busy: "skip", results: ["app"] } });
+    expect(one.wakes.find((w) => w.kind === "schedule")!.words).toContain(" · checks for new work first");
   });
 
   it("a paused schedule says so", () => {

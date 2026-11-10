@@ -126,7 +126,8 @@ describe("Coach's core", () => {
   // A quiet schedule used credits all day for nothing: every schedule checks first, so the AI wakes only for work.
   it("gives a taf on a schedule the read that lists its open work, and never a check on a read that doesn't list it", () => {
     const setUp = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
-    expect(setUp).toContain('"0 9 * * 1-5") and check, the read tool that lists its open work: arguments (open ones only, where the tool allows), items (where the list is in its result), cursor (a field that only grows: created time, an increasing id) and first: "all", so the first check works the queue already there.');
+    expect(setUp).toContain('"0 9 * * 1-5") and check, the read tool that lists its open work: arguments (open ones only, where the tool allows), items (where the list is in its result), cursor (a field that only grows: created time, an increasing id) and first: "all" when its arguments limit it to open work, "new" when they can\'t.');
+    expect(setUp).toContain("It reads through its Card at every firing (96 a day at every 15 minutes): the read's calls a day must allow that.");
     expect(setUp).toContain("Each firing reads it without the AI: a quiet one costs nothing, and the AI wakes only for work.");
     expect(setUp).toContain("Never a check on a read that doesn't list the work: with no such read, unscheduled.");
     const dial = COACH_SKILLS.find((k) => k.name === "the-dial")!.body.replace(/\s+/g, " ");
