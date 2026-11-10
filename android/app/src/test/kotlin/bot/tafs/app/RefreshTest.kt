@@ -9,6 +9,9 @@ import bot.tafs.app.kiff.KiffMapping
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.RecordEntry
 import java.time.Instant
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -56,6 +59,26 @@ class RefreshTest {
   }
 
   // MARK: Reading
+
+  @Test fun aRefreshWhoseScreenWentAwayStillLoadsTheListAndTheNextOneRunsToo() = runTest {
+    answers(home(taf("refunds-1", "Refunds")))
+    val m = signedIn()
+    val before = transport.requestsTo("GET /v1/home").size
+    // Back in the app, a refresh starts from the screen's scope; the list's read is slow, and the screen goes away meanwhile.
+    val slow = transport.holdNext("GET /v1/home")
+    val resumed = launch { m.refresh() }
+    runCurrent()
+    resumed.cancel()
+    slow.complete(Unit)
+    advanceUntilIdle()
+    assertTrue("Home isn't left on Loading your tafs…", m.state.value.listLoaded)
+    assertEquals(listOf("Refunds"), m.state.value.tafs.map { it.name })
+    // The next one isn't held back by it.
+    m.refresh()
+    assertEquals(before + 2, transport.requestsTo("GET /v1/home").size)
+    assertTrue(m.state.value.listLoaded)
+  }
+
 
   @Test fun theAccountsTafsHeldCallsAndRecordAreShown() = runTest {
     answers(

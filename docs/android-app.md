@@ -266,6 +266,13 @@ session (`AppModel.changed`, `readChange`). Nothing is shown and nothing is take
 Every refresh and every push also reads planque's grants again: tafs cloud never sees them, so
 this is how a connection its vendor signed out reaches the list.
 
+**A refresh runs to the end, whoever asked for it** (`AppModel.refresh`): a screen that goes away
+meanwhile never cancels it, and neither does a sign-in's screen, which leaves as soon as the phone
+is signed in (`finishSignIn` loads the account the same way: the list, the approval key, alerts and
+purchases). Before 1.1.1, a cancelled first refresh left Home on "Loading your tafs…" until a pull,
+and could leave a new phone without its approval key or alerts (`SignInTest`, `RefreshTest`). A
+sign-out or another sign-in on the way is told by the account's generation, as before.
+
 **A connection its vendor signed out** (`needs_reconnect`): its taf waits on the owner in the
 home list, at the top with the held calls, its row reading planque's `status_words` ("Signed out
 by Stripe · sign in again"; `AppState.signedOut`, `waitingOnOwner`). On the taf's Card tab its
