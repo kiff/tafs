@@ -454,6 +454,7 @@ object Words {
     fun notStopped(why: String): String = Res.s(R.string.chat_not_stopped, why)
     object Outcome {
       fun approved(title: String): String = Res.s(R.string.chat_outcome_approved, title)
+      fun approvedDone(title: String): String = Res.s(R.string.chat_outcome_approved_done, title)
       fun notDone(title: String, detail: String): String = Res.s(R.string.chat_outcome_not_done, title, detail)
       fun refused(title: String): String = Res.s(R.string.chat_outcome_refused, title)
       fun sending(title: String): String = Res.s(R.string.chat_outcome_sending, title)
@@ -468,6 +469,10 @@ object Words {
     val sendOnceFilesUp: String get() = Res.s(R.string.chat_send_once_files_up)
     fun sendWhileWorks(taf: String): String = Res.s(R.string.chat_send_while_works, taf)
     val stop: String get() = Res.s(R.string.chat_stop)
+    object Stopped {
+      fun declined(taf: String): String = Res.s(R.string.chat_stopped_declined, taf)
+      fun outOfRoom(taf: String): String = Res.s(R.string.chat_stopped_out_of_room, taf)
+    }
     fun tafIsAnswering(taf: String): String = Res.s(R.string.chat_taf_is_answering, taf)
     val theTaf: String get() = Res.s(R.string.chat_the_taf)
     val thinking: String get() = Res.s(R.string.chat_thinking)

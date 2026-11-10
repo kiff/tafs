@@ -455,6 +455,7 @@
     <string name="chat_not_sent_short">Not sent</string>
     <string name="chat_not_stopped">Not stopped. %1$s</string>
     <string name="chat_outcome_approved">%1$s: approved by you, done</string>
+    <string name="chat_outcome_approved_done">%1$s: approved, done</string>
     <string name="chat_outcome_not_done">%1$s: %2$s</string>
     <string name="chat_outcome_refused">%1$s: refused, not sent</string>
     <string name="chat_outcome_sending">%1$s: sent, waiting for the tool</string>
@@ -468,6 +469,8 @@
     <string name="chat_send_once_files_up">Send once the files are up</string>
     <string name="chat_send_while_works">Send to %1$s while it works</string>
     <string name="chat_stop">Stop</string>
+    <string name="chat_stopped_declined">%1$s stopped: the AI declined to continue. Try asking another way.</string>
+    <string name="chat_stopped_out_of_room">%1$s stopped: its reply ran out of room. Ask for something shorter, or for one part at a time.</string>
     <string name="chat_taf_is_answering">%1$s is answering</string>
     <string name="chat_the_taf">The taf</string>
     <string name="chat_thinking">Thinking…</string>

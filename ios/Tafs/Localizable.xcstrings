@@ -4468,6 +4468,17 @@
         }
       }
     },
+    "chat.outcome.approved_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: approved, done"
+          }
+        }
+      }
+    },
     "chat.outcome.not_done": {
       "extractionState": "manual",
       "localizations": {
@@ -4607,6 +4618,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stop"
+          }
+        }
+      }
+    },
+    "chat.stopped.declined": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ stopped: the AI declined to continue. Try asking another way."
+          }
+        }
+      }
+    },
+    "chat.stopped.out_of_room": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ stopped: its reply ran out of room. Ask for something shorter, or for one part at a time."
           }
         }
       }

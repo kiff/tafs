@@ -830,6 +830,8 @@ enum Words {
         enum Outcome {
             /// {title}: approved by you, done
             static func approved(title: String) -> String { Words.line("chat.outcome.approved", title) }
+            /// {title}: approved, done
+            static func approvedDone(title: String) -> String { Words.line("chat.outcome.approved_done", title) }
             /// {title}: {detail}
             static func notDone(title: String, detail: String) -> String { Words.line("chat.outcome.not_done", title, detail) }
             /// {title}: refused, not sent
@@ -857,6 +859,12 @@ enum Words {
         static func sendWhileWorks(taf: String) -> String { Words.line("chat.send_while_works", taf) }
         /// Stop
         static var stop: String { Words.line("chat.stop") }
+        enum Stopped {
+            /// {taf} stopped: the AI declined to continue. Try asking another way.
+            static func declined(taf: String) -> String { Words.line("chat.stopped.declined", taf) }
+            /// {taf} stopped: its reply ran out of room. Ask for something shorter, or for one part at a time.
+            static func outOfRoom(taf: String) -> String { Words.line("chat.stopped.out_of_room", taf) }
+        }
         /// {taf} is answering
         static func tafIsAnswering(taf: String) -> String { Words.line("chat.taf_is_answering", taf) }
         /// The taf

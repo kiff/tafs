@@ -4369,13 +4369,16 @@ final class AppModel: ObservableObject {
     }
 
     /// The stops at a cap of the run's own: it ends with no words for it.
-    nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap"]
+    nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap", "max_token", "refused"]
 
     /// What the chat says when its latest run stopped at a cap, never "…" (the 793 retest).
     nonisolated static func capWords(_ stop: String, taf: String) -> String? {
         switch stop {
-        case "cost_cap": return "\(taf) stopped: this task would cost more than its limit for one task. Ask for something narrower, or someone who manages \(taf) can raise the limit."
-        case "turn_cap": return "\(taf) stopped: this task took more steps than its limit for one task. Ask for something narrower."
+        case "cost_cap": return Words.Chat.Cap.cost(taf: taf)
+        case "turn_cap": return Words.Chat.Cap.turns(taf: taf)
+        // A reply cut off at its length limit, and the AI declining to go on (docs/chat.md).
+        case "max_token": return Words.Chat.Stopped.outOfRoom(taf: taf)
+        case "refused": return Words.Chat.Stopped.declined(taf: taf)
         default: return nil
         }
     }

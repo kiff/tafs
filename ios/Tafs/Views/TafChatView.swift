@@ -664,13 +664,16 @@ extension TafChatView {
     static func outcomeText(_ entry: RecordEntry) -> String {
         switch entry.kind {
         // Why, as the Record says it: a vendor's refusal still counts (kiff/tafs#206 6.13).
-        case .notDone: return "\(entry.title): \(entry.detail)"
+        case .notDone: return Words.Chat.Outcome.notDone(title: entry.title, detail: entry.detail)
         case .sending: return Words.Chat.Outcome.sending(title: "\(entry.title)")
         case .unknown: return Words.Chat.Outcome.unknown(title: "\(entry.title)")
         // KIFF's own record of a held call, after a restart: what the owner decided (kiff/tafs#138).
         // The phone's own line is shown as it is; KIFF's, titled by the action, gets the outcome.
-        case .refused where entry.byYou != true: return "\(entry.title): refused, not sent"
-        case .approved where entry.byYou != true: return "\(entry.title): approved by you, done"
+        case .refused where entry.byYou != true: return Words.Chat.Outcome.refused(title: entry.title)
+        // "By you" only when KIFF says the reader answered it (`answer.you`); anyone else's, or one
+        // KIFF doesn't say, reads as approved.
+        case .approved where entry.byYou != true:
+            return entry.answer?.you == true ? Words.Chat.Outcome.approved(title: entry.title) : Words.Chat.Outcome.approvedDone(title: entry.title)
         default: return entry.title
         }
     }
