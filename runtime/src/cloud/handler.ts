@@ -2888,14 +2888,16 @@ async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps):
 
 /**
  * The account's state a Coach conversation starts from, as far as its skills care: a call held for the
- * owner, and a halt. Best effort: what can't be read counts as absent, and Coach reads the skill itself.
+ * owner, a halt, and a taf of its own. Best effort: what can't be read counts as absent, and Coach reads
+ * the skill itself.
  */
 async function coachStartState(me: KIFFIdentity, event: HTTPEvent, deps: Deps): Promise<CoachState> {
-  const [held, halt] = await Promise.all([
+  const [held, halt, tafs] = await Promise.all([
     readExceptions(bearer(event), deps.fetch, deps.kiffBase).catch(() => []),
     deps.agents.halted(me.tenantID).catch(() => undefined),
+    deps.tafs.list(me.tenantID).catch(() => []),
   ]);
-  return { heldCall: held.length > 0, halted: halt?.halted === true };
+  return { heldCall: held.length > 0, halted: halt?.halted === true, hasTaf: tafs.some((t) => !t.removing && t.job !== SETUP_JOB) };
 }
 
 /** Stores Coach's skills in kiff/agents, each at its version, before a definition that names them is written. */

@@ -526,7 +526,8 @@ first turn (an improvement loads `improve-a-taf` with `connect-an-app`, `name-th
 a free start the setup's five, `set-up-a-taf`, `connect-an-app`, `name-the-tools`, `draft-the-card` and
 `usage-and-plans`, since planque's and KIFF's tools go through KIFF's gateway and never reach tafs
 cloud; a delivery note `the-dial`; lines about a task `the-tafs`; a call held for the owner adds
-`cards-and-holds`, a halt `halting`), sent as the run's `skills`, which kiff/agents keeps on the
+`cards-and-holds`, a halt `halting`, and an account with a taf of its own adds both to every start,
+since "it hasn't done anything" and "stop everything" never name a skill), sent as the run's `skills`, which kiff/agents keeps on the
 session and puts in every turn's context after the instructions, in the definition's order; and by
 the tool, when it is used, for tafs cloud's own tools: a tool whose procedure is a skill
 (`taf_dial`, `taf_results` → `the-dial`; `tafs_state`, `taf_task`, `version_install`… → `the-tafs`;
