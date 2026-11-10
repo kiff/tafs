@@ -483,3 +483,8 @@ last page it shows tafs cloud's `end_words` ("Nothing older in this view").
 `AvatarDoorRim` animates source metadata and respects
 disabled system animations. Coach overlays the mounted taf so its tab survives.
 The API contracts and recent-run history bound are in [api.md](api.md).
+
+### A vendor sign-in left in its tab
+
+The vendor's sign-in opens in a Custom Tab, and the app waits for planque to send the owner back (`tafs://planque/signed-in`). If the owner closes the tab without finishing, the app comes back to the front with no link. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the wait ends as a closed sign-in, the card offers the sign-in again, and other approvals aren't held behind it. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't.
+Coming back to tafs before finishing also ends that sign-in, and a link the tab sends later is dropped, with nothing connected: start it again from the card. With tafs and the tab side by side, tafs may never pause, and the wait keeps its 15 minutes.
