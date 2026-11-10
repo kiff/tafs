@@ -121,4 +121,31 @@ final class SignInTests: XCTestCase {
         XCTAssertEqual(order, [Legal.privacy, Legal.terms])
         XCTAssertEqual(String(reordered.characters), "Privacy policy and Terms apply.")
     }
+
+    /// kiff.dev's Terms and Privacy policy open in the language the app's lines resolved to:
+    /// English at its own path, every other language under its prefix, each at its tafs section.
+    func testTheLegalLinksOpenInTheAppsLanguage() {
+        XCTAssertEqual(Legal.terms(in: "en").absoluteString, "https://kiff.dev/terms#tafs")
+        XCTAssertEqual(Legal.privacy(in: "en").absoluteString, "https://kiff.dev/privacy#tafs")
+        for language in Words.languages where language != "en" {
+            XCTAssertEqual(Legal.terms(in: language).absoluteString, "https://kiff.dev/\(language)/terms#tafs")
+            XCTAssertEqual(Legal.privacy(in: language).absoluteString, "https://kiff.dev/\(language)/privacy#tafs")
+        }
+        XCTAssertEqual(Legal.terms, Legal.terms(in: Legal.language))
+        XCTAssertTrue(Words.languages.contains(Legal.language))
+    }
+
+    /// KIFF's approval page and a held call's page carry the app's language (`lang`), so they
+    /// read as the app does whatever the browser's language; a link that names one keeps it.
+    func testKIFFsPagesOpenInTheAppsLanguage() throws {
+        let start = try JSONDecoder().decode(KIFFClient.DeviceStart.self, from: Data(Self.start.utf8))
+        XCTAssertEqual(start.inAppLanguage("de").verificationURIComplete, "https://app.kiff.dev/auth/device?code=WXYZ-1234&lang=de")
+        XCTAssertEqual(start.inAppLanguage("de").inAppLanguage("fr").verificationURIComplete, "https://app.kiff.dev/auth/device?code=WXYZ-1234&lang=de")
+        XCTAssertEqual(start.inAppLanguage("de").userCode, start.userCode)
+        let bare = KIFFClient.DeviceStart(deviceCode: "dc", userCode: "A", verificationURI: "https://app.kiff.dev/auth/device",
+                                          verificationURIComplete: "https://app.kiff.dev/auth/device", expiresIn: 600, interval: 5)
+        XCTAssertEqual(bare.inAppLanguage("pl").verificationURIComplete, "https://app.kiff.dev/auth/device?lang=pl")
+        let client = KIFFClient(baseURL: URL(string: "https://api.test")!, webURL: URL(string: "https://app.test")!, token: nil)
+        XCTAssertEqual(client.answerPage(for: "ce_1", language: "fr").absoluteString, "https://app.test/needs-you/ce_1?lang=fr")
+    }
 }
