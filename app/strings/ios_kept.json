@@ -57,9 +57,6 @@
     "trace \\(entry.receipt?.traceID ?? \"\") · secp256k1 + keccak256\\nsig 0x\\(sig.prefix(4))…\\(sig.suffix(4))": "a receipt's technical line",
     "receipt \\(entry.receipt?.traceID ?? \"\")": "a receipt's technical line"
   },
-  "Views/SignInView.swift": {
-    "By signing in, you agree to KIFF's [Terms](https://kiff.dev/terms#tafs), which cover tafs, and its [Privacy policy](https://kiff.dev/privacy#tafs).": "a markdown link, which Text renders only from a literal"
-  },
   "Views/TafChatView.swift": {
     "pinned \\(pinned ?? \"none\"), turn \\(top)…\\(foot), room \\(room), viewport \\(Int(viewport)), following \\(following), touched \\(touched)": "developer-only"
   }
