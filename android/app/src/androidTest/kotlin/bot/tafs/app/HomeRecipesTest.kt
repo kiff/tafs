@@ -57,6 +57,8 @@ class HomeRecipesTest {
     rule.onNodeWithText("No refund waits overnight.").assertExists()
     rule.onNodeWithText("Refunds what fits the limit.").assertExists()
     rule.onAllNodesWithText("No tafs yet.", substring = true).assertCountEquals(0)
+    // A new account's Home leads with the jobs: no count above them.
+    rule.onAllNodesWithText(bot.tafs.app.model.Words.Home.working(count = 0)).assertCountEquals(0)
     // A category narrows the list; picked again, every recipe shows.
     rule.onAllNodesWithText("Customers")[0].performClick()
     rule.waitForIdle()
@@ -70,6 +72,8 @@ class HomeRecipesTest {
     home(recipes(RecipesHome(shown = false, words = "Connect an app to set up your first taf.")), mutableListOf())
     rule.onNodeWithText("Connect an app to set up your first taf.").assertExists()
     rule.onAllNodesWithText("No refund waits overnight.").assertCountEquals(0)
+    // Without the jobs, Home keeps its count.
+    rule.onNodeWithText(bot.tafs.app.model.Words.Home.working(count = 0)).assertExists()
     rule.onAllNodesWithText("No tafs yet.", substring = true).assertCountEquals(0)
   }
 
