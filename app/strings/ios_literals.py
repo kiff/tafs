@@ -22,7 +22,6 @@ KEPT_FILES = {
     "Design/Words.swift": "the generated accessors",
     "Services/TafTemplates.swift": "the sample's templates, written as tafs cloud's",
     "Services/KnobSample.swift": "the knob's server-shaped sample",
-    "Services/HaltAllIntent.swift": "Siri's phrases and dialog, which follow with the languages",
     "Drive/": "the drive's lines, which only Coach reads",
 }
 

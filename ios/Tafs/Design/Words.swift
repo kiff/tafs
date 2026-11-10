@@ -4450,6 +4450,10 @@ enum Words {
         return filled(known ? form : "\(key)|other", [number(count)] + values)
     }
 
+    /// The languages the app's screens are written in, as `languages.json` ships them: what it
+    /// asks the servers for, never a language only Siri's phrases are in.
+    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
+
     /// The language the app's lines are in, as the catalog names it, never the device's region.
     static let locale = Locale(identifier: Bundle.main.localizedString(forKey: "_language", value: "en", table: nil))
 

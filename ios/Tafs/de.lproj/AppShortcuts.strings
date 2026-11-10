@@ -1,0 +1,8 @@
+/* Siri's phrases for Halt all, in German (kiff/tafs#236, item 28). */
+"Stop my ${applicationName}" = "Stoppe meine ${applicationName}";
+"Stop all ${applicationName}" = "Stoppe alle ${applicationName}";
+"Stop ${applicationName}" = "Stoppe ${applicationName}";
+"Pause my ${applicationName}" = "Pausiere meine ${applicationName}";
+"Pause ${applicationName}" = "Pausiere ${applicationName}";
+"Halt my ${applicationName}" = "Halte meine ${applicationName} an";
+"Halt all ${applicationName}" = "Halte alle ${applicationName} an";

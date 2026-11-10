@@ -1,0 +1,8 @@
+/* Siri's phrases for Halt all, in Italian (kiff/tafs#236, item 28). */
+"Stop my ${applicationName}" = "Ferma i miei ${applicationName}";
+"Stop all ${applicationName}" = "Ferma tutti i miei ${applicationName}";
+"Stop ${applicationName}" = "Ferma ${applicationName}";
+"Pause my ${applicationName}" = "Metti in pausa i miei ${applicationName}";
+"Pause ${applicationName}" = "Metti in pausa ${applicationName}";
+"Halt my ${applicationName}" = "Blocca i miei ${applicationName}";
+"Halt all ${applicationName}" = "Blocca tutti i miei ${applicationName}";

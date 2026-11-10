@@ -274,6 +274,15 @@ are in, and `Words` writes numbers in it, never in the device's region: an Engli
 reads "1,000 runs", not "1.000 runs".
 The notification extension compiles Model and KIFF, so it has `Words.swift` and the catalog too.
 
+The app ships the eight languages `app/strings/languages.json` lists, and iOS picks the phone's (or the
+language chosen for tafs in Settings), else English. What the servers say comes in the same language: every request to
+KIFF and tafs cloud carries `Accept-Language` with the language the screens resolved to, then the phone's other
+languages the app ships (`Words.languages`), at most four, then `en` (`KIFFClient.screenLanguages`). A language only
+Siri's phrases are in never counts. The calendar's titles follow the language's order (`calendar.title.*`), and its
+month view names the month on its own (`calendar.month_title.*`, the nominative in Polish). Halt all's Siri lines
+are `siri.halt_all.*`, and its phrases are in each language's `AppShortcuts.strings`. The iOS workflow's
+`languages` screenshot set (a manual run with `"screenshots": "languages"`) takes the main screens in each language.
+
 What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, URL
 schemes, what's sent to a server as data (the labels KIFF stores, a door's app and kind), every signed message,
 the sample's templates and the knob's server-shaped sample, and the drive's lines only Coach reads. A screen

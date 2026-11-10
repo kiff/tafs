@@ -65,7 +65,8 @@ fails when one differs from what the generator writes, and CI runs it.
 - a shipped language has every key, and no language has a key `en.json` lacks;
 - a line has the same placeholders in every language;
 - a count has the plural forms its language needs, and `other`;
-- a shipped language's line isn't left in English;
+- a shipped language's line isn't left in English, unless `same_as_english.json` keeps it, on purpose (a name, a
+  unit, a line that is only its values, a word the language shares), and a line kept there still is English;
 - a line that is exactly a glossary term is that term in every language
   (`docs/languages.md`, Terms), or its plural where the line names a group, as the Record's
   "Done" filter does beside "Held" and "Refused" (`TERM_AS_PLURAL` in the test).

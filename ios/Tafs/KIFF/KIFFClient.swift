@@ -1215,15 +1215,26 @@ final class KIFFClient {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
-    /// The languages to ask KIFF for, most preferred first, so KIFF writes what it says to the
-    /// owner (a held call's reason, a Record line's) in the app's language at its source, never
-    /// translated by the app (kiff/tafs#75). English is the last fallback.
     /// The languages the app's own screens are written in, most preferred first: what it asks
-    /// the servers for, so their words always match the screen's (docs/languages.md). English
-    /// only until the app ships its other languages. `Bundle.main.preferredLocalizations` isn't
-    /// that yet: it answers Spanish or French on such a phone, because Siri's phrases
-    /// (`AppShortcuts.strings`) are in those two, while every screen is still in English.
-    static let screenLanguages = ["en"]
+    /// KIFF and tafs cloud for, so their words (a held call's reason, a Record line, a run's
+    /// line) match the screen's (docs/languages.md, kiff/tafs#75). The language the screens
+    /// resolved to comes first, then the phone's other languages the app ships, at most four;
+    /// `acceptLanguage` adds English last.
+    static var screenLanguages: [String] {
+        screenLanguages(resolved: Bundle.main.preferredLocalizations.first, preferred: Locale.preferredLanguages, shipped: Words.languages)
+    }
+
+    /// Each language by its code as the app ships it ("pt-BR" is "pt"), once, and only one the
+    /// app ships: a language only Siri's phrases are in never counts.
+    static func screenLanguages(resolved: String?, preferred: [String], shipped: [String]) -> [String] {
+        var out: [String] = []
+        for tag in [resolved].compactMap({ $0 }) + preferred {
+            let code = tag.lowercased().split(whereSeparator: { $0 == "-" || $0 == "_" }).first.map(String.init) ?? ""
+            if shipped.contains(code), !out.contains(code) { out.append(code) }
+            if out.count == 4 { break }
+        }
+        return out.isEmpty ? ["en"] : out
+    }
 
     static func acceptLanguage(_ preferred: [String]) -> String {
         var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
