@@ -34,7 +34,7 @@ class PlayOffersTest {
     """{"plan":"solo","period":{"start":"2026-11-01T00:00:00Z","end":"2026-12-01T00:00:00Z"},"billing":{"source":""},
     "store":{"app_account_token":"acct_1","solo_product":"bot.tafs.solo"${if (google) ""","google_solo_product":"solo_monthly"""" else ""},
       "packs":[{"id":"rayo","name":"Rayo","line":"Pack · 500 credits","credits":500,"apple_product":"bot.tafs.rayo"${if (google) ""","google_product":"pack_rayo"""" else ""}},
-      {"id":"credits-firstmonth","name":"First month pack","line":"First month pack · 7,000 credits","credits":7000,"once":true,"google_product":"bot.tafs.credits.firstmonth"}]}}""",
+      {"id":"credits-firstmonth","name":"First month pack","line":"First month pack · 7,000 credits","credits":7000,"once":true${if (google) ""","google_product":"bot.tafs.credits.firstmonth"""" else ""}}]}}""",
   )
 
   private fun balance(solo: Boolean, packs: Boolean, firstMonth: String = "null") = KiffClient.json.decodeFromString<Balance>(
