@@ -315,6 +315,8 @@ enum Words {
         static func notRestored(why: String) -> String { Words.line("billing.not_restored", why) }
         /// Not signed in.
         static var notSignedIn: String { Words.line("billing.not_signed_in") }
+        /// Nothing to restore.
+        static var nothingToRestore: String { Words.line("billing.nothing_to_restore") }
         /// One person: tafs, with credits included each period.
         static var onePersonTafsKiffYour: String { Words.line("billing.one_person_tafs_kiff_your") }
         /// Only someone who manages the account's billing buys credits.
@@ -4031,6 +4033,8 @@ enum Words {
         static var buying: String { Words.line("usage.buying") }
         /// Cancel Solo
         static var cancelSolo: String { Words.line("usage.cancel_solo") }
+        /// Choose a plan
+        static var choosePlan: String { Words.line("usage.choose_plan") }
         /// Company is billed by KIFF now. The Solo bought in the App Store renews on {time} unless it's cancelled, from the Apple account that bought it.
         static func companyBilledKiffSoloBought(time: String) -> String { Words.line("usage.company_billed_kiff_solo_bought", time) }
         /// Credits

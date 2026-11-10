@@ -478,6 +478,11 @@ data class AppState(
   /** How the latest purchase or restore went, said under what was tapped (Start Solo, a pack, Restore purchases). */
   val purchaseNote: PurchaseNote? = null,
   /**
+   * Restore purchases is offered: while Play knows a purchase not finished yet, or couldn't say, or after one KIFF didn't record.
+   * Launch and sign-in already send what's unfinished, so with nothing there it has nothing to do.
+   */
+  val restoreShown: Boolean = false,
+  /**
    * What a refresh the app made by itself couldn't do, said quietly under the account's name ("Can't reach KIFF"), never as
    * "Not done"; null once one goes through. And whether the app is still trying again by itself.
    */
@@ -6176,7 +6181,13 @@ class AppModel(
     val store = _state.value.usage?.store ?: return
     if (!_state.value.offersPurchases) return
     purchases.load(store.googleProducts)
-    _state.update { it.copy(storeProducts = purchases.products.value, storeLoaded = purchases.loaded.value, storeFailed = purchases.loadFailed.value) }
+    val unfinished = purchases.anyUnfinished()
+    _state.update {
+      it.copy(
+        storeProducts = purchases.products.value, storeLoaded = purchases.loaded.value, storeFailed = purchases.loadFailed.value,
+        restoreShown = unfinished != false || it.purchaseNote?.offersRestore == true,
+      )
+    }
   }
 
   // MARK: Asking an admin for tasks
@@ -6275,6 +6286,8 @@ class AppModel(
     val outcome = purchases.restore()
     val words = when (val o = outcome) {
       PurchaseOutcome.Done -> Words.Billing.restored
+      // Never "restored" when nothing came back.
+      PurchaseOutcome.NothingToRestore -> Words.Billing.nothingToRestore
       is PurchaseOutcome.NotRecorded -> Words.Billing.restoredNotRecorded
       is PurchaseOutcome.NotAdded -> o.why
       is PurchaseOutcome.NeedsSupport -> o.why
@@ -6286,7 +6299,7 @@ class AppModel(
   }
 
   private fun buyWords(o: PurchaseOutcome): String? = when (o) {
-    PurchaseOutcome.Done, PurchaseOutcome.Cancelled -> null
+    PurchaseOutcome.Done, PurchaseOutcome.Cancelled, PurchaseOutcome.NothingToRestore -> null
     PurchaseOutcome.Pending -> Words.Billing.pendingCredits
     is PurchaseOutcome.NotRecorded -> Words.Billing.boughtNotRecorded
     is PurchaseOutcome.NotAdded -> o.why

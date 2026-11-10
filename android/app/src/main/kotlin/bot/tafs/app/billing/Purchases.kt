@@ -42,6 +42,8 @@ sealed interface PurchaseOutcome {
   data class NeedsSupport(val why: String) : PurchaseOutcome
   /** Google Play couldn't sell it. */
   data class Failed(val why: String) : PurchaseOutcome
+  /** Restore found nothing unfinished on this Google account: nothing came back. */
+  data object NothingToRestore : PurchaseOutcome
 }
 
 /** Google Play, as the app uses it. [PlayBillingStore] is the Billing Library's; tests use their own. */
@@ -124,6 +126,15 @@ class Purchases(private val store: PlayStore) {
     for (p in store.unfinished()) deliver(p, null)
   }
 
+  /** Whether this Google account has a purchase not finished yet: null when Play couldn't say. */
+  suspend fun anyUnfinished(): Boolean? = try {
+    store.unfinished().isNotEmpty()
+  } catch (e: CancellationException) {
+    throw e
+  } catch (_: Exception) {
+    null
+  }
+
   /** Brings back this Google account's purchases not finished yet, and sends each to KIFF: the worst outcome is said. */
   suspend fun restore(): PurchaseOutcome {
     val list = try {
@@ -133,6 +144,7 @@ class Purchases(private val store: PlayStore) {
     } catch (e: Exception) {
       return PurchaseOutcome.Failed(e.message ?: Words.Billing.playCouldntRead)
     }
+    if (list.isEmpty()) return PurchaseOutcome.NothingToRestore
     var outcome: PurchaseOutcome = PurchaseOutcome.Done
     for (p in list) {
       when (val o = deliver(p, null)) {
