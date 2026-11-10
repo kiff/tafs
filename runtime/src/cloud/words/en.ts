@@ -449,10 +449,9 @@ export const en = {
   ct_replaces: "replaces the earlier connection",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
   cts_title: "Give Coach its tools",
-  cts_intro: "Coach needs a few tools to look after your tafs. They go on Coach's own Card, with their limits, and only your fingerprint can sign it.",
+  cts_intro: "Coach needs a few tools to look after your tafs. They go on Coach's own Card, with their limits, and only you can sign it, on your phone.",
   cts_details: "Each tool and its limits",
-  cts_ask: "Give Coach these tools? Your fingerprint signs its Card.",
-  cts_ask_connect: "Give Coach these tools? You'll confirm twice: once to connect them, once to sign its Card.",
+  cts_ask: "Give Coach these tools? You sign its Card on your phone.",
   cts_give: "Give Coach its tools",
   cts_not_now: "Not now",
   cts_row: "Coach has no tools yet · Give them",
@@ -502,7 +501,7 @@ export const en = {
   cts_app_look_does: "While you've turned on a drive, see tafs on your phone, its own screens only.",
   cts_app_look_why: "It sees what's on your screen.",
   cts_app_act: "Use tafs while it drives",
-  cts_app_act_does: "While a drive is on, tap, type and scroll in tafs on your phone, with a caption for each step. It can't approve anything: approvals need your fingerprint.",
+  cts_app_act_does: "While a drive is on, tap, type and scroll in tafs on your phone, with a caption for each step. It can't approve anything: only you approve, on your phone.",
   cts_app_act_why: "It acts in the app as you.",
   // Why Coach stopped driving the app (drive.ts END_SAID), as the person reads it.
   drive_end_owner_took_over: "You touched the app, so it's yours now",

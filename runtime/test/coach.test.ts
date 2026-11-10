@@ -559,5 +559,7 @@ describe("Coach's tools step, at the end of a first Start", () => {
     expect(does.app_look).toContain("Up to 2,000 a day.");
     expect(does.app_act).toContain("Up to 1,000 a day.");
     expect(coachToolsStep("de").groups[3]!.tools[0]!.does).toContain("2.000");
+    // No biometric named and no count of confirmations, in any language: the phone knows what it asks for, and it asks once.
+    for (const lang of LANGUAGES) expect(JSON.stringify(coachToolsStep(lang)).toLowerCase(), lang).not.toMatch(/fingerprint|face id|fingerabdruck|empreinte|huella|impronta|impressão digital|vingerafdruck|vingerafdruk|odcisk|twice|zweimal|deux fois|dos veces|due volte|duas vezes|twee keer|dwa razy/);
   });
 });

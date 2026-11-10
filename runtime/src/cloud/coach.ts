@@ -234,10 +234,9 @@ export interface CoachToolsStep {
  * The step that asks for Coach's tools at the end of a first Start, in the person's language. Each
  * tool's limit is its Card's (COACH_CARDS), never written by hand: a Card's limit a day, counted with
  * the other tools on the same Card, and "waits for you" only where the Card holds past its limit or
- * holds every call. `connecting`: the tools are still to connect, so giving them takes two fingerprints (the
- * batch, then the Card), and the ask says so.
+ * holds every call. It never names a biometric: the phone knows which it asks for, not tafs cloud.
  */
-export function coachToolsStep(lang: Lang = "en", connecting = false): CoachToolsStep {
+export function coachToolsStep(lang: Lang = "en"): CoachToolsStep {
   const w = wordsIn(lang);
   const all = w as unknown as Record<string, string | undefined>;
   const word = (key: string) => all[key] ?? "";
@@ -251,7 +250,7 @@ export function coachToolsStep(lang: Lang = "en", connecting = false): CoachTool
     return other ? w.cts_up_to_shared(n(card.limit), word(`cts_${other}`)) : w.cts_up_to(n(card.limit));
   };
   return {
-    title: w.cts_title, intro: w.cts_intro, details: w.cts_details, ask: connecting ? w.cts_ask_connect : w.cts_ask, give: w.cts_give, not_now: w.cts_not_now, row: w.cts_row,
+    title: w.cts_title, intro: w.cts_intro, details: w.cts_details, ask: w.cts_ask, give: w.cts_give, not_now: w.cts_not_now, row: w.cts_row,
     groups: COACH_TOOL_GROUPS.map((g) => ({
       name: word(`cts_g_${g.id}`),
       line: word(`cts_g_${g.id}_line`),
