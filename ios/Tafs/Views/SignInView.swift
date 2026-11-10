@@ -66,7 +66,7 @@ struct SignInView: View {
                     Button(Words.Common.tryAgain) { begin() }.buttonStyle(OutlineButtonStyle())
                 }
                 Spacer()
-                Text("By signing in, you agree to KIFF's [Terms](https://kiff.dev/terms#tafs), which cover tafs, and its [Privacy policy](https://kiff.dev/privacy#tafs).")
+                Text(Legal.agreement())
                     .scaledFont(12).foregroundColor(Theme.dim).tint(Theme.amber)
             }
             .padding(24)

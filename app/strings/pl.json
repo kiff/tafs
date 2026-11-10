@@ -1932,7 +1932,7 @@
   "setup.title": "Konfiguracja",
   "sign_in.again_to_sign": "Zaloguj się ponownie przez KIFF: to logowanie nie może podpisywać za ten telefon.",
   "sign_in.again_to_sign_device": "Zaloguj się ponownie przez KIFF: to logowanie nie może podpisywać za to urządzenie ({device}).",
-  "sign_in.agree": "Logując się, akceptujesz {terms} KIFF, które obejmują tafs, oraz {privacy}.",
+  "sign_in.agree": "Logując się, akceptujesz {terms} KIFF, które obejmują tafs. Obowiązuje też {privacy} KIFF.",
   "sign_in.check_code": "Zanim zatwierdzisz, sprawdź, czy KIFF pokazuje ten sam kod.",
   "sign_in.could_not_finish": "Nie udało się dokończyć: {why}. Spróbuj ponownie.",
   "sign_in.could_not_start": "Nie udało się rozpocząć: {why}. Spróbuj ponownie.",

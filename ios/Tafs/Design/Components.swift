@@ -264,6 +264,23 @@ enum Legal {
     static let privacy = URL(string: "https://kiff.dev/privacy#tafs")!
     /// KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't.
     static let status = URL(string: "https://status.kiff.dev")!
+
+    /// "By signing in, you agree to KIFF's Terms … and its Privacy policy.", in the line's
+    /// language, with the two names linked wherever that language puts them.
+    static func agreement(_ line: String = Words.SignIn.agree(terms: "\u{1}", privacy: "\u{2}")) -> AttributedString {
+        var out = AttributedString()
+        var rest = Substring(line)
+        while let i = rest.firstIndex(where: { $0 == "\u{1}" || $0 == "\u{2}" }) {
+            out += AttributedString(String(rest[..<i]))
+            let isTerms = rest[i] == "\u{1}"
+            var link = AttributedString(isTerms ? Words.Settings.terms : Words.Settings.privacyPolicy)
+            link.link = isTerms ? terms : privacy
+            out += link
+            rest = rest[rest.index(after: i)...]
+        }
+        out += AttributedString(String(rest))
+        return out
+    }
 }
 
 /// While a refresh can't get through (the 930 test): one quiet line under the account's name,
