@@ -62,7 +62,7 @@ describe("the period's credits, in words", () => {
       not_counted: {
         runs: 12, words: "Not counted: 12 runs",
         lines: [
-          { why: "coach", runs: 7, words: "Coach, included in your plan · 7 runs" },
+          { why: "coach", runs: 7, words: "Coach, included · 7 runs" },
           { why: "trial", runs: 3, words: "Trials of a new version · 3 runs" },
           { why: "failed", runs: 2, words: "Failed on our side · 2 runs" },
         ],

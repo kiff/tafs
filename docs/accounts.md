@@ -127,7 +127,7 @@ counts once, when it ends, in the period it ends in, so a run that waits on an a
 when it ends. A run that used no AI (refused before it began) isn't listed.
 
 **What isn't counted:**
-- Coach, as far as the plan includes it: enough to set up about 4 new jobs a month (`coach`). Past it, Coach's runs count, and
+- Coach, as far as it's included: enough to set up about 4 new jobs a month (`coach`). Past it, Coach's runs count, and
   show as their own row;
 - a trial of a new version, which sends nothing (`trial`);
 - a run that failed on our side: it couldn't start, or kiff/agents or the model failed it
@@ -157,7 +157,7 @@ is the period:
     "runs": 12,
     "words": "Not counted: 12 runs",
     "lines": [
-      { "why": "coach", "runs": 7, "words": "Coach, included in your plan · 7 runs" },
+      { "why": "coach", "runs": 7, "words": "Coach, included · 7 runs" },
       { "why": "trial", "runs": 3, "words": "Trials of a new version · 3 runs" },
       { "why": "failed", "runs": 2, "words": "Failed on our side · 2 runs" }
     ]

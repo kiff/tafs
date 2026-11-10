@@ -90,7 +90,7 @@ export const pl: Words = {
   cr_none: "nie zużyto kredytów",
   cr_this_period: (used, end) => `Ten okres: ${used} · kończy się ${end}`,
   cr_last_period: (used, start, end) => `Poprzedni okres: ${used} · od ${start} do ${end}`,
-  cr_why_coach: "Coach, w cenie planu",
+  cr_why_coach: "Coach, w cenie",
   cr_why_trial: "Próby nowej wersji",
   cr_why_failed: "Nie powiodło się po naszej stronie",
   cr_note: "Każde uruchomienie liczy się raz, gdy się kończy, w pełnych kredytach.",

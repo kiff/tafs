@@ -90,7 +90,7 @@ export const nl: Words = {
   cr_none: "geen credits gebruikt",
   cr_this_period: (used, end) => `Deze periode: ${used} · eindigt op ${end}`,
   cr_last_period: (used, start, end) => `Vorige periode: ${used} · ${start} tot ${end}`,
-  cr_why_coach: "Coach, inbegrepen in je abonnement",
+  cr_why_coach: "Coach, inbegrepen",
   cr_why_trial: "Proeven van een nieuwe versie",
   cr_why_failed: "Mislukt door ons",
   cr_note: "Elke run telt één keer, wanneer die eindigt, in hele credits.",

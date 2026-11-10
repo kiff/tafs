@@ -91,7 +91,7 @@ export const en = {
   cr_none: "no credits used",
   cr_this_period: (used: string, end: string) => `This period: ${used} · ends on ${end}`,
   cr_last_period: (used: string, start: string, end: string) => `Last period: ${used} · ${start} to ${end}`,
-  cr_why_coach: "Coach, included in your plan",
+  cr_why_coach: "Coach, included",
   cr_why_trial: "Trials of a new version",
   cr_why_failed: "Failed on our side",
   cr_note: "Each run counts once, when it ends, in whole credits.",

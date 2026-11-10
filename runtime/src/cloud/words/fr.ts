@@ -90,7 +90,7 @@ export const fr: Words = {
   cr_none: "aucun crédit utilisé",
   cr_this_period: (used, end) => `Cette période : ${used} · se termine le ${end}`,
   cr_last_period: (used, start, end) => `Période précédente : ${used} · du ${start} au ${end}`,
-  cr_why_coach: "Coach, inclus dans votre forfait",
+  cr_why_coach: "Coach, inclus",
   cr_why_trial: "Essais d'une nouvelle version",
   cr_why_failed: "Échecs de notre côté",
   cr_note: "Chaque exécution compte une fois, à sa fin, en crédits entiers.",
