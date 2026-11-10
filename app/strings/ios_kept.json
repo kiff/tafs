@@ -1,0 +1,53 @@
+{
+  "App/AppModel.swift": {
+    "coachTools.\\(tenant).\\(agent).\\(mcp.absoluteString)": "a cache key",
+    "hold off": "the sample's keywords, never shown",
+    "carry on": "the sample's keywords, never shown",
+    "the account changed": "sent to tafs cloud as data: the drive's why",
+    "Coach": "words for dictation to recognize",
+    "Solo": "words for dictation to recognize",
+    "Team": "words for dictation to recognize",
+    "Company": "words for dictation to recognize",
+    "Pico": "the sample's pack names",
+    "Vonk": "the sample's pack names",
+    "Rayo": "the sample's pack names",
+    "Forte": "the sample's pack names",
+    "Maxi": "the sample's pack names",
+    "failed: \\(e)": "an answer sent to tafs cloud"
+  },
+  "App/DoorsModel.swift": {
+    "Ana": "the sample's people",
+    "Mara": "the sample's people"
+  },
+  "KIFF/KIFFClient.swift": {
+    "not a re-link": "developer-only",
+    "Coach": "a label sent to KIFF"
+  },
+  "KIFF/ReceiptCheck.swift": {
+    "secp256k1+keccak256": "the receipt's signature scheme"
+  },
+  "Model/SetupComponent.swift": {
+    "not now": "an answer sent to tafs cloud",
+    "signed in": "an answer sent to tafs cloud"
+  },
+  "Services/VendorSignIn.swift": {
+    "no window": "developer-only",
+    "no scene": "developer-only",
+    "not key": "developer-only"
+  },
+  "Views/DoorsView.swift": {
+    "WhatsApp": "a product's name"
+  },
+  "Views/RecordView.swift": {
+    "signer \\($0.prefix(6))…\\($0.suffix(4))": "a receipt's technical line",
+    "\\(step.words) · \\(step.at.map { $0.zonedShown(date: .omitted, time: .standard) } ?? \"\")\\nhash \\(step.hash)": "a receipt's technical line",
+    "trace \\(entry.receipt?.traceID ?? \"\") · secp256k1 + keccak256\\nsig 0x\\(sig.prefix(4))…\\(sig.suffix(4))": "a receipt's technical line",
+    "receipt \\(entry.receipt?.traceID ?? \"\")": "a receipt's technical line"
+  },
+  "Views/SignInView.swift": {
+    "By signing in, you agree to KIFF's [Terms](https://kiff.dev/terms#tafs), which cover tafs, and its [Privacy policy](https://kiff.dev/privacy#tafs).": "a markdown link, which Text renders only from a literal"
+  },
+  "Views/TafChatView.swift": {
+    "pinned \\(pinned ?? \"none\"), turn \\(top)…\\(foot), room \\(room), viewport \\(Int(viewport)), following \\(following), touched \\(touched)": "developer-only"
+  }
+}

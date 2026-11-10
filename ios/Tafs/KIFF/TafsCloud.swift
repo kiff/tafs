@@ -90,7 +90,7 @@ final class TafsCloud {
 
     /// Keeps the server's representation validator; 304 leaves cached pages intact.
     func representation(_ path: String, etag: String? = nil, headers: [String: String] = [:]) async throws -> (Data?, String?) {
-        guard let url = URL(string: path, relativeTo: baseURL), let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        guard let url = URL(string: path, relativeTo: baseURL), let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -817,7 +817,7 @@ final class TafsCloud {
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/attachments/\(escaped(file))")
         let (data, response) = try await session.data(from: r.url)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        guard (200..<300).contains(status) else { throw CloudError(status: status, message: "The file couldn't be opened.") }
+        guard (200..<300).contains(status) else { throw CloudError(status: status, message: Words.Chat.File.couldNotOpen) }
         return data
     }
 
@@ -1946,7 +1946,7 @@ final class TafsCloud {
 
     /// The answer's body as tafs cloud sent it, for one kept as it is (the person's export).
     func sendData<B: Encodable>(_ method: String, _ path: String, body: B?, headers: [String: String] = [:]) async throws -> Data {
-        guard let url = URL(string: path, relativeTo: baseURL) else { throw CloudError(status: 0, message: "Bad path") }
+        guard let url = URL(string: path, relativeTo: baseURL) else { throw CloudError(status: 0, message: Words.Error.badPath) }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.timeoutInterval = 70

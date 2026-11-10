@@ -176,7 +176,7 @@ struct DeclineRequestView: View {
 extension DeclineRequestView {
     /// "Decline the request to raise the spend limit?", "Decline the request for Rayo?"
     static func question(_ r: KIFFClient.PackRequest, in u: KIFFClient.Usage?) -> String {
-        r.kind == "raise" ? "Decline the request to raise the spend limit?" : "Decline the request for \(UsageView.packLine(r.pack, in: u))?"
+        r.kind == "raise" ? Words.Billing.Request.declineRaiseTitle : Words.Billing.Request.declinePackTitle(pack: "\(UsageView.packLine(r.pack, in: u))")
     }
 }
 
@@ -245,12 +245,12 @@ extension SoloView {
 
     /// "$9.99 a month".
     static func price(_ p: StoreProduct) -> String {
-        "\(p.displayPrice) a \(p.subscription?.period ?? "month")"
+        Words.Billing.pricePer(price: p.displayPrice, period: p.subscription?.period ?? Words.Usage.month)
     }
 
     /// The button: the free trial when this person can have it.
     static func action(_ p: StoreProduct) -> String {
-        if let trial = p.subscription?.freeTrial { return "Try \(trial) free" }
+        if let trial = p.subscription?.freeTrial { return Words.Billing.tryFree(trial: "\(trial)") }
         return Words.Billing.Solo.subscribeFor(price: "\(price(p))")
     }
 

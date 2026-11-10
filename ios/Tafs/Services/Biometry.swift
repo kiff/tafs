@@ -116,8 +116,8 @@ enum ApprovalReadiness: Equatable {
     /// this page, so the path is said instead.
     static func path(_ kind: String?) -> String {
         switch kind {
-        case "Touch ID": return "Settings → Touch ID & Passcode"
-        case "Face ID": return "Settings → Face ID & Passcode"
+        case "Touch ID": return Words.Approval.SettingsPath.touchId
+        case "Face ID": return Words.Approval.SettingsPath.faceId
         default: return Words.Approval.settingsFaceIdPasscodeTouch
         }
     }

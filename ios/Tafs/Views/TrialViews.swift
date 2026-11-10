@@ -50,7 +50,7 @@ struct TrialStartSheet: View {
                     Button(Words.Common.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(model.trialBusy.contains(tafID) ? "Starting…" : "Start trying") {
+                    Button(model.trialBusy.contains(tafID) ? Words.Common.starting : Words.Version.startTrying) {
                         guard let shown = draft?.version else { return }
                         Task {
                             // Started: its chat opens at once (kiff/tafs#247); later it opens from

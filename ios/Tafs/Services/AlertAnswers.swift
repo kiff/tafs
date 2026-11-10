@@ -19,7 +19,7 @@ enum AlertAnswers {
     /// The actions on tafs' notifications, registered at launch.
     static func categories() -> Set<UNNotificationCategory> {
         let approve = UNNotificationAction(identifier: approve, title: Words.Alert.approveOnce, options: [.authenticationRequired, .foreground])
-        let refuse = UNNotificationAction(identifier: refuse, title: "Refuse", options: [.authenticationRequired, .destructive])
+        let refuse = UNNotificationAction(identifier: refuse, title: Words.NeedsYou.refuse, options: [.authenticationRequired, .destructive])
         let hold = UNNotificationCategory(identifier: holdCategory, actions: [approve, refuse], intentIdentifiers: [],
                                           hiddenPreviewsBodyPlaceholder: Words.Alert.needsYou, options: [])
         let halt = UNNotificationCategory(identifier: haltCategory, actions: [], intentIdentifiers: [], options: [])

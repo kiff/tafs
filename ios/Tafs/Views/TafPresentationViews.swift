@@ -99,7 +99,7 @@ struct ConnectedToolsRing: View {
                 Button { job = true } label: {
                     Text(taf.initial).scaledFont(27, weight: .bold, design: .rounded).foregroundColor(.white)
                         .frame(width: 54, height: 54).background(Theme.tafColor(taf.colorIndex)).clipShape(RoundedRectangle(cornerRadius: 16))
-                }.accessibilityLabel("\(taf.name)'s job").position(center)
+                }.accessibilityLabel(Words.Taf.jobLabel(taf: "\(taf.name)")).position(center)
             }
         }.frame(height: 280)
     }

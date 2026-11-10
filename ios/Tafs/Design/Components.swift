@@ -346,7 +346,7 @@ struct PlanLine: View {
             }
             .buttonStyle(.drivablePlain)
             .accessibilityElement(children: .combine)
-            .accessibilityHint("Opens \(UsageView.title).")
+            .accessibilityHint(Words.Home.opensPlan(title: "\(UsageView.title)"))
             .accessibilityIdentifier("plan-line")
         }
     }
@@ -370,7 +370,7 @@ struct ApprovalKeyLostLine: View {
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
-                    Button("Open the browser again") { openURL(relink.url) }
+                    Button(Words.Connect.openBrowserAgain) { openURL(relink.url) }
                         .buttonStyle(OutlineButtonStyle())
                     Button(Words.Common.cancel) { model.cancelRelink() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))

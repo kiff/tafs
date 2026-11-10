@@ -36,7 +36,7 @@ struct AttachButton: View {
                 .clipShape(Circle())
         }
         .disabled(room == 0)
-        .accessibilityLabel(room == 0 ? "Attach: \(FilePrep.perMessage) files is the most a message carries" : "Attach a photo or file")
+        .accessibilityLabel(room == 0 ? Words.Chat.File.attachFull(count: FilePrep.perMessage) : Words.Chat.File.attach)
         .photosPicker(isPresented: $choosingPhotos, selection: $photos, maxSelectionCount: max(room, 1), matching: .images)
         .onChange(of: photos) { picked in
             guard !picked.isEmpty else { return }
@@ -47,7 +47,7 @@ struct AttachButton: View {
                         model.refuseFile(FileProblem(message: Words.Attachment.photoCouldNotRead), in: key)
                         return
                     }
-                    await add { try FilePrep.photo(data, name: "Photo \(n + 1)") }
+                    await add { try FilePrep.photo(data, name: Words.Attachment.photoNumbered(n: "\(n + 1)")) }
                 }
             }
         }
@@ -59,7 +59,7 @@ struct AttachButton: View {
         }
         .sheet(isPresented: $takingPhoto) {
             CameraPicker { image in
-                Task { await add { try FilePrep.photo(image, name: "Photo") } }
+                Task { await add { try FilePrep.photo(image, name: Words.Attachment.photo) } }
             }
             .ignoresSafeArea()
         }
@@ -183,7 +183,7 @@ struct FileChip: View {
                     .foregroundColor(Theme.dim)
                     .frame(width: 28, height: 28)
             }
-            .accessibilityLabel("Remove \(name)")
+            .accessibilityLabel(Words.Chat.File.remove(name: "\(name)"))
         }
         .padding(.leading, 6).padding(.trailing, 2).padding(.vertical, 6)
         .background(Theme.panel)
@@ -259,7 +259,7 @@ struct MessageFiles: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.drivablePlain)
-                .accessibilityLabel("Open \(file.name)")
+                .accessibilityLabel(Words.Chat.File.`open`(name: "\(file.name)"))
             }
         }
         .quickLookPreview($shown)

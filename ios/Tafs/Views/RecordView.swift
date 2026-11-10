@@ -30,14 +30,14 @@ struct RecordView: View {
                         Button {
                             if openReads.contains(day.key) { openReads.remove(day.key) } else { openReads.insert(day.key) }
                         } label: {
-                            Text("· \(day.reads.count == 1 ? "1 read" : "\(day.reads.count) reads") of data, within its Card · \(openReads.contains(day.key) ? "Hide" : "Show")")
+                            Text("· " + Words.Record.reads(count: day.reads.count) + " · " + (openReads.contains(day.key) ? Words.Record.hide : Words.Record.show))
                                 .scaledFont(13).foregroundColor(Theme.ok).padding(.horizontal, 4)
                         }
                         .buttonStyle(.drivablePlain)
                     }
                 }
                 if days.isEmpty {
-                    Text(filter == .all && taf == nil ? "Nothing yet." : "Nothing here.").scaledFont(14).foregroundColor(Theme.dim).padding(.top, 8)
+                    Text(filter == .all && taf == nil ? Words.Common.nothingYet : Words.Record.nothingHere).scaledFont(14).foregroundColor(Theme.dim).padding(.top, 8)
                 }
             }
             // The full width on an iPad, as the other tabs (kiff/tafs#96).
@@ -52,7 +52,7 @@ struct RecordView: View {
     private var tafChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                chip("All tafs", selected: taf == nil) { taf = nil }
+                chip(Words.Record.allTafs, selected: taf == nil) { taf = nil }
                 ForEach(model.tafs + model.otherAgents) { t in
                     chip(t.name, dot: Theme.tafColor(t.colorIndex), selected: taf == t.id) { taf = t.id }
                 }
@@ -126,7 +126,7 @@ struct RecordView: View {
 
     static func dayTitle(_ day: Date, calendar: Calendar = AccountTime.calendar) -> String {
         let date = day.shown(.dateTime.day().month(.abbreviated))
-        if calendar.isDateInToday(day) { return "Today · \(date)" }
+        if calendar.isDateInToday(day) { return Words.Calendar.todayDate(date: "\(date)") }
         if calendar.isDateInYesterday(day) { return Words.Calendar.yesterdayDate(date: "\(date)") }
         return day.shown(.dateTime.weekday(.wide)) + " · " + date
     }
@@ -205,14 +205,14 @@ extension RecordEntry {
     /// Who decided: its Card, the owner or another person (approving or refusing), or KIFF's refusal.
     var decidedLine: String {
         if let answer {
-            return answer.decision == "refused" ? "refused by \(answerer)" : "approved by \(answerer)"
+            return answer.decision == "refused" ? Words.Record.Decided.refusedBy(who: "\(answerer)") : Words.Record.Decided.approvedBy(who: "\(answerer)")
         }
         switch kind {
         case .refused: return Words.Record.Decided.refusedByCard
         case .held: return Words.Record.Decided.waitingForYou
         case .revoked: return Words.Card.cardRevoked
         case .started: return Words.Record.Decided.cardIssued
-        default: return ownerApproved == true ? "approved by you" : "within its Card"
+        default: return ownerApproved == true ? Words.Record.Decided.approvedByYou : Words.Record.Decided.withinCard
         }
     }
 
@@ -490,7 +490,7 @@ struct ReceiptView: View {
         // The decision and when; the receipt's id and signer are under "Show the full
         // receipt" (kiff/tafs#138): ids aren't for reading at a glance.
         var lines = [decisionWords]
-        if let issued { lines.append("issued \(issued.zonedShown(date: .abbreviated, time: .standard))") }
+        if let issued { lines.append(Words.Receipt.issued(at: issued.zonedShown(date: .abbreviated, time: .standard))) }
         return Text(lines.joined(separator: " · ")).scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
     }
 
@@ -600,16 +600,15 @@ struct ReceiptView: View {
 
     private var stateLabel: String {
         if let answer = entry.answer {
-            return answer.decision == "refused" ? "Refused by \(entry.answerer)" : "Approved once by \(entry.answerer)"
+            return answer.decision == "refused" ? Words.Receipt.refusedBy(who: "\(entry.answerer)") : Words.Receipt.approvedOnceBy(who: "\(entry.answerer)")
         }
         return entry.kind.label
     }
 
     private var outcome: String {
-        let money = entry.amountText.map { " \($0)" } ?? ""
         switch entry.kind {
-        case .done, .approved: return entry.amount == nil ? "Done." : "Done.\(money) moved."
-        case .refused: return entry.answer?.decision == "refused" ? "Not sent. Refused by \(entry.answerer)." : "Not sent. Its Card refused it."
+        case .done, .approved: return entry.amount == nil ? Words.Receipt.Outcome.done : entry.amountText.map { Words.Receipt.Outcome.doneMoved(amount: $0) } ?? Words.Receipt.Outcome.done
+        case .refused: return entry.answer?.decision == "refused" ? Words.Receipt.Outcome.refusedBy(who: "\(entry.answerer)") : Words.Receipt.Outcome.cardRefused
         case .held: return Words.Receipt.Outcome.waiting
         default: return entry.detail
         }
@@ -617,29 +616,29 @@ struct ReceiptView: View {
 
     private var decisionWords: String {
         if let answer = entry.answer {
-            return answer.decision == "refused" ? "held → refused by \(entry.answerer)" : "held → approved once by \(entry.answerer)"
+            return answer.decision == "refused" ? Words.Receipt.Decision.heldRefusedBy(who: "\(entry.answerer)") : Words.Receipt.Decision.heldApprovedOnceBy(who: "\(entry.answerer)")
         }
         switch entry.kind {
         case .refused: return Words.Receipt.Decision.refusedByCard
         // Still waiting: the Card held it, it didn't allow it (the 755 retest).
         case .held: return Words.Receipt.Decision.heldByCard
-        default: return entry.ownerApproved == true ? "held → approved by you" : "allowed by the Card"
+        default: return entry.ownerApproved == true ? Words.Receipt.Decision.heldApprovedByYou : Words.Receipt.Decision.allowedByCard
         }
     }
 
     private var decidedBy: String {
         if let answer = entry.answer {
             var how = entry.answeredByOwner ? Words.Receipt.DecidedBy.you : entry.answerer.prefix(1).uppercased() + entry.answerer.dropFirst()
-            if answer.signed == true { how += ", signed on \(answer.device ?? "your device")" }
+            if answer.signed == true { how = Words.Receipt.DecidedBy.signedOn(who: how, device: answer.device ?? Words.Receipt.DecidedBy.yourDevice) }
             return how
         }
         switch entry.kind {
         case .approved: return Words.Receipt.DecidedBy.youApprovingOnce
-        case _ where entry.ownerApproved == true: return "You, approving once"
-        case .refused where entry.signature != nil: return "You"
+        case _ where entry.ownerApproved == true: return Words.Receipt.DecidedBy.youApprovingOnce
+        case .refused where entry.signature != nil: return Words.Receipt.DecidedBy.you
         case .revoked: return Words.Receipt.DecidedBy.youRevoking
         case .started: return Words.Receipt.DecidedBy.youIssuing
-        default: return model.mode == .kiff ? "KIFF, against the Card" : "The Card"
+        default: return model.mode == .kiff ? Words.Receipt.DecidedBy.kiff : Words.Receipt.DecidedBy.card
         }
     }
 

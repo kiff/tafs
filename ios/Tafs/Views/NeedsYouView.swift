@@ -32,7 +32,7 @@ struct NeedsYouView: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(taf.name).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                                         let n = knocks(taf)
-                                        Text(n == 1 ? "Someone knocked at its door. Nothing was done." : "\(n) knocks at its doors. Nothing was done.")
+                                        Text(Words.NeedsYou.knocks(count: n))
                                             .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                                     }
                                     Spacer()
@@ -158,7 +158,7 @@ struct HeldCallCard: View {
                     Button {
                         if call.install != nil { install() } else { send(.approveOnce) }
                     } label: {
-                        Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
+                        Label(call.install == nil ? Words.NeedsYou.approveOnceWith(biometry: "\(Biometry.name)") : Words.Version.installWith(biometry: "\(Biometry.name)"), systemImage: Biometry.symbol)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(sending)
@@ -275,7 +275,7 @@ struct HeldCallCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 4)
                 } label: {
-                    Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
+                    Text(Words.Common.details).scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
                 }
             }
 
@@ -362,7 +362,7 @@ struct HeldCallCard: View {
         if #available(iOS 16, *) {
             return Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(" left")
         }
-        return Text(String(format: "%d:%02d left", seconds / 60, seconds % 60))
+        return Text(Words.NeedsYou.left(time: String(format: "%d:%02d", seconds / 60, seconds % 60)))
     }
 }
 

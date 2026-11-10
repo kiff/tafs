@@ -27,11 +27,11 @@ enum CardCheck {
         if let perWindow = rule.perWindow, let amount = proposed.amount {
             let used = taf.used[rule.action] ?? .zero
             if used + amount > perWindow {
-                breaches.append("Over \(perWindow.formatted) \(rule.window.label)")
+                breaches.append(Words.Card.Check.overTotal(amount: "\(perWindow.formatted)", window: "\(rule.window.label)"))
             }
         }
         if let count = rule.countPerWindow, (taf.counted[rule.action] ?? 0) + 1 > count {
-            breaches.append("Over \(count) \(rule.window.label)")
+            breaches.append(Words.Card.Check.overCount(count: count, window: rule.window.label))
         }
         guard !breaches.isEmpty else { return .allowed }
 

@@ -49,8 +49,8 @@ struct NotificationSettingsView: View {
                 }
             }
             Section {
-                Toggle("Haptics", isOn: $haptics)
-                    .drivable("Haptics", role: .toggle, id: "haptics") { haptics.toggle() }
+                Toggle(Words.Alert.haptics, isOn: $haptics)
+                    .drivable(Words.Alert.haptics, role: .toggle, id: "haptics") { haptics.toggle() }
             } footer: {
                 Text(Words.Settings.lightTapsWhenYouSend)
             }
@@ -95,7 +95,7 @@ private struct LockScreenAlert: View {
         .background(Theme.raised)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(loud ? "With sound" : "Silent"): \(title). \(line)")
+        .accessibilityLabel("\(loud ? Words.Alert.withSound : Words.Alert.silent): \(title). \(line)")
     }
 }
 

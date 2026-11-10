@@ -29,7 +29,7 @@ struct QuestionsCard: View {
                 HStack {
                     Eyebrow(text: component.title ?? Words.Coach.setupNeeds)
                     Spacer()
-                    Text("\(answeredCount) of \(questions.count) answered").scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
+                    Text(Words.Coach.Questions.answeredOf(answered: "\(answeredCount)", total: "\(questions.count)")).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
                 ForEach(Array(questions.enumerated()), id: \.element.id) { i, q in
                     question(q, number: i + 1)
@@ -65,7 +65,7 @@ struct QuestionsCard: View {
                 ForEach(q.options, id: \.self) { o in
                     choice(o.label, detail: o.description, on: selection.picked[q.id]?.contains(o.value) == true) { selection.pick(q, o.value) }
                 }
-                choice("Something else…", detail: nil, on: selection.ownOpen.contains(q.id)) { selection.toggleOwn(q) }
+                choice(Words.Coach.Questions.somethingElse, detail: nil, on: selection.ownOpen.contains(q.id)) { selection.toggleOwn(q) }
             }
             if selection.ownOpen.contains(q.id) {
                 DriveField(Words.Coach.ownAnswer, text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))

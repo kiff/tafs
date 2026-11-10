@@ -71,15 +71,15 @@ struct ShareTafSheet: View {
             }
             .scrollContentBackground(.hidden)
             .screenBackground()
-            .navigationTitle("Share \(taf.name)")
+            .navigationTitle(Words.People.Share.title(taf: "\(taf.name)"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    if step == 1 { Button("Cancel") { dismiss() } } else { Button("Back") { step = 1 } }
+                    if step == 1 { Button(Words.Common.cancel) { dismiss() } } else { Button(Words.Common.back) { step = 1 } }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if step == 1 {
-                        Button("Next") { step = 2 }.disabled(!loaded || chosen == had)
+                        Button(Words.Common.next) { step = 2 }.disabled(!loaded || chosen == had)
                     } else {
                         Button(Words.People.Share.action) { save() }.disabled(saving)
                     }
@@ -110,7 +110,7 @@ struct ShareTafSheet: View {
                         }
                     }
                 }
-            } header: { Text("Groups") }
+            } header: { Text(Words.People.groups) }
         }
         Section {
             ForEach(model.people) { person in
@@ -159,7 +159,7 @@ struct ShareTafSheet: View {
         saving = true
         let add = chosen.subtracting(had), remove = had.subtracting(chosen), agent = agent
         Task {
-            let done = await model.changePeople("Share \(taf.name)") { kiff in
+            let done = await model.changePeople(Words.People.Share.title(taf: "\(taf.name)")) { kiff in
                 for s in add { try await kiff.share(agent: agent, with: s) }
                 for s in remove { try await kiff.unshare(agent: agent, from: s) }
             }
@@ -172,7 +172,7 @@ struct ShareTafSheet: View {
     static func people(of group: KIFFClient.Group, _ model: AppModel) -> String {
         let names = group.members.sorted(by: PeopleGroupsView.managersFirst(model)).map { m in
             let label = model.person(m.subject)?.label ?? m.subject
-            return m.isManager ? "\(label) (manager)" : label
+            return m.isManager ? Words.People.nameManager(name: "\(label)") : label
         }
         return names.isEmpty ? Words.People.noOneYet : names.joined(separator: ", ")
     }
@@ -184,9 +184,9 @@ struct ShareTafSheet: View {
         if !chosen.isEmpty { lines.append(Words.People.ownChats) }
         for share in chosen.sorted(by: { ($0.group ?? $0.subject ?? "") < ($1.group ?? $1.subject ?? "") }) {
             if let id = share.group, let group = model.groups.first(where: { $0.id == id }) {
-                lines.append("\(group.name) uses \(taf.name): \(people(of: group, model)).")
+                lines.append(Words.People.groupUses(group: "\(group.name)", taf: "\(taf.name)", people: "\(people(of: group, model))"))
             } else if let subject = share.subject {
-                lines.append("\(model.person(subject)?.label ?? subject) uses \(taf.name).")
+                lines.append(Words.People.personUses(person: "\(model.person(subject)?.label ?? subject)", taf: "\(taf.name)"))
             }
         }
         for share in had.subtracting(chosen) {
@@ -326,7 +326,7 @@ struct OverviewView: View {
                 names.append(model.person(subject)?.label ?? subject); people.insert(subject)
             }
         }
-        return "\(names.joined(separator: ", ")) · \(people.count) \(people.count == 1 ? "person" : "people")"
+        return names.joined(separator: ", ") + " · " + Words.People.count(count: people.count)
     }
 
     /// "300 US$ left today of 300 US$", from the Card in front, as its page says it: its money,
@@ -339,8 +339,8 @@ struct OverviewView: View {
             return "\(used.formatted) of \(t.limit.formatted) \(t.window.current)"
         }
         if let c = card.calls {
-            guard let used = c.used else { return "\(c.limit) calls \(c.window.label)" }
-            return "\(used) of \(c.limit) calls \(c.window.current)"
+            guard let used = c.used else { return Words.Card.callsWindow(count: c.limit, window: c.window.label) }
+            return Words.Card.callsUsedOf(count: c.limit, used: "\(used)", window: c.window.current)
         }
         return nil
     }

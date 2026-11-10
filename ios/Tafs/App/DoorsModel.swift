@@ -166,7 +166,7 @@ extension DoorsModel {
                                how: Words.Door.checksSenderServerSignedMessage,
                                keys: [.init(id: "you@company.example", name: Words.Door.Key.you, auto: true), .init(id: "ana@company.example", name: "Ana")],
                                today: 3, limit: 20, resting: false, othersToday: 1, othersLimit: 10)],
-        apps: [TafsCloud.DoorApp(id: "email", label: Words.Sample.Tool.email, kind: "email", proof: "proven", how: "It checks the sender's server signed the message")],
+        apps: [TafsCloud.DoorApp(id: "email", label: Words.Sample.Tool.email, kind: "email", proof: "proven", how: Words.Door.checksSenderServerSignedMessage)],
         knocks: [TafsCloud.Knock(id: "knock_sample", door: "door_sample", app: "email", from: "mara@customer.example", name: "Mara",
                                  proof: "pass", subject: Words.Door.refundRequest, text: Words.Door.hiLikeBackOrder,
                                  at: Date().addingTimeInterval(-600))])

@@ -174,8 +174,8 @@ struct SettingsView: View {
                     Text(Words.Home.tagline).foregroundColor(Theme.dim)
                 }
                 Section(Words.Settings.accountActions) {
-                    if model.mode == .sample { Button("Sign in with KIFF") { signingIn = true } }
-                    Button(model.mode == .kiff ? "Sign out" : "Clear the sample", role: .destructive) {
+                    if model.mode == .sample { Button(Words.SignIn.withKiff) { signingIn = true } }
+                    Button(model.mode == .kiff ? Words.Settings.signOut : Words.Settings.clearSample, role: .destructive) {
                         if model.mode == .kiff { confirming = .signOut }
                         else { Task { if await model.signOut() { dismiss() } } }
                     }

@@ -162,7 +162,7 @@ struct TafChatView: View {
                                 VStack(alignment: .trailing, spacing: 4) {
                                     ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
                                         .opacity(0.8)
-                                    Text("\(taf?.name ?? "It") reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                                    Text(taf.map { steering.status == "PAUSED" ? Words.Chat.Steer.tafReadsPaused(taf: $0.name) : Words.Chat.Steer.tafReadsNext(taf: $0.name) } ?? (steering.status == "PAUSED" ? Words.Chat.Steer.itReadsPaused : Words.Chat.Steer.itReadsNext))
                                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -440,7 +440,7 @@ struct TafChatView: View {
         return VStack(spacing: 0) {
         FileTray(key: key)
         VStack(alignment: .leading, spacing: 4) {
-            ChatField(title: thinking ? Words.Chat.writeNext : "Message \(name)", text: $draft, cursor: { model.dictation.cursor = $0 })
+            ChatField(title: thinking ? Words.Chat.writeNext : Words.Chat.messageTaf(taf: "\(name)"), text: $draft, cursor: { model.dictation.cursor = $0 })
                 .accessibilityIdentifier("chat-field")
                 .focused($typing)
                 .scaledFont(16)

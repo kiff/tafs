@@ -37,7 +37,7 @@ struct DeleteAccountView: View {
                         }
                     } label: {
                         HStack {
-                            Text(model.deleteAccountError == nil ? "Delete account" : "Try again")
+                            Text(model.deleteAccountError == nil ? Words.Settings.DeleteAccount.title : Words.Common.tryAgain)
                             if deleting {
                                 Spacer()
                                 ProgressView()

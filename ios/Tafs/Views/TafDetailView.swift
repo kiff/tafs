@@ -56,7 +56,7 @@ struct TafDetailView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     header(taf)
                     if !folded { headerLine(taf) }
-                    Picker("View", selection: $section) {
+                    Picker(Words.Taf.viewPicker, selection: $section) {
                         if model.canChat(taf.id) { Text(Words.Taf.Section.chat).tag(0) }
                         Text(Words.Taf.Section.activity).tag(1)
                         Text(Words.Taf.Section.card).tag(2)
@@ -125,7 +125,7 @@ struct TafDetailView: View {
             } message: {
                 Text(Words.Taf.removeBody)
             }
-            .alert("Remove \(taf.name)", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
+            .alert(Words.Taf.removeNamed(taf: "\(taf.name)"), isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
                 Button(Words.Common.ok, role: .cancel) {}
             } message: {
                 Text(removal ?? "")
@@ -180,7 +180,7 @@ struct TafDetailView: View {
             HStack(spacing: 10) {
                 NavigationLink { VersionsScreen(tafID: taf.id) } label: {
                     let live = model.versions[taf.id]?.first(where: \.live)?.n
-                    Text(live.map { "Version \($0) · live" } ?? Words.Version.title)
+                    Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
                         .scaledFont(13, weight: .semibold)
                 }
                 if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {
@@ -250,7 +250,7 @@ struct TafDetailView: View {
         }
         let entries = model.entries(for: taf.id).filter(activityFilter.keeps)
         if entries.isEmpty {
-            Text(activityFilter == .all ? "Nothing yet." : "Nothing here.").foregroundColor(Theme.dim)
+            Text(activityFilter == .all ? Words.Common.nothingYet : Words.Record.nothingHere).foregroundColor(Theme.dim)
         }
         let calendar = AccountTime.calendar
         let days = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.at) }
@@ -304,7 +304,7 @@ struct TafDetailView: View {
         if model.mode == .kiff, cloud != nil { MemorySummaryPanel(tafID: taf.id) }
         else if model.mode == .sample { MemoryPanel(tafID: taf.id) }
         if model.mode == .sample, taf.state != .revoked {
-            Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
+            Button(taf.state == .paused ? Words.Taf.resume : Words.Taf.pause) { model.togglePause(taf.id) }
                 .buttonStyle(OutlineButtonStyle())
                 .confirming()
         }
@@ -324,10 +324,10 @@ struct TafDetailView: View {
                 ForEach(held) { HeldCallCard(call: $0) }
             }
             let cards = taf.shownCards
-            Eyebrow(text: cards.count == 1 ? "Card" : "Cards")
+            Eyebrow(text: Words.Card.heading(count: cards.count))
             CardStack(cards: cards, issuedBy: model.issuer(of: taf), color: Theme.tafColor(taf.colorIndex),
                       revoked: taf.card.revoked, front: $frontCard)
-            Button(cards.count == 1 ? "All of the Card" : "All of the Cards") { section = 2 }
+            Button(Words.Card.allOf(count: cards.count)) { section = 2 }
                 .buttonStyle(OutlineButtonStyle())
         }
     }
@@ -544,7 +544,7 @@ struct ConnectionsPanel: View {
                             .foregroundColor(Theme.no)
                     }
                     if grant.needsReconnect {
-                        Button(model.connecting == grant.id ? model.connectStep ?? "Opening the sign-in…" : "Sign in again") {
+                        Button(model.connecting == grant.id ? model.connectStep ?? Words.Connect.openingSignIn : Words.Connect.signInAgain) {
                             Task { await model.reconnect(grant) }
                         }
                         .buttonStyle(OutlineButtonStyle(color: Theme.ink))
@@ -677,7 +677,7 @@ struct VersionsPanel: View {
         let trial = model.openTrials[tafID]
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text("Version \(v.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Words.Version.number(version: "\(v.n)")).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 if v.live {
                     Text(Words.Version.liveNow).scaledFont(11, weight: .bold).foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 2)
@@ -711,7 +711,7 @@ struct VersionsPanel: View {
                             .buttonStyle(OutlineButtonStyle())
                             .disabled(trial != nil || model.trialBusy.contains(tafID))
                     }
-                    Button(switching == v.n ? "Installing…" : "Install this version") {
+                    Button(switching == v.n ? Words.Version.installing : Words.Version.installThis) {
                         use(v)
                     }
                     .buttonStyle(OutlineButtonStyle())
@@ -726,17 +726,17 @@ struct VersionsPanel: View {
 
     /// One ended trial, in a line: "Tried 21 Oct · 3 calls, 1 held · went back".
     static func tried(_ t: TafsCloud.TrialSummary) -> String {
-        var counts = "\(t.calls) call\(t.calls == 1 ? "" : "s")"
-        if t.held > 0 { counts += ", \(t.held) held" }
-        if t.refused > 0 { counts += ", \(t.refused) refused" }
+        let counts = [Words.Version.Tried.calls(count: t.calls),
+                      t.held > 0 ? Words.Version.Tried.held(count: t.held) : nil,
+                      t.refused > 0 ? Words.Version.Tried.refused(count: t.refused) : nil].compactMap { $0 }.joined(separator: ", ")
         let how: String
         switch t.why {
-        case "installed": how = "installed"
-        case "back": how = "went back"
-        case "idle": how = "ended unused"
+        case "installed": how = Words.Version.Tried.installed
+        case "back": how = Words.Version.Tried.wentBack
+        case "idle": how = Words.Version.Tried.endedUnused
         default: how = Words.Version.Tried.ended
         }
-        return ["Tried \(t.started.formatted(date: .abbreviated, time: .omitted))", counts, how].joined(separator: " · ")
+        return [Words.Version.Tried.on(date: t.started.formatted(date: .abbreviated, time: .omitted)), counts, how].joined(separator: " · ")
     }
 
     /// A switch that didn't finish: the taf doesn't run until it's finished or cancelled.
@@ -764,7 +764,7 @@ struct VersionsPanel: View {
     /// Who made it, in tafs cloud's words, when, and whether it brings a new Card. A version
     /// kiff/agents wrote itself (the first, or an Upgrade's) names no one.
     static func byline(_ v: TafsCloud.Version) -> String {
-        return [v.byWords, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
+        return [v.byWords, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : Words.Version.bringsNewCard]
             .compactMap { $0 }.joined(separator: " · ")
     }
 }
@@ -787,7 +787,7 @@ struct VersionCardSheet: View {
         NavStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
+                    Text(version.note.map { Words.Version.numberNote(version: "\(version.n)", note: $0) } ?? Words.Version.number(version: "\(version.n)"))
                         .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     if let draft, draft.cards != nil {
@@ -916,7 +916,7 @@ struct MemoryPanel: View {
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.soft)
                             .frame(minHeight: 44)
-                            .accessibilityLabel("Forget: \(note.content)")
+                            .accessibilityLabel(Words.Taf.Memory.forgetLabel(note: "\(note.content)"))
                     }
                 }
                 Text(Words.Taf.Memory.explains)
@@ -929,12 +929,12 @@ struct MemoryPanel: View {
             }
         }
         .task(id: tafID) { if loadAll { await model.loadAllMemory(tafID) } else { await model.loadMemory(tafID) } }
-        .confirmationDialog("Forget this note?", isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }),
+        .confirmationDialog(Words.Taf.Memory.forgetTitle, isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }),
                             titleVisibility: .visible, presenting: forgetting) { note in
             Button(Words.Taf.Memory.forget, role: .destructive) { Task { _ = await model.forget(note, from: tafID) } }
             Button(Words.Common.cancel, role: .cancel) {}
         } message: { note in
-            Text("\u{201C}\(note.content)\u{201D}\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.")
+            Text(Words.Taf.Memory.forgetBody(note: note.content))
         }
     }
 }
@@ -953,7 +953,7 @@ struct RunReportPanel: View {
             }
             if let report {
                 if let at = report.at {
-                    Text("\(at.shortTime) · \(report.finished ? "finished" : report.status == "running" ? "still running" : "no session")")
+                    Text("\(at.shortTime) · \(report.finished ? Words.Taf.Report.finished : report.status == "running" ? Words.Taf.Report.stillRunning : Words.Taf.Report.noSession)")
                         .scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
                 if !report.text.isEmpty {
@@ -1036,7 +1036,7 @@ struct TafCardFace: View {
         if card.rules.isEmpty { parts.append(Words.Card.noActions) }
         parts.append(Words.Card.issuedByNamed(who: "\(issuedBy)"))
         let end = card.expires?.formatted(date: .abbreviated, time: .omitted)
-        parts.append(revoked ? Words.Card.revoked : !card.active ? "Ended \(end ?? "")" : end.map { "Until \($0)" } ?? Words.Card.noEndDate)
+        parts.append(revoked ? Words.Card.revoked : !card.active ? end.map { Words.Card.endedOn(date: $0) } ?? Words.Card.ended : end.map { Words.Card.untilDate(date: "\($0)") } ?? Words.Card.noEndDate)
         return parts.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: ". ") + "."
     }
 
@@ -1068,7 +1068,7 @@ struct TafCardFace: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
                     // A Card with no end says so, never a far-off date (kiff/tafs#96).
-                    Text(revoked ? "Revoked" : !card.active ? "Ended" : card.expires == nil ? "Ends" : "Until")
+                    Text(revoked ? Words.Card.revoked : !card.active ? Words.Card.ended : card.expires == nil ? Words.Card.ends : Words.Card.until)
                         .scaledFont(10).opacity(0.75)
                     Text(card.expires?.shown(date: .abbreviated, time: .omitted) ?? Words.Card.noEndDate)
                         .scaledFont(12, weight: .semibold)
@@ -1119,7 +1119,7 @@ struct CardBar: View {
     private var details: String {
         var parts = [card.title]
         if let environment = card.environmentLabel { parts.append(environment.capitalized) }
-        if count > 1 { parts.append("\(count) Cards") }
+        if count > 1 { parts.append(Words.Card.count(count: count)) }
         return parts.joined(separator: " · ")
     }
 }
@@ -1136,7 +1136,7 @@ struct CardLines: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(rule.label).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                        Text(rule.outside == .hold ? "Outside: held for you" : "Outside: refused")
+                        Text(rule.outside == .hold ? Words.Card.outsideHeld : Words.Card.outsideRefused)
                             .scaledFont(12).foregroundColor(Theme.dim)
                     }
                     Spacer()

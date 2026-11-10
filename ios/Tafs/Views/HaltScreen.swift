@@ -42,7 +42,7 @@ struct HaltScreen: View {
                 }
                 switch h.state {
                 case .running:
-                    Button(busy ? "Halting…" : (tafID == nil ? "Halt all now" : "Halt now")) { halt() }
+                    Button(busy ? Words.Halt.Headline.halting : (tafID == nil ? Words.Halt.allNow : Words.Halt.now)) { halt() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                         .confirming()
                         .disabled(busy)
@@ -75,7 +75,7 @@ struct HaltScreen: View {
             .padding(.vertical, 12)
         }
         .screenBackground()
-        .navigationTitle(tafID == nil ? "Halt all" : "Halt")
+        .navigationTitle(tafID == nil ? Words.Taf.Halt.titleAll : Words.Taf.Halt.title)
         .inlineTitle()
         // Read now, then again every 2 seconds while it is halting, for up to 2 minutes.
         .task(id: tafID) {
@@ -115,8 +115,7 @@ struct HaltScreen: View {
         case .halting:
             return Words.Halt.Explain.halting
         case .halted:
-            let since = h.haltedAt.map { " since \($0.shortTime)" } ?? ""
-            return Words.Halt.haltedNothingReachesYourTools(since: "\(since)")
+            return h.haltedAt.map { Words.Halt.Explain.haltedSince(time: $0.shortTime) } ?? Words.Halt.Explain.halted
         }
     }
 }
@@ -162,8 +161,8 @@ struct HaltRow: View {
             Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill")
                 .scaledFont(16, weight: .semibold).foregroundColor(Theme.no)
             VStack(alignment: .leading, spacing: 2) {
-                Text(tafID == nil ? "Halt all" : "Halt").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                Text(h.state == .running ? "Stop it until you resume" : HaltScreen.headline(h))
+                Text(tafID == nil ? Words.Taf.Halt.titleAll : Words.Taf.Halt.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(h.state == .running ? Words.Halt.rowRunning : HaltScreen.headline(h))
                     .scaledFont(13).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
             }
             Spacer()

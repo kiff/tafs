@@ -207,7 +207,7 @@ struct RootView: View {
             get: { model.timeZoneOffer != nil && model.lastError == nil },
             set: { _ in }
         )) {
-            Button("Use \(model.timeZoneOffer ?? "")") { Task { await model.answerTimeZoneOffer(use: true) } }
+            Button(Words.Settings.TimeZoneOffer.use(zone: model.timeZoneOffer ?? "")) { Task { await model.answerTimeZoneOffer(use: true) } }
             Button(Words.Common.notNow, role: .cancel) { Task { await model.answerTimeZoneOffer(use: false) } }
         } message: {
             Text(Words.Settings.TimeZoneOffer.textDevice(device: ThisDevice.kind, zone: model.kiffAccount?.timeZone ?? "UTC"))

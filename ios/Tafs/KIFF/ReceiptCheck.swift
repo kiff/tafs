@@ -47,8 +47,8 @@ enum ReceiptCheck: Equatable {
         guard let recovered = recoverAddress(digest: digest, signature: signature) else {
             return .failed(Words.Receipt.Check.signatureMismatch)
         }
-        guard recovered == declared else { return .failed("The signature doesn't match these steps.") }
-        guard recovered == expected.lowercased() else { return .failed("It isn't signed by KIFF.") }
+        guard recovered == declared else { return .failed(Words.Receipt.Check.signatureMismatch) }
+        guard recovered == expected.lowercased() else { return .failed(Words.Receipt.Check.notKiff) }
         return .verified(signer: recovered)
     }
 

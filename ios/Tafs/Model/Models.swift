@@ -109,7 +109,7 @@ struct Window: Hashable, Codable, Sendable {
 
     /// Ends an amount's total: "in total a day" for a day's, so a bare number reads apart from
     /// a count; any other window's words already say it ("in any hour", "in total").
-    var sumLabel: String { raw == "calendar_day" ? "in total \(label)" : label }
+    var sumLabel: String { raw == "calendar_day" ? Words.Card.Window.inTotalWindow(window: "\(label)") : label }
 
     init(from decoder: Decoder) throws {
         self.init(try decoder.singleValueContainer().decode(String.self))
@@ -157,7 +157,7 @@ struct CardRule: Identifiable, Hashable, Codable {
     /// room ends on a later day, as a week's or a month's does.
     var roomWords: String? {
         guard let extraRoom, baseLimit != nil else { return nil }
-        return Words.Card.extraRoomPrefix(formatted: "\(extraRoom.formatted)") + (roomEnds.map { "until \($0.endsWords)" } ?? window.current)
+        return roomEnds.map { Words.Card.extraRoomUntil(extra: extraRoom.formatted, ends: $0.endsWords) } ?? Words.Card.extraRoom(extra: extraRoom.formatted, window: window.current)
     }
 
     /// What's left of its total this window ("€800 left today"), given what it has used,
@@ -165,7 +165,7 @@ struct CardRule: Identifiable, Hashable, Codable {
     func left(used: Money?) -> String? {
         guard let total = perWindow, let used, total.currency == used.currency, total.scale == used.scale else { return nil }
         let left = Money(minor: max(0, total.minor - used.minor), currency: total.currency, scale: total.scale)
-        return "\(left.formatted) left \(window.current)"
+        return Words.Card.left(amount: left.formatted, window: window.current)
     }
 
     var summary: String {
@@ -179,16 +179,16 @@ struct CardRule: Identifiable, Hashable, Codable {
             if let own = ownTotal { parts.append(Words.Card.asksYou(formatted: "\(own.formatted)", sumLabel: "\(window.sumLabel)")) }
             if let roomWords { parts.append(roomWords) }
             if let countPerWindow {
-                parts.append(countPerWindow == 0 ? "Each call asks you first"
-                             : "\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label), then it asks you")
+                parts.append(countPerWindow == 0 ? Words.Card.Held.eachCallAsks
+                             : Words.Card.Rule.callsThenAsks(count: countPerWindow, window: window.label))
             }
             return parts.joined(separator: " · ")
         }
-        if let perAction { parts.append("≤ \(perAction.formatted) each") }
+        if let perAction { parts.append(Words.Card.Rule.atMostEach(amount: "\(perAction.formatted)")) }
         // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
         if let own = ownTotal { parts.append(own.hasUnit ? "\(own.formatted) \(window.label)" : "\(own.formatted) \(window.sumLabel)") }
         if let roomWords { parts.append(roomWords) }
-        if let countPerWindow { parts.append("\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label)") }
+        if let countPerWindow { parts.append(Words.Card.callsWindow(count: countPerWindow, window: window.label)) }
         return parts.joined(separator: " · ")
     }
 }
@@ -273,17 +273,17 @@ struct TafCard: Identifiable, Hashable, Codable {
                 // The Card's own total and the extra room apart, as KIFF says them (the 755 retest):
                 // "of 300 US$ + 30 US$ extra room until 00:00".
                 if let extra = t.extra, let own = t.base {
-                    let until = t.roomEnds.map { " until \($0.endsWords)" } ?? ""
+                    let until = t.roomEnds.map { Words.Card.untilEnds(ends: $0.endsWords) } ?? ""
                     return (shown(left), Words.Card.leftExtraRoom(current: "\(t.window.current)", own: "\(shown(own))", extra: "\(shown(extra))", until: "\(until)", note: "\(note)"))
                 }
-                return (shown(left), "left \(t.window.current) of \(shown(t.limit))\(note)")
+                return (shown(left), Words.Card.Hero.leftOfNote(window: "\(t.window.current)", limit: "\(shown(t.limit))", note: "\(note)"))
             }
             return (shown(t.limit), Words.Card.Hero.useUnavailableNote(label: "\(t.window.label)", note: "\(note)"))
         }
         if let c = calls {
             guard let used = c.used else { return ("\(c.limit)", Words.Card.Hero.callsUseUnavailable(window: "\(c.window.label)")) }
             let left = max(0, c.limit - used)
-            return ("\(left)", "\(left == 1 ? "call" : "calls") left \(c.window.current) of \(c.limit)")
+            return ("\(left)", Words.Card.Hero.callsLeftOf(count: left, window: c.window.current, limit: "\(c.limit)"))
         }
         return nil
     }
@@ -294,9 +294,9 @@ struct TafCard: Identifiable, Hashable, Codable {
         guard let hero else { return nil }
         if let t = total {
             let figure = t.limit.hasUnit ? hero.figure : Words.Card.noCurrency(amount: "\(hero.figure)")
-            return hero.words.hasPrefix("left") ? "\(figure) left" : figure
+            return hero.words.hasPrefix("left") ? Words.Card.figureLeft(figure: figure) : figure
         }
-        if let c = calls, c.used != nil { return "\(hero.figure) \(hero.figure == "1" ? "call" : "calls") left" }
+        if let c = calls, c.used != nil { return Int(hero.figure).map { Words.Card.callsLeft(count: $0) } ?? Words.Card.figureLeft(figure: hero.figure) }
         return nil
     }
 
@@ -307,13 +307,13 @@ struct TafCard: Identifiable, Hashable, Codable {
         var out: [String] = []
         if hero == nil {
             out = rules.prefix(2).map { "\($0.label.lowercased()) \($0.summary)" }
-            if rules.count > 2 { out.append("\(rules.count - 2) more") }
+            if rules.count > 2 { out.append(Words.Card.more(count: rules.count - 2)) }
             return out
         }
         if let rule = rules.first(where: { $0.perAction != nil }), let each = rule.perAction {
-            out.append(rule.outside == .hold ? "up to \(each.formatted) each; more asks you first" : "≤ \(each.formatted) each · refused above")
+            out.append(rule.outside == .hold ? Words.Card.Rule.upToEach(amount: "\(each.formatted)") : Words.Card.Rule.atMostEachRefusedAbove(amount: "\(each.formatted)"))
         }
-        if rules.count > 1 { out.append("\(rules.count) tools") }
+        if rules.count > 1 { out.append(Words.Card.tools(count: rules.count)) }
         return out
     }
 

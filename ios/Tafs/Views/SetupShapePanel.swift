@@ -33,7 +33,7 @@ struct SetupShapePanel: View {
 
     private func plan(_ steps: [SetupShape.Step]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: "Plan · \(steps.filter { $0.state == .done }.count) of \(steps.count)")
+            Eyebrow(text: Words.Coach.Plan.progress(done: "\(steps.filter { $0.state == .done }.count)", total: "\(steps.count)"))
             ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
                 HStack(alignment: .top, spacing: 10) {
                     StepMark(status: Self.mark(step.state)).padding(.top, 1)
@@ -56,7 +56,7 @@ struct SetupShapePanel: View {
 
     private static func mark(_ state: SetupShape.Step.State) -> String {
         switch state {
-        case .done: return Words.Record.Result.done
+        case .done: return "done"
         case .failed: return "failed"
         case .needsYou, .now: return "active"
         case .toDo, .skipped: return "pending"
@@ -65,7 +65,7 @@ struct SetupShapePanel: View {
 
     private func tools(_ tools: [SetupShape.Tool]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: "Tools")
+            Eyebrow(text: Words.Coach.toolsEyebrow)
             ForEach(tools) { tool in
                 let status = Self.status(tool.state)
                 VStack(alignment: .leading, spacing: 3) {
