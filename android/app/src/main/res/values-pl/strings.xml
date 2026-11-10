@@ -1935,7 +1935,7 @@
     <string name="setup_title">Konfiguracja</string>
     <string name="sign_in_again_to_sign">Zaloguj się ponownie przez KIFF: to logowanie nie może podpisywać za ten telefon.</string>
     <string name="sign_in_again_to_sign_device">Zaloguj się ponownie przez KIFF: to logowanie nie może podpisywać za to urządzenie (%1$s).</string>
-    <string name="sign_in_agree">Logując się, akceptujesz %1$s KIFF, które obejmują tafs, oraz %2$s.</string>
+    <string name="sign_in_agree">Logując się, akceptujesz %1$s KIFF, które obejmują tafs. Obowiązuje też %2$s KIFF.</string>
     <string name="sign_in_check_code">Zanim zatwierdzisz, sprawdź, czy KIFF pokazuje ten sam kod.</string>
     <string name="sign_in_could_not_finish">Nie udało się dokończyć: %1$s. Spróbuj ponownie.</string>
     <string name="sign_in_could_not_start">Nie udało się rozpocząć: %1$s. Spróbuj ponownie.</string>

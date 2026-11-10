@@ -92826,7 +92826,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logując się, akceptujesz %1$@ KIFF, które obejmują tafs, oraz %2$@."
+            "value": "Logując się, akceptujesz %1$@ KIFF, które obejmują tafs. Obowiązuje też %2$@ KIFF."
           }
         },
         "pt": {
