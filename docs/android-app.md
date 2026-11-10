@@ -206,6 +206,9 @@ or more, as Android's `sw600dp` does (`ThisDevice`, set in `TafsApplication`). B
 (`device.phone`, `device.tablet`), so each language says them. The device name KIFF lists for the phone's key reads "tafs
 on Android phone" (`settings.devices.this_device_name`).
 
+The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open kiff.dev's page in the lines' language:
+`/terms#tafs` in English, `/de/terms#tafs` in German, and so on (`Legal`).
+
 The chat shows the owner's own answer line as it is by a flag on the line (`RecordEntry.byYou`, set where the phone
 records the answer and kept when KIFF's outcome matches), never by matching its words, so it holds in every language.
 KIFF's line for a held call reads "approved by you, done" only when KIFF says the reader answered it (`answer.you`), and
