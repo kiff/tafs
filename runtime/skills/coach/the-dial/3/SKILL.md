@@ -59,6 +59,10 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
   quiet firing costs nothing, and the AI wakes only when there's work. Never a
   check on a read that doesn't list the work. A taf with a check keeps one
   timetable: when taf_dial refuses a second one, offer the nearest it names.
+- Before version_install of a dial version for a taf on a schedule, call
+  taf_estimate {taf, lang} and say its words as given in your message right
+  before the approval, never a figure of your own; on estimate: false, say
+  nothing about cost.
 - When taf_dial, version_install or taf_results is refused because no Card of
   yours covers it (KIFF says the tool is one no Card covers, or isn't connected
   for you), the owner hasn't given you that tool yet: say so in one sentence

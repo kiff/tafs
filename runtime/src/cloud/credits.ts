@@ -126,7 +126,47 @@ export async function readCreditRuns(token: string, taf: string, previous: boole
   if (previous) q.set("period", "previous");
   if (after) q.set("cursor", after);
   const k = await read<Partial<KIFFRuns>>(`/v1/me/usage/credits/runs?${q}`, token, doFetch, base);
-  return { items: Array.isArray(k.items) ? k.items : [], ...(typeof k.next === "string" && k.next ? { next: k.next } : {}) };
+  // A page with no list isn't an empty one: what's worked out from it (an estimate, the week-one note) would be a guess.
+  if (!Array.isArray(k.items)) throw new CreditsError(503, UNREADABLE);
+  return { items: k.items, ...(typeof k.next === "string" && k.next ? { next: k.next } : {}) };
+}
+
+/** A run in KIFF's own record of a taf's credits: what Coach's estimate and a taf's own estimate read. */
+export type CreditRun = Pick<KIFFRun, "run" | "ended" | "credits" | "counted" | "free"> & { trigger?: string };
+
+/** KIFF's answer to Coach's read of a taf's credits couldn't be used: the source is left out, never guessed. */
+export class CoachCreditsError extends Error {}
+
+/**
+ * A taf's runs that ended in the last 30 days, newest first, as KIFF counts them, read with Coach's permit for
+ * the call (POST /v1/coach/credits, {permit, agent}): Coach holds no session of the person's. A counted run
+ * carries its counted credits; a trial's (`free: "trial"`) what it would have used, as KIFF works it out; any
+ * other free run is the caller's to leave out. The answer is checked strictly: anything else is an error,
+ * and the estimate goes on without this source.
+ */
+export async function readCoachCredits(permit: string, agent: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<CreditRun[]> {
+  if (!permit || !agent) throw new CoachCreditsError("no permit or agent");
+  let res: Response;
+  try {
+    res = await doFetch(`${base}/v1/coach/credits`, {
+      method: "POST", headers: { "Content-Type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ permit, agent }),
+    });
+  } catch {
+    throw new CoachCreditsError("KIFF couldn't be reached");
+  }
+  if (res.status !== 200) throw new CoachCreditsError(`KIFF answered ${res.status}`);
+  const body = await res.json().catch(() => undefined) as { runs?: unknown } | undefined;
+  if (!body || typeof body !== "object" || !Array.isArray(body.runs)) throw new CoachCreditsError("not a list of runs");
+  return body.runs.map((r: unknown) => {
+    const x = r as Partial<Record<keyof CreditRun, unknown>> | null;
+    if (!x || typeof x !== "object" || typeof x.run !== "string" || !x.run || typeof x.ended !== "string" || !Number.isFinite(Date.parse(x.ended)) ||
+      typeof x.credits !== "number" || !Number.isFinite(x.credits) || x.credits < 0 || typeof x.counted !== "boolean" ||
+      !(x.free === undefined || x.free === null || typeof x.free === "string")) {
+      throw new CoachCreditsError("a run that isn't one");
+    }
+    return { run: x.run, ended: x.ended, credits: x.credits, counted: x.counted, ...(typeof x.free === "string" && x.free ? { free: x.free } : {}) };
+  });
 }
 
 const count = (n: unknown) => (typeof n === "number" && Number.isFinite(n) && n > 0 ? Math.floor(n) : 0);
@@ -179,7 +219,8 @@ export interface CreditsView {
   credits: number;
   runs: number;
   words: string;
-  tafs: Array<{ taf: string | null; credits: number; runs: number; words: string }>;
+  /** Each row; `pace` is its line at this pace ("At this pace, about 640 this month"), once its own runs make one, this period only. */
+  tafs: Array<{ taf: string | null; credits: number; runs: number; words: string; pace?: string }>;
   coach: { credits: number; runs: number; words: string } | null;
   not_counted: { runs: number; words: string; lines: Array<{ why: string; runs: number; words: string }> };
   note: string;

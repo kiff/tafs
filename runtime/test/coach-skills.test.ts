@@ -41,7 +41,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@6", "did-this-happen@1", "draft-the-card@6", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@4", "the-dial@2", "the-tafs@2", "usage-and-plans@1"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@6", "did-this-happen@1", "draft-the-card@6", "drive-the-app@2", "halting@1", "improve-a-taf@1", "name-the-tools@5", "set-up-a-taf@5", "the-dial@3", "the-tafs@2", "usage-and-plans@1"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -178,14 +178,14 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@6", "draft-the-card@6", "halting@1", "name-the-tools@5", "set-up-a-taf@4", "usage-and-plans@1"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@6", "draft-the-card@6", "halting@1", "name-the-tools@5", "set-up-a-taf@5", "usage-and-plans@1"]);
     expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@6", "draft-the-card@6", "improve-a-taf@1", "name-the-tools@5"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@6", "draft-the-card@6", "halting@1", "name-the-tools@5", "set-up-a-taf@4", "usage-and-plans@1"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@6", "draft-the-card@6", "halting@1", "name-the-tools@5", "set-up-a-taf@5", "usage-and-plans@1"]);
     expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@6", "draft-the-card@6", "halting@1", "improve-a-taf@1", "name-the-tools@5"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
@@ -195,7 +195,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     // planque's and KIFF's tools never reach tafs cloud (KIFF's gateway serves them): their skills come with the start.
     expect(toolSkills("kiff_draft")).toEqual([]);
     expect(toolSkills("catalog")).toEqual([]);
-    expect(toolSkills("taf_dial")).toEqual(["the-dial@2"]);
+    expect(toolSkills("taf_dial")).toEqual(["the-dial@3"]);
     expect(toolSkills("taf_task")).toEqual(["the-tafs@2"]);
     expect(toolSkills("taf_pause")).toEqual(["halting@1"]);
     expect(toolSkills("stripe_refund_k3f9")).toEqual([]);
