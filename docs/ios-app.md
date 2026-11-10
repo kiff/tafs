@@ -303,7 +303,7 @@ reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's 
 The pages the app opens follow the lines' language (`KIFFClient.appLanguage`, the first of the languages the screens
 resolved to), never the browser's:
 
-- **kiff.dev's Terms and Privacy policy** (Sign-in, Plan & usage): `/terms#tafs` in English, `/de/terms#tafs` in
+- **kiff.dev's Terms and Privacy policy** (Sign-in, Settings, Plan & usage): `/terms#tafs` in English, `/de/terms#tafs` in
   German, and so on (`Legal`).
 - **KIFF's approval page**, for a sign-in and for approving again after Face ID changed: the link KIFF answers gets
   `lang=<language>`, and a link that already names one keeps it (`DeviceStart.inAppLanguage`).
