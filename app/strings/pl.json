@@ -533,7 +533,7 @@
   "chat.steer.taf_reads_next": "{taf} przeczyta to w następnym kroku",
   "chat.steer.taf_reads_paused": "{taf} przeczyta to, gdy będzie kontynuować",
   "chat.stop": "Zatrzymaj",
-  "chat.stopped.declined": "{taf} zatrzymał się: AI nie zgodziła się kontynuować. Spróbuj zapytać inaczej.",
+  "chat.stopped.declined": "{taf} zatrzymał się: AI odmówiła kontynuowania. Spróbuj zapytać inaczej.",
   "chat.stopped.out_of_room": "{taf} zatrzymał się: w jego odpowiedzi zabrakło miejsca. Poproś o coś krótszego albo o jedną część naraz.",
   "chat.taf_is_answering": "{taf} odpowiada",
   "chat.the_taf": "Taf",

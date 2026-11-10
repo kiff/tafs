@@ -67,7 +67,8 @@ fails when one differs from what the generator writes, and CI runs it.
 - a count has the plural forms its language needs, and `other`;
 - a shipped language's line isn't left in English;
 - a line that is exactly a glossary term is that term in every language
-  (`docs/languages.md`, Terms).
+  (`docs/languages.md`, Terms), or its plural where the line names a group, as the Record's
+  "Done" filter does beside "Held" and "Refused" (`TERM_AS_PLURAL` in the test).
 - no English is left in the iPhone and iPad app's code (`ios_literals.py`), nor in the Android app's
   (`android_literals.py`, with `android_kept.json`).
 
