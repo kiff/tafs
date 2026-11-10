@@ -5680,8 +5680,8 @@ class AppModel(
     }
     if (generation != accountGeneration) return
     _state.update { it.copy(halts = it.halts + ((tafId.orEmpty()) to halt)) }
-    // The list reads it halted at once, not at its next read.
-    refresh()
+    // The list reads it halted at once, not at its next read; the halt sheet doesn't wait for the whole list to show its own.
+    scope.launch { refresh() }
   }
 
   /** Reads where a halt stands. */

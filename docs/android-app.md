@@ -147,6 +147,13 @@ otherwise the app says once that they're off, with **Turn on**. Another account 
 didn't go through says why there, and the screen never calls a connection by its service's name.
 Its button says what's under way, "Halting…" or "Resuming…", even once the screen has turned to
 the other button.
+While it halts, the screen reads the halt again after half a second, a second, then every 2
+seconds, for about two minutes (`HALT_POLLS_MS`), and the home list is read beside it rather than
+before it, so Halted shows as soon as tafs cloud says so.
+
+**Tafs tapped again goes back to the list** (`tappedAgainGoesToStart`): from a taf's screen, the
+trial, the calendar or Coach, the bar's Tafs closes it, as a phone's tab bar does. Another tab is
+a place of its own.
 Resume's confirmation is bounded: unanswered after 10 seconds, the fingerprint check is
 cancelled, the prompt with it, so a late answer sends nothing, and the screen says "The fingerprint
 check timed out. Try again." (`RESUME_CONFIRM_MS`). Android can't tell whether its prompt is on
