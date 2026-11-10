@@ -715,7 +715,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1070,7 +1070,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1505,6 +1505,12 @@ final class AppModel: ObservableObject {
                 offerTimeZone(account)
             }
             show(list, exceptions)
+            // An account with no taf: Home lists the recipes, where tafs cloud says so, so they're
+            // read with each refresh that finds none, not only when Coach opens (docs/ios-app.md).
+            if tafs.isEmpty {
+                await loadRecipes()
+                guard gen == accountGeneration else { return }
+            }
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
             if let done {
@@ -5782,6 +5788,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupChat: String?
     /// The owner asked for a new conversation: the next message starts one.
     @Published private(set) var setupFresh = false
+    /// Words were handed to this conversation from Home (a recipe): on a phone where Coach
+    /// isn't started yet, the message box shows with them, and Send starts Coach.
+    @Published private(set) var setupHanded = false
     /// Setup's past chats, to reopen, newest first.
     @Published private(set) var setupChats: [TafsCloud.Chat] = []
     /// Setup's archived chats, under Archived (kiff/tafs#97).
@@ -5933,6 +5942,7 @@ final class AppModel: ObservableObject {
         setupImproving = nil
         setupChat = nil
         setupFresh = true
+        setupHanded = false
         setupThread = SetupThread()
         setupSent = []
         setupAwaiting = nil
@@ -6071,6 +6081,27 @@ final class AppModel: ObservableObject {
     func fillRecipe(_ recipe: TafsCloud.Recipes.Recipe) {
         setupDraft = recipe.say
     }
+
+    /// Whether Home with no taf lists the recipes: the account's list is read and empty, and
+    /// tafs cloud says to show them (`home.shown`). Home then leads with tafs cloud's line.
+    var homeListsRecipes: Bool {
+        mode == .kiff && listLoaded && !listUnread && tafs.isEmpty && recipes?.homeListsRecipes == true
+    }
+
+    /// A recipe handed to Coach from Home: a new conversation with the recipe's words in the
+    /// message box, for the person to edit and send, as a recipe tap in Coach does. Nothing is
+    /// sent, and nothing is asked of the person yet: on a phone where Coach isn't started, the
+    /// words show first and Send starts it (`submitSetup`).
+    func handRecipeToCoach(_ recipe: TafsCloud.Recipes.Recipe) {
+        guard mode == .kiff, mayUseCoach else { return }
+        newSetupChat()
+        setupDraft = recipe.say
+        setupHanded = true
+        coachOpen = true
+    }
+
+    /// Coach is started on this phone: it has its taf, and planque has this phone's key.
+    var setupStarted: Bool { setupTaf != nil && planqueReady }
 
     func loadSetupThread() async {
         guard mode == .kiff, let s = setupTaf else { return }
@@ -6288,6 +6319,15 @@ final class AppModel: ObservableObject {
     @discardableResult
     func submitSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Words first (docs/ios-app.md): on a phone where Coach isn't started, Send starts it,
+        // behind its one prompt, and then sends. A Start that's cancelled or fails sends
+        // nothing: the words stay with the composer.
+        if !setupStarted {
+            guard !text.isEmpty || !files.isEmpty else { return false }
+            // A phone that can't approve yet starts nothing and is asked nothing: the words stay.
+            guard !approvalBlocked else { return false }
+            guard await startSetup() else { return false }
+        }
         // A message with files goes as a message of its own (kiff/tafs#209): the composer sends it once Setup is done.
         if !files.isEmpty { return await deliverSetup(text, files: files) == .sent }
         guard !text.isEmpty else { return false }
