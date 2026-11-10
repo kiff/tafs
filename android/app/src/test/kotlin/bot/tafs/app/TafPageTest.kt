@@ -175,6 +175,18 @@ class TafPageTest {
     assertNull(m.state.value.lastError)
   }
 
+  @Test fun aStartedRunsWordsAreIgnored() = runTest {
+    reads()
+    // Words only mean "nothing new" when no run started; a started run speaks through its report.
+    transport.answer("POST /v1/tafs/taf_1/run", 200, """{"session":"s9","words":"Nothing new: list_tickets listed nothing since the last run."}""")
+    transport.answer("GET /v1/tafs/taf_1/runs", 200, """{"runs":[{"session":"s9","at":"2026-10-28T09:00:00Z"}]}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/s9", 200, """{"report":{"status":"running","text":""}}""")
+    val m = model()
+    assertEquals("s9", m.runNow("refunds-1"))
+    assertNull(m.state.value.runNowQuiet["refunds-1"])
+    assertNull(m.state.value.lastError)
+  }
+
   @Test fun aRunNowKiffAgentsRefusedSaysWhyInTafsCloudsWords() = runTest {
     reads()
     transport.answer("POST /v1/tafs/taf_1/run", 409, """{"error":"refused","code":"ai_fair_use","words":"Your tafs have used this period's AI. It starts again on 1 Nov."}""")
