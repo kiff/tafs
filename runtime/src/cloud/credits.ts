@@ -297,10 +297,11 @@ export interface BalanceView {
     raise: { words: string; from_cents: number } | null;
     /**
      * What the app may offer this person in the store. `first_month` is the First month pack, offered
-     * only while Solo runs, among the packs: `{ready: true, words: null}`. `null`: not offered, as
-     * before a plan, where a pack can't be bought.
+     * only while Solo runs, among the packs: `{ready: true, words: null}`. `coach` says what Coach's
+     * help includes, for the app to show under the Solo offer. `null`: not offered, as before a plan,
+     * where a pack can't be bought.
      */
-    buy: { solo: boolean; packs: boolean; first_month: { ready: boolean; words: string | null } | null } | null;
+    buy: { solo: boolean; packs: boolean; first_month: { ready: boolean; words: string | null } | null; coach: string } | null;
     /**
      * Whether Plan & usage shows the Credits panel: false only with no plan and no run this period or
      * the last, the two periods the panel shows, as for an account just made.
@@ -353,7 +354,7 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en", ranLately = true)
   // packs: before a plan, a lone pack that can't be bought only reads as an upsell.
   const firstMonth = b.can_buy?.once === true && b.kind === "solo" && b.can_buy.packs === true ? { ready: true, words: null } : null;
   const buy = b.can_buy && (b.can_buy.solo || b.can_buy.packs)
-    ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true, first_month: firstMonth } : null;
+    ? { solo: b.can_buy.solo === true, packs: b.can_buy.packs === true, first_month: firstMonth, coach: w.cr_buy_coach } : null;
   let words: string, detail: string | null = null, warning: string | null = null, plan: string, home: string | null = null;
   switch (b.kind) {
     case "solo": {

@@ -8,6 +8,7 @@ const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities
 const NOW = new Date("2026-11-20T12:00:00Z");
 const NOV = { start: "2026-11-01T00:00:00Z", end: "2026-12-01T00:00:00Z" };
 const REFUNDS = "taf-3f9a1c0b7d2e4a6f8b91";
+const COACH = "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.";
 
 const balance = (over: Partial<KIFFBalance> = {}): KIFFBalance => ({
   kind: "solo", state: "ok", meter_pct: 40, included: 1000, used: 400, left: 600, packs_left: 0, over: 0,
@@ -38,7 +39,7 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ packs_left: 300, left: 900, over: 12 }))).toEqual({
       balance: { state: "ok", why: null, meter_pct: 40, words: "Solo · 900 credits left this period",
         detail: "300 credits of it in packs, which never expire · 12 credits used past your balance weren't charged",
-        warning: null, raise: null, buy: { solo: false, packs: true, first_month: null }, credits_panel: true },
+        warning: null, raise: null, buy: { solo: false, packs: true, first_month: null, coach: COACH }, credits_panel: true },
       plan_line: "Solo · 900 credits left", plan_tone: "ok", home_line: null,
     });
   });
@@ -90,7 +91,7 @@ describe("the balance, in words", () => {
     expect(balanceView(balance({ kind: "unbounded", meter_pct: null, used: 0, billed_by: "" })).balance.words).toBe("No limit · no credits used yet this period");
     expect(balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false } }))).toEqual({
       balance: { state: "waiting", why: "no_plan", meter_pct: null, words: "No plan", detail: null, warning: "Choose a plan to start your tafs.",
-        raise: null, buy: { solo: true, packs: false, first_month: null }, credits_panel: true },
+        raise: null, buy: { solo: true, packs: false, first_month: null, coach: COACH }, credits_panel: true },
       plan_line: "No plan · choose one to start", plan_tone: "waiting", home_line: "Choose a plan to start your tafs.",
     });
   });
@@ -99,19 +100,19 @@ describe("the balance, in words", () => {
   it("offers the First month pack only while Solo runs, among the packs, never before a plan", () => {
     // No plan: not offered, since it can't be bought before Solo.
     const noPlan = balanceView(balance({ kind: "none", state: "waiting", why: "no_plan", meter_pct: null, can_buy: { solo: true, packs: false, once: true } }));
-    expect(noPlan.balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    expect(noPlan.balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
     // Solo runs: it can be bought, and needs no words.
     expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: true } })).balance.buy)
-      .toEqual({ solo: false, packs: true, first_month: { ready: true, words: null } });
+      .toEqual({ solo: false, packs: true, first_month: { ready: true, words: null }, coach: COACH });
     // Bought, or a KIFF from before the pack: not offered.
-    expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: false } })).balance.buy).toEqual({ solo: false, packs: true, first_month: null });
-    expect(balanceView(balance({ can_buy: { solo: true, packs: false } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    expect(balanceView(balance({ can_buy: { solo: false, packs: true, once: false } })).balance.buy).toEqual({ solo: false, packs: true, first_month: null, coach: COACH });
+    expect(balanceView(balance({ can_buy: { solo: true, packs: false } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
     // Someone who may buy nothing is offered nothing, whatever KIFF says of the pack.
     expect(balanceView(balance({ can_buy: { solo: false, packs: false, once: true } })).balance.buy).toBeNull();
     // Never alone: Solo running with no packs on offer, or another plan, offers none.
-    expect(balanceView(balance({ can_buy: { solo: true, packs: false, once: true } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    expect(balanceView(balance({ can_buy: { solo: true, packs: false, once: true } })).balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
     expect(balanceView(balance({ kind: "company", seats: 4, can_buy: { solo: true, packs: false, once: true } })).balance.buy)
-      .toEqual({ solo: true, packs: false, first_month: null });
+      .toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
   });
 
   // The Credits panel shows this period and the last: with no plan and no run in either, it has
@@ -130,6 +131,16 @@ describe("the balance, in words", () => {
     expect(waitingWords({ ...balance(), why: "no_plan" })).toBe("Choose a plan to start your tafs.");
     expect(waitingWords({ ...balance({ can_buy: { solo: false, packs: false } }), why: "credits_used_up" }))
       .toBe("Your tafs are waiting: this period's credits and your packs are used. They go on when the period starts again on 1 Dec.");
+  });
+
+  it("says what Coach's help includes with every store offer, in all 8 languages, and nothing without one", () => {
+    for (const lang of ["en", "de", "es", "fr", "it", "nl", "pl", "pt"] as const) {
+      const coach = balanceView(balance({ can_buy: { solo: true, packs: false } }), lang).balance.buy?.coach ?? "";
+      expect(coach, lang).toContain("4");
+      expect(coach, lang).toContain("Coach");
+      if (lang !== "en") expect(coach, lang).not.toBe(COACH);
+    }
+    expect(balanceView(balance({ can_buy: { solo: false, packs: false } })).balance.buy).toBeNull();
   });
 });
 
@@ -195,7 +206,7 @@ describe("GET /v1/usage/balance", () => {
     const asked: string[] = [];
     const r = await call(world(kiff({ balance: none, asked })), "/v1/usage/balance");
     expect(r.status).toBe(200);
-    expect((r.body as { balance: { buy: unknown } }).balance.buy).toEqual({ solo: true, packs: false, first_month: null });
+    expect((r.body as { balance: { buy: unknown } }).balance.buy).toEqual({ solo: true, packs: false, first_month: null, coach: COACH });
     expect((r.body as { balance: { credits_panel: boolean } }).balance.credits_panel).toBe(false);
     expect(asked).toContain("/v1/me/usage/credits?period=previous");
   });

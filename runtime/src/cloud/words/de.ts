@@ -134,6 +134,7 @@ export const de: Words = {
   cr_no_plan_line: "Kein Tarif · wähle einen, um zu starten",
   cr_w_again: (day) => `sie arbeiten weiter, wenn der Zeitraum am ${day} neu beginnt`,
   cr_w_no_plan: "Wähle einen Tarif, um deine tafs zu starten.",
+  cr_buy_coach: "Coach ist inklusive: genug, um etwa 4 neue Aufgaben im Monat einzurichten. Darüber hinaus nutzt die Hilfe von Coach deine Credits.",
   cr_w_limit_raise: (again) => `Deine tafs warten: das Ausgabenlimit ist erreicht. Erhöhe es, damit sie weiterarbeiten, oder ${again}.`,
   cr_w_limit_ceiling: (again) => `Deine tafs warten: das Ausgabenlimit ist erreicht und lässt sich in der App nicht weiter erhöhen. Wende dich an KIFF, oder ${again}.`,
   cr_w_limit_admin: "Deine tafs warten: das Ausgabenlimit ist erreicht. Ein Admin dieses Kontos kann es erhöhen.",

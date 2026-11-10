@@ -340,7 +340,7 @@ the spend limit, which the samples here leave out:
   change it.
 - `raise` is `{words, from_cents}` only for someone who may raise the spend limit (Company,
   `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back.
-- `buy` is `null`, or `{solo, packs, first_month}`: what the app may offer this person
+- `buy` is `null`, or `{solo, packs, first_month, coach}`: what the app may offer this person
   (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
   while Solo runs. The products and their store ids come from KIFF's usage read (`store`).
   - `first_month` is the First month pack, which an account buys once. It's offered only while
@@ -349,6 +349,9 @@ the spend limit, which the samples here leave out:
     once bought, or when KIFF lists none. Its row is the entry of KIFF's `store.packs[]` marked
     `once`, which KIFF drops once the account has bought it. (`ready` false with `words` came
     from tafs cloud before 10 Nov 2026; apps still read it as before.)
+  - `coach` says what Coach's help includes, in the person's language, for the app to show under
+    the Solo offer: "Coach is included: enough to set up about 4 new jobs a month. Past that,
+    Coach's help uses your credits." It's the same sentence kiff.dev/tafs and /pricing say.
 - `credits_panel` is whether Plan & usage shows the Credits panel. It's false only with no plan
   and no run this period or the last, the two periods the panel shows: an account just made has
   nothing there. If last period can't be read, it's true. An app that predates the flag shows
