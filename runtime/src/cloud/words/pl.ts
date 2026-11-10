@@ -133,6 +133,7 @@ export const pl: Words = {
   push_refund_title: "Zwrot",
   push_refund_failed: (taf) => `Zwrot wysłany przez ${taf} nie powiódł się u operatora płatności. Jego zapas na Card wrócił.`,
   push_refunded_twice: (taf) => `Płatność zwrócona przez ${taf} została zwrócona także poza KIFF. Sprawdź ją przed kolejnym zwrotem.`,
+  push_refund_after_no: (taf) => `Zwrot wysłany przez ${taf}, który według Twojej odpowiedzi się nie odbył, jednak przeszedł u operatora płatności. Jego zapas na Card jest znowu zajęty. Sprawdź, czy ta prośba nie dostała dwóch zwrotów.`,
   push_raise_title: "Prośba o podniesienie limitu",
   push_raise_body: "Ktoś na Twoim koncie prosi o podniesienie limitu wydatków. Otwórz Plan i wykorzystanie, aby odpowiedzieć.",
   push_pack_title: "Prośba o pakiet",
