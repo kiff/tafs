@@ -14,6 +14,7 @@ import java.time.Instant
 import java.util.Base64
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -103,6 +104,80 @@ class SignInTest {
     transport.answer("POST /v1/auth/device/start", 200, """{"device_code":"dc_1","user_code":"X","verification_uri":"u","verification_uri_complete":"uc","expires_in":600,"interval":5}""")
     m.startSignIn()
     assertEquals(before, m.state.value)
+  }
+
+  // MARK: A sign-in under way
+
+  private val started = """{"device_code":"dc_1","user_code":"ABCD-1234","verification_uri":"u","verification_uri_complete":"uc","expires_in":600,"interval":5}"""
+  private val startedAgain = """{"device_code":"dc_2","user_code":"WXYZ-9876","verification_uri":"u","verification_uri_complete":"uc2","expires_in":600,"interval":5}"""
+
+  @Test fun aScreenRecreatedWhileThePersonApprovesGoesOnWithTheSameCode() = runTest {
+    transport.answer("POST /v1/auth/device/start", 200, started)
+    transport.answer("POST /v1/auth/device/start", 200, startedAgain)
+    val m = model()
+    assertEquals("ABCD-1234", m.startSignIn().userCode)
+    // The sign-in sheet comes back open after Android recreated it: same code, no new one asked of KIFF.
+    assertEquals("ABCD-1234", m.startSignIn().userCode)
+    assertEquals(1, transport.requestsTo("POST /v1/auth/device/start").size)
+  }
+
+  @Test fun anAppRestartedWhileThePersonApprovesGoesOnWithTheSameCode() = runTest {
+    transport.answer("POST /v1/auth/device/start", 200, started)
+    transport.answer("POST /v1/auth/device/start", 200, startedAgain)
+    model().startSignIn()
+    advanceTimeBy(120_000)
+    // A new process: only the phone's secrets are left.
+    val restarted = model()
+    assertEquals("dc_1", restarted.startSignIn().deviceCode)
+    assertEquals(1, transport.requestsTo("POST /v1/auth/device/start").size)
+    // And it polls that code, up to the time the first one had left.
+    approved()
+    restarted.finishSignIn(restarted.startSignIn())
+    assertEquals(Mode.kiff, restarted.state.value.mode)
+    assertTrue(String(transport.requestsTo("POST /v1/auth/device/token").single().body!!).contains("dc_1"))
+    assertNull("done, so forgotten", secrets.load(AppModel.PENDING_SIGN_IN))
+  }
+
+  @Test fun tryAgainStartsOverWithANewCode() = runTest {
+    transport.answer("POST /v1/auth/device/start", 200, started)
+    transport.answer("POST /v1/auth/device/start", 200, startedAgain)
+    val m = model()
+    m.startSignIn()
+    assertEquals("WXYZ-9876", m.startSignIn(fresh = true).userCode)
+    assertEquals("WXYZ-9876", m.startSignIn().userCode)
+  }
+
+  @Test fun anExpiredCodeIsNeverUsedAgain() = runTest {
+    transport.answer("POST /v1/auth/device/start", 200, started)
+    transport.answer("POST /v1/auth/device/start", 200, startedAgain)
+    val m = model()
+    m.startSignIn()
+    advanceTimeBy(600_000)
+    assertEquals("WXYZ-9876", m.startSignIn().userCode)
+  }
+
+  @Test fun closingTheSignInForgetsItsCode() = runTest {
+    transport.answer("POST /v1/auth/device/start", 200, started)
+    transport.answer("POST /v1/auth/device/start", 200, startedAgain)
+    val m = model()
+    m.startSignIn()
+    m.endSignIn()
+    assertNull(secrets.load(AppModel.PENDING_SIGN_IN))
+    assertEquals("WXYZ-9876", m.startSignIn().userCode)
+  }
+
+  @Test fun aPollStoppedWithTheScreenKeepsTheCodeAndARefusalForgetsIt() = runTest {
+    transport.answer("POST /v1/auth/device/start", 200, started)
+    val m = model()
+    val s = m.startSignIn()
+    transport.answer("POST /v1/auth/device/token", 400, """{"error":"authorization_pending"}""")
+    val polling = launch { m.finishSignIn(s) }
+    advanceTimeBy(6_000)
+    polling.cancel()
+    assertNotNull("the screen went away; the sign-in didn't end", secrets.load(AppModel.PENDING_SIGN_IN))
+    transport.answer("POST /v1/auth/device/token", 400, """{"error":"access_denied"}""")
+    try { m.finishSignIn(m.startSignIn()); fail() } catch (e: KiffError.Server) { assertEquals("access_denied", e.message) }
+    assertNull(secrets.load(AppModel.PENDING_SIGN_IN))
   }
 
   // MARK: Finishing

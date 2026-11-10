@@ -5,6 +5,64 @@ seven other languages tafs speaks ([languages.md](languages.md)). Play takes up 
 per language. The same rules as [store-listing.md](store-listing.md): the glossary's words, the
 same claims in every language, nothing stronger, and only what a person can see on screen.
 
+## Android 41
+
+**English (en-US):**
+
+```
+• The First month pack, 7,000 credits that never expire, shows under Solo. It can be bought once, once Solo starts.
+• A sign-in closed before it's finished no longer leaves its approval waiting: the card lets go and can be tried again.
+```
+
+**German (de-DE):**
+
+```
+• Das Erster-Monat-Paket, 7.000 Credits, die nie verfallen, erscheint unter Solo. Es lässt sich einmal kaufen, sobald Solo läuft.
+• Eine Anmeldung, die vor dem Abschluss geschlossen wird, lässt die Freigabe nicht mehr warten: die Karte gibt frei und kann erneut versucht werden.
+```
+
+**French (fr-FR):**
+
+```
+• Le pack Premier mois, 7 000 crédits qui n'expirent jamais, s'affiche sous Solo. Il s'achète une fois, dès que Solo a commencé.
+• Une connexion fermée avant la fin ne laisse plus son approbation en attente : la carte se libère et peut être réessayée.
+```
+
+**Spanish (es-ES):**
+
+```
+• El paquete Primer mes, 7.000 créditos que nunca caducan, aparece bajo Solo. Se compra una vez, en cuanto Solo empieza.
+• Un inicio de sesión cerrado antes de terminar ya no deja su aprobación esperando: la tarjeta se libera y puede intentarse de nuevo.
+```
+
+**Italian (it-IT):**
+
+```
+• Il pacchetto Primo mese, 7.000 crediti che non scadono mai, compare sotto Solo. Si acquista una volta, appena Solo è attivo.
+• Un accesso chiuso prima di finire non lascia più in attesa la sua approvazione: la scheda si libera e si può riprovare.
+```
+
+**Portuguese (pt-PT):**
+
+```
+• O pacote Primeiro mês, 7000 créditos que nunca expiram, aparece abaixo do Solo. Compra-se uma vez, assim que o Solo começa.
+• Um início de sessão fechado antes de terminar já não deixa a aprovação à espera: o cartão liberta-se e pode tentar-se de novo.
+```
+
+**Dutch (nl-NL):**
+
+```
+• Het Eerste-maandpakket, 7.000 credits die nooit verlopen, staat onder Solo. Je koopt het één keer, zodra Solo loopt.
+• Een aanmelding die je sluit voordat ze klaar is, laat de goedkeuring niet meer wachten: de kaart laat los en je kunt het opnieuw proberen.
+```
+
+**Polish (pl-PL):**
+
+```
+• Pakiet Pierwszy miesiąc, 7000 kredytów, które nigdy nie wygasają, widać pod Solo. Można go kupić raz, gdy Solo już działa.
+• Logowanie zamknięte przed końcem nie zostawia już zatwierdzenia w oczekiwaniu: karta zwalnia się i można spróbować ponownie.
+```
+
 ## Android 40
 
 **English (en-US):**

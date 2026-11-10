@@ -482,7 +482,11 @@ sample, or switching account, closes what the last account had open (`accountSho
 `AppModel` cache pages and first-page ETags per taf, filter and app selection.
 The cloud defines outcomes, display names, limits, step mappings and counts.
 `TafPresentationViews` draws the ring, app sheets, Workflow, memory summary,
-Activity and recent runs. A list asks for its next page whenever it is at its end with a cursor
+Activity and recent runs. An app's sheet shows tafs cloud's words for its connection
+(`statusWords`, "Connected"), and planque's state is read on its own. So the taf's Setup is read
+again each time an app's sheet opens, and whenever planque's state for one of the taf's
+connections changes (`ConnectionWords.setupKey`): a sign-out at the vendor, then a new sign-in,
+each show without reopening anything. The Setup on screen stays while it's read. A list asks for its next page whenever it is at its end with a cursor
 and no load running, including when it got there while its first page was refreshing. Under the
 last page it shows tafs cloud's `end_words` ("Nothing older in this view").
 `AvatarDoorRim` animates source metadata and respects

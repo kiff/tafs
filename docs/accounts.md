@@ -23,6 +23,11 @@ Sign in with KIFF's device flow (`AppModel.startSignIn`, `finishSignIn`):
    It keeps polling through a dropped connection or a KIFF error, since iOS closes the
    app's sockets while the person is in the browser, and asks again at once when the app
    comes back.
+   - **On Android, the code is kept until the sign-in ends** (approved, refused, expired, or
+     closed by the person), in the model and with the phone's secrets. Android may recreate the
+     screen, or restart the app, while the person approves in the browser, and the sign-in then
+     goes on with the same code; a new one would never be approved. "Try again" starts over with a
+     new code.
 4. The session is kept in the Keychain. It names the account and holds the phone's key,
    so KIFF accepts the phone's answers only with that key's signature. The approval key
    is registered next ([approvals.md](approvals.md#how-an-answer-is-signed)).

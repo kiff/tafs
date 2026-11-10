@@ -19,6 +19,13 @@ object ConnectionWords {
     return Words.Connect.lastFailed(last.title, last.detail)
   }
 
+  /**
+   * What the taf's setup read follows: each of its connections' id and planque's state. The setup is read again when it changes,
+   * so tafs cloud's words for a connection ("Connected") never stay behind planque's (signed out, signed in again).
+   */
+  fun setupKey(tafId: String, grants: List<Grant>): List<String> =
+    grants.filter { it.request.agent == tafId }.map { "${it.id}:${it.status}:${it.signedIn}" }
+
   /** Ends a grant whose sign-in never came back (it's never connected); the owner connects it again afterwards. */
   val CANCEL_SIGN_IN get() = Words.Common.cancel
   fun cancelTitle(g: Grant): String = Words.Connect.CancelSignIn.title(g.vendor)

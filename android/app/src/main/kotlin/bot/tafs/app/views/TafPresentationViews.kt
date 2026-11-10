@@ -45,6 +45,8 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
   val source = state.tafSetups[taf.id]
   val error = state.tafSetupErrors[taf.id]
   var chosen by rememberSaveable(taf.id) { mutableStateOf<String?>(null) }
+  // A connection's sheet opens on tafs cloud's words as they are now: its setup is read again each time one opens.
+  LaunchedEffect(chosen) { if (chosen != null) actions.loadSetup(taf.id) }
   var showJob by remember { mutableStateOf(false) }
   var workflowOpen by rememberSaveable(taf.id) { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
