@@ -132,7 +132,7 @@ internal fun startsSummary(taf: Taf, knob: KnobWire?): List<String> {
   val starts = knob?.wakes.orEmpty().filter { it.kind != "add_door" && it.kind != "run_now" }.map { it.words.ifBlank { it.label } }
   if (starts.isNotEmpty()) return starts
   if (taf.worksFromChat) return listOf(SetupWords.NO_START)
-  return listOfNotNull(if (taf.paused) Words.Taf.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule)
+  return listOfNotNull(if (taf.paused) Words.Taf.State.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule)
 }
 
 /** Where its results go now: the places on, by their titles. */

@@ -37,7 +37,7 @@ tafs is where a business hands jobs to AI agents, called tafs, and gives each on
 Inside its Card, a taf acts and leaves a receipt. Outside it, the taf waits for your answer on your phone. Revoke the Card and no new action goes through.
 
 WHY YOU CAN HAND IT THE WORK
-• Limits it can't talk its way past: every action is checked against its Card by KIFF, outside the AI, before it reaches your tool. No prompt changes a limit.
+• Limits it can't talk its way past: every action is checked against its Card by KIFF, outside the AI, before it reaches your app. No prompt changes a limit.
 • Your sign-ins stay sealed: the taf never sees your passwords or tokens. KIFF's connection service and its sign-in provider hold them, never the phone.
 • Your fingerprint for what matters: routine work goes ahead within its limits. Anything past its Card is refused, or, if its Card says Ask, waits for you, approved with your fingerprint or face.
 • You decide what really happened: when an app can't confirm a payment went through, tafs asks you "Did this happen?" Nothing is counted as done on a guess.
@@ -50,7 +50,7 @@ JOBS A TAF CAN TAKE, FOR EXAMPLE
 • Chargebacks: answers card disputes with evidence.
 
 HOW IT WORKS
-• Coach: say the job in your own words. Coach connects your tools, drafts the taf and its Card, and you confirm.
+• Coach: say the job in your own words. Coach connects your apps, drafts the taf and its Card, and you confirm.
 • Needs you: when a taf wants to go past its Card, the call is held. Approve it once or refuse it, with your fingerprint or face unlock.
 • Chat: ask a taf what it did, or tell it what to do differently, and watch its work as it goes.
 • Record: everything your tafs did, newest first, with a receipt for each action that went through.

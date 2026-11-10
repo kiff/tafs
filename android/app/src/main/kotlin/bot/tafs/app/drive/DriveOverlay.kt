@@ -106,7 +106,7 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
       layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
     }
     val stopView = TextView(activity).apply {
-      text = "Stop"
+      text = bot.tafs.app.model.Words.Chat.stop
       setTextColor(accent)
       setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
       setPadding(dp(14), dp(6), dp(4), dp(6))

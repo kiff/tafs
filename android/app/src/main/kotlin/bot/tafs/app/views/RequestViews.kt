@@ -32,9 +32,9 @@ import bot.tafs.app.kiff.RequestStep
 
 /** A request's own words in the app; every line and time in it is tafs cloud's. */
 object RequestWords {
-  val WHAT_HAPPENED get() = Words.Work.Request.whatHappened
+  val WHAT_HAPPENED get() = Words.Receipt.whatHappened
   val TRY_REPLY_NOW get() = Words.Work.Request.tryReplyNow
-  val ASK_COACH get() = Words.Work.Request.askCoach
+  val ASK_COACH get() = Words.Coach.ask
 
   /** A step's mark, by its state. */
   fun mark(step: RequestStep): String = when (step.state) {

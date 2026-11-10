@@ -23,7 +23,7 @@ struct ExportChatsSection: View {
                         Text(Words.Export.preparing).foregroundColor(Theme.dim)
                     }
                 } else {
-                    Text(why == nil ? Words.Export.row : Words.Export.tryAgain)
+                    Text(why == nil ? Words.Export.row : Words.Common.tryAgain)
                 }
             }
             .disabled(preparing)

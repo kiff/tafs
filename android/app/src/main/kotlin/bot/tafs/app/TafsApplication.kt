@@ -27,6 +27,8 @@ class TafsApplication : Application() {
     super.onCreate()
     // The words, in the language Android resolved for tafs, before anything is shown (docs/languages.md).
     bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords(this))
+    // The lines that name this device say tablet on a large screen, as Android's own sw600dp does.
+    bot.tafs.app.model.ThisDevice.tablet = resources.configuration.smallestScreenWidthDp >= 600
   }
 
   val authenticator: BiometricAuthenticator by lazy { BiometricAuthenticator(this) }
@@ -82,5 +84,5 @@ class TafsApplication : Application() {
 
   /** What KIFF's device list calls this phone, so the owner can tell it from their other devices. */
   val deviceName: String
-    get() = "tafs on Android " + if (resources.configuration.smallestScreenWidthDp >= 600) "tablet" else "phone"
+    get() = bot.tafs.app.model.Words.Settings.Devices.thisDeviceName(device = "Android " + bot.tafs.app.model.ThisDevice.word)
 }

@@ -187,11 +187,9 @@ class PlayBillingStore(context: Context) : PlayStore {
 
     /** "P1M" → "month", as a price is said per period. */
     fun periodWords(iso: String): String = when (iso) {
-      "P1W" -> "week"
-      "P1M" -> "month"
-      "P3M" -> "3 months"
-      "P6M" -> "6 months"
-      "P1Y" -> "year"
+      "P1W" -> Words.Usage.week
+      "P1M" -> Words.Usage.month
+      "P1Y" -> Words.Usage.year
       else -> lengthWords(iso)
     }
 

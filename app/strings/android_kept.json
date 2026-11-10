@@ -1,0 +1,115 @@
+{
+  "TafsApplication.kt": {
+    "Android ": "the platform's name, in the device name KIFF lists"
+  },
+  "app/AppModel.kt": {
+    "#trial": "a link's fragment",
+    "#coach": "a link's fragment",
+    "tafs on Android": "a test's device name, replaced by the app's at start",
+    "Coach": "the draft's name at KIFF, data",
+    "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.": "told to Coach, which reads English",
+    "There's no connection with that id.": "told to Coach, which reads English",
+    "couldn't read what to approve: ${e.message}": "told to Coach, which reads English",
+    "${grant.vendor} is already connected; nothing new to approve": "told to Coach, which reads English",
+    "KIFF didn't issue the taf's Cards: ${e.message}": "told to Coach, which reads English",
+    "This connection is ${grant.status.replace('_', ' ')}": "told to Coach, which reads English",
+    "KIFF's words for this connection aren't read yet. Nothing was approved.": "told to Coach, which reads English",
+    "The connection came back ${approved.status} with no sign-in link. Nothing was connected.": "told to Coach, which reads English",
+    "The sign-in at ${grant.vendor} came back without its confirmation code. Nothing was connected.": "told to Coach, which reads English",
+    "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}": "told to Coach, which reads English",
+    "The sign-in was closed. Nothing was connected.": "told to Coach, which reads English",
+    "Not connected: ${e.message}": "told to Coach, which reads English",
+    "tafs cloud named no draft to confirm": "sent to tafs cloud as data: the card's why",
+    "tafs cloud named no connection to approve": "sent to tafs cloud as data: the card's why",
+    "the sign-in came back, but the connection is ${connected.status}": "sent to tafs cloud as data: the card's why",
+    "it didn't go through": "sent to tafs cloud as data: the card's why",
+    "signed in": "an answer sent to tafs cloud",
+    "Coach can't drive: ${ErrorWords.of(e)}": "the drive's diagnostics, never shown",
+    "another account or conversation": "a cancellation's reason, never shown",
+    "hold off": "the sample's keywords, never shown",
+    "carry on": "the sample's keywords, never shown"
+  },
+  "design/AvatarDoorRim.kt": {
+    "Door rim": "an animation's label, for tools",
+    "Along the rim": "an animation's label, for tools"
+  },
+  "drive/AndroidDriveHost.kt": {
+    "An approval is open: $approval": "the drive's lines, which only Coach reads",
+    "Secret field": "the drive's lines, which only Coach reads",
+    "android ${Build.VERSION.RELEASE}": "the drive's lines, which only Coach reads"
+  },
+  "drive/DriveInput.kt": {
+    "DriveConfirms": "a semantics key",
+    "DriveSecret": "a semantics key",
+    "DriveApproval": "a semantics key"
+  },
+  "drive/DriveOverlay.kt": {
+    "The drive's $what couldn't be shown: ${it.javaClass.simpleName} ${it.message.orEmpty()}": "the drive's diagnostics, never shown",
+    "tafs drive overlay": "a window's title, for the system"
+  },
+  "files/PhotoPrep.kt": {
+    "File": "a file's name when it has none, sent with it"
+  },
+  "kiff/Coach.kt": {
+    "Coach": "the setup's name when tafs cloud sends none, data"
+  },
+  "kiff/Jcs.kt": {
+    "not JSON: ": "an exception's message, for the logs",
+    "an integer beyond 2^53 - 1": "an exception's message, for the logs",
+    "not a finite number": "an exception's message, for the logs"
+  },
+  "kiff/ProfileWords.kt": {
+    "no words": "a check's reason, for the logs",
+    "words aren't $WORDS_V1": "a check's reason, for the logs",
+    "profile digest": "a check's reason, for the logs",
+    "words digest": "a check's reason, for the logs",
+    "no lines": "a check's reason, for the logs"
+  },
+  "kiff/SecretStore.kt": {
+    "AndroidKeyStore": "the key store's name"
+  },
+  "model/Attachments.kt": {
+    "Photo": "a photo's file name when it has none, sent with it"
+  },
+  "model/DoorWords.kt": {
+    "WhatsApp": "a product's name",
+    "You": "compared with a stored name, data"
+  },
+  "model/Models.kt": {
+    "Instant": "a serializer's name"
+  },
+  "model/Res.kt": {
+    "No words: the app installs its resources at start (Res.install)": "a programming error, never shown"
+  },
+  "model/TafTemplates.kt": {
+    "Return first": "the sample's templates, written as tafs cloud's",
+    "Pay half now": "the sample's templates, written as tafs cloud's",
+    "Run it tonight": "the sample's templates, written as tafs cloud's",
+    "DROP TABLE sessions_old": "the sample's templates, written as tafs cloud's"
+  },
+  "signing/KeystoreKeys.kt": {
+    "signing key: yes; approval key: ${if (store.containsAlias(APPROVAL_ALIAS)) \"yes\" else \"no (${approval.exceptionOrNull()?.javaClass?.simpleName})\"}": "diagnostics, for the logs",
+    "TafsKeys": "a key's alias",
+    "AndroidKeyStore": "the key store's name"
+  },
+  "views/AttachViews.kt": {
+    "Photo ${n + 1}": "a photo's file name, sent with it",
+    "Photo": "a photo's file name, sent with it"
+  },
+  "views/CoachViews.kt": {
+    "not now": "an answer sent to tafs cloud"
+  },
+  "views/ReceiptSheet.kt": {
+    "receipt ${entry.receipt?.traceId.orEmpty()}": "a receipt's technical line",
+    "signer ${it.take(6)}…${it.takeLast(4)}": "a receipt's technical line",
+    "${i + 1}  ${step.words} · ${step.at?.let(::seconds).orEmpty()}\\n   hash ${step.hash}": "a receipt's technical line",
+    "✎  trace ${entry.receipt?.traceId.orEmpty()} · secp256k1 + keccak256\\n   sig 0x${sig.take(4)}…${sig.takeLast(4)}": "a receipt's technical line",
+    "KIFF receipt": "the clipboard's label, for the system"
+  },
+  "views/SignInView.kt": {
+    "KIFF sign-in link": "the clipboard's label, for the system"
+  },
+  "views/SiteSignInViews.kt": {
+    "SetJavaScriptEnabled": "a lint rule's name"
+  }
+}

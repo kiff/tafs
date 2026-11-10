@@ -318,14 +318,14 @@ class MappingTest {
   @Test fun aTafStateReadsInTheAppsWords() {
     assertEquals(TafState.working to "Next run " + bot.tafs.app.model.shortTime(Instant.parse("2026-10-28T10:00:00Z")), named("Refunds").let { it.state to it.now })
     assertEquals(TafState.paused to "Paused", named("Access").let { it.state to it.now })
-    assertEquals(TafState.waiting to "Waiting on you", named("Deploys").let { it.state to it.now })
+    assertEquals(TafState.waiting to "Waiting for you", named("Deploys").let { it.state to it.now })
     assertEquals(TafState.halted to "Halted · resume it from Halt", named("Billing").let { it.state to it.now })
     // A taf with no schedule isn't at work until it's told something in its chat.
     assertEquals(TafState.idle to "Works from its chat", named("Chatty").let { it.state to it.now })
     assertEquals(TafState.idle to "Acting under KIFF", named("Idle").let { it.state to it.now })
     assertEquals(TafState.revoked to "Card not active", named("Stopped").let { it.state to it.now })
     assertEquals(TafState.working to "Running", named("Running").let { it.state to it.now })
-    // A run waiting for an app's event is the app's, in tafs cloud's words; never "Waiting on you", nor its next run.
+    // A run waiting for an app's event is the app's, in tafs cloud's words; never "Waiting for you", nor its next run.
     assertEquals(TafState.idle to "The desk answers when the customer replies.", named("Desk").let { it.state to it.now })
     // A state this app doesn't know reads as tafs cloud's line for its work, never as a Card stopped.
     assertEquals(TafState.idle to "Last done at 09:40", named("Later").let { it.state to it.now })
@@ -414,13 +414,13 @@ class MappingTest {
   @Test fun aCallTheVendorRefusedStillCountsAndSaysSo() {
     val refused = line("p3")
     assertEquals(RecordEntry.Kind.notDone, refused.kind)
-    assertEquals("The tool refused it. No money moved, but it still counts against today's total.", refused.detail)
+    assertEquals("The app refused it. No money moved, but it still counts against today's total.", refused.detail)
     assertEquals(true, refused.refusedByTool)
   }
 
   @Test fun theToolsOtherAnswersAreKeptApart() {
     assertEquals(RecordEntry.Kind.notDone, line("p4").kind)
-    assertTrue(line("p4").detail.endsWith("nothing reached the tool: vendor down"))
+    assertTrue(line("p4").detail.endsWith("nothing reached the app: vendor down"))
     assertEquals(RecordEntry.Kind.sending, line("p5").kind)
     assertEquals(RecordEntry.Kind.unknown, line("p6").kind)
     // No outcome at all is never read as done.

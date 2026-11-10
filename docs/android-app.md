@@ -196,6 +196,21 @@ The one signature over words, a people change (`tafs.people.v1|…`), is a finge
 sent. Lines only Coach reads (the screen's description in a drive) stay English. The terms and the voice for each language
 are in [languages.md](languages.md).
 
+No English is left in the app's code outside that list: `app/strings/android_literals.py` scans the Kotlin literal by
+literal, as `ios_literals.py` does for iOS, so words beside a comparison or a `when` branch are still caught. What stays is
+kept by a rule there or by name in `app/strings/android_kept.json`, with the reason, and the strings tests fail on anything
+else. The Strings workflow runs on every change to `android/app/src/main/kotlin`.
+
+A line that names the device says what it is (`{device}`): "phone", or "tablet" where the screen's smallest width is 600 dp
+or more, as Android's `sw600dp` does (`ThisDevice`, set in `TafsApplication`). Both words are lines of their own
+(`device.phone`, `device.tablet`), so each language says them. The device name KIFF lists for the phone's key reads "tafs
+on Android phone" (`settings.devices.this_device_name`).
+
+The chat shows the owner's own answer line as it is by a flag on the line (`RecordEntry.byYou`, set where the phone
+records the answer and kept when KIFF's outcome matches), never by matching its words, so it holds in every language.
+KIFF's line for a held call reads "approved by you, done" only when KIFF says the reader answered it (`answer.you`), and
+"approved, done" otherwise.
+
 ## Live updates
 
 A silent push from tafs cloud names what changed on the account (`kind: background` with
@@ -321,7 +336,7 @@ happened, each step marked done, failed, not made, waiting or next, every line a
 cloud wrote it. A run waiting for an app's event (the slow-tools design) says what it waits for in
 the connection's words, tafs cloud's `waiting_for`; the step tafs cloud marks `waits_on: "app"` is
 drawn as not needing the owner, never in the amber of a hold (`RequestWords.waitsOnApp`). On the
-home list, a taf whose work is `waiting_on_app` reads as its work's line, not "Waiting on you" nor
+home list, a taf whose work is `waiting_on_app` reads as its work's line, not "Waiting for you" nor
 its next run, and a home state the app doesn't know reads as that line too (`KiffMapping`).
 **Try the reply now** sends a reply given up on again, for whoever manages the
 taf, and **Ask Coach** opens a conversation about the taf.

@@ -93,8 +93,8 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
       onDismissRequest = { cancelling = null },
       title = { Text(ConnectionWords.cancelTitle(grant)) },
       text = { Text(ConnectionWords.cancelBody(grant)) },
-      confirmButton = { TextButton({ cancelling = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text(Words.Connect.cancelSignInConfirm, color = Theme.no) } },
-      dismissButton = { TextButton({ cancelling = null }) { Text(Words.Connect.keepWaiting, color = Theme.soft) } },
+      confirmButton = { TextButton({ cancelling = null; scope.launch { actions.disconnect(grant.id) } }, modifier = Modifier.confirms()) { Text(Words.Connect.CancelSignIn.button, color = Theme.no) } },
+      dismissButton = { TextButton({ cancelling = null }) { Text(Words.Connect.CancelSignIn.keepWaiting, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
   }

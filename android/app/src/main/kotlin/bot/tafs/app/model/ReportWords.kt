@@ -26,8 +26,8 @@ sealed interface ReportResult {
 
 /** Under a finished answer from Coach or a taf: Copy, and More actions (which holds Report this answer). */
 object AnswerWords {
-  val COPY get() = Words.Chat.Answer.copy
-  val COPIED get() = Words.Chat.Answer.copied
+  val COPY get() = Words.Common.copy
+  val COPIED get() = Words.Common.copied
   /** What TalkBack says Copy does. */
   val COPY_LABEL get() = Words.Chat.Answer.copyLabel
   val MORE get() = Words.Chat.Answer.more
