@@ -72,7 +72,7 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
   var folded by remember { mutableStateOf(false) }
   var toolsOpen by remember { mutableStateOf(false) }
   // With the keyboard open, what sits above the conversation steps aside: the box keeps its room.
-  val keyboard = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0
+  val keyboard = LocalKeyboardOpen.current ?: (androidx.compose.foundation.layout.WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current) > 0)
   val folding = remember {
     object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
       override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
@@ -113,6 +113,9 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
     if (state.coachToolsAsked) chats.notNowTools()
   }
 }
+
+/** Whether the keyboard is open, where a screen test says so; else read from the keyboard's own inset. */
+val LocalKeyboardOpen = androidx.compose.runtime.compositionLocalOf<Boolean?> { null }
 
 /** Coach's header, one row: back, its name, and a menu with a new conversation and the earlier ones. */
 @Composable

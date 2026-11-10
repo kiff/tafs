@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
@@ -116,13 +117,8 @@ class CoachToolsStepTest {
     rule.onNodeWithText("Coach has no tools yet · Give them").assertIsDisplayed()
   }
 
-  @Test fun withTheKeyboardOpenTheBoxShowsAndItsButtonsKeepTheirSize() {
-    rule.setShown {
-      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(state(asked = false), actions, loadCoach = {}, onBack = {}, chats = CoachChatActions()) } }
-    }
-    rule.onNode(hasSetTextAction()).performClick()
-    // The keyboard takes a moment to rise.
-    rule.waitUntil(5_000) { rule.onAllNodesWithText(Words.Coach.Tools.title).fetchSemanticsNodes().isEmpty() }
+  /** The box and its buttons, in what's left of a phone once the keyboard is up. */
+  private fun assertTheBoxKeepsItsRoom() {
     val send = rule.onNodeWithContentDescription(Words.Common.send).assertIsDisplayed().fetchSemanticsNode()
     val box = rule.onNode(hasSetTextAction()).assertIsDisplayed().fetchSemanticsNode()
     with(rule.density) {
@@ -130,5 +126,31 @@ class CoachToolsStepTest {
       assertEquals(40.dp.roundToPx(), send.size.height)
     }
     assertTrue("the box shows", box.size.height > 0)
+  }
+
+  @Test fun withTheKeyboardOpenTheBoxKeepsItsRoomAndItsButtonsTheirSize() {
+    // What's left above a keyboard on a small phone, the keyboard said open: no emulator needs to raise one.
+    rule.setShown {
+      TafsTheme {
+        CompositionLocalProvider(LocalBiometry provides "your fingerprint", bot.tafs.app.views.LocalKeyboardOpen provides true) {
+          androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.height(320.dp)) {
+            CoachScreen(state(asked = false), actions, loadCoach = {}, onBack = {}, chats = CoachChatActions())
+          }
+        }
+      }
+    }
+    rule.onAllNodesWithText(Words.Coach.Tools.title).assertCountEquals(0)
+    assertTheBoxKeepsItsRoom()
+  }
+
+  @Test fun withTheRealKeyboardUpTheBoxShows() {
+    rule.setShown {
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(state(asked = false), actions, loadCoach = {}, onBack = {}, chats = CoachChatActions()) } }
+    }
+    rule.onNode(hasSetTextAction()).performClick()
+    // Only where this device raises a keyboard: an emulator with a hardware one shows none, and the test above stands in.
+    val up = runCatching { rule.waitUntil(5_000) { rule.onAllNodesWithText(Words.Coach.Tools.title).fetchSemanticsNodes().isEmpty() } }.isSuccess
+    org.junit.Assume.assumeTrue("no soft keyboard on this device", up)
+    assertTheBoxKeepsItsRoom()
   }
 }
