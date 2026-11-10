@@ -279,8 +279,10 @@ error the screen shows only for itself carries where it came from (`AppModel.fai
 tests read a `Words` accessor in the sources as the English it says (`DriveTests.readable`), so a confirming
 control is still found by its words.
 
-Lines iOS writes that Android has no key for still sit in the code, in English; they move with the next iOS
-strings PR, before any language ships (`languages.json`'s `shipped` is English only).
+A line that differs by platform keeps a key of its own: the device's name (`{device}`, iPhone or iPad), Face ID and
+Touch ID, the App Store and Apple ID, iOS's Settings paths. A few lines stay in code on purpose: the words the app
+reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's Terms line, whose markdown link
+`Text` renders only from a literal.
 
 ## Conventions
 
