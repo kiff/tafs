@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiFor, base, bound, periodName, planOf, type Plan, refusedWords, view } from "../src/cloud/aiuse.js";
+import { periodName, planOf, refusedWords, view } from "../src/cloud/aiuse.js";
 import { handle, handleStream, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -7,54 +7,20 @@ const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities
 const RAE = "taf-aaaa0000000000000000";
 const START = "2026-10-20T09:12:00Z";
 const PERIOD = "2026-10-20t09.12.00z";
-const SOLO: Plan = { plan: "solo", seats: 1, start: START, goOns: 0 };
-/** Half of €8.99 at 1.08 $/€, in micro US dollars. */
+/** A period's AI spend, in micro US dollars: whatever it is, no chat is bounded by it now. */
 const HALF = 4_854_600;
 const NOW = new Date("2026-10-22T12:00:00Z");
 
-describe("the bound", () => {
-  it("is half the plan's monthly price, in micro dollars at the fixed rate", () => {
-    expect(base(SOLO)).toBe(HALF);
-    expect(base({ ...SOLO, plan: "trial" })).toBe(HALF);
-    // Team grows with its seats; the trial and Solo are one seat whatever KIFF says.
-    expect(base({ ...SOLO, plan: "team", seats: 3 })).toBe(3 * HALF);
-    expect(base({ ...SOLO, seats: 4 })).toBe(HALF);
-  });
-
-  it("asks again at each further full bound after a go on", () => {
-    expect(bound({ ...SOLO, goOns: 1 })).toBe(2 * HALF);
-    expect(bound({ ...SOLO, goOns: 2 })).toBe(3 * HALF);
-  });
-
-  it("is none on the internal plan and on a plan it has no price for", () => {
-    expect(bound({ ...SOLO, plan: "internal", seats: 0 })).toBe(0);
-    expect(bound({ ...SOLO, plan: "company", seats: 0 })).toBe(0);
-    expect(aiFor({ ...SOLO, plan: "internal", seats: 0 })).toEqual({ period: PERIOD, bound_micro_usd: 0 });
-  });
-
+describe("AI use since credits are the balance", () => {
   it("names the period as kiff/agents takes it", () => {
     expect(periodName(START)).toBe(PERIOD);
     expect(periodName("2026-10-20T09:12:00.5+02:00")).toMatch(/^[a-z0-9._-]+$/);
   });
 
-  it("shows the use as a share of the base, where the tafs ask, and when they're asking", () => {
-    expect(view(SOLO, HALF / 2)).toEqual({ used_pct: 50, asks_at_pct: 100, paused: false, can_go_on: false, starts_again: null,
-      words: "Your tafs used 50% of this period's AI. They ask you before going past 100%." });
-    expect(view({ ...SOLO, goOns: 1 }, HALF + 1)).toMatchObject({ used_pct: 100, asks_at_pct: 200, paused: false });
-    expect(view({ ...SOLO, plan: "internal" }, 10 * HALF)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false, starts_again: null, words: "Your plan sets no AI limit for your tafs." });
-    expect(view(undefined, 0)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false, starts_again: null, words: "Your plan sets no AI limit for your tafs." });
-  });
-
-  // kiff/tafs#185: while the tafs wait, the billing admin is told to go on; anyone else, that an
-  // admin can, and when the AI use starts again by itself. An admin is named by role, never email.
-  it("tells the billing admin to go on, and anyone else who can and when it starts again", () => {
-    const ending = { ...SOLO, end: "2026-10-31T23:30:00Z" };
-    expect(view(ending, HALF, true, "Europe/Madrid")).toEqual({ used_pct: 100, asks_at_pct: 100, paused: true, can_go_on: true, starts_again: "2026-10-31T23:30:00Z",
-      words: "Your tafs used 100% of this period's AI and are waiting for you. Go on, and they ask again at 200%. Otherwise it starts again on 1 Nov." });
-    expect(view(ending, HALF, false, "UTC")).toMatchObject({ paused: true, can_go_on: false,
-      words: "Your tafs used 100% of this period's AI and are waiting. An admin of this account can let them go on from Settings › AI use. Otherwise it starts again on 31 Oct." });
-    expect(view(SOLO, HALF, false).words).toContain("Otherwise it starts again with the next period.");
-    expect(view(SOLO, HALF, false).words).not.toMatch(/@/);
+  it("shows no bound, nothing used and never waiting", () => {
+    const none = { used_pct: null, asks_at_pct: null, paused: false, starts_again: null, words: "Your plan sets no AI limit for your tafs." };
+    expect(view()).toEqual({ ...none, can_go_on: false });
+    expect(view(true)).toEqual({ ...none, can_go_on: true });
   });
 });
 

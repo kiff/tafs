@@ -617,11 +617,22 @@ final class TafsCloud {
         try await send("DELETE", "/v1/tafs/\(escaped(id))")
     }
 
-    /// Runs the taf now. Returns the run's session.
-    func runNow(_ id: String) async throws -> String {
-        struct Response: Decodable { let session: String }
+    /// What Run now did: the run's session, or none when the taf's check started no run, with
+    /// tafs cloud's words for why (nothing new since the last run), in the person's language.
+    struct RunNow: Equatable {
+        let session: String?
+        let words: String?
+    }
+
+    /// Runs the taf now, by firing its schedule. A taf that checks first and finds nothing new
+    /// starts no run, which is no failure: the answer has no session, and tafs cloud's words
+    /// say why (docs/api.md). An older tafs cloud's bare `null` carries none.
+    func runNow(_ id: String) async throws -> RunNow {
+        struct Response: Decodable { let session: String?; let words: String? }
         let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/run", body: [String: String]())
-        return r.session
+        // The words are tafs cloud's, as they are; the app writes none of its own.
+        let words = r.session == nil ? r.words.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 } : nil
+        return RunNow(session: r.session, words: words)
     }
 
     func setPaused(_ id: String, _ paused: Bool) async throws -> CloudTaf {

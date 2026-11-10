@@ -229,6 +229,10 @@ struct TafDetailView: View {
                     }
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(inFlight)
+                    // Run now started no run: tafs cloud's words, as they are.
+                    if let words = model.runNowWords[cloud.id] {
+                        Text(words).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }

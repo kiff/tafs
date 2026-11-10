@@ -42,13 +42,15 @@ final class StoreKitLocalTests: XCTestCase {
         return purchases
     }
 
-    func testTheProductsAndSolosFreeTrial() async throws {
+    func testTheProductsAndSoloHasNoFreeTrial() async throws {
         let purchases = refusedByKIFF()
-        await purchases.load([solo, "bot.tafs.pack.pico", "bot.tafs.pack.vonk", rayo, "bot.tafs.pack.forte", "bot.tafs.pack.maxi"])
-        XCTAssertEqual(purchases.products.count, 6, "Solo and the five packs")
+        let credits = ["bot.tafs.credits.500", "bot.tafs.credits.1500", "bot.tafs.credits.5000"]
+        await purchases.load([solo, "bot.tafs.pack.pico", "bot.tafs.pack.vonk", rayo, "bot.tafs.pack.forte", "bot.tafs.pack.maxi"] + credits)
+        XCTAssertEqual(purchases.products.count, 9, "Solo, the three packs of credits and the five older packs")
         XCTAssertEqual(purchases.products[solo]?.subscription?.period, "month")
-        XCTAssertEqual(purchases.products[solo]?.subscription?.freeTrial, "1 week", "a new subscriber starts with the free week")
+        XCTAssertNil(purchases.products[solo]?.subscription?.freeTrial, "Solo has no free trial")
         XCTAssertNil(purchases.products[rayo]?.subscription, "a pack is bought once")
+        for id in credits { XCTAssertNil(purchases.products[id]?.subscription, "a pack of credits is bought once") }
     }
 
     /// A pack KIFF can't add yet: the app says so, and the transaction stays unfinished.
@@ -60,7 +62,7 @@ final class StoreKitLocalTests: XCTestCase {
         XCTAssertTrue(left.contains { $0.productID == rayo }, "kept to send again at the next launch")
     }
 
-    /// Solo with its free trial: the same, nothing finished until KIFF records it.
+    /// Solo: the same, nothing finished until KIFF records it.
     func testSoloKIFFCantVerifyStaysUnfinished() async throws {
         let purchases = refusedByKIFF()
         let outcome = await purchases.buy(solo, accountToken: UUID())
