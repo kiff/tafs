@@ -158,6 +158,8 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     expect(entryOf(DELIVERY_WORDS.coach("Rae", "Google Sheets · Refunds 2026", "the app didn't take it"))).toBe("delivery");
     expect(entryOf("[did this happen p_1] Refund a payment at Stripe, 400.00 EUR")).toBe("did_this_happen");
     expect(entryOf(RECIPES[0]!.say)).toBe("recipe");
+    // In every language the apps speak, since the recipe's words come in the person's.
+    for (const r of RECIPES) for (const [lang, w] of Object.entries(r.languages)) expect(entryOf(w.say), `${lang}/${r.id}`).toBe("recipe");
     expect(entryOf("I want a taf that chases overdue invoices")).toBe("free");
   });
 

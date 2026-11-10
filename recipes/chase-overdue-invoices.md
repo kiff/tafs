@@ -3,6 +3,8 @@ id: chase-overdue-invoices
 title: Chase overdue invoices
 category: money
 line: Reminds customers of overdue invoices on a schedule and reports who hasn't paid; moves no money.
+headline: Get paid without chasing.
+today: Late payers stay late until someone finds the time to remind them.
 connections:
   - quickbooks | zohobooks | moneybird
   - gmail | outlook

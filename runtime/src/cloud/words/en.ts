@@ -53,6 +53,21 @@ export const en = {
   // Home's Needs you line (GET /v1/home, needs_you.words): what the count says, nothing or how many.
   home_needs_you_none: "Nothing needs you.",
   home_needs_you: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 needs you." : `${n} need you.`),
+  // Recipes (GET /v1/recipes): the categories' titles, the sheet's labels, Home's line, and the suggestions setting's words.
+  recipes_category_money: "Money",
+  recipes_category_customers: "Customers",
+  recipes_category_operations: "Operations",
+  recipes_category_errands: "Errands",
+  recipes_label_allows: "Does on its own",
+  recipes_label_holds: "Asks you first",
+  recipes_label_never: "Never does",
+  recipes_label_hand: "Hand it to Coach",
+  recipes_home_lead: "Pick a job for your first taf.",
+  recipes_home_empty_coach: "No tafs yet. Connect an app to set up your first taf.",
+  recipes_home_empty_shared: "No tafs yet. Tafs shared with you show here.",
+  suggestions_on: "Suggestions show in a new conversation with Coach until the account's first taf is live.",
+  suggestions_off: "Suggestions are off for this account.",
+  suggestions_live: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good.",
   // A run or chat refused because it's halted: the taf on its own, or the whole account (Coach's included).
   refusal_halted_taf: "This taf is halted: nothing of it runs until you resume it from Halt.",
   refusal_halted_account: "Your account is halted: none of your tafs runs, Coach included, until you resume it from Halt.",

@@ -3,6 +3,8 @@ id: chargebacks-with-evidence
 title: Chargebacks with evidence
 category: money
 line: Answers card disputes with the order, delivery proof and the customer's messages before the deadline; accepts small ones with weak evidence.
+headline: Stop losing disputes you could win.
+today: A dispute nobody answers before the deadline is lost, with the money and the fee.
 connections:
   - stripe
   - shopify | gorgias
