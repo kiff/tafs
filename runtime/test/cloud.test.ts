@@ -2336,6 +2336,12 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const stray = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "daily", at: "09:00" }], check: { ...WORK_CHECK, tool: "list_orders_x1" } } });
     expect(stray.status).toBe(400);
     expect(stray.body.error).toContain("check.tool names list_orders_x1, which isn't among the taf's tools (list_requests_k3f9)");
+    // Cards KIFF can't read refuse a check rather than let it through unchecked.
+    w.account.status = 503;
+    const down = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "daily", at: "09:00" }], check: WORK_CHECK } });
+    expect(down.status).toBe(503);
+    expect(down.body.error).toContain("Cards couldn't be read");
+    w.account.status = undefined;
     // Coach's check at a later dial change goes live with its version, onto the taf's record too.
     const checked = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "daily", at: "09:00" }], check: WORK_CHECK } });
     expect(checked.status).toBe(200);
