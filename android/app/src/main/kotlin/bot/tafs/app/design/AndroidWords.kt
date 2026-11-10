@@ -11,4 +11,10 @@ class AndroidWords(private val context: Context) : Res.Source {
   override fun plural(id: Int, count: Int): String = context.resources.getQuantityString(id, count)
 
   override val locale: Locale get() = context.resources.configuration.locales[0] ?: Locale.getDefault()
+
+  override fun list(items: List<String>, language: String): String =
+    android.icu.text.ListFormatter.getInstance(Locale.forLanguageTag(language)).format(items)
+
+  override fun ordinal(n: Long, language: String): String =
+    android.icu.text.MessageFormat("{0,ordinal}", Locale.forLanguageTag(language)).format(arrayOf<Any>(n))
 }

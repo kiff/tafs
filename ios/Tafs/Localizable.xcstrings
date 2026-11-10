@@ -7383,39 +7383,6 @@
         }
       }
     },
-    "common.a": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "a %1$@"
-          }
-        }
-      }
-    },
-    "common.an": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "an %1$@"
-          }
-        }
-      }
-    },
-    "common.and": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ and %2$@"
-          }
-        }
-      }
-    },
     "common.and_join": {
       "extractionState": "manual",
       "localizations": {
@@ -7592,17 +7559,6 @@
         }
       }
     },
-    "common.list_and": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ and %2$@"
-          }
-        }
-      }
-    },
     "common.loading": {
       "extractionState": "manual",
       "localizations": {
@@ -7709,28 +7665,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opening…"
-          }
-        }
-      }
-    },
-    "common.possessive": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@'s"
-          }
-        }
-      }
-    },
-    "common.possessive_s": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@'"
           }
         }
       }
@@ -13840,17 +13774,6 @@
         }
       }
     },
-    "people.make_role": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Make %1$@ a %2$@ of %3$@"
-          }
-        }
-      }
-    },
     "people.make_role_manager": {
       "extractionState": "manual",
       "localizations": {
@@ -14111,6 +14034,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "an approver"
+          }
+        }
+      }
+    },
+    "people.role_phrase.editor": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an editor"
           }
         }
       }

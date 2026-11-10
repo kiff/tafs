@@ -7,15 +7,11 @@ import bot.tafs.app.kiff.Share
 
 /** The words of People and groups and of sharing a taf (docs/accounts.md), the same as iOS's. */
 object PeopleWords {
-  /** "a, b and c". */
-  fun joined(names: List<String>): String = when (names.size) {
-    0 -> ""
-    1 -> names[0]
-    else -> Words.Common.and(names.dropLast(1).joinToString(", "), names.last())
-  }
+  /** "a and b", "a, b, and c": as the lines' language lists names. */
+  fun joined(names: List<String>): String = Res.list(names)
 
-  /** "a and b and c": each joined with the language's "and". */
-  fun all(names: List<String>): String = names.reduceOrNull { a, b -> Words.Common.and(a, b) }.orEmpty()
+  /** The same list: every name, as the lines' language joins them. */
+  fun all(names: List<String>): String = Res.list(names)
 
   fun label(subject: String, people: List<Person>): String = people.firstOrNull { it.subject == subject }?.label ?: subject
 

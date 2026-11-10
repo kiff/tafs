@@ -1391,12 +1391,6 @@ enum Words {
         static var willWorkLike: String { Words.line("coach.will_work_like") }
     }
     enum Common {
-        /// a {thing}
-        static func a(thing: String) -> String { Words.line("common.a", thing) }
-        /// an {thing}
-        static func an(thing: String) -> String { Words.line("common.an", thing) }
-        /// {first} and {last}
-        static func and(first: String, last: String) -> String { Words.line("common.and", first, last) }
         /// {first} and {second}
         static func andJoin(first: String, second: String) -> String { Words.line("common.and_join", first, second) }
         /// Back
@@ -1429,8 +1423,6 @@ enum Words {
         static var hideTheList: String { Words.line("common.hide_the_list") }
         /// Less
         static var less: String { Words.line("common.less") }
-        /// {first} and {next}
-        static func listAnd(first: String, next: String) -> String { Words.line("common.list_and", first, next) }
         /// Loading…
         static var loading: String { Words.line("common.loading") }
         /// More
@@ -1451,10 +1443,6 @@ enum Words {
         static var ok: String { Words.line("common.ok") }
         /// Opening…
         static var opening: String { Words.line("common.opening") }
-        /// {name}'s
-        static func possessive(name: String) -> String { Words.line("common.possessive", name) }
-        /// {name}'
-        static func possessiveS(name: String) -> String { Words.line("common.possessive_s", name) }
         /// Save
         static var save: String { Words.line("common.save") }
         /// Send
@@ -2609,8 +2597,6 @@ enum Words {
         static var makeManager: String { Words.line("people.make_manager") }
         /// Make a member
         static var makeMember: String { Words.line("people.make_member") }
-        /// Make {who} a {role} of {group}
-        static func makeRole(who: String, role: String, group: String) -> String { Words.line("people.make_role", who, role, group) }
         /// Make {who} a manager of {group}
         static func makeRoleManager(who: String, group: String) -> String { Words.line("people.make_role_manager", who, group) }
         /// Make {who} a member of {group}
@@ -2660,6 +2646,8 @@ enum Words {
             static var admin: String { Words.line("people.role_phrase.admin") }
             /// an approver
             static var approver: String { Words.line("people.role_phrase.approver") }
+            /// an editor
+            static var editor: String { Words.line("people.role_phrase.editor") }
             /// a manager
             static var manager: String { Words.line("people.role_phrase.manager") }
             /// a member

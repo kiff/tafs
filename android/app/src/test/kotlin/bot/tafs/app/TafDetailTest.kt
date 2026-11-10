@@ -134,7 +134,7 @@ class TafDetailTest {
     assertTrue(s.taf(id)!!.card.revoked)
     assertTrue(s.heldCalls(id).isEmpty())
     val line = s.record.first { it.kind == RecordEntry.Kind.revoked }
-    assertTrue(line.detail.contains("$waiting waiting action(s) refused"))
+    assertTrue(line.detail.contains(if (waiting == 1) "1 waiting action refused" else "$waiting waiting actions refused"))
   }
 
   @Test fun aRevokedTafCannotBePausedOrResumed() {

@@ -641,8 +641,18 @@ data class RecordEntry(
   val answerer: String
     get() {
       if (answeredByOwner) return Words.Record.Answerer.you
-      val role = answer?.by?.replace("_", " ")?.takeIf { it.isNotEmpty() } ?: return Words.Record.Answerer.someoneElse
-      return if (role.first() in "aeiou") Words.Common.an(role) else Words.Common.a(role)
+      val role = answer?.by?.takeIf { it.isNotEmpty() } ?: return Words.Record.Answerer.someoneElse
+      // A whole phrase per role, since the article follows each language's grammar; a role KIFF adds later is named.
+      return when (role) {
+        "admin" -> Words.People.RolePhrase.admin
+        "editor" -> Words.People.RolePhrase.editor
+        "approver" -> Words.People.RolePhrase.approver
+        "viewer" -> Words.People.RolePhrase.viewer
+        "member" -> Words.People.RolePhrase.member
+        "manager" -> Words.People.RolePhrase.manager
+        "owner" -> Words.People.RolePhrase.owner
+        else -> Words.People.RolePhrase.other(role = role.replace("_", " "))
+      }
     }
 
   /** Who decided: its Card, the owner or another person (approving or refusing), or KIFF's refusal. */

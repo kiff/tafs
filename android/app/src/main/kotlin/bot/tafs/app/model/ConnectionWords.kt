@@ -91,8 +91,8 @@ object ConnectionWords {
   /** What planque last did, as it writes it ("Approved from tafs on Android phone"). */
   fun lastEvent(g: Grant): String? = g.events.lastOrNull()?.what?.takeIf { it.isNotBlank() }
 
-  /** A name's possessive: "Refunds'", "Invoice reminders'", "Chargebacks'"; else "Coach's". */
-  fun possessive(name: String): String = if (name.endsWith("s")) Words.Common.possessiveS(name) else Words.Common.possessive(name)
+  /** A name's possessive, by the lines' language's rule: "Refunds'", "Coach's" in English. */
+  fun possessive(name: String): String = Words.possessive(name)
 
   /**
    * Disconnect's question, naming the one taf it ends ([taf], or none once its taf was removed), and [alsoStops], the
