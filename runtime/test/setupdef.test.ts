@@ -132,7 +132,10 @@ describe("Setup's definition on kiff/agents", () => {
 
   it("signs a signed-out grant in again, never with a new request", () => {
     const flat = COACH_TEXT.replace(/\s+/g, " ");
-    expect(flat).toContain("A grant that is needs_reconnect (its vendor signed planque out): show sign_in for that same grant, never a new planque request");
+    expect(flat).toContain("A grant that is needs_reconnect (its vendor signed planque out) gets a sign-in card for that same grant, never a new planque request");
+    // Its card's name is never a line of its own: what the owner reads is in their words (a Coach chat once showed "sign_in for same grant.").
+    expect(flat).not.toMatch(/show sign_in for/);
+    expect(flat).toContain("Tell the owner in their words (\"Sign in again to finish connecting it\"), never these names.");
   });
 
   // What Coach answers about holds, usage and halting. In October it read none of these when

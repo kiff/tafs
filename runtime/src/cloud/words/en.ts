@@ -50,6 +50,12 @@ export const en = {
   health_do_that_run: "Open that run to see what it did.",
   work_halted: "Halted · resume it from Halt",
   work_needs_you_count: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 request needs you" : `${n} requests need you`),
+  // Home's Needs you line (GET /v1/home, needs_you.words): what the count says, nothing or how many.
+  home_needs_you_none: "Nothing needs you.",
+  home_needs_you: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 needs you." : `${n} need you.`),
+  // A run or chat refused because it's halted: the taf on its own, or the whole account (Coach's included).
+  refusal_halted_taf: "This taf is halted: nothing of it runs until you resume it from Halt.",
+  refusal_halted_account: "Your account is halted: none of your tafs runs, Coach included, until you resume it from Halt.",
   work_paused: "Paused",
   work_from_chat: "Works from its chat",
   work_next_run: (t: When) => `Next run ${bare(t)}`,
