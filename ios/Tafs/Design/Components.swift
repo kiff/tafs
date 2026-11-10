@@ -271,7 +271,7 @@ enum Legal {
     static var language: String { KIFFClient.appLanguage }
 
     private static func page(_ path: String, _ language: String) -> URL {
-        URL(string: language == "en" ? "https://kiff.dev/\(path)#tafs" : "https://kiff.dev/\(language)/\(path)#tafs")!
+        language == "en" ? URL(string: "https://kiff.dev/\(path)#tafs")! : URL(string: "https://kiff.dev/\(language)/\(path)#tafs")!
     }
 
     /// KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't.
