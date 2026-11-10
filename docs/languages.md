@@ -89,6 +89,8 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | Done | Erledigt | Terminé | Hecho | Fatto | Concluído | Klaar | Gotowe |
 | Failed | Fehlgeschlagen | Échec | Falló | Non riuscito | Falhou | Mislukt | Nie powiodło się |
 | Stopped | Gestoppt | Arrêté | Detenido | Fermato | Parado | Gestopt | Zatrzymane |
+| ran out of room (a reply cut off at its length limit) | hatte keinen Platz mehr | a manqué de place | se quedó sin espacio | ha esaurito lo spazio | ficou sem espaço | had geen ruimte meer | zabrakło miejsca |
+| declined to continue (the AI, ending a run) | hat es abgelehnt, fortzufahren | a refusé de continuer | se negó a continuar | si è rifiutata di continuare | recusou-se a continuar | weigerde verder te gaan | odmówiła kontynuowania |
 | Paused | Pausiert | En pause | En pausa | In pausa | Em pausa | Gepauzeerd | Wstrzymane |
 | Halted | Angehalten | Bloqué | Bloqueado | Bloccato | Bloqueado | Stilgezet | Zablokowane |
 | credit pack | Credit-Paket | pack de crédits | paquete de créditos | pacchetto di crediti | pacote de créditos | creditpakket | pakiet kredytów |

@@ -5,6 +5,14 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Each taf has a health: healthy, at risk or failing (tafs cloud).**
+  - **What it reads:** the taf's last runs and its schedule's last times, from kiff/agents, over 7 days. Runs that couldn't start, checks that couldn't read the app, work a run dropped, runs that failed or were cut short by a limit, and times skipped as late or busy.
+  - **Where it shows:** `health: {level, lines}` on the list and on the taf's page, each line saying what happened and what to do, in all 8 languages. When the taf is otherwise idle, its line says the first reason where it said the next run, so both apps show it today with no app change.
+  - **The alert:** one for each bad spell, when a taf's runs fail one after another. At risk sends nothing.
+  - **A later partway stop** in the same run of failures alerts again, at most once every six hours for that schedule.
+  - **The page's skipped list** also says a time skipped for a version switch, a check that couldn't read the app, a run whose work goes to the next run, and a run that stopped partway.
+  - When the health can't be read, it's left out and the taf shows as before (docs/reliability.md, docs/approvals.md).
+  - **Our own outage never reaches an owner's phone taf by taf.** A run that failed because the AI provider wasn't serving us counts for nothing toward a taf's health, and the alert for a schedule whose runs couldn't start stays quiet when its last run failed that way.
 - **A scheduled run that stopped partway says so (tafs cloud).** When an app check's run stops partway and kiff/agents drops what it was working on (`failing.outcome` is `failed_unfinished`), the alert reads "Its scheduled run stopped partway. What it was working on won't be tried again. Open it to see what it did.", in all 8 languages, and is sent at once, even when the same run of failures was already said as one that couldn't start. It no longer says the run "couldn't start". Older kiff/agents send no `outcome`, and the alert reads as before (docs/approvals.md).
 - **Each language is reviewed against the glossary, and fixes go forward after release.** No language waits for a native speaker before it ships or is listed (docs/languages.md, docs/store-listing.md).
 - **The apps' words get one shared source, and the iPhone app asks the servers for English until it ships its languages.**

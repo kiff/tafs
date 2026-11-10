@@ -197,11 +197,50 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
   tafs doesn't know included, reads "Stopped at 14:20", never "Done". Where the list's line
   for the taf shows its last run (a taf with no next run and a schedule), it says the same; a
   taf with a next run shows that, and one that works from its chat says so, as before.
-- **A firing its schedule skipped** is in `skipped` on the same view: up to 5 from the last 7
-  days, newest first, each `{due, why: missed | busy, words}` ("Skipped the 09:00 run: the last
-  one was still working"). The schedule skips a firing that comes more than an hour late, or one
-  that comes while its last run is still working (kiff/agents' schedule history). It isn't a
-  failure, because nothing ran.
+- **A scheduled time that didn't end in finished work** is in `skipped` on the same view: up to
+  5 from the last 7 days, newest first, each `{due, why, words}`. `why` is one of:
+  - `missed` or `busy`: the schedule skipped it, because it came more than an hour late or
+    while its last run was still working ("Skipped the 09:00 run: the last one was still
+    working"). It isn't a failure, because nothing ran;
+  - `switching`: skipped while the taf switched versions;
+  - `check_failed`: its check of a connected app couldn't read the app;
+  - `retrying`: its run didn't finish, and its work goes to the next run;
+  - `unfinished`: its run stopped partway, and what it was working on won't be tried again.
+
+  A skip for a halt or for credits is said elsewhere, and isn't listed.
+
+### Its health
+
+`health: {level, lines}` is on the same view and on each taf of the list
+(`runtime/src/cloud/health.ts`). `level` is `healthy`, `at_risk` or `failing`, and each line
+says what happened and what the owner can do, in their language. It's read from what
+kiff/agents records, each time, so a taf never stays failing on old history: only the last 7
+days count, of its last 10 runs that ended and its schedule's last 20 times.
+
+| Level | When |
+|---|---|
+| `failing` | two or more scheduled runs in a row couldn't start; its check couldn't read the app two or more times in a row; a scheduled run stopped partway and its work was dropped; its last three runs failed |
+| `at_risk` | one scheduled run couldn't start, or one check couldn't read the app; its last run didn't finish and its work goes to the next run; two or more of its last ten runs failed, or were cut short by a limit (its turns, its cost, or its reply running out of room); three or more of its last twenty scheduled times were skipped as late or busy |
+| `healthy` | none of these |
+
+- **A run of failures ends at the first time that worked:** a run that started, or a check
+  that read the app and found nothing new. An empty queue is healthy, however long it lasts.
+- **Never counted:** a skip for a halt, a version switch or credits; a run paused for its
+  owner; a run its owner stopped; a run already shown as needing them or as retrying; and an
+  outcome this code doesn't know.
+- **Our own outage is never the taf's:** a run that failed because the AI provider wasn't
+  serving us (`code: "ai_unavailable"`), and the scheduled time that started it, count for
+  nothing, toward the level or the alert.
+- **Said once:** a scheduled run that never started leaves a failed run with no turn behind
+  it. Its scheduled time already says it couldn't start, so that run isn't counted again
+  among the failed runs.
+- **Where it shows today:** when the taf is otherwise idle, `summary.line` (and the list's
+  `work.line`) says the first reason, where it would say the next run. A taf that is halted,
+  needs its owner, is retrying, working, waiting on an app or paused says that first.
+- **When it can't be read** (kiff/agents down, or slower than 1.5 seconds for the list),
+  `health` is left out and the taf shows as before.
+- **The alert** is in [approvals.md](approvals.md): one for each bad spell, when a taf turns
+  failing.
 - **A delivery that needs you** is a request whose work is done but whose result didn't reach
   one place after its tries. Its line says where and why. Its action is **Send again**
   (`POST /v1/tafs/{id}/requests/{request}/deliveries/{place}/send`, for someone who manages the
