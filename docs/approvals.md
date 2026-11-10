@@ -329,6 +329,18 @@ a deadline. It never says why the vendor ended the sign-in, and no run waits on 
 handed to kiff/agents. KIFF's resend of the same event tells nobody twice, and an agent that no
 taf runs any more tells nobody.
 
+**A refund that failed, or a charge refunded twice.** KIFF follows a refund a taf sent until
+the payment processor says how it ended. It sends `refund_notice` when that refund failed or
+was cancelled (KIFF gives its room on the Card back), and when a charge the taf refunded was
+also refunded outside KIFF, for example in the processor's dashboard. The notice carries the
+kind (`refund_failed` or `refunded_twice`), the taf's agent and the call. tafs cloud alerts the
+phones of the people who answer: "A refund Refunds sent failed at the payment processor. Its
+room on the Card came back." or "A charge Refunds refunded was also refunded outside KIFF. Check
+it before anything more is refunded." Tapping it opens the taf. Each phone hears it in its own
+language. It sounds, and isn't Time Sensitive. No run waits on it, so it isn't handed to
+kiff/agents. KIFF's resend of the same event tells nobody twice, and an agent that no taf runs
+any more tells nobody.
+
 **On Android** the push is a Firebase data message the phone builds its notification from:
 `kind` (`alert` shows one, `answered` takes it away), the words, where tapping it goes
 (`open`), the call or request it is about, and how loud it is (`level`). A door's alert

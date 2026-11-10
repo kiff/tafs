@@ -5,7 +5,7 @@ import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsV
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -960,9 +960,10 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   let handedOn = true;
   let early = false;
-  // A member's request for a pack or a raise, a vendor signing a connection out, and a credits warning
-  // are the phones' alone: no run waits on them.
-  if (str(parsed.outcome) === PACK_REQUESTED || str(parsed.outcome) === CONNECTION_SIGNED_OUT || str(parsed.outcome) === CREDITS_WARNING) {
+  // A member's request for a pack or a raise, a vendor signing a connection out, a credits warning and
+  // a refund notice are the phones' alone: no run waits on them.
+  if (str(parsed.outcome) === PACK_REQUESTED || str(parsed.outcome) === CONNECTION_SIGNED_OUT || str(parsed.outcome) === CREDITS_WARNING ||
+    str(parsed.outcome) === REFUND_NOTICE) {
     return receiveAlert(signature, raw, {
       push: deps.push,
       apns: deps.apns,
