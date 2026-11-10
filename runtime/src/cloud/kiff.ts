@@ -295,6 +295,21 @@ export async function activeCards(token: string, doFetch: Fetch = fetch, base = 
 }
 
 /**
+ * The actions an agent's Cards in force cover, from one read of KIFF's list (ignoring case and spaces
+ * around, as KIFF matches a Card's action to a tool). A draft revises only the Cards it names, so a tool
+ * these cover stays covered beside the draft.
+ */
+export async function actionsInForce(token: string, agent: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Set<string>> {
+  const out = await ask<{ mandates?: Array<{ subject?: unknown; active?: unknown; grants?: Array<{ action?: unknown }> | null }> }>(token, "GET", "/v1/me/mandates", undefined, doFetch, base);
+  const actions = new Set<string>();
+  for (const m of out.mandates ?? []) {
+    if (m.subject !== agent || m.active !== true) continue;
+    for (const g of m.grants ?? []) if (typeof g.action === "string") actions.add(g.action.trim().toLowerCase());
+  }
+  return actions;
+}
+
+/**
  * How KIFF would word a draft, without making it (POST /v1/me/agent-drafts/preview): the draft's
  * card_title and each Card as the submitted draft would read, with its lines. It writes nothing and
  * needs no signature. Passed on unchanged, so no copy of how a Card reads is kept here.

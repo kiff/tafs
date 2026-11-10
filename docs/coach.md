@@ -195,6 +195,11 @@ things (`runtime/src/cloud/approval.ts`):
   that would let one of its write or money tools run without asking is answered
   `failed: …` too, naming the tool, so Coach drafts it again with that tool held (0 a
   day); the owner widens it later as a version.
+  A draft that leaves one of the taf's tools on no Card is answered `failed: …` too, naming
+  the tool, when no Card in force for the taf's agent covers it either (KIFF's
+  `GET /v1/me/mandates`): KIFF refuses every call no Card covers (`no_mandate_issued`), reads
+  included, so the taf couldn't use it. Setup's own reads (planque's `setup_reads`) are left
+  out. When the Cards in force can't be read, the answer is **read_again**, never a signature.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.

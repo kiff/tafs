@@ -23,7 +23,7 @@ import { noteSendingOutside } from "./sends-outside.js";
 import { createHash } from "node:crypto";
 import type { CoachStore } from "./coach.js";
 import { sha256 } from "./jcs.js";
-import { draftInfo, type Fetch, issued, KIFF_API, KIFFError } from "./kiff.js";
+import { actionsInForce, draftInfo, type Fetch, issued, KIFF_API, KIFFError } from "./kiff.js";
 
 /** A grant as planque sends it, in what the decision reads. */
 export interface ApprovalGrant {
@@ -60,6 +60,27 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
         && card.aggregates.some((a) => fold((a as { quantity?: unknown }).quantity) === "count" && (a as { limit?: unknown }).limit === 0);
       if (!asks) return t.title || t.name || t.tool || name;
     }
+  }
+  return undefined;
+}
+
+/**
+ * The first tool of the grant no Card covers, once the draft is confirmed: neither the draft's Cards
+ * nor the agent's Cards in force (inForce, as actionsInForce reads them) name it. KIFF refuses every
+ * call no Card covers, so the taf couldn't use it, and would ask its owner for a Card it shouldn't
+ * need (Eval 42781271564). Setup's own reads (setup_reads) are on its reader Card, never the taf's.
+ */
+export function uncoveredTool(grant: ApprovalGrant, cards: unknown[], inForce: Set<string>): string | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const covered = new Set(inForce);
+  for (const raw of cards) {
+    const card = raw as { grants?: unknown };
+    if (Array.isArray(card.grants)) for (const g of card.grants) covered.add(fold((g as { action?: unknown }).action));
+  }
+  for (const t of grant.request.tools ?? []) {
+    if (t.setup_reads) continue;
+    const name = fold(t.name || t.tool);
+    if (name && !covered.has(name)) return t.title || t.name || t.tool || name;
   }
   return undefined;
 }
@@ -125,6 +146,7 @@ export const WORDS = {
   noGrant: "There's no connection with that id.",
   cardsNotIssued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
   cardsUnread: "The Card couldn't be checked yet. Read it again, then approve.",
+  uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
   onDemandLetsRun: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   criticalKey: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
   driveKey: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
@@ -231,6 +253,21 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     if (letsRun) {
       const why = WORDS.onDemandLetsRun(vendor, letsRun);
       return { outcome: "answered", answer: `failed: ${vendor} was set up on demand, so every write and money tool of it must ask the owner each time (0 a day, held); the draft lets "${letsRun}" run without asking. Draft it again with that tool held.`, note: why };
+    }
+    // Every tool the taf was given goes on a Card, the reads too: a draft that leaves one uncovered,
+    // with no Card in force covering it either, isn't signed, and Coach hears which. A draft read
+    // without its Cards, or Cards in force that can't be read, isn't signed on trust.
+    if (draft.cards) {
+      let inForce: Set<string>;
+      try {
+        inForce = await actionsInForce(ctx.token, draft.agent, ctx.fetch, ctx.kiffBase ?? KIFF_API);
+      } catch {
+        return { outcome: "read_again", note: WORDS.cardsUnread };
+      }
+      const left = uncoveredTool(grant, draft.cards, inForce);
+      if (left) {
+        return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read gets a call count only, generous enough never to get in the way).`, note: WORDS.uncovered(left) };
+      }
     }
     const id = ctx.newID();
     // KIFF says which key confirms the draft (kiff/tafs#494); until it does, the fingerprint.

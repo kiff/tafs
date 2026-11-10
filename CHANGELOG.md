@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **A Card that leaves one of the taf's tools uncovered isn't signed (tafs cloud).** KIFF refuses every call no Card covers, reads included, so a taf given a tool its Cards don't name could never use it, and its run would end waiting on the owner for a Card. On Approve, tafs cloud now checks every tool of the connection against the draft's Cards and the Cards in force for the taf: one left uncovered is answered to Coach as `failed: …`, naming the tool, and the card says why ("This Card doesn't cover …"). Setup's own reads aren't counted, and Cards in force that can't be read mean "read it again", never a signature. Coach's `draft-the-card@6` says the read that tells a money tool's currency goes on a Card like any other (docs/coach.md).
 - **tafs cloud's words and the apps' words say the same things the same way (tafs cloud).**
   - **English:** a run cut off by its limit says "its limit of steps for one run", as the apps say "steps". An answer to a request for a pack or a higher limit reads "An admin raised the spend limit." (an account can have several admins). "Part-way" is spelled as the apps spell it.
   - **One word for one thing in each language:** a version's trial is "Experiência", "Proef" and "Próba" in Portuguese, Dutch and Polish, on its badge as in the credits lines. An app check is "revisión" in Spanish everywhere. A step is "passo" in Italian. Dutch "retrying" no longer reads as "retried", and Polish says "odrzucił" for declined in both lines.

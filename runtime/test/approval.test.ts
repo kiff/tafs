@@ -37,10 +37,12 @@ interface Services {
   /** Every signature check KIFF was asked, as sent. */
   checks: Array<Record<string, unknown>>;
   proofs: string[];
+  /** The account's Cards, as KIFF lists them (GET /v1/me/mandates); a status when the list fails. */
+  mandates: unknown[] | number;
 }
 
 function services(): Services {
-  return { grants: [grant()], drafts: {}, signed: true, checks: [], proofs: [] };
+  return { grants: [grant()], drafts: {}, signed: true, checks: [], proofs: [], mandates: [] };
 }
 
 function net(s: Services) {
@@ -59,6 +61,9 @@ function net(s: Services) {
     if (url.endsWith("/v1/me/device-signature")) {
       s.checks.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z", ...(s.signedKey ? { key: s.signedKey } : {}), ...(s.signedWindow ? { window: s.signedWindow } : {}) }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
+    }
+    if (url.endsWith("/v1/me/mandates")) {
+      return typeof s.mandates === "number" ? new Response("{}", { status: s.mandates }) : new Response(JSON.stringify({ mandates: s.mandates }), { status: 200 });
     }
     const draft = /\/v1\/me\/agent-drafts\/([^/?]+)$/.exec(url);
     if (draft) {
@@ -260,11 +265,39 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toMatchObject({ grants: { g_1: ["reply"], g_other: ["post"] } });
   });
 
+  // Eval 42781271564: Setup gave Refunds get_charge and read_charge, and drafted its Card over read_charge
+  // alone; KIFF refused every get_charge, and the taf asked its owner for a Card it shouldn't need.
+  it("a draft that leaves one of the taf's tools uncovered, with no Card in force covering it, isn't signed", async () => {
+    const s = services();
+    const tools = [{ tool: "create_refund", name: "refund_k3", title: "Refund a payment" }, { tool: "stripe_api_read", name: "get_charge", title: "Read a charge", read_only: true },
+      { tool: "stripe_api_read", name: "read_charge", title: "Check a charge", read_only: true }, { tool: "stripe_api_details", name: "fields_ab", read_only: true, setup_reads: true }];
+    s.grants = [grant({ status: "connected" }, { tools })];
+    const card = { id: "c1", subject: "refunds-x", grants: [{ action: "refund_k3" }, { action: " READ_CHARGE " }], on_exceed: "owner", aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] };
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [card] };
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const r = await ask();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.uncovered("Read a charge") });
+    expect(String(r.answer)).toMatch(/^failed: no Card covers "Read a charge".*no_mandate_issued/);
+    // A Card in force covers it, the agent's own: the draft revises only the Cards it names, so it's signed.
+    s.mandates = [{ id: "c0", subject: "refunds-x", active: true, grants: [{ action: "get_charge" }] }];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // Another agent's Card, or one no longer in force, covers nothing of this taf's.
+    s.mandates = [{ id: "c0", subject: "other-y", active: true, grants: [{ action: "get_charge" }] }, { id: "c9", subject: "refunds-x", active: false, grants: [{ action: "get_charge" }] }];
+    expect(await ask()).toMatchObject({ outcome: "answered", note: WORDS.uncovered("Read a charge") });
+    // The draft covering it: signed. Setup's own read (fields_ab) is never asked for.
+    s.mandates = [];
+    s.drafts.drf_1.cards = [{ ...card, grants: [...card.grants, { action: "get_charge" }] }];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // The Cards in force can't be read: read again, never signed on trust.
+    s.mandates = 503;
+    expect(await ask()).toEqual({ outcome: "read_again", note: WORDS.cardsUnread });
+  });
+
   it("an app set up on demand asks for every change: a draft that lets one of its writes run outright isn't signed (kiff/planque#87)", async () => {
     const s = services();
     const tools = [{ tool: "send", name: "send_x", title: "Send an email" }, { tool: "list", name: "list_x", title: "List emails", read_only: true }];
     s.grants = [grant({ status: "connected", on_demand: true }, { tools })];
-    const card = (over: Record<string, unknown>) => ({ id: "c1", subject: "refunds-x", grants: [{ action: "send_x" }], on_exceed: "owner", aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }], ...over });
+    const card = (over: Record<string, unknown>) => ({ id: "c1", subject: "refunds-x", grants: [{ action: "send_x" }, { action: "list_x" }], on_exceed: "owner", aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }], ...over });
     // Allowed outright: refused in words, Coach hears why, nothing to sign.
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [card({ aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })] };
     const w = await world(s, { draft: "drf_1" });
@@ -273,9 +306,9 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(String(r.body.answer)).toMatch(/^failed: Stripe was set up on demand.*"Send an email" run without asking/);
     expect(w.told()).toMatchObject({ answer: String(r.body.answer) });
     // KIFF matches an action ignoring case and trims a quantity: so does the check, each way.
-    s.drafts.drf_1.cards = [card({ grants: [{ action: "SEND_X" }], aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })];
+    s.drafts.drf_1.cards = [card({ grants: [{ action: "SEND_X" }, { action: "list_x" }], aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] })];
     expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", note: WORDS.onDemandLetsRun("Stripe", "Send an email") });
-    s.drafts.drf_1.cards = [card({ grants: [{ action: "Send_X" }], aggregates: [{ quantity: " count ", limit: 0, window: "calendar_day" }] })];
+    s.drafts.drf_1.cards = [card({ grants: [{ action: "Send_X" }, { action: "list_x" }], aggregates: [{ quantity: " count ", limit: 0, window: "calendar_day" }] })];
     expect((await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign" });
     // A draft read without its Cards can't be checked: read again, never signed on trust.
     delete s.drafts.drf_1.cards;
