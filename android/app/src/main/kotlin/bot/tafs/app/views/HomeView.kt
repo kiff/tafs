@@ -146,7 +146,8 @@ fun HomeView(
         item {
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Eyebrow(Words.Home.tagline)
-            Headline(state)
+            // A new account's Home leads with the jobs: "0 tafs working" and "Nothing needs you" say nothing yet.
+            if (!state.homeLeadsWithRecipes) Headline(state)
           }
         }
         state.held.firstOrNull()?.let { first ->
@@ -174,7 +175,7 @@ fun HomeView(
           val recipes = state.recipes
           val labels = recipes?.labels
           item {
-            if (state.mode == Mode.kiff && recipes?.home?.shown == true && labels != null) {
+            if (state.homeLeadsWithRecipes && recipes != null && labels != null) {
               HomeRecipes(recipes, labels, onRecipe)
             } else {
               Panel {
@@ -249,6 +250,13 @@ private fun Header(accountLabel: String?, onCalendar: (() -> Unit)? = null) {
     }
   }
 }
+
+/**
+ * Whether Home leads with the jobs a taf can take: an account read, with no taf, where tafs cloud lists them (`home.shown`) and
+ * sends the sheet's words. Home then shows no count above them.
+ */
+internal val AppState.homeLeadsWithRecipes: Boolean
+  get() = mode == Mode.kiff && listLoaded && !listUnread && tafs.isEmpty() && recipes?.home?.shown == true && recipes.labels != null
 
 @Composable
 private fun Headline(state: AppState) {

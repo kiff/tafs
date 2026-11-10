@@ -47,7 +47,8 @@ person's language.
   (picked again, every recipe shows), then each recipe led by its `headline`, the problem it
   removes, with its `line` under it.
 - **Only when `home.shown`** is true, which tafs cloud sets only with no taf, suggestions on, and
-  someone who can set a taf up with Coach. Otherwise Home shows `home.words` alone, its empty line.
+  someone who can set a taf up with Coach. Home then leads with the jobs, with no count above them
+  ("0 tafs working", "Nothing needs you"), since a new account has nothing there yet. Otherwise Home shows `home.words` alone, its empty line.
   A tafs cloud from before `home` leaves Home's own "No tafs yet." as it was.
 - **A recipe's sheet** (`RecipeSheet`): the headline, the line, `today` (what it costs today),
   then its Card in three zones titled by `labels` (`allows`, `holds`, `never`), a zone with
@@ -226,7 +227,11 @@ iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.p
 key (`Words.NeedsYou.approveOnce`, `Words.Taf.worksUnderCards(count = n)`), so a missing key or a wrong value doesn't
 compile. Nobody edits those three files by hand: change the JSON and run the generator, and `--check` fails CI when they
 differ. Code reads a line only through `Words`, which asks `Res`: the app's resources in the language Android resolved for
-tafs, set in `TafsApplication`. Errors that are objects (`KiffError`, `PlanqueError`) read their words when shown, so they
+tafs, set in `TafsApplication` and again by each screen as it's created (`AndroidWords.of`), from the screen's own
+configuration. A screen's configuration carries the language picked for tafs alone (Settings › Apps › tafs › Language,
+from `locales_config`), which can differ from the phone's; the application's context can keep the one the process
+started with. Before 1.1.2, a German app once showed Home's count in English, and a language picked while tafs waited in
+the background didn't reach its own words (`AppLanguageTest`). Errors that are objects (`KiffError`, `PlanqueError`) read their words when shown, so they
 follow the language. Unit tests run on the JVM without Android's resources: there `Res` reads the generated English
 `strings.xml` itself (`XmlWords`, named by a test service file), so every test still checks the exact English words.
 

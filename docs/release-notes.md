@@ -5,6 +5,72 @@ seven other languages tafs speaks ([languages.md](languages.md)). Play takes up 
 per language. The same rules as [store-listing.md](store-listing.md): the glossary's words, the
 same claims in every language, nothing stronger, and only what a person can see on screen.
 
+## Android 44 (1.1.1)
+
+**English (en-US):**
+
+```
+• New: with no taf yet, Home shows ready-made jobs, such as refunds, overdue invoices and new leads, each with its Card. Tap "Hand it to Coach" and Coach builds it with you.
+• An app's connection screen shows when its sign-in has ended, and offers to sign in again.
+• Signing in to tafs no longer gets stuck, waiting for approval or on "Loading your tafs…".
+```
+
+**German (de-DE):**
+
+```
+• Neu: Ohne taf zeigt die Startseite fertige Aufgaben wie Erstattungen, überfällige Rechnungen und neue Leads, jede mit ihrer Card. Tippe auf „An Coach übergeben“, und Coach baut sie mit dir.
+• Die Verbindungsseite einer App zeigt, wenn ihre Anmeldung abgelaufen ist, und bietet an, sich erneut anzumelden.
+• Die Anmeldung bei tafs bleibt nicht mehr hängen, weder beim Warten auf die Freigabe noch bei „Deine tafs werden geladen…“.
+```
+
+**French (fr-FR):**
+
+```
+• Nouveau : sans taf, l'accueil propose des tâches prêtes, comme les remboursements, les factures en retard et les nouveaux prospects, chacune avec sa Card. Touchez « Confier à Coach » et Coach la construit avec vous.
+• L'écran de connexion d'une app indique quand sa connexion a expiré et propose de se reconnecter.
+• La connexion à tafs ne reste plus bloquée, ni en attente d'approbation, ni sur « Chargement de vos tafs… ».
+```
+
+**Spanish (es-ES):**
+
+```
+• Nuevo: sin ningún taf, el inicio muestra tareas listas, como reembolsos, facturas vencidas y nuevos contactos, cada una con su Card. Toca «Pasárselo a Coach» y Coach la crea contigo.
+• La pantalla de conexión de una app indica cuándo ha caducado su inicio de sesión y ofrece volver a iniciarla.
+• Iniciar sesión en tafs ya no se queda atascado, ni esperando la aprobación ni en «Cargando tus tafs…».
+```
+
+**Italian (it-IT):**
+
+```
+• Novità: senza un taf, la Home mostra lavori pronti, come rimborsi, fatture scadute e nuovi contatti, ognuno con la sua Card. Tocca «Affidalo a Coach» e Coach lo costruisce con te.
+• La schermata di connessione di un'app indica quando il suo accesso è scaduto e propone di accedere di nuovo.
+• L'accesso a tafs non resta più bloccato, né in attesa di approvazione né su «Caricamento dei tuoi tafs…».
+```
+
+**Portuguese (pt-PT):**
+
+```
+• Novo: sem nenhum taf, o início mostra tarefas prontas, como reembolsos, faturas em atraso e novos contactos, cada uma com a sua Card. Toque em «Entregar ao Coach» e o Coach constrói-a consigo.
+• O ecrã de ligação de uma app indica quando o início de sessão expirou e propõe iniciar sessão de novo.
+• Iniciar sessão no tafs já não fica preso, nem à espera de aprovação nem em «A carregar os seus tafs…».
+```
+
+**Dutch (nl-NL):**
+
+```
+• Nieuw: zonder taf toont Home kant-en-klare taken, zoals terugbetalingen, achterstallige facturen en nieuwe leads, elk met een eigen Card. Tik op 'Geef het aan Coach' en Coach bouwt het met je.
+• Het verbindingsscherm van een app laat zien wanneer de aanmelding is verlopen en biedt aan opnieuw aan te melden.
+• Aanmelden bij tafs blijft niet meer hangen, niet op wachten op goedkeuring en niet op 'Je tafs laden…'.
+```
+
+**Polish (pl-PL):**
+
+```
+• Nowość: bez tafa ekran główny pokazuje gotowe zadania, takie jak zwroty, zaległe faktury i nowe leady, każde ze swoją Card. Stuknij „Przekaż Coachowi”, a Coach zbuduje je z tobą.
+• Ekran połączenia aplikacji pokazuje, kiedy jej logowanie wygasło, i proponuje zalogować się ponownie.
+• Logowanie do tafs już się nie zawiesza, ani na oczekiwaniu na zatwierdzenie, ani na „Wczytywanie Twoich tafs…”.
+```
+
 ## Android 43 (1.1)
 
 **English (en-US):**

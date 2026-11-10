@@ -135,6 +135,9 @@ class MainActivity : FragmentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    // The words in this screen's language, which follows the app's own when the person picked one: a language changed while
+    // the app was away recreates the screen, and with it this (docs/languages.md).
+    bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords.of(this))
     // The bars follow the app's own Light/Dark/System choice from the first frame, not only the phone's setting; TafsTheme
     // keeps them in step when the choice changes.
     val bars = when (ThemePreference.from(getSharedPreferences("tafs.display", MODE_PRIVATE).getString("theme", null))) {
