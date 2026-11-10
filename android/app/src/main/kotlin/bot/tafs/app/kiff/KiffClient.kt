@@ -229,7 +229,9 @@ class KiffClient(
   }
 
   /** The held call's page in KIFF, where it can be answered today. */
-  fun answerPage(exceptionId: String): String = "$webUrl/needs-you/$exceptionId"
+  /** The held call's page in KIFF, in the language the app's lines resolved to (`lang`); the browser's is KIFF's fallback. */
+  fun answerPage(exceptionId: String, language: String = bot.tafs.app.model.Res.language): String =
+    "$webUrl/needs-you/$exceptionId?lang=$language"
 
   // MARK: Device sign-in
 

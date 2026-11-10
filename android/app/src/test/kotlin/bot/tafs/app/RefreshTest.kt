@@ -256,7 +256,8 @@ class RefreshTest {
     secrets.save("t_01", AppModel.TENANT)
     val m = model().also { it.restore() }
     val call = m.state.value.held.single()
-    assertEquals("https://app.kiff.dev/needs-you/ce_1", m.answerPage(call))
+    // In the language the app's lines are in, so KIFF's page speaks it too.
+    assertEquals("https://app.kiff.dev/needs-you/ce_1?lang=en", m.answerPage(call))
     assertFalse(m.state.value.canAnswer(call))
     assertFalse(m.answer(call, Answer.ApproveOnce))
     assertFalse(m.answer(call, Answer.Refuse))
