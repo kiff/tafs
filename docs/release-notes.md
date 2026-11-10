@@ -5,6 +5,80 @@ seven other languages tafs speaks ([languages.md](languages.md)). Play takes up 
 per language. The same rules as [store-listing.md](store-listing.md): the glossary's words, the
 same claims in every language, nothing stronger, and only what a person can see on screen.
 
+## Android 40
+
+**English (en-US):**
+
+```
+• Run now says when there's nothing new to work on, instead of an error.
+• The Terms, the Privacy policy and KIFF's approval pages open in the app's language.
+• Tapping Tafs again goes back to the list, and a halt shows at once.
+• Plan & usage says what credits pay for, and that Solo adds more with packs.
+```
+
+**German (de-DE):**
+
+```
+• „Jetzt ausführen“ sagt, wenn es nichts Neues zu tun gibt, statt einen Fehler zu zeigen.
+• Die AGB, die Datenschutzerklärung und die Freigabeseiten von KIFF öffnen sich in der Sprache der App.
+• Ein erneutes Tippen auf Tafs führt zurück zur Liste, und ein Stopp wird sofort angezeigt.
+• Tarif & Nutzung sagt, wofür Credits bezahlen und dass Solo mit Paketen mehr dazubekommt.
+```
+
+**French (fr-FR):**
+
+```
+• Lancer maintenant indique quand il n'y a rien de nouveau à traiter, au lieu d'une erreur.
+• Les CGU, la politique de confidentialité et les pages d'approbation de KIFF s'ouvrent dans la langue de l'app.
+• Toucher à nouveau Tafs ramène à la liste, et un arrêt s'affiche aussitôt.
+• Forfait et utilisation indique à quoi servent les crédits, et que Solo en ajoute avec des packs.
+```
+
+**Spanish (es-ES):**
+
+```
+• Ejecutar ahora indica cuándo no hay nada nuevo que hacer, en lugar de un error.
+• Los Términos, la Política de privacidad y las páginas de aprobación de KIFF se abren en el idioma de la app.
+• Tocar Tafs de nuevo vuelve a la lista, y una detención se muestra al instante.
+• Plan y uso indica para qué sirven los créditos, y que en Solo se añaden más con paquetes.
+```
+
+**Italian (it-IT):**
+
+```
+• Esegui ora indica quando non c'è niente di nuovo da fare, invece di un errore.
+• I Termini, l'Informativa privacy e le pagine di approvazione di KIFF si aprono nella lingua dell'app.
+• Toccare di nuovo Tafs riporta all'elenco, e un arresto compare subito.
+• Piano e utilizzo indica a cosa servono i crediti, e che con Solo se ne aggiungono altri con i pacchetti.
+```
+
+**Portuguese (pt-PT):**
+
+```
+• Executar agora indica quando não há nada de novo para tratar, em vez de um erro.
+• Os Termos, a Política de privacidade e as páginas de aprovação do KIFF abrem na língua da app.
+• Tocar de novo em Tafs volta à lista, e uma paragem aparece logo.
+• Plano e utilização indica para que servem os créditos, e que no Solo se juntam mais com pacotes.
+```
+
+**Dutch (nl-NL):**
+
+```
+• Nu uitvoeren zegt wanneer er niets nieuws te doen is, in plaats van een fout.
+• De voorwaarden, het privacybeleid en de goedkeuringspagina's van KIFF openen in de taal van de app.
+• Nogmaals op Tafs tikken gaat terug naar de lijst, en een stop is meteen te zien.
+• Abonnement en gebruik zegt waarvoor credits betalen, en dat je bij Solo meer krijgt met pakketten.
+```
+
+**Polish (pl-PL):**
+
+```
+• Uruchom teraz informuje, gdy nie ma nic nowego do zrobienia, zamiast pokazywać błąd.
+• Regulamin, Polityka prywatności i strony zatwierdzania KIFF otwierają się w języku aplikacji.
+• Ponowne dotknięcie Tafs wraca do listy, a zatrzymanie widać od razu.
+• Plan i wykorzystanie mówi, za co płacą kredyty i że w Solo dokupuje się je w pakietach.
+```
+
 ## Android 39
 
 **English (en-US):**

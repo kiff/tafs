@@ -576,11 +576,11 @@ data class AppState(
   val canManageCards: Boolean get() = allows(kiffAccount?.capabilities, "cards.manage")
 
   /**
-   * Whether buying is offered here: Play Billing in this build, the balance offering Solo or packs to this person (`buy`), and KIFF
+   * Whether buying is offered here: Play Billing in this build, the balance offering Solo, packs or the First month pack to this person (`buy`), and KIFF
    * naming Play's products and the account's token. Until KIFF records Play purchases it names none, so nothing is offered.
    */
   val offersPurchases: Boolean
-    get() = playBilling && mode == Mode.kiff && balance?.balance?.let { it.offers("solo") || it.offers("packs") } == true &&
+    get() = playBilling && mode == Mode.kiff && balance?.balance?.let { it.offers("solo") || it.offers("packs") || it.firstMonth != null } == true &&
       usage?.store?.appAccountToken != null && usage.store.googleProducts.isNotEmpty()
 
   /** Whether this person manages billing (KIFF's billing.manage): raises the limit, buys, and answers requests; others ask. */

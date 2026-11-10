@@ -61,7 +61,7 @@ fun TaskRequests(usage: Usage, kind: String, state: AppState, actions: AccountAc
           Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // A raise is answered by raising the limit, which answers every open request for one; a pack by buying it through
             // Google Play, where this phone offers packs.
-            val product = r.pack?.let { id -> usage.store?.packs?.firstOrNull { it.id == id }?.googleProduct }
+            val product = r.pack?.let { id -> usage.store?.repeatPacks?.firstOrNull { it.id == id }?.googleProduct }
             if (r.isRaise && state.balance?.balance?.raise != null && !state.balanceStale) {
               androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
                 ApprovalGate {

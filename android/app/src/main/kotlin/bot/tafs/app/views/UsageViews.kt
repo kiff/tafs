@@ -152,7 +152,29 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
         }
       }
     }
-    if (offer.offers("packs")) store.packs.forEach { pack ->
+    // The First month pack, right under Solo, once per account: while it waits on Solo, tafs cloud's words take its button's place.
+    offer.firstMonth?.let { first ->
+      val pack = store.firstMonthPack ?: return@let
+      val id = pack.googleProduct ?: return@let
+      val product = state.storeProducts[id] ?: return@let
+      Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+          Text(pack.line.ifEmpty { pack.name }, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+          first.words?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+        }
+        if (first.ready) {
+          Text(
+            if (state.buying == id) Words.Usage.buying else product.price,
+            style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
+            modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+          )
+        } else {
+          Text(product.price, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(8.dp))
+        }
+      }
+      PurchaseNoteLine(state, id, actions)
+    }
+    if (offer.offers("packs")) store.repeatPacks.forEach { pack ->
       val id = pack.googleProduct ?: return@forEach
       val product = state.storeProducts[id] ?: return@forEach
       Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -171,7 +193,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
     // Play lists none of what's offered: said, rather than an empty panel (Play billing off for this app on this phone, or unreachable).
     val offered = buildList {
       if (offer.offers("solo")) store.googleSoloProduct?.let { add(it) }
-      if (offer.offers("packs")) store.packs.forEach { p -> p.googleProduct?.let { add(it) } }
+      if (offer.firstMonth != null) store.firstMonthPack?.googleProduct?.let { add(it) }
+      if (offer.offers("packs")) store.repeatPacks.forEach { p -> p.googleProduct?.let { add(it) } }
     }
     bot.tafs.app.billing.Purchases.buyNote(offered, state.storeProducts.keys, state.storeLoaded, state.storeFailed)?.let {
       Text(it, style = scaled(13, color = Theme.soft))
