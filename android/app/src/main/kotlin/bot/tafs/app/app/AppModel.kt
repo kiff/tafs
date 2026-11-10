@@ -238,6 +238,8 @@ data class AppState(
   val sendingAgain: Set<String> = emptySet(),
   /** The tafs whose Run now is on its way, so a second tap starts nothing. */
   val runsInFlight: Set<String> = emptySet(),
+  /** A Run now that found nothing new, by taf: tafs cloud's words for it, shown under the button until the next one. */
+  val runNowQuiet: Map<String, String> = emptyMap(),
   /** Each taf's thread, oldest first; the sample's lives here, not between launches. */
   val chats: Map<String, List<ChatMessage>> = emptyMap(),
   /** The tafs a message is on its way to, so one is sent at a time. */
@@ -1665,16 +1667,21 @@ class AppModel(
 
   // MARK: Runs, pausing and removing a taf on tafs cloud
 
-  /** Runs a taf now, outside its schedule. The run's session; null when it didn't start, or a Run now for it is on its way. */
+  /**
+   * Runs a taf now, outside its schedule. The run's session; null when it didn't start, when a Run now for it is on its way,
+   * or when its check found nothing new, which is no failure: no run, nothing said wrong.
+   */
   suspend fun runNow(tafId: String): String? {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return null
     if (tafId in _state.value.runsInFlight) return null
-    _state.update { it.copy(runsInFlight = it.runsInFlight + tafId) }
+    _state.update { it.copy(runsInFlight = it.runsInFlight + tafId, runNowQuiet = it.runNowQuiet - tafId) }
     val generation = accountGeneration
     try {
-      val session = cloud.runNow(cloudId)
-      if (generation == accountGeneration) loadReport(tafId)
-      return session
+      val run = cloud.runNow(cloudId)
+      if (generation != accountGeneration) return run.session
+      run.words?.let { words -> _state.update { it.copy(runNowQuiet = it.runNowQuiet + (tafId to words)) } }
+      loadReport(tafId)
+      return run.session
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {

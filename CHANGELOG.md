@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Run now that finds nothing new says so, not "The run didn't start" (Android).** A taf that checks first and finds nothing new answers with no session; Android takes that as a success and shows tafs cloud's words for it under Run now. Before, it read as a failure.
 - **Halted shows sooner, and Tafs goes back to the list (Android).** The Halt screen no longer waits for the home list before it shows where the halt stands, and reads it again after half a second and a second before every 2 seconds, so "Halting…" lasts only as long as the halt does. Tapping Tafs on a taf's screen goes back to the list.
 - **Links open in the app's language (Android).** Terms and Privacy policy open kiff.dev's page in the language the app shows (`/de/terms#tafs`), English keeping its own path. KIFF's held-call page and its device-approval page carry the app's language (`lang`), so they speak it whatever the browser's.
 - **iPhone and iPad: the pages the app opens read in its language.** The Terms and Privacy policy links open kiff.dev's page in the language the app's screens are in (`/de/terms#tafs` in German, and so on, English at `/terms#tafs`). KIFF's approval page (signing in, and approving again after Face ID changed) and a held call's page in KIFF open in that language too, whatever the browser's. As Android does (docs/ios-app.md).

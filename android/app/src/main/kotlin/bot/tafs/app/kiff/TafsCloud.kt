@@ -443,7 +443,10 @@ class TafsCloud(
   data class Removal(val done: Boolean, val removed: List<String> = emptyList(), val failed: List<String> = emptyList())
 
   @kotlinx.serialization.Serializable
-  private data class RunStarted(val session: String)
+  private data class RunStarted(val session: String? = null, val outcome: String? = null, val words: String? = null)
+
+  /** What Run now did: the run's [session], or none when its check found nothing new, with tafs cloud's [words] for it. */
+  data class RunNow(val session: String?, val words: String? = null)
 
   @kotlinx.serialization.Serializable
   private data class ScheduleBody(val taf: Schedule)
@@ -466,7 +469,14 @@ class TafsCloud(
   private data class Notes(val notes: List<Note> = emptyList())
 
   /** Runs the taf now, outside its schedule. Returns the run's session. */
-  suspend fun runNow(id: String): String = post<RunStarted>("/v1/tafs/${escaped(id)}/run", emptyMap()).session
+  /**
+   * Runs it now, by firing its schedule: the run's session, or null when a taf that checks first found nothing new and started
+   * no run, which is no failure (docs/api.md).
+   */
+  suspend fun runNow(id: String): RunNow = post<RunStarted>("/v1/tafs/${escaped(id)}/run", emptyMap()).let { r ->
+    // `outcome: "quiet"` comes with tafs cloud's words, in the person's language; the app makes up none of its own.
+    RunNow(r.session, r.words?.takeIf { r.session == null && it.isNotBlank() })
+  }
 
   /** Pauses or resumes its schedule: no run starts while it's paused. Its Cards aren't touched. */
   suspend fun setPaused(id: String, paused: Boolean): Schedule =

@@ -151,6 +151,10 @@ While it halts, the screen reads the halt again after half a second, a second, t
 seconds, for about two minutes (`HALT_POLLS_MS`), and the home list is read beside it rather than
 before it, so Halted shows as soon as tafs cloud says so.
 
+**Run now that finds nothing new is no failure** (`runNowQuiet`): a taf that checks first answers
+`session: null` with `outcome: "quiet"` and tafs cloud's `words`, shown as they are under Run now until
+the next one. The app writes no line of its own, and an older tafs cloud's bare `null` shows nothing.
+
 **Tafs tapped again goes back to the list** (`tappedAgainGoesToStart`): from a taf's screen, the
 trial, the calendar or Coach, the bar's Tafs closes it, as a phone's tab bar does. Another tab is
 a place of its own.
