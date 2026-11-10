@@ -449,6 +449,8 @@ final class DriveTests: XCTestCase {
         ("Views/DoorsView.swift", #"Button("Remove door""#),
         ("Views/DeleteAccountView.swift", #"Button(role: .destructive) {"#),
         ("Views/DevicesView.swift", #"Button("Sign out") { removing = device }"#),
+        // Coach's Send, which starts Coach while it isn't started (docs/ios-app.md).
+        ("Views/SetupChatView.swift", #"Button(action: send) {"#),
     ]
 
     func testEveryListedConfirmingControlCarriesTheMark() throws {

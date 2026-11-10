@@ -66,9 +66,11 @@ struct SetupChatView: View {
             VStack(spacing: 0) {
                 if !model.setupStarted {
                     intro
-                    if model.setupHanded {
+                    if model.setupHanded && !model.approvalBlocked {
                         // Words first (docs/ios-app.md): what was handed over waits in the
-                        // box, and Send starts Coach behind its one prompt, then sends.
+                        // box, and Send starts Coach behind its one prompt, then sends. A
+                        // phone that can't approve yet gets no box: the intro says why, and
+                        // the words wait in the draft until it can.
                         composer
                         DictationBar(dictation: model.dictation)
                     }
@@ -147,7 +149,9 @@ struct SetupChatView: View {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
             }
             Spacer()
-            if !model.setupHanded {
+            // With words handed over the box's Send starts Coach, so there's no Start button;
+            // on a phone that can't approve yet the gate stays, for its words.
+            if !model.setupHanded || model.approvalBlocked {
                 ApprovalGate {
                     Button(model.startingSetup ? Words.Common.starting : Words.Coach.start) { Task { _ = await model.startSetup() } }
                         .buttonStyle(PrimaryButtonStyle())
@@ -668,6 +672,9 @@ struct SetupChatView: View {
                 }
                 .disabled(empty || held)
                 .shortcut(.send)
+                // While Coach isn't started, Send starts it: that's the person's, as the Start
+                // button was, so a drive's touch on it is refused (docs/drive.md).
+                .background { if !model.setupStarted { Color.clear.drivable(Words.Common.send).confirming() } }
                 .accessibilityLabel(held && uploading ? Words.Chat.sendOnceFilesUp : thinking ? Words.Coach.sendWhenAnswerDone : Words.Common.send)
             }
         }

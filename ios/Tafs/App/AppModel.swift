@@ -6324,6 +6324,8 @@ final class AppModel: ObservableObject {
         // nothing: the words stay with the composer.
         if !setupStarted {
             guard !text.isEmpty || !files.isEmpty else { return false }
+            // A phone that can't approve yet starts nothing and is asked nothing: the words stay.
+            guard !approvalBlocked else { return false }
             guard await startSetup() else { return false }
         }
         // A message with files goes as a message of its own (kiff/tafs#209): the composer sends it once Setup is done.

@@ -53,6 +53,9 @@ final class HomeRecipesTests: XCTestCase {
         await model.useSession("kiff_dev_x", tenant: "t_01")
         await model.refreshPeople()
         await model.loadRecipes()
+        // This phone can approve, unless a test says otherwise.
+        model.readApprovalReadiness = { .ready }
+        model.checkApprovalReadiness()
         return model
     }
 
@@ -252,6 +255,42 @@ final class HomeRecipesTests: XCTestCase {
         let empty = await model.submitSetup("   ")
         XCTAssertFalse(empty)
         XCTAssertTrue(signer.prompts.isEmpty, "an empty box asks for no Face ID")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A phone that can't approve yet starts nothing with handed words: Send takes nothing,
+    /// asks for no Face ID and sends nothing, and the words stay for when it can. Once it can,
+    /// the same Send starts Coach behind its one prompt.
+    func testAPhoneThatCantApproveYetKeepsTheHandedWordsAndStartsNothing() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        serveStart()
+        let recipe = try XCTUnwrap(model.recipes?.recipes.first)
+        var device = ApprovalReadiness.unavailable(lockedOut: true)
+        model.readApprovalReadiness = { device }
+        model.checkApprovalReadiness()
+        XCTAssertTrue(model.approvalBlocked)
+
+        model.handRecipeToCoach(recipe)
+        XCTAssertEqual(model.setupDraft, "Erstatte Kunden bis 40 EUR.", "the words are kept")
+        StubProtocol.sent = []
+        let taken = await model.submitSetup(model.setupDraft)
+        XCTAssertFalse(taken, "not taken: the words stay")
+        XCTAssertTrue(signer.prompts.isEmpty, "a phone that can't approve is asked nothing")
+        XCTAssertFalse(model.setupStarted)
+        XCTAssertEqual(model.setupDraft, "Erstatte Kunden bis 40 EUR.")
+        XCTAssertTrue(model.setupHanded)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/setup").isEmpty)
+        XCTAssertTrue(model.setupThread.messages.isEmpty, "nothing shows as sent")
+
+        // The phone can approve again: the words are still there, and Send starts Coach.
+        device = .ready
+        model.checkApprovalReadiness()
+        XCTAssertFalse(model.approvalBlocked)
+        let started = await model.submitSetup(model.setupDraft)
+        XCTAssertTrue(started, model.setupError ?? "")
+        await model.setupStream?.value
+        XCTAssertEqual(signer.prompts, ["tafs.setup.v1|t_01"])
         Keychain.delete(AppModel.planqueAccount)
     }
 }

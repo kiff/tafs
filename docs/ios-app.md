@@ -250,6 +250,10 @@ language: the app has none of its own for it.
   with its words where the Start button would be, and Send starts Coach, then sends
   (`AppModel.submitSetup`). Start asks for Face ID once: the same unlock signs the phone's
   enrolment and Coach's draft. A Start that's cancelled sends nothing, and the words stay.
+  A phone that can't approve yet gets no box: the intro keeps the words that say why
+  (`ApprovalNotReady`), nothing is started or asked, and the handed words wait in the draft
+  until it can. While Coach isn't started, that Send confirms: a drive's touch on it is
+  refused (docs/drive.md).
 - **When it's read:** with each refresh that finds no taf, as well as when Coach opens
   (`HomeRecipesTests`).
 
