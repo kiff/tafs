@@ -116,6 +116,7 @@ export const it: Words = {
   cr_no_plan_line: "Nessun piano · scegline uno per iniziare",
   cr_w_again: (day) => `ripartono quando il periodo ricomincia il ${day}`,
   cr_w_no_plan: "Scegli un piano per avviare i tuoi tafs.",
+  cr_first_month_wait: "Aggiungilo quando parte Solo.",
   cr_w_limit_raise: (again) => `I tuoi tafs sono in attesa: il limite di spesa è raggiunto. Aumentalo per farli continuare, oppure ${again}.`,
   cr_w_limit_ceiling: (again) => `I tuoi tafs sono in attesa: il limite di spesa è raggiunto e non si può aumentare oltre dall'app. Contatta KIFF per aumentarlo, oppure ${again}.`,
   cr_w_limit_admin: "I tuoi tafs sono in attesa: il limite di spesa è raggiunto. Un amministratore di questo account può aumentarlo.",
