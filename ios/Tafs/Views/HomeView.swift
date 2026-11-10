@@ -170,7 +170,7 @@ struct HomeView: View {
             NavStack { List { ExportChatsSection() }.navigationTitle(Words.Settings.title) }.environmentObject(model)
         }
         .navigationDestination(isPresented: $openingFirst) {
-            if let id = model.tafs.first(where: { $0.name == "Refunds" })?.id ?? model.tafs.first?.id {
+            if let id = model.tafs.first(where: { $0.name == TafTemplates.refunds.name })?.id ?? model.tafs.first?.id {
                 TafDetailView(tafID: id)
             }
         }

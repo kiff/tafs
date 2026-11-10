@@ -4885,10 +4885,10 @@ final class AppModel: ObservableObject {
         // Pulling to refresh plays the next round.
         playNextDemoActions()
         playNextDemoActions()
-        if Screenshots.enabled, Screenshots.screen == "card", let i = tafs.firstIndex(where: { $0.name == "Refunds" }) {
+        if Screenshots.enabled, Screenshots.screen == "card", let i = tafs.firstIndex(where: { $0.name == TafTemplates.refunds.name }) {
             tafs[i].kiffCards = Screenshots.cards(tafs[i])
         }
-        if let refunds = tafs.first(where: { $0.name == "Refunds" }) {
+        if let refunds = tafs.first(where: { $0.name == TafTemplates.refunds.name }) {
             chats[refunds.id] = [
                 sampleMessage(.taf, Self.sampleHello(refunds)),
                 sampleMessage(.owner, Words.Sample.Chat.question),

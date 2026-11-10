@@ -125,7 +125,7 @@ struct HomeSplitView: View {
     /// one a call waits on first, then the one used last (the 859 test). CI's screenshots open
     /// Refunds, as on the phone.
     static func opening(_ listed: [Taf], screenshot: Bool) -> HomeSelection? {
-        let refunds = screenshot ? listed.first(where: { $0.name == "Refunds" })?.id : nil
+        let refunds = screenshot ? listed.first(where: { $0.name == TafTemplates.refunds.name })?.id : nil
         return (refunds ?? listed.first?.id).map { .taf($0) }
     }
 
