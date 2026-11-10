@@ -86,7 +86,7 @@ Damit automatisierst du Erstattungen, Rechnungszahlungen, Zugänge und Deploys. 
 Innerhalb seiner Card handelt ein taf und hinterlässt einen Beleg. Außerhalb wartet der taf auf deinem Handy auf deine Antwort. Widerrufe die Card, und keine neue Aktion geht mehr durch.
 
 WARUM DU IHM DIE ARBEIT ÜBERGEBEN KANNST
-• Grenzen, die er sich nicht wegreden kann: KIFF prüft jede Aktion gegen seine Card, außerhalb der KI, bevor sie deine App erreicht. Kein Prompt ändert ein Limit.
+• Grenzen, die er sich nicht wegreden kann: KIFF prüft jede Aktion gegen ihre Card, außerhalb der KI, bevor sie deine App erreicht. Kein Prompt ändert ein Limit.
 • Deine Anmeldungen bleiben versiegelt: Der taf sieht nie deine Passwörter oder Tokens. Der Verbindungsdienst von KIFF und sein Anmeldeanbieter verwahren sie, nie das Handy.
 • Dein Fingerabdruck für das, was zählt: Routinearbeit läuft innerhalb ihrer Grenzen. Alles jenseits der Card wird abgelehnt oder wartet, wenn die Card „Fragen“ sagt, auf dich und wird mit Fingerabdruck oder Gesicht genehmigt.
 • Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Zahlung durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
@@ -334,7 +334,7 @@ Zautomatyzujesz nim zwroty, opłacanie faktur, nadawanie dostępów i wdrożenia
 W ramach swojej Card taf działa i zostawia potwierdzenie. Poza nią taf czeka na Twoją odpowiedź na Twoim telefonie. Odwołaj Card, a żadna nowa akcja już nie przejdzie.
 
 DLACZEGO MOŻESZ POWIERZYĆ MU PRACĘ
-• Granice, których nie obejdzie słowami: KIFF sprawdza każdą akcję względem jego Card, poza AI, zanim dotrze ona do Twojej aplikacji. Żaden prompt nie zmienia limitu.
+• Granice, których nie obejdzie słowami: KIFF sprawdza każdą akcję względem jej Card, poza AI, zanim dotrze ona do Twojej aplikacji. Żaden prompt nie zmienia limitu.
 • Twoje dane logowania pozostają zapieczętowane: taf nigdy nie widzi Twoich haseł ani tokenów. Przechowują je usługa połączeń KIFF i jej dostawca logowania, nigdy telefon.
 • Twój odcisk palca do tego, co ważne: rutynowa praca idzie naprzód w swoich granicach. Wszystko poza jego Card zostaje odrzucone albo, jeśli jego Card mówi „Pytaj”, czeka na Ciebie i jest zatwierdzane odciskiem palca lub twarzą.
 • To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że płatność przeszła, tafs pyta Cię „Czy to się stało?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
