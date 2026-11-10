@@ -133,6 +133,7 @@ export const es: Words = {
   push_refund_title: "Un reembolso",
   push_refund_failed: (taf) => `Un reembolso que envió ${taf} falló en el procesador de pagos. Su margen en la Card ha vuelto.`,
   push_refunded_twice: (taf) => `Un cobro que reembolsó ${taf} también se reembolsó fuera de KIFF. Revísalo antes de reembolsar nada más.`,
+  push_refund_after_no: (taf) => `Un reembolso que envió ${taf}, y que dijiste que no ocurrió, sí se hizo en el procesador de pagos. Su margen en la Card vuelve a estar ocupado. Comprueba que la solicitud no se reembolsó dos veces.`,
   push_raise_title: "Piden subir el límite",
   push_raise_body: "Alguien de tu cuenta te pide subir el límite de gasto. Abre Plan y uso para responder.",
   push_pack_title: "Piden un paquete",

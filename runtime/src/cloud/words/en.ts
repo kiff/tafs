@@ -133,6 +133,7 @@ export const en = {
   push_refund_title: "A refund",
   push_refund_failed: (taf: string) => `A refund ${taf} sent failed at the payment processor. Its room on the Card came back.`,
   push_refunded_twice: (taf: string) => `A charge ${taf} refunded was also refunded outside KIFF. Check it before anything more is refunded.`,
+  push_refund_after_no: (taf: string) => `A refund ${taf} sent, which you said didn't happen, went through at the payment processor. Its room on the Card is taken again. Check the request wasn't refunded twice.`,
   push_raise_title: "A raise asked for",
   push_raise_body: "Someone on your account asks you to raise the spend limit. Open Plan & usage to answer.",
   push_pack_title: "A pack asked for",

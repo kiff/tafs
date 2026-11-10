@@ -133,6 +133,7 @@ export const de: Words = {
   push_refund_title: "Eine Erstattung",
   push_refund_failed: (taf) => `Eine Erstattung von ${taf} ist beim Zahlungsanbieter fehlgeschlagen. Der Spielraum dafür auf der Card ist wieder frei.`,
   push_refunded_twice: (taf) => `Eine Zahlung, die ${taf} erstattet hat, wurde auch außerhalb von KIFF erstattet. Prüfe sie, bevor weiter erstattet wird.`,
+  push_refund_after_no: (taf) => `Eine Erstattung von ${taf}, die laut dir nicht stattgefunden hat, ist beim Zahlungsanbieter doch durchgegangen. Der Spielraum dafür auf der Card ist wieder belegt. Prüfe, ob die Anfrage zweimal erstattet wurde.`,
   push_raise_title: "Erhöhung angefragt",
   push_raise_body: "Jemand in deinem Konto bittet dich, das Ausgabenlimit zu erhöhen. Öffne Tarif & Nutzung, um zu antworten.",
   push_pack_title: "Paket angefragt",

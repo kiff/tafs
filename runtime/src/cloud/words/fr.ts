@@ -133,6 +133,7 @@ export const fr: Words = {
   push_refund_title: "Un remboursement",
   push_refund_failed: (taf) => `Un remboursement envoyé par ${taf} a échoué chez le prestataire de paiement. Sa marge sur la Card est revenue.`,
   push_refunded_twice: (taf) => `Un paiement remboursé par ${taf} a aussi été remboursé en dehors de KIFF. Vérifiez-le avant tout autre remboursement.`,
+  push_refund_after_no: (taf) => `Un remboursement envoyé par ${taf}, dont vous aviez dit qu'il n'avait pas eu lieu, a bien été effectué chez le prestataire de paiement. Sa marge sur la Card est de nouveau prise. Vérifiez que la demande n'a pas été remboursée deux fois.`,
   push_raise_title: "Une hausse demandée",
   push_raise_body: "Quelqu'un sur votre compte vous demande de relever le plafond de dépenses. Ouvrez Forfait et utilisation pour répondre.",
   push_pack_title: "Un pack demandé",
