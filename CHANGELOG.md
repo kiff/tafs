@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach's tools step (tafs cloud).** `GET /v1/setup` sends the words of the step that asks for Coach's tools at the end of a first Start, in the person's language: four groups up front, each tool folded under them, with what it lets Coach do and why it needs a yes. Every limit comes from Coach's Cards (docs/coach.md).
 - **Plan & usage on a new account says less (tafs cloud).** Before a plan, the balance read no longer offers the First month pack: it comes only once Solo runs, with the other packs. A new `credits_panel` flag is false with no plan and no run this period or the last, so the apps can leave the Credits panel out for someone who just signed in (docs/accounts.md).
 - **The app's own language reaches every line (Android 1.1.2).** With tafs set to a language other than the phone's (Settings › Apps › tafs › Language), some of the app's own lines stayed in the phone's language, or in a language picked earlier: Home's "0 tafs working." read English in a German app. Each screen now reads the words in its own configuration's language, plurals included (docs/android-app.md).
 - **A new account's Home leads with the jobs (Android 1.1.2).** Where Home lists the jobs a taf can take, it no longer shows "0 tafs working" and "Nothing needs you" above them.

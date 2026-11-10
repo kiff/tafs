@@ -1361,6 +1361,9 @@ describe("Setup (kiff/agents#91)", () => {
     const coachCards = (active: boolean) => COACH_CARDS.map((c) => ({ id: c.id, subject: "setup-acme", active }) as Mandate);
     const first = await tools();
     expect(first.state).toBe("to_give");
+    // The step the app shows at the end of a first Start, in the person's words: four groups, each tool folded under them.
+    expect(first.coach_tools_step.title).toBe("Give Coach its tools");
+    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 4, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();
