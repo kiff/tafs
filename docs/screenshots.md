@@ -5,8 +5,9 @@ The apps with sample data, light and dark. The README's hero is
 
 ## iPhone and iPad
 
-From iOS CI's `screenshots` artifact, full set (a release build, or a manual run of the iOS
-workflow; a pull request that changes a screen takes a key set). See [ios-app.md](ios-app.md).
+From iOS CI's `screenshots` artifact, full set (a tag's build, or a manual run of the iOS
+workflow with `screenshots: full` and `upload` off, once no other manual run is in the
+queue; a pull request that changes a screen takes a key set). See [ios-app.md](ios-app.md).
 
 <p>
   <img src="screenshots/ios/welcome.png" width="200" alt="Welcome: They taf. You kiff.">
