@@ -1854,7 +1854,7 @@
     <string name="setup_schedule">La sua pianificazione</string>
     <string name="setup_section_description">%1$s. %2$s. Apri</string>
     <string name="setup_send_again">Invia di nuovo</string>
-    <string name="setup_skip_it">Saltalo</string>
+    <string name="setup_skip_it">Salta</string>
     <string name="setup_starts_when">Parte quando</string>
     <string name="setup_stop">Ferma</string>
     <string name="setup_title">Configurazione</string>

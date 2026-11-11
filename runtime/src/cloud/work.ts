@@ -3,6 +3,7 @@ import { type Lang, plural, type When, wordsIn } from "./words/index.js";
 import type { DeliveryView } from "./delivery.js";
 import { type Health, healthLine } from "./health.js";
 import type { Sent } from "./doors/model.js";
+import { isYourStep, type YourStepView, yourStepsOf } from "./yourstep.js";
 
 /**
  * Where a taf's work stands, as both apps show it (docs/reliability.md, "The taf's view"):
@@ -34,6 +35,8 @@ export interface RequestView {
   waiting_for?: string;
   /** Why a failed run stopped, as kiff/agents' code (`runFailure`), when it has one: its words are the line. */
   code?: string;
+  /** A step the taf handed its owner, waiting for "Done" or "Skip it" (yourstep.ts): its line is the step's. */
+  your_step?: YourStepView;
   /** Where its result went: the door's reply as far as tafs cloud sent it, and each place of the taf's own (delivery.ts). */
   deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true } | DeliveryView>;
 }
@@ -162,7 +165,10 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
     case "RUNNING":
       return { ...base, state: "working", line: w.work_working };
     case "PAUSED": {
-      if (r.requirements?.some((q) => q.exception && !q.answered)) return { ...base, state: "waiting", line: w.work_waiting_approval };
+      // A step handed to the owner reads as theirs to do, never as an approval: it comes first.
+      const step = yourStepsOf(r, lang)[0];
+      if (step) return { ...base, state: "waiting", line: step.words.line, your_step: step };
+      if (r.requirements?.some((q) => q.exception && !q.answered && !isYourStep(q))) return { ...base, state: "waiting", line: w.work_waiting_approval };
       // An open card is the owner's to answer: it comes before any wait on the app, so an owner's question is never drawn as the app's.
       if (r.requirements?.some((q) => q.kind === "card" && !q.answered)) return { ...base, state: "waiting", line: w.work_waiting_answer };
       const wait = r.requirements?.find((q) => q.kind === "event" && !q.answered && q.wait)?.wait;

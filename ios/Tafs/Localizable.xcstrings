@@ -93685,19 +93685,19 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Omitirla"
+            "value": "Omitir"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La sauter"
+            "value": "Passer"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saltalo"
+            "value": "Salta"
           }
         },
         "nl": {
@@ -93715,7 +93715,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ignorá-lo"
+            "value": "Saltar"
           }
         }
       }

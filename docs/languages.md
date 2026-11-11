@@ -89,6 +89,8 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | follow-up (one a taf set for itself) | Nachfassen | relance | seguimiento | promemoria | acompanhamento | opvolging | przypomnienie |
 | Working on it | Wird bearbeitet | En cours | Trabajando en ello | In corso | Em curso | Bezig | W toku |
 | Done | Erledigt | Terminé | Hecho | Fatto | Concluído | Klaar | Gotowe |
+| Your step (a step a taf handed its owner) | Dein Schritt | Votre étape | Tu paso | Il tuo passaggio | O seu passo | Jouw stap | Twój krok |
+| Skip it | Überspringen | Passer | Omitir | Salta | Saltar | Overslaan | Pomiń |
 | Failed | Fehlgeschlagen | Échec | Falló | Non riuscito | Falhou | Mislukt | Nie powiodło się |
 | Stopped | Gestoppt | Arrêté | Detenido | Fermato | Parado | Gestopt | Zatrzymane |
 | ran out of room (a reply cut off at its length limit) | hatte keinen Platz mehr | a manqué de place | se quedó sin espacio | ha esaurito lo spazio | ficou sem espaço | had geen ruimte meer | zabrakło miejsca |

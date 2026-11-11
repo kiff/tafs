@@ -8,6 +8,13 @@ export const en = {
   // A taf's work (work.ts): a request's line, the list's summary, and the firings it skipped.
   work_working: "Working on it",
   work_waiting_approval: "Waiting for your approval",
+  // "Your step": a step a taf may never take, handed to its owner to finish (docs/api.md, "Your step").
+  your_step_title: "Your step",
+  your_step_done: "Done",
+  your_step_skip: "Skip it",
+  your_step_open: (vendor: string) => `Open in ${vendor}`,
+  your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
+  your_step_line: (what: string) => `Your step: ${what}`,
   // What Coach is doing, one line per tool, in the person's language (steps.ts); a tool KIFF titles keeps its title.
   doing_show: "Showing you a card…",
   doing_results: "Setting where its results go…",
