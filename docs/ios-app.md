@@ -124,8 +124,8 @@ the app in sample mode.
     `raise` is set, **Add credits** (`BuyCreditsView`) where `buy.packs` is, and Solo
     (`SoloView`) where `buy.solo` is, under **Choose a plan**. Under Solo's line, `buy.coach`
     says what Coach's help includes, tafs cloud's sentence as kiff.dev says it; none sent, or a
-    blank one, no line. "Add credits" shows only once Solo runs. A 404 shows no balance, and a failed read keeps what was read with tafs cloud's
-    words above it.
+    blank one, no line. "Add credits" shows only once Solo runs. A 404 shows no balance, and a
+    failed read keeps what was read with tafs cloud's words above it.
   - **The packs** (`AppModel.offeredPacks`): the First month pack comes first, only where
     `buy.first_month` is set and `ready`, then the packs that can be bought again
     (`Store.offered(firstMonth:)`). Not ready, it isn't listed: never alone or greyed. KIFF
