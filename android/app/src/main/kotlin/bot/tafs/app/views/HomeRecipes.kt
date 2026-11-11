@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -55,26 +56,32 @@ internal fun HomeRecipes(recipes: Recipes, labels: RecipeLabels, onOpen: (Recipe
     if (groups.size > 1) {
       FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         groups.forEach { (category, _) ->
-          CategoryChip(category.title, picked == category.id) { picked = if (picked == category.id) null else category.id }
+          CategoryChip(category.title, picked == category.id, categoryColor(category)) { picked = if (picked == category.id) null else category.id }
         }
       }
     }
     groups.filter { picked == null || it.first.id == picked }.forEach { (category, inIt) ->
       Eyebrow(category.title)
-      inIt.forEach { recipe -> HomeRecipeRow(recipe) { onOpen(recipe) } }
+      inIt.forEach { recipe -> JobRow(recipe, categoryColor(category)) { onOpen(recipe) } }
     }
   }
 }
 
+/** A category's colour, tafs cloud's token for the theme on screen; null from an older tafs cloud. */
+internal fun categoryColor(category: bot.tafs.app.kiff.RecipeCategory?): androidx.compose.ui.graphics.Color? =
+  category?.color?.argb(Theme.dark)?.let { androidx.compose.ui.graphics.Color(it) }
+
 @Composable
-private fun CategoryChip(title: String, selected: Boolean, onClick: () -> Unit) {
+private fun CategoryChip(title: String, selected: Boolean, color: androidx.compose.ui.graphics.Color?, onClick: () -> Unit) {
+  // The category's colour, where tafs cloud gives one: its text and edge, and its ground once picked.
+  val tint = color ?: Theme.ink
   Text(
     title,
-    style = scaled(13, color = if (selected) Theme.background else Theme.soft),
+    style = scaled(13, color = if (selected) Theme.background else color ?: Theme.soft),
     modifier = Modifier
       .clip(CircleShape)
-      .background(if (selected) Theme.ink else Theme.panel)
-      .border(BorderStroke(1.dp, if (selected) Theme.ink else Theme.line), CircleShape)
+      .background(if (selected) tint else Theme.panel)
+      .border(BorderStroke(1.dp, if (selected || color != null) tint else Theme.line), CircleShape)
       .clickable(onClick = onClick)
       .semantics { this.selected = selected }
       .heightIn(min = 32.dp)
@@ -82,12 +89,70 @@ private fun CategoryChip(title: String, selected: Boolean, onClick: () -> Unit) 
   )
 }
 
-/** One recipe on Home: the problem it removes first, then its line. A recipe from before headlines leads with its title. */
+/**
+ * One job: the problem it removes first, then its line, then the apps its taf works with, each with its logo. Its category's colour
+ * is its edge. A recipe from before headlines leads with its title.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun HomeRecipeRow(recipe: Recipe, onClick: () -> Unit) {
-  Panel(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+internal fun JobRow(recipe: Recipe, color: androidx.compose.ui.graphics.Color?, onClick: () -> Unit) {
+  val edge = Modifier.drawBehind { if (color != null) drawRect(color, size = androidx.compose.ui.geometry.Size(4.dp.toPx(), size.height)) }
+  Panel(modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).then(edge).clickable(onClick = onClick)) {
     Text(recipe.headline.ifBlank { recipe.title }, style = scaled(16, FontWeight.SemiBold, Theme.ink))
     if (recipe.line.isNotBlank()) Text(recipe.line, style = scaled(14, color = Theme.soft))
+    if (recipe.apps.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      recipe.apps.forEach { app -> if (app.name.isNotBlank()) bot.tafs.app.design.AppWithLogo(app.name, app.logo) }
+    }
+  }
+}
+
+/**
+ * Every job a taf can take, from + New on Tafs (`GET /v1/recipes/gallery`, docs/android-app.md), also once a taf runs: a chip per
+ * category, each job in its colour, and "Say it in your own words", which opens Coach empty. Every word is tafs cloud's.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+internal fun GallerySheet(gallery: bot.tafs.app.kiff.RecipesGallery, canUseCoach: Boolean, onOpen: (Recipe) -> Unit, onOwnWords: () -> Unit, onClose: () -> Unit) {
+  var picked by rememberSaveable { mutableStateOf<String?>(null) }
+  val groups = gallery.byCategory
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+    Column(
+      Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      gallery.words?.title?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(24, FontWeight.Bold, Theme.ink, display = true)) }
+      // In the person's own words: Coach, empty, to build the taf with them.
+      val words = gallery.words
+      if (canUseCoach && words != null && words.ownWords.isNotBlank()) {
+        Panel(modifier = Modifier.fillMaxWidth().clickable(onClick = onOwnWords)) {
+          Text(words.ownWords, style = scaled(16, FontWeight.SemiBold, Theme.amberText))
+          if (words.ownWordsLine.isNotBlank()) Text(words.ownWordsLine, style = scaled(14, color = Theme.soft))
+        }
+      }
+      words?.all?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(17, FontWeight.SemiBold, Theme.ink)) }
+      if (groups.size > 1) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          groups.forEach { (category, _) ->
+            CategoryChip(category.title, picked == category.id, categoryColor(category)) { picked = if (picked == category.id) null else category.id }
+          }
+        }
+      }
+      groups.filter { picked == null || it.first.id == picked }.forEach { (category, inIt) ->
+        Eyebrow(category.title)
+        inIt.forEach { recipe -> JobRow(recipe, categoryColor(category)) { onOpen(recipe) } }
+      }
+    }
+  }
+}
+
+/** Under the tafs list: a few jobs the account doesn't run yet, as tafs cloud picks and orders them. Nothing when it shows none. */
+@Composable
+internal fun JobStrip(gallery: bot.tafs.app.kiff.RecipesGallery, onOpen: (Recipe) -> Unit) {
+  val jobs = gallery.stripRecipes
+  if (jobs.isEmpty()) return
+  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    gallery.strip?.title?.takeIf { it.isNotBlank() }?.let { Eyebrow(it) }
+    jobs.forEach { recipe -> JobRow(recipe, categoryColor(gallery.category(recipe.category))) { onOpen(recipe) } }
   }
 }
 
