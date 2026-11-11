@@ -1126,6 +1126,21 @@
   "halt.now": "Bloquer maintenant",
   "halt.row_running": "L'arrêter jusqu'à ce que vous le repreniez",
   "halt.your_tafs_lower": "vos tafs",
+  "halt_all.description": "Bloque tous les tafs d'un coup. Rien de nouveau n'est envoyé tant que vous ne les reprenez pas dans tafs.",
+  "halt_all.failed": "tafs n'a pas pu bloquer vos tafs. {why} Ouvrez tafs pour les bloquer.",
+  "halt_all.halted": {
+    "one": "{count} taf bloqué. Rien de nouveau n'est envoyé tant que vous ne reprenez pas.",
+    "other": "{count} tafs bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
+  },
+  "halt_all.halted_all": "Vos tafs sont bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas.",
+  "halt_all.halting": {
+    "one": "Blocage de {count} taf : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait.",
+    "other": "Blocage de {count} tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
+  },
+  "halt_all.halting_all": "Blocage de vos tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait.",
+  "halt_all.running": "tafs n'a pas pu bloquer vos tafs. Ouvrez tafs pour les bloquer.",
+  "halt_all.signed_out": "Vous êtes déconnecté de tafs. Connectez-vous pour bloquer vos tafs.",
+  "halt_all.title": "Bloquer tous les tafs",
   "home.calendar_not_read": "Le calendrier n'a pas pu être lu. {why}",
   "home.cant_reach_kiff": "Impossible de joindre KIFF",
   "home.choose_taf": "Choisissez un taf.",
@@ -1878,21 +1893,6 @@
   "sign_in.welcome.title": "Ils tafent.\nVous kiffez.",
   "sign_in.with_kiff": "Se connecter avec KIFF",
   "sign_in.your_code": "Votre code",
-  "siri.halt_all.description": "Bloque tous les tafs d'un coup. Rien de nouveau n'est envoyé tant que vous ne les reprenez pas dans tafs.",
-  "siri.halt_all.failed": "tafs n'a pas pu bloquer vos tafs. {why} Ouvrez tafs pour les bloquer.",
-  "siri.halt_all.halted": {
-    "one": "{count} taf bloqué. Rien de nouveau n'est envoyé tant que vous ne reprenez pas.",
-    "other": "{count} tafs bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
-  },
-  "siri.halt_all.halted_all": "Vos tafs sont bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas.",
-  "siri.halt_all.halting": {
-    "one": "Blocage de {count} taf : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait.",
-    "other": "Blocage de {count} tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
-  },
-  "siri.halt_all.halting_all": "Blocage de vos tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait.",
-  "siri.halt_all.running": "tafs n'a pas pu bloquer vos tafs. Ouvrez tafs pour les bloquer.",
-  "siri.halt_all.signed_out": "Vous êtes déconnecté de tafs. Connectez-vous pour bloquer vos tafs.",
-  "siri.halt_all.title": "Bloquer tous les tafs",
   "taf.activity.all_apps": "Toutes les apps",
   "taf.activity.checking_waits": "Vérification de ce qui vous attend…",
   "taf.activity.reading_notes": "Lecture de ses notes…",

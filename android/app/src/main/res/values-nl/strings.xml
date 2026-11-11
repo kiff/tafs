@@ -1129,6 +1129,21 @@
     <string name="halt_now">Nu stilzetten</string>
     <string name="halt_row_running">Zet het stil tot je hervat</string>
     <string name="halt_your_tafs_lower">je tafs</string>
+    <string name="halt_all_description">Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat.</string>
+    <string name="halt_all_failed">tafs kon je tafs niet stilzetten. %1$s Open tafs om ze stil te zetten.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">%1$s taf stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
+        <item quantity="other">%1$s tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
+    </plurals>
+    <string name="halt_all_halted_all">Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">%1$s taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
+        <item quantity="other">%1$s tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</string>
+    <string name="halt_all_running">tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.</string>
+    <string name="halt_all_signed_out">Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.</string>
+    <string name="halt_all_title">Alle tafs stilzetten</string>
     <string name="home_calendar_not_read">De agenda kon niet worden gelezen. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF is niet bereikbaar</string>
     <string name="home_choose_taf">Kies een taf.</string>
@@ -1881,21 +1896,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Inloggen met KIFF</string>
     <string name="sign_in_your_code">Je code</string>
-    <string name="siri_halt_all_description">Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat.</string>
-    <string name="siri_halt_all_failed">tafs kon je tafs niet stilzetten. %1$s Open tafs om ze stil te zetten.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">%1$s taf stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
-        <item quantity="other">%1$s tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">%1$s taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
-        <item quantity="other">%1$s tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</string>
-    <string name="siri_halt_all_running">tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.</string>
-    <string name="siri_halt_all_signed_out">Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.</string>
-    <string name="siri_halt_all_title">Alle tafs stilzetten</string>
     <string name="taf_activity_all_apps">Alle apps</string>
     <string name="taf_activity_checking_waits">Controleren wat op je wacht…</string>
     <string name="taf_activity_reading_notes">Notities lezen…</string>

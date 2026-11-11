@@ -1215,6 +1215,25 @@
     <string name="halt_now">Zablokuj teraz</string>
     <string name="halt_row_running">Zatrzymaj, dopóki nie wznowisz</string>
     <string name="halt_your_tafs_lower">Twoje tafs</string>
+    <string name="halt_all_description">Blokuje wszystkie tafs naraz. Nic nowego nie zostanie wysłane, dopóki ich nie wznowisz w tafs.</string>
+    <string name="halt_all_failed">tafs nie mógł zablokować Twoich tafs. %1$s Otwórz tafs, aby je zablokować.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">Zablokowano %1$s taf. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
+        <item quantity="few">Zablokowano %1$s tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
+        <item quantity="many">Zablokowano %1$s tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
+        <item quantity="other">Zablokowano %1$s tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
+    </plurals>
+    <string name="halt_all_halted_all">Twoje tafs są zablokowane. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">Blokowanie %1$s tafa: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
+        <item quantity="few">Blokowanie %1$s tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
+        <item quantity="many">Blokowanie %1$s tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
+        <item quantity="other">Blokowanie %1$s tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Blokowanie Twoich tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</string>
+    <string name="halt_all_running">tafs nie mógł zablokować Twoich tafs. Otwórz tafs, aby je zablokować.</string>
+    <string name="halt_all_signed_out">Wylogowano z tafs. Zaloguj się, aby zablokować swoje tafs.</string>
+    <string name="halt_all_title">Zablokuj wszystkie tafs</string>
     <string name="home_calendar_not_read">Nie udało się odczytać kalendarza. %1$s</string>
     <string name="home_cant_reach_kiff">Brak połączenia z KIFF</string>
     <string name="home_choose_taf">Wybierz tafa.</string>
@@ -1989,25 +2008,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Zaloguj się przez KIFF</string>
     <string name="sign_in_your_code">Twój kod</string>
-    <string name="siri_halt_all_description">Blokuje wszystkie tafs naraz. Nic nowego nie zostanie wysłane, dopóki ich nie wznowisz w tafs.</string>
-    <string name="siri_halt_all_failed">tafs nie mógł zablokować Twoich tafs. %1$s Otwórz tafs, aby je zablokować.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">Zablokowano %1$s taf. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
-        <item quantity="few">Zablokowano %1$s tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
-        <item quantity="many">Zablokowano %1$s tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
-        <item quantity="other">Zablokowano %1$s tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">Twoje tafs są zablokowane. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">Blokowanie %1$s tafa: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
-        <item quantity="few">Blokowanie %1$s tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
-        <item quantity="many">Blokowanie %1$s tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
-        <item quantity="other">Blokowanie %1$s tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Blokowanie Twoich tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.</string>
-    <string name="siri_halt_all_running">tafs nie mógł zablokować Twoich tafs. Otwórz tafs, aby je zablokować.</string>
-    <string name="siri_halt_all_signed_out">Wylogowano z tafs. Zaloguj się, aby zablokować swoje tafs.</string>
-    <string name="siri_halt_all_title">Zablokuj wszystkie tafs</string>
     <string name="taf_activity_all_apps">Wszystkie aplikacje</string>
     <string name="taf_activity_checking_waits">Sprawdzanie, co na Ciebie czeka…</string>
     <string name="taf_activity_reading_notes">Odczytywanie jego notatek…</string>
