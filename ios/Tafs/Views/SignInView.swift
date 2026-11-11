@@ -17,7 +17,7 @@ struct SignInView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
                 Text(Words.SignIn.withKiff).scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                Text(Words.SignIn.lead)
+                Text(Words.SignIn.lead(device: "\(ThisDevice.kind)"))
                     .scaledFont(15).foregroundColor(Theme.soft)
 
                 if let start {

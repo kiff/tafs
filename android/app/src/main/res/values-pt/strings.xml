@@ -1869,7 +1869,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Cada ação de um taf passa pelo KIFF, que verifica o seu Card antes de algo chegar a uma app. As suas respostas são assinadas neste %1$s.</string>
     <string name="sign_in_how_works">Como funciona</string>
     <string name="sign_in_ios_did_not_open_sign">O iOS não abriu a página de início de sessão (erro %1$s; %2$s). Tente novamente com o tafs aberto.</string>
-    <string name="sign_in_lead">Os seus tafs agem ao abrigo de Cards do KIFF. Aprove este telefone no KIFF, e os Cards que emitiu aparecem aqui.</string>
+    <string name="sign_in_lead">Os seus tafs agem ao abrigo de Cards do KIFF. Aprove este %1$s no KIFF, e os Cards que emitiu aparecem aqui.</string>
     <string name="sign_in_not_signed_out">Ainda sem sessão terminada no KIFF. Tente novamente, ou termine a sessão deste telefone em Dispositivos noutro dispositivo.</string>
     <string name="sign_in_not_signed_out_device">Ainda sem sessão terminada no KIFF: %1$s. Tente novamente, ou termine a sessão deste %2$s em Dispositivos noutro dispositivo.</string>
     <string name="sign_in_open_kiff">Abrir o KIFF para aprovar</string>

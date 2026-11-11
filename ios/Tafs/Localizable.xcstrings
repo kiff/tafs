@@ -94468,49 +94468,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine tafs handeln unter KIFF-Cards. Genehmige dieses Telefon in KIFF, und die Cards, die du ausgestellt hast, erscheinen hier."
+            "value": "Deine tafs handeln unter KIFF-Cards. Genehmige dieses %1$@ in KIFF, und die Cards, die du ausgestellt hast, erscheinen hier."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here."
+            "value": "Your tafs act under KIFF Cards. Approve this %1$@ in KIFF, and the Cards you issued show up here."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tus tafs actúan con Cards de KIFF. Aprueba este teléfono en KIFF y aquí aparecerán las Cards que emitiste."
+            "value": "Tus tafs actúan con Cards de KIFF. Aprueba este %1$@ en KIFF y aquí aparecerán las Cards que emitiste."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vos tafs agissent sous des Cards KIFF. Approuvez ce téléphone dans KIFF, et les Cards que vous avez émises s'affichent ici."
+            "value": "Vos tafs agissent sous des Cards KIFF. Approuvez cet %1$@ dans KIFF, et les Cards que vous avez émises s'affichent ici."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I tuoi tafs agiscono con le Card di KIFF. Approva questo telefono in KIFF, e le Card che hai emesso compaiono qui."
+            "value": "I tuoi tafs agiscono con le Card di KIFF. Approva questo %1$@ in KIFF, e le Card che hai emesso compaiono qui."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je tafs handelen onder KIFF-Cards. Je kunt deze telefoon goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen."
+            "value": "Je tafs handelen onder KIFF-Cards. Je kunt deze %1$@ goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twoje tafs działają w ramach Card KIFF. Zatwierdź ten telefon w KIFF, a wydane przez Ciebie Card pojawią się tutaj."
+            "value": "Twoje tafs działają w ramach Card KIFF. Zatwierdź to urządzenie (%1$@) w KIFF, a wydane przez Ciebie Card pojawią się tutaj."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os seus tafs agem ao abrigo de Cards do KIFF. Aprove este telefone no KIFF, e os Cards que emitiu aparecem aqui."
+            "value": "Os seus tafs agem ao abrigo de Cards do KIFF. Aprove este %1$@ no KIFF, e os Cards que emitiu aparecem aqui."
           }
         }
       }

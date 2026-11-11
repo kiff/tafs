@@ -1866,7 +1866,7 @@
   "sign_in.every_action_taf_takes_goes": "Jede Aktion eines tafs läuft über KIFF, das seine Card prüft, bevor etwas eine App erreicht. Deine Antworten werden auf diesem {device} signiert.",
   "sign_in.how_works": "So funktioniert es",
   "sign_in.ios_did_not_open_sign": "iOS hat die Anmeldeseite nicht geöffnet (Fehler {code}; {context}). Versuch es erneut, während tafs geöffnet ist.",
-  "sign_in.lead": "Deine tafs handeln unter KIFF-Cards. Genehmige dieses Telefon in KIFF, und die Cards, die du ausgestellt hast, erscheinen hier.",
+  "sign_in.lead": "Deine tafs handeln unter KIFF-Cards. Genehmige dieses {device} in KIFF, und die Cards, die du ausgestellt hast, erscheinen hier.",
   "sign_in.not_signed_out": "Bei KIFF noch nicht abgemeldet. Versuch es erneut oder melde dieses Telefon über „Geräte“ auf einem anderen Gerät ab.",
   "sign_in.not_signed_out_device": "Bei KIFF noch nicht abgemeldet: {why}. Versuch es erneut oder melde dieses {device} über „Geräte“ auf einem anderen Gerät ab.",
   "sign_in.open_kiff": "KIFF zum Genehmigen öffnen",

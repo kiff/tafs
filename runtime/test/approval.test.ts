@@ -81,6 +81,8 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
   const tafs = memoryTafs();
   const taf: Taf = { id: COACH, name: "Coach", job: "setup", kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
   tafs.held.set(`t_acme#${COACH}`, taf);
+  // The taf being set up, whose agent the grant is for: the phone's prompt names it.
+  tafs.held.set("t_acme#taf-rrrr0000000000000000", { id: "taf-rrrr0000000000000000", name: "Refunds", job: "refunds", kiffAgent: "refunds-x", nameClaim: "r", created: "2026-10-15T09:00:00Z" });
   await agents.api.putAgent("t_acme", COACH, {} as never);
   agents.access.set("u_ana", { cards_manage: true });
   const run = await agents.api.startRun("t_acme", COACH, "Set up refunds", ANA);
@@ -126,7 +128,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({
       outcome: "sign",
-      ask: { step: "connect", message: `tafs.connect.v1|t_acme|g_1|${sha256(grant().request)}`, reason: "Connect Stripe to refunds-x", planque: { grant: "g_1", body: { digest: sha256(grant().request) } } },
+      ask: { step: "connect", message: `tafs.connect.v1|t_acme|g_1|${sha256(grant().request)}`, reason: "Connect Stripe to Refunds", planque: { grant: "g_1", body: { digest: sha256(grant().request) } } },
     });
     expect((r.body.ask as { planque: { body: object } }).planque.body).not.toHaveProperty("kiff_profile");
     expect(w.told()).toBeUndefined();
@@ -239,6 +241,20 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(w.told()).toMatchObject({ answer: "already approved: Stripe is connected and its Card is confirmed" });
   });
 
+  it("the phone's signing prompt names the app and the taf in the person's language, never a server slug or agent id", async () => {
+    // As the French iPad showed it: planque's vendor was the server's slug and the agent its id.
+    const s = services();
+    s.grants = [grant({ vendor: "stripe-mcp" })];
+    const w = await world(s);
+    const fr = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) }, { "accept-language": "fr-FR" });
+    expect((fr.body.ask as { reason: string }).reason).toBe("Connecter Stripe à Refunds");
+    // A taf tafs cloud doesn't hold by that agent: the app alone, never the agent id.
+    s.grants = [grant({}, { agent: "taf-x9" })];
+    const unnamed = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant({}, { agent: "taf-x9" }).request) }, { "accept-language": "fr-FR" });
+    expect((unnamed.body.ask as { reason: string }).reason).toBe("Connecter Stripe");
+    expect(JSON.stringify(unnamed.body)).not.toContain("taf-x9\"");
+  });
+
   it("the Cards over a connected vendor: KIFF's draft at the version shown, one message to sign", async () => {
     const s = services();
     s.grants = [grant({ status: "connected" })];
@@ -247,7 +263,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const old = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v2" });
     expect(old.body).toEqual({ outcome: "read_again", note: WORDS.outOfDate });
     const r = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
-    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "cards", message: "tafs.cards.v1|t_acme|drf_1|v3", reason: "Give refunds-x its Card", kiff: { draft: "drf_1", version: "v3" } } });
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "cards", message: "tafs.cards.v1|t_acme|drf_1|v3", reason: "Give Refunds its Card", kiff: { draft: "drf_1", version: "v3" } } });
     expect(r.body.ask).not.toHaveProperty("planque");
     expect(w.told()).toBeUndefined();
   });
