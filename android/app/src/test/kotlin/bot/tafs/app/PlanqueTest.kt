@@ -1634,4 +1634,12 @@ class PlanqueTest {
     planque().grants()
     assertEquals(bot.tafs.app.kiff.KiffClient.screenLanguage(), transport.requests.single().headers["Accept-Language"])
   }
+
+  @Test fun theSharedVectorIsTheSameOnEveryApp() = runTest {
+    // The vector planque and iOS pin (kiff/planque#132, kiff/tafs#709), byte for byte: the three agree on what's signed.
+    val request = """{"agent":"books","asked_by":"setup-agent","created_at":"2026-11-11T16:00:00Z","grant":"g_02","server":"https://mcp.qonto.com/mcp","tenant":"t_01","tools":[{"read_only":true,"tool":"list_invoices"}],"v":"planque.grant.v1"}"""
+    val grant = """{"id":"g_02","status":"pending","text":"books pourra lire vos factures sur mcp.qonto.com","lang":"fr","digest_v":2,""" +
+      """"digest":"f1ca3ab371ecf97a82d134204e4931ef39ea474b7cd6a3e233b36f97499fbb32","request":$request,"audience":"https://planque.kiff.dev/mcp/t_01/g_02","events":[]}"""
+    assertTrue(readGrant(grant).digestMatches)
+  }
 }
