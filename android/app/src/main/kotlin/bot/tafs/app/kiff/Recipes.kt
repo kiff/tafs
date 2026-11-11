@@ -26,7 +26,60 @@ data class Recipes(
 }
 
 @Serializable
-data class RecipeCategory(val id: String, val title: String)
+data class RecipeCategory(
+  val id: String,
+  val title: String,
+  /** The category's colour, tafs cloud's token for each theme, for its chip and its cards' edge. Absent from an older tafs cloud. */
+  val color: CategoryColor? = null,
+)
+
+/** A colour as tafs cloud gives it, `#RRGGBB` for the light theme and for the dark one, both checked as text on the app's grounds. */
+@Serializable
+data class CategoryColor(val light: String = "", val dark: String = "") {
+  /** The colour for [dark], as ARGB; null when tafs cloud's value isn't `#RRGGBB`. */
+  fun argb(dark: Boolean): Long? = (if (dark) this.dark else light).let { hex ->
+    if (!Regex("^#[0-9A-Fa-f]{6}$").matches(hex)) null else 0xFF000000L or hex.substring(1).toLong(16)
+  }
+}
+
+/** One app a recipe's taf works with: its name, and its logo's path on tafs cloud when it has one. */
+@Serializable
+data class RecipeApp(val name: String = "", val logo: String? = null)
+
+/**
+ * Every job a taf can take, for + New and the strip under the tafs list (`GET /v1/recipes/gallery`, docs/android-app.md): also once a
+ * taf runs. tafs cloud picks the strip's jobs and their order; the app draws [strip]'s ids as they come.
+ */
+@Serializable
+data class RecipesGallery(
+  val categories: List<RecipeCategory> = emptyList(),
+  val recipes: List<Recipe> = emptyList(),
+  val strip: GalleryStrip? = null,
+  val words: GalleryWords? = null,
+  val labels: RecipeLabels? = null,
+) {
+  val byCategory: List<Pair<RecipeCategory, List<Recipe>>>
+    get() = categories.map { c -> c to recipes.filter { it.category == c.id } }.filter { it.second.isNotEmpty() }
+
+  /** The strip's jobs, in tafs cloud's order; none when it isn't shown or names none the gallery has. */
+  val stripRecipes: List<Recipe>
+    get() = if (strip?.shown != true) emptyList() else strip.ids.mapNotNull { id -> recipes.firstOrNull { it.id == id } }
+
+  fun category(id: String): RecipeCategory? = categories.firstOrNull { it.id == id }
+}
+
+@Serializable
+data class GalleryStrip(val shown: Boolean = false, val title: String = "", val ids: List<String> = emptyList())
+
+/** The gallery's words, tafs cloud's in the person's language. */
+@Serializable
+data class GalleryWords(
+  val title: String = "",
+  /** The heading over every job. */
+  val all: String = "",
+  @kotlinx.serialization.SerialName("own_words") val ownWords: String = "",
+  @kotlinx.serialization.SerialName("own_words_line") val ownWordsLine: String = "",
+)
 
 /** The account's "Show suggestions" setting, kept in tafs cloud: whether it's on, and tafs cloud's words for it. */
 @Serializable
@@ -49,6 +102,12 @@ data class Recipe(
   val headline: String = "",
   val today: String = "",
   val card: RecipeCard = RecipeCard(),
+  /** The apps its taf works with, each with its logo on tafs cloud. */
+  val apps: List<RecipeApp> = emptyList(),
+  /** Every app it needs is connected already. */
+  val connected: Boolean = false,
+  /** A taf on the account was built from it. */
+  val running: Boolean = false,
 )
 
 /** The Card a recipe's taf would have, as its file says it: what it does on its own, asks first, and never does. */

@@ -240,6 +240,8 @@ data class ConnectApps(
     val vendor: String = "",
     val title: String = "",
     val icon: String? = null,
+    /** The app's logo, a path on tafs cloud (`/v1/logos/{key}`), never a URL: loaded from tafs cloud alone. */
+    val logo: String? = null,
     /** oauth or key. */
     val how: String = "oauth",
     /** connected, available, needs_reconnect or needs_setup. */

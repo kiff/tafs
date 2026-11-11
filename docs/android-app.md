@@ -58,6 +58,24 @@ person's language.
 - **When it's read:** the recipes are read with each refresh that finds no taf, as well as when
   Coach opens (`RecipesTest`, `HomeRecipesTest`).
 
+**Every job, also once a taf runs** (`GET /v1/recipes/gallery`, read with each refresh;
+[coach.md](coach.md#the-gallery)). tafs cloud decides what shows; the app draws it.
+- **+ New** on Tafs, beside the tagline, in tafs cloud's `words.title`, opens the gallery
+  (`GallerySheet`): its title, "Say it in your own words" (`own_words`), which opens Coach on a new,
+  empty conversation (`AppModel.openCoachEmpty`), then `words.all`, a chip per category, and every
+  job. Only for someone who may use Coach. A tafs cloud without the route shows no + New.
+- **The strip** under the tafs list (`JobStrip`) draws `strip.ids` in their order, under
+  `strip.title`, while `strip.shown`. An id the gallery doesn't list is left out.
+- **A job** (`JobRow`, also on Home with no taf) leads with its headline, then its line, then its
+  apps, each with its logo. Its category's colour is its edge, and its chip's; the colour is tafs
+  cloud's token for the theme on screen (`CategoryColor`), and without one the app's own colours
+  show. A tap opens the same sheet as on Home, with the gallery's `labels`.
+- **Logos** (`LogoStore`, `AppWithLogo`) load only tafs cloud's own `/v1/logos/{key}` paths, with no
+  session: any other value, a URL included, draws the name alone, so no request ever leaves for a
+  third party. They're kept in memory and on disk for a week, as tafs cloud's `max-age` says.
+  Connect apps shows an app's logo in place of its initial when tafs cloud sends one
+  (`GalleryTest`, `GalleryScreenTest`).
+
 ## Building and testing
 
 ```bash
