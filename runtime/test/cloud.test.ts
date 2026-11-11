@@ -523,7 +523,8 @@ describe("tafs cloud", () => {
       { ...at("2026-10-29T09:30:00.000Z"), outcome: "failed_retrying", run: "r4" },
       { ...at("2026-10-29T09:15:00.000Z"), outcome: "failed_check" },
       { ...at("2026-10-29T09:00:00.000Z"), outcome: "skipped_switching" },
-      // Not listed: a halt's and a credits skip are said elsewhere, a quiet check and a run aren't skips, and an outcome not known here is left out.
+      // Listed (wave 1): work waiting for credits started no run. Not listed: a halt's skip is said elsewhere, a
+      // quiet check and a run aren't skips, and an outcome not known here is left out.
       { ...at("2026-10-29T08:45:00.000Z"), outcome: "skipped_halted" },
       { ...at("2026-10-29T08:30:00.000Z"), outcome: "skipped_credits" },
       { ...at("2026-10-29T08:15:00.000Z"), outcome: "quiet" },
@@ -535,6 +536,7 @@ describe("tafs cloud", () => {
       { due: "2026-10-29T09:30:00.000Z", why: "retrying", words: "The 09:30 run didn't finish: its work goes to the next run" },
       { due: "2026-10-29T09:15:00.000Z", why: "check_failed", words: "The 09:15 check couldn't read the app" },
       { due: "2026-10-29T09:00:00.000Z", why: "switching", words: "Skipped the 09:00 run: its taf was switching versions" },
+      { due: "2026-10-29T08:30:00.000Z", why: "credits", words: "Skipped the 08:30 run: your account's tafs wait for credits" },
     ]);
     // In the reader's language too.
     const es = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana", headers: { "accept-language": "es" } });
@@ -572,6 +574,39 @@ describe("tafs cloud", () => {
     const halted = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
     expect(halted.body.summary.status).toBe("halted");
     expect(halted.body.summary.line).not.toContain("couldn't start");
+  });
+
+  it("never reads skipped work as healthy: an oversized batch and a credits wait say why on the page and on Home, with the fix (wave 1)", async () => {
+    const w = world();
+    const at = (iso: string) => ({ due: iso, at: iso });
+    // An oversized batch: the check found work too big for one run, twice, so nothing ran.
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:45:00.000Z"), outcome: "skipped_too_large" },
+      { ...at("2026-10-29T09:30:00.000Z"), outcome: "skipped_too_large" },
+      { ...at("2026-10-29T09:15:00.000Z"), outcome: "run", run: "r1" },
+    ]);
+    const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(page.body.health).toEqual({
+      level: "failing",
+      lines: ["Its last 2 checks found work too big for one run, so nothing ran. Have Coach narrow what it reads, so each piece fits one run."],
+      fixes: [{ line: 0, kind: "coach", words: "Narrow it with Coach", say: "Its last check found work too big for one run. Narrow what it reads, so each piece fits one run." }],
+    });
+    expect(page.body.skipped.map((s: { why: string; words: string }) => [s.why, s.words])).toEqual([
+      ["too_large", "Skipped the 09:45 run: its work was too big for one run"],
+      ["too_large", "Skipped the 09:30 run: its work was too big for one run"],
+    ]);
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.body.tafs.find((t: { id: string }) => t.id === RAE).health).toEqual(page.body.health);
+    // Waiting for credits: at risk, since the first wait, with Add credits, or Ask an admin without billing.
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:45:00.000Z"), outcome: "skipped_credits" },
+      { ...at("2026-10-29T09:30:00.000Z"), outcome: "skipped_credits" },
+      { ...at("2026-10-29T09:15:00.000Z"), outcome: "run", run: "r1" },
+    ]);
+    const credits = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(credits.body.health).toMatchObject({ level: "at_risk", lines: ["Waiting for credits since 09:30."] });
+    // Ana manages Cards but not billing: she's offered to ask an admin (one with billing.manage gets Add credits).
+    expect(credits.body.health.fixes).toEqual([{ line: 0, kind: "credits", words: "Ask an admin for credits" }]);
   });
 
   it("shows a taf as before, with no health, when its firings can't be read or come too slowly", async () => {
