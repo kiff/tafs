@@ -1316,6 +1316,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach couldn\'t open on it. %1$s</string>
     <string name="needs_you_waiting_for_browser">Waiting for your browser…</string>
     <string name="needs_you_when_taf_asks_something_outside">When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this %1$s and its lock screen, even with tafs closed.</string>
+    <string name="needs_you_your_step_ended">This step was already answered or has ended.</string>
+    <string name="needs_you_your_step_not_answered">Your answer didn\'t go through. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Not answered: it wasn\'t confirmed.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nothing yet</string>
     <string name="people_account_people">THE ACCOUNT\'S PEOPLE</string>

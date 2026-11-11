@@ -504,6 +504,32 @@ taf, and **Ask Coach** opens a conversation about the taf.
   <img src="screenshots/android/record-by-taf-dark.png" width="160" alt="The Record by taf, in dark: a chip per taf, each entry starting with its taf">
 </p>
 
+## Your step
+
+A step a taf may never take itself, such as approving a bank transfer, is handed to its owner
+([api.md](api.md#your-step)). Signed in, Home's `your_steps` come first in **Needs you**, oldest
+first, each a panel (`YourStepPanel`, `views/YourStepViews.kt`) in tafs cloud's words: its title and
+the taf's name, what to do, and why. Needs you counts each once, as tafs cloud does.
+
+- **Open in {vendor}** shows only for an https `link` whose own host is tafs cloud's `link_host`,
+  with `words.open` (`YourStep.open`, as iOS's `openLink`). It opens the browser on that link, and
+  the host shows under the button, so the line names where it really goes. A link with no host apart,
+  another host, or plain http shows the words with no button, as does one tafs cloud left out.
+- **Done** and **Skip it** are for those who answer holds (`canAnswerHolds`). Each reads the hand-off
+  from KIFF (`GET /v1/me/handoffs/{id}`) for its version, signs KIFF's `kiff.handoff.v1` (tenant,
+  hand-off, `done` or `skipped`, version, signed_at) with the **device key** (the signing key KIFF
+  binds to the session), after the screen lock, as a refusal is signed. It's never the approval key
+  and never needs a fingerprint, since answering grants nothing. It then sends it to KIFF
+  (`POST /v1/me/handoffs/{id}/answer`, `AppModel.answerYourStep`). KIFF tells the taf's run. The
+  prompt reads tafs cloud's words: "Done · {what}".
+- **A step KIFF no longer waits on** (answered elsewhere, or past its week) isn't signed: the app
+  says so and drops it. A refusal from KIFF keeps the step and says why.
+- **Its alerts** open the taf. A step's alert is tagged by its hand-off, so its reminder replaces its
+  first alert and no other, once tafs cloud passes `handoff` on to Android.
+- **The vector:** `YourStepTest` pins KIFF's `kiff.handoff.v1` message and its sha256, and checks
+  KIFF's vector signature verifies with the key derived from its seed, and for no other answer,
+  hand-off, account or version.
+
 ## Alerts
 
 In Account (Settings), **Alerts** shows how each kind looks on the lock screen (a hold, with

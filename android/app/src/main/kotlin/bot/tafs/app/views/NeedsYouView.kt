@@ -187,9 +187,11 @@ fun NeedsYouView(
     verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
     item { ScreenTitle(Words.NeedsYou.title) }
+    // Steps a taf handed its owner, oldest first, as tafs cloud lists them: before the held calls, as each is the owner's to do.
+    items(state.yourSteps, key = { "ys|" + it.handoff }) { step -> YourStepPanel(step, state) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
-    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty()) {
+    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty()) {
       item {
         Panel {
           Text(Words.NeedsYou.nothingWaiting, style = scaled(15, FontWeight.SemiBold, Theme.ink))

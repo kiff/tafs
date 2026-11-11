@@ -1364,6 +1364,11 @@ object Words {
     }
     val waitingForBrowser: String get() = Res.s(R.string.needs_you_waiting_for_browser)
     fun whenTafAsksSomethingOutside(device: String): String = Res.s(R.string.needs_you_when_taf_asks_something_outside, device)
+    object YourStep {
+      val ended: String get() = Res.s(R.string.needs_you_your_step_ended)
+      fun notAnswered(why: String): String = Res.s(R.string.needs_you_your_step_not_answered, why)
+      val notAnsweredUnconfirmed: String get() = Res.s(R.string.needs_you_your_step_not_answered_unconfirmed)
+    }
   }
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)

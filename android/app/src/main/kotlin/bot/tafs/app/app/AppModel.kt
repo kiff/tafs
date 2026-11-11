@@ -234,6 +234,12 @@ data class AppState(
   val dismissingCardUnits: Set<String> = emptySet(),
   /** The ones KIFF took a Dismiss for: kept out of every page and Setup read since, even one that was on its way already. */
   val dismissedCardUnits: Set<String> = emptySet(),
+  /** Steps a taf handed its owner, as tafs cloud lists them on Home (docs/api.md › Your step); Needs you draws them. */
+  val yourSteps: List<bot.tafs.app.kiff.YourStep> = emptyList(),
+  /** The hand-offs whose answer is on its way to KIFF. */
+  val answeringSteps: Set<String> = emptySet(),
+  /** The hand-offs KIFF took an answer for: kept out of a Home read already on its way. */
+  val answeredSteps: Set<String> = emptySet(),
   val record: List<RecordEntry> = emptyList(),
   val scriptPosition: Map<String, Int> = emptyMap(),
   val templateOf: Map<String, String> = emptyMap(),
@@ -581,7 +587,7 @@ data class AppState(
    * What Needs you holds, as Home's headline and the bar's badge count it: tafs cloud's count, else (when it couldn't count all
    * of it) the app's own of what it has, held calls, currency requests and "Did this happen?".
    */
-  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size)
+  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size)
 
   /** Home's line for it: tafs cloud's words, else the app's for its own count. */
   val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) Words.NeedsYou.nothing else Words.NeedsYou.count(count = it) }
@@ -1238,6 +1244,7 @@ class AppModel(
         otherAgents = others,
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
+        yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
         needsYou = read.home.needsYou,
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
@@ -1866,6 +1873,53 @@ class AppModel(
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(dismissingCardUnits = it.dismissingCardUnits - ask.id) }
     }
+  }
+
+  /**
+   * Answers a step a taf handed its owner: [done] says the owner did it, else they skip it. The phone reads the hand-off from KIFF
+   * for its version, signs KIFF's `kiff.handoff.v1` with its signing key behind the screen lock, and sends it to KIFF, which tells
+   * the taf's run. Answering grants nothing: the step stays one the taf may never take. The app decides nothing about the step.
+   */
+  suspend fun answerYourStep(step: bot.tafs.app.kiff.YourStep, done: Boolean) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null || step.handoff in _state.value.answeringSteps) return
+    val generation = accountGeneration
+    val answer = if (done) "done" else "skipped"
+    _state.update { it.copy(answeringSteps = it.answeringSteps + step.handoff) }
+    try {
+      val current = kiff.handoff(step.handoff)
+      if (generation != accountGeneration) return
+      if (current.status.isNotEmpty() && current.status != "waiting") {
+        fail(Words.NeedsYou.YourStep.ended)
+        drop(step.handoff)
+        return
+      }
+      var signedAt = ""
+      // The prompt is tafs cloud's words for the answer and the step: "Done · Approve the transfer to Acme in Qonto".
+      val prompt = listOf(if (done) step.words.done else step.words.skip, step.what).filter { it.isNotBlank() }.joinToString(" · ")
+      val signature = signer.sign(prompt) {
+        signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
+        KiffClient.handoffMessage(tenant, current.id, answer, current.version, signedAt)
+      }
+      if (generation != accountGeneration) return
+      kiff.answerHandoff(current.id, answer, KiffClient.AnswerSignature(signedAt, signature))
+      if (generation != accountGeneration) return
+      drop(current.id)
+      refresh()
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) fail(notSigned(e, Words.NeedsYou.YourStep.notAnsweredUnconfirmed))
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail(Words.NeedsYou.YourStep.notAnswered(why = AnswerRefusals.answerRefusedWords(e)))
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(answeringSteps = it.answeringSteps - step.handoff) }
+    }
+  }
+
+  /** Takes an answered or ended step off Needs you at once, and out of a Home read already on its way. */
+  private fun drop(handoff: String) {
+    _state.update { it.copy(answeredSteps = it.answeredSteps + handoff, yourSteps = it.yourSteps.filterNot { s -> s.handoff == handoff }) }
   }
 
   /** Reads the taf's latest run and, once it has stopped, its report. */

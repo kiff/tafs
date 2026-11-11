@@ -146,7 +146,56 @@ data class Home(
   @SerialName("needs_you") val needsYou: NeedsYouCount? = null,
   /** Cards asked to take a currency they have no limit for, for the tafs this person sees: Needs you draws them. */
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
+  /** Steps a taf handed its owner, oldest first (docs/api.md › Your step): Needs you draws them. */
+  @SerialName("your_steps") val yourSteps: List<YourStep>? = null,
 )
+
+/**
+ * A step a taf may never take itself, handed to its owner, as tafs cloud shows it: KIFF's hand-off id, what to do and why, in
+ * tafs cloud's words. [link] comes only when the taf's own connections vouch for its host, with [linkHost] apart, so the app never
+ * parses it; with no link or no [YourStepWords.open], the card has no button.
+ */
+@Serializable
+data class YourStep(
+  val handoff: String,
+  val run: String = "",
+  val taf: YourStepTaf? = null,
+  val what: String = "",
+  val why: String = "",
+  val link: String? = null,
+  @SerialName("link_host") val linkHost: String? = null,
+  val since: String? = null,
+  val expires: String? = null,
+  val words: YourStepWords = YourStepWords(),
+) {
+  /**
+   * The vendor's page, only as tafs cloud vouched for it: an https link, its host apart ([linkHost]) and the button's words. The
+   * host must be the link's own, so the line under the button names where it really goes; anything else is no button, only the
+   * words. As iOS's `openLink`.
+   */
+  val open: OpenLink? get() {
+    val l = link ?: return null
+    val host = linkHost?.takeIf { it.isNotBlank() } ?: return null
+    val w = words.open?.takeIf { it.isNotBlank() } ?: return null
+    val uri = runCatching { java.net.URI(l) }.getOrNull() ?: return null
+    if (!uri.scheme.equals("https", ignoreCase = true) || !uri.host.equals(host, ignoreCase = true)) return null
+    return OpenLink(w, l, host)
+  }
+}
+
+/** A step's button: its words, the link it opens, and the host shown under it. */
+data class OpenLink(val words: String, val link: String, val host: String)
+
+@Serializable
+data class YourStepTaf(val id: String, val name: String = "")
+
+/** The card's words, tafs cloud's in the person's language: "Your step", "Done", "Skip it", "Open in {vendor}", its line. */
+@Serializable
+data class YourStepWords(val title: String = "", val done: String = "", val skip: String = "", val open: String? = null, val line: String = "")
+
+/** A hand-off as KIFF keeps it: what the phone needs to sign its answer. */
+@Serializable
+data class Handoff(val id: String, val version: Int, val status: String = "")
 
 /** Needs you, counted once by tafs cloud: held calls, "Did this happen?" calls, currency requests and tafs with a knock. */
 @Serializable

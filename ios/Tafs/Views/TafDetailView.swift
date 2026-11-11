@@ -590,9 +590,15 @@ struct WorkPanel: View {
 
     private func request(_ r: TafsCloud.TafWork.Request) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(r.line).scaledFont(14)
-                .foregroundColor(r.state == "needs_you" ? Theme.amberText : r.state == "failed" ? Theme.no : Theme.soft)
-                .fixedSize(horizontal: false, vertical: true)
+            // A step the taf handed its owner, answered here too, in place of its line: Home's, which
+            // carries the vendor's link when tafs cloud vouched for it, else the request's own (never a link).
+            if let step = r.yourStep, model.canAnswer(step: step.handoff) {
+                YourStepCard(step: model.yourStep(step.handoff) ?? step, onTaf: tafID)
+            } else {
+                Text(r.line).scaledFont(14)
+                    .foregroundColor(r.state == "needs_you" ? Theme.amberText : r.state == "failed" ? Theme.no : Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             ForEach(Array(r.deliveries.enumerated()), id: \.offset) { _, d in
                 Text(d.line).scaledFont(12, relativeTo: .caption).foregroundColor(d.sendAgain ? Theme.amberText : Theme.dim)
                     .fixedSize(horizontal: false, vertical: true)

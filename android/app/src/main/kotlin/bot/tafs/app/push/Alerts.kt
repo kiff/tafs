@@ -48,7 +48,9 @@ object AlertPayload {
 
   /** What a message asks of the phone; null for one it doesn't understand, so a message of a newer kind never breaks the phone. */
   fun parse(data: Map<String, String>, now: Instant = Instant.now()): Alert? {
-    val tag = data["hold_id"]?.takeIf { it.isNotBlank() } ?: data["request_id"]?.takeIf { it.isNotBlank() } ?: ""
+    // A step handed to its owner is tagged by its hand-off, so its reminder replaces its first alert and no other.
+    val tag = data["hold_id"]?.takeIf { it.isNotBlank() } ?: data["request_id"]?.takeIf { it.isNotBlank() }
+      ?: data["handoff"]?.takeIf { it.isNotBlank() }?.let { "step:$it" } ?: ""
     return when (data["kind"]) {
       "answered" -> if (tag.isEmpty()) null else Alert.Clear(tag)
       "background" -> data["change"]?.takeIf { it in CHANGES }?.let { Alert.Changed(it, data["taf_id"]?.takeIf(String::isNotBlank)) }
