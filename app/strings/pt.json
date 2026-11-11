@@ -1499,6 +1499,17 @@
   "record.event.someone": "Alguém",
   "record.expired": "Expirado: {summary}",
   "record.expired_detail": "Ninguém respondeu a tempo",
+  "record.export_last_days": {
+    "one": "Último {count} dia",
+    "other": "Últimos {count} dias"
+  },
+  "record.export_missing": {
+    "one": "{count} chamada ainda não tem recibo.",
+    "other": "{count} chamadas ainda não têm recibo."
+  },
+  "record.export_not_exported": "Não foi possível exportá-los. {why}",
+  "record.export_preparing": "A preparar recibos…",
+  "record.export_receipts": "Exportar recibos",
   "record.extra_room": "Margem extra dada por si · {at} · {summary}",
   "record.extra_room_detail": "O seu Card recebeu a margem para este total, até ser reposto. Se também exceder um limite por chamada, a chamada fica novamente retida por isso",
   "record.filter.all": "Tudo",
@@ -1546,6 +1557,7 @@
     "other": "Nenhuma ação nova é concluída. {count} ações em espera recusadas."
   },
   "record.revoked.title": "Revogou o Card de {taf}",
+  "record.search_hint": "Pesquisar por encomenda, fatura, valor ou ação",
   "record.sent_waiting": "{allowed}, e enviado: à espera da resposta da app",
   "record.show": "Mostrar",
   "record.shows_receipt": "Mostra o recibo",

@@ -1597,6 +1597,21 @@
   "record.event.someone": "Ktoś",
   "record.expired": "Wygasło: {summary}",
   "record.expired_detail": "Nikt nie odpowiedział na czas",
+  "record.export_last_days": {
+    "one": "Ostatni {count} dzień",
+    "few": "Ostatnie {count} dni",
+    "many": "Ostatnie {count} dni",
+    "other": "Ostatnie {count} dnia"
+  },
+  "record.export_missing": {
+    "one": "{count} wywołanie nie ma jeszcze potwierdzenia.",
+    "few": "{count} wywołania nie mają jeszcze potwierdzenia.",
+    "many": "{count} wywołań nie ma jeszcze potwierdzenia.",
+    "other": "{count} wywołania nie ma jeszcze potwierdzenia."
+  },
+  "record.export_not_exported": "Nie udało się ich wyeksportować. {why}",
+  "record.export_preparing": "Przygotowywanie potwierdzeń…",
+  "record.export_receipts": "Eksportuj potwierdzenia",
   "record.extra_room": "Dodatkowy zapas od Ciebie · {at} · {summary}",
   "record.extra_room_detail": "Jego Card dostała zapas na tę sumę, do jej wyzerowania. Jeśli przekracza też limit na jedno wywołanie, wywołanie znowu jest z tego powodu oczekujące",
   "record.filter.all": "Wszystkie",
@@ -1648,6 +1663,7 @@
     "other": "Żadna nowa akcja nie przejdzie. Odrzucono {count} czekającej akcji."
   },
   "record.revoked.title": "Unieważniono Card {taf}",
+  "record.search_hint": "Szukaj po zamówieniu, fakturze, kwocie lub akcji",
   "record.sent_waiting": "{allowed} i wysłane: czeka na odpowiedź aplikacji",
   "record.show": "Pokaż",
   "record.shows_receipt": "Pokazuje potwierdzenie",

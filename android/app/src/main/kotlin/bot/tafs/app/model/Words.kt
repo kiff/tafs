@@ -1587,6 +1587,11 @@ object Words {
     }
     fun expired(summary: String): String = Res.s(R.string.record_expired, summary)
     val expiredDetail: String get() = Res.s(R.string.record_expired_detail)
+    fun exportLastDays(count: Int): String = Res.p(R.plurals.record_export_last_days, count, Res.number(count))
+    fun exportMissing(count: Int): String = Res.p(R.plurals.record_export_missing, count, Res.number(count))
+    fun exportNotExported(why: String): String = Res.s(R.string.record_export_not_exported, why)
+    val exportPreparing: String get() = Res.s(R.string.record_export_preparing)
+    val exportReceipts: String get() = Res.s(R.string.record_export_receipts)
     fun extraRoom(at: String, summary: String): String = Res.s(R.string.record_extra_room, at, summary)
     val extraRoomDetail: String get() = Res.s(R.string.record_extra_room_detail)
     object Filter {
@@ -1638,6 +1643,7 @@ object Words {
       fun refusedWaiting(count: Int): String = Res.p(R.plurals.record_revoked_refused_waiting, count, Res.number(count))
       fun title(taf: String): String = Res.s(R.string.record_revoked_title, taf, Words.possessive(taf))
     }
+    val searchHint: String get() = Res.s(R.string.record_search_hint)
     fun sentWaiting(allowed: String): String = Res.s(R.string.record_sent_waiting, allowed)
     val show: String get() = Res.s(R.string.record_show)
     val showsReceipt: String get() = Res.s(R.string.record_shows_receipt)

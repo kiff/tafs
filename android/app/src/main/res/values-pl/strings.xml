@@ -1600,6 +1600,21 @@
     <string name="record_event_someone">Ktoś</string>
     <string name="record_expired">Wygasło: %1$s</string>
     <string name="record_expired_detail">Nikt nie odpowiedział na czas</string>
+    <plurals name="record_export_last_days">
+        <item quantity="one">Ostatni %1$s dzień</item>
+        <item quantity="few">Ostatnie %1$s dni</item>
+        <item quantity="many">Ostatnie %1$s dni</item>
+        <item quantity="other">Ostatnie %1$s dnia</item>
+    </plurals>
+    <plurals name="record_export_missing">
+        <item quantity="one">%1$s wywołanie nie ma jeszcze potwierdzenia.</item>
+        <item quantity="few">%1$s wywołania nie mają jeszcze potwierdzenia.</item>
+        <item quantity="many">%1$s wywołań nie ma jeszcze potwierdzenia.</item>
+        <item quantity="other">%1$s wywołania nie ma jeszcze potwierdzenia.</item>
+    </plurals>
+    <string name="record_export_not_exported">Nie udało się ich wyeksportować. %1$s</string>
+    <string name="record_export_preparing">Przygotowywanie potwierdzeń…</string>
+    <string name="record_export_receipts">Eksportuj potwierdzenia</string>
     <string name="record_extra_room">Dodatkowy zapas od Ciebie · %1$s · %2$s</string>
     <string name="record_extra_room_detail">Jego Card dostała zapas na tę sumę, do jej wyzerowania. Jeśli przekracza też limit na jedno wywołanie, wywołanie znowu jest z tego powodu oczekujące</string>
     <string name="record_filter_all">Wszystkie</string>
@@ -1651,6 +1666,7 @@
         <item quantity="other">Żadna nowa akcja nie przejdzie. Odrzucono %1$s czekającej akcji.</item>
     </plurals>
     <string name="record_revoked_title">Unieważniono Card %1$s</string>
+    <string name="record_search_hint">Szukaj po zamówieniu, fakturze, kwocie lub akcji</string>
     <string name="record_sent_waiting">%1$s i wysłane: czeka na odpowiedź aplikacji</string>
     <string name="record_show">Pokaż</string>
     <string name="record_shows_receipt">Pokazuje potwierdzenie</string>

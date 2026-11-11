@@ -1502,6 +1502,17 @@
     <string name="record_event_someone">Alguém</string>
     <string name="record_expired">Expirado: %1$s</string>
     <string name="record_expired_detail">Ninguém respondeu a tempo</string>
+    <plurals name="record_export_last_days">
+        <item quantity="one">Último %1$s dia</item>
+        <item quantity="other">Últimos %1$s dias</item>
+    </plurals>
+    <plurals name="record_export_missing">
+        <item quantity="one">%1$s chamada ainda não tem recibo.</item>
+        <item quantity="other">%1$s chamadas ainda não têm recibo.</item>
+    </plurals>
+    <string name="record_export_not_exported">Não foi possível exportá-los. %1$s</string>
+    <string name="record_export_preparing">A preparar recibos…</string>
+    <string name="record_export_receipts">Exportar recibos</string>
     <string name="record_extra_room">Margem extra dada por si · %1$s · %2$s</string>
     <string name="record_extra_room_detail">O seu Card recebeu a margem para este total, até ser reposto. Se também exceder um limite por chamada, a chamada fica novamente retida por isso</string>
     <string name="record_filter_all">Tudo</string>
@@ -1549,6 +1560,7 @@
         <item quantity="other">Nenhuma ação nova é concluída. %1$s ações em espera recusadas.</item>
     </plurals>
     <string name="record_revoked_title">Revogou o Card de %1$s</string>
+    <string name="record_search_hint">Pesquisar por encomenda, fatura, valor ou ação</string>
     <string name="record_sent_waiting">%1$s, e enviado: à espera da resposta da app</string>
     <string name="record_show">Mostrar</string>
     <string name="record_shows_receipt">Mostra o recibo</string>

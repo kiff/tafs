@@ -1502,6 +1502,17 @@
     <string name="record_event_someone">Iemand</string>
     <string name="record_expired">Verlopen: %1$s</string>
     <string name="record_expired_detail">Niemand antwoordde op tijd</string>
+    <plurals name="record_export_last_days">
+        <item quantity="one">Afgelopen %1$s dag</item>
+        <item quantity="other">Afgelopen %1$s dagen</item>
+    </plurals>
+    <plurals name="record_export_missing">
+        <item quantity="one">%1$s aanroep heeft nog geen bon.</item>
+        <item quantity="other">%1$s aanroepen hebben nog geen bon.</item>
+    </plurals>
+    <string name="record_export_not_exported">Ze konden niet worden geëxporteerd. %1$s</string>
+    <string name="record_export_preparing">Bonnen worden voorbereid…</string>
+    <string name="record_export_receipts">Bonnen exporteren</string>
     <string name="record_extra_room">Extra ruimte door jou · %1$s · %2$s</string>
     <string name="record_extra_room_detail">Zijn Card kreeg de ruimte voor dit totaal, tot het wordt gereset. Gaat de aanroep ook boven een limiet voor één aanroep, dan wordt hij daarvoor opnieuw vastgehouden</string>
     <string name="record_filter_all">Alles</string>
@@ -1549,6 +1560,7 @@
         <item quantity="other">Er gaat geen nieuwe actie meer door. %1$s wachtende acties geweigerd.</item>
     </plurals>
     <string name="record_revoked_title">Je hebt de Card van %1$s ingetrokken</string>
+    <string name="record_search_hint">Zoek op bestelling, factuur, bedrag of actie</string>
     <string name="record_sent_waiting">%1$s, en verzonden: wacht op het antwoord van de app</string>
     <string name="record_show">Tonen</string>
     <string name="record_shows_receipt">Toont het ontvangstbewijs</string>

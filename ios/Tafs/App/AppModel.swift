@@ -19,6 +19,14 @@ final class AppModel: ObservableObject {
     @Published private(set) var tafSetupErrors: [UUID: String] = [:]
     @Published private(set) var activityPages: [String: SourcePages<TafsCloud.ActivityPage>] = [:]
     @Published private(set) var runPages: [String: SourcePages<TafsCloud.RunsPage>] = [:]
+    /// The Record's search box words, as tafs cloud says them; nil until read.
+    @Published private(set) var recordHint: String?
+    /// The Record searched across the person's tafs; nil while nothing is searched.
+    @Published private(set) var recordSearch: RecordSearch?
+    /// The case open from a search: every call about the same thing, oldest first.
+    @Published private(set) var recordCase: TafsCloud.RecordCase?
+    /// Why the case couldn't be read, in words.
+    @Published private(set) var recordCaseError: String?
     @Published private(set) var cardUnitExceptions: [TafsCloud.CardUnitException] = []
     /// Home's count of what waits for the person, from tafs cloud (kiff/tafs#469 item 1).
     @Published private(set) var homeNeedsYou: TafsCloud.NeedsYou?
@@ -600,6 +608,7 @@ final class AppModel: ObservableObject {
         didSet {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
             tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
+            recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
             haltErrors = [:]
             alertsOffered = false
@@ -4883,6 +4892,101 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: The Record across the person's tafs (docs/ios-app.md › The Record)
+
+    /// Whether this person sees every taf's Record (oversees or manages each), which the
+    /// receipts export needs; tafs cloud still decides (403).
+    var seesEveryTaf: Bool {
+        guard mode == .kiff else { return false }
+        let onCloud = tafs.filter { cloudTaf(for: $0.id) != nil }
+        return !onCloud.isEmpty && onCloud.allSatisfy { taf in
+            kiffAgent(for: taf.id).flatMap { access[$0] }.map { $0.oversee || $0.manage } ?? false
+        }
+    }
+
+    /// The app's taf for tafs cloud's id, when the person has it on Home.
+    func tafID(cloudID: String) -> UUID? {
+        cloudTafs.first { $0.value.id == cloudID }.flatMap { holderIDs[$0.key] }.flatMap { id in tafs.contains { $0.id == id } ? id : nil }
+    }
+
+    /// The search box's words, read once from tafs cloud; the app's own stand in until they come.
+    func loadRecordHint() async {
+        guard mode == .kiff, recordHint == nil else { return }
+        let gen = accountGeneration
+        guard let hint = try? await cloud.searchRecord("", limit: 1).hint, gen == accountGeneration else { return }
+        if !hint.trimmingCharacters(in: .whitespaces).isEmpty { recordHint = hint }
+    }
+
+    /// Searches the Record across the person's tafs (`GET /v1/record?q=`). A blank `q` clears the
+    /// search and shows the Record as before. `more` reads the next page of the same search; a
+    /// cursor tafs cloud refuses (409, a call made since) searches again from the top.
+    func searchRecord(_ q: String, more: Bool = false) async {
+        guard mode == .kiff else { return }
+        let asked = q.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !asked.isEmpty else { recordSearch = nil; return }
+        let current = recordSearch?.q == asked ? recordSearch : nil
+        if more, current == nil || current?.loading == true || current?.nextCursor == nil { return }
+        var started = more ? current! : RecordSearch(q: asked)
+        started.loading = true; started.error = nil
+        recordSearch = started
+        let gen = accountGeneration
+        do {
+            let page = try await cloud.searchRecord(asked, cursor: more ? current?.nextCursor : nil)
+            guard gen == accountGeneration, var now = recordSearch, now.q == asked else { return }
+            now.pages = (more ? now.pages : []) + [page]
+            now.loading = false
+            recordSearch = now
+            if !page.hint.trimmingCharacters(in: .whitespaces).isEmpty { recordHint = page.hint }
+        } catch {
+            guard gen == accountGeneration else { return }
+            if more, (error as? TafsCloud.CloudError)?.status == 409 { await searchRecord(asked); return }
+            guard var now = recordSearch, now.q == asked else { return }
+            now.loading = false; now.error = error.localizedDescription
+            recordSearch = now
+        }
+    }
+
+    /// Opens one case from the Record: every call about `about`, oldest first, and the step that
+    /// didn't go through.
+    func openRecordCase(_ about: String) async {
+        guard mode == .kiff, !about.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let gen = accountGeneration
+        recordCase = TafsCloud.RecordCase(about: about); recordCaseError = nil
+        do {
+            let read = try await cloud.recordCase(about)
+            if gen == accountGeneration, recordCase?.about == about { recordCase = read }
+        } catch {
+            if gen == accountGeneration, recordCase?.about == about { recordCaseError = error.localizedDescription }
+        }
+    }
+
+    func closeRecordCase() { recordCase = nil; recordCaseError = nil }
+
+    /// Where an export of receipts writes its two files: removed with the opened files, so
+    /// nothing of the account stays on the phone after them, and replaced at each export.
+    static var receiptFiles: URL { exportedFiles.appendingPathComponent("receipts", isDirectory: true) }
+
+    /// The receipts of `from` to `to` (YYYY-MM-DD) for an accountant, as two files to share:
+    /// tafs cloud's answer as it came (KIFF's receipts exactly as issued) and its CSV. Nil, with
+    /// why in words, when they weren't exported.
+    func exportReceipts(from: String, to: String) async -> (files: [URL]?, missing: Int, why: String?) {
+        guard mode == .kiff else { return (nil, 0, Words.Error.signInFirst) }
+        let export: TafsCloud.ReceiptsExport
+        do { export = try await cloud.exportReceipts(from: from, to: to) } catch { return (nil, 0, error.localizedDescription) }
+        do {
+            let dir = Self.receiptFiles
+            try? FileManager.default.removeItem(at: dir)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let stem = "receipts-\(export.from)-to-\(export.to)"
+            let json = dir.appendingPathComponent("\(stem).json"), csv = dir.appendingPathComponent("\(stem).csv")
+            try export.json.write(to: json, options: .completeFileProtection)
+            try Data(export.csv.utf8).write(to: csv, options: .completeFileProtection)
+            return ([json, csv], export.missing, nil)
+        } catch {
+            return (nil, 0, error.localizedDescription)
+        }
+    }
+
     // MARK: Exporting one's own chats
 
     /// The person's own chats, trials and notes, as two files to save or share
@@ -7415,4 +7519,14 @@ extension AppModel {
     /// This device can't approve now, so an approval's button is disabled. Sample mode signs
     /// nothing for real, so nothing is blocked there.
     var approvalBlocked: Bool { mode == .kiff && !approvalReadiness.isReady }
+}
+
+/// A search of the Record: what was asked, the pages read so far, and whether one is on its way
+/// or failed.
+struct RecordSearch {
+    let q: String
+    var pages: [TafsCloud.RecordSearchPage] = []
+    var loading = false
+    var error: String?
+    var nextCursor: String? { pages.last?.next_cursor }
 }
