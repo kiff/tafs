@@ -76,7 +76,7 @@
     <string name="approval_kept">Resta in Ti aspetta.</string>
     <string name="approval_key_could_not_sign">La chiave non è riuscita a firmare</string>
     <string name="approval_key_gone_approve_again">Le tue impronte sono cambiate, o nessuna è stata riconosciuta, quindi questo telefono non può approvare finché non lo approvi di nuovo nel browser.</string>
-    <string name="approval_key_gone_face_id">Il tuo Face ID o le tue impronte sono cambiati, o non sono stati riconosciuti, quindi questo telefono non può approvare finché non lo approvi di nuovo nel browser.</string>
+    <string name="approval_key_gone_biometry">Il tuo %1$s è cambiato o non è stato riconosciuto, quindi questo dispositivo non può approvare finché non lo approvi di nuovo nel browser.</string>
     <string name="approval_key_gone_sign_in">Le tue impronte sono cambiate, o nessuna è stata riconosciuta, quindi questo telefono non può approvare finché non accedi di nuovo.</string>
     <string name="approval_key_lost">Accedi di nuovo con KIFF per approvare da questo telefono.</string>
     <string name="approval_locked_after_too_many_tries">%1$s è bloccato dopo troppi tentativi. Blocca questo %2$s, sbloccalo con il codice, poi controlla di nuovo.</string>
@@ -86,7 +86,7 @@
     <string name="approval_no_key">Nessuna chiave con cui firmare</string>
     <string name="approval_not_confirmed">Non confermato</string>
     <string name="approval_not_recognized">Riprova, o accedi di nuovo se le tue impronte sono cambiate.</string>
-    <string name="approval_not_recognized_face_id">Riprova, o accedi di nuovo se il tuo Face ID o le tue impronte sono cambiati.</string>
+    <string name="approval_not_recognized_biometry">Riprova, o accedi di nuovo se il tuo %1$s è cambiato.</string>
     <string name="approval_nothing_approved_request_kept_approve">Non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
     <string name="approval_open_settings">Apri impostazioni</string>
     <string name="approval_prompt_approve_on_kiff">Approva su KIFF</string>

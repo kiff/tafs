@@ -151,4 +151,22 @@ final class PresentationTests: XCTestCase {
         _ = try await cloud.activityPage("taf-example", filter: "held", cursor: page?.next_cursor, etag: nil, selection: "")
         XCTAssertTrue(StubProtocol.sent.last?.url?.absoluteString.hasSuffix("cursor=opaque%2B%2F%3D") == true)
     }
+
+    /// The owner's iPhone test: two Stripe connections on one taf drew two Stripe nodes, one
+    /// "Choose actions", one "2 actions". One node per app now, the one with actions in front,
+    /// the other sign-in inside its sheet.
+    func testOneRingNodePerApp() throws {
+        func app(_ id: String, _ name: String, actions: Int, reconnect: Bool = false) -> String {
+            #"{"id":"\#(id)","name":"\#(name)","status":"\#(actions > 0 ? "connected" : "listed")","status_words":"s","reconnect":\#(reconnect),"action_count":\#(actions),"action_words":"\#(actions > 0 ? "\(actions) actions" : "Choose actions")","actions":[],"steps":[],"workflow_steps":[],"running":false,"stats":{"calls":0,"done":0,"held":0,"words":"w","complete":true,"activity_query":"q"}}"#
+        }
+        let json = "[" + [app("g1", "Stripe", actions: 0), app("g2", "Slack", actions: 1), app("g3", "Stripe", actions: 2)].joined(separator: ",") + "]"
+        let apps = try JSONDecoder().decode([TafsCloud.ConnectedApp].self, from: Data(json.utf8))
+        let nodes = ConnectedToolsRing.nodes(apps)
+        XCTAssertEqual(nodes.map(\.app.id), ["g3", "g2"], "Stripe once, in its first place, the one with actions shown")
+        XCTAssertEqual(nodes[0].others.map(\.id), ["g1"])
+        XCTAssertTrue(nodes[1].others.isEmpty)
+        // With none that has actions, the one to sign in again comes first.
+        let two = try JSONDecoder().decode([TafsCloud.ConnectedApp].self, from: Data(("[" + app("a", "Stripe", actions: 0) + "," + app("b", "Stripe", actions: 0, reconnect: true) + "]").utf8))
+        XCTAssertEqual(ConnectedToolsRing.nodes(two).map(\.app.id), ["b"])
+    }
 }

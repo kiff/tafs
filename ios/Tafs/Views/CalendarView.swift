@@ -81,20 +81,23 @@ struct CalendarView: View {
     // MARK: Header: Today, previous and next, the date, and Day / Week / Month
 
     @ViewBuilder private func header(compact: Bool) -> some View {
+        let title = Text(CalendarMath.title(state))
+            .scaledFont(compact ? 16 : 20, weight: .bold, design: .rounded, relativeTo: .headline)
+            .foregroundColor(Theme.ink)
+            .accessibilityIdentifier("calendar.title")
         let nav = HStack(spacing: 10) {
             Button(Words.Calendar.today) { select(today) }
                 .buttonStyle(OutlineButtonStyle())
+                .fixedSize(horizontal: true, vertical: false)
                 .disabled(state.selected == today)
                 .accessibilityIdentifier("calendar.today")
             Button { show(CalendarMath.step(state, by: -1)) } label: { Image(systemName: "chevron.left") }
                 .accessibilityLabel(state.mode == .day ? Words.Calendar.previousDay : state.mode == .week ? Words.Calendar.previousWeek : Words.Calendar.previousMonth)
             Button { show(CalendarMath.step(state, by: 1)) } label: { Image(systemName: "chevron.right") }
                 .accessibilityLabel(state.mode == .day ? Words.Calendar.nextDay : state.mode == .week ? Words.Calendar.nextWeek : Words.Calendar.nextMonth)
-            Text(CalendarMath.title(state))
-                .scaledFont(compact ? 16 : 20, weight: .bold, design: .rounded, relativeTo: .headline)
-                .foregroundColor(Theme.ink)
-                .oneLineUnlessLarge()
-                .accessibilityIdentifier("calendar.title")
+            // On a phone the range has a line of its own, above: beside the buttons it was cut
+            // to "9 – 15 No…" (the owner's iPhone test).
+            if !compact { title.oneLineUnlessLarge() }
             Spacer(minLength: 0)
             DatePicker(Words.Calendar.datePicker, selection: dateBinding, displayedComponents: .date)
                 .labelsHidden()
@@ -108,7 +111,11 @@ struct CalendarView: View {
         .pickerStyle(.segmented)
         .accessibilityIdentifier("calendar.mode")
         if compact {
-            VStack(alignment: .leading, spacing: 10) { nav; picker }
+            VStack(alignment: .leading, spacing: 10) {
+                title.fixedSize(horizontal: false, vertical: true)
+                nav
+                picker
+            }
         } else {
             VStack(alignment: .leading, spacing: 10) { nav; picker.frame(maxWidth: 320) }
         }

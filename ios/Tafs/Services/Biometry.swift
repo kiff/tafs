@@ -159,5 +159,5 @@ enum ApprovalReadiness: Equatable {
 
 extension Biometry {
     /// "Face ID" or "Touch ID" when the device has one, for the setup words.
-    static var kind: String? { name == "your passcode" ? nil : name }
+    static var kind: String? { name == Words.Approval.yourPasscode ? nil : name }
 }

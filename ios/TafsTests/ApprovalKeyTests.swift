@@ -515,6 +515,32 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(sent("POST", "/v1/me/device/relink").isEmpty)
     }
 
+    /// The owner's iPhone test: Face ID turned off for tafs and the key gone said two things at
+    /// once. One state shows: the device's words while it can't approve, the lost key after.
+    func testTheLostKeyWaitsForTheDeviceToBeReady() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, registration: (409, #"{"error":"approval_key_exists","fingerprint":""# + KIFFClient.fingerprint(Data([0x30, 0x59, 0x09])) + #""}"#),
+                                   held: Self.heldJSON)
+        XCTAssertTrue(model.approvalKeyLost)
+        var device = ApprovalReadiness.offForTafs
+        model.readApprovalReadiness = { device }
+        model.checkApprovalReadiness()
+        XCTAssertTrue(model.approvalBlocked)
+        XCTAssertFalse(model.showsApprovalKeyLost, "the device's words, not the lost key's")
+        device = .ready
+        model.checkApprovalReadiness()
+        XCTAssertTrue(model.showsApprovalKeyLost)
+    }
+
+    /// Its words name what this device asks for, never "Face ID or fingerprints".
+    func testTheLostKeyWordsNameThisDevicesBiometry() {
+        let kind = Biometry.kind ?? Words.Approval.faceIdTouchId
+        XCTAssertTrue(KIFFClient.approvalKeyLost.contains(kind))
+        XCTAssertTrue(KIFFClient.notRecognized.contains(kind))
+        XCTAssertFalse(KIFFClient.approvalKeyLost.contains("fingerprint"))
+        XCTAssertNotEqual(Biometry.kind, Words.Approval.yourPasscode)
+    }
+
     func testTheRelinkMessageIsKIFFs() {
         let message = String(decoding: KIFFClient.relinkMessage(tenant: "t_01", deviceKey: Data([1]), newKey: Data([2]), signedAt: "2026-10-30T22:00:00Z"), as: UTF8.self)
         XCTAssertEqual(message, "kiff.approval-key-relink.v1\nt_01\n" +
