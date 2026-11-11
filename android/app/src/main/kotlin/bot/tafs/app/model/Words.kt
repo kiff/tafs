@@ -2014,7 +2014,7 @@ object Words {
     fun everyActionTafTakesGoes(device: String): String = Res.s(R.string.sign_in_every_action_taf_takes_goes, device)
     val howWorks: String get() = Res.s(R.string.sign_in_how_works)
     fun iosDidNotOpenSign(code: String, context: String): String = Res.s(R.string.sign_in_ios_did_not_open_sign, code, context)
-    val lead: String get() = Res.s(R.string.sign_in_lead)
+    fun lead(device: String): String = Res.s(R.string.sign_in_lead, device)
     val notSignedOut: String get() = Res.s(R.string.sign_in_not_signed_out)
     fun notSignedOutDevice(why: String, device: String): String = Res.s(R.string.sign_in_not_signed_out_device, why, device)
     val openKiff: String get() = Res.s(R.string.sign_in_open_kiff)

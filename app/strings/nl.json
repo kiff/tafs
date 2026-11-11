@@ -1869,7 +1869,7 @@
   "sign_in.every_action_taf_takes_goes": "Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je antwoorden worden ondertekend op deze {device}.",
   "sign_in.how_works": "Hoe het werkt",
   "sign_in.ios_did_not_open_sign": "iOS heeft de inlogpagina niet geopend (fout {code}; {context}). Probeer het opnieuw met tafs geopend.",
-  "sign_in.lead": "Je tafs handelen onder KIFF-Cards. Je kunt deze telefoon goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.",
+  "sign_in.lead": "Je tafs handelen onder KIFF-Cards. Je kunt deze {device} goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.",
   "sign_in.not_signed_out": "Nog niet uitgelogd bij KIFF. Probeer het opnieuw, of log deze telefoon uit via Apparaten op een ander apparaat.",
   "sign_in.not_signed_out_device": "Nog niet uitgelogd bij KIFF: {why}. Probeer het opnieuw, of log deze {device} uit via Apparaten op een ander apparaat.",
   "sign_in.open_kiff": "KIFF openen om goed te keuren",

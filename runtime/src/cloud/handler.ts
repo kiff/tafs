@@ -2778,6 +2778,8 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     tenant: me.tenantID, taf: taf.id, component, token: bearer(event), proof: event.headers?.["planque-device-signature"] ?? "",
     store: deps.coach, planqueBase: deps.planqueBase, kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, now: deps.now?.() ?? new Date(),
     newID: () => `ask_${randomBytes(9).toString("hex")}`, lang: langOf(event),
+    // The prompt names the taf being set up, by its name: the card is Coach's, so not `taf`'s.
+    tafName: async (agent) => (agent ? (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === agent)?.name : undefined),
   };
 }
 
@@ -6526,7 +6528,15 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
       return undefined;
     });
     if (!outcome) continue;
-    await deps.agents.answerResult(tenant, coach.id, r.id, card.id, outcome).catch(async (err: unknown) => {
+    const cardID = card.id;
+    await deps.agents.answerResult(tenant, coach.id, r.id, cardID, outcome).catch(async (err: unknown) => {
+      // A kiff/agents from before `check` refuses the field: the taf is made, so it's answered without it, and
+      // Coach reads the first check's failure with the owner's next message, as before.
+      if ("taf_id" in outcome && outcome.check && err instanceof AgentsError && err.status === 400) {
+        return deps.agents.answerResult(tenant, coach.id, r.id, cardID, { taf_id: outcome.taf_id });
+      }
+      throw err;
+    }).catch(async (err: unknown) => {
       // Answered meanwhile (another note, or an app from before this): nothing more to do.
       if (refused(err, "card_not_waiting")) return;
       // Not answered, as a failed make: the sweep tries again, and finds the taf made.
@@ -7107,6 +7117,8 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       const line = `[taf ${taf.name ?? id} first check] The taf is set up, but its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`;
       await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
+      // Said in the answer too, so Coach's closing message never calls the taf working (A4).
+      return { taf_id: id, check: out.reason ?? "no reason given" };
     }
     return { taf_id: id };
   } catch (err) {

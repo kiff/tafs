@@ -1872,7 +1872,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je antwoorden worden ondertekend op deze %1$s.</string>
     <string name="sign_in_how_works">Hoe het werkt</string>
     <string name="sign_in_ios_did_not_open_sign">iOS heeft de inlogpagina niet geopend (fout %1$s; %2$s). Probeer het opnieuw met tafs geopend.</string>
-    <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze telefoon goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
+    <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze %1$s goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
     <string name="sign_in_not_signed_out">Nog niet uitgelogd bij KIFF. Probeer het opnieuw, of log deze telefoon uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_not_signed_out_device">Nog niet uitgelogd bij KIFF: %1$s. Probeer het opnieuw, of log deze %2$s uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_open_kiff">KIFF openen om goed te keuren</string>
