@@ -298,6 +298,10 @@ describe("recent work pages", () => {
     } as unknown as Deps;
     const event: HTTPEvent = { rawPath: `/v1/tafs/${id}/work/runs`, headers: { authorization: "Bearer synthetic-session" }, requestContext: { http: { method: "GET" } } };
     const first = await handle(event, deps); expect(first.statusCode).toBe(200);
+    // Titled as its runs, never as the work panel above it ("Its work"): the two read apart on both apps.
+    expect(JSON.parse(first.body)).toMatchObject({ title: "Its runs", more_title: "Show all runs" });
+    const fr = await handle({ ...event, headers: { ...event.headers, "accept-language": "fr-FR" } }, deps);
+    expect(JSON.parse(fr.body)).toMatchObject({ title: "Ses exécutions", more_title: "Voir toutes les exécutions" });
     const one = JSON.parse(first.body); expect(one.requests).toHaveLength(20); expect(one.requests[0].id).toBe("run-0");
     runs.unshift({ ...runs[0]!, id: "new-run", created: new Date(now.getTime() + 1000).toISOString(), requester: { kind: "member", id: "person-example" } });
     const two = JSON.parse((await handle({ ...event, rawQueryString: `cursor=${encodeURIComponent(one.next_cursor)}` }, deps)).body);

@@ -421,7 +421,7 @@ export const es: Words = {
   cal_follow_up: "Vuelve a revisar, como se programó",
   trial_label: "Prueba",
   trial_title: (n) => `Probando la versión ${n}`,
-  runs_title: "Su trabajo",
+  runs_title: "Sus ejecuciones",
   runs_more: "Ver todas las ejecuciones",
   runs_end: "Nada más antiguo en las ejecuciones guardadas",
   tz_words: (zone) => `Horas en ${zone}`,

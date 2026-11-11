@@ -421,7 +421,7 @@ export const pl: Words = {
   cal_follow_up: "Sprawdzi ponownie, jak sam ustalił",
   trial_label: "Próba",
   trial_title: (n) => `Próba wersji ${n}`,
-  runs_title: "Jego praca",
+  runs_title: "Jego uruchomienia",
   runs_more: "Pokaż wszystkie uruchomienia",
   runs_end: "Nic starszego w zachowanych uruchomieniach",
   tz_words: (zone) => `Godziny w strefie ${zone}`,
