@@ -2529,6 +2529,14 @@ enum Words {
         static var waitingForBrowser: String { Words.line("needs_you.waiting_for_browser") }
         /// When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this {device} and its lock screen, even with tafs closed.
         static func whenTafAsksSomethingOutside(device: String) -> String { Words.line("needs_you.when_taf_asks_something_outside", device) }
+        enum YourStep {
+            /// This step was already answered or has ended.
+            static var ended: String { Words.line("needs_you.your_step.ended") }
+            /// Your answer didn't go through. {why}
+            static func notAnswered(why: String) -> String { Words.line("needs_you.your_step.not_answered", why) }
+            /// Not answered: it wasn't confirmed.
+            static var notAnsweredUnconfirmed: String { Words.line("needs_you.your_step.not_answered_unconfirmed") }
+        }
     }
     enum Overview {
         /// {figure} {words}
@@ -3715,8 +3723,8 @@ enum Words {
         static var howWorks: String { Words.line("sign_in.how_works") }
         /// iOS didn't open the sign-in page (error {code}; {context}). Try again with tafs open.
         static func iosDidNotOpenSign(code: String, context: String) -> String { Words.line("sign_in.ios_did_not_open_sign", code, context) }
-        /// Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here.
-        static var lead: String { Words.line("sign_in.lead") }
+        /// Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.
+        static func lead(device: String) -> String { Words.line("sign_in.lead", device) }
         /// Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices.
         static var notSignedOut: String { Words.line("sign_in.not_signed_out") }
         /// Not signed out at KIFF yet: {why}. Try again, or sign this {device} out from another device's Devices.

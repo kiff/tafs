@@ -1366,6 +1366,11 @@ object Words {
     }
     val waitingForBrowser: String get() = Res.s(R.string.needs_you_waiting_for_browser)
     fun whenTafAsksSomethingOutside(device: String): String = Res.s(R.string.needs_you_when_taf_asks_something_outside, device)
+    object YourStep {
+      val ended: String get() = Res.s(R.string.needs_you_your_step_ended)
+      fun notAnswered(why: String): String = Res.s(R.string.needs_you_your_step_not_answered, why)
+      val notAnsweredUnconfirmed: String get() = Res.s(R.string.needs_you_your_step_not_answered_unconfirmed)
+    }
   }
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)
@@ -2014,7 +2019,7 @@ object Words {
     fun everyActionTafTakesGoes(device: String): String = Res.s(R.string.sign_in_every_action_taf_takes_goes, device)
     val howWorks: String get() = Res.s(R.string.sign_in_how_works)
     fun iosDidNotOpenSign(code: String, context: String): String = Res.s(R.string.sign_in_ios_did_not_open_sign, code, context)
-    val lead: String get() = Res.s(R.string.sign_in_lead)
+    fun lead(device: String): String = Res.s(R.string.sign_in_lead, device)
     val notSignedOut: String get() = Res.s(R.string.sign_in_not_signed_out)
     fun notSignedOutDevice(why: String, device: String): String = Res.s(R.string.sign_in_not_signed_out_device, why, device)
     val openKiff: String get() = Res.s(R.string.sign_in_open_kiff)

@@ -1318,6 +1318,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach couldn\'t open on it. %1$s</string>
     <string name="needs_you_waiting_for_browser">Waiting for your browser…</string>
     <string name="needs_you_when_taf_asks_something_outside">When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this %1$s and its lock screen, even with tafs closed.</string>
+    <string name="needs_you_your_step_ended">This step was already answered or has ended.</string>
+    <string name="needs_you_your_step_not_answered">Your answer didn\'t go through. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Not answered: it wasn\'t confirmed.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nothing yet</string>
     <string name="people_account_people">THE ACCOUNT\'S PEOPLE</string>
@@ -1874,7 +1877,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this %1$s.</string>
     <string name="sign_in_how_works">How it works</string>
     <string name="sign_in_ios_did_not_open_sign">iOS didn\'t open the sign-in page (error %1$s; %2$s). Try again with tafs open.</string>
-    <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here.</string>
+    <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this %1$s in KIFF, and the Cards you issued show up here.</string>
     <string name="sign_in_not_signed_out">Not signed out at KIFF yet. Try again, or sign this phone out from another device\'s Devices.</string>
     <string name="sign_in_not_signed_out_device">Not signed out at KIFF yet: %1$s. Try again, or sign this %2$s out from another device\'s Devices.</string>
     <string name="sign_in_open_kiff">Open KIFF to approve</string>

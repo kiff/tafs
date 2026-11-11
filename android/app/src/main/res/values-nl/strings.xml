@@ -1318,6 +1318,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach kon er niet op openen. %1$s</string>
     <string name="needs_you_waiting_for_browser">Wachten op je browser…</string>
     <string name="needs_you_when_taf_asks_something_outside">Als een taf om iets buiten zijn Card vraagt, wacht het op je antwoord. Een melding laat het je meteen weten, op deze %1$s en het toegangsscherm, ook als tafs gesloten is.</string>
+    <string name="needs_you_your_step_ended">Deze stap is al beantwoord of is afgelopen.</string>
+    <string name="needs_you_your_step_not_answered">Je antwoord is niet doorgekomen. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Niet beantwoord: het is niet bevestigd.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nog niets</string>
     <string name="people_account_people">DE MENSEN VAN HET ACCOUNT</string>
@@ -1874,7 +1877,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je antwoorden worden ondertekend op deze %1$s.</string>
     <string name="sign_in_how_works">Hoe het werkt</string>
     <string name="sign_in_ios_did_not_open_sign">iOS heeft de inlogpagina niet geopend (fout %1$s; %2$s). Probeer het opnieuw met tafs geopend.</string>
-    <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze telefoon goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
+    <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze %1$s goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
     <string name="sign_in_not_signed_out">Nog niet uitgelogd bij KIFF. Probeer het opnieuw, of log deze telefoon uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_not_signed_out_device">Nog niet uitgelogd bij KIFF: %1$s. Probeer het opnieuw, of log deze %2$s uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_open_kiff">KIFF openen om goed te keuren</string>

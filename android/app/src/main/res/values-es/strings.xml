@@ -1318,6 +1318,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach no pudo abrirse con esto. %1$s</string>
     <string name="needs_you_waiting_for_browser">Esperando a tu navegador…</string>
     <string name="needs_you_when_taf_asks_something_outside">Cuando un taf pide algo fuera de su Card, espera tu respuesta. Una alerta te avisa al momento, en este %1$s y en su pantalla de bloqueo, aunque tafs esté cerrado.</string>
+    <string name="needs_you_your_step_ended">Este paso ya se respondió o ha terminado.</string>
+    <string name="needs_you_your_step_not_answered">Tu respuesta no se completó. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Sin responder: no se confirmó.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nada todavía</string>
     <string name="people_account_people">LAS PERSONAS DE LA CUENTA</string>
@@ -1874,7 +1877,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Cada acción de un taf pasa por KIFF, que comprueba su Card antes de que nada llegue a una app. Tus respuestas se firman en este %1$s.</string>
     <string name="sign_in_how_works">Cómo funciona</string>
     <string name="sign_in_ios_did_not_open_sign">iOS no abrió la página de inicio de sesión (error %1$s; %2$s). Vuelve a intentarlo con tafs abierto.</string>
-    <string name="sign_in_lead">Tus tafs actúan con Cards de KIFF. Aprueba este teléfono en KIFF y aquí aparecerán las Cards que emitiste.</string>
+    <string name="sign_in_lead">Tus tafs actúan con Cards de KIFF. Aprueba este %1$s en KIFF y aquí aparecerán las Cards que emitiste.</string>
     <string name="sign_in_not_signed_out">Aún no se ha cerrado la sesión en KIFF. Vuelve a intentarlo, o cierra la sesión de este teléfono desde Dispositivos en otro dispositivo.</string>
     <string name="sign_in_not_signed_out_device">Aún no se ha cerrado la sesión en KIFF: %1$s. Vuelve a intentarlo, o cierra la sesión de este %2$s desde Dispositivos en otro dispositivo.</string>
     <string name="sign_in_open_kiff">Abrir KIFF para aprobar</string>

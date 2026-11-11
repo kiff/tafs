@@ -1418,6 +1418,9 @@
     <string name="needs_you_unsure_coach_not_opened">Nie udało się otworzyć w tym Coacha. %1$s</string>
     <string name="needs_you_waiting_for_browser">Czeka na Twoją przeglądarkę…</string>
     <string name="needs_you_when_taf_asks_something_outside">Gdy taf poprosi o coś poza swoją Card, czeka na Twoją odpowiedź. Alert powiadomi Cię od razu, na tym urządzeniu (%1$s) i jego ekranie blokady, nawet gdy tafs jest zamknięte.</string>
+    <string name="needs_you_your_step_ended">Na ten krok już odpowiedziano albo się zakończył.</string>
+    <string name="needs_you_your_step_not_answered">Twoja odpowiedź nie dotarła. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Bez odpowiedzi: nie zostało potwierdzone.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Jeszcze nic</string>
     <string name="people_account_people">OSOBY NA KONCIE</string>
@@ -1986,7 +1989,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Każda akcja tafa przechodzi przez KIFF, który sprawdza jego Card, zanim cokolwiek dotrze do aplikacji. Twoje odpowiedzi są podpisywane na tym urządzeniu (%1$s).</string>
     <string name="sign_in_how_works">Jak to działa</string>
     <string name="sign_in_ios_did_not_open_sign">iOS nie otworzył strony logowania (błąd %1$s; %2$s). Spróbuj ponownie przy otwartym tafs.</string>
-    <string name="sign_in_lead">Twoje tafs działają w ramach Card KIFF. Zatwierdź ten telefon w KIFF, a wydane przez Ciebie Card pojawią się tutaj.</string>
+    <string name="sign_in_lead">Twoje tafs działają w ramach Card KIFF. Zatwierdź to urządzenie (%1$s) w KIFF, a wydane przez Ciebie Card pojawią się tutaj.</string>
     <string name="sign_in_not_signed_out">Jeszcze nie wylogowano w KIFF. Spróbuj ponownie albo wyloguj ten telefon z sekcji Urządzenia na innym urządzeniu.</string>
     <string name="sign_in_not_signed_out_device">Jeszcze nie wylogowano w KIFF: %1$s. Spróbuj ponownie albo wyloguj to urządzenie (%2$s) z sekcji Urządzenia na innym urządzeniu.</string>
     <string name="sign_in_open_kiff">Otwórz KIFF, aby zatwierdzić</string>

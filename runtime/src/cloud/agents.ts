@@ -51,7 +51,8 @@ export function refused(err: unknown, ...codes: string[]): err is AgentsError {
 export const ANSWERED_BY = "tafs cloud";
 
 /** What came of handing the owner over to a taf: exactly one is set. */
-export type ResultOutcome = { taf_id: string } | { version: number } | { failed: string };
+/** A result's answer: the new taf (with `check`, why its first check couldn't read), its new version, or why neither. */
+export type ResultOutcome = { taf_id: string; check?: string } | { version: number } | { failed: string };
 
 /** A run that keeps a switch from beginning, as kiff/agents names it in the 409 (kiff/tafs#206). */
 export interface BlockingRun {

@@ -110,7 +110,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
       ) {
         Text(Words.SignIn.withKiff, style = scaled(34, FontWeight.Bold, Theme.ink, display = true))
         Text(
-          Words.SignIn.lead,
+          Words.SignIn.lead(bot.tafs.app.model.ThisDevice.word),
           style = scaled(15, color = Theme.soft),
         )
 

@@ -311,6 +311,7 @@ fun RootView(model: AppModel) {
         bot.tafs.app.views.LocalCardUnitActions provides remember(model) {
           bot.tafs.app.views.CardUnitActions(discuss = model::discussCardUnit, dismiss = model::dismissCardUnit)
         },
+        bot.tafs.app.views.LocalYourStepActions provides remember(model) { bot.tafs.app.views.YourStepActions(answer = model::answerYourStep) },
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
