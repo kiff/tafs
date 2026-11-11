@@ -103,8 +103,13 @@ never reach the phone.
 What a step says comes from tafs cloud, never the tool's name (`steps.ts`): for a tool
 through KIFF, KIFF's title for it on the taf's Cards (`grants[].title`, read as the person
 and kept a minute); for Coach's and the agents' own tools, what they do ("Drafting the
-Card…", "Showing you a card…"). A tool nothing names has no words, and the app shows the
-step without them.
+Card…", "Showing you a card…"), in the person's language (`Accept-Language`), so a Polish chat
+reads "Przygotowuję Card…". KIFF's title stays the vendor's own words. A tool nothing names has
+no words, and the app shows the step without them.
+
+A sign-in card's buttons are the app's chrome: tafs cloud writes `yes` and `no` in the app's
+language ("Se connecter", "Pas maintenant"), whatever language Coach wrote the card in. Its
+`title`, `text` and `note` are Coach's message, as written.
 
 ### The work block
 

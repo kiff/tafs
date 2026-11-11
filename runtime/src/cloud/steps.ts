@@ -1,8 +1,9 @@
 /**
  * What Coach is doing, in a few words for the phone, from the tool it calls and
  * what it asked of it: "Checking your Stripe connection…", "Drafting the Card…".
- * Only these words reach the phone, never the call's arguments.
+ * Only these words reach the phone, never the call's arguments. Each is in the person's language.
  */
+import { type Lang, wordsIn } from "./words/index.js";
 
 /** Vendors' names for the hosts of their MCP servers, where the host alone doesn't say it well. */
 const VENDORS: Record<string, string> = { "stripe.com": "Stripe", "shopify.com": "Shopify", "paypal.com": "PayPal", "hubspot.com": "HubSpot" };
@@ -34,8 +35,8 @@ export type ToolTitles = ReadonlyMap<string, string>;
  * records): the same words as while it went, without the "…". Undefined for a tool
  * nothing names: the app says it worked, and shows no tool name.
  */
-export function stepWords(tool: string, titles: ToolTitles = new Map()): string | undefined {
-  return new Steps(titles).call(tool, undefined)?.replace(/…$/, "");
+export function stepWords(tool: string, titles: ToolTitles = new Map(), lang: Lang = "en"): string | undefined {
+  return new Steps(titles, lang).call(tool, undefined)?.replace(/…$/, "");
 }
 
 /** A run's steps: it remembers which vendor each grant is with, from the requests it saw. */
@@ -43,24 +44,20 @@ export class Steps {
   private vendors = new Map<string, string>();
   private asked = new Map<string, string>(); // call id → vendor, for a request whose grant id comes in its result
 
-  constructor(private readonly titles: ToolTitles = new Map()) {}
+  constructor(private readonly titles: ToolTitles = new Map(), private readonly lang: Lang = "en") {}
 
   /**
-   * The words for a call: Coach's and the agents' own tools by what they do, a tool
-   * through KIFF by KIFF's title for it. Undefined for a tool nothing names.
+   * The words for a call, in the person's language: Coach's and the agents' own tools by what they do, a
+   * tool through KIFF by KIFF's title for it. Undefined for a tool nothing names.
    */
   call(tool: string, input: unknown, callID?: string): string | undefined {
     const i = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
-    const your = (vendor: string) => (vendor ? `your ${vendor}` : "your");
+    const w = wordsIn(this.lang);
     switch (tool) {
-      case "show":
-        return "Showing you a card…";
-      case "taf_results":
-        return "Setting where its results go…";
-      case "memory":
-        return "Going through its notes…";
-      case "workspace":
-        return "Working in its workspace…";
+      case "show": return w.doing_show;
+      case "taf_results": return w.doing_results;
+      case "memory": return w.doing_memory;
+      case "workspace": return w.doing_workspace;
       case "planque": {
         const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
         switch (i.action) {
@@ -68,31 +65,31 @@ export class Steps {
             const vendor = vendorName(i.server);
             if (callID) this.asked.set(callID, vendor);
             const tools = Array.isArray(i.tools) && i.tools.length > 0;
-            return tools ? `Preparing ${vendor ? `${vendor}'s` : "the"} tools for your approval…` : `Preparing the connection to ${vendor || "your provider"}…`;
+            return tools ? w.doing_tools_for(vendor) : w.doing_connect_to(vendor);
           }
-          case "status": return `Checking ${your(grant)} connection…`;
-          case "catalog": return `Reading what ${grant || "your provider"} offers…`;
-          case "tools": return "Choosing the tools…";
-          case "read": return `Reading from ${your(grant)} account…`;
-          case "grants": return "Looking up your connections…";
-          default: return "Working on the connection…";
+          case "status": return w.doing_check_connection(grant);
+          case "catalog": return w.doing_catalog(grant);
+          case "tools": return w.doing_choose_tools;
+          case "read": return w.doing_read_account(grant);
+          case "grants": return w.doing_grants;
+          default: return w.doing_connection;
         }
       }
-      case "kiff_draft": return "Drafting the Card…";
-      case "kiff_card": return "Reading the taf's Card…";
-      case "kiff_pending": return "Checking what waits for you…";
-      case "tafs_state": return "Looking at your tafs…";
-      case "taf_run": return "Checking the taf's run…";
-      case "taf_check": return "Checking what's wrong with the taf…";
-      case "taf_estimate": return "Working out what it will likely use…";
-      case "taf_task": return "Handing the task over…";
-      case "run_stop": return "Stopping the run…";
-      case "taf_pause": return "Pausing the taf…";
-      case "version_try": return "Trying the new version…";
-      case "version_install": return "Preparing the update…";
+      case "kiff_draft": return w.doing_draft;
+      case "kiff_card": return w.doing_card;
+      case "kiff_pending": return w.doing_pending;
+      case "tafs_state": return w.doing_tafs;
+      case "taf_run": return w.doing_run;
+      case "taf_check": return w.doing_check;
+      case "taf_estimate": return w.doing_estimate;
+      case "taf_task": return w.doing_task;
+      case "run_stop": return w.doing_stop;
+      case "taf_pause": return w.doing_pause;
+      case "version_try": return w.doing_trying;
+      case "version_install": return w.doing_install;
       default: {
         const title = this.titles.get(tool)?.trim();
-        return title ? `${title}…` : undefined;
+        return title ? w.doing_titled(title) : undefined;
       }
     }
   }

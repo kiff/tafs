@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
+import { approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -420,6 +420,42 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     const r = await w.report({ result: "connected" });
     expect(r.body).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}`, note: WORDS.notConnected("Stripe", "signed_in") });
     expect(w.told()).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}` });
+  });
+
+  it("words each note in the approving request's language, the reason Coach hears with it, and keeps the protocol's words", async () => {
+    // agentgabo on #716: "Your approval window has ended…" read English in a Polish chat.
+    const PL = approvalWords("pl");
+    const SIG = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig", "accept-language": "pl-PL,pl;q=0.9" };
+    const cases: Array<[Record<string, unknown>, string]> = [
+      [{ result: "sign_in_closed" }, PL.signInClosed],
+      [{ result: "no_code" }, PL.noCode("Stripe")],
+      [{ result: "not_connected", status: "needs_reconnect" }, PL.cameBack("needs_reconnect")],
+      [{ result: "failed" }, PL.failed()],
+    ];
+    for (const [body, why] of cases) {
+      const s = services();
+      const w = await asked(s);
+      s.grants = [grant({ status: "approved" })];
+      const r = await w.report(body, SIG);
+      expect(r.body).toMatchObject({ outcome: "answered", answer: `failed: ${why}`, note: why });
+      expect(w.told()).toMatchObject({ answer: `failed: ${why}` });
+    }
+    expect(PL.cameBack("needs_reconnect")).toBe("Połączenie wróciło bez linku do logowania (stan: czeka na ponowne zalogowanie). Nic nie zostało połączone.");
+    expect(PL.failed()).toBe("Nie połączono: nie powiodło się");
+    // A note on a tap, and a refusal's words, the same.
+    const w = await world(services());
+    const none = await w.call("POST", ASK, { grant: "g_9" }, { "accept-language": "pl" });
+    expect(none.body).toMatchObject({ outcome: "answered", answer: `failed: ${PL.noGrant}`, note: PL.noGrant });
+    const s = services();
+    const w2 = await world(s);
+    const r = await w2.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    const id = (r.body.ask as { id: string }).id;
+    s.signedKey = "device";
+    s.signedWindow = { id: "win_abcdefghijklmnopqrstuvwxyz", open: false };
+    const ended = await w2.call("POST", `${ASK}/${id}`, { result: "connected" }, { ...SIG, "kiff-device-signature": "t=2026-10-16T12:00:30Z,v2=sig,w=win_abcdefghijklmnopqrstuvwxyz" });
+    expect(ended.body).toEqual({ error: "Czas na zatwierdzenie minął. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.", code: "window_required" });
+    // English is as it was: no Accept-Language, or an English one.
+    expect(WORDS.notConnected("Stripe", "needs_reconnect")).toBe("The sign-in at Stripe didn't connect: the connection is needs reconnect. Nothing was connected. Try signing in again.");
   });
 
   it("each failure the phone can report has tafs cloud's words, for Coach and for the card", async () => {
