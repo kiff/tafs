@@ -1126,6 +1126,21 @@
   "halt.now": "Nu stilzetten",
   "halt.row_running": "Zet het stil tot je hervat",
   "halt.your_tafs_lower": "je tafs",
+  "halt_all.description": "Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat.",
+  "halt_all.failed": "tafs kon je tafs niet stilzetten. {why} Open tafs om ze stil te zetten.",
+  "halt_all.halted": {
+    "one": "{count} taf stilgezet. Er wordt niets nieuws verzonden tot je hervat.",
+    "other": "{count} tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat."
+  },
+  "halt_all.halted_all": "Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat.",
+  "halt_all.halting": {
+    "one": "{count} taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.",
+    "other": "{count} tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
+  },
+  "halt_all.halting_all": "Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.",
+  "halt_all.running": "tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.",
+  "halt_all.signed_out": "Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.",
+  "halt_all.title": "Alle tafs stilzetten",
   "home.calendar_not_read": "De agenda kon niet worden gelezen. {why}",
   "home.cant_reach_kiff": "KIFF is niet bereikbaar",
   "home.choose_taf": "Kies een taf.",
@@ -1878,21 +1893,6 @@
   "sign_in.welcome.title": "They taf.\nYou kiff.",
   "sign_in.with_kiff": "Inloggen met KIFF",
   "sign_in.your_code": "Je code",
-  "siri.halt_all.description": "Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat.",
-  "siri.halt_all.failed": "tafs kon je tafs niet stilzetten. {why} Open tafs om ze stil te zetten.",
-  "siri.halt_all.halted": {
-    "one": "{count} taf stilgezet. Er wordt niets nieuws verzonden tot je hervat.",
-    "other": "{count} tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat."
-  },
-  "siri.halt_all.halted_all": "Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat.",
-  "siri.halt_all.halting": {
-    "one": "{count} taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.",
-    "other": "{count} tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
-  },
-  "siri.halt_all.halting_all": "Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.",
-  "siri.halt_all.running": "tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.",
-  "siri.halt_all.signed_out": "Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.",
-  "siri.halt_all.title": "Alle tafs stilzetten",
   "taf.activity.all_apps": "Alle apps",
   "taf.activity.checking_waits": "Controleren wat op je wacht…",
   "taf.activity.reading_notes": "Notities lezen…",

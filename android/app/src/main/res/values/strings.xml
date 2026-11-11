@@ -1129,6 +1129,21 @@
     <string name="halt_now">Halt now</string>
     <string name="halt_row_running">Stop it until you resume</string>
     <string name="halt_your_tafs_lower">your tafs</string>
+    <string name="halt_all_description">Stops every taf at once. Nothing new is sent until you resume them in tafs.</string>
+    <string name="halt_all_failed">tafs couldn\'t halt your tafs. %1$s Open tafs to halt them.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">Halted %1$s taf. Nothing new is sent until you resume.</item>
+        <item quantity="other">Halted %1$s tafs. Nothing new is sent until you resume.</item>
+    </plurals>
+    <string name="halt_all_halted_all">Halted your tafs. Nothing new is sent until you resume.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">Halting %1$s taf: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
+        <item quantity="other">Halting %1$s tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Halting your tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</string>
+    <string name="halt_all_running">tafs couldn\'t halt your tafs. Open tafs to halt them.</string>
+    <string name="halt_all_signed_out">You\'re signed out of tafs. Sign in to halt your tafs.</string>
+    <string name="halt_all_title">Halt all tafs</string>
     <string name="home_calendar_not_read">The calendar couldn\'t be read. %1$s</string>
     <string name="home_cant_reach_kiff">Can\'t reach KIFF</string>
     <string name="home_choose_taf">Choose a taf.</string>
@@ -1881,21 +1896,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Sign in with KIFF</string>
     <string name="sign_in_your_code">Your code</string>
-    <string name="siri_halt_all_description">Stops every taf at once. Nothing new is sent until you resume them in tafs.</string>
-    <string name="siri_halt_all_failed">tafs couldn\'t halt your tafs. %1$s Open tafs to halt them.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">Halted %1$s taf. Nothing new is sent until you resume.</item>
-        <item quantity="other">Halted %1$s tafs. Nothing new is sent until you resume.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">Halted your tafs. Nothing new is sent until you resume.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">Halting %1$s taf: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
-        <item quantity="other">Halting %1$s tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Halting your tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</string>
-    <string name="siri_halt_all_running">tafs couldn\'t halt your tafs. Open tafs to halt them.</string>
-    <string name="siri_halt_all_signed_out">You\'re signed out of tafs. Sign in to halt your tafs.</string>
-    <string name="siri_halt_all_title">Halt all tafs</string>
     <string name="taf_activity_all_apps">All apps</string>
     <string name="taf_activity_checking_waits">Checking what waits for you…</string>
     <string name="taf_activity_reading_notes">Reading its notes…</string>
