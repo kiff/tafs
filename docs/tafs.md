@@ -218,7 +218,10 @@ the home list's `removing`.
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
 Doors tab (on Android, none of Setup's changes), or line saying who it's shared with. For whoever manages it, that line has a
-**Share** button with the system's share mark, beside who uses the taf. On its Cards, "Issued by" names who
+**Share** button with the system's share mark, beside who uses the taf. KIFF's default group, which KIFF
+keeps as "Everyone", is named in the person's language wherever a group shows (`people.everyone_group`),
+with its own sentences where a language inflects it ("Shared with everyone", `people.shared_with_everyone`;
+"Everyone uses {taf}", `people.everyone_uses`); on Android, `Group.shownName`. On its Cards, "Issued by" names who
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer` on iOS, `AppState.issuer` on Android).
 
