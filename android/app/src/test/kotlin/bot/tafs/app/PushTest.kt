@@ -479,4 +479,14 @@ class PushTest {
     assertEquals("Off", AlertWords.status(true, false))
     assertTrue(AlertWords.foot(true, null)!!.startsWith("When a taf needs you"))
   }
+
+  @Test fun aDoorsKnockOpensItsTafOnActivityAndAnyOtherTafAlertAsBefore() {
+    val now = java.time.Instant.parse("2026-11-11T20:00:00Z")
+    val knock = AlertPayload.parse(mapOf("kind" to "alert", "title" to "Refunds", "body" to "A stranger knocked", "open" to "taf", "taf_id" to "taf_9", "knock" to "k_1"), now) as Alert.Show
+    assertEquals("taf_9", AlertPayload.tafOf(knock.open))
+    assertTrue(AlertPayload.opensActivity(knock.open))
+    val other = AlertPayload.parse(mapOf("kind" to "alert", "title" to "Refunds", "body" to "Its run ended", "open" to "taf", "taf_id" to "taf_9"), now) as Alert.Show
+    assertEquals("taf_9", AlertPayload.tafOf(other.open))
+    assertFalse(AlertPayload.opensActivity(other.open))
+  }
 }

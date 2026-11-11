@@ -193,7 +193,10 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
   app never formats a time or builds a line from them.
 - **In the list:** each taf in `GET /v1/home` gains `work: {status, line, needs_you}`. That's
   the taf's status (`working`, `retrying`, `needs_you`, `paused` or `idle`), its line, and how
-  many of its requests need the owner. The list needs no read per taf.
+  many of its requests need the owner. The list needs no read per taf. What went wrong last comes
+  before the next run, which would read as all's well: its latest firing's check that couldn't read
+  (a Run now's too), then its health, then its last run stopped at a cap or failed. Such a line comes
+  with `attention: true`, and an app draws it in place of "Working" or the next run.
 - **On the taf's page:** `GET /v1/tafs/{id}/work` gives the counts per state, the next run, and
   the recent requests, newest first, each with its `line` and its deliveries.
 - **A run is done only when it answered.** kiff/agents ends a run that hit its turn cap or its

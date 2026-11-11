@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">Les textes de KIFF pour cette connexion n\'ont pas pu être lus. %1$s</string>
     <string name="connect_profile_words_unread">Les textes de KIFF pour cette connexion ne sont pas encore lus. Rien n\'a été approuvé.</string>
     <string name="connect_prompt_connect">Connecter %1$s à %2$s</string>
+    <string name="connect_prompt_connect_app">Connecter %1$s</string>
     <string name="connect_prompt_give_card">Donner sa Card à %1$s</string>
     <string name="connect_prompt_give_key">Donner à %1$s sa clé pour %2$s</string>
+    <string name="connect_prompt_give_key_app">Donner à %1$s sa clé</string>
     <string name="connect_prompt_keep_sealed">Garder scellés les identifiants de vos apps</string>
     <string name="connect_reading_asks">Lecture de ce qu\'il demande…</string>
     <string name="connect_reading_request">Lecture de la demande…</string>
@@ -1180,7 +1182,7 @@
     <string name="home_status">État</string>
     <string name="home_status_retrying">%1$s · nouvel essai</string>
     <string name="home_tafs_shared_you_show">Les tafs partagés avec vous s\'affichent ici.</string>
-    <string name="home_tagline">Ils tafent. Vous kiffez.</string>
+    <string name="home_tagline">They taf. You kiff.</string>
     <string name="home_title">Tafs</string>
     <plurals name="home_working">
         <item quantity="one">%1$s taf en cours.</item>
@@ -1316,6 +1318,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach n\'a pas pu s\'ouvrir dessus. %1$s</string>
     <string name="needs_you_waiting_for_browser">En attente de votre navigateur…</string>
     <string name="needs_you_when_taf_asks_something_outside">Quand un taf demande quelque chose hors de sa Card, il attend votre réponse. Une alerte vous prévient aussitôt, sur cet %1$s et son écran verrouillé, même si tafs est fermé.</string>
+    <string name="needs_you_your_step_ended">Cette étape a déjà reçu une réponse ou a pris fin.</string>
+    <string name="needs_you_your_step_not_answered">Votre réponse n\'a pas abouti. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Pas de réponse envoyée : ce n\'a pas été confirmé.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Rien pour l\'instant</string>
     <string name="people_account_people">LES PERSONNES DU COMPTE</string>
@@ -1338,7 +1343,9 @@
     <string name="people_delete_group_button">Supprimer %1$s</string>
     <string name="people_delete_group_title">Supprimer %1$s ?</string>
     <string name="people_delete_this_group_title">Supprimer ce groupe ?</string>
-    <string name="people_everyone_in">Tout le monde sur le compte fait partie de %1$s. Invitez des personnes depuis le tableau de bord KIFF.</string>
+    <string name="people_everyone_group">Tout le monde</string>
+    <string name="people_everyone_in">Tout le monde sur le compte est ici. Invitez des personnes depuis le tableau de bord KIFF.</string>
+    <string name="people_everyone_uses">Tout le monde utilise %1$s : %2$s.</string>
     <string name="people_everyone_uses_none">Tout le monde sur le compte · n\'utilise aucun taf</string>
     <string name="people_group_actions">Actions de %1$s</string>
     <string name="people_group_name_hint">Support, Finance…</string>
@@ -1388,6 +1395,7 @@
     <string name="people_share_who_gets">Qui reçoit %1$s</string>
     <string name="people_share_who_uses">Qui utilise %1$s ?</string>
     <string name="people_shared_with">Partagé avec %1$s</string>
+    <string name="people_shared_with_everyone">Partagé avec tout le monde</string>
     <string name="people_shared_with_prefix">"Partagé avec "</string>
     <string name="people_sharing">Partage…</string>
     <string name="people_stops_using">%1$s cesse d\'utiliser %2$s. Ses chats restent les siens.</string>
@@ -1725,6 +1733,7 @@
     <string name="settings_alerts_off_text">Elles se sont désactivées quand ce téléphone s\'est déconnecté. Activez-les pour recevoir une alerte quand un taf vous attend.</string>
     <string name="settings_alerts_off_title_device">Les alertes sont désactivées sur cet %1$s</string>
     <string name="settings_alerts_off_turn_on">Activer</string>
+    <string name="settings_change_language">Changer de langue</string>
     <string name="settings_chargebacks_needs_you">Chargebacks vous attend</string>
     <string name="settings_choose_time_zone">Choisir un fuseau horaire…</string>
     <string name="settings_clear_sample">Effacer l\'exemple</string>
@@ -1763,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Chacune indique à qui il a été répondu et par quelle porte, jamais son contenu. Désactivez-la dans Configuration du taf › Les résultats vont vers.</string>
     <string name="settings_find_time_zone">Rechercher un fuseau horaire</string>
     <string name="settings_kiff_account">Compte KIFF</string>
+    <string name="settings_language_title">Langue</string>
     <string name="settings_legal">Mentions légales</string>
     <string name="settings_light_taps_when_you_send">Une légère vibration quand vous envoyez ou répondez.</string>
     <string name="settings_mode">Mode</string>

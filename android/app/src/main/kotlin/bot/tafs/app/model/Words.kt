@@ -883,8 +883,10 @@ object Words {
     val profileWordsUnread: String get() = Res.s(R.string.connect_profile_words_unread)
     object Prompt {
       fun connect(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_connect, vendor, agent)
+      fun connectApp(vendor: String): String = Res.s(R.string.connect_prompt_connect_app, vendor)
       fun giveCard(agent: String): String = Res.s(R.string.connect_prompt_give_card, agent)
       fun giveKey(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_give_key, vendor, agent)
+      fun giveKeyApp(vendor: String): String = Res.s(R.string.connect_prompt_give_key_app, vendor)
       val keepSealed: String get() = Res.s(R.string.connect_prompt_keep_sealed)
     }
     val readingAsks: String get() = Res.s(R.string.connect_reading_asks)
@@ -1364,6 +1366,11 @@ object Words {
     }
     val waitingForBrowser: String get() = Res.s(R.string.needs_you_waiting_for_browser)
     fun whenTafAsksSomethingOutside(device: String): String = Res.s(R.string.needs_you_when_taf_asks_something_outside, device)
+    object YourStep {
+      val ended: String get() = Res.s(R.string.needs_you_your_step_ended)
+      fun notAnswered(why: String): String = Res.s(R.string.needs_you_your_step_not_answered, why)
+      val notAnsweredUnconfirmed: String get() = Res.s(R.string.needs_you_your_step_not_answered_unconfirmed)
+    }
   }
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)
@@ -1387,7 +1394,9 @@ object Words {
     fun deleteGroupButton(group: String): String = Res.s(R.string.people_delete_group_button, group)
     fun deleteGroupTitle(group: String): String = Res.s(R.string.people_delete_group_title, group)
     val deleteThisGroupTitle: String get() = Res.s(R.string.people_delete_this_group_title)
-    fun everyoneIn(group: String): String = Res.s(R.string.people_everyone_in, group)
+    val everyoneGroup: String get() = Res.s(R.string.people_everyone_group)
+    val everyoneIn: String get() = Res.s(R.string.people_everyone_in)
+    fun everyoneUses(taf: String, people: String): String = Res.s(R.string.people_everyone_uses, taf, people)
     val everyoneUsesNone: String get() = Res.s(R.string.people_everyone_uses_none)
     fun groupActions(group: String): String = Res.s(R.string.people_group_actions, group)
     val groupNameHint: String get() = Res.s(R.string.people_group_name_hint)
@@ -1441,6 +1450,7 @@ object Words {
       fun whoUses(taf: String): String = Res.s(R.string.people_share_who_uses, taf)
     }
     fun sharedWith(names: String): String = Res.s(R.string.people_shared_with, names)
+    val sharedWithEveryone: String get() = Res.s(R.string.people_shared_with_everyone)
     val sharedWithPrefix: String get() = Res.s(R.string.people_shared_with_prefix)
     val sharing: String get() = Res.s(R.string.people_sharing)
     fun stopsUsing(who: String, taf: String): String = Res.s(R.string.people_stops_using, who, taf)
@@ -1843,6 +1853,7 @@ object Words {
       fun titleDevice(device: String): String = Res.s(R.string.settings_alerts_off_title_device, device)
       val turnOn: String get() = Res.s(R.string.settings_alerts_off_turn_on)
     }
+    val changeLanguage: String get() = Res.s(R.string.settings_change_language)
     val chargebacksNeedsYou: String get() = Res.s(R.string.settings_chargebacks_needs_you)
     val chooseTimeZone: String get() = Res.s(R.string.settings_choose_time_zone)
     val clearSample: String get() = Res.s(R.string.settings_clear_sample)
@@ -1885,6 +1896,7 @@ object Words {
     val eachSendsWhoAnsweredThrough: String get() = Res.s(R.string.settings_each_sends_who_answered_through)
     val findTimeZone: String get() = Res.s(R.string.settings_find_time_zone)
     val kiffAccount: String get() = Res.s(R.string.settings_kiff_account)
+    val languageTitle: String get() = Res.s(R.string.settings_language_title)
     val legal: String get() = Res.s(R.string.settings_legal)
     val lightTapsWhenYouSend: String get() = Res.s(R.string.settings_light_taps_when_you_send)
     val mode: String get() = Res.s(R.string.settings_mode)

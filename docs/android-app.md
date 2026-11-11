@@ -287,6 +287,16 @@ searches across their tafs, opens one case, and exports receipts
 
 ## Words and languages
 
+**Account › Language** shows the lines' language named in itself ("Français", `AppLanguage.name`) and **Change
+language**, which opens the phone's own setting: Android 13+'s per-app language for tafs, which offers the 8 because the
+manifest declares the generated `locales_config` (`android:localeConfig`), else the phone's languages on Android 11 and
+12. There's no picker of the app's own.
+
+**Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
+region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and
+symbol, and is never converted (`Money.figure`, `MoneyFormatTest`). Amounts in KIFF's or tafs cloud's own words are
+shown as they come.
+
 Every line the app writes itself is in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
 iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.py` writes, from it,
 `res/values/strings.xml` (counts as `<plurals>`), `res/xml/locales_config.xml` and `model/Words.kt`, a typed accessor per
@@ -439,7 +449,9 @@ moved came to, by unit (`spentOn`).
 
 ## The taf's screen
 
-Four tabs, each with one job (`TafDetailView`):
+Four tabs, each with one job (`TafDetailView`). It opens on Chat, except from a door's knock alert
+(tafs cloud's `knock`, `AlertPayload.opensActivity`), which opens it on Activity, where knocks are
+answered:
 - **Chat:** talking to it.
 - **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
@@ -503,6 +515,32 @@ taf, and **Ask Coach** opens a conversation about the taf.
   <img src="screenshots/android/taf-activity-dark.png" width="160" alt="A taf's Activity, in dark: All, Done, Held, Refused, by day">
   <img src="screenshots/android/record-by-taf-dark.png" width="160" alt="The Record by taf, in dark: a chip per taf, each entry starting with its taf">
 </p>
+
+## Your step
+
+A step a taf may never take itself, such as approving a bank transfer, is handed to its owner
+([api.md](api.md#your-step)). Signed in, Home's `your_steps` come first in **Needs you**, oldest
+first, each a panel (`YourStepPanel`, `views/YourStepViews.kt`) in tafs cloud's words: its title and
+the taf's name, what to do, and why. Needs you counts each once, as tafs cloud does.
+
+- **Open in {vendor}** shows only for an https `link` whose own host is tafs cloud's `link_host`,
+  with `words.open` (`YourStep.open`, as iOS's `openLink`). It opens the browser on that link, and
+  the host shows under the button, so the line names where it really goes. A link with no host apart,
+  another host, or plain http shows the words with no button, as does one tafs cloud left out.
+- **Done** and **Skip it** are for those who answer holds (`canAnswerHolds`). Each reads the hand-off
+  from KIFF (`GET /v1/me/handoffs/{id}`) for its version, signs KIFF's `kiff.handoff.v1` (tenant,
+  hand-off, `done` or `skipped`, version, signed_at) with the **device key** (the signing key KIFF
+  binds to the session), after the screen lock, as a refusal is signed. It's never the approval key
+  and never needs a fingerprint, since answering grants nothing. It then sends it to KIFF
+  (`POST /v1/me/handoffs/{id}/answer`, `AppModel.answerYourStep`). KIFF tells the taf's run. The
+  prompt reads tafs cloud's words: "Done · {what}".
+- **A step KIFF no longer waits on** (answered elsewhere, or past its week) isn't signed: the app
+  says so and drops it. A refusal from KIFF keeps the step and says why.
+- **Its alerts** open the taf. A step's alert is tagged by its hand-off, so its reminder replaces its
+  first alert and no other, once tafs cloud passes `handoff` on to Android.
+- **The vector:** `YourStepTest` pins KIFF's `kiff.handoff.v1` message and its sha256, and checks
+  KIFF's vector signature verifies with the key derived from its seed, and for no other answer,
+  hand-off, account or version.
 
 ## Alerts
 
@@ -598,6 +636,12 @@ new sign-in. Whether the phone can approve is read each time the app comes back
 (`approvalReadiness`), and while it can't, each approval's button gives way to the state and what
 to do ([approvals.md](approvals.md#set-up-approvals-on-this-device)). A debug build on a phone with no screen lock signs without asking, as the iOS
 Simulator does; a release never does.
+
+**What the prompt says** is the last thing read before signing. Connecting an app names the app and
+the taf as the person knows them (`ConnectionWords.connectPrompt`, `giveKeyPrompt`): tafs cloud's
+Connect apps title for that connection, else planque's vendor name, and the taf's name, else the
+name planque keeps (`agent_name`). It never shows an agent id or a server's slug. With no name for
+the taf, it names the app alone ("Connect Stripe").
 
 ## The calendar
 

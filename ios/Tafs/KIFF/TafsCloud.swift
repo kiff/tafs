@@ -315,6 +315,8 @@ final class TafsCloud {
         /// The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors.
         var doorsOffered: [String]? = nil
         var cardUnitExceptions: [CardUnitException]? = nil
+        /// The steps tafs handed the person, oldest first (docs/api.md › Your step); absent when none.
+        var yourSteps: [YourStep]? = nil
         /// Everything that waits for the person, counted by tafs cloud with its words; absent
         /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
         var needsYou: NeedsYou? = nil
@@ -322,6 +324,7 @@ final class TafsCloud {
         enum CodingKeys: String, CodingKey {
             case tafs, others, removing, doorsOffered = "doors_offered"
             case cardUnitExceptions = "card_unit_exceptions"
+            case yourSteps = "your_steps"
             case needsYou = "needs_you"
         }
     }

@@ -280,7 +280,8 @@ class PlanqueTest {
     m.refreshConnections()
     val result = m.connect("a1", "g1", digest)
     assertTrue(result.toString(), result is AppModel.Connected.Done)
-    assertEquals(listOf("Connect mcp.stripe.com to refunds-1"), auth.asked)
+    // The prompt never names the agent by its id: with no taf of that name here, it names the app alone.
+    assertEquals(listOf("Connect mcp.stripe.com"), auth.asked)
     assertEquals("https://mcp.stripe.com/oauth?x=1", vendor.opened)
     assertEquals("c0de", KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject.getValue("confirm").jsonPrimitive.content)
     val order = transport.requests.map { it.method + " " + java.net.URI(it.url).path }
@@ -508,7 +509,7 @@ class PlanqueTest {
     val m = model()
     m.refreshConnections()
     assertTrue(m.giveKey("g1", digest, "  sk_test_4eC39H  "))
-    assertEquals("confirmed with the approval key", listOf("Give mcp.stripe.com its key for refunds-1"), auth.asked)
+    assertEquals("confirmed with the approval key, never naming the agent id", listOf("Give mcp.stripe.com its key"), auth.asked)
     val sent = transport.requestsTo(key).single()
     assertEquals("the key, trimmed, in its header alone", "sk_test_4eC39H", sent.headers[PlanqueClient.VENDOR_KEY])
     val body = String(sent.body!!)

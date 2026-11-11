@@ -375,7 +375,13 @@ that read only those. A job run's report may carry `delivered`, tafs
 cloud's one line on where its result went; Android draws it above the taf's words, as written
 (`ChatMessage.delivered`), and nothing where none comes.
 
-- A job run's first message is the job's instruction, shown as a small note.
+- A job run's first message is the job's instruction, shown as a small note. When its schedule's check handed it
+  items, the note says how many after the instruction ("Its check found 2 new items.", `checkStart`), never the
+  items themselves: they're the app's data, kept whole in the run's input for the taf, not the owner's words.
+- **The loop card**, kiff/agents' `confirm` with id `tafs-loop-N` and `loop: {tool, pages}`, shown when a run read
+  page after page of one list, comes in tafs cloud's words in the person's language: "Still reading", the read by
+  its KIFF title (else "the same list", never its tool name), and **Read on** / **Stop here**, whose values stay
+  `tafs_loop_continue` and `tafs_loop_summarise` (`loopCardWords`).
 - A message that came through a door shows with its door and sender ([doors.md](doors.md)).
 - `GET /v1/tafs/{id}/chats` lists the person's chats, newest first, each named by the
   start of what they asked. One tap reopens a chat.

@@ -125,7 +125,20 @@ describe("each Card on its own (kiff/tafs#211)", () => {
 
   it("puts the live Cards first, then a test Card", () => {
     const s = summary([test, reads, refunds]);
-    expect(s.cards.map((c) => [c.id, c.live])).toEqual([["reads", true], ["live", true], ["test", false]]);
+    // Of the two live ones, the refunds Card has used 22% of its total, the reads one 10% of its calls.
+    expect(s.cards.map((c) => [c.id, c.live])).toEqual([["live", true], ["reads", true], ["test", false]]);
+  });
+
+  // The Card in front is the one at work, never an unused one at 200 of 200.
+  it("puts the Card that has used the most of its limit in front, within the live and the test ones", () => {
+    const counted = (id: string, title: string, used: number | undefined): Mandate => ({
+      id, subject: "s", active: true, environment: "test", title, grants: [{ action: id, title }],
+      aggregates: [{ quantity: "count", window: "calendar_day", limit: 200 }],
+      limits: used === undefined ? [] : [{ quantity: "count", window: "calendar_day", limit: 200, used, status: "ok" }],
+    } as Mandate);
+    const s = summary([counted("read", "Read a dispute", 0), counted("unread", "Never read", undefined), counted("list", "List disputes", 44)]);
+    expect(s.cards.map((c) => c.id)).toEqual(["list", "read", "unread"]);
+    expect(s.cards[0]!.calls).toMatchObject({ limit: 200, used: 44 });
   });
 
   it("takes the Card's own title when KIFF gives one, else its main tool's", () => {

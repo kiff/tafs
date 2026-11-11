@@ -394,7 +394,7 @@ export interface ReportContext extends DecideContext {
  * inside a window for a critical ask, since that phone took the window path for
  * a critical call, and a window that has ended.
  */
-export async function checkSigned(ctx: ReportContext, key: "window" | "critical" | "approval" = "window"): Promise<void> {
+export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | "kiffBase" | "token" | "lang"> & Partial<ReportContext>, key: "window" | "critical" | "approval" = "window"): Promise<void> {
   const W = approvalWords(ctx.lang);
   const { signed } = ctx;
   if (!signed.signature) throw new ApprovalError(403, "this answer isn't signed by your phone");

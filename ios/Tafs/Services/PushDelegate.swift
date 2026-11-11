@@ -57,6 +57,9 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
             target = AlertAnswers.destination(hold: hold, answer: AlertAnswers.approve)
         } else if let hold, destination == "needs-you" {
             target = AlertAnswers.destination(hold: hold)
+        } else if let handoff = info["handoff"] as? String, !handoff.isEmpty {
+            // A step a taf handed its owner (docs/api.md › Your step): where it's answered.
+            target = "step:" + handoff
         } else {
             target = destination
         }

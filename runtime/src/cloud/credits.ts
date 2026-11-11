@@ -233,16 +233,20 @@ export interface CreditsView {
  */
 export function creditsView(k: KIFFCredits, tafs: CreditsTaf[], lang: Lang = "en"): CreditsView {
   const w = wordsIn(lang);
-  const rows: CreditsView["tafs"] = [];
+  // One row per taf: KIFF can count a taf's runs on more than one line (its scheduled runs and its chat's, under
+  // its runtime agent or its KIFF agent), and each would read as the taf with only part of its runs.
+  const per = new Map<string, { t: CreditsTaf; credits: number; runs: number }>();
   let rest = { credits: 0, runs: 0, unseen: false };
   for (const a of k.by_agent) {
     const t = tafs.find((x) => x.id === a.runtime_agent) ?? tafs.find((x) => x.kiffAgent === a.agent);
     if (t?.opens) {
-      rows.push({ taf: t.id, credits: count(a.credits), runs: count(a.runs), words: `${t.name} · ${credits(count(a.credits), lang)} · ${runs(count(a.runs), lang)}` });
+      const was = per.get(t.id) ?? { t, credits: 0, runs: 0 };
+      per.set(t.id, { t, credits: was.credits + count(a.credits), runs: was.runs + count(a.runs) });
       continue;
     }
     rest = { credits: rest.credits + count(a.credits), runs: rest.runs + count(a.runs), unseen: rest.unseen || t !== undefined };
   }
+  const rows: CreditsView["tafs"] = [...per.values()].map(({ t, credits: c, runs: r }) => ({ taf: t.id, credits: c, runs: r, words: `${t.name} · ${credits(c, lang)} · ${runs(r, lang)}` }));
   rows.sort((a, b) => b.credits - a.credits);
   if (rest.runs > 0) {
     const name = rest.unseen ? w.cr_other_tafs : w.cr_removed_tafs;

@@ -150,6 +150,9 @@ fun TafDetailView(
   onConnectApps: () -> Unit = {},
   /** Back to the list; not shown beside it, on a tablet. */
   showBack: Boolean = true,
+  /** Open on Activity, once: a door's knock alert opened the taf, and its knocks are answered there. */
+  openActivity: Boolean = false,
+  onActivityOpened: () -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val taf = state.taf(tafId)
@@ -172,6 +175,12 @@ fun TafDetailView(
     val canChat = state.canChat(taf.id)
     val sections = Section.entries.filter { it != Section.Chat || canChat }
     var section by rememberSaveable { mutableStateOf(sections.first()) }
+    LaunchedEffect(openActivity) {
+      if (openActivity) {
+        section = Section.Activity
+        onActivityOpened()
+      }
+    }
     var activitySelection by rememberSaveable(taf.id) { mutableStateOf("") }
     // tafs cloud's setup words a connection's state ("Connected"); planque's state is read on its own. Read the setup again
     // whenever planque's state for one of the taf's connections changes, so the two never disagree on screen.

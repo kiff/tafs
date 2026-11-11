@@ -151,7 +151,7 @@ export function ownerWords(text: string): string {
     const m = text.match(/^\[door knock [^\]\n]*\] The owner says: ([\s\S]*?)\n\n/);
     return m?.[1]?.trim() ?? text;
   }
-  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[did this happen ") && !text.startsWith("[tafs connections]") && !text.startsWith("[tafs language]")) return text;
+  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[did this happen ") && !text.startsWith("[tafs connections]") && !text.startsWith("[tafs language]") && !text.startsWith("[tafs time zone]")) return text;
   const at = text.lastIndexOf("\nThe owner says: ");
   return at < 0 ? text : text.slice(at + "\nThe owner says: ".length).trim();
 }

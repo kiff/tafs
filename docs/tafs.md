@@ -103,6 +103,11 @@ apart. tafs cloud builds it from its records and KIFF's Cards and held calls, re
 the owner's session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists
 only what KIFF says the person may use or oversee.
 
+A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
+the most of its limit first (its money total or its calls, whichever is further along), then
+KIFF's order: the Card in front is the one at work, never an unused one at 200 of 200 while
+another is half used. The apps keep this order.
+
 Each taf's `job_summary` is what Coach said it does, one line in the owner's language, kept
 from Coach's result (`summary`); a taf from before, or one Coach didn't make, shows its job's
 fixed line. An improvement that changes what the taf does carries its own `summary`: tafs
@@ -213,7 +218,10 @@ the home list's `removing`.
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
 Doors tab (on Android, none of Setup's changes), or line saying who it's shared with. For whoever manages it, that line has a
-**Share** button with the system's share mark, beside who uses the taf. On its Cards, "Issued by" names who
+**Share** button with the system's share mark, beside who uses the taf. KIFF's default group, which KIFF
+keeps as "Everyone", is named in the person's language wherever a group shows (`people.everyone_group`),
+with its own sentences where a language inflects it ("Shared with everyone", `people.shared_with_everyone`;
+"Everyone uses {taf}", `people.everyone_uses`); on Android, `Group.shownName`. On its Cards, "Issued by" names who
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer` on iOS, `AppState.issuer` on Android).
 

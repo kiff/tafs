@@ -59,6 +59,8 @@ export const en = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   approval_critical_key: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
   approval_drive_key: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
+  // A taf's removal unsigned, or signed without the screen lock, once signing is required (handler.ts, removalSigned).
+  remove_signed: "Remove it from your device: removing a taf asks for your screen lock each time. Nothing was removed.",
   approval_window_closed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
   approval_sign_in_closed: "The sign-in was closed. Nothing was connected.",
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
@@ -395,7 +397,7 @@ export const en = {
   dial_on_schedule: "On a schedule",
   dial_every_min: (n: number) => `Every ${n} min`,
   dial_every_minutes: (n: number) => `Every ${n} minutes`,
-  dial_every_hours: (n: number, form: Intl.LDMLPluralRule) => `Every ${n} hour${form === "one" ? "" : "s"}`,
+  dial_every_hours: (n: number, form: Intl.LDMLPluralRule) => (form === "one" && n === 1 ? "Every hour" : `Every ${n} hour${form === "one" ? "" : "s"}`),
   dial_every_between: (n: number, from: string, to: string, weekdays: boolean) => `Every ${n} minutes from ${from} to ${to}${weekdays ? " on weekdays" : ""}`,
   dial_daily: (t: string) => `Every day at ${t}`,
   dial_weekdays: "Weekdays",
@@ -413,12 +415,14 @@ export const en = {
   dial_times_a_day: (times: string[]) => `Every day at ${times.join(", ")}`,
   dial_n_a_day: (n: number) => `${n} a day`,
   dial_weekly_at: (codes: string[], t: string) => `${codes.join(", ")} at ${t}`,
-  dial_every_on: (n: number, between: { from: string; to: string } | undefined, codes: string[]) =>
-    `Every ${n} minutes${between ? ` from ${between.from} to ${between.to}` : ""}${codes.length ? ` on ${codes.join(", ")}` : ""}`,
+  // `every` is everyWords (words/index.ts): "Every 15 minutes", "Every 4 hours".
+  dial_every_on: (every: string, between: { from: string; to: string } | undefined, codes: string[]) =>
+    `${every}${between ? ` from ${between.from} to ${between.to}` : ""}${codes.length ? ` on ${codes.join(", ")}` : ""}`,
   dial_once_on: (date: string) => `Once, on ${date.replace("T", " at ")}`,
   dial_wakes_door: "Wakes on its door",
   dial_wakes_vendor: "Wakes on a vendor's event",
-  dial_checks: (operation: string, n: number) => `Checks ${operation} every ${n} minutes, and works only on what's new`,
+  // `every` is everyWords as it reads mid-line: "every 15 minutes", "every 4 hours".
+  dial_checks: (operation: string, every: string) => `Checks ${operation} ${every}, and works only on what's new`,
   // A schedule of a taf that checks its work first (triggers.ts, Check), after its time: "Weekdays at 09:00 · checks for new work first".
   dial_checks_first: "checks for new work first",
   // Run now, or a new taf's first firing, whose check found nothing new: no run started (POST …/run, POST /v1/tafs).
@@ -529,6 +533,16 @@ export const en = {
   // A card's steps (handler.ts withLine): where they stand.
   steps_done: (n: number) => `Done · ${n} of ${n}`,
   steps_at: (i: number, n: number, label: string) => `Step ${i} of ${n}${label ? ` · ${label}` : ""}`,
+  // The loop card (kiff/agents' confirm tafs-loop-N): tafs cloud's words, with the read by its title (withLine).
+  loop_title: "Still reading",
+  loop_line: (pages: number, of: string) => `Read ${pages} pages ${of}, and there's more. Read on, or stop here and answer with what's been read?`,
+  loop_read_on: "Read on",
+  loop_stop: "Stop here",
+  // The read with its preposition: its KIFF title quoted (loop_named), else the same list, never its tool name.
+  loop_what: "of the same list",
+  loop_named: (title: string) => `of "${title}"`,
+  // A check-fired run's start, in place of the items the check handed it (checkStart).
+  check_found: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "Its check found 1 new item." : `Its check found ${n} new items.`),
   cal_folded: (words: string, n: number, first: string, last: string) => `${words}: ${n} times from ${first} to ${last}`,
   // Coach's own tools, as the phone lists them when it connects them (coach.ts coachConnect).
   ct_tafs_state: "See your tafs, their versions and their runs",
