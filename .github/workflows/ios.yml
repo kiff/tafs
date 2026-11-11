@@ -151,16 +151,16 @@ jobs:
             [ -n "$id" ] || continue
             git cat-file -e "$sha^{commit}" 2>/dev/null && git merge-base --is-ancestor "$sha" "$HEAD" || continue
             changed=$(git diff --name-only "$sha" "$HEAD")
-            # Each job's outcome, and each step of test's ("Test on a simulator"
-            # is the step that ran unit and UI tests together, before they were split).
+            # Each job's outcome, and each step of test's: "Unit and UI tests on a
+            # simulator" (and "Test on a simulator", its name before) ran both kinds.
             done=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" \
               --jq '.jobs[] | "\(.name)=\(.conclusion)", (select(.name == "test") | .steps[] | "step:\(.name)=\(.conclusion)")') || continue
             if [ "$tested" = false ] && echo "$done" | grep -qx 'test=success' \
-               && echo "$done" | grep -qxE 'step:(Unit tests|Test) on a simulator=success' && ! echo "$changed" | grep -Eq "$app"; then
+               && echo "$done" | grep -qxE 'step:(Unit tests|Unit and UI tests|Test) on a simulator=success' && ! echo "$changed" | grep -Eq "$app"; then
               tested=true; echo "The unit tests passed on main in run $id at $sha, with the same app: they're skipped."
             fi
             if [ "$ui_tested" = false ] && echo "$done" | grep -qx 'test=success' \
-               && echo "$done" | grep -qxE 'step:(UI tests|Test) on a simulator=success' && ! echo "$changed" | grep -Eq "$uitests"; then
+               && echo "$done" | grep -qxE 'step:(UI tests|Unit and UI tests|Test) on a simulator=success' && ! echo "$changed" | grep -Eq "$uitests"; then
               ui_tested=true; echo "The iPhone's UI tests passed on main in run $id at $sha, with the same screens: they're skipped."
             fi
             if [ "$ipad_tested" = false ] && echo "$done" | grep -qx 'ipad=success' && ! echo "$changed" | grep -Eq "$ipad"; then
@@ -229,8 +229,21 @@ jobs:
             -destination "id=$DEVICE_ID" \
             CODE_SIGNING_ALLOWED=NO
 
+      # Both kinds in one run when both are due, so the app is installed and
+      # launched once (two runs cost about two minutes more); otherwise only
+      # the kind that's due. Each step's name says what passed, which a manual
+      # run's lookup (changes.tested) reads.
+      - name: Unit and UI tests on a simulator
+        if: needs.changes.outputs.tested != 'true' && needs.changes.outputs.ui == 'true'
+        run: |
+          cd ios
+          xcodebuild test-without-building \
+            -project Tafs.xcodeproj -scheme Tafs \
+            -destination "id=$DEVICE_ID" \
+            CODE_SIGNING_ALLOWED=NO
+
       - name: Unit tests on a simulator
-        if: needs.changes.outputs.tested != 'true'
+        if: needs.changes.outputs.tested != 'true' && needs.changes.outputs.ui != 'true'
         run: |
           cd ios
           xcodebuild test-without-building \
@@ -240,7 +253,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: UI tests on a simulator
-        if: needs.changes.outputs.ui == 'true'
+        if: needs.changes.outputs.tested == 'true' && needs.changes.outputs.ui == 'true'
         run: |
           cd ios
           xcodebuild test-without-building \
