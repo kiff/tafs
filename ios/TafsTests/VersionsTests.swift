@@ -242,7 +242,12 @@ final class VersionsTests: XCTestCase {
 
         let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertTrue(done, model.versionErrors[id] ?? "")
-        XCTAssertEqual(signer.signed, ["tafs.cards.v1|t_01|d_02|v7"], "the install's one Face ID, nothing else")
+        // The install's one Face ID, the Card's; the request it signs under that Face ID goes
+        // to KIFF's confirm. Nothing of Coach's tools is signed.
+        XCTAssertEqual(signer.reusedUnlock.count, 1, "one Face ID")
+        XCTAssertEqual(signer.signed.first, "tafs.cards.v1|t_01|d_02|v7")
+        XCTAssertFalse(signer.signed.contains { $0.hasPrefix("tafs.coach-tools.v1") })
+        XCTAssertFalse(signer.signed.contains { $0.contains("/v1/connections/batch") })
         XCTAssertTrue(sent("POST", "/v1/connections/batch").isEmpty)
         XCTAssertTrue(sent("POST", "/v1/me/agent-drafts").isEmpty)
         XCTAssertTrue(model.coachToolsAsked, "their own step is asked")
