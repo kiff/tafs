@@ -8,7 +8,7 @@ import type { ResultPlace } from "./handler.js";
 import { type Check, plannedOf, type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
 import { placeWords, type VendorPlace } from "./places.js";
 import { timeIn } from "./work.js";
-import { type Lang, plural, wordsIn } from "./words/index.js";
+import { everyWords, type Lang, plural, wordsIn } from "./words/index.js";
 
 /** A version's dial as PUT takes it: its triggers, what a busy taf does, where results go. */
 /** One step of the taf's recipe, as Coach wrote it: what it does, in order. `tool` is the KIFF tool it uses, when one. */
@@ -149,6 +149,11 @@ export interface KnobInput {
   check?: Check;
 }
 
+/** A ring's short word for how often: "Every 15 min", or whole hours as hours ("Every 4 hours"). */
+function everyLabel(lang: Lang, minutes: number): string {
+  return minutes >= 60 && minutes % 60 === 0 ? everyWords(lang, minutes) : wordsIn(lang).dial_every_min(minutes);
+}
+
 /** The schedule in words, for the forms the dial sets; any other cron reads as "On a schedule". */
 export function cronWords(cron: string, lang: Lang = "en"): { label: string; words: string } {
   const w = wordsIn(lang);
@@ -158,10 +163,10 @@ export function cronWords(cron: string, lang: Lang = "en"): { label: string; wor
   const at = (h: string, m: string) => `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
   const plain = (s: string) => /^\d{1,2}$/.test(s);
   const every = /^\*\/(\d+)$/.exec(min);
-  if (every && hour === "*" && dom === "*" && mon === "*" && dow === "*") return { label: w.dial_every_min(Number(every[1])), words: w.dial_every_minutes(Number(every[1])) };
+  if (every && hour === "*" && dom === "*" && mon === "*" && dow === "*") return { label: everyLabel(lang, Number(every[1])), words: everyWords(lang, Number(every[1])) };
   const between = /^(\d{1,2})-(\d{1,2})$/.exec(hour);
   if (every && between && dom === "*" && mon === "*") {
-    if (dow === "1-5" || dow === "*") return { label: w.dial_every_min(Number(every[1])), words: w.dial_every_between(Number(every[1]), at(between[1]!, "0"), at(String(Number(between[2]) + 1), "0"), dow === "1-5") };
+    if (dow === "1-5" || dow === "*") return { label: everyLabel(lang, Number(every[1])), words: w.dial_every_between(Number(every[1]), at(between[1]!, "0"), at(String(Number(between[2]) + 1), "0"), dow === "1-5") };
   }
   if (!plain(min) || !plain(hour) || mon !== "*") return { label: w.dial_schedule, words: w.dial_on_schedule };
   const t = at(hour, min);
@@ -340,7 +345,7 @@ function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting, 
       w.size = { label: words.dial_time, index: values.indexOf(t.at), choices: values.map((v) => ({ label: v, setting: withWake(i, { ...t, at: v }) })) };
     } else if (t.form === "every" && t.every_minutes) {
       const values = [...new Set([...EVERY, t.every_minutes])].sort((a, b) => a - b);
-      const say = (n: number) => n < 60 ? words.dial_every_minutes(n) : words.dial_every_hours(n / 60, plural(lang, n / 60));
+      const say = (n: number) => everyWords(lang, n);
       w.size = { label: words.dial_how_often, index: values.indexOf(t.every_minutes), choices: values.map((v) => ({ label: say(v), setting: withWake(i, { ...t, every_minutes: v }) })) };
     }
   }
@@ -425,7 +430,7 @@ function checkedWords(t: Trigger, check: Check | undefined, lang: Lang = "en"): 
 function wordsOf(t: Trigger, lang: Lang = "en"): { label: string; words: string } {
   const w = wordsIn(lang);
   if (t.kind === "app_check") return { label: w.dial_check, words: triggerWords(t, lang) };
-  const label = t.form === "every" ? w.dial_every_min(t.every_minutes ?? 0) : t.form === "weekdays" ? w.dial_weekdays : t.form === "monthly" || t.form === "monthly_last_day" ? w.dial_monthly
+  const label = t.form === "every" ? everyLabel(lang, t.every_minutes ?? 0) : t.form === "weekdays" ? w.dial_weekdays : t.form === "monthly" || t.form === "monthly_last_day" ? w.dial_monthly
     : t.form === "once" ? w.dial_once : t.form === "weekly" ? w.dial_weekly : t.form === "times_a_day" ? w.dial_n_a_day(t.times?.length ?? 0) : t.at ?? w.dial_schedule;
   return { label, words: triggerWords(t, lang) };
 }

@@ -28,7 +28,7 @@ const ARGS: Record<string, unknown[][]> = {
   dial_day_short: [[1], [5]],
   dial_times_a_day: [[["09:00", "17:00"]]],
   dial_weekly_at: [[["mon", "fri"], "09:00"]],
-  dial_every_on: [[15, { from: "09:00", to: "17:00" }, ["mon"]], [30, undefined, []]],
+  dial_every_on: [["Every 15 minutes", { from: "09:00", to: "17:00" }, ["mon"]], ["Every 4 hours", undefined, []]],
   dial_once_on: [["2026-11-05T09:00"], ["2026-11-05"]],
   dial_turn_stop: [["Replies to whoever wrote"]],
   dial_turn_on: [["Replies to whoever wrote"]],

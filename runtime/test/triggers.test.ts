@@ -141,3 +141,21 @@ describe("a taf that checks its work first", () => {
     }
   });
 });
+
+describe("how often, in words", () => {
+  it("says whole hours as hours, never 240 minutes", async () => {
+    const { everyWords } = await import("../src/cloud/words/index.js");
+    const { triggerWords } = await import("../src/cloud/triggers.js");
+    expect(everyWords("en", 240)).toBe("Every 4 hours");
+    expect(everyWords("en", 60)).toBe("Every hour");
+    expect(everyWords("en", 15)).toBe("Every 15 minutes");
+    expect(everyWords("en", 90)).toBe("Every 90 minutes");
+    expect(everyWords("fr", 240)).toBe("Toutes les 4 heures");
+    expect(everyWords("pl", 120)).toBe("Co 2 godziny");
+    expect(everyWords("pl", 300)).toBe("Co 5 godzin");
+    expect(triggerWords({ kind: "schedule", form: "every", every_minutes: 240 })).toBe("Every 4 hours");
+    expect(triggerWords({ kind: "schedule", form: "every", every_minutes: 120, between: { from: "09:00", to: "17:00" }, days: ["mon"] }, "en")).toMatch(/^Every 2 hours from 09:00 to 17:00/);
+    expect(triggerWords({ kind: "app_check", operation: "disputes", every_minutes: 240 } as Trigger)).toBe("Checks disputes every 4 hours, and works only on what's new");
+    expect(triggerWords({ kind: "app_check", operation: "disputes", every_minutes: 60 } as Trigger, "de")).toBe("Prüft disputes jede Stunde und bearbeitet nur Neues");
+  });
+});

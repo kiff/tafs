@@ -646,7 +646,7 @@ describe("tafs cloud", () => {
 
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
-    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"], time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC" }]);
+    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", next_run_words: "Next run Fri 12:30", last_run: null, results: ["door_reply"], time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC" }]);
     expect(r.body.removing).toEqual([]);
   });
 
@@ -1045,7 +1045,7 @@ describe("the home list", () => {
     // The owner is around (kiff/tafs#210): what isn't urgent is told quietly, not kept for later.
     expect(await w.slots.held(`present#t_acme`)).toBe(true);
     expect(r.body.tafs).toEqual([{
-      id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"],
+      id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", next_run_words: "Next run Fri 12:30", last_run: null, results: ["door_reply"],
       time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC",
       // A custom name with no saved job never borrows the starter template's description.
       job_summary: "Ask Coach to describe this taf's job",

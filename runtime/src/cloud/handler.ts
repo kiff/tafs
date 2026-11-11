@@ -13,7 +13,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
+import { runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
 import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, wordsIn } from "./words/index.js";
@@ -5401,6 +5401,8 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     /** It works from its chat: no schedule runs it (kiff/tafs#138). Only said when so. */
     ...(taf.unscheduled ? { unscheduled: true } : {}),
     next_run: s?.enabled && s.next ? iso(s.next) : null,
+    /** The next run in words, with its weekday when it isn't today ("Next run Mon 08:00"): never a bare time that reads as tomorrow. */
+    next_run_words: s?.enabled && s.next ? wordsIn(lang).work_next_run(whenIn(s.next, me.timeZone ?? "UTC", deps.now?.() ?? new Date(), lang)) : null,
     last_run: last ? iso(last.created) : null,
     /** Where its results go (docs/reliability.md). */
     results: placesOf(taf),

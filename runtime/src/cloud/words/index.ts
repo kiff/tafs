@@ -49,6 +49,20 @@ export function plural(lang: Lang, n: number): Intl.LDMLPluralRule {
   return new Intl.PluralRules(lang).select(n);
 }
 
+/**
+ * How often, in the person's language: a whole number of hours as hours ("Every 4 hours", "Every hour"), anything
+ * else in minutes ("Every 15 minutes"). Never "Every 240 minutes".
+ */
+export function everyWords(lang: Lang, minutes: number): string {
+  const w = wordsIn(lang);
+  return minutes >= 60 && minutes % 60 === 0 ? w.dial_every_hours(minutes / 60, plural(lang, minutes / 60)) : w.dial_every_minutes(minutes);
+}
+
+/** A phrase that opens a line, as it reads inside one ("Every 4 hours" → "every 4 hours"). */
+export function midLine(phrase: string): string {
+  return phrase.charAt(0).toLocaleLowerCase() + phrase.slice(1);
+}
+
 /** Each language's name in English, for the lines Coach and the tafs read (they're written in English, as their instructions). */
 export const LANGUAGE_NAMES: Record<Lang, string> = {
   en: "English", de: "German", fr: "French", es: "Spanish", it: "Italian", pt: "European Portuguese", nl: "Dutch", pl: "Polish",
