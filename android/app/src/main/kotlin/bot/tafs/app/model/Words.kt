@@ -2393,6 +2393,11 @@ object Words {
     val whatYouSaidStaysMessage: String get() = Res.s(R.string.voice_what_you_said_stays_message)
   }
   object Work {
+    val answerWithin: String get() = Res.s(R.string.work_answer_within)
+    fun answerWithinHours(count: Int): String = Res.p(R.plurals.work_answer_within_hours, count, Res.number(count))
+    val answerWithinLine: String get() = Res.s(R.string.work_answer_within_line)
+    val answerWithinNone: String get() = Res.s(R.string.work_answer_within_none)
+    fun answerWithinNotSet(why: String): String = Res.s(R.string.work_answer_within_not_set, why)
     fun askingKiffRun(tool: String): String = Res.s(R.string.work_asking_kiff_run, tool)
     fun didNotStop(why: String): String = Res.s(R.string.work_did_not_stop, why)
     object Duration {

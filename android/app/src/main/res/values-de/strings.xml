@@ -2215,6 +2215,14 @@
     <string name="voice_title">Diktieren</string>
     <string name="voice_voice_becomes_text_device_not">Deine Stimme wird auf diesem Gerät zu Text. Sie wird erst gesendet, wenn du sendest.</string>
     <string name="voice_what_you_said_stays_message">Was du gesagt hast, bleibt ungesendet im Nachrichtenfeld.</string>
+    <string name="work_answer_within">Antwort innerhalb</string>
+    <plurals name="work_answer_within_hours">
+        <item quantity="one">%1$s Stunde</item>
+        <item quantity="other">%1$s Stunden</item>
+    </plurals>
+    <string name="work_answer_within_line">Du wirst benachrichtigt, wenn ein Fall länger wartet.</string>
+    <string name="work_answer_within_none">Nicht festgelegt</string>
+    <string name="work_answer_within_not_set">Das konnte nicht festgelegt werden. %1$s</string>
     <string name="work_asking_kiff_run">KIFF wird gebeten, %1$s auszuführen…</string>
     <string name="work_did_not_stop">Es hat nicht gestoppt: %1$s</string>
     <string name="work_duration_minutes">%1$s Min. %2$s s</string>

@@ -368,6 +368,15 @@ taf's row says: its work's `line` carries health's first reason only while `work
 idle and at risk or failing, the row shows that line amber or red (`HomeTaf.health`,
 `Taf.nowHealth`). Otherwise it reads as before, untinted.
 
+**Its oldest waiting case** ([reliability.md](reliability.md#its-oldest-waiting-case);
+`TafWork.oldestWaiting`) shows under its health, in tafs cloud's `words` ("Oldest case waiting
+5 h, past the 4 h you set"): amber once it's `late`, soft otherwise, and nothing while no case
+waits. For whoever manages the taf, **Answer within** (`PromiseRow`) shows its `promise` as tafs
+cloud keeps it, or Not set. Its menu offers Not set, 1, 2, 4, 8, 24, 48 or 168 hours, and sends
+`PUT /v1/tafs/{id}/promise {hours | null}` (`AppModel.setPromise`), then reads the work again.
+tafs cloud checks the range, and a refusal says why on the panel. tafs cloud sends the late alert,
+which opens the taf. The app keeps no copy of the promise and works out nothing from it.
+
 ## When something doesn't go through
 
 The owner reads the app's own words for what happened and what, if anything, they can do
