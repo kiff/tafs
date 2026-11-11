@@ -429,6 +429,22 @@ its dark value, the owner-reviewed warm near-black (background `141311`, panels 
 surfaces. Text on a status fill uses the panel's colour, so it stays readable either way; taf
 colours and the Card keep white text.
 
+**Edge to edge, without deprecated calls.** The app draws behind the status and navigation bars
+on every Android version, and the bars' icons follow the app's own Light, Dark or System from the
+first frame (`MainActivity`, then `TafsTheme`). It doesn't use androidx.activity's
+`enableEdgeToEdge`, which calls the window's bar colours (`setStatusBarColor`,
+`setNavigationBarColor`) and the short-edges cutout mode, all deprecated from Android 15 and
+flagged by Google Play. Below Android 15, the theme makes the bars transparent and uses the cutout
+area (`values/themes.xml`, `values-v31`). From Android 15, which draws edge to edge on its own,
+the theme sets no bar colours (`values-v35`). `EdgeToEdgeSourceTest` fails if the app's code calls
+any of them again; `EdgeToEdgeTest` checks that the app draws behind the bars, with the icons'
+shade per theme.
+
+<p>
+  <img src="screenshots/android/edge-to-edge-light.png" width="180" alt="Home in light, drawn behind the status and navigation bars, with dark icons">
+  <img src="screenshots/android/edge-to-edge-dark.png" width="180" alt="Home in dark, drawn behind the bars, with light icons">
+</p>
+
 ## Connect apps
 
 Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#connect-apps) says:

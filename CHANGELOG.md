@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Edge to edge without deprecated calls (Android 1.3.1).** The app no longer uses the window's bar colours or the short-edges cutout mode, which Google Play flags as deprecated for edge to edge from Android 15. It still draws behind the status and navigation bars, with their icons in the app's own Light or Dark from the first frame (docs/android-app.md).
 - **iPhone and iPad: what Coach includes, under Solo.** As on Android 1.3. Plan & usage shows tafs cloud's sentence about Coach's help (`buy.coach`) under Solo, as kiff.dev says it. A tafs cloud without it shows no line (docs/ios-app.md).
 - **iPhone and iPad: Coach's tools are asked after an install.** As on Android 1.3. Installing a version with its Card while Coach's tools are still to give asks the tools step on Coach's screen; the install's Face ID gives none of them (docs/ios-app.md, docs/coach.md).
 - **Coach answers about cost in credits (usage-and-plans@2).** Coach describes today's plans in kiff.dev's and Plan & usage's words: credits per run, Solo at €12.50 with 500 credits a month, packs that never expire, Company per seat with a spend limit, no free trial, and "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits." Nothing about tasks or a free week, and never a figure it works out. Live after the next Eval and Upgrade.

@@ -13,8 +13,6 @@ import bot.tafs.app.push.AlertPayload
 import kotlinx.coroutines.CompletableDeferred
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.activity.SystemBarStyle
-import androidx.activity.enableEdgeToEdge
 import bot.tafs.app.model.ThemePreference
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -140,12 +138,14 @@ class MainActivity : FragmentActivity() {
     bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords.of(this))
     // The bars follow the app's own Light/Dark/System choice from the first frame, not only the phone's setting; TafsTheme
     // keeps them in step when the choice changes.
-    val bars = when (ThemePreference.from(getSharedPreferences("tafs.display", MODE_PRIVATE).getString("theme", null))) {
-      ThemePreference.Light -> SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
-      ThemePreference.Dark -> SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-      ThemePreference.System -> SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+    // Edge to edge without the window's deprecated bar colours (docs/android-app.md): the theme makes the bars transparent
+    // below Android 15, which draws edge to edge on its own; here the app draws behind them and picks their icons' shade.
+    val systemDark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    val light = !ThemePreference.from(getSharedPreferences("tafs.display", MODE_PRIVATE).getString("theme", null)).dark(systemDark)
+    androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+    androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).run {
+      isAppearanceLightStatusBars = light; isAppearanceLightNavigationBars = light
     }
-    enableEdgeToEdge(bars, bars)
     // The prompt for approving shows on this activity while it is on screen.
     app.authenticator.attach(this)
     // So does Google Play's purchase sheet, where buying is on.
