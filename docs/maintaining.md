@@ -33,8 +33,11 @@ a green unit test is not a completed rollout.
 ## Before a release
 
 1. Resolve release-blocking findings or document the evidence that rules them out.
-2. Review Unreleased in CHANGELOG.md; include behavior, compatibility changes,
-   migration or dependency order, and disclosed security fixes.
+2. Fold the pull requests' entries in (`python3 scripts/changelog.py fold
+   --release "<version>"`, [changes/README.md](../changes/README.md)), then
+   review the release's entries in CHANGELOG.md; include behavior,
+   compatibility changes, migration or dependency order, and disclosed
+   security fixes.
 3. Tag and describe the exact reviewed commit when making a versioned release.
    Keep build, source version, and deployed revision traceable. Do not label
    unverified work as shipped.
