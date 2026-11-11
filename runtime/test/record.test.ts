@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ActivityCall } from "../src/cloud/activity.js";
-import { caseKey, caseView, EXPORT_MAX_RECEIPTS, receiptsExport, recordMatches, recordPage, type RecordTaf } from "../src/cloud/record.js";
+import { caseKey, caseView, EXPORT_MAX_RECEIPTS, MAX_SCAN, receiptsExport, recordMatches, recordPage, type RecordTaf } from "../src/cloud/record.js";
 
 const now = new Date("2026-11-11T12:00:00Z");
 const refunds: RecordTaf = { id: "taf-refunds", name: "Refunds", kiffAgent: "agent-refunds" };
@@ -150,5 +150,29 @@ describe("the receipts export", () => {
     await expect(exportOf([], "2026-11-11", "2026-11-10").out).rejects.toThrow("on or after");
     const full = Array.from({ length: EXPORT_MAX_RECEIPTS + 1 }, (_, i) => call(i, 1));
     await expect(exportOf(full, "2026-11-11", "2026-11-11").out).rejects.toThrow("export fewer days");
+  });
+
+  it("covers 92 days at most, both days counted", async () => {
+    // 1 January to 2 April 2026 is 92 days; to 3 April, 93.
+    await expect(exportOf([], "2026-01-01", "2026-04-02").out).resolves.toMatchObject({ from: "2026-01-01", to: "2026-04-02" });
+    await expect(exportOf([], "2026-01-01", "2026-04-03").out).rejects.toThrow("at most 92 days");
+  });
+
+  it("is whole or refused: more calls in the range than it reads is refused, never cut short", async () => {
+    const all = MAX_SCAN * 100;
+    const many = (n: number) => Array.from({ length: n }, (_, i) => call(i, 1, { receipt: null }));
+    // Every call it may read, and no more: whole.
+    const whole = await exportOf(many(all), "2026-11-11", "2026-11-11").out;
+    expect(whole.csv.trim().split("\r\n")).toHaveLength(all + 1);
+    // One more in the range than it reads: refused, never a CSV that looks complete.
+    await expect(exportOf(many(all + 1), "2026-11-11", "2026-11-11").out).rejects.toThrow(`more than ${all} calls on those days; export fewer days at a time`);
+    // As many before the range don't count: it stops at the first day before it.
+    const before = Array.from({ length: all }, (_, i) => call(5000 + i, 48, { receipt: null }));
+    await expect(exportOf([...many(10), ...before], "2026-11-11", "2026-11-11").out).resolves.toMatchObject({ missing: 0 });
+  });
+
+  it("keeps a negative amount a number, and still writes a formula as text", async () => {
+    const got = await exportOf([call(1, 1, { amount: { value: "-5.00", unit: "EUR" }, about: "-1+1" })], "2026-11-11", "2026-11-11").out;
+    expect(got.csv.trim().split("\r\n")[1]).toBe('"2026-11-11","Refunds","Refund a payment","\'-1+1","-5.00","EUR","allowed","tr-1"');
   });
 });

@@ -131,20 +131,23 @@ export async function recordPage(input: { token: string; scope: string; tafs: Re
     ...(!entries.length && !more && q ? { none_words: w.record_none(q) } : {}) };
 }
 
-/** Every call the Record reads (at most MAX_SCAN pages), newest first, while `keep` says to read on. */
-async function scan(token: string, net: Fetch, base: string, keep: (c: ActivityCall) => boolean): Promise<ActivityCall[]> {
+/**
+ * Every call the Record reads (at most MAX_SCAN pages), newest first, while `keep` says to read on. `cut` says it
+ * stopped at MAX_SCAN with calls left that `keep` might still want: what it read isn't all there is.
+ */
+async function scan(token: string, net: Fetch, base: string, keep: (c: ActivityCall) => boolean): Promise<{ calls: ActivityCall[]; cut: boolean }> {
   const out: ActivityCall[] = [];
   let offset = 0;
   for (let n = 0; n < MAX_SCAN; n++) {
     const page = await read(token, offset, net, base);
     for (const c of page.calls) {
-      if (!keep(c)) return out;
+      if (!keep(c)) return { calls: out, cut: false };
       out.push(c);
     }
     offset += page.calls.length;
-    if (!page.calls.length || offset >= page.shown) break;
+    if (!page.calls.length || offset >= page.shown) return { calls: out, cut: false };
   }
-  return out;
+  return { calls: out, cut: true };
 }
 
 export interface CaseView {
@@ -156,7 +159,8 @@ export interface CaseView {
 /**
  * One case: every call of the person's tafs about the same thing (caseKey), oldest first, each with its receipt and
  * how it went. When one didn't go through, `failed` names the latest such step and its own next step, which is the
- * only retry there is: through the taf, under its Card, never a re-send from here.
+ * only retry there is: through the taf, under its Card, never a re-send from here. It reads the newest
+ * MAX_SCAN × PAGE calls: a case older than those isn't found.
  */
 export async function caseView(input: { token: string; about: string; tafs: RecordTaf[]; zone: string; now: Date; lang?: Lang },
   net: Fetch = fetch, base = KIFF_API): Promise<CaseView | undefined> {
@@ -164,7 +168,7 @@ export async function caseView(input: { token: string; about: string; tafs: Reco
   const key = caseKey(input.about);
   if (!key || input.about.length > 120) return;
   const byAgent = new Map(input.tafs.map((t) => [t.kiffAgent, t]));
-  const calls = (await scan(input.token, net, base, () => true))
+  const calls = (await scan(input.token, net, base, () => true)).calls
     .filter((c) => typeof c.about === "string" && caseKey(c.about) === key && byAgent.has(c.actor_id ?? ""));
   if (!calls.length) return;
   const steps = calls.reverse().map((c) => entryOf(c, byAgent.get(c.actor_id ?? "")!, input.zone, input.now, lang));
@@ -175,7 +179,8 @@ export async function caseView(input: { token: string; about: string; tafs: Reco
 
 /** A CSV cell: quoted, and one a spreadsheet would read as a formula starts with an apostrophe. */
 function cell(v: string): string {
-  const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+  // A plain number, a negative amount among them, stays a number a spreadsheet sums; anything else it would run is text.
+  const safe = /^-?\d+(\.\d+)?$/.test(v) ? v : /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
   return `"${safe.replaceAll('"', '""')}"`;
 }
 
@@ -200,8 +205,10 @@ export async function receiptsExport(input: { token: string; from: string | null
   if (to < from) throw new ActivityError(400, "to is on or after from");
   if ((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000 >= EXPORT_MAX_DAYS) throw new ActivityError(400, `an export covers at most ${EXPORT_MAX_DAYS} days`);
   const byAgent = new Map(input.tafs.map((t) => [t.kiffAgent, t]));
-  const calls = (await scan(input.token, net, base, (c) => dayIn(c.created_at, input.zone) >= from))
-    .filter((c) => dayIn(c.created_at, input.zone) <= to && byAgent.has(c.actor_id ?? ""));
+  const found = await scan(input.token, net, base, (c) => dayIn(c.created_at, input.zone) >= from);
+  // An export is whole or refused: one cut short at MAX_SCAN would read as complete to an accountant.
+  if (found.cut) throw new ActivityError(400, `more than ${MAX_SCAN * PAGE} calls on those days; export fewer days at a time`);
+  const calls = found.calls.filter((c) => dayIn(c.created_at, input.zone) <= to && byAgent.has(c.actor_id ?? ""));
   const traced = calls.filter((c) => typeof (c.receipt as { trace_id?: unknown } | null)?.trace_id === "string");
   if (traced.length > EXPORT_MAX_RECEIPTS) throw new ActivityError(400, `more than ${EXPORT_MAX_RECEIPTS} receipts on those days; export fewer days at a time`);
   const receipts = new Map<string, unknown>();
