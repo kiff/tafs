@@ -41,6 +41,7 @@ import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
+import { caseView, receiptsExport, recordPage, type RecordTaf } from "./record.js";
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
@@ -130,6 +131,9 @@ import { RECIPES } from "../recipes.js";
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes (?all=true: every shared note and this person's own, with a summary)
  *   GET  /v1/tafs/{id}/activity         ?filter=all|done|held|refused&limit=&cursor=&tools=&from=: a page of its Activity, filtered here, ready to draw (ETag)
  *   GET  /v1/tafs/{id}/work/runs        ?limit=&cursor=: a page of its recent retained runs (ETag)
+ *   GET  /v1/record                     ?q=&from=&to=&limit=&cursor=: the Record across the person's tafs, searched by order, invoice, amount or action (record.ts)
+ *   GET  /v1/record/cases/{about}       one case: every call about the same thing, oldest first, and the step that didn't go through
+ *   GET  /v1/record/receipts            ?from=&to=: the receipts of those days for an accountant (at most 92 days), for those who see every taf's Record
  *   GET  /v1/tafs/{id}/setup            its Setup, ready to draw: connections, workflow, memory and versions (Planque-Device-Signature forwarded for the grants read)
  *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
@@ -558,7 +562,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats coach components connect continue conversation drive " +
   "activity delete deletions deliveries doors door email whatsapp ended estimate events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "logos gallery recipes memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
-  "unarchive usage versions work webhooks").split(" "));
+  "unarchive usage versions work webhooks record cases receipts").split(" "));
 
 /**
  * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the route
@@ -614,6 +618,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
+  if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] === "coach" && parts[2] === "drive") return driveRoute(event, method, parts, await person(event, deps), deps);
   // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
@@ -5394,6 +5399,37 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
  * list rather than showing tafs without their Cards. It lists only the agents KIFF
  * says the person may use or oversee (GET /v1/me/access): tafs cloud decides nothing.
  */
+/**
+ * The Record across the person's tafs (record.ts): the tafs KIFF says they may use or oversee, as home lists them.
+ * Its receipts are for the people who see every taf's Record: those who oversee or manage each of the account's tafs.
+ */
+async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, deps: Deps) {
+  const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
+  const all = records.filter((t) => !t.removing && t.job !== SETUP_JOB);
+  const tafs: RecordTaf[] = all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent }));
+  const zone = me.timeZone ?? "UTC", now = deps.now?.() ?? new Date(), lang = langOf(event);
+  const q = new URLSearchParams(event.rawQueryString ?? "");
+  if (parts.length === 2) {
+    return conditionalPage(event, await recordPage({ token: bearer(event), scope: `${me.tenantID}#${me.subject}`, tafs, zone, now, query: q, lang }, deps.fetch, deps.kiffBase));
+  }
+  if (parts.length >= 4 && parts[2] === "cases") {
+    // A reference may hold a "/" (an invoice's "F-2026/001"): the rest of the path is the reference, whether "/" came
+    // escaped (%2F) or was decoded on the way.
+    let about: string;
+    try { about = decodeURIComponent(parts.slice(3).join("/")); } catch { throw new HTTPError(400, "that case's reference isn't readable"); }
+    const view = await caseView({ token: bearer(event), about, tafs, zone, now, lang }, deps.fetch, deps.kiffBase);
+    if (!view) throw new HTTPError(404, "no such case in the Record");
+    return view;
+  }
+  if (parts.length === 3 && parts[2] === "receipts") {
+    if (!all.every((t) => access.get(t.kiffAgent)?.oversee || access.get(t.kiffAgent)?.manage)) {
+      throw new HTTPError(403, "exporting receipts is for the people who see every taf's Record");
+    }
+    return receiptsExport({ token: bearer(event), from: q.get("from"), to: q.get("to"), tafs, zone }, deps.fetch, deps.kiffBase);
+  }
+  throw new HTTPError(404, "not found");
+}
+
 /**
  * The calendar (kiff/tafs#534): the scheduled work still to come on the dates `from` to `to`, in the account's zone, for
  * the tafs this person may see (as home lists them). Computed here from each taf's schedules, follow-ups and runs
