@@ -2228,6 +2228,10 @@
   "voice.voice_becomes_text_device_not": "La tua voce diventa testo su questo dispositivo. Non viene inviata finché non la invii tu.",
   "voice.what_you_said_stays_message": "Ciò che hai detto resta nella casella del messaggio, non inviato.",
   "work.answer_within": "Rispondi entro",
+  "work.answer_within_days": {
+    "one": "{count} giorno",
+    "other": "{count} giorni"
+  },
   "work.answer_within_hours": {
     "one": "{count} ora",
     "other": "{count} ore"

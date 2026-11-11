@@ -38,7 +38,16 @@ final class PromiseTests: XCTestCase {
         XCTAssertEqual(TafsCloud.TafWork.promiseChoices, [1, 2, 4, 8, 24, 48, 168])
         XCTAssertTrue(TafsCloud.TafWork.promiseChoices.allSatisfy { (1...168).contains($0) })
         XCTAssertEqual(PromiseRow.value(nil), Words.Work.answerWithinNone)
-        XCTAssertEqual(PromiseRow.value(24), Words.Work.answerWithinHours(count: 24))
+        // Whole days read as days, the rest as hours; tafs cloud still gets hours.
+        XCTAssertEqual(TafsCloud.TafWork.promiseChoices.map(PromiseRow.label), [
+            Words.Work.answerWithinHours(count: 1), Words.Work.answerWithinHours(count: 2),
+            Words.Work.answerWithinHours(count: 4), Words.Work.answerWithinHours(count: 8),
+            Words.Work.answerWithinDays(count: 1), Words.Work.answerWithinDays(count: 2), Words.Work.answerWithinDays(count: 7),
+        ])
+        XCTAssertEqual(PromiseRow.value(24), Words.Work.answerWithinDays(count: 1))
+        XCTAssertEqual(PromiseRow.value(168), Words.Work.answerWithinDays(count: 7))
+        XCTAssertEqual(PromiseRow.value(36), Words.Work.answerWithinHours(count: 36), "not a whole number of days")
+        XCTAssertNotEqual(Words.Work.answerWithinDays(count: 7), Words.Work.answerWithinHours(count: 168))
     }
 
     /// Setting sends whole hours; clearing sends null, never an absent key.

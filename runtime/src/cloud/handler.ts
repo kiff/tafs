@@ -183,7 +183,7 @@ export type AgentsAPI = Pick<Agents,
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
-  "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
+  "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
   "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
 
 export interface Deps {
@@ -6810,11 +6810,18 @@ export async function sweepYourSteps(deps: Deps): Promise<Array<{ tenant: string
   const now = deps.now?.() ?? new Date();
   const told: Array<{ tenant: string; taf: string; handoff: string; reminder: boolean }> = [];
   for (const tenant of await deps.tafs.tenants()) {
-    const tafs = (await deps.tafs.list(tenant).catch(() => [] as Taf[])).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    // One read for the whole account: its runs paused on a step, from kiff/agents' per-account paused list, never
+    // one read per taf. An account with none costs that read and nothing else.
+    const paused = await deps.agents.pausedRuns(tenant, YOUR_STEP_TOOL).catch((err) => {
+      console.warn(`your steps: ${tenant}: ${err instanceof Error ? err.message : "error"}`);
+      return [] as Run[];
+    });
+    if (!paused.length) continue;
+    const byAgent = new Map<string, Run[]>();
+    for (const r of paused) byAgent.set(r.agent, [...(byAgent.get(r.agent) ?? []), r]);
+    const tafs = (await deps.tafs.list(tenant).catch(() => [] as Taf[])).filter((t) => !t.removing && t.job !== SETUP_JOB && byAgent.has(t.id));
     for (const taf of tafs) {
-      // Only the runs not ended (a paused run among them): a small read, whatever the taf's history.
-      const runs = await deps.agents.runs(tenant, taf.id, true, 20).catch(() => undefined);
-      const steps = (runs ?? []).flatMap((r) => yourStepsOf(r));
+      const steps = (byAgent.get(taf.id) ?? []).flatMap((r) => yourStepsOf(r));
       if (!steps.length) continue;
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
       for (const step of steps) {

@@ -624,6 +624,7 @@ final class AppModel: ObservableObject {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
             tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
+            recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
             yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0
             haltErrors = [:]
@@ -4936,6 +4937,34 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let hint = try? await cloud.searchRecord("", limit: 1).hint, gen == accountGeneration else { return }
         if !hint.trimmingCharacters(in: .whitespaces).isEmpty { recordHint = hint }
+    }
+
+    /// The search waiting for the person to stop typing (`recordQueryTyped`).
+    private var recordTyping: Task<Void, Never>?
+    /// How long the Record waits after the last key before it searches what's typed.
+    var recordTypingPause: UInt64 = 400_000_000
+
+    /// The Record's box as the person types: what's typed is searched `recordTypingPause` after
+    /// the last key, so a word typed letter by letter is one search, not one a letter. Each key
+    /// starts the wait again. Words already searched (or being searched) aren't searched again,
+    /// and an emptied box shows the Record at once.
+    func recordQueryTyped(_ q: String) {
+        recordTyping?.cancel(); recordTyping = nil
+        let asked = q.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !asked.isEmpty else { recordSearch = nil; return }
+        let pause = recordTypingPause
+        recordTyping = Task { [weak self] in
+            do { try await Task.sleep(nanoseconds: pause) } catch { return }
+            guard let self, !Task.isCancelled, self.recordSearch?.q != asked else { return }
+            self.recordTyping = nil
+            await self.searchRecord(asked)
+        }
+    }
+
+    /// The box's Search key: what's typed, at once, and no wait left to search it again.
+    func recordQuerySubmitted(_ q: String) async {
+        recordTyping?.cancel(); recordTyping = nil
+        await searchRecord(q)
     }
 
     /// Searches the Record across the person's tafs (`GET /v1/record?q=`). A blank `q` clears the

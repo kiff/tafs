@@ -71,6 +71,59 @@ final class RecordSearchTests: XCTestCase {
     }
 
     /// What's typed goes as one query value, whatever it holds.
+    /// The searches sent to tafs cloud, by what they asked.
+    private func searchesSent() -> [String] {
+        StubProtocol.sent.compactMap { r in
+            guard r.url?.path == "/v1/record", let q = URLComponents(url: r.url!, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "q" })?.value, !q.isEmpty else { return nil }
+            return q
+        }
+    }
+
+    private func pause(_ ms: UInt64) async throws { try await Task.sleep(nanoseconds: ms * 1_000_000) }
+
+    func testTypingSearchesOnceThePersonStopsTyping() async throws {
+        let model = await kiffModel()
+        StubProtocol.responses["GET /v1/record?q=1042"] = (200, Self.page1)
+        model.recordTypingPause = 100_000_000
+        XCTAssertEqual(AppModel(signer: StubSigner()).recordTypingPause, 400_000_000)
+        for typed in ["1", "10", "104", "1042"] { model.recordQueryTyped(typed) }
+        try await pause(40)
+        XCTAssertEqual(searchesSent(), [], "nothing is searched while the person is still typing")
+        try await pause(400)
+        XCTAssertEqual(searchesSent(), ["1042"], "one search, for what was typed last")
+        XCTAssertEqual(model.recordSearch?.pages.first?.entries.map(\.id), ["e1"])
+
+        // The same words again (a letter typed and taken back) aren't searched twice.
+        model.recordQueryTyped("1042 ")
+        try await pause(400)
+        XCTAssertEqual(searchesSent(), ["1042"])
+    }
+
+    func testTheSearchKeySearchesAtOnceAndTheWaitDoesntRepeatIt() async throws {
+        let model = await kiffModel()
+        StubProtocol.responses["GET /v1/record?q=1042"] = (200, Self.page1)
+        model.recordTypingPause = 150_000_000
+        model.recordQueryTyped("1042")
+        await model.recordQuerySubmitted("1042")
+        XCTAssertEqual(searchesSent(), ["1042"])
+        try await pause(500)
+        XCTAssertEqual(searchesSent(), ["1042"], "the wait for the typed words was dropped")
+    }
+
+    func testAnEmptiedBoxShowsTheRecordAtOnceAndDropsTheWait() async throws {
+        let model = await kiffModel()
+        StubProtocol.responses["GET /v1/record?q=1042"] = (200, Self.page1)
+        await model.searchRecord("1042")
+        model.recordTypingPause = 100_000_000
+        model.recordQueryTyped("10421")
+        model.recordQueryTyped("  ")
+        XCTAssertNil(model.recordSearch, "the Record shows again at once")
+        try await pause(400)
+        XCTAssertEqual(searchesSent(), ["1042"], "the words typed before the box was emptied aren't searched")
+        XCTAssertNil(model.recordSearch)
+    }
+
     func testWhatsTypedIsSentAsOneValue() async throws {
         let model = await kiffModel()
         StubProtocol.responses["GET /v1/record?q=F%2D2026%2F001%26x%3D1"] = (200, #"{"q":"F-2026/001&x=1","entries":[],"groups":[],"none_words":"Nothing matches F-2026/001&x=1"}"#)

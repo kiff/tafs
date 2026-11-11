@@ -2228,6 +2228,10 @@
   "voice.voice_becomes_text_device_not": "Tu voz se convierte en texto en este dispositivo. No se envía hasta que lo envíes.",
   "voice.what_you_said_stays_message": "Lo que dijiste se queda en el cuadro de mensaje, sin enviar.",
   "work.answer_within": "Responder en",
+  "work.answer_within_days": {
+    "one": "{count} día",
+    "other": "{count} días"
+  },
   "work.answer_within_hours": {
     "one": "{count} hora",
     "other": "{count} horas"

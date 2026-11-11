@@ -2359,6 +2359,12 @@
     <string name="voice_voice_becomes_text_device_not">Twój głos zamienia się w tekst na tym urządzeniu. Nie zostanie wysłany, dopóki go nie wyślesz.</string>
     <string name="voice_what_you_said_stays_message">Podyktowany tekst zostaje w polu wiadomości, niewysłany.</string>
     <string name="work_answer_within">Odpowiedź w ciągu</string>
+    <plurals name="work_answer_within_days">
+        <item quantity="one">%1$s dzień</item>
+        <item quantity="few">%1$s dni</item>
+        <item quantity="many">%1$s dni</item>
+        <item quantity="other">%1$s dnia</item>
+    </plurals>
     <plurals name="work_answer_within_hours">
         <item quantity="one">%1$s godzina</item>
         <item quantity="few">%1$s godziny</item>

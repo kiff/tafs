@@ -271,6 +271,12 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const ended = (st: string) => st === "COMPLETED" || st === "ERROR" || st === "CANCELLED";
       return runs.filter((r) => r.tenant === tenant && r.agent === agent && !(active && ended(r.status))).slice(0, limit).map((r) => ({ ...r }));
     },
+    async pausedRuns(tenant, tool, limit = 100) {
+      calls.push(`pausedRuns ${tenant}${tool ? ` ${tool}` : ""}`);
+      failing("pausedRuns");
+      return runs.filter((r) => r.tenant === tenant && r.status === "PAUSED" && (!tool || (r.requirements ?? []).some((q) => q.tool === tool)))
+        .slice(0, limit).map((r) => ({ ...r }));
+    },
     async trial(tenant, id, run) {
       const r = runs.find((x) => x.tenant === tenant && x.agent === id && x.id === run && x.trigger === "trial");
       if (!r) throw gone();

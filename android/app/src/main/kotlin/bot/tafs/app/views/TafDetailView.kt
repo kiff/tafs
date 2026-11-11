@@ -585,6 +585,10 @@ internal fun HealthLines(health: bot.tafs.app.kiff.TafHealth, canUseCoach: Boole
 /** The hours a case may wait, as the owner picks them: tafs cloud checks the range (1 to 168). */
 internal val PROMISE_CHOICES = listOf(1, 2, 4, 8, 24, 48, 168)
 
+/** A promise's hours in words: whole days read as days ("1 day", "7 days"), anything else as hours ("8 hours"). Sent as hours either way. */
+internal fun promiseWords(hours: Int): String =
+  if (hours >= 24 && hours % 24 == 0) Words.Work.answerWithinDays(count = hours / 24) else Words.Work.answerWithinHours(count = hours)
+
 /**
  * "Answer within", for whoever manages the taf: the promise as tafs cloud keeps it, or Not set, and a menu of whole hours to change it
  * (or clear it). The phones that answer its holds are told when a case waits longer; tafs cloud sends that alert.
@@ -601,11 +605,11 @@ internal fun PromiseRow(hours: Int?, onPick: (Int?) -> Unit) {
       Text(Words.Work.answerWithin, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
       // The menu opens under the value it changes, not at the row's start.
       Box {
-        Text((hours?.let { Words.Work.answerWithinHours(count = it) } ?: Words.Work.answerWithinNone) + " ⌄", style = scaled(15, FontWeight.SemiBold, Theme.amberText))
+        Text((hours?.let { promiseWords(it) } ?: Words.Work.answerWithinNone) + " ⌄", style = scaled(15, FontWeight.SemiBold, Theme.amberText))
         DriveMenu(expanded = open, onDismissRequest = { open = false }, containerColor = Theme.panel) {
           DropdownMenuItem(text = { Text(Words.Work.answerWithinNone) }, onClick = { open = false; if (hours != null) onPick(null) })
           PROMISE_CHOICES.forEach { h ->
-            DropdownMenuItem(text = { Text(Words.Work.answerWithinHours(count = h)) }, onClick = { open = false; if (h != hours) onPick(h) })
+            DropdownMenuItem(text = { Text(promiseWords(h)) }, onClick = { open = false; if (h != hours) onPick(h) })
           }
         }
       }

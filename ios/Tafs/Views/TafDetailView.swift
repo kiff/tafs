@@ -487,9 +487,15 @@ struct PromiseRow: View {
     let hours: Int?
     let pick: (Int?) -> Void
 
-    /// What the row says the promise is: its hours, or Not set.
+    /// What the row says the promise is: its time, or Not set.
     static func value(_ hours: Int?) -> String {
-        hours.map { Words.Work.answerWithinHours(count: $0) } ?? Words.Work.answerWithinNone
+        hours.map(label) ?? Words.Work.answerWithinNone
+    }
+
+    /// A promise in words: whole days as days (24 h is "1 day", 168 h "7 days"), anything else in
+    /// hours. tafs cloud gets hours all the same.
+    static func label(_ hours: Int) -> String {
+        hours >= 24 && hours % 24 == 0 ? Words.Work.answerWithinDays(count: hours / 24) : Words.Work.answerWithinHours(count: hours)
     }
 
     var body: some View {
@@ -497,7 +503,7 @@ struct PromiseRow: View {
             Menu {
                 Button(Words.Work.answerWithinNone) { if hours != nil { pick(nil) } }
                 ForEach(TafsCloud.TafWork.promiseChoices, id: \.self) { h in
-                    Button(Words.Work.answerWithinHours(count: h)) { if h != hours { pick(h) } }
+                    Button(PromiseRow.label(h)) { if h != hours { pick(h) } }
                 }
             } label: {
                 HStack(spacing: 8) {

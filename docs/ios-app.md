@@ -93,8 +93,8 @@ runs it kept (`RetainedRuns`), which stand for its latest run's report. What nee
 comes first, then the work, then the runs, as on Android (`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
 (`oldest_waiting.words`, tafs cloud's line, amber once `late`) and, for whoever manages the taf,
 **Answer within** (`PromiseRow`): the promise as tafs cloud keeps it (`promise.hours`) or Not set,
-and a menu of None, 1, 2, 4, 8, 24, 48 or 168 hours that sends `PUT /v1/tafs/{id}/promise`
-(`AppModel.setPromise`). The app keeps no copy; a promise that couldn't be set says why under the
+and a menu of None, 1, 2, 4 or 8 hours, or 1, 2 or 7 days (whole days read as days, `PromiseRow.label`),
+that sends the hours in `PUT /v1/tafs/{id}/promise` (`AppModel.setPromise`). The app keeps no copy; a promise that couldn't be set says why under the
 work. The phones that answer its holds are told when a case waits longer; tafs cloud sends that
 alert, and it opens the taf.
 
@@ -384,7 +384,8 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 - **Search:** the box's placeholder is tafs cloud's `hint` ("Search by order, invoice, amount
   or action"), read once when the tab opens; the app's own line stands in until it comes.
-  Search sends what's typed. The results take the list's place: tafs cloud's `groups`, each
+  What's typed is searched 400 ms after the last key (`AppModel.recordQueryTyped`), so a word
+  typed letter by letter is one search; the Search key searches at once. The results take the list's place: tafs cloud's `groups`, each
   call drawn as its taf's Activity draws it (`SourceActivityRow`, with its receipt and its own
   next step) under its taf's name, and **More** for `next_cursor`. A taf the phone doesn't
   list shows the call as tafs cloud words it, without a next step. A cursor tafs cloud refuses
