@@ -9,7 +9,7 @@ struct RecordSearchBox: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundColor(Theme.dim).accessibilityHidden(true)
-            TextField(model.recordHint ?? Words.Record.searchHint, text: $query)
+            DriveField(model.recordHint ?? Words.Record.searchHint, text: $query)
                 .scaledFont(15).foregroundColor(Theme.ink)
                 .submitLabel(.search)
                 .autocorrectionDisabled()
