@@ -503,6 +503,15 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val detailState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
   val coachVisibility = remember { androidx.compose.animation.core.MutableTransitionState(false) }
   LaunchedEffect(coachOpen) { coachVisibility.targetState = coachOpen }
+  val recordActions = remember(model) {
+    bot.tafs.app.views.RecordActions(
+      loadHint = model::loadRecordHint,
+      search = { q, more -> model.searchRecord(q, more) },
+      openCase = model::openRecordCase,
+      closeCase = model::closeRecordCase,
+      export = model::exportReceipts,
+    )
+  }
   val actions = remember(model) {
     TafActions(
       answer = { call, answer -> model.answer(call, answer) },
@@ -713,7 +722,12 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           }
         }
         Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) })
-        Tab.Record -> RecordView(state)
+        Tab.Record -> RecordView(
+          state,
+          record = recordActions,
+          tafActions = actions,
+          onConnectApps = { showingConnectApps = true },
+        )
       }
     }
     if (showingSettings) {

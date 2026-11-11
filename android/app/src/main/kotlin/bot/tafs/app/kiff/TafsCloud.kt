@@ -707,6 +707,30 @@ class TafsCloud(
   suspend fun endTrial(id: String): TrialSummary =
     KiffClient.json.decodeFromString<TrialInstalled>(String(send("DELETE", "/v1/tafs/${escaped(id)}/trial"))).ended
 
+  /** The Record across the person's tafs, searched by [q] (an order, invoice, amount or action); [cursor] continues the same search. */
+  suspend fun searchRecord(q: String, cursor: String? = null, limit: Int? = null): RecordSearchPage {
+    val query = buildList {
+      add("q=${escaped(q)}")
+      cursor?.let { add("cursor=${escaped(it)}") }
+      limit?.let { add("limit=$it") }
+    }.joinToString("&")
+    return get("/v1/record?$query")
+  }
+
+  /** One case: every call about [about], oldest first. A 404 says no call of the person's is about it. */
+  suspend fun recordCase(about: String): RecordCase = get("/v1/record/cases/${escaped(about)}")
+
+  /**
+   * The receipts of [from] to [to] (YYYY-MM-DD, at most 92 days), for someone who sees every taf's Record. The JSON file is tafs
+   * cloud's answer byte for byte, so KIFF's receipts are exactly as issued, never re-encoded; the CSV is as tafs cloud wrote it.
+   */
+  suspend fun exportReceipts(from: String, to: String): ReceiptsExport {
+    val raw = String(send("GET", "/v1/record/receipts?from=${escaped(from)}&to=${escaped(to)}"))
+    val body = KiffClient.json.parseToJsonElement(raw) as kotlinx.serialization.json.JsonObject
+    fun text(key: String) = (body[key] as? kotlinx.serialization.json.JsonPrimitive)?.content.orEmpty()
+    return ReceiptsExport(from = text("from"), to = text("to"), receiptsJson = raw, csv = text("csv"), missing = text("missing").toIntOrNull() ?: 0)
+  }
+
   /**
    * The person's own chats, trials and notes, for their own copy (docs/data.md): the data as JSON, and `readable`, the same as
    * text. Kept as tafs cloud wrote it: [ChatExport.of] splits it into the two files, and nothing in it is read on the phone.

@@ -2937,6 +2937,16 @@ enum Words {
         static func expired(summary: String) -> String { Words.line("record.expired", summary) }
         /// Nobody answered in time
         static var expiredDetail: String { Words.line("record.expired_detail") }
+        /// Last {count} days
+        static func exportLastDays(count: Int) -> String { Words.count("record.export_last_days", count) }
+        /// {count} calls have no receipt yet.
+        static func exportMissing(count: Int) -> String { Words.count("record.export_missing", count) }
+        /// They couldn't be exported. {why}
+        static func exportNotExported(why: String) -> String { Words.line("record.export_not_exported", why) }
+        /// Preparing receipts…
+        static var exportPreparing: String { Words.line("record.export_preparing") }
+        /// Export receipts
+        static var exportReceipts: String { Words.line("record.export_receipts") }
         /// Extra room by you · {at} · {summary}
         static func extraRoom(at: String, summary: String) -> String { Words.line("record.extra_room", at, summary) }
         /// Its Card got the room for this total, until it resets. Over a limit for one call as well, the call is held again for that
@@ -3029,6 +3039,8 @@ enum Words {
             /// You revoked {taf|possessive} Card
             static func title(taf: String) -> String { Words.line("record.revoked.title", taf, Words.possessive(taf)) }
         }
+        /// Search by order, invoice, amount or action
+        static var searchHint: String { Words.line("record.search_hint") }
         /// {allowed}, and sent: waiting for the app's answer
         static func sentWaiting(allowed: String) -> String { Words.line("record.sent_waiting", allowed) }
         /// Show

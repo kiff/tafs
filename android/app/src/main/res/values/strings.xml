@@ -1502,6 +1502,17 @@
     <string name="record_event_someone">Someone</string>
     <string name="record_expired">Expired: %1$s</string>
     <string name="record_expired_detail">Nobody answered in time</string>
+    <plurals name="record_export_last_days">
+        <item quantity="one">Last %1$s day</item>
+        <item quantity="other">Last %1$s days</item>
+    </plurals>
+    <plurals name="record_export_missing">
+        <item quantity="one">%1$s call has no receipt yet.</item>
+        <item quantity="other">%1$s calls have no receipt yet.</item>
+    </plurals>
+    <string name="record_export_not_exported">They couldn\'t be exported. %1$s</string>
+    <string name="record_export_preparing">Preparing receipts…</string>
+    <string name="record_export_receipts">Export receipts</string>
     <string name="record_extra_room">Extra room by you · %1$s · %2$s</string>
     <string name="record_extra_room_detail">Its Card got the room for this total, until it resets. Over a limit for one call as well, the call is held again for that</string>
     <string name="record_filter_all">All</string>
@@ -1549,6 +1560,7 @@
         <item quantity="other">No new action goes through. %1$s waiting actions refused.</item>
     </plurals>
     <string name="record_revoked_title">You revoked %2$s Card</string>
+    <string name="record_search_hint">Search by order, invoice, amount or action</string>
     <string name="record_sent_waiting">%1$s, and sent: waiting for the app\'s answer</string>
     <string name="record_show">Show</string>
     <string name="record_shows_receipt">Shows the receipt</string>
