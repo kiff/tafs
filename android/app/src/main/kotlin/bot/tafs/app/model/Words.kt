@@ -1175,6 +1175,17 @@ object Words {
     val rowRunning: String get() = Res.s(R.string.halt_row_running)
     val yourTafsLower: String get() = Res.s(R.string.halt_your_tafs_lower)
   }
+  object HaltAll {
+    val description: String get() = Res.s(R.string.halt_all_description)
+    fun failed(why: String): String = Res.s(R.string.halt_all_failed, why)
+    fun halted(count: Int): String = Res.p(R.plurals.halt_all_halted, count, Res.number(count))
+    val haltedAll: String get() = Res.s(R.string.halt_all_halted_all)
+    fun halting(count: Int): String = Res.p(R.plurals.halt_all_halting, count, Res.number(count))
+    val haltingAll: String get() = Res.s(R.string.halt_all_halting_all)
+    val running: String get() = Res.s(R.string.halt_all_running)
+    val signedOut: String get() = Res.s(R.string.halt_all_signed_out)
+    val title: String get() = Res.s(R.string.halt_all_title)
+  }
   object Home {
     fun calendarNotRead(why: String): String = Res.s(R.string.home_calendar_not_read, why)
     val cantReachKiff: String get() = Res.s(R.string.home_cant_reach_kiff)
@@ -2029,19 +2040,6 @@ object Words {
     }
     val withKiff: String get() = Res.s(R.string.sign_in_with_kiff)
     val yourCode: String get() = Res.s(R.string.sign_in_your_code)
-  }
-  object Siri {
-    object HaltAll {
-      val description: String get() = Res.s(R.string.siri_halt_all_description)
-      fun failed(why: String): String = Res.s(R.string.siri_halt_all_failed, why)
-      fun halted(count: Int): String = Res.p(R.plurals.siri_halt_all_halted, count, Res.number(count))
-      val haltedAll: String get() = Res.s(R.string.siri_halt_all_halted_all)
-      fun halting(count: Int): String = Res.p(R.plurals.siri_halt_all_halting, count, Res.number(count))
-      val haltingAll: String get() = Res.s(R.string.siri_halt_all_halting_all)
-      val running: String get() = Res.s(R.string.siri_halt_all_running)
-      val signedOut: String get() = Res.s(R.string.siri_halt_all_signed_out)
-      val title: String get() = Res.s(R.string.siri_halt_all_title)
-    }
   }
   object Taf {
     object Activity {

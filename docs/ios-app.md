@@ -443,7 +443,9 @@ KIFF and tafs cloud carries `Accept-Language` with the language the screens reso
 languages the app ships (`Words.languages`), at most four, then `en` (`KIFFClient.screenLanguages`). A language only
 Siri's phrases are in never counts. The calendar's titles follow the language's order (`calendar.title.*`), and its
 month view names the month on its own (`calendar.month_title.*`, the nominative in Polish). Halt all's Siri lines
-are `siri.halt_all.*`, and its phrases are in each language's `AppShortcuts.strings`. The iOS workflow's
+are `halt_all.*`, and its phrases are in each language's `AppShortcuts.strings`. Apple reads an App Intent's
+keys as its words and refuses a build whose title or description contains "siri" (90626), so no intent key or
+phrase does, which `test_strings` checks. The iOS workflow's
 `languages` screenshot set (a manual run with `"screenshots": "languages"`) takes the main screens in each language.
 
 What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, URL
