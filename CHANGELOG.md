@@ -5,6 +5,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **A taf's tabs stay on one line in every language (Android 1.7.3).** A long label, such as Spanish "Configuración", shrinks to fit its tab instead of breaking over two lines.
+- **"Shared with" shows the names in every language (Android 1.7.3).** The line beside Share takes the rest of the row, on up to two lines, so in Spanish, "Compartido con" no longer pushes the names off the screen.
 - **The Record searches as you type (Android 1.7.3).** It searched only on the keyboard's Search; it now searches 400 ms after the last key, and Search still sends at once (docs/android-app.md › The Record). iPhone and iPad follow.
 - **Answer within reads whole days as days (Android 1.7.3).** Its menu offers 1, 2, 4 or 8 hours, or 1, 2 or 7 days, in all 8 languages, instead of "168 hours". tafs cloud still gets hours. iPhone and iPad follow.
 - **Android: ready for the approval text in the person's language (Android 1.7.2).** The app tells planque the person's language, and checks a grant marked `digest_v: 2` over its words and their language as well as its request, so the words shown are the words signed. Grants without the mark are checked as before, so nothing changes until planque issues v2 grants (docs/android-app.md › Connect apps).
