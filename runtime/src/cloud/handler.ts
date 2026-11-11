@@ -2202,7 +2202,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (!Number.isNaN(at)) part.seen = Math.max(part.seen, at);
         // A call refused back unmade (an act beside a read) isn't failed work: it shows as not made.
         for (const t of turn?.waited ?? []) {
-          const words = stepWords(t.tool, titles);
+          const words = stepWords(t.tool, titles, lang);
           part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}), ...(t.inputHash ? { inputHash: t.inputHash } : {}) });
         }
         continue;
@@ -2224,7 +2224,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         // The card's answer as kiff/agents recorded it: on the run's latest card with its id.
         const b = (e.body ?? {}) as { id?: unknown; type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown };
         const card = components.findLast((c) => c.run === e.run && (c.component as { id?: unknown })?.id === b.id);
-        if (card) card.answer = cardAnswer(b, iso(e.time));
+        if (card) card.answer = cardAnswer(b, iso(e.time), lang);
         // Words the owner wrote while the card waited answered it: they show as their message, as sent.
         if (typeof b.wrote === "string" && b.wrote.trim()) {
           // Recorded also as the run's message, at the same time: one message, marked as the answer.
@@ -2393,12 +2393,15 @@ const UNMARKED_OWNER = new Set(["confirm", "questions", "approval", "sign_in", "
 /**
  * A plan (a `steps` component) with its one-line form, `line`: "Step 3 of 6 · Your rules", the step
  * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
- * counting of its own. Any other component is as it came.
+ * counting of its own. A sign-in card gets its buttons in the app's language. Any other component is as it came.
  */
 export function withLine(component: unknown, lang: Lang = "en"): unknown {
   const c = component as { type?: unknown; steps?: unknown; waits?: unknown } | null | undefined;
   // A card from before kiff/agents marked who it waits on gets the mark here, so an app reads `waits` on every card.
   if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) }, lang);
+  // A sign-in card's buttons are the app's chrome, in the app's language (Accept-Language), whatever language
+  // Coach wrote the card in; its title, text and note are Coach's message, as written.
+  if (c && c.type === "sign_in") return { ...c, yes: wordsIn(lang).signin_yes, no: wordsIn(lang).signin_no };
   if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
   const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
   const n = steps.length;
@@ -2414,11 +2417,25 @@ function inputID(run: string): string {
   return `${run}.in`;
 }
 
+/**
+ * An approval card's answer in the person's language, as the app words it: kiff/agents records it in English
+ * ("Approve · it didn't go through: …"). The reason after it is tafs cloud's own, already in the language of the
+ * request that approved (approval.ts). Undefined for any other card or answer: its words stay as recorded.
+ */
+function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang): string | undefined {
+  if (b.type !== "approval" || typeof b.answer !== "string") return undefined;
+  const w = wordsIn(lang);
+  if (b.answer === "approved") return w.approval_answer_approved;
+  if (b.answer === "declined") return w.approval_answer_declined;
+  if (b.answer.startsWith("failed: ")) return w.approval_answer_failed(b.answer.slice("failed: ".length));
+  return undefined;
+}
+
 /** An `answered` event's body as the app shows it. */
-function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown }, at: string): CardAnswer {
+function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown }, at: string, lang: Lang = "en"): CardAnswer {
   if (b.unanswered === true) return { state: "no_answer", words: "", at };
   if (typeof b.wrote === "string" && b.wrote) return { state: "wrote", words: b.wrote, at };
-  const out: CardAnswer = { state: "answered", words: typeof b.words === "string" ? b.words : "", at };
+  const out: CardAnswer = { state: "answered", words: approvalAnswerWords(b, lang) ?? (typeof b.words === "string" ? b.words : ""), at };
   if (typeof b.answered_by === "string" && b.answered_by) out.by = b.answered_by;
   const o = b.answer as { taf_id?: unknown; version?: unknown; failed?: unknown } | null | undefined;
   if (b.type === "result" && o && typeof o === "object") {
@@ -2708,7 +2725,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
     // Only the approval key, behind the fingerprint, starts a drive: never the device key, never a window's tap.
     await checkSigned({ tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: "", store, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase,
-      fetch: deps.fetch ?? fetch, now, newID: () => "", signed }, "approval").catch(approvalFailure);
+      fetch: deps.fetch ?? fetch, now, newID: () => "", signed, lang: langOf(event) }, "approval").catch(approvalFailure);
     // The card first: a start for a card that isn't there starts nothing (qa-kiff on #554). Without
     // one, the session must be one of the person's own chats with Coach (agentgabo on #554).
     const component = str(body.component).trim();
@@ -2760,7 +2777,7 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
   return {
     tenant: me.tenantID, taf: taf.id, component, token: bearer(event), proof: event.headers?.["planque-device-signature"] ?? "",
     store: deps.coach, planqueBase: deps.planqueBase, kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, now: deps.now?.() ?? new Date(),
-    newID: () => `ask_${randomBytes(9).toString("hex")}`,
+    newID: () => `ask_${randomBytes(9).toString("hex")}`, lang: langOf(event),
   };
 }
 
@@ -4977,7 +4994,7 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
 }
 
 async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en"): AsyncGenerator<string> {
-  const steps = new Steps(titles);
+  const steps = new Steps(titles, lang);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.
