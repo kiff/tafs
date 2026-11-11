@@ -20,9 +20,11 @@ that it works from its chat (`unscheduled`). Its record keeps them (`Taf.work`,
 `summary`, `Taf.check`), under the job id `custom`, so its definition can be built again. Any job at all,
 with whatever the account has connected, under a Card: nothing limits it to a template.
 
-The five jobs tafs began with are recipes now ([coach.md](coach.md#recipes)), and stay as the
-starter jobs for the tafs that have one, each with its own instructions, kickoff and default
-schedule:
+Three of the five jobs tafs began with are recipes now ([coach.md](coach.md#recipes)). Bill pay
+and Access aren't: the apps they connect can't do their Card's work today (no payment app can pay,
+and adding or removing people needs an admin connection most accounts can't make), so they're not
+offered as recipes. All five stay as the starter jobs for the tafs that have one, each with its own instructions, kickoff
+and default schedule:
 
 | Job | What it does | Runs by default |
 |---|---|---|
