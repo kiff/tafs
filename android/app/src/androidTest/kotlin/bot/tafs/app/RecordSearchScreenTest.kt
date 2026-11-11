@@ -1,6 +1,10 @@
 package bot.tafs.app
 
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import bot.tafs.app.app.AppState
@@ -17,7 +21,9 @@ import bot.tafs.app.kiff.RecordHitGroup
 import bot.tafs.app.kiff.RecordSearchPage
 import bot.tafs.app.kiff.RecordTafRef
 import bot.tafs.app.views.ExportReceiptsRow
+import bot.tafs.app.views.RECORD_SEARCH_PAUSE_MS
 import bot.tafs.app.views.RecordCaseSheet
+import bot.tafs.app.views.RecordSearchBox
 import bot.tafs.app.views.RecordResults
 import java.time.Instant
 import java.time.LocalDate
@@ -54,6 +60,42 @@ class RecordSearchScreenTest {
     rule.onNodeWithText("Order 1042 ›").performClick()
     rule.waitForIdle()
     assertEquals(listOf("Order 1042"), opened)
+  }
+
+  @Test fun theBoxSearchesAsYouTypeAfterAPauseAndEnterStillSearchesAtOnce() {
+    val asked = mutableListOf<String>()
+    rule.setShown { TafsTheme { RecordSearchBox(hint = null) { asked += it } } }
+    val box = rule.onNode(hasSetTextAction())
+    rule.mainClock.autoAdvance = false
+    box.performTextInput("80")
+    rule.mainClock.advanceTimeBy(RECORD_SEARCH_PAUSE_MS / 2)
+    box.performTextInput("0")
+    rule.mainClock.advanceTimeBy(RECORD_SEARCH_PAUSE_MS / 2)
+    // Still typing: nothing sent yet.
+    assertEquals(emptyList<String>(), asked)
+    rule.mainClock.advanceTimeBy(RECORD_SEARCH_PAUSE_MS)
+    assertEquals(listOf("800"), asked)
+    // The keyboard's Search sends at once.
+    box.performImeAction()
+    rule.mainClock.advanceTimeBy(16)
+    assertEquals(listOf("800", "800"), asked)
+    // Clearing the box shows the Record at once.
+    box.performTextClearance()
+    rule.mainClock.advanceTimeBy(16)
+    assertEquals(listOf("800", "800", ""), asked)
+    rule.mainClock.autoAdvance = true
+  }
+
+  @Test fun searchPressedDuringThePauseSendsItOnce() {
+    val asked = mutableListOf<String>()
+    rule.setShown { TafsTheme { RecordSearchBox(hint = null) { asked += it } } }
+    val box = rule.onNode(hasSetTextAction())
+    rule.mainClock.autoAdvance = false
+    box.performTextInput("80")
+    box.performImeAction()
+    rule.mainClock.advanceTimeBy(RECORD_SEARCH_PAUSE_MS * 2)
+    assertEquals(listOf("80"), asked)
+    rule.mainClock.autoAdvance = true
   }
 
   @Test fun nothingFoundSaysSoInTafsCloudsWords() {

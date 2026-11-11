@@ -267,8 +267,9 @@ searches across their tafs, opens one case, and exports receipts
 `RecordSearchViews.kt`, `AppModel.searchRecord`):
 
 - **Search:** the box's placeholder is tafs cloud's `hint` ("Search by order, invoice, amount or
-  action"), read once when the tab opens; the app's own line stands in until it comes. Search
-  sends what's typed. The results take the list's place: tafs cloud's `groups`, each call drawn as
+  action"), read once when the tab opens; the app's own line stands in until it comes. It searches as
+  the person types, 400 ms after the last key (`RECORD_SEARCH_PAUSE_MS`), and at once on the
+  keyboard's Search; only the answer for what's in the box is shown. The results take the list's place: tafs cloud's `groups`, each call drawn as
   its taf's Activity draws it (`SourceActivityRow`, with its receipt and its own next step) under
   its taf's name, and **More** for `next_cursor`. A cursor tafs cloud refuses (409, a call made
   since) searches again. Nothing found shows `none_words`. Clearing the box shows the Record as
@@ -400,7 +401,8 @@ idle and at risk or failing, the row shows that line amber or red (`HomeTaf.heal
 `TafWork.oldestWaiting`) shows under its health, in tafs cloud's `words` ("Oldest case waiting
 5 h, past the 4 h you set"): amber once it's `late`, soft otherwise, and nothing while no case
 waits. For whoever manages the taf, **Answer within** (`PromiseRow`) shows its `promise` as tafs
-cloud keeps it, or Not set. Its menu offers Not set, 1, 2, 4, 8, 24, 48 or 168 hours, and sends
+cloud keeps it, or Not set. Its menu offers Not set, 1, 2, 4 or 8 hours, or 1, 2 or 7 days (whole days read as
+days, `promiseWords`; they're still 24, 48 and 168 hours), and sends
 `PUT /v1/tafs/{id}/promise {hours | null}` (`AppModel.setPromise`), then reads the work again.
 tafs cloud checks the range, and a refusal says why on the panel. tafs cloud sends the late alert,
 which opens the taf. The app keeps no copy of the promise and works out nothing from it.

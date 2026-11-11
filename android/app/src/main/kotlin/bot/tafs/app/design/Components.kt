@@ -1,5 +1,7 @@
 package bot.tafs.app.design
 
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.BasicText
 import bot.tafs.app.model.Words
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -182,7 +184,16 @@ fun <T> Segmented(options: List<T>, selected: T, label: (T) -> String, onSelect:
           .clickable { onSelect(option) },
         contentAlignment = Alignment.Center,
       ) {
-        Text(label(option), style = scaled(13, if (on) FontWeight.SemiBold else FontWeight.Medium, Theme.ink))
+        // One line, whatever the language: a long label ("Configuración") shrinks to fit its segment rather than wrap.
+        val style = scaled(13, if (on) FontWeight.SemiBold else FontWeight.Medium, Theme.ink)
+        BasicText(
+          label(option),
+          Modifier.padding(horizontal = 4.dp),
+          style = style,
+          maxLines = 1,
+          softWrap = false,
+          autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize, stepSize = 0.5.sp),
+        )
       }
     }
   }

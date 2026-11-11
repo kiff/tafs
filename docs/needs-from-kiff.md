@@ -96,3 +96,16 @@ Card. On Android the approval key signs once per fingerprint, so this took two.
 only, and treats the hold as answered only on `approved` for that id. A KIFF
 that ignores the field answers with no `hold`, and the app answers the hold as
 before, so there's no deploy order. iOS already signs both under one Face ID.
+
+## 8. A receipt's steps in the person's language — open
+
+A receipt's **What happened** shows each step of KIFF's signed `causal_chain`
+by its `message`, which KIFF writes in English ("Refused"). The apps can't
+reword it: it's inside what KIFF signed, and words KIFF didn't sign mustn't read
+as KIFF's.
+
+- **The need:** a documented, stable vocabulary of step `kind`s. A new kind is
+  a new field or value, and receipts already issued still verify.
+- **tafs's part — not built.** Once the vocabulary is published, both apps word
+  the kinds they know in the person's language, and show KIFF's signed `message`
+  as it is under Details. A kind they don't know shows its `message`, as now.
