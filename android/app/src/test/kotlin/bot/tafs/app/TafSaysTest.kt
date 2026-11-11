@@ -5,6 +5,7 @@ import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.KiffMapping
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -44,6 +45,14 @@ class TafSaysTest {
     assertEquals("Order 1042: see [this](https://x.example) <b>now</b>", KiffMapping.tafSays("Order 1042:\n\tsee [this](https://x.example) <b>now</b>\u0007"))
     assertEquals(KiffMapping.TAF_REASON_MAX, KiffMapping.tafSays("a".repeat(400))?.length)
     assertEquals(KiffMapping.TAF_ABOUT_MAX, held(""","taf_about":"${"b".repeat(200)}"""").tafAbout?.length)
+    // Bidi overrides and zero-width marks are dropped, so they can't reorder or hide words.
+    assertEquals("Order 1042 refund", KiffMapping.tafSays("Order 1042 ‮refund‬​"))
+    // The cap counts code points, as KIFF does: an emoji at the edge stays whole.
+    val emoji = "📦"
+    val capped = KiffMapping.tafSays("a".repeat(279) + emoji + "b")!!
+    assertEquals(KiffMapping.TAF_REASON_MAX, capped.codePointCount(0, capped.length))
+    assertTrue(capped.endsWith(emoji))
+    assertEquals("a".repeat(279) + emoji, KiffMapping.tafSays("a".repeat(279) + emoji))
     assertNull(KiffMapping.tafSays("  \n "))
     assertNull(KiffMapping.tafSays(null))
     // An older KIFF sends none: no section.

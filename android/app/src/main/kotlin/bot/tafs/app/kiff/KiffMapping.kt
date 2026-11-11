@@ -334,9 +334,26 @@ object KiffMapping {
    * more than KIFF keeps ([max]: 280 for the reason, 120 for what it's on). It's drawn as text alone, so a link or markup in it is
    * only words. Blank is none.
    */
-  fun tafSays(reason: String?, max: Int = TAF_REASON_MAX): String? =
-    reason?.map { if (it.isISOControl() || it == '\u2028' || it == '\u2029') ' ' else it }?.joinToString("")
-      ?.replace(Regex("\\s+"), " ")?.trim()?.take(max)?.takeIf { it.isNotBlank() }
+  fun tafSays(reason: String?, max: Int = TAF_REASON_MAX): String? {
+    if (reason == null) return null
+    val plain = StringBuilder()
+    var i = 0
+    while (i < reason.length) {
+      val c = reason.codePointAt(i)
+      when {
+        // Format characters (Cf: bidi overrides such as U+202E, zero-width marks) are dropped: they could reorder or hide words.
+        Character.getType(c) == Character.FORMAT.toInt() -> Unit
+        // Controls and line or paragraph separators become a space: one paragraph.
+        Character.isISOControl(c) || c == 0x2028 || c == 0x2029 -> plain.append(' ')
+        else -> plain.appendCodePoint(c)
+      }
+      i += Character.charCount(c)
+    }
+    val text = plain.toString().replace(Regex("\\s+"), " ").trim()
+    // Capped by code points, as KIFF caps it, so an emoji is never cut in half.
+    val capped = if (text.codePointCount(0, text.length) > max) text.substring(0, text.offsetByCodePoints(0, max)) else text
+    return capped.takeIf { it.isNotBlank() }
+  }
 
   const val TAF_REASON_MAX = 280
   const val TAF_ABOUT_MAX = 120
