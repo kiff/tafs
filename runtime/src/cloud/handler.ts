@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
-import { type BalanceView, balanceView, CreditsError, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
+import { type BalanceView, balanceView, type CreditRun, CreditsError, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
@@ -44,6 +44,8 @@ import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, settle as settleApproval } from "./approval.js";
+import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
+import { RECIPES } from "../recipes.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -73,7 +75,7 @@ import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, 
  *   GET  /v1/setup                      the account's Setup (Coach), or null
  *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead, never with from_setup
+ *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?, recipe?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead, never with from_setup
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET | POST | DELETE /v1/tafs/{id}/halt  one taf's halt
  *   GET  /v1/tafs/{id}/runs
@@ -97,6 +99,7 @@ import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, 
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
  *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
  *   GET  /v1/tafs/{id}/knob             its dial: what wakes it, when, where results go, and today's work, in tafs cloud's words
+ *   GET  /v1/tafs/{id}/estimate         its likely credits a month, from its own runs, a trial's or our tests', in one line (docs/api.md, "A taf's estimate")
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
@@ -367,6 +370,10 @@ export interface Taf {
   actionResults?: VendorPlace[];
   /** The connected apps' events the live version wakes on (applyKnob): what tafs cloud takes from planque for it. */
   appEvents?: Trigger[];
+  /** The recipe it was built from, by id (recipes/*.md), when its start said so: what its estimate's tests are read for. */
+  recipe?: string;
+  /** What its first week used, once its week-one note is posted in its chat (estimate.ts): posted once, so kept here. */
+  weekOne?: WeekOne;
 }
 
 /** The most a taf's one-line summary keeps, in characters. */
@@ -538,7 +545,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats coach components connect continue conversation drive " +
-  "activity delete deletions deliveries doors door email whatsapp ended events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
+  "activity delete deletions deliveries doors door email whatsapp ended estimate events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
 
@@ -785,6 +792,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return dialVersion(parseBody(event), me, taf, deps, event);
   }
   if (parts.length === 4 && method === "GET" && action === "knob") return knobRoute(event, me, taf, deps);
+  if (parts.length === 4 && method === "GET" && action === "estimate") {
+    if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
+    return estimateRoute(event, me, taf, deps);
+  }
   if (parts.length === 5 && method === "POST" && action === "knob" && parts[4] === "subscriptions") {
     // The owner's phone approved an app event at planque: its subscription is recorded on the trigger, so
     // the dial shows it on and the taf wakes only on that subscription's events (docs/api.md, "The knob").
@@ -861,12 +872,18 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { session, report: report(run) };
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
+    const managing = managesTaf(event, me, taf, deps);
+    // The week-one note, when it's due: read beside the rest, at most WEEK_ONE_READ_MS, and never a reason the
+    // thread fails. Not posted this time, a later read tries again.
+    const weekOne = weekOneDue(taf, deps.now?.() ?? new Date())
+      ? within(managing.then((m) => (m ? weekOneOnRead(bearer(event), me.tenantID, taf, deps) : undefined)).catch(() => undefined), WEEK_ONE_READ_MS)
+      : Promise.resolve(undefined);
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     // What the person wrote that waits for the taf to be done goes now, in each chat where it's done (docs/chat.md).
     await settleChats(event, me, taf, deps).catch(() => undefined);
-    const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, undefined, doors, titles, langOf(event));
+    const [doors, titles, posted] = await Promise.all([managing, titlesOf(event, me, taf, deps), weekOne]);
+    const { messages, components, held, drives, sessions, usage } = await conversation(me, posted ? { ...taf, weekOne: posted } : taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
@@ -1328,6 +1345,8 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   if (budget !== undefined && (!Number.isInteger(budget) || budget <= 0 || budget > MAX_BUDGET_CENTS)) {
     throw new HTTPError(400, `a run's budget is 1 to ${MAX_BUDGET_CENTS} cents`);
   }
+  // The recipe it was built from, kept for its estimate: one of the recipes, never a reason to refuse the taf.
+  const recipe = typeof body.recipe === "string" && RECIPES.some((r) => r.id === body.recipe) ? body.recipe : undefined;
 
   // The agent's key comes one of two ways. From a confirmed KIFF draft
   // (draft_id + claim_secret), tafs cloud claims it itself, so the key never
@@ -1413,7 +1432,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
     ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}), ...(work ? { work } : {}), ...(disclose?.length ? { disclose } : {}),
     ...(writesFor ? { writesFor } : {}), ...(ownerLang !== "en" ? { ownerLang } : {}), ...(workCheck ? { check: workCheck } : {}),
-    ...(tools.length ? { tools } : {}),
+    ...(tools.length ? { tools } : {}), ...(recipe ? { recipe } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -2006,6 +2025,8 @@ export interface ThreadMessage {
   answers?: string;
   /** On a run's report: where its result went, in tafs cloud's words, above the taf's own (delivery.ts). */
   delivered?: string;
+  /** A note tafs cloud posted in the taf's chat (its week-one note): tafs cloud's words, never the model's. */
+  note?: true;
   /**
    * A taf's message that called tools first (kiff/tafs#285): how long it worked on it, from the
    * message before, and the tools it called, by name, in order, with the ones that failed. From
@@ -2243,6 +2264,11 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (line && report) report.delivered = line;
       }
     }
+  }
+  // The week-one note (weekOneOnRead), in the taf's thread at the time it was posted: tafs cloud's words, never the model's.
+  if (!only && taf.weekOne) {
+    const newest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
+    messages.push({ id: `week-one.${taf.id}`, at: taf.weekOne.at, from: "taf", kind: "message", text: weekOneWords(taf.name, taf.weekOne, lang), session: newest?.id ?? "", note: true });
   }
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
@@ -5492,9 +5518,11 @@ async function aiUsage(_event: HTTPEvent, _me: KIFFIdentity, _deps: Deps): Promi
  * GET /v1/usage/balance: the balance now, from KIFF with the person's session, in tafs cloud's words
  * (docs/accounts.md, "The balance read"): for Plan & usage, Settings' Plan card and Home.
  */
-async function usageBalance(event: HTTPEvent, _me: KIFFIdentity, deps: Deps): Promise<BalanceView> {
+async function usageBalance(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<BalanceView> {
   const token = bearer(event), lang = langOf(event);
   const { balance, runs } = await creditsRead(() => readBalanceAndRuns(token, deps.fetch, deps.kiffBase), lang);
+  // The plan, kept for Coach's estimate, which reads no session of the person's.
+  await keepPlan(me.tenantID, balance, deps);
   return balanceView(balance, lang, balance.kind !== "none" || runs > 0 || await ranLastPeriod(token, deps));
 }
 
@@ -5524,7 +5552,18 @@ async function usageCredits(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Pro
   ]);
   const tafs = records.filter((t) => t.job !== SETUP_JOB)
     .map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, opens: !t.removing && listable(access, t.kiffAgent) }));
-  return creditsView(k, tafs, langOf(event));
+  const view = creditsView(k, tafs, langOf(event));
+  if (k.balance && ["solo", "company", "unbounded", "none"].includes(k.balance.kind)) await keepPlan(me.tenantID, k.balance, deps);
+  // This period's rows get their pace, once a taf's own runs make one (docs/accounts.md, "Credits").
+  if (!previous) {
+    const shown = records.filter((t) => view.tafs.some((row) => row.taf === t.id));
+    const paces = await paceLines(token, shown, deps, langOf(event));
+    for (const row of view.tafs) {
+      const line = row.taf ? paces.get(row.taf) : undefined;
+      if (line) row.pace = line;
+    }
+  }
+  return view;
 }
 
 /**
@@ -5542,6 +5581,152 @@ async function tafCredits(event: HTTPEvent, me: KIFFIdentity, id: string, deps: 
     creditsRead(() => readCreditRuns(token, taf.id, previous, after, deps.fetch, deps.kiffBase), langOf(event)),
   ]);
   return tafCreditsView(k, page, { id: taf.id, name: taf.name, kiffAgent: taf.kiffAgent, opens: true }, deps.now?.() ?? new Date(), langOf(event));
+}
+
+/** How long a taf's estimate waits for what it reads, at most: an estimate is never what anything waits on. */
+export const ESTIMATE_MS = 3000;
+/** How long Coach's estimate waits for KIFF's credits, at most: past it, they're left out and the line falls to what's left. */
+const COACH_CREDITS_MS = 2000;
+/** How many pages of KIFF's runs an estimate reads in each period, at most, and how many a Plan & usage row does. */
+const ESTIMATE_PAGES = 5;
+const PACE_PAGES = 2;
+/** How long Plan & usage waits for its rows' pace, at most: past it, the rows show without it. */
+const PACE_READ_MS = 1500;
+/** How long the account's plan is kept from its last balance read, for Coach's tool. */
+const PLAN_KEPT_MS = 2 * 24 * 3600_000;
+const planKey = (tenant: string) => `${tenant}#plan`;
+
+/** What `work` gives within `ms`, or undefined: a read that's late is left out, never waited for. */
+async function within<T>(work: Promise<T>, ms: number): Promise<T | undefined> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<undefined>((resolve) => { timer = setTimeout(() => resolve(undefined), ms); });
+  try { return await Promise.race([work, late]); } finally { clearTimeout(timer); }
+}
+
+/**
+ * The taf's runs over the last 30 days, from KIFF's record with the person's session: this period's pages,
+ * then the period before's, newest first, each run once. Its own counted runs, and the trial runs KIFF gives
+ * credits for. Where the pages run out before the 30 days do, the record covers only from its oldest run read.
+ */
+async function recordFromKIFF(token: string, taf: Taf, now: Date, deps: Deps, pages = ESTIMATE_PAGES): Promise<{ own: Own; trial: number[] }> {
+  const cutoff = now.getTime() - WINDOW_DAYS * 86_400_000;
+  const seen = new Map<string, KIFFRunLike>();
+  let truncated = false, reached = false;
+  for (const previous of [false, true]) {
+    let after = "";
+    for (let page = 0; page < pages; page++) {
+      const p = await readCreditRuns(token, taf.id, previous, after, deps.fetch, deps.kiffBase);
+      for (const r of p.items) if (!seen.has(r.run)) seen.set(r.run, r);
+      if (p.items.some((r) => Date.parse(r.ended) < cutoff)) { reached = true; break; }
+      if (!p.next) break;
+      if (page === pages - 1) truncated = true;
+      after = p.next;
+    }
+    if (reached || truncated) break;
+  }
+  const items = [...seen.values()].filter((r) => Date.parse(r.ended) >= cutoff);
+  const oldest = items.reduce((t, r) => Math.min(t, Date.parse(r.ended)), now.getTime());
+  return { own: ownOf(items, taf, now, truncated ? oldest : undefined), trial: trialsFromKIFF(items) };
+}
+type KIFFRunLike = Awaited<ReturnType<typeof readCreditRuns>>["items"][number];
+
+/** The taf's own counted runs in the last 30 days, and from when the record covers them: its start, or `from` when the read stopped short. */
+function ownOf(items: CreditRun[], taf: Taf, now: Date, from?: number): Own {
+  const cutoff = now.getTime() - WINDOW_DAYS * 86_400_000;
+  const start = from ?? Math.max(cutoff, Date.parse(taf.created) || cutoff);
+  return { runs: samplesFromKIFF(items.filter((r) => Date.parse(r.ended) >= cutoff)), from: new Date(start).toISOString() };
+}
+
+/** The account's plan as its last balance read gave it, kept for Coach's tool. A store that can't keep it keeps nothing. */
+async function keepPlan(tenant: string, b: Parameters<typeof planOf>[0], deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  await deps.coach.put(planKey(tenant), { ...planOf(b), at: now.toISOString() }, new Date(now.getTime() + PLAN_KEPT_MS)).catch(() => undefined);
+}
+
+async function keptPlan(tenant: string, deps: Deps): Promise<Plan | undefined> {
+  const v = await deps.coach?.get(planKey(tenant)).catch(() => undefined) as Partial<Plan> | undefined;
+  if (!v || !["solo", "company", "unbounded", "none"].includes(String(v.kind))) return undefined;
+  return planOf(v as Plan);
+}
+
+/**
+ * GET /v1/tafs/{id}/estimate: the taf's likely credits a month, in one line (docs/api.md, "A taf's estimate"),
+ * read with the person's session: its own counted runs and its trial runs from KIFF, our tests' by its recipe,
+ * and the plan from the balance. 404 for a taf they can't see. KIFF unreadable answers 503 with words, as the
+ * credits reads do: never a figure from elsewhere.
+ */
+async function estimateRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Estimate> {
+  const token = bearer(event), lang = langOf(event), now = deps.now?.() ?? new Date();
+  if (!listable(await creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase), lang), taf.kiffAgent)) throw new HTTPError(404, "no such taf");
+  const [record, balance] = await Promise.all([
+    creditsRead(() => recordFromKIFF(token, taf, now, deps), lang),
+    readBalance(token, deps.fetch, deps.kiffBase).catch(() => undefined),
+  ]);
+  if (balance) await keepPlan(me.tenantID, balance, deps);
+  return estimate({ own: record.own, trial: record.trial, tests: testsFor(taf.recipe), plan: balance ? planOf(balance) : undefined, now }, lang);
+}
+
+/**
+ * Coach's taf_estimate: an existing taf's, by id, or a new taf's, from its draft (its recipe). Coach has no
+ * session of the person's, so the taf's runs are read from KIFF with the call's permit (POST /v1/coach/credits,
+ * readCoachCredits), and the plan is the one the account's last balance read kept. That read failing in any
+ * way (no permit, KIFF unreachable, any answer but a 200 with runs, a 404 from a KIFF without the route yet)
+ * leaves its sources out: the line falls to our tests', or says it can't tell yet. The whole tool answers within
+ * ESTIMATE_MS, or says there's no estimate this time: Coach then says nothing about cost. Never a figure from
+ * anywhere else.
+ */
+async function estimateTool(args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
+  const none: ToolAnswer = { estimate: false, say: "There's no estimate this time: say nothing about cost, and go on." };
+  const now = deps.now?.() ?? new Date();
+  const asked = str(args.lang).trim();
+  try {
+    const taf = args.taf !== undefined && str(args.taf).trim() ? await coachTaf(call.tenant, args.taf, deps) : undefined;
+    const recipe = typeof args.recipe === "string" && args.recipe ? args.recipe : taf?.recipe;
+    const out = await within((async () => {
+      const permit = call.person?.permit;
+      const [may, runs, plan, kept] = await Promise.all([
+        // In a person's chat, only a taf they may see: KIFF not answering is no estimate, as any failure here.
+        taf && call.person ? coachAct(call, taf.kiffAgent, deps).catch(() => undefined) : Promise.resolve(null),
+        // KIFF's credits for the taf, read sooner than the whole tool must answer: late, or failed, they're left out.
+        taf?.kiffAgent && permit ? within(readCoachCredits(permit, taf.kiffAgent, deps.fetch, deps.kiffBase), COACH_CREDITS_MS).catch((err: unknown) => {
+          console.warn(`taf estimate: no credits from KIFF: ${maskedWhy(String((err as Error)?.message ?? err))}`);
+          return undefined;
+        }) : Promise.resolve(undefined),
+        keptPlan(call.tenant, deps),
+        (LANGUAGES as readonly string[]).includes(asked) ? Promise.resolve(asked as Lang) : taf?.ownerLang ? Promise.resolve(taf.ownerLang) : languageKept(call.tenant, deps),
+      ]);
+      if (may === undefined) return undefined;
+      if (may && taf && !may.use && !may.oversee && !may.manage) throw new ToolRefusal(`${taf.name} isn't shared with them`);
+      return estimate({
+        ...(taf && runs ? { own: ownOf(runs, taf, now), trial: trialsFromKIFF(runs) } : {}),
+        tests: testsFor(recipe), plan, now,
+      }, kept);
+    })(), ESTIMATE_MS);
+    if (!out) return none;
+    return { estimate: true, source: out.source, words: out.words,
+      say: "Say words as given, in your message right before the approval card. Never a figure of your own, and never a different one." };
+  } catch (err) {
+    // A taf that isn't there, or isn't theirs, is Coach's to hear; anything else is no estimate this time.
+    if (err instanceof ToolRefusal) throw err;
+    console.warn(`taf estimate: ${maskedWhy(String((err as Error)?.message ?? err))}`);
+    return none;
+  }
+}
+
+/**
+ * Each taf row's pace for Plan & usage ("At this pace, about 640 this month"), from its own counted runs in
+ * KIFF's record, once 7 days of them make a pace. Read beside the period, at most PACE_READ_MS: a row whose
+ * runs can't be read, or come late, shows without it.
+ */
+async function paceLines(token: string, tafs: Taf[], deps: Deps, lang: Lang): Promise<Map<string, string>> {
+  const now = deps.now?.() ?? new Date();
+  const lines = await within(Promise.all(tafs.map(async (t) => {
+    const record = await recordFromKIFF(token, t, now, deps, PACE_PAGES).catch(() => undefined);
+    const line = record ? paceLine(record.own, now, lang) : undefined;
+    return line ? [t.id, line] as const : undefined;
+  })), PACE_READ_MS);
+  return new Map((lines ?? []).filter((x): x is readonly [string, string] => x !== undefined));
 }
 
 /**
@@ -5925,6 +6110,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       reading: "A taf with schedule.on true is working on its schedule: say its next run. open_runs lists only what runs this minute.",
     };
   }
+  // A new taf's estimate has no taf yet: it's read from the draft.
+  if (name === "taf_estimate") return estimateTool(args, call, deps);
   const taf = await coachTaf(call.tenant, args.taf, deps);
   const n = Number(args.n);
   // In a person's chat, what KIFF says they may do with this taf; tafs cloud only applies it.
@@ -6432,6 +6619,44 @@ export async function sweepHealth(deps: Deps): Promise<Array<{ tenant: string; t
   return told;
 }
 
+/** A taf's first week, and how long after it its note may still be posted: never to a taf from long before. */
+const WEEK_MS = 7 * 86_400_000;
+const WEEK_ONE_LATE_MS = 7 * 86_400_000;
+/** How long a conversation read waits for the week-one note, at most: past it, the thread shows without it. */
+const WEEK_ONE_READ_MS = 1500;
+
+/** Whether a taf's week-one note is due: 7 to 14 days after it started, and not posted yet. */
+function weekOneDue(taf: Taf, now: Date): boolean {
+  if (taf.removing || taf.job === SETUP_JOB || taf.weekOne) return false;
+  const age = now.getTime() - Date.parse(taf.created);
+  return age >= WEEK_MS && age < WEEK_MS + WEEK_ONE_LATE_MS;
+}
+
+/**
+ * The week-one note (docs/api.md, "A taf's estimate"): one note in a taf's chat with what its first week used and
+ * a month at that pace ("Refunds used 120 credits in its first week, so about 510 a month at this pace."). Posted
+ * on the first read of the taf's conversation, by someone who manages it, between 7 and 14 days after it
+ * started: its counted runs of its first 7 days are read from KIFF with that person's session (KIFF lists
+ * everyone's runs on a taf only to someone who manages it), and the figures are kept on the taf (`weekOne`),
+ * written only while the taf is as read, so it's posted once; the thread shows it in the reader's language.
+ * Best effort: anything that fails posts nothing, and a later read tries again. A first week the read can't
+ * cover whole (more runs since than its pages hold) gets none, and a taf past its second week never does.
+ */
+async function weekOneOnRead(token: string, tenant: string, taf: Taf, deps: Deps): Promise<WeekOne | undefined> {
+  const now = deps.now?.() ?? new Date();
+  if (!weekOneDue(taf, now)) return undefined;
+  const start = Date.parse(taf.created);
+  const { own } = await recordFromKIFF(token, taf, now, deps);
+  if (Date.parse(own.from) > start) return undefined;
+  const week = own.runs.filter((r) => { const t = Date.parse(r.at); return t >= start && t < start + WEEK_MS; });
+  const read = await deps.tafs.get(tenant, taf.id);
+  if (!read || read.removing || read.weekOne) return read?.weekOne;
+  const weekOne = weekOneOf(week, now);
+  if (!(await deps.tafs.putIf(tenant, { ...read, weekOne }, read))) return undefined;
+  await tellChange(tenant, "taf", taf.id, deps);
+  return weekOne;
+}
+
 function healthNotification(taf: Taf, reason: Health["reasons"][number], lang: Lang = "en"): Notification {
   return {
     kind: "alert",
@@ -6636,7 +6861,7 @@ async function sendingCheck(tenant: string, agent: string | undefined, tools: st
  * (kiff/tafs#476): `summary`, `kickoff`, `instructions`, and `cron` with the `check` its schedule reads first, or `unscheduled`. A `job` naming
  * one of the five starter jobs is refused (makeTaf), and Coach is told why.
  */
-interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; tools?: string[] }
+interface NewTaf { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string; kickoff?: string; instructions?: string; cron?: string; check?: unknown; disclose?: unknown; writes_for?: unknown; tools?: string[]; recipe?: unknown }
 
 async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
@@ -6669,6 +6894,8 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       ...(Array.isArray(taf.disclose) ? { disclose: taf.disclose } : {}),
       ...(typeof taf.writes_for === "string" ? { writes_for: taf.writes_for } : {}),
       ...(taf.tools ? { tools: taf.tools } : {}),
+      // The recipe Coach built it from, when the result names one: kept for its estimate.
+      ...(typeof taf.recipe === "string" ? { recipe: taf.recipe } : {}),
     }, me, deps);
     const id = (out.taf as { id: string }).id;
     // The answer to a result carries only the taf's id, so a first check that couldn't read reaches Coach as a line

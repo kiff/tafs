@@ -243,7 +243,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
 
   /** Lines where the English word isn't the glossary's term (a verb where the term is a noun), by catalog key. */
   const NOT_THE_TERM: Record<string, string[]> = {
-    run: ["dial_run_tap", "dial_tap_latest", "failing_follow_up", "waited_follow_up", "cts_g_run", "cts_version_try_does"], // "to run": the verb, not a run
+    run: ["dial_run_tap", "dial_tap_latest", "failing_follow_up", "waited_follow_up", "cts_g_run", "cts_version_try_does", "est_never_past_solo"], // "to run" (and "run out"): the verb, not a run
   };
 
   it("uses the glossary's word for each glossary term, in every line of every language", () => {
