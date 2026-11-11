@@ -68,9 +68,15 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
     if (url.includes("/v1/me/activity")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
       // KIFF narrows to one agent with ?actor=.
-      const actor = new URL(url).searchParams.get("actor");
+      const q = new URL(url).searchParams, actor = q.get("actor");
       const calls = (account.calls ?? []).filter((c) => actor === null || c.actor_id === actor);
-      return new Response(JSON.stringify({ calls }), { status: 200 });
+      const offset = Number(q.get("offset") ?? 0), limit = Number(q.get("limit") ?? calls.length);
+      return new Response(JSON.stringify({ calls: calls.slice(offset, offset + limit), shown: calls.length }), { status: 200 });
+    }
+    const receipt = /\/v1\/receipts\/([^/?]+)$/.exec(url);
+    if (receipt) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      return new Response(JSON.stringify({ trace_id: decodeURIComponent(receipt[1]!), signature: "sig" }), { status: 200 });
     }
     const halt = /\/v1\/(?:agents\/([^/]+)\/)?halt$/.exec(url);
     if (halt) {
@@ -4681,5 +4687,47 @@ describe("the oldest waiting case and the owner's promise", () => {
     w2.agents.halts.set(`t_acme|${RAE}`, { on: true, at: ago(10) });
     expect(await sweepLate(d2)).toEqual([]);
     expect(w2.pushed).toHaveLength(0);
+  });
+});
+
+describe("the Record across the person's tafs", () => {
+  const at = (hours: number) => new Date(Date.parse("2026-11-05T10:00:00Z") - hours * 3_600_000).toISOString();
+  const calls = (): ActivityCall[] => [
+    { proposal_id: "p-reply", actor_id: "rae", action_name: "send_reply", title: "Reply to the customer", outcome: "allowed", created_at: at(1), about: "Order 1042", tool_outcome: { status: "refused_by_tool", message: "it answered 422" } },
+    { proposal_id: "p-refund", actor_id: "rae", action_name: "create_refund", title: "Refund a payment", outcome: "allowed", created_at: at(2), about: "Order #1042", amount: { value: "150.00", unit: "EUR" }, receipt: { trace_id: "tr-refund", status: "anchored" } },
+    { proposal_id: "p-other", actor_id: "someone-else", action_name: "create_refund", outcome: "allowed", created_at: at(3), about: "Order 1042" },
+  ];
+
+  it("searches the person's tafs by order, opens the case, and names the step that didn't go through", async () => {
+    const w = world();
+    w.now = new Date("2026-11-05T10:00:00Z");
+    w.account.calls = calls();
+    const found = await call(w, "GET", "/v1/record", { token: "ana_paris", query: "q=order%201042" });
+    expect(found.status).toBe(200);
+    expect(found.body.entries.map((e: { call: ActivityCall }) => e.call.proposal_id)).toEqual(["p-reply", "p-refund"]);
+    expect(found.body.entries[1]).toMatchObject({ taf: { id: RAE, name: "Rae" }, about: "Order #1042" });
+    const view = await call(w, "GET", `/v1/record/cases/${encodeURIComponent("order 1042")}`, { token: "ana_paris" });
+    expect(view.status).toBe(200);
+    expect(view.body.steps.map((s: { title: string }) => s.title)).toEqual(["Refund a payment", "Reply to the customer"]);
+    expect(view.body.failed).toMatchObject({ next: { kind: "ask_coach", taf: "Rae" } });
+    expect((await call(w, "GET", "/v1/record/cases/Order%209999", { token: "ana_paris" })).status).toBe(404);
+    // Someone KIFF says may not use or oversee Rae sees none of its Record.
+    w.account.access = { rae: { use: false, oversee: false, manage: false } };
+    expect((await call(w, "GET", "/v1/record", { token: "ana_paris", query: "q=1042" })).body.entries).toEqual([]);
+  });
+
+  it("exports the receipts for those who oversee every taf, and no one else", async () => {
+    const w = world();
+    w.now = new Date("2026-11-05T10:00:00Z");
+    w.account.calls = calls();
+    w.account.access = { rae: { use: true, oversee: false, manage: false } };
+    const refused = await call(w, "GET", "/v1/record/receipts", { token: "ana_paris", query: "from=2026-11-05&to=2026-11-05" });
+    expect(refused.status).toBe(403);
+    w.account.access = { rae: { use: true, oversee: true, manage: false } };
+    const r = await call(w, "GET", "/v1/record/receipts", { token: "ana_paris", query: "from=2026-11-05&to=2026-11-05" });
+    expect(r.status).toBe(200);
+    expect(r.body.receipts).toEqual([{ trace_id: "tr-refund", signature: "sig" }]);
+    expect(r.body.csv.split("\r\n").filter(Boolean)).toHaveLength(3);
+    expect((await call(w, "GET", "/v1/record/receipts", { token: "ana_paris", query: "from=2026-01-01&to=2026-11-05" })).status).toBe(400);
   });
 });
