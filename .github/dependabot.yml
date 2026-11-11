@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
+    # The workflows pin each action by commit (# its tag beside it): a new
+    # release waits a week before Dependabot proposes moving the pin.
+    cooldown:
+      default-days: 7
   - package-ecosystem: gradle
     directory: /android
     schedule:
