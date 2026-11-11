@@ -2400,6 +2400,7 @@ object Words {
   }
   object Work {
     val answerWithin: String get() = Res.s(R.string.work_answer_within)
+    fun answerWithinDays(count: Int): String = Res.p(R.plurals.work_answer_within_days, count, Res.number(count))
     fun answerWithinHours(count: Int): String = Res.p(R.plurals.work_answer_within_hours, count, Res.number(count))
     val answerWithinLine: String get() = Res.s(R.string.work_answer_within_line)
     val answerWithinNone: String get() = Res.s(R.string.work_answer_within_none)

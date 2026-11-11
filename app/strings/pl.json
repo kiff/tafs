@@ -2353,6 +2353,12 @@
   "voice.voice_becomes_text_device_not": "Twój głos zamienia się w tekst na tym urządzeniu. Nie zostanie wysłany, dopóki go nie wyślesz.",
   "voice.what_you_said_stays_message": "Podyktowany tekst zostaje w polu wiadomości, niewysłany.",
   "work.answer_within": "Odpowiedź w ciągu",
+  "work.answer_within_days": {
+    "one": "{count} dzień",
+    "few": "{count} dni",
+    "many": "{count} dni",
+    "other": "{count} dnia"
+  },
   "work.answer_within_hours": {
     "one": "{count} godzina",
     "few": "{count} godziny",
