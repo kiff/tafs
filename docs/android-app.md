@@ -181,6 +181,20 @@ tafs cloud leaves it out (it couldn't read all of it), the app counts what it ha
 Android shows each alert on the lock screen as it comes, with no count of its own there. An app's
 sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
+**A held call's card** (`HeldCallCard`) has KIFF's face: the amount in its declared unit, the
+action as KIFF titles it, and the Card rule it crossed in KIFF's words (`reason_text`). Under it,
+when KIFF kept the taf's words with the call, **The taf says** (`needs_you.taf_says`) shows them
+under their own heading:
+- `taf_about`, what the call is on, as a business reference ("Order 1042");
+- `taf_reason`, the customer's reason ("Arrived broken, photo attached").
+
+These come from text a customer wrote, so they're drawn as plain text, one paragraph each, with
+control characters and line breaks made spaces (`KiffMapping.tafSays`), and capped at what KIFF
+keeps (120 and 280). A link or markup shows only as words. They never stand in for KIFF's amount,
+rule or action. The gateway's own arguments (`kiff_operation_id`, `kiff_about`, `kiff_reason`)
+aren't repeated under Details, where the call's ids stay. A KIFF that keeps neither shows the card
+as before.
+
 **A Card asked to take another currency** (KIFF's `card_unit` exception, as tafs cloud draws it in
 `card_unit_exceptions`): one panel (`CardUnitExceptionPanel`) with tafs cloud's title, words and
 history, in Needs you (and its count), at the top of the taf's Setup, and above its Activity, where

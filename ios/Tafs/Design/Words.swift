@@ -2487,6 +2487,8 @@ enum Words {
         static var someoneAnswers: String { Words.line("needs_you.someone_answers") }
         /// Needs you, {n}
         static func tabLabel(n: String) -> String { Words.line("needs_you.tab_label", n) }
+        /// The taf says
+        static var tafSays: String { Words.line("needs_you.taf_says") }
         /// Needs you
         static var title: String { Words.line("needs_you.title") }
         /// Turn on alerts

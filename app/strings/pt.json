@@ -1290,6 +1290,7 @@
   "needs_you.sign_in_again_to_answer": "Termine a sessão e inicie sessão novamente para responder a partir deste telefone, para que o KIFF conheça a sua chave. Ou responda a este no KIFF.",
   "needs_you.someone_answers": "Alguém que aprova nesta conta responde a isto. A resposta aparece aqui.",
   "needs_you.tab_label": "Precisa de si, {n}",
+  "needs_you.taf_says": "O taf diz",
   "needs_you.title": "Precisa de si",
   "needs_you.turn_alerts": "Ativar alertas",
   "needs_you.turning_on": "A ativar…",

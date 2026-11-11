@@ -323,9 +323,23 @@ object KiffMapping {
       accountingVersion = e.accountingVersion,
       nextSteps = e.nextSteps ?: emptyList(),
       details = details(e),
+      tafSays = tafSays(e.tafReason),
+      tafAbout = tafSays(e.tafAbout, TAF_ABOUT_MAX),
       install = install(e, coach),
     )
   }
+
+  /**
+   * The taf's line as the card shows it: plain text on one paragraph, with control characters and line breaks made spaces, and no
+   * more than KIFF keeps ([max]: 280 for the reason, 120 for what it's on). It's drawn as text alone, so a link or markup in it is
+   * only words. Blank is none.
+   */
+  fun tafSays(reason: String?, max: Int = TAF_REASON_MAX): String? =
+    reason?.map { if (it.isISOControl() || it == '\u2028' || it == '\u2029') ' ' else it }?.joinToString("")
+      ?.replace(Regex("\\s+"), " ")?.trim()?.take(max)?.takeIf { it.isNotBlank() }
+
+  const val TAF_REASON_MAX = 280
+  const val TAF_ABOUT_MAX = 120
 
   /**
    * The one breach a held call names (kiff/tafs#236, item 33). A call over both its limit for one call
@@ -397,7 +411,8 @@ object KiffMapping {
     val shown = (e.parameterUnits?.keys.orEmpty() + e.parameters?.keys.orEmpty()).map { it.lowercase() }.toSet()
     return arguments.keys.sorted().mapNotNull { key ->
       val k = key.lowercase()
-      if (k in shown || k == "kiff_operation_id") return@mapNotNull null
+      // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
+      if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@mapNotNull null
       val text = argumentText(arguments[key]).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
       "$key: $text"
     }
