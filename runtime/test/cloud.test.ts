@@ -4664,6 +4664,19 @@ describe("the oldest waiting case and the owner's promise", () => {
     expect((await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" })).body.oldest_waiting).toBeUndefined();
   });
 
+  it("keeps the promise on Home when the taf's runs can't be read: it's a setting, not a reading", async () => {
+    const { w } = setUp();
+    w.now = AT;
+    await call(w, "PUT", `/v1/tafs/${RAE}/promise`, { token: "ana", body: { hours: 4 } });
+    w.agents.fail.set("runs", new Error("kiff/agents is down"));
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.status).toBe(200);
+    const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(rae.promise).toEqual({ hours: 4 });
+    expect(rae.oldest_waiting).toBeUndefined();
+    expect(rae.work).toBeUndefined();
+  });
+
   it("tells the phones that answer once per waiting spell, past the promise only, and never without one", async () => {
     const { w, deps } = setUp();
     w.now = AT;
