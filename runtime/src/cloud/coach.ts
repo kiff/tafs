@@ -140,6 +140,18 @@ export const TOOLS: ToolDef[] = [
       "grouped by connection, and call version_install for that version.",
   },
   {
+    name: "taf_estimate", line: "Say what a taf will likely use", read: true,
+    properties: {
+      taf: { type: "string", description: "An existing taf's id, from tafs_state, or its name. Omit it for a new taf." },
+      recipe: { type: "string", description: "A new taf built from a recipe: the recipe's id." },
+      lang: { type: "string", enum: ["en", "de", "fr", "es", "it", "pt", "nl", "pl"], description: "The owner's language, from the [tafs language] line; omitted, the account's." },
+    },
+    required: [],
+    description: "A taf's likely credits a month, in one line for the owner, from records only, in credits as KIFF counts them: its own runs, a trial's, or the same job's in our tests. " +
+      "Call it before the result of a new scheduled taf, and before a dial version of a scheduled taf, then say its words as given in your message right before the approval card. " +
+      "Never a figure of your own. When it answers estimate: false, say nothing about cost and go on: it never holds anything up.",
+  },
+  {
     name: "version_try", line: "Try a version of a taf, sending nothing",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 }, input: { type: "string", description: "What the trial works on; omitted, what each scheduled run asks." } },
     required: ["taf", "n"],
@@ -206,13 +218,15 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   // A Card of its own (gap 10): an account's Cards are found by id, so a read added to coach-reads would
   // never be issued; this one is asked for on the phone's next read, as any Card added later.
   { id: "coach-checks", actions: ["taf_check"], limit: 200, asks: false },
+  // A read, with a Card of its own for the same reason: a taf's estimate before the owner approves it.
+  { id: "coach-estimates", actions: ["taf_estimate"], limit: 200, asks: false },
 ];
 
 /** Coach's tools in the four groups the tools step shows, in TOOLS' order within each. */
 export const COACH_TOOL_GROUPS: Array<{ id: "watch" | "run" | "build" | "drive"; tools: string[] }> = [
   { id: "watch", tools: ["tafs_state", "taf_run", "taf_check"] },
   { id: "run", tools: ["taf_task", "run_stop", "taf_pause"] },
-  { id: "build", tools: ["taf_dial", "version_try", "version_install", "taf_results"] },
+  { id: "build", tools: ["taf_dial", "taf_estimate", "version_try", "version_install", "taf_results"] },
   { id: "drive", tools: ["app_look", "app_act"] },
 ];
 
