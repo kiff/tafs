@@ -38,4 +38,15 @@ class PromiseRowTest {
     rule.waitForIdle()
     assertEquals(listOf<Int?>(null), picked)
   }
+
+  @Test fun theMenuOpensUnderItsValueNotAtTheRowsStart() {
+    rule.setShown { TafsTheme { PromiseRow(hours = 4) {} } }
+    val label = rule.onNodeWithText("Answer within").fetchSemanticsNode().positionOnScreen.x
+    val value = rule.onNodeWithText("4 hours", substring = true).fetchSemanticsNode().positionOnScreen.x
+    rule.onNodeWithText("4 hours", substring = true).performClick()
+    rule.waitForIdle()
+    // The menu is a window of its own: on screen, its first choice starts at the value, right of the row's label.
+    val choice = rule.onNodeWithText("Not set").fetchSemanticsNode().positionOnScreen.x
+    org.junit.Assert.assertTrue("the menu opens at its value ($choice, value $value, label $label)", choice > label + (value - label) / 2)
+  }
 }
