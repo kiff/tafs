@@ -57,6 +57,13 @@ export const en = {
   health_fix_narrow_say: "Its last check found work too big for one run. Narrow what it reads, so each piece fits one run.",
   health_fix_credits: "Add credits",
   health_fix_credits_ask: "Ask an admin for credits",
+  // The oldest waiting case (waiting.ts): durations, the line, and the alert past the owner's promise.
+  waiting_minutes: (n: number) => `${n} min`,
+  waiting_hours: (n: number) => `${n} h`,
+  waiting_days: (n: number) => (n === 1 ? "1 day" : `${n} days`),
+  waiting_line: (age: string) => `Oldest case waiting ${age}`,
+  waiting_late: (age: string, promise: string) => `Oldest case waiting ${age}, past the ${promise} you set`,
+  waiting_alert: (age: string, promise: string) => `A case has waited ${age}, past the ${promise} you set.`,
   health_do_that_run: "Open that run to see what it did.",
   work_halted: "Halted · resume it from Halt",
   work_needs_you_count: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 request needs you" : `${n} requests need you`),

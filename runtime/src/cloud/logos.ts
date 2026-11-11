@@ -49,8 +49,10 @@ export function logoPath(key: string): string {
 }
 
 const srcKey = (key: string) => `logo#src#${key}`;
-const pngKey = (key: string) => `logo#png#${key}`;
-const badKey = (key: string) => `logo#bad#${key}`;
+// "png2": logos drawn on their tile; those kept before it are drawn again once.
+const pngKey = (key: string) => `logo#png2#${key}`;
+// "bad2": sources refused before a public DOCTYPE was accepted are tried again, not kept blank for a day.
+const badKey = (key: string) => `logo#bad2#${key}`;
 const dayKey = (now: Date) => `logo#new#${now.toISOString().slice(0, 10)}`;
 
 /** Whether a source URL may be fetched: https on the default port, with a host name and no credentials. */
@@ -104,7 +106,7 @@ export interface Source {
 /** How logos are fetched and drawn: the real ones by default, fakes in tests. */
 export interface LogoDeps {
   fetchSource?: (url: string) => Promise<Source>;
-  render?: (svg: string) => Promise<Uint8Array>;
+  render?: (input: string | { png: Uint8Array }) => Promise<Uint8Array>;
   now?: () => Date;
 }
 
@@ -132,7 +134,9 @@ export async function logoFor(store: CoachStore | undefined, key: string, deps: 
   let png: Uint8Array;
   try {
     png = await drawn(await (deps.fetchSource ?? fetchSource)(src.url), deps.render ?? render);
-  } catch {
+  } catch (err) {
+    // Said in the log, so a logo that stays blank says why; the source's key, never the account.
+    console.warn(JSON.stringify({ event: "logo_refused", key, why: err instanceof Error ? err.message : String(err) }));
     await store.put(badKey(key), { at: now.toISOString() }, new Date(now.getTime() + BAD_MS)).catch(() => undefined);
     return undefined;
   }
@@ -142,15 +146,17 @@ export async function logoFor(store: CoachStore | undefined, key: string, deps: 
   return { png };
 }
 
-/** A source as a PNG: a PNG checked and kept as it is, or an SVG checked and drawn. Anything else throws. */
-async function drawn(source: Source, draw: (svg: string) => Promise<Uint8Array>): Promise<Uint8Array> {
+/** A source as a PNG on its tile: a PNG or an SVG, checked, then drawn. Anything else throws. */
+async function drawn(source: Source, draw: (input: string | { png: Uint8Array }) => Promise<Uint8Array>): Promise<Uint8Array> {
   if (source.bytes.length > SOURCE_MAX) throw new Error("too big");
   if (source.type === "image/png") {
     if (!pngOK(source.bytes)) throw new Error("not a PNG we keep");
-    return source.bytes;
+    const png = await draw({ png: source.bytes });
+    if (!pngOK(png)) throw new Error("the drawing isn't a PNG");
+    return png;
   }
   if (source.type !== "image/svg+xml") throw new Error(`not an image we draw: ${source.type}`);
-  const svg = new TextDecoder("utf-8", { fatal: true }).decode(source.bytes);
+  const svg = withoutPublicDoctype(new TextDecoder("utf-8", { fatal: true }).decode(source.bytes));
   const why = unsafeSVG(svg);
   if (why) throw new Error(why);
   const png = await draw(svg);
@@ -167,6 +173,15 @@ export function pngOK(b: Uint8Array): boolean {
   const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
   const w = view.getUint32(16), h = view.getUint32(20);
   return w > 0 && h > 0 && w <= PNG_SIDE_MAX && h <= PNG_SIDE_MAX;
+}
+
+/**
+ * The SVG without its public DOCTYPE, the line many editors write (`<!DOCTYPE svg PUBLIC "…" "…">`): it names
+ * the SVG 1.1 DTD, loads nothing and declares nothing. One with an internal subset (`[`), where entities are
+ * declared, is left as it is, so unsafeSVG refuses it.
+ */
+export function withoutPublicDoctype(svg: string): string {
+  return svg.replace(/<!DOCTYPE\s+svg\s+PUBLIC\s+"[^"[\]<>]*"\s+"[^"[\]<>]*"\s*>/i, "");
 }
 
 /**
@@ -200,14 +215,16 @@ function rendererFiles(): { worker: URL; wasm: string } {
 }
 
 /**
- * Draws an SVG as a LOGO_PX PNG in a worker thread, stopped after RENDER_MS. The worker loads no font and
- * no file, and refuses an SVG that names an image to load.
+ * Draws a logo, an SVG or a PNG already checked, as a LOGO_PX square PNG: the logo centred on a light rounded
+ * tile, the same on light and dark screens and in both apps. In a worker thread, stopped after RENDER_MS. The
+ * worker loads no font and no file, and refuses an SVG that names an image to load.
  */
-export function render(svg: string, opts: { ms?: number; worker?: URL } = {}): Promise<Uint8Array> {
+export function render(input: string | { png: Uint8Array }, opts: { ms?: number; worker?: URL } = {}): Promise<Uint8Array> {
   const files = rendererFiles();
   const ms = opts.ms ?? RENDER_MS;
+  const source = typeof input === "string" ? { svg: input } : { png: input.png };
   return new Promise((resolve, reject) => {
-    const worker = new Worker(opts.worker ?? files.worker, { workerData: { svg, px: LOGO_PX, wasm: files.wasm }, resourceLimits: { maxOldGenerationSizeMb: 64 } });
+    const worker = new Worker(opts.worker ?? files.worker, { workerData: { ...source, px: LOGO_PX, wasm: files.wasm }, resourceLimits: { maxOldGenerationSizeMb: 64 } });
     const timer = setTimeout(() => { void worker.terminate(); reject(new Error("the drawing took too long")); }, ms);
     worker.once("message", (m: { png?: Uint8Array; error?: string }) => {
       clearTimeout(timer);
