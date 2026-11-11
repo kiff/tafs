@@ -5159,6 +5159,24 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Answer within: the owner's promise for a taf, whole hours or nil to clear it. tafs cloud
+    /// checks and keeps it, so the work is read again after, whatever came of it; a promise that
+    /// couldn't be set says why under the work.
+    func setPromise(_ tafID: UUID, hours: Int?) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        workErrors[tafID] = nil
+        let gen = accountGeneration
+        var failed: String?
+        do {
+            try await cloud.setPromise(c.id, hours: hours)
+        } catch {
+            failed = Words.Work.answerWithinNotSet(why: "\(error.localizedDescription)")
+        }
+        guard gen == accountGeneration else { return }
+        await loadWork(tafID)
+        if let failed { workErrors[tafID] = failed }
+    }
+
     /// Send again: a door reply given up on after its tries goes once more. It does no work
     /// and signs nothing. The work is read again after, whatever came of it.
     func sendAgain(_ tafID: UUID, run: String) async {
