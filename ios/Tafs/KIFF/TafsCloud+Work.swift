@@ -149,15 +149,39 @@ extension TafsCloud {
             }
         }
 
+        /// Its oldest waiting case, in tafs cloud's words (docs/reliability.md, "Its oldest waiting
+        /// case"): since when, the line ("Oldest case waiting 5 h"), and whether it's past the
+        /// owner's promise. Sent only while a case waits.
+        struct OldestWaiting: Decodable, Equatable {
+            var since: Date?
+            var words = ""
+            var late = false
+            private enum CodingKeys: String, CodingKey { case since, words, late }
+            init(since: Date? = nil, words: String = "", late: Bool = false) { self.since = since; self.words = words; self.late = late }
+            init(from decoder: Decoder) throws {
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                since = (try? c.decodeIfPresent(Date.self, forKey: .since)) ?? nil
+                words = (try? c.decode(String.self, forKey: .words)) ?? ""
+                late = (try? c.decode(Bool.self, forKey: .late)) ?? false
+            }
+        }
+
         var summary: Summary?
         var requests: [Request] = []
         var skipped: [Skipped] = []
         /// Its health, when tafs cloud could read it in time.
         var health: Health?
+        var oldestWaiting: OldestWaiting?
+        /// The owner's promise: how many whole hours a case may wait before the phones that answer
+        /// its holds are told. Nil when none is set.
+        var promiseHours: Int?
 
-        enum CodingKeys: String, CodingKey { case summary, requests, skipped, health }
-        init(summary: Summary? = nil, requests: [Request] = [], skipped: [Skipped] = [], health: Health? = nil) {
+        private struct Promise: Decodable { let hours: Int }
+        enum CodingKeys: String, CodingKey { case summary, requests, skipped, health, oldestWaiting = "oldest_waiting", promise }
+        init(summary: Summary? = nil, requests: [Request] = [], skipped: [Skipped] = [], health: Health? = nil,
+             oldestWaiting: OldestWaiting? = nil, promiseHours: Int? = nil) {
             self.summary = summary; self.requests = requests; self.skipped = skipped; self.health = health
+            self.oldestWaiting = oldestWaiting; self.promiseHours = promiseHours
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -166,7 +190,14 @@ extension TafsCloud {
             // An older tafs cloud sends none.
             skipped = (try? c.decode([Skipped].self, forKey: .skipped)) ?? []
             health = (try? c.decodeIfPresent(Health.self, forKey: .health)) ?? nil
+            // Neither ever fails the read: a line that isn't one is none.
+            oldestWaiting = ((try? c.decodeIfPresent(OldestWaiting.self, forKey: .oldestWaiting)) ?? nil)
+                .flatMap { $0.words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+            promiseHours = ((try? c.decodeIfPresent(Promise.self, forKey: .promise)) ?? nil).map(\.hours).flatMap { $0 > 0 ? $0 : nil }
         }
+
+        /// The hours a case may wait, as the owner picks them; tafs cloud checks the range (1 to 168).
+        static let promiseChoices = [1, 2, 4, 8, 24, 48, 168]
 
         /// Open the work still asking for attention, otherwise the newest request.
         var focusedRequest: Request? { requests.first { $0.state != "done" } ?? requests.first }
@@ -202,6 +233,22 @@ extension TafsCloud {
 
     /// Send again: the door reply of `run`, given up on after its tries, sent once more. It
     /// does no work and signs nothing. Returns the delivery's state: sent, not_sent or waiting.
+    /// The owner's promise (`PUT …/promise`, for whoever may change its Cards): how many whole
+    /// hours a case may wait before the phones that answer its holds are told, or nil to clear it.
+    /// tafs cloud checks the range and keeps it; the app keeps no copy.
+    func setPromise(_ id: String, hours: Int?) async throws {
+        struct Body: Encodable {
+            let hours: Int?
+            enum CodingKeys: String, CodingKey { case hours }
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                if let hours { try c.encode(hours, forKey: .hours) } else { try c.encodeNil(forKey: .hours) }
+            }
+        }
+        struct Response: Decodable {}
+        let _: Response = try await send("PUT", "/v1/tafs/\(escaped(id))/promise", body: Body(hours: hours))
+    }
+
     @discardableResult
     func sendAgain(_ id: String, run: String, place: String = "door_reply") async throws -> String {
         struct Response: Decodable { var state: String? }

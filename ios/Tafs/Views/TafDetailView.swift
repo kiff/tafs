@@ -17,8 +17,6 @@ struct TafDetailView: View {
     @State private var confirmRemove = false
     /// What removing it did, shown once it's done.
     @State private var removal: String?
-    /// Set on the tap itself, before the request starts, so a second tap can't send one.
-    @State private var runTapped = false
     /// The Card in front of the stack (kiff/tafs#211); nil for the first, the live one.
     @State private var frontCard: String?
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -39,6 +37,16 @@ struct TafDetailView: View {
     /// Reconnecting is offered to whoever manages the taf and may use Coach, signed in.
     static func offersReconnect(manages: Bool, mayUseCoach: Bool, mode: AppModel.Mode) -> Bool {
         mode == .kiff && manages && mayUseCoach
+    }
+
+    /// What a tab of the taf's page draws: its chat, the Activity of a taf on tafs cloud
+    /// (`TafActivityList`, with its runs and its work), or a scrolling page (the Card, Setup, and
+    /// the sample's Activity).
+    enum Pane: Equatable { case chat, activityList, scroll }
+    static func pane(section: Int, kiff: Bool, canChat: Bool) -> Pane {
+        if section == 0 && canChat { return .chat }
+        if section == 1 && kiff { return .activityList }
+        return .scroll
     }
 
     /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
@@ -76,11 +84,12 @@ struct TafDetailView: View {
                 .padding(.bottom, 4)
 
                 HStack(alignment: .top, spacing: 0) {
-                    if section == 0 && model.canChat(taf.id) {
+                    switch Self.pane(section: section, kiff: model.mode == .kiff, canChat: model.canChat(taf.id)) {
+                    case .chat:
                         TafChatView(tafID: taf.id, onScroll: fold)
-                    } else if section == 1 && model.mode == .kiff {
+                    case .activityList:
                         TafActivityList(tafID: taf.id, selection: $activitySelection)
-                    } else {
+                    case .scroll:
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
                                 switch section {
@@ -196,7 +205,9 @@ struct TafDetailView: View {
         }
     }
 
-    /// Activity: what it waits for from the owner, then what it did, by day.
+    /// The Activity of a taf tafs cloud doesn't run (the sample's): what it waits for from the
+    /// owner, then what it did, by day. A taf on tafs cloud draws `TafActivityList` instead, with
+    /// its runs and its work (`TafDetailView.pane`).
     @ViewBuilder
     private func activity(_ taf: Taf) -> some View {
         // Beside it on a wide screen, in the second column.
@@ -206,37 +217,6 @@ struct TafDetailView: View {
                 Eyebrow(text: Words.NeedsYou.title, color: Theme.amber)
                 ForEach(held) { HeldCallCard(call: $0) }
             }
-        }
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil { WorkPanel(tafID: taf.id) }
-        if let cloud = model.cloudTaf(for: taf.id) {
-            let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
-            Panel {
-                Eyebrow(text: Words.Taf.runs)
-                if cloud.worksFromChat {
-                    // Its tools can't find its work by themselves (kiff/tafs#138): no schedule.
-                    Text(Words.Taf.worksFromChat)
-                        .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
-                        .scaledFont(15).foregroundColor(Theme.ink)
-                    Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
-                        guard !runTapped else { return }
-                        runTapped = true
-                        Task {
-                            if await model.runNow(cloud) != nil { await model.loadReport(cloud) }
-                            runTapped = false
-                        }
-                    }
-                    .buttonStyle(OutlineButtonStyle())
-                    .disabled(inFlight)
-                    // Run now started no run: tafs cloud's words, as they are.
-                    if let words = model.runNowWords[cloud.id] {
-                        Text(words).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-            RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }
-                .task(id: cloud.id) { await model.loadReport(cloud) }
         }
         HStack(spacing: 6) {
             ForEach(ActivityFilter.allCases, id: \.self) { f in
@@ -459,10 +439,89 @@ struct HealthLines: View {
     }
 }
 
+/// A taf's runs on tafs cloud: when it runs next (or that it works from its chat), and Run now,
+/// with tafs cloud's words when Run now started nothing. Drawn on a cloud taf's Activity.
+struct RunsPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+    /// Set on the tap itself, before the request starts, so a second tap can't send one.
+    @State private var runTapped = false
+
+    var body: some View {
+        if let cloud = model.cloudTaf(for: tafID) {
+            let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
+            Panel {
+                Eyebrow(text: Words.Taf.runs)
+                if cloud.worksFromChat {
+                    // Its tools can't find its work by themselves (kiff/tafs#138): no schedule.
+                    Text(Words.Taf.worksFromChat)
+                        .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
+                        .scaledFont(15).foregroundColor(Theme.ink)
+                    Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
+                        guard !runTapped else { return }
+                        runTapped = true
+                        Task {
+                            // The run it started shows among the runs it kept.
+                            if await model.runNow(cloud) != nil { await model.loadRunPage(tafID) }
+                            runTapped = false
+                        }
+                    }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(inFlight)
+                    // Run now started no run: tafs cloud's words, as they are.
+                    if let words = model.runNowWords[cloud.id] {
+                        Text(words).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Answer within, for whoever manages the taf: the promise as tafs cloud keeps it, or Not set,
+/// and a menu of whole hours to change or clear it. The phones that answer its holds are told
+/// when a case waits longer; tafs cloud sends that alert.
+struct PromiseRow: View {
+    let hours: Int?
+    let pick: (Int?) -> Void
+
+    /// What the row says the promise is: its hours, or Not set.
+    static func value(_ hours: Int?) -> String {
+        hours.map { Words.Work.answerWithinHours(count: $0) } ?? Words.Work.answerWithinNone
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Menu {
+                Button(Words.Work.answerWithinNone) { if hours != nil { pick(nil) } }
+                ForEach(TafsCloud.TafWork.promiseChoices, id: \.self) { h in
+                    Button(Words.Work.answerWithinHours(count: h)) { if h != hours { pick(h) } }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Text(Words.Work.answerWithin).scaledFont(15).foregroundColor(Theme.ink)
+                    Spacer(minLength: 8)
+                    Text(Self.value(hours)).scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                    Image(systemName: "chevron.up.chevron.down").scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
+                        .accessibilityHidden(true)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .accessibilityIdentifier("work.answer-within")
+            Text(Words.Work.answerWithinLine).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
 /// Where the taf's work stands, as tafs cloud says it (docs/reliability.md): its line, then its
 /// recent requests and skipped firings, newest first, each in tafs cloud's words. A request
 /// needing the owner is amber, a failed one red; a skipped firing isn't a failure, so it's dim.
-/// A door reply given up on offers Send again to whoever manages the taf.
+/// A door reply given up on offers Send again to whoever manages the taf. Under its health, its
+/// oldest waiting case and, for whoever manages the taf, Answer within.
 struct WorkPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
@@ -483,6 +542,17 @@ struct WorkPanel: View {
                     }
                     if let health {
                         HealthLines(health: health, tafID: tafID)
+                    }
+                    // Its oldest waiting case, in tafs cloud's words, amber once past the promise.
+                    if let waiting = work?.oldestWaiting {
+                        Text(verbatim: waiting.words)
+                            .scaledFont(14, weight: waiting.late ? .semibold : .regular)
+                            .foregroundColor(waiting.late ? Theme.amberText : Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("work.oldest-waiting")
+                    }
+                    if let work, model.mode == .kiff, model.manages(tafID) {
+                        PromiseRow(hours: work.promiseHours) { hours in Task { await model.setPromise(tafID, hours: hours) } }
                     }
                     ForEach(work?.rows ?? []) { row in
                         switch row {
@@ -989,41 +1059,6 @@ struct MemoryPanel: View {
             Button(Words.Common.cancel, role: .cancel) {}
         } message: { note in
             Text(Words.Taf.Memory.forgetBody(note: note.content))
-        }
-    }
-}
-
-/// The taf's latest run on tafs cloud and, once it stops, what it reported.
-struct RunReportPanel: View {
-    let report: AppModel.RunReport?
-    let reload: () -> Void
-
-    var body: some View {
-        Panel {
-            HStack {
-                Eyebrow(text: Words.Taf.lastRun)
-                Spacer()
-                Button(Words.Taf.refresh, action: reload).scaledFont(13).foregroundColor(Theme.amberText)
-            }
-            if let report {
-                if let at = report.at {
-                    Text("\(at.shortTime) · \(report.finished ? Words.Taf.Report.finished : report.status == "running" ? Words.Taf.Report.stillRunning : Words.Taf.Report.noSession)")
-                        .scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
-                }
-                if !report.text.isEmpty {
-                    // A taf writes markdown: shown as the chat shows it, never raw (kiff/tafs#96).
-                    MarkdownText(report.text, size: 14).foregroundColor(Theme.ink).textSelection(.enabled)
-                } else if report.session == nil && report.error == nil {
-                    Text(Words.Taf.Report.noRunYet).scaledFont(14).foregroundColor(Theme.dim)
-                } else if !report.finished && report.error == nil {
-                    Text(Words.Taf.Report.whenRunEnds).scaledFont(14).foregroundColor(Theme.dim)
-                }
-                if let error = report.error {
-                    Text(error).scaledFont(13).foregroundColor(Theme.no)
-                }
-            } else {
-                ProgressView().tint(Theme.amber)
-            }
         }
     }
 }
