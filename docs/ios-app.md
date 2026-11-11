@@ -412,11 +412,20 @@ Tests: `TafsTests/RecordSearchTests.swift`.
   that test found.
 - **UI tests** (`TafsUITests`): `ChatPinUITests` holds how a sent message, the work block
   and the answer sit in the chat ([chat.md](chat.md#the-sent-message-stays-on-top)).
-- **CI** (`.github/workflows/ios.yml`) builds and tests every push and pull request on a
-  simulator. When a change touches the screens, it takes screenshots and uploads them as
-  the `screenshots` artifact. A `v*` tag or a manual run also uploads to TestFlight: Team
-  at once, and the external Beta testers after Apple's review unless the run turns that
-  off.
+- **CI** (`.github/workflows/ios.yml`) builds and tests, on a simulator, every pull request
+  and push to main that changes what the app is built from (`ios/`, `app/strings/`, the
+  workflow); a tafs cloud or Android change doesn't take a macOS runner. The iPad's list
+  tests run only when the iPad's layout changes. When a pull request touches the screens,
+  it takes a key set of screenshots, uploaded as the `screenshots` artifact. A `v*` tag or a
+  manual run also uploads to TestFlight: Team at once, and the external Beta testers after
+  Apple's review unless the run turns that off. A manual upload skips the tests (and the
+  iPad's) when main already passed them on a commit with the same app (the same iPad layout
+  for the iPad's), and goes straight to the archive; a tag runs everything.
+- **Screenshot runs** are manual runs with `upload` off and `screenshots` set (`full`, `key`
+  or `languages`; it's `none` by default). They wait for an empty queue: one stops at once,
+  before it takes a macOS runner, while another manual or tag run is queued or running, so
+  a release build never waits behind screenshots. Dispatch it again once that run is
+  through.
 
 ```bash
 cd ios && xcodegen generate
