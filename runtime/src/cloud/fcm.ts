@@ -84,6 +84,8 @@ export function fcmMessage(n: Notification, now: Date): { data: Record<string, s
     set("hold_id", str(p.hold_id));
     set("request_id", str(p.request_id));
     set("expires_at", str(p.expires_at));
+    // A step handed to the owner ("Your step"): Android tags its alert by it, so it never replaces another of the taf's.
+    set("handoff", str(p.handoff));
     data.level = levelOf(aps);
   }
   const android: Record<string, unknown> = {

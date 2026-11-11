@@ -1,0 +1,1 @@
+- **"Your step": an Android step alert carries its hand-off (tafs cloud).** A step's push now sends `handoff` in Android's data, so the app tags its alert by the step (`step:<handoff>`) and it never replaces another alert of the same taf. "Your step" stays off until `TAFS_YOUR_STEP=on` (docs/api.md › Your step).
