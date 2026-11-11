@@ -65,6 +65,12 @@ interface ApprovalSigning {
   suspend fun signApproval(reason: String, built: () -> ByteArray): String
 
   /**
+   * As [signApproval], with no way round the fingerprint: a debug phone with no screen lock gets no demo signature. For what
+   * can't be undone, such as removing a taf for good, which tafs cloud takes only from the approval key, asked each time.
+   */
+  suspend fun signCritical(reason: String, built: () -> ByteArray): String = signApproval(reason, built)
+
+  /**
    * Whether the approval key can still sign, checked without a prompt: false when a fingerprint added since turned it off (a new
    * one is made in its place, which KIFF learns at the next sign-in). True where there's no key to check.
    */
@@ -165,6 +171,11 @@ class DeviceSigner(
     } catch (e: Exception) {
       throw SignerException(Words.Approval.keyCouldNotSign, e)
     }
+  }
+
+  override suspend fun signCritical(reason: String, built: () -> ByteArray): String {
+    if (keys.approvalPublicKeyDER.isEmpty()) throw SignerException(NO_FINGERPRINT)
+    return signApproval(reason, built)
   }
 
   override fun approvalKeyUsable(): Boolean {

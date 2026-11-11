@@ -388,6 +388,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
   // The taf open on the Tafs tab: the screens inside a tab keep its bar, as a navigation stack does.
   var openTaf by rememberSaveable { mutableStateOf<String?>(null) }
+  // On a tablet with nothing picked, the taf being removed: the pane beside the list stays on it, rather than following the list's
+  // first taf, which changes under the person's finger once it's gone.
+  var removingBeside by rememberSaveable { mutableStateOf<String?>(null) }
+  LaunchedEffect(openTaf) { if (openTaf != null) removingBeside = null }
   // The taf a door's knock alert opened, to show on Activity once, where its knocks are answered.
   var openOnActivity by rememberSaveable { mutableStateOf<String?>(null) }
   var showingSettings by rememberSaveable { mutableStateOf(false) }
@@ -671,6 +675,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               showBack = !wide,
               openActivity = openOnActivity == id,
               onActivityOpened = { if (openOnActivity == id) openOnActivity = null },
+              onRemoving = { if (openTaf == null) removingBeside = it },
             ) }
           }
           val calendar: @Composable (Boolean) -> Unit = { phone ->
@@ -726,7 +731,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                   open != null -> open()
                   calendarOpen -> calendar(false)
                   overviewOpen -> OverviewView(state, loadReport = model::loadReport, onOpenCalendar = { calendarOpen = true }) { overviewOpen = false; openTaf = it }
-                  state.tafs.isNotEmpty() -> detail(state.tafs.first().id)
+                  removingBeside != null || state.tafs.isNotEmpty() -> detail(removingBeside ?: state.tafs.first().id)
                   else -> Unit
                 }
               }

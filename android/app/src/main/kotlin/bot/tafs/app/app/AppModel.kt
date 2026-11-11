@@ -2030,11 +2030,15 @@ class AppModel(
     val taf = s.taf(tafId)
     val cloudId = taf?.cloudId
     if (s.mode != Mode.kiff || taf == null || cloudId == null) return null
+    val tenant = kiffTenant ?: return null
     val generation = accountGeneration
-    try {
-      signer.sign("tafs.remove.v1|$cloudId".toByteArray(), Words.Taf.Remove.prompt(taf = taf.name))
-    } catch (_: SignerException) {
-      return null
+    // The fingerprint first, every time, before anything is undone: the approval key signs the DELETE itself, and tafs cloud asks
+    // KIFF whether this phone signed it. No fingerprint, no removal, even on a debug phone with no screen lock.
+    val signature = try {
+      cloud.removalSignature(cloudId, tenant) { built -> signer.signCritical(Words.Taf.Remove.prompt(taf = taf.name)) { built() } }
+    } catch (e: SignerException) {
+      // A prompt closed or a finger not recognized does nothing; anything else (no fingerprint set up) says why.
+      return e.message?.takeIf { it != bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED }
     }
     if (generation != accountGeneration) return null
     var cardsLeft = 0
@@ -2063,7 +2067,7 @@ class AppModel(
         else -> ""
       } + connections.kept.joinToString("") { " $it" }
     val removal = try {
-      cloud.remove(cloudId)
+      cloud.remove(cloudId, signature)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -2101,11 +2105,14 @@ class AppModel(
   /** KIFF's receipt for a Record line, as KIFF wrote it, for the phone to check. */
   suspend fun receipt(traceId: String): ByteArray = kiff.receipt(traceId)
 
-  /** Finishes removals tafs cloud lists as begun. They were confirmed when they began; finishing only deletes what's left of a taf already stopped. */
+  /**
+   * Finishes removals tafs cloud lists as begun. They were confirmed, signed, when they began; finishing only deletes what's left of a
+   * taf already stopped, which tafs cloud takes unsigned only for a taf it lists as `removing`.
+   */
   private suspend fun finishRemovals(removing: List<bot.tafs.app.kiff.PendingRemoval>, generation: Int) {
     for (r in removing) {
       if (generation != accountGeneration) return
-      attempt { cloud.remove(r.id) }
+      attempt { cloud.remove(r.id, signature = null) }
     }
   }
 
