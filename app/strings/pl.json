@@ -75,7 +75,7 @@
   "approval.kept": "Zostaje w sekcji Czeka na Ciebie.",
   "approval.key_could_not_sign": "Klucz nie mógł podpisać",
   "approval.key_gone_approve_again": "Twoje odciski palców się zmieniły albo żaden nie został rozpoznany, więc ten telefon nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce.",
-  "approval.key_gone_biometry": "Twoje {biometry} się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz je ponownie w przeglądarce.",
+  "approval.key_gone_biometry": "Twoje {biometry} się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce.",
   "approval.key_gone_sign_in": "Twoje odciski palców się zmieniły albo żaden nie został rozpoznany, więc ten telefon nie może zatwierdzać, dopóki nie zalogujesz się ponownie.",
   "approval.key_lost": "Zaloguj się ponownie przez KIFF, aby zatwierdzać z tego telefonu.",
   "approval.locked_after_too_many_tries": "{either} jest zablokowane po zbyt wielu próbach. Zablokuj ten {device}, odblokuj go kodem, a potem sprawdź ponownie.",

@@ -4095,7 +4095,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twoje %1$@ się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz je ponownie w przeglądarce."
+            "value": "Twoje %1$@ się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce."
           }
         },
         "pt": {
