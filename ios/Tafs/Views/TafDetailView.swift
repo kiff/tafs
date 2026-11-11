@@ -478,8 +478,7 @@ struct WorkPanel: View {
                     let health = work?.health ?? model.taf(tafID)?.health
                     // An idle taf's line is its first health line (docs/reliability.md): said once,
                     // with its colour and fix, below.
-                    if let line = work?.summary?.line, !line.isEmpty,
-                       !(health?.needsAttention == true && health?.lines.first == line) {
+                    if let line = work?.summary?.line, !line.isEmpty, health?.repeats(workLine: line) != true {
                         Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                     }
                     if let health {
