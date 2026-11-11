@@ -86,3 +86,4 @@ struct LenientItem<T: Decodable>: Decodable {
 }
 
 extension LenientItem: Equatable where T: Equatable {}
+extension LenientItem: Sendable where T: Sendable {}
