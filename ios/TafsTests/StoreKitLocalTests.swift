@@ -25,24 +25,31 @@ final class StoreKitLocalTests: XCTestCase {
         if try await Product.products(for: [solo]).isEmpty {
             throw XCTSkip("StoreKit's local testing has no store on this machine: no products load.")
         }
-        // A store that lists the products but can't complete a purchase (a simulator that finds the
-        // App Store's sandbox products, with no sandbox account to buy them) would hang every test
-        // here: one purchase first, ten seconds at most. A store that answers, however it answers,
-        // runs the tests, so a purchase that comes out wrong still fails.
-        guard let probe = try await Product.products(for: [rayo]).first,
-              await Self.answers(probe, within: 10) else {
-            throw XCTSkip("StoreKit's local testing can't complete a purchase on this machine within 10 seconds.")
+        // A store that lists the products but can't sell them (a simulator that finds the App Store's
+        // sandbox products, with no sandbox account; a pack the App Store doesn't offer) either never
+        // answers a purchase or refuses it at once. Each product the tests buy is bought first, ten
+        // seconds at most, and only a completed purchase runs the tests. In a working local StoreKit
+        // session those always complete, so a purchase that then comes out wrong still fails.
+        for id in [rayo, solo] {
+            guard let probe = try await Product.products(for: [id]).first,
+                  await Self.completes(probe, within: 10) else {
+                session.resetToDefaultState()
+                throw XCTSkip("StoreKit's local testing can't complete a purchase of \(id) on this machine within 10 seconds.")
+            }
         }
         session.clearTransactions()
     }
 
-    /// Whether the store answers a purchase of product within the time: a result or an error, as
-    /// opposed to no answer at all. The purchase runs on its own, so one that never returns can't
-    /// hold the test (a task group would wait for it).
-    private static func answers(_ product: Product, within seconds: UInt64) async -> Bool {
+    /// Whether a purchase of product completes (`.success`) within the time. An error, pending,
+    /// cancelled or no answer at all is no. The purchase runs on its own, so one that never returns
+    /// can't hold the test (a task group would wait for it).
+    private static func completes(_ product: Product, within seconds: UInt64) async -> Bool {
         await withCheckedContinuation { (done: CheckedContinuation<Bool, Never>) in
             let once = Once(done)
-            Task { _ = try? await product.purchase(); once.resume(true) }
+            Task {
+                guard case .success = try? await product.purchase() else { return once.resume(false) }
+                once.resume(true)
+            }
             Task { try? await Task.sleep(nanoseconds: seconds * 1_000_000_000); once.resume(false) }
         }
     }
