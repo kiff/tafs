@@ -6,6 +6,8 @@ import SwiftUI
 /// cloud's, in the person's language: the app has none of its own here.
 struct HomeRecipes: View {
     let recipes: TafsCloud.Recipes
+    /// Where an app's logo loads from: only ever tafs cloud (`TafsCloud.logoURL`).
+    var logo: (String?) -> URL? = { _ in nil }
     let open: (TafsCloud.Recipes.Recipe) -> Void
     /// A category picked narrows the list; picked again, every recipe shows.
     @State private var picked: String?
@@ -33,17 +35,20 @@ struct HomeRecipes: View {
 
     private func chip(_ category: TafsCloud.Recipes.Category) -> some View {
         let on = picked == category.id
+        // The category's colour, tafs cloud's token, where it sent one: its words in it, and its
+        // fill once picked. Without one, the chip is drawn as before.
+        let tint = RecipeTint.color(category)
         return Button {
             Haptics.tap()
             picked = on ? nil : category.id
         } label: {
             Text(category.title)
                 .scaledFont(13, relativeTo: .footnote)
-                .foregroundColor(on ? Theme.background : Theme.soft)
+                .foregroundColor(on ? Theme.onFill : (tint ?? Theme.soft))
                 .padding(.horizontal, 12).padding(.vertical, 6)
                 .frame(minHeight: 32)
-                .background(on ? Theme.ink : Theme.panel)
-                .overlay(Capsule().stroke(on ? Theme.ink : Theme.line, lineWidth: 1))
+                .background(on ? (tint ?? Theme.ink) : Theme.panel)
+                .overlay(Capsule().stroke(on ? (tint ?? Theme.ink) : (tint ?? Theme.line), lineWidth: 1))
                 .clipShape(Capsule())
         }
         .buttonStyle(.drivablePlain)
@@ -53,7 +58,21 @@ struct HomeRecipes: View {
 
     /// One recipe: the problem it ends first, then its line.
     private func row(_ recipe: TafsCloud.Recipes.Recipe) -> some View {
-        Button { open(recipe) } label: {
+        RecipeRow(recipe: recipe, category: recipes.categories.first { $0.id == recipe.category }, logo: logo) { open(recipe) }
+    }
+}
+
+/// One ready-made job as a card: the problem it ends, its line, and the apps it uses, each
+/// with its logo where tafs cloud has one, on an edge in its category's colour. Home's list,
+/// the gallery and the strip all draw it.
+struct RecipeRow: View {
+    let recipe: TafsCloud.Recipes.Recipe
+    let category: TafsCloud.Recipes.Category?
+    var logo: (String?) -> URL? = { _ in nil }
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
             Panel {
                 Text(recipe.lead).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                     .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
@@ -61,10 +80,61 @@ struct HomeRecipes: View {
                     Text(recipe.line).scaledFont(14).foregroundColor(Theme.soft)
                         .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 }
+                if !recipe.apps.isEmpty { AppMarks(apps: recipe.apps, logo: logo) }
             }
+            .overlay(alignment: .leading) {
+                if let tint = RecipeTint.color(category) {
+                    tint.frame(width: 4).accessibilityHidden(true)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.drivablePlain)
         .driveWords(recipe.lead)
+    }
+}
+
+/// The apps a job uses, by name, each after its logo when tafs cloud serves one: small and
+/// as it comes. With no logo, or one that doesn't load, the name alone.
+struct AppMarks: View {
+    let apps: [TafsCloud.Recipes.App]
+    var logo: (String?) -> URL? = { _ in nil }
+
+    var body: some View {
+        FlowRow(spacing: 8) {
+            ForEach(Array(apps.enumerated()), id: \.offset) { _, app in
+                AppMark(name: app.name, url: logo(app.logo))
+            }
+        }
+    }
+}
+
+/// One app: its logo from tafs cloud, then its name.
+struct AppMark: View {
+    let name: String
+    let url: URL?
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let url {
+                // Loading, or failed (tafs cloud's 404): nothing, so the name stands alone.
+                AsyncImage(url: url) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().interpolation(.high).scaledToFit().frame(width: 18, height: 18)
+                    }
+                }
+                .accessibilityHidden(true)
+            }
+            Text(name).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+        }
+    }
+}
+
+/// A category's colour, from tafs cloud's token: light or dark as the app's appearance is.
+enum RecipeTint {
+    static func color(_ category: TafsCloud.Recipes.Category?) -> Color? {
+        guard let tint = category?.color else { return nil }
+        return Color(light: tint.light, dark: tint.dark)
     }
 }
 

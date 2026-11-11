@@ -368,6 +368,9 @@ extension TafsCloud {
             var vendor = ""
             var title = ""
             var icon: String?
+            /// Its logo's path on tafs cloud (`/v1/logos/{key}`), the only place the app loads one
+            /// from; nil when tafs cloud has none.
+            var logo: String?
             /// oauth or key.
             var how = "oauth"
             /// connected, available or needs_reconnect.
@@ -377,13 +380,14 @@ extension TafsCloud {
             var connected: Bool { state == "connected" }
             var needsReconnect: Bool { state == "needs_reconnect" }
 
-            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, how, state, grant }
+            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 entry = try c.decode(String.self, forKey: .entry)
                 vendor = try c.decodeIfPresent(String.self, forKey: .vendor) ?? ""
                 title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
                 icon = try c.decodeIfPresent(String.self, forKey: .icon)
+                logo = (try? c.decodeIfPresent(String.self, forKey: .logo)) ?? nil
                 how = try c.decodeIfPresent(String.self, forKey: .how) ?? "oauth"
                 state = try c.decodeIfPresent(String.self, forKey: .state) ?? "available"
                 grant = try c.decodeIfPresent(String.self, forKey: .grant)

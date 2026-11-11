@@ -46,8 +46,11 @@ struct HomeSplitView: View {
     /// do, the first taf in the list is the one open (the 859 test).
     @State private var opened: HomeSelection?
     @State private var chosen = false
-    /// A recipe's sheet, opened from the detail pane with no taf.
+    /// A recipe's sheet, opened from the detail pane with no taf, or from the strip in the sidebar.
     @State private var openRecipe: TafsCloud.Recipes.Recipe?
+    /// + New's gallery of every ready-made job, and what was chosen in it: acted on once it closes.
+    @State private var showingGallery = false
+    @State private var galleryChoice: GalleryChoice?
 
     var body: some View {
         NavigationSplitView {
@@ -67,7 +70,7 @@ struct HomeSplitView: View {
                     // No taf yet: the recipes take the pane beside the sidebar, which is
                     // narrow for a headline (docs/ios-app.md).
                     ScrollView {
-                        HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes()) { openRecipe = $0 }
+                        HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes(), logo: { model.cloud.logoURL($0) }) { openRecipe = $0 }
                             .padding(.horizontal, 24).padding(.vertical, 20)
                             .frame(maxWidth: 720, alignment: .leading)
                             .frame(maxWidth: .infinity)
@@ -90,9 +93,16 @@ struct HomeSplitView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .sheet(item: $openRecipe) { recipe in
-            RecipeSheet(recipe: recipe, recipes: model.recipes ?? TafsCloud.Recipes(), canHand: model.mayUseCoach) {
+            RecipeSheet(recipe: recipe, recipes: sheetRecipes(for: recipe), canHand: model.mayUseCoach) {
                 openRecipe = nil
                 model.handRecipeToCoach(recipe)
+            }
+        }
+        .sheet(isPresented: $showingGallery, onDismiss: actOnGalleryChoice) {
+            if let gallery = model.gallery {
+                RecipeGallerySheet(gallery: gallery, labels: model.recipes?.labels, logo: { model.cloud.logoURL($0) },
+                                   canHand: model.mayUseCoach, choose: { galleryChoice = $0; showingGallery = false },
+                                   close: { showingGallery = false })
             }
         }
         .onAppear { model.sidebarShown = true }
@@ -194,6 +204,23 @@ struct HomeSplitView: View {
                     ForEach(sections.shared) { taf in tafLinks(taf) }
                 } header: { Eyebrow(text: Words.Home.sharedYou) }
             }
+            // A few jobs the account doesn't run yet, where tafs cloud shows them, in its order.
+            if model.mode == .kiff, !model.tafs.isEmpty, let gallery = model.gallery, !gallery.stripRecipes.isEmpty {
+                Section {
+                    ForEach(gallery.stripRecipes) { recipe in
+                        Button { openRecipe = recipe } label: {
+                            HStack(spacing: 10) {
+                                (RecipeTint.color(gallery.category(of: recipe)) ?? Theme.line)
+                                    .frame(width: 4, height: 28).clipShape(Capsule()).accessibilityHidden(true)
+                                Text(recipe.lead).scaledFont(14).foregroundColor(Theme.ink).lineLimit(2)
+                            }
+                        }
+                        .buttonStyle(.drivablePlain)
+                        .driveWords(recipe.lead)
+                    }
+                } header: { Eyebrow(text: gallery.strip.title) }
+                .accessibilityIdentifier("home.recipe-strip")
+            }
             if !model.otherAgents.isEmpty {
                 // Agents made through KIFF's API, not run by tafs: their Cards, apart.
                 Section {
@@ -214,7 +241,26 @@ struct HomeSplitView: View {
     /// A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59). The sample has
     /// no form for one, so its + isn't shown (`canStartTafs`).
     private func startNewTaf() {
-        model.startNewTaf()
+        // + New opens every ready-made job where tafs cloud sends the gallery; without it,
+        // Coach as before.
+        if model.gallery != nil { showingGallery = true } else { model.startNewTaf() }
+    }
+
+    /// The recipes a job's sheet draws from: the detail pane's list when the job is on it, else
+    /// the gallery's, with `/v1/recipes`' sheet words where the gallery sends none.
+    private func sheetRecipes(for recipe: TafsCloud.Recipes.Recipe) -> TafsCloud.Recipes {
+        if let recipes = model.recipes, recipes.recipes.contains(where: { $0.id == recipe.id }) { return recipes }
+        return model.gallery?.asRecipes(labels: model.recipes?.labels) ?? model.recipes ?? TafsCloud.Recipes()
+    }
+
+    /// What was chosen in the gallery, once it has closed: Coach opens over Home.
+    private func actOnGalleryChoice() {
+        guard let choice = galleryChoice else { return }
+        galleryChoice = nil
+        switch choice {
+        case .recipe(let recipe): model.handRecipeToCoach(recipe)
+        case .ownWords: model.startNewTaf()
+        }
     }
 
     /// A taf in the list, and its open trial under it (kiff/tafs#173).
