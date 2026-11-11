@@ -231,16 +231,8 @@ and `openCreditsRun` in `AppModel`); on iPhone and iPad, `CreditsViews.swift`
   period, then credits beyond them on the period's invoice, up to the account's **spend limit**.
   At the limit, the tafs wait until someone who manages billing raises it.
 - **An agreement**, a plan arranged with KIFF (KIFF's `company`), and **internal**: no limit.
-- **The prices**, as [kiff.dev/tafs](https://kiff.dev/tafs) and
-  [kiff.dev/pricing](https://kiff.dev/pricing) publish them:
-  - Solo: €12.50 a month, VAT included, with 500 credits a month.
-  - Packs: 500 credits for €11.50, 1,500 for €29.99, 5,000 for €84.99, VAT included.
-  - The First month pack: 7,000 credits for €99.99, once.
-  - Company: €10.50 a seat a month, plus VAT, with 500 credits a seat, pooled. Then €0.01 a
-    credit, up to the spend limit (€50 to start).
-  - There's no free trial on any plan.
-
-  The apps show the store's own price for what it sells. They never write one of their own.
+- **Prices:** [kiff.dev/tafs](https://kiff.dev/tafs) and [kiff.dev/pricing](https://kiff.dev/pricing).
+  The apps show the store's own price for what they sell. There's no free trial on any plan.
 - **No plan:** no taf runs. A person can sign in, look around, and ask Coach what tafs do. Coach
   answers within a small allowance per account, which KIFF pays for, and has none of its tools, so
   it sets nothing up ([Under the hood](#under-the-hood)).
