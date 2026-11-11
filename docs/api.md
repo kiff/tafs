@@ -387,7 +387,9 @@ intermediate pages keep their cursor and never claim that history has ended.
 `limit=3`. This view reads the runtime's latest 100 runs; it is not an archive of
 all past runs. The older `/runs` report endpoint is unchanged. Both new page
 routes supply `end_words` at the end of their available history; for runs it
-says "Nothing older in the retained runs" to make the retention boundary clear. Both page
+says "Nothing older in the retained runs" to make the retention boundary clear. The first page also
+has `skipped`, as `GET /v1/tafs/{id}/work` gives it, when a recent firing started no run (a Run now
+whose check couldn't read included): it was no run, and Its runs says so. Both page
 routes send an `ETag`; repeating a read with `If-None-Match` returns 304 with no
 body when unchanged. Apps keep previously read pages per account, taf and filter.
 

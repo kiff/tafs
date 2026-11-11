@@ -15,7 +15,7 @@ import { isYourStep, type YourStepView, yourStepsOf } from "./yourstep.js";
 export type WorkStatus = "halted" | "needs_you" | "retrying" | "working" | "waiting_on_app" | "paused" | "idle";
 
 /** What else says where a taf stands: halted, its schedule off, no schedule at all, its next run. */
-export interface TafNow { paused?: boolean; halted?: boolean; unscheduled?: boolean; next?: string | null }
+export interface TafNow { paused?: boolean; halted?: boolean; unscheduled?: boolean; next?: string | null; fired?: Fired[] }
 
 /** What the home list shows of a taf's work. */
 export interface WorkSummary {
@@ -23,6 +23,11 @@ export interface WorkSummary {
   line: string;
   /** How many of its recent requests need the owner. */
   needs_you: number;
+  /**
+   * Only when its line says something went wrong (its last check couldn't read, its last run stopped at a cap or
+   * failed, its health): an app draws that, never "Working" or the next run, which read as all's well.
+   */
+  attention?: true;
 }
 
 /** One request as the taf's page shows it, newest first. */
@@ -202,7 +207,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
 /** A taf's status and line on the list, from its recent runs, newest first. */
 export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date, lang: Lang = "en", health?: Health): WorkSummary {
   const w = wordsIn(lang);
-  const { paused = false, halted = false, unscheduled = false, next = null } = typeof how === "boolean" ? { paused: how } : how;
+  const { paused = false, halted = false, unscheduled = false, next = null, fired = [] } = typeof how === "boolean" ? { paused: how } : how;
   // Halted stops everything, its holds included: that comes first.
   if (halted) return { status: "halted", line: w.work_halted, needs_you: 0 };
   const recent = runs.filter((r) => now.getTime() - Date.parse(r.updated) < NEEDS_YOU_DAYS * 86_400_000);
@@ -223,14 +228,20 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   });
   if (waiting) return { status: "waiting_on_app", line: requestOf(waiting, zone, now, [], undefined, [], lang).line, needs_you: 0 };
   if (paused) return { status: "paused", line: w.work_paused, needs_you: 0 };
-  // A taf that isn't healthy says why, where an idle one would say its next run: what's happening now, and
-  // what waits for the owner, came first.
-  if (health && health.level !== "healthy") return { status: "idle", line: healthLine(health.reasons[0]!, lang), needs_you: 0 };
+  // What went wrong last comes before the next run, which would read as all's well: its latest firing's check
+  // that couldn't read first (a Run now's too), then its health, then its last run stopped at a cap or failed.
+  const newest = fired[0];
+  if (newest?.outcome === "failed_check") return { status: "idle", line: w.work_check_failed(whenIn(newest.due, zone, now, lang)), needs_you: 0, attention: true };
+  if (health && health.level !== "healthy") return { status: "idle", line: healthLine(health.reasons[0]!, lang), needs_you: 0, attention: true };
+  const ended = runs.find((r) => r.status === "COMPLETED" || r.status === "ERROR");
+  if (ended && !unscheduled && (ended.status === "ERROR" || (ended.stop && ended.stop !== "answered"))) {
+    return { status: "idle", line: requestOf(ended, zone, now, [], undefined, [], lang).line, needs_you: 0, attention: true };
+  }
   if (unscheduled) return { status: "idle", line: w.work_from_chat, needs_you: 0 };
   if (next) return { status: "idle", line: w.work_next_run(whenIn(next, zone, now, lang)), needs_you: 0 };
   const last = runs.find((r) => r.status === "COMPLETED");
   // The last one cut off at a cap says so, as its request does.
-  if (last && last.stop && last.stop !== "answered") return { status: "idle", line: requestOf(last, zone, now, [], undefined, [], lang).line, needs_you: 0 };
+  if (last && last.stop && last.stop !== "answered") return { status: "idle", line: requestOf(last, zone, now, [], undefined, [], lang).line, needs_you: 0, attention: true };
   return { status: "idle", line: last ? w.work_last_done(whenIn(last.updated, zone, now, lang)) : w.work_nothing_yet, needs_you: 0 };
 }
 

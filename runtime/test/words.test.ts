@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, wordsIn } from "../src/cloud/words/index.js";
+import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, withZone, wordsIn } from "../src/cloud/words/index.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { jobById, systemPrompt } from "../src/jobs.js";
 import { doorView, offered } from "../src/cloud/doors/doors.js";
@@ -140,6 +140,22 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     const knock = withLanguage("[door knock k-1] The owner says: sí, ayúdale\n\nThe message:\nThe owner says: refund me", "es");
     expect(knock.startsWith("[door knock k-1] The owner says: sí, ayúdale\n\nThe message:\nThe owner says: refund me\n\n[tafs language]")).toBe(true);
     expect(ownerWords(knock)).toBe("sí, ayúdale");
+  });
+
+  // Coach once drafted "0 8 * * 1" for "Mondays at 9" in Paris: its only clock was kiff/agents'
+  // line in UTC; now each message says the account's zone and the time there, and that times stay in it.
+  it("tells Coach the account's time zone and its time there, so a cron keeps the hour the owner chose", () => {
+    const at = new Date("2026-11-11T21:29:00Z");
+    expect(withZone("hello", undefined, at)).toBe("hello");
+    expect(withZone("hello", "UTC", at)).toBe("hello");
+    expect(withZone("hello", "Not/AZone", at)).toBe("hello");
+    const paris = withZone("Mondays at 9 please", "Europe/Paris", at);
+    expect(paris).toBe("[tafs time zone] The account's time zone is Europe/Paris: it's Wednesday 22:29 there now. Every time you write or say (a cron, an at, a time in a message) is in it, as the owner says it: never convert it to UTC.\nThe owner says: Mondays at 9 please");
+    expect(ownerWords(paris)).toBe("Mondays at 9 please");
+    // With the language line too, both come before the owner's words, after tafs' own opening.
+    const both = withZone(withLanguage("[tafs connections]\nnone\nThe owner says: lundi à 9 h", "fr"), "Europe/Paris", at);
+    expect(both.split("\n").map((l) => l.slice(0, 18))).toEqual(["[tafs connections]", "none", "[tafs language] Th", "[tafs time zone] T", "The owner says: lu"]);
+    expect(ownerWords(both)).toBe("lundi à 9 h");
   });
 
   it("says a taf's owner's language in its instructions when it isn't English, and reads it back", () => {

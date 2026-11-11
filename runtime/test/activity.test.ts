@@ -282,6 +282,29 @@ describe("Activity in the person's language", () => {
 });
 
 describe("recent work pages", () => {
+  // A Run now whose check couldn't read starts no run: Its runs says so.
+  it("says, on the first page of its runs, a firing that started no run, a Run now's included", async () => {
+    const id = "taf-01234567890123456789";
+    const deps = { now: () => now,
+      tafs: { get: async () => ({ id, name: "Example", job: "refunds", kiffAgent: "agent-example" }) },
+      agents: {
+        runs: async () => [],
+        scheduleFirings: async () => [{ due: new Date(now.getTime() - 60_000).toISOString(), outcome: "failed_check" }, { due: new Date(now.getTime() - 120_000).toISOString(), outcome: "run" }],
+      },
+      fetch: (async (url: string | URL | Request) => {
+        const path = new URL(String(url)).pathname;
+        if (path === "/v1/me") return new Response(JSON.stringify({ tenant_id: "account-example", subject: "person-example", api_key: false, capabilities: ["read"] }));
+        if (path === "/v1/me/access") return new Response(JSON.stringify({ agents: { "agent-example": { use: true } } }));
+        throw new Error("unexpected request");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const event: HTTPEvent = { rawPath: `/v1/tafs/${id}/work/runs`, headers: { authorization: "Bearer synthetic-session" }, requestContext: { http: { method: "GET" } } };
+    const page = JSON.parse((await handle(event, deps)).body);
+    expect(page.skipped).toHaveLength(1);
+    expect(page.skipped[0]).toMatchObject({ why: "check_failed" });
+    expect(page.skipped[0].words).toMatch(/check/i);
+  });
+
   it("pages the retained runs without repeats when a newer run arrives and excludes another member's work", async () => {
     const id = "taf-01234567890123456789";
     const runs = Array.from({ length: 60 }, (_, i) => ({ id: `run-${i}`, session: `session-${i}`, status: "COMPLETED", created: new Date(now.getTime() - i * 1000).toISOString(), updated: now.toISOString(), requester: { kind: "member", id: "person-example" } }));
