@@ -45,7 +45,7 @@ class GalleryScreenTest {
     ),
     recipes = listOf(refunds, invoices, leads),
     strip = GalleryStrip(shown = true, title = "More jobs to hand off", ids = listOf("follow-up-new-leads", "chase-overdue-invoices")),
-    words = GalleryWords("New taf", "Say it in your own words", "Tell Coach the job, and it builds the taf with you."),
+    words = GalleryWords(title = "New taf", all = "All jobs", ownWords = "Say it in your own words", ownWordsLine = "Tell Coach the job, and it builds the taf with you."),
     labels = RecipeLabels("Does on its own", "Asks you first", "Never does", "Hand it to Coach"),
   )
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "Refund", tools = emptyList(), colorIndex = 1, card = Card(emptyList(), "You"), cloudId = "taf_1")
@@ -92,6 +92,7 @@ class GalleryScreenTest {
       TafsTheme { GallerySheet(gallery, canUseCoach = true, onOpen = { opened += it.id }, onOwnWords = { ownWords++ }, onClose = {}) }
     }
     rule.onNodeWithText("New taf").assertExists()
+    rule.onNodeWithText("All jobs").assertExists()
     rule.onNodeWithText("Say it in your own words").performClick()
     rule.waitForIdle()
     assertEquals(1, ownWords)
