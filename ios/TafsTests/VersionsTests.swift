@@ -220,6 +220,54 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(order[live...].contains("/v1/home"), "the list read again after the install")
     }
 
+    /// Installing a version with its Card while Coach's tools are still to give: the install's
+    /// one Face ID gives nothing of Coach's tools, and their own step is asked after it
+    /// (docs/coach.md › Coach's tools step), as on Android 1.3.
+    func testAnInstallWithCoachsToolsStillToGiveAsksTheirStepAndGivesNothingInsideIt() async throws {
+        let signer = RecordingSigner()
+        let (model, id) = await kiffModel(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":{"id":"taf-setup","name":"Setup","job":"setup","kiff_agent":"setup-acme","status":"active","next_run":null,"last_run":null},"tools":{"state":"to_give","connect":{"body":{"connections":[]},"lines":["Read your tafs"]}}}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[]}"#)
+        await model.loadSetup()
+        XCTAssertEqual(model.coachTools?.toGive, true)
+        XCTAssertFalse(model.coachToolsAsked)
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"confirmed","version":"v7"}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/live"] = (200, #"{"live":2}"#)
+        await model.loadVersions(id)
+        let v2 = try XCTUnwrap(model.versions[id]?.last)
+        StubProtocol.sent = []
+
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertTrue(done, model.versionErrors[id] ?? "")
+        XCTAssertEqual(signer.signed, ["tafs.cards.v1|t_01|d_02|v7"], "the install's one Face ID, nothing else")
+        XCTAssertTrue(sent("POST", "/v1/connections/batch").isEmpty)
+        XCTAssertTrue(sent("POST", "/v1/me/agent-drafts").isEmpty)
+        XCTAssertTrue(model.coachToolsAsked, "their own step is asked")
+    }
+
+    /// Coach's tools given: an install with its Card asks no tools step.
+    func testAnInstallWithCoachsToolsGivenAsksNoStep() async throws {
+        let (model, id) = await kiffModel(signer: RecordingSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":{"id":"taf-setup","name":"Setup","job":"setup","kiff_agent":"setup-acme","status":"active","next_run":null,"last_run":null},"tools":{"state":"given"}}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[]}"#)
+        await model.loadSetup()
+        XCTAssertEqual(model.coachTools?.given, true)
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"confirmed","version":"v7"}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/live"] = (200, #"{"live":2}"#)
+        await model.loadVersions(id)
+        let v2 = try XCTUnwrap(model.versions[id]?.last)
+
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertTrue(done, model.versionErrors[id] ?? "")
+        XCTAssertFalse(model.coachToolsAsked)
+    }
+
     /// Back to a version with the taf's current Cards: one Face ID approves the switch itself.
     func testGoingBackToAVersionWithoutACardAsksOnce() async throws {
         let signer = RecordingSigner()

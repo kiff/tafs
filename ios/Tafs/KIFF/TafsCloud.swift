@@ -377,14 +377,19 @@ final class TafsCloud {
             var solo = false
             var packs = false
             var firstMonth: FirstMonth? = nil
-            init(solo: Bool = false, packs: Bool = false, firstMonth: FirstMonth? = nil) {
-                self.solo = solo; self.packs = packs; self.firstMonth = firstMonth
+            /// What Coach's help includes (`coach`): tafs cloud's sentence for under the Solo
+            /// offer, as kiff.dev says it. Nil from a tafs cloud that sends none, or a blank one.
+            var coach: String? = nil
+            init(solo: Bool = false, packs: Bool = false, firstMonth: FirstMonth? = nil, coach: String? = nil) {
+                self.solo = solo; self.packs = packs; self.firstMonth = firstMonth; self.coach = coach
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 solo = Self.offered(c, .solo)
                 packs = Self.offered(c, .packs)
                 firstMonth = (try? c.decodeIfPresent(FirstMonth.self, forKey: .firstMonth)) ?? nil
+                coach = ((try? c.decodeIfPresent(String.self, forKey: .coach)) ?? nil)
+                    .flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
             }
             /// The First month pack can be bought now.
             var firstMonthReady: Bool { firstMonth?.ready == true }
@@ -394,7 +399,7 @@ final class TafsCloud {
                 guard c.contains(k), (try? c.decodeNil(forKey: k)) == false else { return false }
                 return true
             }
-            enum CodingKeys: String, CodingKey { case solo, packs, firstMonth = "first_month" }
+            enum CodingKeys: String, CodingKey { case solo, packs, firstMonth = "first_month", coach }
         }
         struct Line: Decodable, Equatable {
             /// `ok`, `warning` (from 80%) or `waiting`; a state the app doesn't know reads `ok`.

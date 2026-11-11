@@ -319,6 +319,13 @@ struct BalancePanel: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(Words.Usage.solo).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                                     Text(SoloView.line).scaledFont(13).foregroundColor(Theme.dim)
+                                    // What Coach's help includes, in tafs cloud's words: the same
+                                    // sentence kiff.dev says. None sent, no line.
+                                    if let coach = buy.coach {
+                                        Text(coach).scaledFont(13).foregroundColor(Theme.soft)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .accessibilityIdentifier("solo-coach-included")
+                                    }
                                 }
                                 Spacer()
                                 Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)

@@ -122,8 +122,9 @@ the app in sample mode.
   - **The balance** (`BalancePanel`), from `GET /v1/usage/balance`: `words`, a bar at
     `meter_pct` (none when it's `null`), `detail`, the `warning`, then **Raise the limit** where
     `raise` is set, **Add credits** (`BuyCreditsView`) where `buy.packs` is, and Solo
-    (`SoloView`) where `buy.solo` is, under **Choose a plan**. "Add credits" shows only once
-    Solo runs. A 404 shows no balance, and a failed read keeps what was read with tafs cloud's
+    (`SoloView`) where `buy.solo` is, under **Choose a plan**. Under Solo's line, `buy.coach`
+    says what Coach's help includes, tafs cloud's sentence as kiff.dev says it; none sent, or a
+    blank one, no line. "Add credits" shows only once Solo runs. A 404 shows no balance, and a failed read keeps what was read with tafs cloud's
     words above it.
   - **The packs** (`AppModel.offeredPacks`): the First month pack comes first, only where
     `buy.first_month` is set and `ready`, then the packs that can be bought again
@@ -275,8 +276,10 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
 - **The read** (`TafsCloud.setupRead`, `CoachTools.read`): `GET /v1/setup`'s `tools`, with each
   opening of Coach and after a Start. The `connect` batch and the `card` draft are kept as the
   bytes tafs cloud wrote.
-- **The step** (`CoachToolsSheet`): a sheet at the end of a first Start, with tafs cloud's title,
-  intro, groups and ask. Each tool and KIFF's words for the Cards are folded under `details`.
+- **The step** (`CoachToolsSheet`): a sheet at the end of a first Start, and on Coach's screen
+  after installing a version with its Card while the tools are still to give
+  (`coachToolsAsked`), with tafs cloud's title, intro, groups and ask. The install's Face ID
+  gives none of them. Each tool and KIFF's words for the Cards are folded under `details`.
   It has **Give** and **Not now**.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF

@@ -230,6 +230,17 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(older.buy?.firstMonthReady, false, "a tafs cloud that doesn't say offers none")
     }
 
+    /// What Coach's help includes, under the Solo offer: tafs cloud's sentence, or no line.
+    func testWhatCoachIncludesIsTafsCloudsSentenceOrNothing() throws {
+        let said = try line(#"{"words":"No plan","buy":{"solo":true,"packs":false,"first_month":null,"coach":"Coach is included."}}"#)
+        XCTAssertEqual(said.buy?.coach, "Coach is included.")
+        // A tafs cloud from before it, a blank one, or one that isn't words: no line.
+        XCTAssertNil(try line(#"{"words":"No plan","buy":{"solo":true,"packs":false}}"#).buy?.coach)
+        XCTAssertNil(try line(#"{"words":"No plan","buy":{"solo":true,"coach":"  "}}"#).buy?.coach)
+        XCTAssertNil(try line(#"{"words":"No plan","buy":{"solo":true,"coach":4}}"#).buy?.coach)
+        XCTAssertEqual(try line(#"{"words":"No plan","buy":{"solo":true,"coach":4}}"#).buy?.solo, true, "the offer still reads")
+    }
+
     /// The packs as listed: the First month pack first while it can be bought, then the packs
     /// that can be bought again; otherwise it isn't listed at all.
     func testTheFirstMonthPackLeadsThePacksOnlyWhileItCanBeBought() throws {
