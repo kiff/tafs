@@ -1389,6 +1389,7 @@
     <string name="needs_you_sign_in_again_to_answer">Wyloguj się i zaloguj ponownie, aby odpowiadać z tego telefonu, żeby KIFF znał jego klucz. Albo odpowiedz na to w KIFF.</string>
     <string name="needs_you_someone_answers">Odpowiada na to osoba zatwierdzająca na tym koncie. Jej odpowiedź pojawi się tutaj.</string>
     <string name="needs_you_tab_label">Czeka na Ciebie, %1$s</string>
+    <string name="needs_you_taf_says">Taf pisze</string>
     <string name="needs_you_title">Czeka na Ciebie</string>
     <string name="needs_you_turn_alerts">Włącz alerty</string>
     <string name="needs_you_turning_on">Włączanie…</string>

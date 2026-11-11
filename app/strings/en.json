@@ -1290,6 +1290,7 @@
   "needs_you.sign_in_again_to_answer": "Sign out and in again to answer from this phone, so KIFF knows its key. Or answer this one in KIFF.",
   "needs_you.someone_answers": "Someone who approves on this account answers this. Their answer shows here.",
   "needs_you.tab_label": "Needs you, {n}",
+  "needs_you.taf_says": "The taf says",
   "needs_you.title": "Needs you",
   "needs_you.turn_alerts": "Turn on alerts",
   "needs_you.turning_on": "Turning on…",
