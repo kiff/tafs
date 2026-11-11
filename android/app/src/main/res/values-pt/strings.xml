@@ -2215,6 +2215,14 @@
     <string name="voice_title">Ditado</string>
     <string name="voice_voice_becomes_text_device_not">A sua voz torna-se texto neste dispositivo. Não é enviada até a enviar.</string>
     <string name="voice_what_you_said_stays_message">O que disse fica na caixa de mensagem, por enviar.</string>
+    <string name="work_answer_within">Responder em</string>
+    <plurals name="work_answer_within_hours">
+        <item quantity="one">%1$s hora</item>
+        <item quantity="other">%1$s horas</item>
+    </plurals>
+    <string name="work_answer_within_line">Avisamos quando um caso espera mais.</string>
+    <string name="work_answer_within_none">Não definido</string>
+    <string name="work_answer_within_not_set">Não foi possível definir. %1$s</string>
     <string name="work_asking_kiff_run">A pedir ao KIFF para executar %1$s…</string>
     <string name="work_did_not_stop">Não parou: %1$s</string>
     <string name="work_duration_minutes">%1$s min %2$s s</string>
