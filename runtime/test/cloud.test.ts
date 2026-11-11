@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -4605,5 +4605,81 @@ describe("the account's connections a Coach conversation starts with", () => {
       const started = await send(planque(w, answer), `/v1/tafs/${COACH}/messages`, { text: "I want a taf that chases overdue invoices", new_chat: true });
       expect(await firstMessage(w, started.session)).toBe("I want a taf that chases overdue invoices");
     }
+  });
+});
+
+// Wave 1, item 1b: a taf's oldest waiting case, and the owner's promise of how long one may wait.
+describe("the oldest waiting case and the owner's promise", () => {
+  const AT = new Date("2026-10-29T10:00:00Z");
+  const ago = (m: number) => new Date(AT.getTime() - m * 60_000).toISOString();
+  const setUp = () => {
+    const w = world();
+    w.phones.push({ token: "a".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "" },
+      { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
+    // Work found at 08:30 and 09:00 waited for credits; the firing before them ran.
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { due: ago(60), at: ago(60), outcome: "skipped_credits" },
+      { due: ago(90), at: ago(90), outcome: "skipped_credits" },
+      { due: ago(120), at: ago(120), outcome: "run", run: "r1" },
+    ]);
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    return { w, deps };
+  };
+
+  it("lets someone who manages the taf set or clear the promise, in whole hours up to a week", async () => {
+    const { w } = setUp();
+    expect((await call(w, "PUT", `/v1/tafs/${RAE}/promise`, { token: "viewer", body: { hours: 4 } })).status).toBe(403);
+    for (const bad of [0, 169, 2.5, "4", undefined]) {
+      expect((await call(w, "PUT", `/v1/tafs/${RAE}/promise`, { token: "ana", body: { hours: bad } })).status, String(bad)).toBe(400);
+    }
+    const set = await call(w, "PUT", `/v1/tafs/${RAE}/promise`, { token: "ana", body: { hours: 4 } });
+    expect(set.body).toEqual({ taf: RAE, promise: { hours: 4 } });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.respondWithin).toBe(4);
+    const cleared = await call(w, "PUT", `/v1/tafs/${RAE}/promise`, { token: "ana", body: { hours: null } });
+    expect(cleared.body).toEqual({ taf: RAE, promise: null });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)).not.toHaveProperty("respondWithin");
+  });
+
+  it("shows the oldest waiting case on the taf's page and on Home, and says when it's past the promise", async () => {
+    const { w } = setUp();
+    w.now = AT;
+    const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(page.body.oldest_waiting).toEqual({ since: ago(90), words: "Oldest case waiting 1 h", late: false });
+    expect(page.body.promise).toBeUndefined();
+    await call(w, "PUT", `/v1/tafs/${RAE}/promise`, { token: "ana", body: { hours: 1 } });
+    const late = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(late.body.oldest_waiting).toEqual({ since: ago(90), words: "Oldest case waiting 1 h, past the 1 h you set", late: true });
+    expect(late.body.promise).toEqual({ hours: 1 });
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(rae.oldest_waiting).toEqual(late.body.oldest_waiting);
+    // Nothing waits once a firing has run: no line at all.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: ago(5), at: ago(5), outcome: "run", run: "r2" }, ...w.agents.firings.get(`t_acme|${RAE}`)!]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" })).body.oldest_waiting).toBeUndefined();
+  });
+
+  it("tells the phones that answer once per waiting spell, past the promise only, and never without one", async () => {
+    const { w, deps } = setUp();
+    w.now = AT;
+    // No promise: nothing read, nothing said.
+    expect(await sweepLate(deps)).toEqual([]);
+    await w.tafs.put("t_acme", { ...w.tafs.held.get(`t_acme#${RAE}`)!, respondWithin: 2 });
+    // 90 minutes waited, the promise is 2 h: not yet.
+    expect(await sweepLate(deps)).toEqual([]);
+    w.now = new Date(AT.getTime() + 40 * 60_000);
+    expect(await sweepLate(deps)).toEqual([{ tenant: "t_acme", taf: RAE }]);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", payload: {
+      aps: { alert: { title: "Rae", body: "A case has waited 2 h, past the 2 h you set." } }, open: "taf", taf_id: RAE } } });
+    // The same case, later: said once.
+    w.now = new Date(AT.getTime() + 3 * 3600_000);
+    expect(await sweepLate(deps)).toEqual([]);
+    // A halted taf says nothing.
+    const { w: w2, deps: d2 } = setUp();
+    w2.now = new Date(AT.getTime() + 3 * 3600_000);
+    await w2.tafs.put("t_acme", { ...w2.tafs.held.get(`t_acme#${RAE}`)!, respondWithin: 1 });
+    w2.agents.halts.set(`t_acme|${RAE}`, { on: true, at: ago(10) });
+    expect(await sweepLate(d2)).toEqual([]);
+    expect(w2.pushed).toHaveLength(0);
   });
 });

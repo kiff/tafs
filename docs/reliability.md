@@ -263,6 +263,28 @@ days count, of its last 10 runs that ended and its schedule's last 20 times.
 - **The `app` place's alert** is the alert tafs cloud already sends, through APNs and FCM. It has
   `open: "taf"` and `taf_id`, which every door alert now carries, so tapping it opens the taf.
 
+### Its oldest waiting case
+
+`oldest_waiting: {since, words, late}` is on the taf's view and on each taf of the list, only when a case
+waits (`runtime/src/cloud/waiting.ts`). It's read each time from what kiff/agents records, with no session:
+
+- **A case waiting for the owner:** a run paused on a call KIFF holds, unanswered, or one past its last try
+  (`needs_you`), since it paused.
+- **Found work that couldn't start:** work its schedule found but couldn't start (waiting for credits, the
+  run before still working, or too late), since the first such scheduled time after the last one that ran or
+  was quiet. Work too big for one run isn't waiting, since it was set aside: its health says so.
+- **The oldest of these** is the one shown: "Oldest case waiting 5 h".
+
+**The promise.** `respond_within`, how many whole hours a case may wait, is the owner's to set per taf
+(`PUT /v1/tafs/{id}/promise {hours: 1–168 | null}`, for someone who manages it). Coach may suggest one from a
+recipe; the owner sets it. With a promise, `promise: {hours}` is on the same views, and past it `late` is
+true: "Oldest case waiting 5 h, past the 4 h you set". With none, nothing is late and no alert is sent.
+
+**The alert.** The sweep reads each taf that has a promise. When its oldest waiting case passes it, the
+phones that answer its holds hear once for that case, in each phone's language: "A case has waited 5 h,
+past the 4 h you set." It opens the taf. A halted, paused or removed taf says nothing, and a case that ends
+and another that waits later is another alert.
+
 ## How it's proven
 
 One end-to-end test (kiff/agents `cmd/e2e`, `crashMidRefund`): Coach sets up a taf that refunds
