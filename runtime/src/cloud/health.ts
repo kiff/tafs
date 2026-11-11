@@ -109,9 +109,12 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   let retrying = false;
   // The scheduled times whose run failed on our side: they neither fail nor recover, like a skip.
   const oursToWatch = new Set(runs.filter(ours).map((r) => r.id));
+  // A firing that counts for nothing: skipped for a halt or a version switch, or whose run failed on our side.
+  const neutral = (f: Fired) => f.outcome === "skipped_halted" || f.outcome === "skipped_switching" || (f.run !== undefined && oursToWatch.has(f.run));
   for (const f of firings) {
     if (f.run && oursToWatch.has(f.run)) continue;
-    if (GOOD_FIRING.has(f.outcome)) break;
+    // Work too big for a run isn't a good firing, but its check read the app: the check failures before it are over.
+    if (GOOD_FIRING.has(f.outcome) || f.outcome === "skipped_too_large") break;
     if (FAILED_FIRING.has(f.outcome)) streak.push(f);
     // A run that didn't finish, whose work goes to the next run: not a failure, and the failures before it
     // are another spell. It's still waiting to go again when nothing has failed or worked since.
@@ -129,6 +132,7 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   // Its newest firings that found only work too big for one run: that work is set aside, not done.
   const tooLarge: Fired[] = [];
   for (const f of firings) {
+    if (neutral(f)) continue;
     if (f.outcome !== "skipped_too_large") break;
     tooLarge.push(f);
   }
@@ -139,6 +143,7 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   // Its newest firings that waited for credits: its work waits too, since the first of them.
   const credits: Fired[] = [];
   for (const f of firings) {
+    if (neutral(f)) continue;
     if (f.outcome !== "skipped_credits") break;
     credits.push(f);
   }

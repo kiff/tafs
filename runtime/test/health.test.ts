@@ -111,6 +111,23 @@ describe("a taf's health", () => {
     expect(level([], firings("run", "skipped_too_large", "skipped_too_large"))).toBe("healthy");
   });
 
+  it("ends a spell of checks that couldn't read the app at one that found work too big: that check read it", () => {
+    const h = healthOf([], firings("skipped_too_large", "failed_check", "failed_check"), NOW);
+    expect(h).toMatchObject({ level: "at_risk", reasons: [{ code: "too_large_one" }] });
+    expect(healthView(h).lines).toEqual(["Its last check found work too big for one run, so nothing ran. Have Coach narrow what it reads, so each piece fits one run."]);
+  });
+
+  it("looks past a skip that counts for nothing to the too-large or credits spell behind it", () => {
+    expect(codes([], firings("skipped_halted", "skipped_too_large", "skipped_too_large"))).toEqual(["too_large"]);
+    expect(codes([], firings("skipped_switching", "skipped_credits"))).toEqual(["credits"]);
+    // Nor a firing whose run failed on our side: the AI provider wasn't serving us.
+    const down = run(15, "ERROR", { id: "run_down", code: "ai_unavailable" });
+    const f = [{ ...fired(15, "failed_unworked"), run: "run_down" }, fired(30, "skipped_credits")];
+    expect(codes([down], f)).toEqual(["credits"]);
+    // A skip that counts for nothing doesn't join two spells across a firing that worked.
+    expect(level([], firings("skipped_switching", "run", "skipped_credits"))).toBe("healthy");
+  });
+
   it("is never healthy while its work waits for credits, with the way to add them, or to ask an admin", () => {
     const h = healthOf([], firings("skipped_credits", "skipped_credits", "run"), NOW);
     expect(h).toMatchObject({ level: "at_risk", reasons: [{ code: "credits", since: ago(30) }] });
