@@ -45,14 +45,18 @@ export interface RequestView {
  */
 export interface SkippedView {
   due: string;
-  why: "missed" | "busy" | "switching" | "check_failed" | "retrying" | "unfinished";
+  why: "missed" | "busy" | "switching" | "check_failed" | "retrying" | "unfinished" | "too_large" | "credits";
   words: string;
 }
 
-/** The firings the page lists, with why each is there. A halt's and a credits skip have their own words elsewhere. */
+/**
+ * The firings the page lists, with why each is there. A halt's skip has its own words elsewhere. Work too big
+ * for one run, and work waiting for credits, are listed too: no run started, and the owner can fix either.
+ */
 const SKIPPED_WHY: Record<string, SkippedView["why"]> = {
   skipped_missed: "missed", skipped_busy: "busy", skipped_switching: "switching",
   failed_check: "check_failed", failed_retrying: "retrying", failed_unfinished: "unfinished",
+  skipped_too_large: "too_large", skipped_credits: "credits",
 };
 
 /** How many skipped firings the page shows, newest first, and from how far back. */
@@ -76,6 +80,7 @@ export function skippedOf(fired: Fired[], zone: string, now: Date, lang: Lang = 
       const words = {
         missed: w.work_skipped_late, busy: w.work_skipped_busy, switching: w.work_skipped_switching,
         check_failed: w.work_check_failed, retrying: w.work_run_retrying, unfinished: w.work_run_unfinished,
+        too_large: w.work_skipped_too_large, credits: w.work_skipped_credits,
       }[why](when);
       return { due: new Date(f.due).toISOString(), why, words };
     });

@@ -217,7 +217,7 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
 
 ### Its health
 
-`health: {level, lines}` is on the same view and on each taf of the list
+`health: {level, lines, fixes?}` is on the same view and on each taf of the list
 (`runtime/src/cloud/health.ts`). `level` is `healthy`, `at_risk` or `failing`, and each line
 says what happened and what the owner can do, in their language. It's read from what
 kiff/agents records, each time, so a taf never stays failing on old history: only the last 7
@@ -225,13 +225,21 @@ days count, of its last 10 runs that ended and its schedule's last 20 times.
 
 | Level | When |
 |---|---|
-| `failing` | two or more scheduled runs in a row couldn't start; its check couldn't read the app two or more times in a row; a scheduled run stopped part-way and its work was dropped; its last three runs failed |
-| `at_risk` | one scheduled run couldn't start, or one check couldn't read the app; its last run didn't finish and its work goes to the next run; two or more of its last ten runs failed, or were cut short by a limit (its turns, its cost, or its reply running out of room); three or more of its last twenty scheduled times were skipped as late or busy |
+| `failing` | two or more scheduled runs in a row couldn't start; its last two or more checks in a row found only work too big for one run, so nothing ran (that work is set aside, not done); its check couldn't read the app two or more times in a row; a scheduled run stopped part-way and its work was dropped; its last three runs failed |
+| `at_risk` | one scheduled run couldn't start, or one check couldn't read the app; its last check found only work too big for one run; its newest scheduled times waited for credits ("Waiting for credits since 09:30"); its last run didn't finish and its work goes to the next run; two or more of its last ten runs failed, or were cut short by a limit (its turns, its cost, or its reply running out of room); three or more of its last twenty scheduled times were skipped as late or busy |
 | `healthy` | none of these |
 
 - **A run of failures ends at the first time that worked:** a run that started, or a check
   that read the app and found nothing new. An empty queue is healthy, however long it lasts.
-- **Never counted:** a skip for a halt, a version switch or credits; a run paused for its
+- **Skipped work is never healthy:** a check that found only work too big for one run, and a
+  scheduled time that waited for credits, started no run. Both show on the taf's `skipped` list
+  (`why: too_large | credits`) and in its health, with the way to fix it.
+- **`fixes`** are the buttons for the lines that have one, decided here:
+  `[{line, kind: coach | credits, words, say?}]`, `line` being the index in `lines`.
+  - `coach` opens Coach with `say` in its message box, to narrow what the taf reads, so each piece fits one run.
+  - `credits` opens Plan & usage: "Add credits" for someone with `billing.manage`, "Ask an admin for credits" for anyone else.
+  - A line with no fix has none, and an app that reads only `lines` sees what it always did.
+- **Never counted:** a skip for a halt or a version switch; a run paused for its
   owner; a run its owner stopped; a run already shown as needing them or as retrying; and an
   outcome this code doesn't know.
 - **Our own outage is never the taf's:** a run that failed because the AI provider wasn't
