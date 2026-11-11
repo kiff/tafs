@@ -14,7 +14,7 @@ import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.j
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
-import { vendorSites, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
+import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
 import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
@@ -5554,7 +5554,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // read only when a step waits; a list that can't be read shows no link (yourstep.ts).
   const stepping = tafs.some((_, i) => (recent[i] ?? []).some((r) => yourStepsOf(r).length > 0));
   const conns = stepping && deps.planqueBase ? await accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []) : [];
-  const yourSteps = tafs.flatMap((t, i) => (recent[i] ?? []).flatMap((r) => yourStepsOf(r, langOf(event), vendorSites(conns, t.kiffAgent)).map((s) => ({ ...s, taf: { id: t.id, name: t.name } }))))
+  const yourSteps = tafs.flatMap((t, i) => (recent[i] ?? []).flatMap((r) => yourStepsOf(r, langOf(event), vendorReach(conns, t.kiffAgent)).map((s) => ({ ...s, taf: { id: t.id, name: t.name } }))))
     .sort((a, b) => a.since.localeCompare(b.since));
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a

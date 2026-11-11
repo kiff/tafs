@@ -4802,7 +4802,7 @@ describe("a step a taf handed its owner", () => {
     const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
     const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
-      return new Response(JSON.stringify({ connections: [{ agent: rae.kiffAgent, vendor: "Example", kind: "key", api: { url: "https://api.example.com" }, status: "approved" }] }), { status: 200 });
+      return new Response(JSON.stringify({ connections: [{ agent: rae.kiffAgent, vendor: "Example", kind: "key", api: { url: "https://app.example.com" }, status: "approved" }] }), { status: 200 });
     }) as Deps["fetch"] };
     const r = await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
     const home = { status: r.statusCode, body: JSON.parse(r.body) };

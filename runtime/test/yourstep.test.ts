@@ -2,12 +2,12 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Requirement, Run } from "../src/cloud/agents.js";
 import { definition, yourStepOn } from "../src/cloud/tafdef.js";
 import { requestOf, summaryOf } from "../src/cloud/work.js";
-import { linkHost, vendorSites, yourStepsOf } from "../src/cloud/yourstep.js";
+import { linkHost, vendorReach, yourStepsOf } from "../src/cloud/yourstep.js";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { jobById } from "../src/jobs.js";
 
 const NOW = new Date("2026-11-11T17:00:00Z");
-const VENDORS = new Set(["example.com", "stripe.com"]);
+const VENDORS = { hosts: ["app.example.com"], sites: new Set(["stripe.com"]) };
 const run = (o: Partial<Run>): Run => ({
   id: "r1", agent: "taf-a", session: "s", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
   created: "2026-11-11T16:00:00Z", updated: "2026-11-11T16:05:00Z", ...o,
@@ -97,16 +97,28 @@ describe("a step's link and the taf's own vendors", () => {
     { agent: "agent-b", vendor: "Other", kind: "key" as const, api: { url: "https://api.other.com" }, status: "approved" },
   ];
 
-  it("are the sites the taf's connections reach, never a cloud function's host or another taf's", () => {
-    expect([...vendorSites(conns, "agent-a")].sort()).toEqual(["example.com", "stripe.com"]);
-    expect([...vendorSites(conns, "agent-c")]).toEqual([]);
+  it("are the hosts the taf's connections reach, and only single-tenant vendors' whole site, never a cloud function's or another taf's", () => {
+    const reach = vendorReach(conns, "agent-a");
+    expect(reach.hosts.sort()).toEqual(["api.example.com", "mcp.stripe.com"]);
+    expect([...reach.sites]).toEqual(["stripe.com"]);
+    expect(vendorReach(conns, "agent-c")).toEqual({ hosts: [], sites: new Set() });
+  });
+
+  it("vouch only for the owner's own host on a platform that gives each customer one", () => {
+    const reach = vendorReach([{ agent: "agent-a", vendor: "Shop", kind: "vendor_sign_in", server: "https://acme.myshopify.com/api/mcp", status: "approved" }], "agent-a");
+    const of = (link: string) => yourStepsOf(run({ requirements: [step({}, { link })] }), "en", reach)[0]!;
+    expect(of("https://acme.myshopify.com/admin/orders/1").link_host).toBe("acme.myshopify.com");
+    expect(of("https://evil.myshopify.com/login").link).toBeUndefined();
+    expect(of("https://myshopify.com/").link).toBeUndefined();
   });
 
   it("show the link only on one of them: a look-alike host a crafted message slipped in is words only", () => {
-    const vendors = vendorSites(conns, "agent-a");
-    const of = (link: string) => yourStepsOf(run({ requirements: [step({}, { link })] }), "en", vendors)[0]!;
+    const reach = vendorReach(conns, "agent-a");
+    const of = (link: string) => yourStepsOf(run({ requirements: [step({}, { link })] }), "en", reach)[0]!;
     expect(of("https://dashboard.stripe.com/payments/1")).toMatchObject({ link_host: "dashboard.stripe.com", words: { open: "Open in Stripe" } });
-    for (const lookalike of ["https://stripe-secure.example/login", "https://stripe.com.evil.example/x", "https://app.other.com/x", "https://abc.execute-api.eu-west-1.amazonaws.com/x"]) {
+    // api.example.com vouches for itself and hosts under it, not for its siblings: example.com isn't single-tenant.
+    expect(of("https://eu.api.example.com/x").link_host).toBe("eu.api.example.com");
+    for (const lookalike of ["https://stripe-secure.example/login", "https://stripe.com.evil.example/x", "https://app.other.com/x", "https://abc.execute-api.eu-west-1.amazonaws.com/x", "https://www.example.com/x"]) {
       const s = of(lookalike);
       expect(s.link, lookalike).toBeUndefined();
       expect(s.words.open, lookalike).toBeUndefined();

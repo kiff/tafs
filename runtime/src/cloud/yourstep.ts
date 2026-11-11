@@ -54,19 +54,40 @@ function siteOf(host: string): string {
 }
 
 /**
- * The sites a taf's connections reach, by planque's list: each connection's server, entry and API host that
- * names a vendor (a cloud function's host names none, so it vouches for nothing).
+ * Vendors whose whole site is theirs alone, so any of its hosts is the vendor's own: a connection to
+ * mcp.stripe.com vouches for dashboard.stripe.com. A platform that gives each customer a host under its site
+ * (myshopify.com, zendesk.com, atlassian.net) is never here: there, another tenant's page could sit beside
+ * the owner's, so only the connection's own host, or one under it, is vouched for.
  */
-export function vendorSites(conns: AccountConnection[], agent: string): Set<string> {
-  const out = new Set<string>();
+const SINGLE_TENANT_SITES = new Set(["stripe.com", "paypal.com", "hubspot.com", "shopify.com", "qonto.com", "xero.com", "intuit.com", "pennylane.com", "mollie.com", "gocardless.com"]);
+
+/** What a taf's connections vouch for: their own hosts (and hosts under them), and the single-tenant sites among them. */
+export interface VendorReach {
+  hosts: string[];
+  sites: Set<string>;
+}
+
+/**
+ * What a taf's connections reach, by planque's list: each connection's server, entry and API host that names a
+ * vendor (a cloud function's host names none, so it vouches for nothing).
+ */
+export function vendorReach(conns: AccountConnection[], agent: string): VendorReach {
+  const reach: VendorReach = { hosts: [], sites: new Set() };
   for (const c of conns) {
     if (c.agent !== agent) continue;
     for (const url of [c.server, c.entry, c.api?.url]) {
       const host = linkHost(url);
-      if (host && vendorName(`https://${host}/`)) out.add(siteOf(host));
+      if (!host || !vendorName(`https://${host}/`)) continue;
+      reach.hosts.push(host);
+      if (SINGLE_TENANT_SITES.has(siteOf(host))) reach.sites.add(siteOf(host));
     }
   }
-  return out;
+  return reach;
+}
+
+/** Whether a link's host is one the taf's connections vouch for. */
+export function vouched(host: string, reach: VendorReach): boolean {
+  return reach.hosts.some((h) => host === h || host.endsWith(`.${h}`)) || reach.sites.has(siteOf(host));
 }
 
 /** The vendor as the button names it: its name from the link's host ("Stripe" for app.stripe.com), else the host without www. or app. */
@@ -84,10 +105,10 @@ function handedAt(q: Requirement, r: Run): string {
 }
 
 /**
- * The open steps a run waits on, oldest first. `vendors` are the sites the taf's connections reach
- * (vendorSites): a link shows only when its host is one of them. Without them, no link shows.
+ * The open steps a run waits on, oldest first. `reach` is what the taf's connections vouch for (vendorReach):
+ * a link shows only when its host is vouched for. Without it, no link shows.
  */
-export function yourStepsOf(r: Run, lang: Lang = "en", vendors: ReadonlySet<string> = new Set()): YourStepView[] {
+export function yourStepsOf(r: Run, lang: Lang = "en", reach: VendorReach = { hosts: [], sites: new Set() }): YourStepView[] {
   if (r.status !== "PAUSED") return [];
   const w = wordsIn(lang);
   const out: YourStepView[] = [];
@@ -97,7 +118,7 @@ export function yourStepsOf(r: Run, lang: Lang = "en", vendors: ReadonlySet<stri
     const what = typeof input.what === "string" ? input.what.trim() : "";
     const why = typeof input.why === "string" ? input.why.trim() : "";
     const https = linkHost(input.link);
-    const host = https && vendors.has(siteOf(https)) ? https : undefined;
+    const host = https && vouched(https, reach) ? https : undefined;
     out.push({
       handoff: q.exception, run: r.id, what, why,
       ...(host ? { link: (input.link as string).trim(), link_host: host } : {}),
