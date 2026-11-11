@@ -1314,7 +1314,7 @@
   "needs_you.waiting_for_browser": "À espera do seu navegador…",
   "needs_you.when_taf_asks_something_outside": "Quando um taf pede algo fora do seu Card, aguarda a sua resposta. Um alerta avisa-o de imediato, neste {device} e no ecrã bloqueado, mesmo com o tafs fechado.",
   "needs_you.your_step.ended": "Este passo já teve resposta ou terminou.",
-  "needs_you.your_step.not_answered": "A sua resposta não foi enviada. {why}",
+  "needs_you.your_step.not_answered": "A sua resposta não chegou. {why}",
   "needs_you.your_step.not_answered_unconfirmed": "Sem resposta: não foi confirmado.",
   "overview.hero": "{figure} {words}",
   "overview.nothing_yet": "Ainda nada",

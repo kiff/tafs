@@ -1316,7 +1316,7 @@
     <string name="needs_you_unsure_coach_not_opened">Coach non è riuscito ad aprirsi su questo. %1$s</string>
     <string name="needs_you_waiting_for_browser">In attesa del browser…</string>
     <string name="needs_you_when_taf_asks_something_outside">Quando un taf chiede qualcosa fuori dalla sua Card, aspetta la tua risposta. Un avviso te lo dice subito, su questo %1$s e sulla sua schermata di blocco, anche con tafs chiusa.</string>
-    <string name="needs_you_your_step_ended">Questo passaggio ha già una risposta o è terminato.</string>
+    <string name="needs_you_your_step_ended">Questo passo ha già una risposta o è terminato.</string>
     <string name="needs_you_your_step_not_answered">La tua risposta non è andata a buon fine. %1$s</string>
     <string name="needs_you_your_step_not_answered_unconfirmed">Nessuna risposta: non è stato confermato.</string>
     <string name="overview_hero">%1$s %2$s</string>

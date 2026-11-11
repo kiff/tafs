@@ -65687,7 +65687,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questo passaggio ha già una risposta o è terminato."
+            "value": "Questo passo ha già una risposta o è terminato."
           }
         },
         "nl": {
@@ -65734,7 +65734,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre réponse n'est pas passée. %1$@"
+            "value": "Votre réponse n'a pas abouti. %1$@"
           }
         },
         "it": {
@@ -65758,7 +65758,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua resposta não foi enviada. %1$@"
+            "value": "A sua resposta não chegou. %1$@"
           }
         }
       }
