@@ -4681,5 +4681,28 @@ describe("the oldest waiting case and the owner's promise", () => {
     w2.agents.halts.set(`t_acme|${RAE}`, { on: true, at: ago(10) });
     expect(await sweepLate(d2)).toEqual([]);
     expect(w2.pushed).toHaveLength(0);
+    // A paused taf says nothing either: nothing of it runs until it's resumed.
+    const { w: w3, deps: d3 } = setUp();
+    w3.now = new Date(AT.getTime() + 3 * 3600_000);
+    await w3.tafs.put("t_acme", { ...w3.tafs.held.get(`t_acme#${RAE}`)!, respondWithin: 1, paused: true });
+    expect(await sweepLate(d3)).toEqual([]);
+    expect(w3.pushed).toHaveLength(0);
+  });
+
+  it("says a held case once, even when its run moves while it still waits", async () => {
+    const { w, deps } = setUp();
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: ago(200), at: ago(200), outcome: "run", run: "run_held" }]);
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_held", agent: RAE, session: "s", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
+      created: ago(180), updated: ago(170), requirements: [{ call_id: "c", tool: "stripe_refund", input: {}, operation: "o", exception: "exc_1", expires: ago(-600) }] });
+    await w.tafs.put("t_acme", { ...w.tafs.held.get(`t_acme#${RAE}`)!, respondWithin: 2 });
+    w.now = AT;
+    expect(await sweepLate(deps)).toEqual([{ tenant: "t_acme", taf: RAE }]);
+    // The owner answers part of it, and steers it: the run moves, and still waits on its hold.
+    w.agents.runs[0] = { ...w.agents.runs[0]!, updated: new Date(AT.getTime() - 60_000).toISOString() };
+    w.now = new Date(AT.getTime() + 2.5 * 3600_000);
+    expect(await sweepLate(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(1);
+    const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(page.body.oldest_waiting).toMatchObject({ since: ago(180), late: true });
   });
 });

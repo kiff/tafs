@@ -1,5 +1,5 @@
 import { writeFileSync } from "node:fs";
-import { inflateSync } from "node:zlib";
+import { deflateSync, inflateSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -35,6 +35,20 @@ function pixels(png: Uint8Array) {
     }
   }
   return { w, h, at: (x: number, y: number) => Array.from(out.subarray(y * stride + x * 4, y * stride + x * 4 + 4)) };
+}
+
+/** A w×h 8-bit RGBA PNG of one colour: a raster source with no tile of its own. */
+function rawPNG(w: number, h: number, rgba: number[]): Uint8Array {
+  const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = (b: Buffer) => { let c = 0xffffffff; for (const x of b) c = crcTable[(c ^ x) & 255]! ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const chunk = (type: string, data: Buffer) => {
+    const head = Buffer.alloc(8); head.writeUInt32BE(data.length, 0); head.write(type, 4, "ascii");
+    const tail = Buffer.alloc(4); tail.writeUInt32BE(crc(Buffer.concat([head.subarray(4), data])), 0);
+    return Buffer.concat([head, data, tail]);
+  };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr.set([8, 6, 0, 0, 0], 8);
+  const rows = Buffer.concat(Array.from({ length: h }, () => Buffer.from([0, ...Array.from({ length: w }, () => rgba).flat()])));
+  return new Uint8Array(Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(rows)), chunk("IEND", Buffer.alloc(0))]));
 }
 
 /** A store, a source fetcher that counts, and the real renderer unless a test swaps it. */
@@ -151,7 +165,9 @@ describe("logos", () => {
   });
 
   it("draws a PNG source on its tile too, and refuses one too big or not a PNG", async () => {
-    const png = await render(STRIPE);
+    // A raster logo as a vendor sends it, black to its edges, with no tile of its own.
+    const png = rawPNG(16, 16, [0, 0, 0, 255]);
+    expect(pixels(png).at(8, 0)).toEqual([0, 0, 0, 255]);
     const ok = setup({ type: "image/png", bytes: png });
     await nameLogos(ok.store, [URL_OK], NOW);
     const tiled = (await logoFor(ok.store, logoKey(URL_OK), ok.deps))!.png;

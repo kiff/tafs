@@ -28,14 +28,18 @@ export interface WaitingView {
 
 /**
  * The oldest case the taf has waiting, or undefined when none does:
- *   - a run paused for its owner (a call KIFF holds, unanswered, or one past its last try), since it paused;
+ *   - a run paused for its owner on a call KIFF holds, unanswered, since the run began: kiff/agents moves a
+ *     run's `updated` on every change, a partial answer or a note's retry among them, so a case that still
+ *     waits would look younger, and be alerted again. It over-states the wait by the minutes the run worked
+ *     before it paused, never under-states it;
+ *   - a run past its last try (needs_you), since it stopped: such a run moves only on retries of its note;
  *   - work its schedule found but couldn't start (credits, busy, missed), since the first such firing after
  *     the last one that ran or was quiet. Work too big for one run was set aside, not kept: health says it.
  */
 export function oldestWaiting(runs: Run[], fired: Fired[]): Waiting | undefined {
   const held = runs
     .filter((r) => r.state === "needs_you" || (r.status === "PAUSED" && r.requirements?.some((q) => q.exception && !q.answered)))
-    .map((r) => r.updated)
+    .map((r) => (r.status === "PAUSED" ? r.created : r.updated))
     .filter((at) => !Number.isNaN(Date.parse(at)));
   let work: string | undefined;
   for (const f of fired) {
@@ -69,7 +73,7 @@ export function waitingView(waiting: Waiting, promiseHours: number | undefined, 
   const isLate = late(waiting, promiseHours, now);
   return {
     since: new Date(waiting.since).toISOString(),
-    words: isLate ? w.waiting_late(age, w.waiting_hours(promiseHours!)) : w.waiting_line(age),
+    words: isLate ? w.waiting_late(age, durationIn(promiseHours! * 3600_000, lang)) : w.waiting_line(age),
     late: isLate,
   };
 }
@@ -77,5 +81,5 @@ export function waitingView(waiting: Waiting, promiseHours: number | undefined, 
 /** The alert for a case past the promise: the taf's name, how long, and the promise. */
 export function lateAlert(taf: string, waiting: Waiting, promiseHours: number, now: Date, lang: Lang = "en"): { title: string; body: string } {
   const w = wordsIn(lang);
-  return { title: taf, body: w.waiting_alert(durationIn(now.getTime() - Date.parse(waiting.since), lang), w.waiting_hours(promiseHours)) };
+  return { title: taf, body: w.waiting_alert(durationIn(now.getTime() - Date.parse(waiting.since), lang), durationIn(promiseHours * 3600_000, lang)) };
 }

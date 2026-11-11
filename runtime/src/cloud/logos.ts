@@ -176,11 +176,6 @@ export function pngOK(b: Uint8Array): boolean {
 }
 
 /**
- * Why an SVG isn't drawn, or "": no DOCTYPE or entity (no entity expansion), no script, and nothing that
- * points outside it. Every href is a fragment or an embedded raster image, and every url() a fragment.
- * The renderer loads nothing either way; this refuses such a logo outright.
- */
-/**
  * The SVG without its public DOCTYPE, the line many editors write (`<!DOCTYPE svg PUBLIC "…" "…">`): it names
  * the SVG 1.1 DTD, loads nothing and declares nothing. One with an internal subset (`[`), where entities are
  * declared, is left as it is, so unsafeSVG refuses it.
@@ -189,6 +184,11 @@ export function withoutPublicDoctype(svg: string): string {
   return svg.replace(/<!DOCTYPE\s+svg\s+PUBLIC\s+"[^"[\]<>]*"\s+"[^"[\]<>]*"\s*>/i, "");
 }
 
+/**
+ * Why an SVG isn't drawn, or "": no DOCTYPE or entity (no entity expansion), no script, and nothing that
+ * points outside it. Every href is a fragment or an embedded raster image, and every url() a fragment.
+ * The renderer loads nothing either way; this refuses such a logo outright.
+ */
 export function unsafeSVG(svg: string): string {
   if (!/<svg[\s>]/i.test(svg)) return "no svg element";
   if (/<!DOCTYPE|<!ENTITY/i.test(svg)) return "a DOCTYPE or an entity";
