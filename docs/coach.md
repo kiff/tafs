@@ -637,7 +637,8 @@ those words; the person edits them (the limits are examples) and sends. Coach th
 any request: it connects the tools from the catalog, drafts the Card and hands the taf over. Recipes
 are suggestions, not finished products: there is no recipe-specific code, and when Coach can't
 build one, the gap is fixed generically (a connection, how Coach picks tools, a Card rule), so a
-person can prompt Coach freely. The five starter jobs tafs began with are recipes now.
+person can prompt Coach freely. Four of the five starter jobs tafs began with are recipes now. Bill pay isn't, because no payment
+app it connects can pay today.
 
 They show only while the account has no live taf, and while its "Show suggestions" setting is
 on (the owner's decision): tafs cloud decides, and `GET /v1/recipes` sends the list or an empty

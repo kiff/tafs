@@ -6,7 +6,9 @@ the recipe's words, which they can edit before sending. Coach builds the taf fro
 connections and a Card, as for any other request: there is no recipe-specific code anywhere.
 Recipes are suggestions, not finished products: each is tried in Coach on a test account to find
 where Coach falls short, and every gap gets a generic fix (a connection, how Coach picks tools, a
-Card rule), never recipe-specific code. The five starter jobs tafs began with are recipes here.
+Card rule), never recipe-specific code. Four of the five starter jobs tafs began with are recipes here. Bill pay isn't, because no payment
+app it connects can pay today, and a recipe is only listed when its Card's "does on its own" can be
+done.
 
 One file per recipe, `<id>.md`, with a front matter and the words to say to Coach as the body:
 

@@ -28,7 +28,6 @@ In the app, **Hand it to Coach** opens Coach with those words. All of them, in 8
 | Money | [No refund waits overnight](recipes/refunds-within-a-limit.md) | Answers refund requests and refunds within the Card |
 | Money | [Stop losing disputes you could win](recipes/chargebacks-with-evidence.md) | Answers card disputes with evidence before the deadline |
 | Money | [Get paid without chasing](recipes/chase-overdue-invoices.md) | Reminds customers of overdue invoices; moves no money |
-| Money | [Pay the right bills on time](recipes/pay-matching-bills.md) | Pays vendor bills that match their purchase order |
 | Money | [Keep the customer who's about to leave](recipes/save-a-customer-who-cancels.md) | Offers a cancelling subscriber a free month or a discount |
 | Customers | [Stop answering "where is my order?"](recipes/answer-questions-about-orders.md) | Answers order questions from the shop; passes money to you |
 | Customers | [Never lose a lead to a slow reply](recipes/follow-up-new-leads.md) | Adds each new lead to the CRM and replies within the hour |
