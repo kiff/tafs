@@ -5,5 +5,11 @@
     <style name="Theme.Tafs" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">#FBF7EE</item>
         <item name="android:windowSplashScreenBackground">#FBF7EE</item>
+        <!-- Below Android 15: transparent bars the app draws behind, and the cutout area used, as Android 15 does by itself. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
     </style>
 </resources>

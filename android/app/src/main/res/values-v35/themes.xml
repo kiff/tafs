@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Android 15 and later draw the app edge to edge on their own: no bar colours (deprecated there), only no scrim. -->
+    <style name="Theme.Tafs" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FBF7EE</item>
+        <item name="android:windowSplashScreenBackground">#FBF7EE</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+    </style>
+</resources>
