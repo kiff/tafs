@@ -103,6 +103,11 @@ apart. tafs cloud builds it from its records and KIFF's Cards and held calls, re
 the owner's session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists
 only what KIFF says the person may use or oversee.
 
+A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
+the most of its limit first (its money total or its calls, whichever is further along), then
+KIFF's order: the Card in front is the one at work, never an unused one at 200 of 200 while
+another is half used. The apps keep this order.
+
 Each taf's `job_summary` is what Coach said it does, one line in the owner's language, kept
 from Coach's result (`summary`); a taf from before, or one Coach didn't make, shows its job's
 fixed line. An improvement that changes what the taf does carries its own `summary`: tafs

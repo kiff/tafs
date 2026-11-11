@@ -455,9 +455,21 @@ export function eachItemWords(a: NonNullable<Mandate["aggregates"]>[number]): st
   return `${amount} ${over} for each ${item}`;
 }
 
-/** The live Cards first, then the active ones, each group in KIFF's order. */
+/**
+ * The live Cards first, then the active ones; within each, the one that has used the most of its limit first (its
+ * money total or its calls, whichever is further along), so the Card in front is the one at work, never an unused
+ * one at 200 of 200 while another is half used; then KIFF's order.
+ */
 function shownOrder(a: CardView, b: CardView): number {
-  return Number(b.live) - Number(a.live) || Number(b.active) - Number(a.active);
+  return Number(b.live) - Number(a.live) || Number(b.active) - Number(a.active) || usedShare(b) - usedShare(a);
+}
+
+/** How much of its limit a Card has used, 0 to 1; -1 when its use can't be read, so it goes after those that can. */
+export function usedShare(c: CardView): number {
+  const shares: number[] = [];
+  if (c.total?.used && c.total.limit.minor > 0) shares.push(c.total.used.minor / c.total.limit.minor);
+  if (c.calls && typeof c.calls.used === "number" && c.calls.limit > 0) shares.push(c.calls.used / c.calls.limit);
+  return shares.length ? Math.max(...shares) : -1;
 }
 
 /** What a holder's live Cards allow and have used. */

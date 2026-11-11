@@ -395,7 +395,7 @@ export const en = {
   dial_on_schedule: "On a schedule",
   dial_every_min: (n: number) => `Every ${n} min`,
   dial_every_minutes: (n: number) => `Every ${n} minutes`,
-  dial_every_hours: (n: number, form: Intl.LDMLPluralRule) => `Every ${n} hour${form === "one" ? "" : "s"}`,
+  dial_every_hours: (n: number, form: Intl.LDMLPluralRule) => (form === "one" && n === 1 ? "Every hour" : `Every ${n} hour${form === "one" ? "" : "s"}`),
   dial_every_between: (n: number, from: string, to: string, weekdays: boolean) => `Every ${n} minutes from ${from} to ${to}${weekdays ? " on weekdays" : ""}`,
   dial_daily: (t: string) => `Every day at ${t}`,
   dial_weekdays: "Weekdays",
@@ -413,12 +413,14 @@ export const en = {
   dial_times_a_day: (times: string[]) => `Every day at ${times.join(", ")}`,
   dial_n_a_day: (n: number) => `${n} a day`,
   dial_weekly_at: (codes: string[], t: string) => `${codes.join(", ")} at ${t}`,
-  dial_every_on: (n: number, between: { from: string; to: string } | undefined, codes: string[]) =>
-    `Every ${n} minutes${between ? ` from ${between.from} to ${between.to}` : ""}${codes.length ? ` on ${codes.join(", ")}` : ""}`,
+  // `every` is everyWords (words/index.ts): "Every 15 minutes", "Every 4 hours".
+  dial_every_on: (every: string, between: { from: string; to: string } | undefined, codes: string[]) =>
+    `${every}${between ? ` from ${between.from} to ${between.to}` : ""}${codes.length ? ` on ${codes.join(", ")}` : ""}`,
   dial_once_on: (date: string) => `Once, on ${date.replace("T", " at ")}`,
   dial_wakes_door: "Wakes on its door",
   dial_wakes_vendor: "Wakes on a vendor's event",
-  dial_checks: (operation: string, n: number) => `Checks ${operation} every ${n} minutes, and works only on what's new`,
+  // `every` is everyWords as it reads mid-line: "every 15 minutes", "every 4 hours".
+  dial_checks: (operation: string, every: string) => `Checks ${operation} ${every}, and works only on what's new`,
   // A schedule of a taf that checks its work first (triggers.ts, Check), after its time: "Weekdays at 09:00 · checks for new work first".
   dial_checks_first: "checks for new work first",
   // Run now, or a new taf's first firing, whose check found nothing new: no run started (POST …/run, POST /v1/tafs).

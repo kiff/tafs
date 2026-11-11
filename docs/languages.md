@@ -150,7 +150,10 @@ that tell a message's language, in tafs and kiff/agents together.
   language and each phone gets its own.
 - **Coach** is told the person's language with each message from an app in another language than
   English: a `[tafs language]` line before the owner's words, after tafs' own opening lines, so the
-  thread still shows only the owner's words. Coach answers in it.
+  thread still shows only the owner's words. Coach answers in it. For an account outside UTC, a
+  `[tafs time zone]` line beside it says the account's zone and the time there now, and that every
+  time Coach writes (a cron, an at, a time in a message) is in it, as the owner says it: kiff/agents'
+  own date line is in UTC, and a cron converted to it ran an hour early.
 - **A taf** follows the person writing in its chat. Its reports and alerts to its owner go in the
   account's language, as tafs cloud keeps it from the person's Coach chats: its instructions say so
   from its build, or its next Upgrade once the language changes. A message to a customer keeps the

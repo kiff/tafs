@@ -13,10 +13,10 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
+import { runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
-import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, wordsIn } from "./words/index.js";
+import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
@@ -787,7 +787,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
       ...waitingOf(runs, fired, taf, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
@@ -2928,7 +2928,8 @@ async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: stri
   if (taf.job !== SETUP_JOB) return text;
   // Every Coach message says the person's language when it isn't English (docs/languages.md): Coach replies in it.
   const lang = langOf(event);
-  return withLanguage(await coachStart(me, taf, at, text, event, lang, deps), lang);
+  // And the account's time zone when it isn't UTC: Coach's own clock line is in UTC, a taf's times aren't.
+  return withZone(withLanguage(await coachStart(me, taf, at, text, event, lang, deps), lang), me.timeZone, deps.now?.() ?? new Date());
 }
 
 async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, lang: Lang, deps: Deps): Promise<string> {
@@ -3461,7 +3462,13 @@ async function runsPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps
   const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, sent.filter((s) => s.status === "not_sent").map((s) => s.run)).catch(() => new Set<string>()) : new Set<string>();
   const now = deps.now?.() ?? new Date();
   const last = selected.at(-1);
+  // A firing that started no run (its check couldn't read, it came while the last was still working…) is no run
+  // of kiff/agents', a Run now's included: the first page says them too, as the work page does, so a failed Run now
+  // isn't missing from Its runs. A read that fails leaves them out.
+  const fired = before || taf.unscheduled ? [] : await Promise.resolve().then(() => deps.agents.scheduleFirings(me.tenantID, taf.id, HEALTH_FIRINGS)).catch(() => [] as Fired[]);
+  const skipped = skippedOf(fired, me.timeZone ?? "UTC", now, langOf(event));
   return conditionalPage(event, { ...workOf(selected, me.timeZone ?? "UTC", now, sent, again, undefined, langOf(event)),
+    ...(skipped.length ? { skipped } : {}),
     ...(remaining.length > limit && last ? { next_cursor: Buffer.from(JSON.stringify({ scope, at: last.created, id: last.id })).toString("base64url") } : {}),
     title: wordsIn(langOf(event)).runs_title, more_title: wordsIn(langOf(event)).runs_more, ...(remaining.length <= limit ? { end_words: wordsIn(langOf(event)).runs_end } : {}) });
 }
@@ -5401,6 +5408,8 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     /** It works from its chat: no schedule runs it (kiff/tafs#138). Only said when so. */
     ...(taf.unscheduled ? { unscheduled: true } : {}),
     next_run: s?.enabled && s.next ? iso(s.next) : null,
+    /** The next run in words, with its weekday when it isn't today ("Next run Mon 08:00"): never a bare time that reads as tomorrow. */
+    next_run_words: s?.enabled && s.next ? wordsIn(lang).work_next_run(whenIn(s.next, me.timeZone ?? "UTC", deps.now?.() ?? new Date(), lang)) : null,
     last_run: last ? iso(last.created) : null,
     /** Where its results go (docs/reliability.md). */
     results: placesOf(taf),
@@ -5545,7 +5554,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
-    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now, langOf(event), health) : undefined;
+    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [] }, me.timeZone ?? "UTC", now, langOf(event), health) : undefined;
     return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
       // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
       ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };

@@ -71,6 +71,16 @@ describe("the period's credits, in words", () => {
     });
   });
 
+  // A taf's runs counted on two
+  // lines (by its runtime agent and by its KIFF agent alone) are one row, all its runs.
+  it("gives a taf one row with all its runs, however KIFF splits them", () => {
+    const k = kiffCredits({ by_agent: [
+      { agent: "agt-refunds", runtime_agent: REFUNDS, credits: 30, runs: 2 },
+      { agent: "agt-refunds", runtime_agent: "", credits: 12, runs: 1 },
+    ] });
+    expect(creditsView(k, tafs).tafs).toEqual([{ taf: REFUNDS, credits: 42, runs: 3, words: "Refunds · 42 credits · 3 runs" }]);
+  });
+
   it("puts a taf the person doesn't see, and one removed since, on one row that doesn't open", () => {
     const k = kiffCredits({ by_agent: [
       { agent: "agt-refunds", runtime_agent: REFUNDS, credits: 10, runs: 1 },
