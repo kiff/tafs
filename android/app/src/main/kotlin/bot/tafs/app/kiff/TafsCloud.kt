@@ -75,6 +75,19 @@ class TafsCloud(
   /** The recipes a new Coach conversation opens to, by category (kiff/tafs#476). */
   suspend fun recipes(): Recipes = get("/v1/recipes")
 
+  /** Every job a taf can take, for + New and the strip under the tafs list (docs/android-app.md). */
+  suspend fun gallery(): RecipesGallery = get("/v1/recipes/gallery")
+
+  /**
+   * A logo's image, from tafs cloud only: [path] must be one of its `/v1/logos/{key}` paths, never a URL, so no request ever leaves for
+   * a third party. No session goes with it: logos are public. Null for anything else, or when tafs cloud has none.
+   */
+  suspend fun logo(path: String): ByteArray? {
+    if (!isLogoPath(path)) return null
+    val response = transport.send(HttpRequest("GET", baseUrl + path, mapOf("Accept" to "image/png")))
+    return response.body.takeIf { response.status in 200..299 && it.isNotEmpty() }
+  }
+
   /** The account's "Show suggestions" setting, with tafs cloud's words for it. */
   suspend fun suggestions(): Suggestions = get<SuggestionsAnswer>("/v1/me/suggestions").suggestions
 
@@ -831,6 +844,9 @@ class TafsCloud(
 
   companion object {
     const val DEFAULT_URL = "https://cloud.tafs.kiff.dev"
+
+    /** A logo's path on tafs cloud, `/v1/logos/` and its 32-hex key, and nothing else: no scheme, host, query or `..`. */
+    fun isLogoPath(path: String?): Boolean = path != null && Regex("^/v1/logos/[0-9a-f]{32}$").matches(path)
     /** tafs cloud's streaming function, as the iPhone app reaches it. */
     const val DEFAULT_STREAM_URL = "https://ghjfunc5ppretjo22bl5izlnya0zrocm.lambda-url.eu-west-1.on.aws"
   }

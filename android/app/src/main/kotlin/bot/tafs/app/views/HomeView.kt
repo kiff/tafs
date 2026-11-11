@@ -81,8 +81,10 @@ fun HomeView(
   onHalted: (String) -> Unit = {},
   /** Opens Plan & usage, from the plan's line when it needs the owner. */
   onUsage: () -> Unit = {},
-  /** Opens a recipe's sheet, from Home's list with no taf. */
+  /** Opens a recipe's sheet, from Home's list with no taf, or the strip under the tafs list. */
   onRecipe: (bot.tafs.app.kiff.Recipe) -> Unit = {},
+  /** + New: every job a taf can take (docs/android-app.md); null where there's no gallery to open. */
+  onNewTaf: (() -> Unit)? = null,
   modifier: Modifier = Modifier,
 ) {
   // Pulling to refresh plays the sample's next round; signed in, it reads KIFF again.
@@ -145,7 +147,18 @@ fun HomeView(
       } else {
         item {
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Eyebrow(Words.Home.tagline)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Box(Modifier.weight(1f)) { Eyebrow(Words.Home.tagline) }
+              // + New, in tafs cloud's words: the gallery of every job, also once a taf runs.
+              val newTaf = state.gallery?.words?.title?.takeIf { it.isNotBlank() }
+              if (onNewTaf != null && newTaf != null && state.mayUseCoach) {
+                Text(
+                  "+ $newTaf",
+                  style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+                  modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onNewTaf).padding(horizontal = 4.dp, vertical = 10.dp),
+                )
+              }
+            }
             // A new account's Home leads with the jobs: "0 tafs working" and "Nothing needs you" say nothing yet.
             if (!state.homeLeadsWithRecipes) Headline(state)
           }
@@ -161,6 +174,9 @@ fun HomeView(
             }
           }
         }
+        // A few jobs the account doesn't run yet, under its tafs, as tafs cloud picks them (docs/android-app.md).
+        val gallery = state.gallery
+        if (gallery != null && state.tafs.isNotEmpty() && state.mayUseCoach && gallery.stripRecipes.isNotEmpty()) item { JobStrip(gallery, onRecipe) }
         if (state.otherAgents.isNotEmpty()) {
           // Agents made through KIFF's API, not run by tafs: their Cards, apart.
           item {

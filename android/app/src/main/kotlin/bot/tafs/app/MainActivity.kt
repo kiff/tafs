@@ -213,7 +213,8 @@ class MainActivity : FragmentActivity() {
           model.requestOpen(openFromAlert)
           openFromAlert = null
         }
-        CompositionLocalProvider(LocalBiometry provides biometry) { RootView(model) }
+        val logos = remember(model) { bot.tafs.app.design.LogoStore(java.io.File(cacheDir, "logos"), model::logo) }
+        CompositionLocalProvider(LocalBiometry provides biometry, bot.tafs.app.design.LocalLogos provides logos) { RootView(model) }
       }
     }
   }
@@ -389,6 +390,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var usageOpen by rememberSaveable { mutableStateOf(false) }
   // A recipe's sheet, opened from Home with no taf.
   var recipeOpen by rememberSaveable { mutableStateOf<String?>(null) }
+  var galleryOpen by rememberSaveable { mutableStateOf(false) }
   var versionsTaf by rememberSaveable { mutableStateOf<String?>(null) }
   val versionActions = remember(model) {
     VersionActions(
@@ -631,6 +633,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onHalted = { id -> haltTaf = if (!state.haltOf(null).running) null else id; haltOpen = true },
               onUsage = { usageOpen = true },
               onRecipe = { recipeOpen = it.id },
+              onNewTaf = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryOpen = true }) else null,
             )
           }
           val detail: @Composable (String) -> Unit = { id ->
@@ -801,12 +804,21 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     versionsTaf?.let { taf ->
       VersionsSheet(taf, state, versionActions, onOpenTrial = { versionsTaf = null; trialTaf = taf; tab = Tab.Tafs; openTaf = taf }, onClose = { versionsTaf = null })
     }
+    if (galleryOpen) state.gallery?.let { gallery ->
+      bot.tafs.app.views.GallerySheet(
+        gallery, canUseCoach = state.mayUseCoach,
+        onOpen = { recipeOpen = it.id },
+        onOwnWords = { galleryOpen = false; model.openCoachEmpty() },
+        onClose = { galleryOpen = false },
+      )
+    }
     recipeOpen?.let { id ->
+      // From Home with no taf, the gallery, or the strip: the same sheet, with tafs cloud's words for it.
       val recipes = state.recipes
-      val recipe = recipes?.recipes?.firstOrNull { it.id == id }
-      val labels = recipes?.labels
+      val recipe = recipes?.recipes?.firstOrNull { it.id == id } ?: state.gallery?.recipes?.firstOrNull { it.id == id }
+      val labels = recipes?.labels ?: state.gallery?.labels
       // A recipe no longer listed (the account has a taf now, or the list was read again) shows no sheet.
-      if (recipe != null && labels != null) bot.tafs.app.views.RecipeSheet(recipe, labels, canHand = state.mayUseCoach, onHand = { recipeOpen = null; model.handRecipeToCoach(recipe) }, onClose = { recipeOpen = null })
+      if (recipe != null && labels != null) bot.tafs.app.views.RecipeSheet(recipe, labels, canHand = state.mayUseCoach, onHand = { recipeOpen = null; galleryOpen = false; model.handRecipeToCoach(recipe) }, onClose = { recipeOpen = null })
     }
     if (usageOpen) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
     // A taf's runs: over Plan & usage from its Credits row, or over its page from its Usage row.

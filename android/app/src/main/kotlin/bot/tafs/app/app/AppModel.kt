@@ -367,6 +367,8 @@ data class AppState(
   val coachTools: bot.tafs.app.kiff.CoachTools? = null,
   /** The recipes a new Coach conversation opens to, from tafs cloud; null until read, or when they couldn't be. */
   val recipes: bot.tafs.app.kiff.Recipes? = null,
+  /** Every job a taf can take, for + New and the strip under the tafs list; null before it's read, or from an older tafs cloud. */
+  val gallery: bot.tafs.app.kiff.RecipesGallery? = null,
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
@@ -1143,6 +1145,8 @@ class AppModel(
       nameRecordLines(generation)
       // An account with no taf: Home lists the recipes, when tafs cloud says so (docs/android-app.md).
       if (_state.value.tafs.isEmpty()) loadRecipes()
+      // The jobs a taf can take, for + New and the strip under the list, read with each refresh.
+      loadGallery()
     } catch (e: CancellationException) {
       cancelled = true
       throw e
@@ -1625,6 +1629,13 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach) return
     newCoachChat()
     setDraft(COACH_CHAT, recipe.say)
+    _state.update { it.copy(coachRequested = true) }
+  }
+
+  /** "Say it in your own words": a new Coach conversation, empty, to build a taf with the person. */
+  fun openCoachEmpty() {
+    if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach) return
+    newCoachChat()
     _state.update { it.copy(coachRequested = true) }
   }
 
@@ -2516,6 +2527,20 @@ class AppModel(
     if (generation == accountGeneration) _state.update { it.copy(recipes = recipes) }
   }
 
+  /** Reads the gallery: every job, and the strip's. A tafs cloud without it, or a read that fails, leaves what was read. */
+  suspend fun loadGallery() {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    val gallery = try {
+      cloud.gallery()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(gallery = gallery) }
+  }
+
   /** The calendar shows another view or date: kept in the state, so a rotation keeps it. */
   fun showCalendar(calendar: bot.tafs.app.model.CalendarState) {
     _state.update { it.copy(calendarState = calendar) }
@@ -2678,6 +2703,9 @@ class AppModel(
 
   /** The tools step put off, or done: the row above the conversation opens it again. */
   fun notNowCoachTools() = _state.update { it.copy(coachToolsAsked = false) }
+
+  /** A logo's image from tafs cloud, for [bot.tafs.app.design.LogoStore]: only its own `/v1/logos/` paths. */
+  suspend fun logo(path: String): ByteArray? = cloud.logo(path)
 
   private fun startFailed(words: String) = _state.update { it.copy(coachStartError = words) }
 

@@ -373,9 +373,16 @@ fun ConnectAppsSheet(
 private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}, onManage: ((ConnectApps.App) -> Unit)? = null) {
   Panel {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-      // The app's initial on a tile; tafs cloud names the app, the tile is only a marker.
-      Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(tileColor(app.title)), contentAlignment = Alignment.Center) {
-        Text(app.title.take(1).uppercase(), style = scaled(15, FontWeight.ExtraBold, Color.White))
+      // The app's logo from tafs cloud, small and as it is; without one, its initial on a tile, which is only a marker.
+      val logo = bot.tafs.app.design.rememberLogo(app.logo)
+      if (logo != null) {
+        Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+          androidx.compose.foundation.Image(logo, contentDescription = null, modifier = Modifier.size(28.dp))
+        }
+      } else {
+        Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(tileColor(app.title)), contentAlignment = Alignment.Center) {
+          Text(app.title.take(1).uppercase(), style = scaled(15, FontWeight.ExtraBold, Color.White))
+        }
       }
       // Its title alone: the provider's own id for it means nothing to a person; an app not set up yet says so under it.
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
