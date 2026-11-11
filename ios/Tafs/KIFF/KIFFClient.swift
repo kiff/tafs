@@ -413,9 +413,19 @@ final class KIFFClient {
         var kind: String? = nil
         var count: Int? = nil
         var lastAt: Date? = nil
+        /// What the call is on and why, in the taf's own words, kept by KIFF with the hold
+        /// (`taf_about`, a business reference such as "Order 1042"; `taf_reason`, the customer's
+        /// reason). Unsigned, never used to decide anything, and possibly from a customer's
+        /// text: the apps draw them as the taf's words, plain, and nothing else is taken from
+        /// them. One that isn't text is left out, never the hold.
+        var tafAboutText: LenientItem<String>? = nil
+        var tafReasonText: LenientItem<String>? = nil
+        var tafAbout: String? { tafAboutText?.value }
+        var tafReason: String? { tafReasonText?.value }
 
         enum CodingKeys: String, CodingKey {
             case proposalID = "proposal_id", canApproveOnce = "can_approve_once", reasonText = "reason_text"
+            case tafAboutText = "taf_about", tafReasonText = "taf_reason"
             case id, subject, action, title, arguments, status, breaches, parameters, reason, kind, count
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"

@@ -1293,6 +1293,7 @@
     <string name="needs_you_sign_in_again_to_answer">Log uit en opnieuw in om vanaf deze telefoon te antwoorden, zodat KIFF de sleutel kent. Of beantwoord deze in KIFF.</string>
     <string name="needs_you_someone_answers">Iemand die in dit account goedkeurt, beantwoordt dit. Het antwoord verschijnt hier.</string>
     <string name="needs_you_tab_label">Wacht op jou, %1$s</string>
+    <string name="needs_you_taf_says">Het taf zegt</string>
     <string name="needs_you_title">Wacht op jou</string>
     <string name="needs_you_turn_alerts">Meldingen aanzetten</string>
     <string name="needs_you_turning_on">Aanzetten…</string>
