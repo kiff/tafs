@@ -82,14 +82,21 @@ otherwise the list holds its settled order. The taf's Card tab offers **Sign in 
 one approval, then the vendor's own page, and it's signed in only once planque answers
 connected: "Checking the sign-in…" meanwhile (`connectStep`).
 
-**A taf's work:** the Activity tab of a taf on tafs cloud (`TafActivityList`, in the order
-`TafActivityList.parts` gives) shows the taf's Needs you items, then `GET /v1/tafs/{id}/work`
+**A taf's work:** the Activity tab of a taf on tafs cloud (`TafActivityList`, chosen by
+`TafDetailView.pane`) shows the taf's Needs you items, then `GET /v1/tafs/{id}/work`
 ([reliability.md](reliability.md#the-tafs-view); `WorkPanel`, `AppModel.loadWork`): tafs
 cloud's line, then its recent requests and skipped firings, newest first, in tafs cloud's words.
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
 given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`). Then its
 runs (`RunsPanel`): when it runs next, or that it works from its chat, and **Run now**; then the
-runs it kept (`RetainedRuns`).
+runs it kept (`RetainedRuns`). The runs come before the work, as on Android
+(`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
+(`oldest_waiting.words`, tafs cloud's line, amber once `late`) and, for whoever manages the taf,
+**Answer within** (`PromiseRow`): the promise as tafs cloud keeps it (`promise.hours`) or Not set,
+and a menu of None, 1, 2, 4, 8, 24, 48 or 168 hours that sends `PUT /v1/tafs/{id}/promise`
+(`AppModel.setPromise`). The app keeps no copy; a promise that couldn't be set says why under the
+work. The phones that answer its holds are told when a case waits longer; tafs cloud sends that
+alert, and it opens the taf.
 
 **A taf that isn't healthy** ([reliability.md](reliability.md#its-health); `HealthLines`,
 `TafsCloud.Health`): skipped work is never healthy, so the phone says why and what fixes it.

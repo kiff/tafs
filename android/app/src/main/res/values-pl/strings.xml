@@ -2339,6 +2339,16 @@
     <string name="voice_title">Dyktowanie</string>
     <string name="voice_voice_becomes_text_device_not">Twój głos zamienia się w tekst na tym urządzeniu. Nie zostanie wysłany, dopóki go nie wyślesz.</string>
     <string name="voice_what_you_said_stays_message">Podyktowany tekst zostaje w polu wiadomości, niewysłany.</string>
+    <string name="work_answer_within">Odpowiedź w ciągu</string>
+    <plurals name="work_answer_within_hours">
+        <item quantity="one">%1$s godzina</item>
+        <item quantity="few">%1$s godziny</item>
+        <item quantity="many">%1$s godzin</item>
+        <item quantity="other">%1$s godziny</item>
+    </plurals>
+    <string name="work_answer_within_line">Dostaniesz powiadomienie, gdy sprawa czeka dłużej.</string>
+    <string name="work_answer_within_none">Nie ustawiono</string>
+    <string name="work_answer_within_not_set">Nie udało się tego ustawić. %1$s</string>
     <string name="work_asking_kiff_run">Prośba do KIFF o uruchomienie %1$s…</string>
     <string name="work_did_not_stop">Nie zatrzymało się: %1$s</string>
     <string name="work_duration_minutes">%1$s min %2$s s</string>

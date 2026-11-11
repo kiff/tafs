@@ -2215,6 +2215,14 @@
     <string name="voice_title">Dettatura</string>
     <string name="voice_voice_becomes_text_device_not">La tua voce diventa testo su questo dispositivo. Non viene inviata finché non la invii tu.</string>
     <string name="voice_what_you_said_stays_message">Ciò che hai detto resta nella casella del messaggio, non inviato.</string>
+    <string name="work_answer_within">Rispondi entro</string>
+    <plurals name="work_answer_within_hours">
+        <item quantity="one">%1$s ora</item>
+        <item quantity="other">%1$s ore</item>
+    </plurals>
+    <string name="work_answer_within_line">Ti avvisiamo quando un caso aspetta di più.</string>
+    <string name="work_answer_within_none">Non impostato</string>
+    <string name="work_answer_within_not_set">Non è stato possibile impostarlo. %1$s</string>
     <string name="work_asking_kiff_run">Richiesta a KIFF di eseguire %1$s…</string>
     <string name="work_did_not_stop">Non si è fermato: %1$s</string>
     <string name="work_duration_minutes">%1$s min %2$s s</string>

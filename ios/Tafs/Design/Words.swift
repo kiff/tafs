@@ -4417,6 +4417,16 @@ enum Words {
         static var whatYouSaidStaysMessage: String { Words.line("voice.what_you_said_stays_message") }
     }
     enum Work {
+        /// Answer within
+        static var answerWithin: String { Words.line("work.answer_within") }
+        /// {count} hours
+        static func answerWithinHours(count: Int) -> String { Words.count("work.answer_within_hours", count) }
+        /// You're told when a case waits longer.
+        static var answerWithinLine: String { Words.line("work.answer_within_line") }
+        /// Not set
+        static var answerWithinNone: String { Words.line("work.answer_within_none") }
+        /// It couldn't be set. {why}
+        static func answerWithinNotSet(why: String) -> String { Words.line("work.answer_within_not_set", why) }
         /// Asking KIFF to run {tool}…
         static func askingKiffRun(tool: String) -> String { Words.line("work.asking_kiff_run", tool) }
         /// It didn't stop: {why}
