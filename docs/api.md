@@ -94,7 +94,7 @@ What the owner sees is in [connect-apps.md](connect-apps.md#disconnecting).
 |---|---|---|
 | `GET /v1/recipes` | a person | The recipes a new Coach conversation opens to ([coach.md](coach.md#recipes)): `{categories: [{id, title}], recipes: [{id, title, category, headline, today, line, say, connections: [[vendor…]…], card: {allows[], holds[], never[]}}], filtered, shown, suggestions: {show, reason, words}, home: {shown, words}, labels: {allows, holds, never, hand}}`, every word in the person's language (`Accept-Language`, the eight languages; English otherwise). `headline` is the problem the recipe ends, `today` what it costs today, in words. `home.shown` is true only while `shown` is, for a person with `cards.manage`, and with at least one recipe listed: Home then leads with the recipes under `home.words`; otherwise `home.words` is Home's empty line ("No tafs yet. Connect an app to set up your first taf.", or "…Tafs shared with you show here." without `cards.manage`). `labels` are the recipe sheet's three zones and its button. Shown only while the account has no live taf and its suggestions are on (the owner's decision): otherwise `categories` and `recipes` are empty, `shown` is false and `suggestions.words` say why; the apps draw only what comes. The recipes in `recipes/`, filtered to those whose every connection has a vendor the account's catalog lists, read from planque with the person's session, page by page. `categories` are the ones with a recipe, in order, with the title the apps show. `say` is what a tap puts in Coach's message box; the person edits it before sending. When the catalog can't be read, or has more pages than tafs cloud reads, every recipe is listed and `filtered` is false: a recipe is never hidden for a vendor that wasn't seen, and the page is never blank for that. Each recipe also carries `apps`, `connected` and, for someone with `cards.manage`, `running`, as the gallery has them |
 | `GET /v1/recipes/gallery` | a person | The gallery behind **+ New** on Tafs, and the strip under the tafs list ([coach.md](coach.md#the-gallery)): `{categories: [{id, title}], recipes: [{…every field of /v1/recipes' recipes…, apps: [{name, logo?}], connected, running?}], filtered, strip: {shown, title, ids}, words: {title, all, own_words, own_words_line}, labels: {allows, holds, never, hand}}`, in the person's language. Every job the catalog can connect, at any time: also once a taf is live, whatever "Show suggestions" says. `apps` has one per connection, the vendor it would use: one already connected, else the first the catalog lists, else the recipe's first; `name` is the catalog's title. `logo` is a path on tafs cloud (`/v1/logos/{key}`), never a URL: the apps load it from tafs cloud alone, and draw the name alone without it. `connected`: every app it needs is connected. `running`, only for someone with `cards.manage`, who can see every taf: a taf on the account was built from it. `strip.shown` only for someone with `cards.manage`, once the account has a live taf (before, Home leads with every job), with suggestions on and a job to show; `ids` are at most 3 jobs not `running`, every app connected first, then some, then none, each group in recipe order: the apps draw them in that order. `words` are the gallery's title, its "All jobs" heading, and "Say it in your own words", which opens Coach empty, with its line |
-| `GET /v1/logos/{key}` | anyone | An app's logo ([Logos](#logos)): a PNG of at most 96 px a side, `Cache-Control: public, max-age=604800`. No session: image loaders send none, and these are public brand images. Only keys tafs cloud recorded are served; any other, or a logo that can't be had, is a 404, and the app draws the name alone |
+| `GET /v1/logos/{key}` | anyone | An app's logo ([Logos](#logos)): a 96 px square PNG, the logo on a light rounded tile, `Cache-Control: public, max-age=604800`. No session: image loaders send none, and these are public brand images. Only keys tafs cloud recorded are served; any other, or a logo that can't be had, is a 404, and the app draws the name alone |
 
 ### Alerts
 
@@ -204,7 +204,7 @@ See [doors.md](doors.md). Reading and changing both need managing the taf: someo
 
 ## Logos
 
-The apps show each app's logo, small and unaltered, next to its name, and load it only from tafs cloud, so
+The apps show each app's logo, small and on a light tile, next to its name, and load it only from tafs cloud, so
 no person's address reaches a third party (`logos.ts`).
 
 - **Named:** when tafs cloud builds a view from planque's catalog (Connect apps, the gallery, the recipes), it
@@ -217,13 +217,16 @@ no person's address reaches a third party (`logos.ts`).
 - **Fetched:** https only, to an address that is public after the name resolves (private, loopback,
   link-local with the metadata service, shared, documentation and reserved ranges refused, IPv4 inside IPv6
   too; one such answer refuses the name), with no redirect followed, in 5 s and 256 KB at most, and only an
-  SVG or a PNG. A source that fails isn't tried again for a day.
-- **Drawn:** Composio's logos are SVG, which neither phone draws by itself, so tafs cloud draws each as a PNG of
-  at most 96 px a side, fitted by its longer side (resvg, as WebAssembly, in a worker thread stopped after
-  2 s). An SVG with a DOCTYPE or entity, a script or foreign content, an href that isn't a fragment or an
-  embedded raster image, a `url()` that isn't a fragment, a size over 10,000 or a side 16 times the other is
-  refused; the renderer loads no font, file or image either way. A PNG source is checked (at most 1,024 px a
-  side, 200 KB) and kept as it is.
+  SVG or a PNG. A source that fails isn't tried again for a day, and tafs cloud's log says why it failed
+  (`logo_refused`, with the key).
+- **Drawn:** Composio's logos are SVG, which neither phone draws by itself, so tafs cloud draws each as a
+  96 px square PNG: the logo, fitted by its longer side into the middle three quarters, on a white rounded
+  tile, so a dark logo reads on a dark screen and both apps show the same (resvg, as WebAssembly, in a
+  worker thread stopped after 2 s). The standard public DOCTYPE line (`<!DOCTYPE svg PUBLIC "…" "…">`,
+  with no internal subset) is dropped first; any other DOCTYPE or an entity, a script or foreign content,
+  an href that isn't a fragment or an embedded raster image, a `url()` that isn't a fragment, a size over
+  10,000 or a side 16 times the other is refused, and the renderer loads no font, file or image either way.
+  A PNG source is checked (at most 1,024 px a side, 200 KB) and drawn on the same tile.
 - **Bounded:** at most 300 new logos a day across accounts, so the store holds at most about 9,000.
 
 ## A taf's estimate
