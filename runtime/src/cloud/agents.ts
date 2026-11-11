@@ -689,6 +689,15 @@ export class Agents {
   }
 
   /**
+   * The account's PAUSED runs across its agents, newest first, from kiff/agents' per-tenant paused list (GET
+   * /runs/paused): one read for a whole account. `tool` keeps the runs waiting on a call of that tool.
+   */
+  async pausedRuns(tenant: string, tool?: string, limit = 100): Promise<Run[]> {
+    const out = await this.call<{ runs: Run[] }>("GET", tenant, ["runs", "paused"], undefined, { limit: String(limit), ...(tool ? { tool } : {}), ...AS_SERVICE });
+    return out.runs;
+  }
+
+  /**
    * Starts a run in the foreground and reads its stream (server-sent events):
    * the run first, what the agent does as it does it, then where it stopped.
    * A refusal before the stream begins throws, as `startRun` does. The run is

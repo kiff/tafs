@@ -4837,6 +4837,31 @@ describe("a step a taf handed its owner", () => {
     expect(w.pushed).toHaveLength(2);
   });
 
+  it("reads each account once a pass, its paused runs waiting on a step, never each taf's runs", async () => {
+    process.env.TAFS_YOUR_STEP = "on";
+    const { w, deps } = setUp();
+    // A run paused on a call KIFF held, not a step: not read as one.
+    w.agents.runs.unshift({ ...w.agents.runs.find((r) => r.id === "run_step")!, id: "run_held",
+      requirements: [{ call_id: "c2", tool: "stripe_refund", operation: "op-2", exception: "ex_2", expires: ago(-60), input: {} }] });
+    w.agents.calls.length = 0;
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: false }]);
+    const reads = w.agents.calls.filter((c) => c.startsWith("pausedRuns") || c.startsWith("runs"));
+    expect(new Set(reads)).toEqual(new Set((await depsOf(w).tafs.tenants()).map((t) => `pausedRuns ${t} your_step`)));
+    // A taf being removed says nothing, even with its step still paused.
+    const { w: w2, deps: d2 } = setUp();
+    w2.tafs.held.get(`t_acme#${RAE}`)!.removing = true;
+    expect(await sweepYourSteps(d2)).toEqual([]);
+  });
+
+  it("logs an account whose paused runs can't be read, and goes on with the others", async () => {
+    process.env.TAFS_YOUR_STEP = "on";
+    const { w, deps } = setUp();
+    w.agents.fail.set("pausedRuns", new Error("down"));
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    w.agents.fail.delete("pausedRuns");
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: false }]);
+  });
+
   it("says only the reminder for a step first seen past a day, and nothing for a halted taf", async () => {
     process.env.TAFS_YOUR_STEP = "on";
     const { w, deps } = setUp(25 * 60);
