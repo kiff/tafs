@@ -1,0 +1,1 @@
+- **Changelog entries are one file per pull request.** A pull request adds its entry as `changes/<branch>.md` and no longer edits CHANGELOG.md, so open pull requests stop conflicting on its first line; `scripts/changelog.py fold` moves them in at a release, and the References check enforces it (changes/README.md).
