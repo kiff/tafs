@@ -2009,7 +2009,8 @@ class AppModel(
     }
     if (generation != accountGeneration) return
     val taf = _state.value.taf(tafId) ?: return
-    var updated = taf.copy(paused = schedule.paused, nextRun = schedule.nextRun)
+    // The schedule's answer carries no words for the new time: the app's own format stands in until Home is read again.
+    var updated = taf.copy(paused = schedule.paused, nextRun = schedule.nextRun, nextRunWords = null)
     if (taf.state != TafState.waiting && taf.state != TafState.revoked && taf.state != TafState.halted) {
       updated = updated.copy(
         state = if (schedule.paused) TafState.paused else TafState.working,

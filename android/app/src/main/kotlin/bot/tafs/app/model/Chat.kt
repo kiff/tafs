@@ -234,6 +234,10 @@ object Chat {
   fun workRows(work: bot.tafs.app.kiff.TafWork): List<WorkRow> =
     (work.requests.map { WorkRow.Request(it) } + work.skipped.map { WorkRow.Skipped(it) }).sortedByDescending { it.at }
 
+  /** A page of the runs a taf kept, with the firings that started no run (on the first page) in their place by time, newest first. */
+  fun runRows(page: bot.tafs.app.kiff.TafRunsPage): List<WorkRow> =
+    (page.requests.map { WorkRow.Request(it) } + page.skipped.map { WorkRow.Skipped(it) }).sortedByDescending { it.at }
+
   /** One row of a chat: a thread item (by its index), or a door's knock waiting on the owner. */
   sealed interface Row {
     val key: String

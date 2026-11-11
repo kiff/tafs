@@ -361,6 +361,13 @@ app's own lines stand in only where tafs cloud sends none.
 
 ## A taf's work
 
+**Its row's line** is tafs cloud's: the next run as `next_run_words` ("Next run Mon 08:00", with its day when it isn't
+today; the app's own format only where an older tafs cloud sends none, and after a pause or resume until Home is read
+again), and, when its work's summary has `attention` (a failed check, an unhealthy taf, a run stopped at a cap or failed),
+that summary's `line` in place of "Working" (`KiffMapping.taf`). Its Cards keep tafs cloud's order, which puts first the
+one that has used the most of its limit; the app sorts none (`Taf.shownCards`). **Its runs** show the first page's
+`skipped` firings in their place by time (`Chat.runRows`), so a Run now whose check couldn't read shows there.
+
 The Activity tab of a taf on tafs cloud (`TafActivityList`) shows, for whoever manages it, its
 doors' knocks first (`KnocksPanel`: strangers' knocks with Do it, Pair them and Ignore, then paired
 senders), so a knock Needs you counts is on the taf's page too. Then come its held calls, then where its

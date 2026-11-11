@@ -116,6 +116,8 @@ data class HomeTaf(
   @SerialName("schedule_time_zone_words") val scheduleTimeZoneWords: String? = null,
   val status: String? = null,
   @SerialName("next_run") @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
+  /** The next run in the person's language, its weekday when it isn't today ("Next run Mon 08:00"): drawn as is. */
+  @SerialName("next_run_words") val nextRunWords: String? = null,
   @SerialName("last_run") @Serializable(with = InstantAsString::class) val lastRun: Instant? = null,
   val color: Int = 0,
   /** working, paused, waiting, idle (an agent tafs doesn't run) or stopped (no active Card). */

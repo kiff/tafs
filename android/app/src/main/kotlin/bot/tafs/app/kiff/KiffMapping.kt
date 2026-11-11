@@ -154,9 +154,15 @@ object KiffMapping {
       h.state == "halted" -> taf.copy(state = TafState.halted, now = Words.Taf.Now.halted)
       // Its run waits for a connected app's event (the slow-tools design): not the owner's, in the connection's words.
       h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = h.work.line)
+      // Something went wrong first (a failed check, its health, a run stopped or failed): tafs cloud's line, never "Working".
+      h.work?.attention == true && h.work.line.isNotBlank() -> taf.copy(state = TafState.idle, now = h.work.line)
       // A taf with no schedule isn't at work until it's told something in its chat (kiff/tafs#138, item 55).
       h.state == "working" && h.unscheduled == true -> taf.copy(state = TafState.idle, now = Words.Taf.Now.worksFromChat)
-      h.state == "working" -> taf.copy(state = TafState.working, now = h.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.running)
+      h.state == "working" -> taf.copy(
+        state = TafState.working,
+        // tafs cloud's words, with the day when it isn't today; the app's own format only where an older tafs cloud sends none.
+        now = h.nextRunWords?.takeIf { it.isNotBlank() } ?: h.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.running,
+      )
       h.state == "idle" -> taf.copy(state = TafState.idle, now = Words.Taf.Now.actingUnderKiff)
       h.state == "stopped" -> taf.copy(state = TafState.revoked, now = Words.Taf.Now.cardNotActive)
       // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
@@ -171,6 +177,7 @@ object KiffMapping {
       cloudId = h.id,
       paused = h.status == "paused",
       nextRun = h.nextRun,
+      nextRunWords = h.nextRunWords?.takeIf { it.isNotBlank() },
       worksFromChat = h.unscheduled == true,
       results = h.results,
       timeZoneWords = h.timeZoneWords,

@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
@@ -238,6 +239,16 @@ internal fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppSta
   if (open) ReceiptSheet(entry, state) { open = false }
 }
 
+/** One line of Its runs: a run, which opens its steps, or a firing that started no run, in tafs cloud's words. */
+@Composable
+private fun RunRow(row: bot.tafs.app.model.Chat.WorkRow, taf: Taf, actions: TafActions) {
+  val scope = rememberCoroutineScope()
+  when (row) {
+    is bot.tafs.app.model.Chat.WorkRow.Request -> TextButton({ scope.launch { actions.openRequest(taf.id, row.request.id) } }) { Text(row.request.line, color = Theme.ink) }
+    is bot.tafs.app.model.Chat.WorkRow.Skipped -> Text(row.firing.words, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+  }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
@@ -247,9 +258,8 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
   val scope = rememberCoroutineScope()
   Panel {
     Eyebrow(source?.pages?.firstOrNull()?.title ?: Words.Taf.itsWork)
-    source?.pages?.forEach { page -> page.requests.forEach { run ->
-      TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) }
-    } }
+    // Its runs, with the firings that started no run in their place (a failed Run now's check), as tafs cloud words them.
+    source?.pages?.forEach { page -> bot.tafs.app.model.Chat.runRows(page).forEach { row -> RunRow(row, taf, actions) } }
     source?.error?.let { Text(it, color = Theme.no) }
     TextButton({ all = true }) { Text(source?.pages?.firstOrNull()?.moreTitle ?: Words.Taf.showAllRuns, color = Theme.amberText) }
   }
@@ -262,7 +272,9 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
     LaunchedEffect(end, next, loading, failed) { if (end && next != null && !loading && !failed) scope.launch { actions.loadRuns(taf.id, true, true) } }
     LazyColumn(Modifier.fillMaxWidth().heightIn(min = 160.dp, max = 600.dp), state = list, contentPadding = PaddingValues(16.dp)) {
       item { Text(Words.Taf.itsWork, style = scaled(24, FontWeight.Bold, Theme.ink)) }
-      cache?.pages?.forEach { page -> items(page.requests, key = { it.id }) { run -> TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) } } }
+      cache?.pages?.forEach { page ->
+        items(bot.tafs.app.model.Chat.runRows(page), key = { row -> when (row) { is bot.tafs.app.model.Chat.WorkRow.Request -> row.request.id; is bot.tafs.app.model.Chat.WorkRow.Skipped -> "skipped|" + row.firing.due } }) { row -> RunRow(row, taf, actions) }
+      }
       if (cache?.loading != false) item { CircularProgressIndicator(color = Theme.amber) }
       else if (next == null) cache.pages.lastOrNull()?.endWords?.let { words -> item { Text(words, style = scaled(13, color = Theme.dim)) } }
       cache?.error?.let { item { Text(it, color = Theme.no); TextButton({ scope.launch { actions.loadRuns(taf.id, false, true) } }) { Text(Words.Common.tryAgain, color = Theme.amberText) } } }
