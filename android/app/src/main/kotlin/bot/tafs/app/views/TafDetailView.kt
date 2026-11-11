@@ -329,21 +329,12 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
 }
 
 /**
- * What it did and what it's waiting for: what waits for you first (its holds, its doors' knocks), then its work and last run, then
- * its Record by day. Each request opens step by step; each call opens what KIFF signed.
+ * The Activity of a taf tafs cloud doesn't run (the sample's, or an agent with Cards only): what waits for you, then its Record by
+ * day. A taf on tafs cloud draws [TafActivityList] instead, with its runs and its work.
  */
 @Composable
 private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
   state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) }
-  if (state.mode == Mode.kiff && taf.cloudId != null) {
-    if (state.manages(taf.id)) {
-      LaunchedEffect(taf.id) { actions.doors.load(taf.id) }
-      KnocksPanel(taf, state, actions.doors)
-    }
-    RunsPanel(taf, taf.id in state.runsInFlight, actions, state.runNowQuiet[taf.id])
-    WorkPanel(taf, state, actions)
-    RunReportPanel(taf.id, state.reports[taf.id], actions)
-  }
   ActivityRecord(state.entries(taf.id), state)
 }
 
@@ -416,7 +407,7 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions, quiet: 
  * reply given up on offers Send again to whoever manages the taf.
  */
 @Composable
-private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
+internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
   val scope = rememberCoroutineScope()
   LaunchedEffect(taf.id) { actions.loadWork(taf.id) }
   val work = state.works[taf.id]
@@ -473,39 +464,6 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
       }
     }
     error?.let { Text(it, style = scaled(13, color = Theme.no)) }
-  }
-}
-
-/** The taf's latest run on tafs cloud and, once it stops, what it reported. */
-@Composable
-private fun RunReportPanel(tafId: String, report: RunReport?, actions: TafActions) {
-  val scope = rememberCoroutineScope()
-  LaunchedEffect(tafId) { actions.loadReport(tafId) }
-  Panel {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-      Eyebrow(Words.Taf.lastRun)
-      Spacer(Modifier.weight(1f))
-      Text(
-        Words.Taf.refresh,
-        style = scaled(13, color = Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.loadReport(tafId) } }.padding(top = 12.dp),
-      )
-    }
-    if (report == null) {
-      CircularProgressIndicator(Modifier.size(18.dp), color = Theme.amber, strokeWidth = 2.dp)
-    } else {
-      report.at?.let { at ->
-        val how = if (report.finished) Words.Taf.Report.finished else if (report.status == "running") Words.Taf.Report.stillRunning else Words.Taf.Report.noSession
-        Text("${shortTime(at)} · $how", style = scaled(12, color = Theme.dim, mono = true))
-      }
-      when {
-        // A taf writes markdown: shown as the chat shows it, never raw (kiff/tafs#96).
-        report.text.isNotEmpty() -> MarkdownText(report.text, size = 14, modifier = Modifier.fillMaxWidth())
-        report.session == null && report.error == null -> Text(Words.Taf.Report.noRunYet, style = scaled(14, color = Theme.dim))
-        !report.finished && report.error == null -> Text(Words.Taf.Report.whenRunEnds, style = scaled(14, color = Theme.dim))
-      }
-      report.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
-    }
   }
 }
 

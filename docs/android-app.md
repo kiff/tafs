@@ -335,8 +335,9 @@ app's own lines stand in only where tafs cloud sends none.
 
 ## A taf's work
 
-The Activity tab shows where the taf's work stands, from `GET /v1/tafs/{id}/work`
-([reliability.md](reliability.md#the-tafs-view); `WorkPanel`, `AppModel.loadWork`): tafs cloud's
+The Activity tab of a taf on tafs cloud (`TafActivityList`) shows where its work stands under
+its runs, from `GET /v1/tafs/{id}/work` ([reliability.md](reliability.md#the-tafs-view);
+`WorkPanel`, `AppModel.loadWork`): tafs cloud's
 summary line, then its recent requests and skipped firings, newest first, each in tafs cloud's
 words (`Chat.workRows`). A request that needs the owner is amber, a failed one red; a skipped
 firing ("Skipped the 9:00 run: the last one was still working", `skipped[]`) isn't a failure, so

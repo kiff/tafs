@@ -192,6 +192,8 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     latest?.cardUnitExceptionsNotice?.let { notice -> item { Text(notice, style = scaled(13, color = Theme.dim)) } }
     // When it runs, with Run now and Pause, ahead of what it did.
     item(key = "runs") { RunsPanel(taf, taf.id in state.runsInFlight, actions, state.runNowQuiet[taf.id]) }
+    // Where its work stands, as tafs cloud says it: its health with its fixes, its oldest waiting case, Answer within, its requests.
+    item(key = "work") { WorkPanel(taf, state, actions) }
     item { RetainedRuns(taf, state, actions) }
     if (selection.isNotBlank()) item { TextButton(clearSelection) { Text(Words.Taf.Activity.allApps, color = Theme.amberText) } }
     item {
