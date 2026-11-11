@@ -141,8 +141,8 @@ describe("Coach's core", () => {
   // Coach said it was set up (A4).
   it("sizes the job before drafting it, and never calls a taf working after its first check failed", () => {
     const body = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("Size the job first: make the check's read once yourself (its arguments, limit 1, the total if given); never hand over a check you haven't seen read.");
-    expect(body).toContain("Over 50 waiting, or no total: bound the kickoff and instructions (the 20 most recent, and the total) and tell the owner how many wait.");
+    expect(body).toContain("Size the job first: make the check's read once (its arguments, limit 1, the total if given); never hand over a check you haven't seen read.");
+    expect(body).toContain("Over 50 waiting, or no total: bound the kickoff and instructions (the 20 most recent, and the total) and say how many wait.");
     expect(body).toContain("An answer with check: its first check couldn't read. Never call the taf ready or working: say what failed and fix it with taf_dial.");
   });
 

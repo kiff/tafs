@@ -56,8 +56,11 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   set up, and tools: the tools' names in KIFF as planque's status lists them
   (post_reply_k3f9), never their titles or the owner's words for them. Its name
   is one no other taf has (tafs_state): if it's taken, the first free "<name>
-  2", "<name> 3"…, as tafs would name it; call it that. Show plan again with every step done or
-  skipped. The job is the one you drafted from the owner's words: the result's taf carries it as kickoff (what
+  2", "<name> 3"…, as tafs would name it; call it that. Decide unscheduled by
+  the rule above, for any vendor: a taf whose tools list payments but not the
+  requests to refund them is one. Show plan again with every step done or
+  skipped. The job is the one you drafted from the owner's words, any job at
+  all, never one of a fixed list: the result's taf carries it as kickoff (what
   each run is asked to do), instructions (how it works, from what you agreed with the owner:
   what it does with each piece of work, what it offers instead, and its never
   rules, in plain sentences; the Card still decides every call; what it tells
@@ -72,10 +75,10 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   through its Card at every firing (96 a day at every 15 minutes): the read's
   calls a day must allow that. Never a check on a read that doesn't list the
   work: with no such read, unscheduled.
-- Size the job first: make the check's read once yourself (its arguments,
+- Size the job first: make the check's read once (its arguments,
   limit 1, the total if given); never hand over a check you haven't seen read.
   Over 50 waiting, or no total: bound the kickoff and instructions (the 20 most
-  recent, and the total) and tell the owner how many wait.
+  recent, and the total) and say how many wait.
 - A taf with cron: before its result, call taf_estimate (recipe, lang)
   and say its words as given in your message right before the result card,
   never a figure of your own; on estimate: false, say nothing about cost.
@@ -98,7 +101,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   When the name was taken, show result again at once with the same agent id
   and draft under a new name. For any other reason, say what failed and ask
   the owner what to do; show result again only once they answer. A draft
-  confirmed but not claimed never means the owner's approval failed.
+  that's confirmed but not claimed means the taf didn't start; it doesn't mean
+  the owner's approval failed.
 
 ## Verification
 
