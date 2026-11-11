@@ -335,8 +335,11 @@ app's own lines stand in only where tafs cloud sends none.
 
 ## A taf's work
 
-The Activity tab shows where the taf's work stands, from `GET /v1/tafs/{id}/work`
-([reliability.md](reliability.md#the-tafs-view); `WorkPanel`, `AppModel.loadWork`): tafs cloud's
+The Activity tab of a taf on tafs cloud (`TafActivityList`) shows, for whoever manages it, its
+doors' knocks first (`KnocksPanel`: strangers' knocks with Do it, Pair them and Ignore, then paired
+senders), so a knock Needs you counts is on the taf's page too. Then come its held calls, then where its
+work stands, then its runs (the same order on iOS: what needs the owner first), from `GET /v1/tafs/{id}/work` ([reliability.md](reliability.md#the-tafs-view);
+`WorkPanel`, `AppModel.loadWork`): tafs cloud's
 summary line, then its recent requests and skipped firings, newest first, each in tafs cloud's
 words (`Chat.workRows`). A request that needs the owner is amber, a failed one red; a skipped
 firing ("Skipped the 9:00 run: the last one was still working", `skipped[]`) isn't a failure, so
@@ -367,6 +370,15 @@ taf's row says: its work's `line` carries health's first reason only while `work
 `idle`, since halted, needs you, retrying, working, waiting on an app and paused come first. While
 idle and at risk or failing, the row shows that line amber or red (`HomeTaf.health`,
 `Taf.nowHealth`). Otherwise it reads as before, untinted.
+
+**Its oldest waiting case** ([reliability.md](reliability.md#its-oldest-waiting-case);
+`TafWork.oldestWaiting`) shows under its health, in tafs cloud's `words` ("Oldest case waiting
+5 h, past the 4 h you set"): amber once it's `late`, soft otherwise, and nothing while no case
+waits. For whoever manages the taf, **Answer within** (`PromiseRow`) shows its `promise` as tafs
+cloud keeps it, or Not set. Its menu offers Not set, 1, 2, 4, 8, 24, 48 or 168 hours, and sends
+`PUT /v1/tafs/{id}/promise {hours | null}` (`AppModel.setPromise`), then reads the work again.
+tafs cloud checks the range, and a refusal says why on the panel. tafs cloud sends the late alert,
+which opens the taf. The app keeps no copy of the promise and works out nothing from it.
 
 ## When something doesn't go through
 

@@ -697,5 +697,6 @@ enabled for `cards.manage`, and a new conversation draws only the recipes that c
 
 **Android** reads them each time Coach opens, with Coach's setup (`AppModel.loadRecipes`), and
 draws them in an empty conversation that isn't improving a taf (`CoachStarts`): each category's
-title, then its recipes' `title` and `line`. A tap sets the conversation's draft to `say`. Recipes
+title, then each recipe named as the gallery and Home name it, by its `headline` (else its
+`title`), with its `line` under it. A tap sets the conversation's draft to `say`. Recipes
 not read leave the conversation open without them, with no error: Coach still takes any job.
