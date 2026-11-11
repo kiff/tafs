@@ -315,6 +315,16 @@ data class TafHealth(
 ) {
   /** The fix for line [index], if tafs cloud sent one. */
   fun fixFor(index: Int): HealthFix? = fixes.firstOrNull { it.line == index }
+
+  /**
+   * Whether a work's line is this health's first reason, as tafs cloud says it on an idle taf's work (docs/reliability.md): the first
+   * line is that reason, then what to do ("…, so nothing ran" and "…, so nothing ran. Narrow it with Coach."), so the page says it once.
+   */
+  fun repeats(workLine: String): Boolean {
+    val line = workLine.trim()
+    if ((level != "at_risk" && level != "failing") || line.isEmpty()) return false
+    return lines.firstOrNull()?.startsWith(line) == true
+  }
 }
 
 /**

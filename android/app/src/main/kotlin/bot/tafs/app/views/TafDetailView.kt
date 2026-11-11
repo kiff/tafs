@@ -420,7 +420,8 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
   if (work == null && error == null) return
   Panel {
     Eyebrow(Words.Taf.itsWork)
-    work?.summary?.line?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
+    // An idle taf's work line is its first health reason: said once, under its health.
+    work?.summary?.line?.takeIf { it.isNotBlank() && work.health?.repeats(it) != true }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     work?.health?.let { h ->
       HealthLines(h, canUseCoach = state.mayUseCoach, onCoach = { say -> actions.askCoachAbout(taf.id, say) }, onPlan = actions.openPlan)
     }

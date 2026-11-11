@@ -349,7 +349,9 @@ message box, sent only by the owner (`askCoachAbout`). The request sheet's **Try
 is the door reply's alone. A `taf` live update reads it again where the page has.
 
 **Its health** ([reliability.md](reliability.md#its-health); `HealthLines`, `TafWork.health`)
-shows under the summary line: each of tafs cloud's `health.lines`, amber when `at_risk` and red
+shows under the summary line. An idle taf's summary line is its first reason, and health's first
+line is that reason followed by what to do, so the summary line is left out when it begins health's
+first line (`TafHealth.repeats`, as on iOS). Health shows: each of tafs cloud's `health.lines`, amber when `at_risk` and red
 when `failing`. Skipped work is never healthy, so a check that found work too big for one run,
 or a time that waited for credits, shows here and among the skipped firings (`why: too_large`,
 `credits`, in tafs cloud's words). Under a line with a fix (`health.fixes[].line`), its button

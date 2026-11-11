@@ -7,6 +7,8 @@ import bot.tafs.app.kiff.TafWork
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -112,5 +114,18 @@ class TafHealthTest {
     assertNull(byId["orders"]?.nowHealth)
     assertEquals(bot.tafs.app.model.Words.Taf.Now.actingUnderKiff, byId["orders"]?.now)
     assertNull(byId["returns"]?.nowHealth)
+  }
+
+  @Test fun theTafsPageSaysTheFirstReasonOnce() {
+    val h = read("""{"health":{"level":"at_risk","lines":["Its last check found work too big for one run, so nothing ran. Narrow what it reads with Coach.","Two of its last ten runs failed."]}}""").health!!
+    // The work's line is the first reason, alone or with what to do.
+    assertTrue(h.repeats("Its last check found work too big for one run, so nothing ran"))
+    assertTrue(h.repeats("Its last check found work too big for one run, so nothing ran. Narrow what it reads with Coach."))
+    // Any other line is said.
+    assertFalse(h.repeats("Next run today at 14:00"))
+    assertFalse(h.repeats("Two of its last ten runs failed"))
+    assertFalse(h.repeats("  "))
+    // A healthy taf's line is said.
+    assertFalse(read("""{"health":{"level":"healthy","lines":["Its last check found work too big for one run"]}}""").health!!.repeats("Its last check found work too big for one run"))
   }
 }
