@@ -1390,7 +1390,7 @@ object Words {
     fun deleteGroupTitle(group: String): String = Res.s(R.string.people_delete_group_title, group)
     val deleteThisGroupTitle: String get() = Res.s(R.string.people_delete_this_group_title)
     val everyoneGroup: String get() = Res.s(R.string.people_everyone_group)
-    fun everyoneIn(group: String): String = Res.s(R.string.people_everyone_in, group)
+    val everyoneIn: String get() = Res.s(R.string.people_everyone_in)
     fun everyoneUses(taf: String, people: String): String = Res.s(R.string.people_everyone_uses, taf, people)
     val everyoneUsesNone: String get() = Res.s(R.string.people_everyone_uses_none)
     fun groupActions(group: String): String = Res.s(R.string.people_group_actions, group)

@@ -1341,7 +1341,7 @@
     <string name="people_delete_group_title">¿Eliminar %1$s?</string>
     <string name="people_delete_this_group_title">¿Eliminar este grupo?</string>
     <string name="people_everyone_group">Todos</string>
-    <string name="people_everyone_in">Todas las personas de la cuenta están en %1$s. Invita a gente desde el panel de KIFF.</string>
+    <string name="people_everyone_in">Todas las personas de la cuenta están aquí. Invita a gente desde el panel de KIFF.</string>
     <string name="people_everyone_uses">Todo el mundo usa %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Toda la cuenta · no usa ningún taf</string>
     <string name="people_group_actions">Acciones de %1$s</string>

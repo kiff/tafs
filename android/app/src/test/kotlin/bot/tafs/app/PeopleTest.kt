@@ -134,6 +134,20 @@ class PeopleTest {
     assertTrue(lines.contains("Everyone uses Refunds: ana@acme.com."))
   }
 
+  @Test fun noOneIsAddedToOrTakenOutOfKiffsDefaultGroupHere() = runTest {
+    val m = model()
+    m.refreshPeople()
+    val s = m.state.value
+    val everyone = s.groups.single { it.everyone == true }
+    val member = everyone.members.first()
+    assertTrue("a manager of people may manage it", s.managesGroup(everyone))
+    assertFalse(bot.tafs.app.views.mayAddTo(everyone, s))
+    assertFalse(bot.tafs.app.views.mayRemoveFrom(everyone, member, s))
+    // Any other group, as before.
+    val other = s.groups.first { it.everyone != true }
+    assertTrue(bot.tafs.app.views.mayAddTo(other, s))
+  }
+
   @Test fun theConsequencesSayWhoGetsItAndWhoStops() {
     val lines = PeopleWords.consequences("Refunds", had = setOf(Share(subject = "u_ana")), chosen = setOf(Share(group = "g_sup")), groups = listOf(support), people = listOf(maria, ana))
     assertEquals(

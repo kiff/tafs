@@ -66904,49 +66904,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle im Konto sind in %1$@. Lade Personen über das KIFF-Dashboard ein."
+            "value": "Alle im Konto sind hier. Lade Personen über das KIFF-Dashboard ein."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everyone on the account is in %1$@. Invite people from the KIFF dashboard."
+            "value": "Everyone on the account is here. Invite people from the KIFF dashboard."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todas las personas de la cuenta están en %1$@. Invita a gente desde el panel de KIFF."
+            "value": "Todas las personas de la cuenta están aquí. Invita a gente desde el panel de KIFF."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout le monde sur le compte fait partie de %1$@. Invitez des personnes depuis le tableau de bord KIFF."
+            "value": "Tout le monde sur le compte est ici. Invitez des personnes depuis le tableau de bord KIFF."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutti nell'account sono in %1$@. Invita persone dalla dashboard di KIFF."
+            "value": "Tutti nell'account sono qui. Invita persone dalla dashboard di KIFF."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iedereen in het account zit in %1$@. Nodig mensen uit via het KIFF-dashboard."
+            "value": "Iedereen in het account staat hier. Nodig mensen uit via het KIFF-dashboard."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wszyscy na koncie są w %1$@. Zapraszaj osoby z panelu KIFF."
+            "value": "Wszyscy na koncie są tutaj. Zapraszaj osoby z panelu KIFF."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todas as pessoas da conta estão em %1$@. Convide pessoas a partir do painel do KIFF."
+            "value": "Todas as pessoas da conta estão aqui. Convide pessoas a partir do painel do KIFF."
           }
         }
       }

@@ -245,7 +245,7 @@ struct AddToGroupSheet: View {
                         }
                     }
                     if outside.isEmpty {
-                        Text(Words.People.everyoneIn(group: "\(group.name)"))
+                        Text(Words.People.everyoneIn)
                             .scaledFont(14).foregroundColor(Theme.dim)
                     }
                 } header: { Text(Words.People.accountPeopleTitle) }

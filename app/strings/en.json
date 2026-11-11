@@ -1338,7 +1338,7 @@
   "people.delete_group_title": "Delete {group}?",
   "people.delete_this_group_title": "Delete this group?",
   "people.everyone_group": "Everyone",
-  "people.everyone_in": "Everyone on the account is in {group}. Invite people from the KIFF dashboard.",
+  "people.everyone_in": "Everyone on the account is here. Invite people from the KIFF dashboard.",
   "people.everyone_uses": "Everyone uses {taf}: {people}.",
   "people.everyone_uses_none": "Everyone on the account · uses no taf",
   "people.group_actions": "{group} actions",

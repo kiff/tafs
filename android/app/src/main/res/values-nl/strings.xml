@@ -1341,7 +1341,7 @@
     <string name="people_delete_group_title">%1$s verwijderen?</string>
     <string name="people_delete_this_group_title">Deze groep verwijderen?</string>
     <string name="people_everyone_group">Iedereen</string>
-    <string name="people_everyone_in">Iedereen in het account zit in %1$s. Nodig mensen uit via het KIFF-dashboard.</string>
+    <string name="people_everyone_in">Iedereen in het account staat hier. Nodig mensen uit via het KIFF-dashboard.</string>
     <string name="people_everyone_uses">Iedereen gebruikt %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Iedereen in het account · gebruikt geen taf</string>
     <string name="people_group_actions">Acties voor %1$s</string>

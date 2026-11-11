@@ -147,6 +147,16 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
   }
 }
 
+/** Whether this person may add someone to [group]: never KIFF's default group, which already holds everyone on the account. */
+internal fun mayAddTo(group: Group, state: AppState): Boolean = state.managesGroup(group) && group.everyone != true
+
+/**
+ * Whether this person may take [member] out of [group]: never out of KIFF's default group, which is the account itself; people
+ * are invited and removed in KIFF.
+ */
+internal fun mayRemoveFrom(group: Group, member: bot.tafs.app.kiff.GroupMember, state: AppState): Boolean =
+  group.everyone != true && (state.canManagePeople || (state.managesGroup(group) && !member.isManager))
+
 /** A group: its name, the tafs it uses, its people (managers first), and its actions for whoever may take them. */
 @Composable
 private fun GroupPanel(
@@ -176,7 +186,7 @@ private fun GroupPanel(
       }
     }
     PeopleWords.managersFirst(group.members, state.people).forEach { member -> MemberRow(member, group, state, setMember, removeMember) }
-    if (state.managesGroup(group)) {
+    if (mayAddTo(group, state)) {
       Text(Words.People.addSomeone(group.shownName), style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 8.dp))
     }
   }
@@ -189,7 +199,7 @@ private fun MemberRow(member: GroupMember, group: Group, state: AppState, setMem
   // Naming or changing a manager is for whoever manages people (KIFF's members.manage), not for the group's manager; a group's
   // manager removes its members, and removing a manager is for whoever manages people, as KIFF allows.
   val mayRole = state.canManagePeople
-  val mayRemove = state.canManagePeople || (state.managesGroup(group) && !member.isManager)
+  val mayRemove = mayRemoveFrom(group, member, state)
   Box {
     Row(
       Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled = mayRole || mayRemove) { menu = true }.padding(vertical = 6.dp),
@@ -283,7 +293,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
               Text(person.label, style = scaled(15, color = Theme.ink), maxLines = 1)
             }
           }
-          if (outside.isEmpty()) Text(Words.People.everyoneIn(group.shownName), style = scaled(14, color = Theme.dim))
+          if (outside.isEmpty()) Text(Words.People.everyoneIn, style = scaled(14, color = Theme.dim))
         }
         state.peopleError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
       }

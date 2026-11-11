@@ -2573,8 +2573,8 @@ enum Words {
         static var deleteThisGroupTitle: String { Words.line("people.delete_this_group_title") }
         /// Everyone
         static var everyoneGroup: String { Words.line("people.everyone_group") }
-        /// Everyone on the account is in {group}. Invite people from the KIFF dashboard.
-        static func everyoneIn(group: String) -> String { Words.line("people.everyone_in", group) }
+        /// Everyone on the account is here. Invite people from the KIFF dashboard.
+        static var everyoneIn: String { Words.line("people.everyone_in") }
         /// Everyone uses {taf}: {people}.
         static func everyoneUses(taf: String, people: String) -> String { Words.line("people.everyone_uses", taf, people) }
         /// Everyone on the account · uses no taf

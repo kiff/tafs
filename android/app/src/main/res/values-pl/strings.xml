@@ -1443,7 +1443,7 @@
     <string name="people_delete_group_title">Usunąć %1$s?</string>
     <string name="people_delete_this_group_title">Usunąć tę grupę?</string>
     <string name="people_everyone_group">Wszyscy</string>
-    <string name="people_everyone_in">Wszyscy na koncie są w %1$s. Zapraszaj osoby z panelu KIFF.</string>
+    <string name="people_everyone_in">Wszyscy na koncie są tutaj. Zapraszaj osoby z panelu KIFF.</string>
     <string name="people_everyone_uses">Wszyscy używają %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Wszyscy na koncie · nie używa żadnego tafa</string>
     <string name="people_group_actions">Akcje grupy %1$s</string>

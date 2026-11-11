@@ -1338,7 +1338,7 @@
   "people.delete_group_title": "{group} verwijderen?",
   "people.delete_this_group_title": "Deze groep verwijderen?",
   "people.everyone_group": "Iedereen",
-  "people.everyone_in": "Iedereen in het account zit in {group}. Nodig mensen uit via het KIFF-dashboard.",
+  "people.everyone_in": "Iedereen in het account staat hier. Nodig mensen uit via het KIFF-dashboard.",
   "people.everyone_uses": "Iedereen gebruikt {taf}: {people}.",
   "people.everyone_uses_none": "Iedereen in het account · gebruikt geen taf",
   "people.group_actions": "Acties voor {group}",

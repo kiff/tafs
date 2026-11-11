@@ -1338,7 +1338,7 @@
   "people.delete_group_title": "Supprimer {group} ?",
   "people.delete_this_group_title": "Supprimer ce groupe ?",
   "people.everyone_group": "Tout le monde",
-  "people.everyone_in": "Tout le monde sur le compte fait partie de {group}. Invitez des personnes depuis le tableau de bord KIFF.",
+  "people.everyone_in": "Tout le monde sur le compte est ici. Invitez des personnes depuis le tableau de bord KIFF.",
   "people.everyone_uses": "Tout le monde utilise {taf} : {people}.",
   "people.everyone_uses_none": "Tout le monde sur le compte · n'utilise aucun taf",
   "people.group_actions": "Actions de {group}",
