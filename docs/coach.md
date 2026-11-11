@@ -113,7 +113,7 @@ first Send starts it (`AppModel.sendChat`, `startCoach`):
   yes once, then enrols it with planque. It makes no draft.
 - **Coach's tools are given in their own step only,** never inside another confirmation: not inside a
   Start on a phone new to a Coach already there, and not inside installing a version. Still to give,
-  the step is asked (`AppState.coachToolsAsked`), as iOS does.
+  the step is asked (`coachToolsAsked`), on Android and on iPhone and iPad.
 - **Then the message goes, once.** A Start that's closed or fails sends nothing: the words go
   back to the box, and why shows above it.
 - **A phone that can't approve yet** shows what Coach is and why it can't start, with no box.

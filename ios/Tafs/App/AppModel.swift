@@ -3534,6 +3534,9 @@ final class AppModel: ObservableObject {
                 return false
             }
             await keepKIFFAlerts(tenant: tenant, gen: gen)
+            // Coach's tools are never given inside another confirmation: still to give, their
+            // own step is asked (docs/coach.md › Coach's tools step).
+            if gen == accountGeneration, coachTools?.toGive == true { coachToolsAsked = true }
         } else {
             do {
                 _ = try await signer.sign(Data("tafs.version.v1|\(tenant)|\(c.id)|\(version.n)".utf8),
