@@ -144,6 +144,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
         state.storeProducts[id]?.let { solo ->
           Text(Words.Usage.solo, style = scaled(16, FontWeight.SemiBold, Theme.ink))
           Text(UsageWords.soloTerms(solo.price, solo.period, solo.freeTrial), style = scaled(13, color = Theme.soft))
+          // What Coach's help includes, in tafs cloud's words: the same sentence kiff.dev says.
+          offer.coachIncluded?.let { Text(it, style = scaled(13, color = Theme.soft)) }
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.terms()) }.padding(vertical = 6.dp))
             Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.privacy()) }.padding(vertical = 6.dp))

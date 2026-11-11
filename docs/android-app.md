@@ -129,7 +129,8 @@ Solo and packs of credits, which never expire, at Play's prices, where the balan
 them to this person, and only once KIFF's usage names their Play products and the account's token.
 KIFF records each purchase before Play is told it's done, and Restore purchases sends again what
 wasn't. The panel's title is **Choose a plan** while Solo is offered (`buy.solo`), and **Add
-credits** once it runs.
+credits** once it runs. Under Solo's terms, the balance's `buy.coach` says what Coach's help
+includes, tafs cloud's sentence as kiff.dev says it; none sent, no line.
 - **Restore purchases** shows only while Play knows a purchase not finished yet, or couldn't say, or
   after one KIFF didn't record (`AppState.restoreShown`, read with Play's offers). Launch and sign-in
   already send what's unfinished, so an account that bought nothing has no Restore. A restore that

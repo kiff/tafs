@@ -114,6 +114,11 @@ data class BalanceNow(
 
   data class FirstMonth(val ready: Boolean, val words: String?)
 
+  /** What Coach's help includes (`buy.coach`), tafs cloud's sentence for under the Solo offer; null when it sent none. */
+  val coachIncluded: String?
+    get() = ((buy as? kotlinx.serialization.json.JsonObject)?.get("coach") as? kotlinx.serialization.json.JsonPrimitive)
+      ?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() }
+
   companion object {
     const val OK = "ok"
     const val WARNING = "warning"

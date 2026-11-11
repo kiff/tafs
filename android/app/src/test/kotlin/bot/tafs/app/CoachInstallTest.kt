@@ -43,13 +43,13 @@ class CoachInstallTest {
   private fun state(v2Live: Boolean, v2Draft: Boolean) =
     """{"versions":[{"n":1,"created":"2026-10-20T09:00:00Z","live":${!v2Live}},{"n":2,"note":"Asks before refunds over 50","by":"setup","created":"2026-10-27T09:00:00Z","live":$v2Live${if (v2Draft) ""","draft":"dr_1"""" else ""}}],"switching":null}"""
 
-  private fun reads(held: String = installHeld(), coachNamed: Boolean = true) {
+  private fun reads(held: String = installHeld(), coachNamed: Boolean = true, tools: String = """{"state":"given"}""") {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["holds.answer","cards.manage","members.manage"]}""")
     transport.answer("GET /v1/home", 200, home)
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[$held]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
-    transport.answer("GET /v1/setup", 200, if (coachNamed) """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"$coach"},"tools":{"state":"given"}}""" else """{"setup":null}""")
+    transport.answer("GET /v1/setup", 200, if (coachNamed) """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"$coach"},"tools":$tools}""" else """{"setup":null}""")
   }
 
   private suspend fun model(): AppModel {
@@ -125,8 +125,8 @@ class CoachInstallTest {
   private val confirm = "POST /v1/me/agent-drafts/dr_1/confirm"
 
   /** Coach's install of version 2 with its Card, up to the confirm, which KIFF answers with [confirmed]. */
-  private suspend fun installWithCard(confirmed: String): Boolean {
-    reads()
+  private suspend fun installWithCard(confirmed: String, tools: String = """{"state":"given"}"""): Boolean {
+    reads(tools = tools)
     transport.answer(versions, 200, state(v2Live = false, v2Draft = true))
     transport.answer(switch2, 200, """{"switching":{"n":2,"draft":"dr_1","at":"2026-10-28T09:00:00Z"}}""")
     transport.answer("GET /v1/me/agent-drafts/dr_1", 200, """{"id":"dr_1","agent_id":"refunds-1","status":"draft","version":"v3","cards":[]}""")
@@ -134,6 +134,12 @@ class CoachInstallTest {
     transport.answer(live2, 200)
     transport.answer(approve, 200)
     val m = model()
+    // Coach's tools as tafs cloud says them, read as Coach's screen does.
+    if (tools != """{"state":"given"}""") {
+      transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
+      m.loadCoach()
+      assertTrue(m.state.value.coachTools?.toGive == true)
+    }
     val call = m.state.value.held.single()
     val ready = m.beginCoachInstall(call)!!
     assertTrue(ready.hasCard)
@@ -147,6 +153,14 @@ class CoachInstallTest {
     // The new Card is read again once live, so the taf's page shows its limits, not the old ones.
     assertTrue(o.lastIndexOf("GET /v1/home") > o.indexOf(live2))
     return done
+  }
+
+  @Test fun coachsToolsStillToGiveAreAskedInTheirOwnStepNeverGivenInsideTheInstall() = runTest {
+    val toGive = """{"state":"to_give","connect":{"body":{"connections":[]},"lines":["Read your tafs"]}}"""
+    assertTrue(installWithCard("""{"id":"dr_1","status":"confirmed","version":"v3","hold":{"id":"ce_7","status":"approved"}}""", tools = toGive))
+    // The install's one fingerprint, and nothing of Coach's tools sent under it.
+    assertEquals(listOf("Use version 2 of Refunds, with its Card, as Coach asked"), auth.asked)
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
   }
 
   @Test fun anInstallWithACardWhoseConfirmKiffTakesForCoachsCallAsksOnceAndSendsNoOtherAnswer() = runTest {
