@@ -126,6 +126,8 @@ data class HomeTaf(
   @SerialName("avatar_rim") val avatarRim: bot.tafs.app.model.AvatarRim? = null,
   /** Where its work stands, in tafs cloud's words: its status and line (`GET /v1/tafs/{id}/work`'s `summary`). */
   val work: bot.tafs.app.kiff.WorkSummary? = null,
+  /** How it's doing, in tafs cloud's words (docs/reliability.md › Its health); absent when it can't be read in time. */
+  val health: bot.tafs.app.kiff.TafHealth? = null,
 )
 
 /** A taf whose removal began and didn't finish: archived, so no longer listed as a taf. */

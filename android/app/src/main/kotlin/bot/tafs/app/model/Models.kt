@@ -396,6 +396,8 @@ data class Taf(
   val card: Card,
   val state: TafState = TafState.idle,
   val now: String = Words.Taf.State.ready,
+  /** `at_risk` or `failing` while [now] is tafs cloud's first health line, which Home draws amber or red; null otherwise. */
+  val nowHealth: String? = null,
   /** Spent so far in the current window, per rule action. */
   val used: Map<String, Money> = emptyMap(),
   /** Rule actions whose use KIFF could not read: shown as unknown, never as zero. Null in sample mode. */

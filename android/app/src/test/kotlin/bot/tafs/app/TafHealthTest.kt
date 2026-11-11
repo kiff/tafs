@@ -72,4 +72,39 @@ class TafHealthTest {
     m.loadWork("refunds-1")
     assertEquals("failing", m.state.value.works["refunds-1"]?.health?.level)
   }
+
+  private suspend fun home(vararg tafs: String): AppModel {
+    transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["cards.manage","holds.answer"]}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[${tafs.joinToString(",")}],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    secrets.save("at_1", AppModel.TOKEN)
+    secrets.save("t_01", AppModel.TENANT)
+    secrets.save("1", AppModel.KEYED)
+    return testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false).also { it.restore(); it.refresh() }
+  }
+
+  private fun homeTaf(agent: String, state: String, health: String?) =
+    """{"id":"taf_$agent","name":"$agent","kiff_agent":"$agent","color":1,"state":"$state","card":{"ids":["c1"],"active":true}""" +
+      (health?.let { ""","health":$it""" } ?: "") + "}"
+
+  @Test fun homeShowsTheFirstReasonOfATafAtRiskOrFailingInPlaceOfWhatItsDoing() = runTest {
+    val m = home(
+      homeTaf("refunds", "idle", """{"level":"failing","lines":["Its last 2 checks found work too big for one run, so nothing ran.","Waiting for credits."]}"""),
+      homeTaf("invoices", "idle", """{"level":"at_risk","lines":["Waiting for credits since 09:00."]}"""),
+      homeTaf("leads", "idle", """{"level":"healthy","lines":[]}"""),
+      // The owner's own state says more: a paused taf reads paused, whatever its health.
+      homeTaf("disputes", "paused", """{"level":"failing","lines":["Its last three runs failed."]}"""),
+      homeTaf("orders", "idle", null),
+    )
+    val byId = m.state.value.tafs.associateBy { it.id }
+    assertEquals("Its last 2 checks found work too big for one run, so nothing ran.", byId["refunds"]?.now)
+    assertEquals("failing", byId["refunds"]?.nowHealth)
+    assertEquals("at_risk", byId["invoices"]?.nowHealth)
+    assertNull(byId["leads"]?.nowHealth)
+    assertEquals(bot.tafs.app.model.Words.Taf.Now.actingUnderKiff, byId["leads"]?.now)
+    assertNull(byId["disputes"]?.nowHealth)
+    assertEquals(bot.tafs.app.model.Words.Taf.State.paused, byId["disputes"]?.now)
+    assertNull(byId["orders"]?.nowHealth)
+  }
 }

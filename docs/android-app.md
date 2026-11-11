@@ -345,7 +345,9 @@ shows in tafs cloud's `words`:
   someone without `billing.manage`.
 
 A kind the app doesn't know draws no button, and its line still shows. The app works out no
-level and no fix. A healthy taf with no lines shows nothing. Home doesn't show health yet.
+level and no fix. A healthy taf with no lines shows nothing. On Home, a taf at risk or failing
+shows its first line in place of what it's doing, amber or red (`HomeTaf.health`,
+`Taf.nowHealth`). Halted, paused or waiting on the owner reads as before, since that says more.
 
 ## When something doesn't go through
 

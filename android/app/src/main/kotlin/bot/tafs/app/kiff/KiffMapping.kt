@@ -162,6 +162,13 @@ object KiffMapping {
       // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
       else -> taf.copy(state = TafState.idle, now = h.work?.line.orEmpty())
     }
+    // At risk or failing: tafs cloud's first reason in place of what it's doing, unless the owner's own state says more (halted,
+    // paused, waiting on them). The level is tafs cloud's; the app works none out.
+    val health = h.health?.takeIf { it.level == "at_risk" || it.level == "failing" }
+    val reason = health?.lines?.firstOrNull { it.isNotBlank() }
+    if (health != null && reason != null && taf.state != TafState.halted && taf.state != TafState.paused && taf.state != TafState.waiting) {
+      taf = taf.copy(now = reason, nowHealth = health.level)
+    }
     return taf.copy(
       cloudId = h.id,
       paused = h.status == "paused",
