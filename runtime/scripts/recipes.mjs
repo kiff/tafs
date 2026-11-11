@@ -8,7 +8,14 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const CATEGORIES = ["money", "customers", "operations", "errands"];
+const here = dirname(fileURLToPath(import.meta.url));
+export const RECIPES_DIR = join(here, "..", "..", "recipes");
+export const MODULE = join(here, "..", "src", "recipes.ts");
+
+/** The categories, in the apps' order, from recipes/categories.txt: data, never a list here. */
+export const CATEGORIES = readFileSync(join(RECIPES_DIR, "categories.txt"), "utf8").split("\n")
+  .map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+for (const c of CATEGORIES) if (!/^[a-z]+(?:-[a-z]+)*$/.test(c)) throw new Error(`categories.txt: ${c} isn't a category id`);
 /** The languages besides English a recipe's words are in (docs/languages.md): each has a file per recipe. */
 export const LANGS = ["de", "fr", "es", "it", "pt", "nl", "pl"];
 const LISTS = ["allows", "holds", "never"];
@@ -140,10 +147,6 @@ export function render(recipes) {
 export const RECIPES = ${JSON.stringify(recipes, null, 2)} as const;
 `;
 }
-
-const here = dirname(fileURLToPath(import.meta.url));
-export const RECIPES_DIR = join(here, "..", "..", "recipes");
-export const MODULE = join(here, "..", "src", "recipes.ts");
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const recipes = readRecipes(RECIPES_DIR);

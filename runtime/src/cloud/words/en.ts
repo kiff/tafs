@@ -65,6 +65,12 @@ export const en = {
   recipes_home_lead: "Pick a job for your first taf.",
   recipes_home_empty_coach: "No tafs yet. Connect an app to set up your first taf.",
   recipes_home_empty_shared: "No tafs yet. Tafs shared with you show here.",
+  // The gallery (GET /v1/recipes/gallery): its title, its "all jobs" heading, the way to say a job in one's own words, and the strip's title.
+  gallery_title: "New taf",
+  gallery_all: "All jobs",
+  gallery_own_words: "Say it in your own words",
+  gallery_own_words_line: "Coach builds the taf with you.",
+  gallery_strip_title: "More jobs to hand off",
   suggestions_on: "Suggestions show in a new conversation with Coach until the account's first taf is live.",
   suggestions_off: "Suggestions are off for this account.",
   suggestions_live: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good.",
