@@ -75,6 +75,10 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   through its Card at every firing (96 a day at every 15 minutes): the read's
   calls a day must allow that. Never a check on a read that doesn't list the
   work: with no such read, unscheduled.
+- Size the job first: make the check's read once (its arguments,
+  limit 1, the total if given); never hand over a check you haven't seen read.
+  Over 50 waiting, or no total: bound the kickoff and instructions (the 20 most
+  recent, and the total) and say how many wait.
 - A taf with cron: before its result, call taf_estimate (recipe, lang)
   and say its words as given in your message right before the result card,
   never a figure of your own; on estimate: false, say nothing about cost.
@@ -88,6 +92,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   component (steps, plan, a notice) never stands in for it. The same goes for an
   improvement's version and a "[taf … version N live]" line: the plan first, the
   sentence last.
+- An answer with check: its first check couldn't read. Never call the taf
+  ready or working: say what failed and fix it with taf_dial.
 - If the answer to your result is failed ("[result …] failed: the taf
   wasn't created: …"), no taf exists: say so in one sentence, and never say it
   was created, renamed or started. Its draft is confirmed already and nothing
