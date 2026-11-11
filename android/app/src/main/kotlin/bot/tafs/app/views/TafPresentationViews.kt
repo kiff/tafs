@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
+import bot.tafs.app.app.Mode
 import bot.tafs.app.design.*
 import bot.tafs.app.kiff.*
 import bot.tafs.app.model.RecordEntry
@@ -190,6 +191,11 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     val latest = cache?.pages?.lastOrNull()
     items(latest?.cardUnitExceptions.orEmpty(), key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     latest?.cardUnitExceptionsNotice?.let { notice -> item { Text(notice, style = scaled(13, color = Theme.dim)) } }
+    // Strangers' knocks at its doors, for whoever manages it: what Needs you counts, on the taf's own page, ahead of its runs.
+    if (state.mode == Mode.kiff && state.manages(taf.id)) item(key = "knocks") {
+      LaunchedEffect(taf.id) { actions.doors.load(taf.id) }
+      KnocksPanel(taf, state, actions.doors)
+    }
     // When it runs, with Run now and Pause, ahead of what it did.
     item(key = "runs") { RunsPanel(taf, taf.id in state.runsInFlight, actions, state.runNowQuiet[taf.id]) }
     // Where its work stands, as tafs cloud says it: its health with its fixes, its oldest waiting case, Answer within, its requests.

@@ -25,6 +25,10 @@ import bot.tafs.app.views.DoorActions
 import bot.tafs.app.views.TafActions
 import bot.tafs.app.views.TafActivityList
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import bot.tafs.app.app.TafDoors
+import bot.tafs.app.kiff.Knock
+import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
 
@@ -54,11 +58,21 @@ class CloudTafActivityTest {
     promise = TafPromise(hours = 4),
   )
 
-  private fun show(manage: Boolean, loaded: MutableList<String> = mutableListOf(), coach: MutableList<Pair<String, String>> = mutableListOf()) {
+  private val knock = Knock(
+    "k_1", "door_1", "email", "mara@customer.example", "Mara", "pass", "Order", "Where is my refund?", 0,
+    Instant.parse("2026-11-11T09:00:00Z"), "open", null, 0, false,
+  )
+
+  private fun show(
+    manage: Boolean,
+    loaded: MutableList<String> = mutableListOf(),
+    coach: MutableList<Pair<String, String>> = mutableListOf(),
+    doorsLoaded: MutableList<String> = mutableListOf(),
+  ) {
     val actions = TafActions(
       answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
       sendChat = { _, _, _, _ -> }, issuer = "You",
-      doors = DoorActions({}, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {}),
+      doors = DoorActions({ doorsLoaded += it }, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {}),
       coach = CoachActions(answer = { _, _, _ -> }, approve = { _, _, _ -> }, cancelSignIn = {}),
       connections = ConnectionActions({}, { false }),
       loadWork = { loaded += it },
@@ -68,6 +82,7 @@ class CloudTafActivityTest {
       mode = Mode.kiff, ready = true, tafs = listOf(taf), works = mapOf(taf.id to work),
       kiffAccount = Account("t_01", "acme", capabilities = listOf("members.manage", "cards.manage")),
       access = mapOf(taf.id to Access(use = true, oversee = true, manage = manage)),
+      doors = mapOf(taf.id to TafDoors(knocks = listOf(knock), loaded = true)),
     )
     rule.setShown { TafsTheme { TafActivityList(taf, state, actions, selection = "", clearSelection = {}) } }
   }
@@ -96,5 +111,25 @@ class CloudTafActivityTest {
     show(manage = false)
     rule.onNodeWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").performScrollTo().assertIsDisplayed()
     rule.onAllNodesWithText("Answer within").assertCountEquals(0)
+  }
+
+  @Test fun whoeverManagesTheTafSeesItsKnocksAboveItsRuns() {
+    val doorsLoaded = mutableListOf<String>()
+    show(manage = true, doorsLoaded = doorsLoaded)
+    rule.waitForIdle()
+    assertEquals(listOf("refunds-1"), doorsLoaded.distinct())
+    rule.onNodeWithText("KNOCKS · WAITING ON YOU").performScrollTo().assertIsDisplayed()
+    rule.onNodeWithText("Where is my refund?", substring = true).performScrollTo().assertIsDisplayed()
+    val knocks = rule.onNodeWithText("KNOCKS · WAITING ON YOU").fetchSemanticsNode().boundsInRoot.top
+    val runs = rule.onNodeWithText("RUNS").fetchSemanticsNode().boundsInRoot.top
+    assertTrue("knocks come before the runs", knocks < runs)
+  }
+
+  @Test fun someoneWhoDoesNotManageTheTafSeesNoKnocks() {
+    val doorsLoaded = mutableListOf<String>()
+    show(manage = false, doorsLoaded = doorsLoaded)
+    rule.waitForIdle()
+    rule.onAllNodesWithText("KNOCKS · WAITING ON YOU").assertCountEquals(0)
+    assertTrue(doorsLoaded.isEmpty())
   }
 }

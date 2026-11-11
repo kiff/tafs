@@ -335,7 +335,9 @@ app's own lines stand in only where tafs cloud sends none.
 
 ## A taf's work
 
-The Activity tab of a taf on tafs cloud (`TafActivityList`) shows where its work stands under
+The Activity tab of a taf on tafs cloud (`TafActivityList`) shows, for whoever manages it, its
+doors' knocks first (`KnocksPanel`: strangers' knocks with Do it, Pair them and Ignore, then paired
+senders), so a knock Needs you counts is on the taf's page too. Then it shows where its work stands under
 its runs, from `GET /v1/tafs/{id}/work` ([reliability.md](reliability.md#the-tafs-view);
 `WorkPanel`, `AppModel.loadWork`): tafs cloud's
 summary line, then its recent requests and skipped firings, newest first, each in tafs cloud's
