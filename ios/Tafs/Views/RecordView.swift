@@ -16,28 +16,16 @@ struct RecordView: View {
                 Text(Words.Record.title).scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Text(Words.Record.lead)
                     .scaledFont(14).foregroundColor(Theme.soft)
-                tafChips
-                chips
-                ForEach(days, id: \.key) { day in
-                    Text([day.title, Self.spent(day.lines + day.reads)].compactMap { $0 }.joined(separator: " · "))
-                        .scaledFont(11, weight: .medium, design: .monospaced).textCase(.uppercase)
-                        .foregroundColor(Theme.dim).padding(.top, 6)
-                    ForEach(day.lines) { RecordRow(entry: $0, showTaf: true) }
-                    if !day.reads.isEmpty {
-                        if openReads.contains(day.key) {
-                            ForEach(day.reads) { RecordRow(entry: $0, showTaf: true) }
-                        }
-                        Button {
-                            if openReads.contains(day.key) { openReads.remove(day.key) } else { openReads.insert(day.key) }
-                        } label: {
-                            Text("· " + Words.Record.reads(count: day.reads.count) + " · " + (openReads.contains(day.key) ? Words.Record.hide : Words.Record.show))
-                                .scaledFont(13).foregroundColor(Theme.ok).padding(.horizontal, 4)
-                        }
-                        .buttonStyle(.drivablePlain)
-                    }
+                // Signed in: search across the person's tafs, and export receipts for whoever
+                // sees every taf's Record. While a search is shown, it stands in for the list.
+                if model.mode == .kiff {
+                    RecordSearchBox()
+                    if model.seesEveryTaf { ExportReceiptsRow() }
                 }
-                if days.isEmpty {
-                    Text(filter == .all && taf == nil ? Words.Common.nothingYet : Words.Record.nothingHere).scaledFont(14).foregroundColor(Theme.dim).padding(.top, 8)
+                if model.mode == .kiff, let search = model.recordSearch {
+                    RecordResults(search: search)
+                } else {
+                    list
                 }
             }
             // The full width on an iPad, as the other tabs (kiff/tafs#96).
@@ -46,6 +34,37 @@ struct RecordView: View {
             .padding(.vertical, 12)
         }
         .screenBackground()
+        // One case, open from a search: drawn over the Record.
+        .sheet(isPresented: Binding(get: { model.recordCase != nil }, set: { if !$0 { model.closeRecordCase() } })) {
+            if let open = model.recordCase { RecordCaseSheet(recordCase: open, error: model.recordCaseError).environmentObject(model) }
+        }
+    }
+
+    /// Every call by day, as before a search.
+    @ViewBuilder private var list: some View {
+        tafChips
+        chips
+        ForEach(days, id: \.key) { day in
+            Text([day.title, Self.spent(day.lines + day.reads)].compactMap { $0 }.joined(separator: " · "))
+                .scaledFont(11, weight: .medium, design: .monospaced).textCase(.uppercase)
+                .foregroundColor(Theme.dim).padding(.top, 6)
+            ForEach(day.lines) { RecordRow(entry: $0, showTaf: true) }
+            if !day.reads.isEmpty {
+                if openReads.contains(day.key) {
+                    ForEach(day.reads) { RecordRow(entry: $0, showTaf: true) }
+                }
+                Button {
+                    if openReads.contains(day.key) { openReads.remove(day.key) } else { openReads.insert(day.key) }
+                } label: {
+                    Text("· " + Words.Record.reads(count: day.reads.count) + " · " + (openReads.contains(day.key) ? Words.Record.hide : Words.Record.show))
+                        .scaledFont(13).foregroundColor(Theme.ok).padding(.horizontal, 4)
+                }
+                .buttonStyle(.drivablePlain)
+            }
+        }
+        if days.isEmpty {
+            Text(filter == .all && taf == nil ? Words.Common.nothingYet : Words.Record.nothingHere).scaledFont(14).foregroundColor(Theme.dim).padding(.top, 8)
+        }
     }
 
     /// "All tafs", then one chip a taf with its colour: it narrows the Record with the filter.
