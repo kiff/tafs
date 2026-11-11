@@ -1,17 +1,19 @@
 name: iOS
 
 # A pull request, once it's ready for review (a draft runs nothing here): the
-# tests on a simulator; the iPad's list tests when the change touches the
-# iPad's layout; and, when it touches the screens, a key set of screenshots
-# (a few screens, light and dark), beside the tests. main: the tests, and the
-# iPad's when the push touches the iPad's layout. Only a change to what the app
+# unit tests on a simulator; the iPhone's UI tests when the change touches the
+# screens or the UI tests; the iPad's list tests when it touches the iPad's
+# layout; and, when it touches the screens, a key set of screenshots (a few
+# screens, light and dark), beside the tests. main: the same tests on the same
+# rules, and no screenshots. Only a change to what the app
 # is built from runs here (the paths below): a tafs cloud or Android merge
 # doesn't wait for a macOS runner.
 # A version tag (v0.1.0) or a manual run, which is how a release is built:
 # the tests, the iPad's, the full set of screenshots for a tag, and then
-# archive, sign and upload to TestFlight. A manual upload skips the tests and
-# the iPad's when main already passed them on a commit with the same app
-# (changes.tested); a tag runs everything. A manual run can pick the
+# archive, sign and upload to TestFlight. A manual run skips whatever main
+# already passed on a commit with the same app (changes.tested, ui,
+# ipad_tested), so an upload can go straight to the archive; a tag runs
+# everything. A manual run can pick the
 # screenshots (none by default, key, full, languages) and leave the upload
 # off. A screenshot run never runs beside a release build: it stops at once
 # while another manual or tag run is queued or running. Internal testers ("Team") get it at once; it also goes to the
@@ -71,6 +73,8 @@ jobs:
     outputs:
       ipad: ${{ steps.diff.outputs.ipad }}
       shots: ${{ steps.diff.outputs.shots }}
+      # The iPhone's UI tests (TafsUITests): a manual run's from the lookup, else the diff's.
+      ui: ${{ steps.tested.outputs.ui || steps.diff.outputs.ui }}
       tested: ${{ steps.tested.outputs.tested }}
       ipad_tested: ${{ steps.tested.outputs.ipad_tested }}
     steps:
@@ -92,58 +96,80 @@ jobs:
           # What draws the screens: the views, the design system, the assets,
           # the root (TafsApp.swift), the mascot. And this workflow.
           ui='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|\.github/workflows/ios\.yml$)'
+          # What the iPhone's UI tests depend on: what draws the screens, and the UI tests.
+          uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           case "$EVENT" in
-            workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
+            workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
             push) case "$REF" in
-                    refs/tags/v*) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "shots=full" >> "$GITHUB_OUTPUT"; exit 0 ;;
+                    refs/tags/v*) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=full" >> "$GITHUB_OUTPUT"; exit 0 ;;
                   esac
-                  # main: the iPad's only when the push touches its layout, as on a pull request.
+                  # main: the iPad's and the iPhone's UI tests only when the push
+                  # touches what they test, as on a pull request.
                   echo "shots=none" >> "$GITHUB_OUTPUT"
-                  if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then echo "ipad=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-                  if git diff --name-only "$BASE" "$HEAD" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
+                  if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+                    echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; exit 0
+                  fi
+                  changed=$(git diff --name-only "$BASE" "$HEAD")
+                  if echo "$changed" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
+                  if echo "$changed" | grep -Eq "$uitests"; then echo "ui=true" >> "$GITHUB_OUTPUT"; else echo "ui=false" >> "$GITHUB_OUTPUT"; fi
                   exit 0 ;;
           esac
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "shots=key" >> "$GITHUB_OUTPUT"   # nothing to compare with
+            echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=key" >> "$GITHUB_OUTPUT"   # nothing to compare with
             exit 0
           fi
           changed=$(git diff --name-only "$BASE" "$HEAD")
           if echo "$changed" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -Eq "$uitests"; then echo "ui=true" >> "$GITHUB_OUTPUT"; else echo "ui=false" >> "$GITHUB_OUTPUT"; fi
           if echo "$changed" | grep -Eq "$ui"; then echo "shots=key" >> "$GITHUB_OUTPUT"; else echo "shots=none" >> "$GITHUB_OUTPUT"; fi
 
-      # A manual upload: has main already passed the tests (and the iPad's) on a
-      # commit whose app is this one's? Then the upload skips them and goes
-      # straight to the archive. For the tests, "the same app" is no change
-      # since that commit to what the app is built from (the push paths); for
-      # the iPad's, no change since to the iPad's layout, as main and pull
-      # requests decide when to run them. Main's last 40 successful runs are looked
-      # at, newest first. Anything else, and a tag, runs everything.
+      # A manual run (an upload, or screenshots): has main already passed what
+      # it would test, on a commit with the same app? Then it's skipped, and an
+      # upload goes straight to the archive. Each part on its own rule, the
+      # rule main and pull requests use to decide when to run it:
+      # - the unit tests (tested): no change since to what the app is built
+      #   from (the push paths);
+      # - the iPhone's UI tests (ui): no change since to what draws the screens
+      #   or to the UI tests;
+      # - the iPad's (ipad_tested): no change since to the iPad's layout.
+      # Main's last 40 successful runs are looked at, newest first, each at an
+      # ancestor of this commit. Anything not found runs; a tag runs everything.
       - id: tested
-        if: github.event_name == 'workflow_dispatch' && inputs.upload
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
           HEAD: ${{ github.sha }}
           RUN: ${{ github.run_id }}
         run: |
           app='^(ios/|app/strings/|\.github/workflows/ios\.yml$)'
+          uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           ipad='^(ios/Tafs/Views/(HomeSplitView|HomeView|TafsBar)\.swift$|ios/Tafs/App/TafsApp\.swift$|ios/TafsUITests/ListTapUITests\.swift$|\.github/workflows/ios\.yml$)'
-          tested=false; ipad_tested=false
+          tested=false; ui_tested=false; ipad_tested=false
           runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ios.yml/runs?branch=main&status=success&per_page=40" \
             --jq ".workflow_runs[] | select(.id != $RUN) | \"\(.id) \(.head_sha)\"") || runs=""
           while read -r id sha; do
             [ -n "$id" ] || continue
             git cat-file -e "$sha^{commit}" 2>/dev/null && git merge-base --is-ancestor "$sha" "$HEAD" || continue
             changed=$(git diff --name-only "$sha" "$HEAD")
-            jobs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" --jq '.jobs[] | "\(.name)=\(.conclusion)"') || continue
-            if [ "$tested" = false ] && echo "$jobs" | grep -qx 'test=success' && ! echo "$changed" | grep -Eq "$app"; then
-              tested=true; echo "The tests passed on main in run $id at $sha, with the same app: they're skipped."
+            # Each job's outcome, and each step of test's ("Test on a simulator"
+            # is the step that ran unit and UI tests together, before they were split).
+            done=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" \
+              --jq '.jobs[] | "\(.name)=\(.conclusion)", (select(.name == "test") | .steps[] | "step:\(.name)=\(.conclusion)")') || continue
+            if [ "$tested" = false ] && echo "$done" | grep -qx 'test=success' \
+               && echo "$done" | grep -qxE 'step:(Unit tests|Test) on a simulator=success' && ! echo "$changed" | grep -Eq "$app"; then
+              tested=true; echo "The unit tests passed on main in run $id at $sha, with the same app: they're skipped."
             fi
-            if [ "$ipad_tested" = false ] && echo "$jobs" | grep -qx 'ipad=success' && ! echo "$changed" | grep -Eq "$ipad"; then
+            if [ "$ui_tested" = false ] && echo "$done" | grep -qx 'test=success' \
+               && echo "$done" | grep -qxE 'step:(UI tests|Test) on a simulator=success' && ! echo "$changed" | grep -Eq "$uitests"; then
+              ui_tested=true; echo "The iPhone's UI tests passed on main in run $id at $sha, with the same screens: they're skipped."
+            fi
+            if [ "$ipad_tested" = false ] && echo "$done" | grep -qx 'ipad=success' && ! echo "$changed" | grep -Eq "$ipad"; then
               ipad_tested=true; echo "The iPad's passed on main in run $id at $sha, with the same iPad layout: they're skipped."
             fi
-            [ "$tested" = true ] && [ "$ipad_tested" = true ] && break
+            [ "$tested" = true ] && [ "$ui_tested" = true ] && [ "$ipad_tested" = true ] && break
           done <<< "$runs"
           echo "tested=$tested" >> "$GITHUB_OUTPUT"; echo "ipad_tested=$ipad_tested" >> "$GITHUB_OUTPUT"
+          if [ "$ui_tested" = true ]; then echo "ui=false" >> "$GITHUB_OUTPUT"; else echo "ui=true" >> "$GITHUB_OUTPUT"; fi
 
       # A screenshot run (a manual run that doesn't upload) never runs beside a
       # release build: while another manual or tag run is queued or running, it
@@ -163,11 +189,13 @@ jobs:
             exit 1
           fi
 
+  # Built once, then the unit tests on every change to the app, and the
+  # iPhone's UI tests only when what they test changes (changes.ui). A draft
+  # runs nothing on macOS: the tests run once it's ready for review. A manual
+  # run skips what main already passed with the same app (changes.tested, ui).
   test:
     needs: changes
-    # A draft runs nothing on macOS: the tests run once it's ready for review.
-    # A manual upload skips them when main passed them with the same app.
-    if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.changes.outputs.tested != 'true'
+    if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && (needs.changes.outputs.tested != 'true' || needs.changes.outputs.ui == 'true')
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -183,7 +211,7 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
-      - name: Test on a simulator
+      - name: Build for testing
         run: |
           cd ios
           xcodebuild -version
@@ -195,9 +223,30 @@ jobs:
           iphones = [d for d in devices[ios[-1]] if d["name"].startswith("iPhone")]
           print(next((d for d in iphones if "Pro Max" in d["name"]), iphones[0])["udid"])
           ')
-          xcodebuild test \
+          echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+          xcodebuild build-for-testing \
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Unit tests on a simulator
+        if: needs.changes.outputs.tested != 'true'
+        run: |
+          cd ios
+          xcodebuild test-without-building \
+            -project Tafs.xcodeproj -scheme Tafs \
+            -destination "id=$DEVICE_ID" \
+            -only-testing:TafsTests \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: UI tests on a simulator
+        if: needs.changes.outputs.ui == 'true'
+        run: |
+          cd ios
+          xcodebuild test-without-building \
+            -project Tafs.xcodeproj -scheme Tafs \
+            -destination "id=$DEVICE_ID" \
+            -only-testing:TafsUITests \
             CODE_SIGNING_ALLOWED=NO
 
   # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad, since the
