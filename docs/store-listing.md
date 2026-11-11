@@ -161,7 +161,7 @@ Forfaits : Solo, avec {SOLO_MONTHLY_CREDITS} crédits par mois, et des packs de 
 **Full description:**
 
 ```
-tafs es donde una empresa encarga tareas a agentes de IA, o compañeros de IA, llamados tafs, y le da a cada uno una Card: los límites dentro de los que trabaja.
+tafs es donde una empresa encarga trabajos a agentes de IA, o compañeros de IA, llamados tafs, y le da a cada uno una Card: los límites dentro de los que trabaja.
 
 Úsalo para automatizar reembolsos, pago de facturas, accesos y despliegues. Cada agente de IA trabaja por su cuenta dentro de su Card, y nunca más allá.
 
@@ -173,7 +173,7 @@ POR QUÉ PUEDES ENCARGARLE EL TRABAJO
 • Tu huella para lo importante: el trabajo rutinario avanza dentro de sus límites. Lo que va más allá de su Card se rechaza o, si su Card dice «Preguntar», te espera y se aprueba con tu huella o tu cara.
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
-TAREAS QUE PUEDE ASUMIR UN TAF, POR EJEMPLO
+TRABAJOS QUE PUEDE ASUMIR UN TAF, POR EJEMPLO
 • Reembolsos: resuelve solicitudes de reembolso y de abono de la cola de soporte, por ejemplo hasta 150 € cada una y 2.000 € al día.
 • Pago de facturas: paga facturas de proveedores que coinciden con una orden de compra; las transferencias siempre preguntan.
 • Accesos: da sus apps a quien entra y se las quita a quien sale; los accesos elevados siempre preguntan.
@@ -181,7 +181,7 @@ TAREAS QUE PUEDE ASUMIR UN TAF, POR EJEMPLO
 • Contracargos: responde a las disputas de tarjeta con pruebas.
 
 CÓMO FUNCIONA
-• Coach: di la tarea con tus palabras. Coach, el asistente de IA de tafs, conecta tus apps, prepara el taf y su Card, y tú confirmas.
+• Coach: di el trabajo con tus palabras. Coach, el asistente de IA de tafs, conecta tus apps, prepara el taf y su Card, y tú confirmas.
 • Te necesita: cuando un taf quiere ir más allá de su Card, la llamada queda retenida. Apruébala una vez o recházala, con tu huella o el desbloqueo facial.
 • Chat: pregunta a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
 • Registro: todo lo que hicieron tus tafs, lo más reciente primero, con un recibo por cada acción que salió adelante.
@@ -245,7 +245,7 @@ European Portuguese (`pt-PT`), as [languages.md](languages.md) proposes, address
 **Full description:**
 
 ```
-O tafs é onde uma empresa entrega tarefas a agentes de IA, ou colegas de IA, chamados tafs, e dá a cada um um Card: os limites dentro dos quais trabalha.
+O tafs é onde uma empresa entrega trabalhos a agentes de IA, ou colegas de IA, chamados tafs, e dá a cada um um Card: os limites dentro dos quais trabalha.
 
 Use-o para automatizar reembolsos, pagamento de faturas, acessos e implementações. Cada agente de IA trabalha de forma autónoma dentro do seu Card, e nunca para além dele.
 
@@ -257,7 +257,7 @@ PORQUE PODE ENTREGAR-LHE O TRABALHO
 • A sua impressão digital para o que importa: o trabalho de rotina avança dentro dos seus limites. O que vai além do seu Card é recusado ou, se o seu Card disser «Perguntar», aguarda por si e é aprovado com a sua impressão digital ou o seu rosto.
 • É você quem decide o que aconteceu de facto: quando uma app não consegue confirmar que um pagamento foi feito, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por suposição.
 
-TAREFAS QUE UM TAF PODE ASSUMIR, POR EXEMPLO
+TRABALHOS QUE UM TAF PODE ASSUMIR, POR EXEMPLO
 • Reembolsos: resolve pedidos de reembolso e de crédito da fila de suporte, por exemplo até 150 € cada e 2000 € por dia.
 • Pagamento de faturas: paga faturas de fornecedores que correspondem a uma nota de encomenda; as transferências perguntam sempre.
 • Acessos: dá as apps a quem entra e retira-as a quem sai; os acessos elevados perguntam sempre.
@@ -265,7 +265,7 @@ TAREFAS QUE UM TAF PODE ASSUMIR, POR EXEMPLO
 • Estornos: responde a disputas de cartão com provas.
 
 COMO FUNCIONA
-• Coach: descreva a tarefa por palavras suas. O Coach, o assistente de IA do tafs, liga as suas apps, prepara o taf e o seu Card, e você confirma.
+• Coach: descreva o trabalho por palavras suas. O Coach, o assistente de IA do tafs, liga as suas apps, prepara o taf e o seu Card, e você confirma.
 • Precisa de si: quando um taf quer ir além do seu Card, a chamada fica retida. Aprove-a uma vez ou recuse-a, com a sua impressão digital ou o desbloqueio facial.
 • Chat: pergunte a um taf o que fez, ou diga-lhe o que fazer de outra forma, e acompanhe o trabalho enquanto decorre.
 • Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, com um recibo por cada ação que avançou.
@@ -274,7 +274,7 @@ COMO FUNCIONA
 OS SEUS DADOS
 As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/privacy#delete-account.
 
-Planos: Solo, com {SOLO_MONTHLY_CREDITS} créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através do Google Play. Cada execução de um taf usa créditos pela IA que utilizou. Não há período de avaliação gratuito.
+Planos: Solo, com {SOLO_MONTHLY_CREDITS} créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através do Google Play. Cada execução de um taf usa créditos pela IA que utilizou. Não há período de teste gratuito.
 ```
 
 ## Dutch (nl)
