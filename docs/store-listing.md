@@ -51,7 +51,7 @@ READY-MADE JOBS, FOR EXAMPLE
 • Get paid without chasing: reminds customers of overdue invoices on a schedule and moves no money.
 • Never lose a lead to a slow reply: turns each new form entry into a deal and sends a first reply within the hour.
 • Stop answering "where is my order?": answers order questions from the shop and passes anything about money to you.
-More come ready too: bookings, joiners and leavers, deploys and receipts. Every limit is yours to change.
+More come ready too: bookings, deploys and receipts. Every limit is yours to change.
 
 THE CARD: YOUR CONTROL
 • Does on its own: the routine, within its limits, with a receipt for each action.
@@ -96,7 +96,7 @@ FERTIGE AUFGABEN, ZUM BEISPIEL
 • Werde bezahlt, ohne hinterherzulaufen: erinnert Kunden nach Plan an überfällige Rechnungen und bewegt kein Geld.
 • Verlier keinen Lead mehr an eine langsame Antwort: macht aus jedem neuen Formulareintrag einen Deal und schickt innerhalb einer Stunde eine erste Antwort.
 • Schluss mit „Wo ist meine Bestellung?“: beantwortet Fragen zu Bestellungen mit Blick in den Shop und gibt alles, was Geld betrifft, an dich weiter.
-Weitere gibt es auch fertig: Termine, Neue und Ausscheidende, Deploys und Belege. Jedes Limit kannst du ändern.
+Weitere gibt es auch fertig: Termine, Deploys und Belege. Jedes Limit kannst du ändern.
 
 DIE CARD: DEINE KONTROLLE
 • Macht es selbst: die Routine, innerhalb ihrer Limits, mit einem Beleg für jede Aktion.
@@ -141,7 +141,7 @@ DES TÂCHES PRÊTES, PAR EXEMPLE
 • Soyez payé sans relancer : relance les clients pour les factures en retard selon un calendrier et ne déplace aucun argent.
 • Ne perdez plus un prospect à cause d'une réponse lente : transforme chaque nouvelle entrée de formulaire en affaire et envoie une première réponse dans l'heure.
 • Fini le « où est ma commande ? » : répond aux questions sur les commandes en consultant la boutique, et vous transmet tout ce qui touche à l'argent.
-D'autres sont prêtes aussi : rendez-vous, arrivées et départs, déploiements et justificatifs. Chaque limite est à vous de la changer.
+D'autres sont prêtes aussi : rendez-vous, déploiements et justificatifs. Chaque limite est à vous de la changer.
 
 LA CARD : VOTRE CONTRÔLE
 • Fait seul : la routine, dans ses limites, avec un reçu pour chaque action.
@@ -186,7 +186,7 @@ TRABAJOS LISTOS, POR EJEMPLO
 • Cobra sin perseguir a nadie: recuerda a los clientes sus facturas vencidas según un calendario y no mueve dinero.
 • No pierdas ni un contacto por responder tarde: convierte cada nueva entrada del formulario en una oportunidad y envía una primera respuesta en menos de una hora.
 • Deja de responder «¿dónde está mi pedido?»: responde las preguntas sobre pedidos consultando la tienda y te pasa todo lo que tenga que ver con dinero.
-Hay más listos también: citas, altas y bajas, despliegues y recibos. Cada límite lo cambias tú.
+Hay más listos también: citas, despliegues y recibos. Cada límite lo cambias tú.
 
 LA CARD: TU CONTROL
 • Lo hace solo: la rutina, dentro de sus límites, con un recibo por cada acción.
@@ -231,7 +231,7 @@ LAVORI PRONTI, PER ESEMPIO
 • Fatti pagare senza rincorrere nessuno: ricorda ai clienti le fatture scadute secondo un calendario e non muove denaro.
 • Non perdere più un contatto per una risposta lenta: trasforma ogni nuova compilazione del modulo in un'opportunità e invia una prima risposta entro un'ora.
 • Basta rispondere a «dov'è il mio ordine?»: risponde alle domande sugli ordini controllando il negozio e ti passa tutto ciò che riguarda i soldi.
-Ce ne sono altri pronti: appuntamenti, chi entra e chi esce, rilasci e ricevute. Ogni limite lo cambi tu.
+Ce ne sono altri pronti: appuntamenti, rilasci e ricevute. Ogni limite lo cambi tu.
 
 LA CARD: IL TUO CONTROLLO
 • Fa da solo: la routine, entro i suoi limiti, con una ricevuta per ogni azione.
@@ -278,7 +278,7 @@ TRABALHOS PRONTOS, POR EXEMPLO
 • Receba sem andar atrás de ninguém: lembra os clientes das faturas em atraso segundo um calendário e não movimenta dinheiro.
 • Nunca perca um contacto por responder tarde: transforma cada novo preenchimento do formulário numa oportunidade e envia uma primeira resposta em menos de uma hora.
 • Deixe de responder a «onde está a minha encomenda?»: responde às perguntas sobre encomendas consultando a loja e passa-lhe tudo o que envolva dinheiro.
-Há mais prontos: marcações, quem entra e quem sai, publicações e recibos. Cada limite é seu para mudar.
+Há mais prontos: marcações, publicações e recibos. Cada limite é seu para mudar.
 
 O CARD: O SEU CONTROLO
 • Faz sozinho: a rotina, dentro dos seus limites, com um recibo por cada ação.
@@ -323,7 +323,7 @@ KANT-EN-KLARE TAKEN, BIJVOORBEELD
 • Krijg betaald zonder achter mensen aan te gaan: herinnert klanten volgens een schema aan achterstallige facturen en verplaatst geen geld.
 • Verlies nooit meer een lead door een trage reactie: maakt van elke nieuwe formulierinzending een deal en stuurt binnen een uur een eerste antwoord.
 • Nooit meer „waar is mijn bestelling?” beantwoorden: beantwoordt vragen over bestellingen door in de winkel te kijken en geeft alles wat met geld te maken heeft aan jou door.
-Er zijn er meer kant-en-klaar: afspraken, nieuwe collega's en vertrekkers, uitrol en bonnetjes. Elke limiet pas jij aan.
+Er zijn er meer kant-en-klaar: afspraken, uitrol en bonnetjes. Elke limiet pas jij aan.
 
 DE CARD: JOUW CONTROLE
 • Doet het zelf: het routinewerk, binnen zijn limieten, met een bewijs voor elke actie.
@@ -368,7 +368,7 @@ GOTOWE ZADANIA, NA PRZYKŁAD
 • Dostawaj pieniądze bez ganiania za nikim: przypomina klientom o zaległych fakturach według harmonogramu i nie przelewa pieniędzy.
 • Nie trać leadów przez wolną odpowiedź: z każdego nowego zgłoszenia z formularza tworzy szansę sprzedaży i wysyła pierwszą odpowiedź w ciągu godziny.
 • Koniec z odpowiadaniem na „gdzie jest moje zamówienie?”: odpowiada na pytania o zamówienia, sprawdzając sklep, a wszystko, co dotyczy pieniędzy, przekazuje Tobie.
-Gotowych jest więcej: wizyty, nowe osoby i odchodzący, wdrożenia i paragony. Każdy limit zmieniasz Ty.
+Gotowych jest więcej: wizyty, wdrożenia i paragony. Każdy limit zmieniasz Ty.
 
 CARD: TWOJA KONTROLA
 • Robi sam: rutynę, w swoich limitach, z potwierdzeniem dla każdej akcji.
