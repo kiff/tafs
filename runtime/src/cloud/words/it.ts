@@ -61,6 +61,7 @@ export const it: Words = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} è stato configurato oggi, quindi ogni modifica deve chiederti prima; questa Card lascerebbe eseguire «${tool}» senza chiedere. Non è stato approvato nulla. Coach la riscrive.`,
   approval_critical_key: "Questo amplia ciò che il taf può fare, quindi serve la tua impronta. Non è stato approvato nulla; approva di nuovo con la tua impronta.",
   approval_drive_key: "Per lasciare che Coach usi l'app serve la tua impronta. Non è partito nulla; approva di nuovo con la tua impronta.",
+  remove_signed: "Rimuovilo dal tuo telefono: rimuovere un taf chiede ogni volta il blocco schermo. Non è stato rimosso nulla.",
   approval_window_closed: "Il tempo per l'approvazione è scaduto. Non è stato approvato nulla; approva di nuovo con la tua impronta.",
   approval_sign_in_closed: "L'accesso è stato chiuso. Non è stato collegato nulla.",
   approval_no_code: (vendor: string) => `L'accesso a ${vendor} è tornato senza il suo codice di conferma. Non è stato collegato nulla.`,
