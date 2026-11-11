@@ -2,11 +2,12 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Requirement, Run } from "../src/cloud/agents.js";
 import { definition, yourStepOn } from "../src/cloud/tafdef.js";
 import { requestOf, summaryOf } from "../src/cloud/work.js";
-import { linkHost, yourStepsOf } from "../src/cloud/yourstep.js";
+import { linkHost, vendorSites, yourStepsOf } from "../src/cloud/yourstep.js";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { jobById } from "../src/jobs.js";
 
 const NOW = new Date("2026-11-11T17:00:00Z");
+const VENDORS = new Set(["example.com", "stripe.com"]);
 const run = (o: Partial<Run>): Run => ({
   id: "r1", agent: "taf-a", session: "s", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
   created: "2026-11-11T16:00:00Z", updated: "2026-11-11T16:05:00Z", ...o,
@@ -19,7 +20,7 @@ const step = (o: Partial<Requirement> = {}, input: Record<string, unknown> = {})
 
 describe("Your step: a step a taf handed its owner", () => {
   it("is read from the paused run: what, why, the https link with its host apart, and tafs cloud's words", () => {
-    const [s] = yourStepsOf(run({ requirements: [step()] }));
+    const [s] = yourStepsOf(run({ requirements: [step()] }), "en", VENDORS);
     expect(s).toMatchObject({
       handoff: "ho_1", run: "r1", what: "Approve 3 supplier payments, €4,210 in all", why: "Your bank asks you to approve transfers yourself",
       link: "https://app.example.com/requests/r1?token=x", link_host: "app.example.com", since: "2026-11-11T16:05:00.000Z", expires: "2026-11-18T16:05:00Z",
@@ -30,7 +31,7 @@ describe("Your step: a step a taf handed its owner", () => {
   it("passes only an https link to a named host: anything else is no link, only the words", () => {
     for (const bad of ["http://app.example.com/x", "javascript:alert(1)", "intent://x#Intent;end", "https://10.0.0.1/x", "https://localhost/x", "https://u:p@app.example.com/", "", 42]) {
       expect(linkHost(bad), String(bad)).toBeUndefined();
-      const [s] = yourStepsOf(run({ requirements: [step({}, { link: bad })] }));
+      const [s] = yourStepsOf(run({ requirements: [step({}, { link: bad })] }), "en", VENDORS);
       expect(s!.link).toBeUndefined();
       expect(s!.link_host).toBeUndefined();
       expect(s!.words.open).toBeUndefined();
@@ -63,15 +64,13 @@ describe("Your step: a step a taf handed its owner", () => {
       if (lang !== "en") expect(w.your_step_skip, lang).not.toBe("Skip it");
     }
     expect(wordsIn("en").your_step_reminder("Approve it")).toBe("Your step is still waiting: Approve it");
-    expect(yourStepsOf(run({ requirements: [step()] }), "fr")[0]!.words).toMatchObject({ title: "Votre étape", done: "Terminé", skip: "Passer", open: "Ouvrir dans Example" });
+    expect(yourStepsOf(run({ requirements: [step()] }), "fr", VENDORS)[0]!.words).toMatchObject({ title: "Votre étape", done: "Terminé", skip: "Passer", open: "Ouvrir dans Example" });
   });
 
   it("names the vendor on the button by its name, and dates the step from KIFF's hand-off, not the run's start", () => {
-    const [s] = yourStepsOf(run({ created: "2026-11-11T09:00:00Z", requirements: [step({ expires: "2026-11-18T16:30:00Z" }, { link: "https://app.stripe.com/payments/1" })] }));
+    const [s] = yourStepsOf(run({ created: "2026-11-11T09:00:00Z", requirements: [step({ expires: "2026-11-18T16:30:00Z" }, { link: "https://app.stripe.com/payments/1" })] }), "en", VENDORS);
     expect(s!.words.open).toBe("Open in Stripe");
     expect(s!.since).toBe("2026-11-11T16:30:00.000Z");
-    // A cloud function's host names no vendor: the host, as it is.
-    expect(yourStepsOf(run({ requirements: [step({}, { link: "https://abc.execute-api.eu-west-1.amazonaws.com/x" })] }))[0]!.words.open).toBe("Open in abc.execute-api.eu-west-1.amazonaws.com");
     // An expiry that can't be read: the run's start.
     expect(yourStepsOf(run({ requirements: [step({ expires: "" })] }))[0]!.since).toBe("2026-11-11T16:00:00Z");
   });
@@ -87,5 +86,33 @@ describe("the your_step tool on a taf's definition", () => {
     expect(definition("t_1", jobById("refunds")).your_step).toBeUndefined();
     process.env.TAFS_YOUR_STEP = "on";
     expect(definition("t_1", jobById("refunds")).your_step).toBe(true);
+  });
+});
+
+describe("a step's link and the taf's own vendors", () => {
+  const conns = [
+    { agent: "agent-a", vendor: "Stripe", kind: "vendor_sign_in" as const, server: "https://mcp.stripe.com/mcp", status: "approved" },
+    { agent: "agent-a", vendor: "Desk", kind: "key" as const, api: { url: "https://api.example.com/v2" }, status: "approved" },
+    { agent: "agent-a", vendor: "Custom", kind: "provider" as const, server: "https://abc.execute-api.eu-west-1.amazonaws.com/mcp", status: "approved" },
+    { agent: "agent-b", vendor: "Other", kind: "key" as const, api: { url: "https://api.other.com" }, status: "approved" },
+  ];
+
+  it("are the sites the taf's connections reach, never a cloud function's host or another taf's", () => {
+    expect([...vendorSites(conns, "agent-a")].sort()).toEqual(["example.com", "stripe.com"]);
+    expect([...vendorSites(conns, "agent-c")]).toEqual([]);
+  });
+
+  it("show the link only on one of them: a look-alike host a crafted message slipped in is words only", () => {
+    const vendors = vendorSites(conns, "agent-a");
+    const of = (link: string) => yourStepsOf(run({ requirements: [step({}, { link })] }), "en", vendors)[0]!;
+    expect(of("https://dashboard.stripe.com/payments/1")).toMatchObject({ link_host: "dashboard.stripe.com", words: { open: "Open in Stripe" } });
+    for (const lookalike of ["https://stripe-secure.example/login", "https://stripe.com.evil.example/x", "https://app.other.com/x", "https://abc.execute-api.eu-west-1.amazonaws.com/x"]) {
+      const s = of(lookalike);
+      expect(s.link, lookalike).toBeUndefined();
+      expect(s.words.open, lookalike).toBeUndefined();
+      expect(s.what).toBe("Approve 3 supplier payments, €4,210 in all");
+    }
+    // No vendors read (planque down, or a view that doesn't read them): no link, ever.
+    expect(yourStepsOf(run({ requirements: [step()] }))[0]!.link).toBeUndefined();
   });
 });

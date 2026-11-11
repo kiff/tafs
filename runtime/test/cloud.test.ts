@@ -4798,13 +4798,24 @@ describe("a step a taf handed its owner", () => {
 
   it("lists it on Home for Needs you, counted once, with tafs cloud's words and the link's host apart", async () => {
     const { w } = setUp();
-    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    // The taf's connections, from planque: its link is to one of them.
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
+      return new Response(JSON.stringify({ connections: [{ agent: rae.kiffAgent, vendor: "Example", kind: "key", api: { url: "https://api.example.com" }, status: "approved" }] }), { status: 200 });
+    }) as Deps["fetch"] };
+    const r = await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    const home = { status: r.statusCode, body: JSON.parse(r.body) };
     expect(home.status).toBe(200);
     expect(home.body.your_steps).toEqual([expect.objectContaining({
       handoff: "ho_1", run: "run_step", taf: { id: RAE, name: "Rae" }, what: "Approve 3 supplier payments", link: "https://app.example.com/r/1", link_host: "app.example.com",
       words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in Example", line: "Your step: Approve 3 supplier payments" } })]);
-    const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
-    expect(rae.work).toMatchObject({ status: "needs_you", line: "Your step: Approve 3 supplier payments" });
+    const listed = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(listed.work).toMatchObject({ status: "needs_you", line: "Your step: Approve 3 supplier payments" });
+    // Without planque's list, the step still shows, with no link.
+    const bare = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(bare.body.your_steps[0].link).toBeUndefined();
+    expect(bare.body.your_steps[0].words.open).toBeUndefined();
     if (home.body.needs_you) expect(home.body.needs_you.count).toBeGreaterThanOrEqual(1);
   });
 
