@@ -48,46 +48,51 @@ export function linkHost(link: unknown): string | undefined {
 /** How long KIFF waits for the owner's answer: its hand-offs expire a week after they're raised. */
 export const HANDOFF_WAIT_MS = 7 * 24 * 3600_000;
 
-/** A host's site: its last two labels ("app.stripe.com" is "stripe.com"). */
+/** A host's site: its last two labels ("app.stripe.com" is "stripe.com"), only to look a vendor up in VENDOR_WEB_HOSTS. */
 function siteOf(host: string): string {
   return host.split(".").slice(-2).join(".");
 }
 
 /**
- * Vendors whose whole site is theirs alone, so any of its hosts is the vendor's own: a connection to
- * mcp.stripe.com vouches for dashboard.stripe.com. A platform that gives each customer a host under its site
- * (myshopify.com, zendesk.com, atlassian.net) is never here: there, another tenant's page could sit beside
- * the owner's, so only the connection's own host, or one under it, is vouched for.
+ * Vendors whose web app sits on a sibling of their connection's host (mcp.stripe.com, with the dashboard on
+ * dashboard.stripe.com): those web hosts, by the vendor's site, as a list kept here, never computed. A
+ * connection to one of these vendors vouches for its own host and for these, nothing else on the site.
  */
-const SINGLE_TENANT_SITES = new Set(["stripe.com", "paypal.com", "hubspot.com", "shopify.com", "qonto.com", "xero.com", "intuit.com", "pennylane.com", "mollie.com", "gocardless.com"]);
-
-/** What a taf's connections vouch for: their own hosts (and hosts under them), and the single-tenant sites among them. */
-export interface VendorReach {
-  hosts: string[];
-  sites: Set<string>;
-}
+const VENDOR_WEB_HOSTS: Record<string, string[]> = {
+  "stripe.com": ["dashboard.stripe.com"],
+  "paypal.com": ["www.paypal.com"],
+  "shopify.com": ["admin.shopify.com"],
+  "hubspot.com": ["app.hubspot.com"],
+  "qonto.com": ["app.qonto.com"],
+  "xero.com": ["go.xero.com"],
+  "intuit.com": ["qbo.intuit.com"],
+  "pennylane.com": ["app.pennylane.com"],
+  "mollie.com": ["my.mollie.com"],
+  "gocardless.com": ["manage.gocardless.com"],
+};
 
 /**
- * What a taf's connections reach, by planque's list: each connection's server, entry and API host that names a
- * vendor (a cloud function's host names none, so it vouches for nothing).
+ * The hosts a taf's connections vouch for, by planque's list: each connection's server, entry and API host
+ * that names a vendor (a cloud function's host names none, so it vouches for nothing), and its vendor's listed
+ * web hosts.
  */
-export function vendorReach(conns: AccountConnection[], agent: string): VendorReach {
-  const reach: VendorReach = { hosts: [], sites: new Set() };
+export function vendorReach(conns: AccountConnection[], agent: string): string[] {
+  const hosts = new Set<string>();
   for (const c of conns) {
     if (c.agent !== agent) continue;
     for (const url of [c.server, c.entry, c.api?.url]) {
       const host = linkHost(url);
       if (!host || !vendorName(`https://${host}/`)) continue;
-      reach.hosts.push(host);
-      if (SINGLE_TENANT_SITES.has(siteOf(host))) reach.sites.add(siteOf(host));
+      hosts.add(host);
+      for (const web of VENDOR_WEB_HOSTS[siteOf(host)] ?? []) hosts.add(web);
     }
   }
-  return reach;
+  return [...hosts];
 }
 
-/** Whether a link's host is one the taf's connections vouch for. */
-export function vouched(host: string, reach: VendorReach): boolean {
-  return reach.hosts.some((h) => host === h || host.endsWith(`.${h}`)) || reach.sites.has(siteOf(host));
+/** Whether a link's host is one the taf's connections vouch for: one of their hosts, or a host under one. */
+export function vouched(host: string, reach: readonly string[]): boolean {
+  return reach.some((h) => host === h || host.endsWith(`.${h}`));
 }
 
 /** The vendor as the button names it: its name from the link's host ("Stripe" for app.stripe.com), else the host without www. or app. */
@@ -108,7 +113,7 @@ function handedAt(q: Requirement, r: Run): string {
  * The open steps a run waits on, oldest first. `reach` is what the taf's connections vouch for (vendorReach):
  * a link shows only when its host is vouched for. Without it, no link shows.
  */
-export function yourStepsOf(r: Run, lang: Lang = "en", reach: VendorReach = { hosts: [], sites: new Set() }): YourStepView[] {
+export function yourStepsOf(r: Run, lang: Lang = "en", reach: readonly string[] = []): YourStepView[] {
   if (r.status !== "PAUSED") return [];
   const w = wordsIn(lang);
   const out: YourStepView[] = [];

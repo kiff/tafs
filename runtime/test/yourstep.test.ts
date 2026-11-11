@@ -7,7 +7,7 @@ import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { jobById } from "../src/jobs.js";
 
 const NOW = new Date("2026-11-11T17:00:00Z");
-const VENDORS = { hosts: ["app.example.com"], sites: new Set(["stripe.com"]) };
+const VENDORS = ["app.example.com", "app.stripe.com"];
 const run = (o: Partial<Run>): Run => ({
   id: "r1", agent: "taf-a", session: "s", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
   created: "2026-11-11T16:00:00Z", updated: "2026-11-11T16:05:00Z", ...o,
@@ -97,11 +97,9 @@ describe("a step's link and the taf's own vendors", () => {
     { agent: "agent-b", vendor: "Other", kind: "key" as const, api: { url: "https://api.other.com" }, status: "approved" },
   ];
 
-  it("are the hosts the taf's connections reach, and only single-tenant vendors' whole site, never a cloud function's or another taf's", () => {
-    const reach = vendorReach(conns, "agent-a");
-    expect(reach.hosts.sort()).toEqual(["api.example.com", "mcp.stripe.com"]);
-    expect([...reach.sites]).toEqual(["stripe.com"]);
-    expect(vendorReach(conns, "agent-c")).toEqual({ hosts: [], sites: new Set() });
+  it("are the hosts the taf's connections reach and their vendor's listed web hosts, never a cloud function's or another taf's", () => {
+    expect(vendorReach(conns, "agent-a").sort()).toEqual(["api.example.com", "dashboard.stripe.com", "mcp.stripe.com"]);
+    expect(vendorReach(conns, "agent-c")).toEqual([]);
   });
 
   it("vouch only for the owner's own host on a platform that gives each customer one", () => {
@@ -129,6 +127,8 @@ describe("a step's link and the taf's own vendors", () => {
     const reach = vendorReach(conns, "agent-a");
     const of = (link: string) => yourStepsOf(run({ requirements: [step({}, { link })] }), "en", reach)[0]!;
     expect(of("https://dashboard.stripe.com/payments/1")).toMatchObject({ link_host: "dashboard.stripe.com", words: { open: "Open in Stripe" } });
+    // The listed web host only: another host on Stripe's site isn't vouched for.
+    expect(of("https://checkout.stripe.com/x").link).toBeUndefined();
     // api.example.com vouches for itself and hosts under it, not for its siblings: example.com isn't single-tenant.
     expect(of("https://eu.api.example.com/x").link_host).toBe("eu.api.example.com");
     for (const lookalike of ["https://stripe-secure.example/login", "https://stripe.com.evil.example/x", "https://app.other.com/x", "https://abc.execute-api.eu-west-1.amazonaws.com/x", "https://www.example.com/x"]) {
