@@ -345,9 +345,11 @@ shows in tafs cloud's `words`:
   someone without `billing.manage`.
 
 A kind the app doesn't know draws no button, and its line still shows. The app works out no
-level and no fix. A healthy taf with no lines shows nothing. On Home, a taf at risk or failing
-shows its first line in place of what it's doing, amber or red (`HomeTaf.health`,
-`Taf.nowHealth`). Halted, paused or waiting on the owner reads as before, since that says more.
+level and no fix. A healthy taf with no lines shows nothing. On Home, tafs cloud orders what a
+taf's row says: its work's `line` carries health's first reason only while `work.status` is
+`idle`, since halted, needs you, retrying, working, waiting on an app and paused come first. While
+idle and at risk or failing, the row shows that line amber or red (`HomeTaf.health`,
+`Taf.nowHealth`). Otherwise it reads as before, untinted.
 
 ## When something doesn't go through
 

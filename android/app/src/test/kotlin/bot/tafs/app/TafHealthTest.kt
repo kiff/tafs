@@ -84,27 +84,33 @@ class TafHealthTest {
     return testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false).also { it.restore(); it.refresh() }
   }
 
-  private fun homeTaf(agent: String, state: String, health: String?) =
+  private fun homeTaf(agent: String, state: String, health: String?, work: String?) =
     """{"id":"taf_$agent","name":"$agent","kiff_agent":"$agent","color":1,"state":"$state","card":{"ids":["c1"],"active":true}""" +
-      (health?.let { ""","health":$it""" } ?: "") + "}"
+      (health?.let { ""","health":$it""" } ?: "") + (work?.let { ""","work":$it""" } ?: "") + "}"
 
-  @Test fun homeShowsTheFirstReasonOfATafAtRiskOrFailingInPlaceOfWhatItsDoing() = runTest {
+  private val failing = """{"level":"failing","lines":["Its last 2 checks found work too big for one run, so nothing ran."]}"""
+
+  @Test fun homeShowsTafsCloudsWorkLineTintedByHealthOnlyWhileItsWorkIsIdle() = runTest {
     val m = home(
-      homeTaf("refunds", "idle", """{"level":"failing","lines":["Its last 2 checks found work too big for one run, so nothing ran.","Waiting for credits."]}"""),
-      homeTaf("invoices", "idle", """{"level":"at_risk","lines":["Waiting for credits since 09:00."]}"""),
-      homeTaf("leads", "idle", """{"level":"healthy","lines":[]}"""),
-      // The owner's own state says more: a paused taf reads paused, whatever its health.
-      homeTaf("disputes", "paused", """{"level":"failing","lines":["Its last three runs failed."]}"""),
-      homeTaf("orders", "idle", null),
+      // Idle: tafs cloud's work line is the health reason, tinted by its level.
+      homeTaf("refunds", "idle", failing, """{"status":"idle","line":"Its last 2 checks found work too big for one run, so nothing ran."}"""),
+      homeTaf("invoices", "idle", """{"level":"at_risk","lines":["Waiting for credits since 09:00."]}""", """{"status":"idle","line":"Waiting for credits since 09:00."}"""),
+      // Working, or retrying: what it's doing comes first, as tafs cloud orders it, with no tint.
+      homeTaf("leads", "working", failing, """{"status":"working","line":"Working on 2 requests"}"""),
+      homeTaf("disputes", "idle", failing, """{"status":"retrying","line":"Retrying at 10:15"}"""),
+      // Healthy, or no health read: nothing changes.
+      homeTaf("orders", "idle", """{"level":"healthy","lines":[]}""", """{"status":"idle","line":"Nothing ran today"}"""),
+      homeTaf("returns", "idle", null, null),
     )
     val byId = m.state.value.tafs.associateBy { it.id }
     assertEquals("Its last 2 checks found work too big for one run, so nothing ran.", byId["refunds"]?.now)
     assertEquals("failing", byId["refunds"]?.nowHealth)
+    assertEquals("Waiting for credits since 09:00.", byId["invoices"]?.now)
     assertEquals("at_risk", byId["invoices"]?.nowHealth)
     assertNull(byId["leads"]?.nowHealth)
-    assertEquals(bot.tafs.app.model.Words.Taf.Now.actingUnderKiff, byId["leads"]?.now)
     assertNull(byId["disputes"]?.nowHealth)
-    assertEquals(bot.tafs.app.model.Words.Taf.State.paused, byId["disputes"]?.now)
     assertNull(byId["orders"]?.nowHealth)
+    assertEquals(bot.tafs.app.model.Words.Taf.Now.actingUnderKiff, byId["orders"]?.now)
+    assertNull(byId["returns"]?.nowHealth)
   }
 }
