@@ -91,8 +91,8 @@ given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgai
 runs (`RunsPanel`): when it runs next, in tafs cloud's `next_run_words` ("Next run Mon 08:00", with
 the day when it isn't today; the app's own time only from a tafs cloud that sends none), or that it
 works from its chat, and **Run now**; then the runs it kept (`RetainedRuns`), which stand for its
-latest run's report, under the firings that started no run (the first page's `skipped`, a Run now
-whose check couldn't read among them), dim. The home list says the next run the same way. A taf
+latest run's report, with the firings that started no run among them by time (the first page's
+`skipped`, a Run now whose check couldn't read among them, `RunsPage.rows`), dim. The home list says the next run the same way. A taf
 whose `work.attention` is set says what went wrong last in place of its next run, and its row and
 page drop the **Working** chip (`Taf.attention`). Its Cards keep tafs cloud's order (`Taf.shownCards`):
 the one in front is the one that has used most of its limit. The Record shows an action's whole

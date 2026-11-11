@@ -48,6 +48,14 @@ final class CloudLinesTests: XCTestCase {
         XCTAssertNil(none.skipped, "an older tafs cloud sends none")
     }
 
+    /// The firings that started no run sit among the runs by time, newest first, on the first page only.
+    func testSkippedFiringsTakeTheirPlaceAmongTheRuns() throws {
+        let json = #"{"requests":[{"id":"run_new","at":"2026-11-11T22:00:00Z","state":"done","line":"Done at 23:00"},{"id":"run_old","at":"2026-11-11T20:00:00Z","state":"done","line":"Done at 21:00"}],"next_cursor":null,"title":"Its runs","more_title":"All","skipped":[{"due":"2026-11-11T21:29:00Z","why":"check_failed","words":"22:29: no run started"}]}"#
+        let page = try KIFFClient.decoder.decode(TafsCloud.RunsPage.self, from: Data(json.utf8))
+        XCTAssertEqual(page.rows(first: true).map(\.id), ["r|run_new", "s|\(page.skipped![0].due.timeIntervalSince1970)", "r|run_old"])
+        XCTAssertEqual(page.rows(first: false).map(\.id), ["r|run_new", "r|run_old"], "a later page carries runs only")
+    }
+
     /// The Record's title keeps the action's whole title: "Save $800" read as saving the money.
     func testARecordTitleKeepsTheWholeActionTitle() throws {
         var entry = RecordEntry(tafID: UUID(), kind: .done, title: "Save a dispute response", detail: "", at: Date())
