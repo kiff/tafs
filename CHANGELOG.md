@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **iPhone and iPad: every ready-made job, at any time.** + New opens tafs cloud's gallery of jobs, with "Say it in your own words"; a short strip under the tafs list shows a few jobs the account doesn't run yet, in tafs cloud's order. Each job shows its apps with their logos, loaded only from tafs cloud, and each category has its colour. From a tafs cloud without the gallery, + New opens Coach as before (docs/ios-app.md).
 - **Edge to edge without deprecated calls (Android 1.3.1).** The app no longer uses the window's bar colours or the short-edges cutout mode, which Google Play flags as deprecated for edge to edge from Android 15. It still draws behind the status and navigation bars, with their icons in the app's own Light or Dark from the first frame (docs/android-app.md).
 - **iPhone and iPad: what Coach includes, under Solo.** As on Android 1.3. Plan & usage shows tafs cloud's sentence about Coach's help (`buy.coach`) under Solo, as kiff.dev says it. A tafs cloud without it shows no line (docs/ios-app.md).
 - **iPhone and iPad: Coach's tools are asked after an install.** As on Android 1.3. Installing a version with its Card while Coach's tools are still to give asks the tools step on Coach's screen; the install's Face ID gives none of them (docs/ios-app.md, docs/coach.md).
