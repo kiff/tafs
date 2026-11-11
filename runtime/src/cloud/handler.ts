@@ -6795,7 +6795,8 @@ export async function sweepYourSteps(deps: Deps): Promise<Array<{ tenant: string
   for (const tenant of await deps.tafs.tenants()) {
     const tafs = (await deps.tafs.list(tenant).catch(() => [] as Taf[])).filter((t) => !t.removing && t.job !== SETUP_JOB);
     for (const taf of tafs) {
-      const runs = await deps.agents.runs(tenant, taf.id, false, 20).catch(() => undefined);
+      // Only the runs not ended (a paused run among them): a small read, whatever the taf's history.
+      const runs = await deps.agents.runs(tenant, taf.id, true, 20).catch(() => undefined);
       const steps = (runs ?? []).flatMap((r) => yourStepsOf(r));
       if (!steps.length) continue;
       if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
