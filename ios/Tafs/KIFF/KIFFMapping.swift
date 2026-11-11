@@ -138,6 +138,7 @@ enum KIFFMapping {
         }
         taf.doors = h.doors
         taf.avatarRim = h.avatarRim
+        taf.health = h.health
         taf.used = h.card.used.compactMapValues { amount($0) }
         taf.usageUnknown = Set(h.card.usageUnknown)
         return taf

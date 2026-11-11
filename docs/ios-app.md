@@ -88,6 +88,21 @@ cloud's line, then its recent requests and skipped firings, newest first, in taf
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
 given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`).
 
+**A taf that isn't healthy** ([reliability.md](reliability.md#its-health); `HealthLines`,
+`TafsCloud.Health`): skipped work is never healthy, so the phone says why and what fixes it.
+- **Its page:** under the work's line, each of tafs cloud's `health.lines`, amber when at risk and
+  red when failing, from the work read or else Home's. Under a line, the fixes tafs cloud decided
+  for it (`health.fixes`):
+  - **`coach`** opens Coach on this taf with `say` in its box, nothing sent
+    (`AppModel.askCoachAbout`), for someone who may use Coach and manages the taf.
+  - **`credits`** opens Plan & usage: "Add credits", or "Ask an admin for credits", as tafs cloud
+    words it for who's reading.
+  - Any other kind, or a fix with no words, is no button.
+- **Home** (iPhone and iPad): the row shows tafs cloud's first health line in place of what the
+  taf is doing, after a signed-out connection.
+- **Healthy, or no health read,** draws nothing. A `health` that isn't one never fails the
+  read it's on (`HealthTests`).
+
 **Dictation** goes in at the box's insertion point, with what was after it kept after the words
 heard (`Dictation.cursor`, from iOS 18, which says where the point is); before that, at the end.
 

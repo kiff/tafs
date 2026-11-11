@@ -416,6 +416,49 @@ struct TafDetailView: View {
     }
 }
 
+/// A taf that isn't healthy, as tafs cloud says it (docs/reliability.md, "Its health"): each
+/// line, amber when at risk and red when failing, with the fixes tafs cloud decided for it.
+/// Coach's fix opens Coach on this taf with tafs cloud's words in the box, nothing sent, for
+/// someone who may use Coach and manages the taf. The credits fix opens Plan & usage, where
+/// credits are added or asked for. Healthy draws nothing.
+struct HealthLines: View {
+    @EnvironmentObject private var model: AppModel
+    let health: TafsCloud.Health
+    let tafID: UUID
+
+    var body: some View {
+        if health.needsAttention {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(health.lines.enumerated()), id: \.offset) { index, line in
+                    Text(line).scaledFont(14).foregroundColor(health.failing ? Theme.no : Theme.amberText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    ForEach(health.fixes(for: index), id: \.self) { fix in
+                        if let act = action(fix) {
+                            Button(fix.words, action: act)
+                                .buttonStyle(OutlineButtonStyle())
+                                .accessibilityIdentifier("taf.health.fix.\(fix.kind)")
+                        }
+                    }
+                }
+            }
+            .accessibilityIdentifier("taf.health")
+        }
+    }
+
+    /// What a fix does here; nil draws no button.
+    private func action(_ fix: TafsCloud.Health.Fix) -> (() -> Void)? {
+        switch fix.kind {
+        case "coach":
+            guard let say = fix.say, !say.isEmpty, model.mayUseCoach, model.manages(tafID) else { return nil }
+            return { model.askCoachAbout(tafID, words: say) }
+        case "credits":
+            return { model.usageRequested = true }
+        default:
+            return nil
+        }
+    }
+}
+
 /// Where the taf's work stands, as tafs cloud says it (docs/reliability.md): its line, then its
 /// recent requests and skipped firings, newest first, each in tafs cloud's words. A request
 /// needing the owner is amber, a failed one red; a skipped firing isn't a failure, so it's dim.
@@ -433,6 +476,10 @@ struct WorkPanel: View {
                     Eyebrow(text: Words.Taf.itsWork)
                     if let line = work?.summary?.line, !line.isEmpty {
                         Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    }
+                    // Its health, read with the work, else as Home read it.
+                    if let health = work?.health ?? model.taf(tafID)?.health {
+                        HealthLines(health: health, tafID: tafID)
                     }
                     ForEach(work?.rows ?? []) { row in
                         switch row {
