@@ -1542,7 +1542,57 @@ final class TafsCloud {
     /// category, as tafs cloud sends them: a recipe is a job and the words to say to Coach. The
     /// app draws them and keeps no list of its own.
     struct Recipes: Decodable, Equatable {
-        struct Category: Decodable, Equatable { let id: String; let title: String }
+        struct Category: Decodable, Equatable {
+            let id: String
+            let title: String
+            /// The category's colour, tafs cloud's token for light and dark, for its chip and its
+            /// cards' edge; nil from a tafs cloud from before colours, or one the app can't read.
+            var color: Tint? = nil
+            private enum CodingKeys: String, CodingKey { case id, title, color }
+            init(id: String, title: String, color: Tint? = nil) { self.id = id; self.title = title; self.color = color }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                id = try c.decode(String.self, forKey: .id)
+                title = try c.decode(String.self, forKey: .title)
+                color = (try? c.decodeIfPresent(Tint.self, forKey: .color)) ?? nil
+            }
+        }
+        /// A colour as tafs cloud sends it, `#RRGGBB` for light and for dark. Either one not
+        /// readable, there's no colour: the app never guesses one.
+        struct Tint: Decodable, Equatable {
+            let light: UInt32
+            let dark: UInt32
+            init(light: UInt32, dark: UInt32) { self.light = light; self.dark = dark }
+            private enum CodingKeys: String, CodingKey { case light, dark }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                guard let l = Self.hex(try c.decode(String.self, forKey: .light)),
+                      let d = Self.hex(try c.decode(String.self, forKey: .dark)) else {
+                    throw DecodingError.dataCorruptedError(forKey: .light, in: c, debugDescription: "not #RRGGBB")
+                }
+                light = l; dark = d
+            }
+            /// `#RRGGBB`, and only that.
+            static func hex(_ s: String) -> UInt32? {
+                guard s.count == 7, s.first == "#" else { return nil }
+                let digits = s.dropFirst()
+                guard digits.allSatisfy(\.isHexDigit) else { return nil }
+                return UInt32(digits, radix: 16)
+            }
+        }
+        /// One of the apps a recipe's taf uses, as tafs cloud names it, with its logo's path on
+        /// tafs cloud (`/v1/logos/{key}`) when there is one.
+        struct App: Decodable, Equatable {
+            let name: String
+            var logo: String? = nil
+            private enum CodingKeys: String, CodingKey { case name, logo }
+            init(name: String, logo: String? = nil) { self.name = name; self.logo = logo }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                name = try c.decode(String.self, forKey: .name)
+                logo = (try? c.decodeIfPresent(String.self, forKey: .logo)) ?? nil
+            }
+        }
         /// The Card a recipe's taf would have, as its file says it: what it does on its own,
         /// asks first, and never does.
         struct Card: Decodable, Equatable {
@@ -1572,11 +1622,19 @@ final class TafsCloud {
             var headline: String = ""
             var today: String = ""
             var card = Card()
-            private enum CodingKeys: String, CodingKey { case id, title, category, line, say, headline, today, card }
+            /// The apps its taf uses, one per connection, in tafs cloud's order.
+            var apps: [App] = []
+            /// Every app it needs is connected on the account already.
+            var connected = false
+            /// A taf on the account was built from it.
+            var running = false
+            private enum CodingKeys: String, CodingKey { case id, title, category, line, say, headline, today, card, apps, connected, running }
             init(id: String, title: String, category: String = "", line: String = "", say: String = "",
-                 headline: String = "", today: String = "", card: Card = Card()) {
+                 headline: String = "", today: String = "", card: Card = Card(), apps: [App] = [],
+                 connected: Bool = false, running: Bool = false) {
                 self.id = id; self.title = title; self.category = category; self.line = line; self.say = say
                 self.headline = headline; self.today = today; self.card = card
+                self.apps = apps; self.connected = connected; self.running = running
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -1588,6 +1646,9 @@ final class TafsCloud {
                 headline = (try? c.decodeIfPresent(String.self, forKey: .headline)) ?? ""
                 today = (try? c.decodeIfPresent(String.self, forKey: .today)) ?? ""
                 card = (try? c.decodeIfPresent(Card.self, forKey: .card)) ?? Card()
+                apps = ((try? c.decodeIfPresent([LenientItem<App>].self, forKey: .apps)) ?? nil)?.compactMap(\.value) ?? []
+                connected = ((try? c.decodeIfPresent(Bool.self, forKey: .connected)) ?? nil) ?? false
+                running = ((try? c.decodeIfPresent(Bool.self, forKey: .running)) ?? nil) ?? false
             }
             /// What leads the recipe on Home and on its sheet: the problem it ends; its title
             /// from a tafs cloud from before headlines.
@@ -1706,6 +1767,93 @@ final class TafsCloud {
 
     func recipes() async throws -> Recipes {
         try await send("GET", "/v1/recipes")
+    }
+
+    /// Every ready-made job, reachable at any time (`GET /v1/recipes/gallery`): the full
+    /// gallery behind + New, and the short strip under the tafs list. tafs cloud decides what
+    /// each shows and in what order; the app draws it.
+    struct Gallery: Decodable, Equatable {
+        /// The strip under the tafs list: shown or not, its title, and the jobs, in order.
+        struct Strip: Decodable, Equatable {
+            var shown = false
+            var title = ""
+            var ids: [String] = []
+            private enum CodingKeys: String, CodingKey { case shown, title, ids }
+            init(shown: Bool = false, title: String = "", ids: [String] = []) { self.shown = shown; self.title = title; self.ids = ids }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                shown = ((try? c.decodeIfPresent(Bool.self, forKey: .shown)) ?? nil) ?? false
+                title = ((try? c.decodeIfPresent(String.self, forKey: .title)) ?? nil) ?? ""
+                ids = ((try? c.decodeIfPresent([String].self, forKey: .ids)) ?? nil) ?? []
+            }
+        }
+        /// The gallery's own words: its title, and the row that opens Coach with nothing in it.
+        struct Words: Decodable, Equatable {
+            var title = ""
+            /// The heading over every job ("All jobs").
+            var all = ""
+            var ownWords = ""
+            var ownWordsLine = ""
+            private enum CodingKeys: String, CodingKey { case title, all, ownWords = "own_words", ownWordsLine = "own_words_line" }
+            init(title: String = "", all: String = "", ownWords: String = "", ownWordsLine: String = "") {
+                self.title = title; self.all = all; self.ownWords = ownWords; self.ownWordsLine = ownWordsLine
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                title = ((try? c.decodeIfPresent(String.self, forKey: .title)) ?? nil) ?? ""
+                all = ((try? c.decodeIfPresent(String.self, forKey: .all)) ?? nil) ?? ""
+                ownWords = ((try? c.decodeIfPresent(String.self, forKey: .ownWords)) ?? nil) ?? ""
+                ownWordsLine = ((try? c.decodeIfPresent(String.self, forKey: .ownWordsLine)) ?? nil) ?? ""
+            }
+        }
+        var categories: [Recipes.Category] = []
+        var recipes: [Recipes.Recipe] = []
+        var strip = Strip()
+        var words = Words()
+        /// The job sheet's words; nil from a tafs cloud that sends none with the gallery.
+        var labels: Recipes.Labels?
+        private enum CodingKeys: String, CodingKey { case categories, recipes, strip, words, labels }
+        init(categories: [Recipes.Category] = [], recipes: [Recipes.Recipe] = [], strip: Strip = Strip(),
+             words: Words = Words(), labels: Recipes.Labels? = nil) {
+            self.categories = categories; self.recipes = recipes; self.strip = strip; self.words = words; self.labels = labels
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            categories = ((try? c.decodeIfPresent([LenientItem<Recipes.Category>].self, forKey: .categories)) ?? nil)?.compactMap(\.value) ?? []
+            recipes = ((try? c.decodeIfPresent([LenientItem<Recipes.Recipe>].self, forKey: .recipes)) ?? nil)?.compactMap(\.value) ?? []
+            strip = ((try? c.decodeIfPresent(Strip.self, forKey: .strip)) ?? nil) ?? Strip()
+            words = ((try? c.decodeIfPresent(Words.self, forKey: .words)) ?? nil) ?? Words()
+            labels = (try? c.decodeIfPresent(Recipes.Labels.self, forKey: .labels)) ?? nil
+        }
+        /// The gallery as recipes, so it draws as Home's list does, its sheet with `labels`
+        /// (the gallery's, else `fallback`'s, from `/v1/recipes`).
+        func asRecipes(labels fallback: Recipes.Labels? = nil) -> Recipes {
+            Recipes(categories: categories, recipes: recipes, labels: labels ?? fallback)
+        }
+        /// The strip's jobs, in tafs cloud's order: an id the gallery doesn't list is skipped.
+        /// None when tafs cloud doesn't show it.
+        var stripRecipes: [Recipes.Recipe] {
+            guard strip.shown else { return [] }
+            return strip.ids.compactMap { id in recipes.first { $0.id == id } }
+        }
+        /// The category a recipe is in, for its colour.
+        func category(of recipe: Recipes.Recipe) -> Recipes.Category? { categories.first { $0.id == recipe.category } }
+    }
+
+    func recipesGallery() async throws -> Gallery {
+        try await send("GET", "/v1/recipes/gallery")
+    }
+
+    /// Where an app's logo loads from: a path tafs cloud sent, `/v1/logos/` and the 32 lowercase
+    /// hex of the key tafs cloud mints, as Android checks it, on tafs cloud itself. Anything else,
+    /// an absolute URL or another path, loads nothing: the phone only ever asks tafs cloud, so no
+    /// one else sees its address.
+    func logoURL(_ path: String?) -> URL? {
+        let prefix = "/v1/logos/"
+        guard let path, path.hasPrefix(prefix) else { return nil }
+        let key = path.utf8.dropFirst(prefix.utf8.count)
+        guard key.count == 32, key.allSatisfy({ (0x30...0x39).contains($0) || (0x61...0x66).contains($0) }) else { return nil }
+        return URL(string: path, relativeTo: baseURL)?.absoluteURL
     }
 
     /// The account's "Show suggestions" setting, with tafs cloud's words for it.
