@@ -28,16 +28,31 @@ final class AppModel: ObservableObject {
     /// Why the case couldn't be read, in words.
     @Published private(set) var recordCaseError: String?
     @Published private(set) var cardUnitExceptions: [TafsCloud.CardUnitException] = []
+    /// The steps tafs handed the person, oldest first, as tafs cloud lists them on Home (docs/api.md
+    /// › Your step), less those this phone just answered.
+    @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
+    /// Steps answered here and accepted by KIFF that Home may still list until the run hears the
+    /// answer: kept out of Needs you and its count, and forgotten once Home stops listing them.
+    private var answeredSteps: Set<String> = []
+    /// Steps whose answer is being signed or sent, so a second tap sends nothing.
+    @Published private(set) var answeringSteps: Set<String> = []
+    /// A step opened from its notification: Needs you brings it into view and clears this.
+    @Published var requestedStep: String?
     /// Home's count of what waits for the person, from tafs cloud (kiff/tafs#469 item 1).
     @Published private(set) var homeNeedsYou: TafsCloud.NeedsYou?
+    /// Of tafs cloud's count, the steps answered here that it still counts.
+    private var answeredStillCounted = 0
 
     /// What waits for the person: tafs cloud's count, or, when it sent none, the app's own
-    /// count of held calls, currency requests and "Did this happen?" calls.
-    var needsYouCount: Int { homeNeedsYou?.count ?? held.count + cardUnitExceptions.count + unproven.count }
+    /// count of held calls, currency requests, steps and "Did this happen?" calls.
+    var needsYouCount: Int {
+        homeNeedsYou.map { max(0, $0.count - answeredStillCounted) }
+            ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count
+    }
 
     /// Home's line under the working count, in tafs cloud's words when it sent them.
     var needsYouWords: String {
-        if let words = homeNeedsYou?.words { return words }
+        if answeredStillCounted == 0, let words = homeNeedsYou?.words { return words }
         let n = needsYouCount
         return n == 0 ? Words.NeedsYou.nothing : Words.NeedsYou.count(count: n)
     }
@@ -610,6 +625,7 @@ final class AppModel: ObservableObject {
             tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
+            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0
             haltErrors = [:]
             alertsOffered = false
             remembered?.removeObject(forKey: Self.alertsOfferedKey)
@@ -1142,6 +1158,10 @@ final class AppModel: ObservableObject {
             haltRequested = true
         // A Coach task's run ended (kiff/tafs#210): its line is in Coach's chat.
         case "coach": if mode == .kiff { coachOpen = true }
+        // A step a taf handed its owner: Needs you, where "Done" and "Skip it" are, brings it into view.
+        case let d where d.hasPrefix("step:"):
+            requestedTab = .needsYou
+            requestedStep = String(d.dropFirst("step:".count))
         default:
             if let hold = AlertAnswers.request(from: destination) {
                 requestedTab = .needsYou
@@ -1625,6 +1645,7 @@ final class AppModel: ObservableObject {
     /// are not recreated.
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
+        showSteps(home.yourSteps ?? [])
         homeNeedsYou = home.needsYou
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
@@ -6084,6 +6105,74 @@ final class AppModel: ObservableObject {
         improveTaf(taf.id)
         setupDraft = ask.coach_text
         coachOpen = true
+    }
+
+    /// Home's steps, less those answered here that it still lists; an answered step Home no
+    /// longer lists is forgotten.
+    private func showSteps(_ listed: [TafsCloud.YourStep]) {
+        answeredSteps.formIntersection(listed.map(\.handoff))
+        answeredStillCounted = answeredSteps.count
+        yourSteps = listed.filter { !answeredSteps.contains($0.handoff) }
+    }
+
+    /// Whether a step still waits for an answer from this phone: not one it just answered.
+    func canAnswer(step handoff: String) -> Bool { !answeredSteps.contains(handoff) }
+
+    /// The step `handoff` waits on, from Home's list or, for a taf's request, its work.
+    func yourStep(_ handoff: String) -> TafsCloud.YourStep? {
+        yourSteps.first { $0.handoff == handoff }
+    }
+
+    /// Whether this phone can answer a step: as for a hold, KIFF checks the device key's
+    /// signature, so the session must hold it, and the person must answer the account's holds.
+    var canAnswerSteps: Bool {
+        mode == .kiff && canAnswerHolds != false && kiffTenant != nil && (sessionHasKey || !kiff.serverVerifiesSignatures)
+    }
+
+    /// Answers a step a taf handed its owner (docs/api.md › Your step): "done" or "skipped", to
+    /// KIFF, signed with the device key over `kiff.handoff.v1`. It grants nothing, so the
+    /// approval key isn't asked for. KIFF tells the taf's run, which goes on: "Done" checks the
+    /// vendor where it can, and "Skip it" withdraws what it prepared.
+    /// `tafID` is the taf whose page it was answered on; Needs you's steps name their taf.
+    func answerYourStep(_ step: TafsCloud.YourStep, done: Bool, tafID: UUID? = nil) async {
+        guard mode == .kiff, !answeringSteps.contains(step.handoff), !answeredSteps.contains(step.handoff) else { return }
+        guard canAnswerSteps, let tenant = kiffTenant else {
+            lastError = kiff.serverVerifiesSignatures && !sessionHasKey ? Words.NeedsYou.signInAgainToAnswer : Words.NeedsYou.answerInKiff
+            return
+        }
+        answeringSteps.insert(step.handoff)
+        let gen = accountGeneration
+        defer { if gen == accountGeneration { answeringSteps.remove(step.handoff) } }
+        let answer = done ? "done" : "skipped"
+        let at = SigningTime.next(now: clock())
+        let message = KIFFClient.handoffMessage(tenant: tenant, handoffID: step.handoff, answer: answer, signedAt: at)
+        let value: String
+        do {
+            // The prompt says what's being answered, in tafs cloud's words.
+            value = try await signer.sign(message, reason: step.words.line.isEmpty ? step.what : step.words.line)
+        } catch {
+            guard gen == accountGeneration else { return }
+            lastError = ApprovalReadiness.cancelled(error) ?? Words.Common.notSentUnconfirmed
+            return
+        }
+        guard gen == accountGeneration else { return }
+        do {
+            try await kiff.answerHandoff(step.handoff, answer: answer, signature: .init(signedAt: at, value: value))
+        } catch KIFFClient.KIFFError.server(409, _, _) {
+            // Answered already, from another phone or this one: nothing more to do here.
+        } catch {
+            if gen == accountGeneration { lastError = Self.answerRefusedWords(error) }
+            return
+        }
+        guard gen == accountGeneration else { return }
+        answeredSteps.insert(step.handoff)
+        if yourSteps.contains(where: { $0.handoff == step.handoff }) { answeredStillCounted += 1 }
+        yourSteps.removeAll { $0.handoff == step.handoff }
+        if requestedStep == step.handoff { requestedStep = nil }
+        // The taf's work shows the run going on once it hears the answer.
+        let taf = tafID ?? step.taf.flatMap { t in cloudTafs.first { $0.value.id == t.id }.flatMap { holderIDs[$0.key] } }
+        await refresh()
+        if let taf, works[taf] != nil { await loadWork(taf) }
     }
 
     func dismissCardUnit(_ exception: TafsCloud.CardUnitException) async {

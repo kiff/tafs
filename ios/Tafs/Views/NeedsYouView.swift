@@ -16,7 +16,9 @@ struct NeedsYouView: View {
                 // A money call whose outcome KIFF can't prove: the owner says whether it happened.
                 ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
                 ForEach(model.cardUnitExceptions) { ask in CardUnitExceptionPanel(ask: ask).id(ask.id) }
-                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty {
+                // A step a taf handed its owner, oldest first (docs/api.md › Your step).
+                ForEach(model.yourSteps) { step in YourStepCard(step: step).id(step.id) }
+                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty && model.yourSteps.isEmpty {
                     Panel {
                         Text(Words.NeedsYou.nothingWaiting).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text(Words.NeedsYou.emptyHint)
@@ -53,7 +55,10 @@ struct NeedsYouView: View {
         .onChange(of: model.requestedHold) { request in scroll(to: request, reader) }
         .onChange(of: model.held) { _ in scroll(to: model.requestedHold, reader) }
         .onChange(of: model.cardUnitExceptions) { _ in scroll(to: model.requestedHold, reader) }
-        .onAppear { scroll(to: model.requestedHold, reader) }
+        // A step opened from its notification too, once Home has listed it.
+        .onChange(of: model.requestedStep) { _ in scroll(toStep: reader) }
+        .onChange(of: model.yourSteps) { _ in scroll(toStep: reader) }
+        .onAppear { scroll(to: model.requestedHold, reader); scroll(toStep: reader) }
         }
         .refreshable {
             await model.refresh()
@@ -61,6 +66,12 @@ struct NeedsYouView: View {
         }
         .task { await model.loadUnproven() }
         .screenBackground()
+    }
+
+    private func scroll(toStep reader: ScrollViewProxy) {
+        guard let handoff = model.requestedStep, model.yourSteps.contains(where: { $0.handoff == handoff }) else { return }
+        withMotion { reader.scrollTo(handoff, anchor: .top) }
+        model.requestedStep = nil
     }
 
     private func knocks(_ taf: Taf) -> Int { (taf.doors ?? []).reduce(0) { $0 + $1.knocks } }
