@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { type CreditRun, type KIFFBalance, type KIFFRun, readCoachCredits } from "../src/cloud/credits.js";
-import { estimate, type Own, paceLine, weekOneWords } from "../src/cloud/estimate.js";
+import { estimate, ESTIMATES_KEY, type Own, paceLine, testsFor, testsIn, weekOneWords } from "../src/cloud/estimate.js";
 import { coachTool, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -138,8 +138,38 @@ describe("a taf's estimate: its last line, by plan", () => {
 });
 
 describe("our tests' figures", () => {
-  it("are committed empty, in credits, generated outside this repo: no figure until an Eval report is read", () => {
-    expect(JSON.parse(readFileSync(new URL("../src/cloud/estimates.json", import.meta.url), "utf8"))).toEqual({});
+  // They're kept in tafs cloud's store, written from the private Eval reports outside this repo: no file of
+  // figures is committed, and the code holds none.
+  it("are in no file in this repo", () => {
+    expect(existsSync(new URL("../src/cloud/estimates.json", import.meta.url))).toBe(false);
+    expect(readFileSync(new URL("../src/cloud/estimate.ts", import.meta.url), "utf8")).not.toMatch(/\.json/);
+  });
+
+  it("are read from the store at estimates#v1, a recipe's whole figures only", async () => {
+    const store = memoryCoach(() => NOW);
+    expect(ESTIMATES_KEY).toBe("estimates#v1");
+    expect(await testsFor("chargebacks-with-evidence", store)).toBeUndefined();
+    await store.put(ESTIMATES_KEY, {
+      "chargebacks-with-evidence": { p50: 40, p90: 30, runs: 12, from: "2026-11-11" },
+      "half": { p50: 40, runs: 12 },
+      "zero": { p50: 0, p90: 10, runs: 3 },
+      "nothing": null,
+    }, new Date(NOW.getTime() + 365 * DAY));
+    // A p90 below the median is read as the median: never a range that runs backwards.
+    expect(await testsFor("chargebacks-with-evidence", store)).toEqual({ p50: 40, p90: 40, runs: 12, from: "2026-11-11" });
+    for (const r of ["half", "zero", "nothing", "toString", "refunds-within-a-limit", undefined]) expect(await testsFor(r, store)).toBeUndefined();
+    expect(await testsFor("chargebacks-with-evidence", undefined)).toBeUndefined();
+    for (const table of [[], "x", 7, null]) expect(testsIn(table, "chargebacks-with-evidence")).toBeUndefined();
+  });
+
+  it("are none when the store can't be read, never a failure", async () => {
+    const broken = { get: async () => { throw new Error("throttled"); } };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      expect(await testsFor("chargebacks-with-evidence", broken)).toBeUndefined();
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 
@@ -255,6 +285,14 @@ describe("GET /v1/tafs/{id}/estimate", () => {
     expect((await get(world(kiff({ runs: [failed] })).deps, `/v1/tafs/${REFUNDS}/estimate`)).body).toEqual({ source: "none", words: `${UNKNOWN} ${FIRST_WEEK} ${NEVER}` });
   });
 
+  it("says our tests' figures for the taf's recipe when the store keeps them and it has no runs of its own", async () => {
+    const w = world(kiff());
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...w.tafs.held.get(`t_acme#${REFUNDS}`)!, recipe: "chargebacks-with-evidence" });
+    await w.coach.put(ESTIMATES_KEY, { "chargebacks-with-evidence": { p50: 110, p90: 220, runs: 12, from: "2026-11-11" } }, new Date(NOW.getTime() + 365 * DAY));
+    const r = await get(w.deps, `/v1/tafs/${REFUNDS}/estimate`);
+    expect(r.body).toMatchObject({ source: "tests", per_run: { low: 110, high: 220 } });
+  });
+
   it("is a 404 for a taf the person can't see, and a 503 with words, never a figure, when KIFF's runs can't be read", async () => {
     expect((await get(world(kiff()).deps, `/v1/tafs/${HIDDEN}/estimate`)).status).toBe(404);
     const r = await get(world(kiff({ runsStatus: 500 })).deps, `/v1/tafs/${REFUNDS}/estimate`);
@@ -362,9 +400,15 @@ describe("Coach's taf_estimate", () => {
   it("answers a new taf from its draft: our tests' figures by recipe when there are some, else the honest line", async () => {
     const w = world(kiff());
     await w.coach.put("t_acme#plan", { kind: "company", included: 5000, limit_cents: 10_000 }, new Date(NOW.getTime() + DAY));
+    // Nothing kept yet: no figure is made up for the recipe.
     const a = await coachTool("taf_estimate", { recipe: "refunds-within-a-limit" }, person, w.deps) as Answer;
-    // The table is empty until an Eval report is read: no figure is made up for the recipe.
     expect(a).toMatchObject({ estimate: true, source: "none", words: `${UNKNOWN} ${FIRST_WEEK} ${NEVER_COMPANY}` });
+    // Kept for one recipe: that recipe's line says our tests, and any other still says it can't tell.
+    await w.coach.put(ESTIMATES_KEY, { "chargebacks-with-evidence": { p50: 110, p90: 220, runs: 12, from: "2026-11-11" } }, new Date(NOW.getTime() + 365 * DAY));
+    const kept = await coachTool("taf_estimate", { recipe: "chargebacks-with-evidence" }, person, w.deps) as Answer;
+    expect(kept).toMatchObject({ estimate: true, source: "tests" });
+    expect(kept.words).toContain("In our tests, a run of this job used about 110 to 220 credits.");
+    expect(await coachTool("taf_estimate", { recipe: "refunds-within-a-limit" }, person, w.deps)).toMatchObject({ source: "none" });
   });
 
   // The guard: an estimate never holds anything up. Whatever fails answers that there's none this time, and

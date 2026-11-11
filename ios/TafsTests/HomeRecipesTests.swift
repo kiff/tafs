@@ -101,6 +101,9 @@ final class HomeRecipesTests: XCTestCase {
         // The problem it ends leads; a recipe with no headline leads with its title.
         XCTAssertEqual(refunds.lead, "Erstattungen, ohne dass du sie abtippst")
         XCTAssertEqual(read.recipes[1].lead, "Bestellungen")
+        // Coach's start list names each job as the gallery and Home do, never by its title alone.
+        XCTAssertEqual(SetupChatView.recipeName(refunds), "Erstattungen, ohne dass du sie abtippst")
+        XCTAssertEqual(SetupChatView.recipeName(read.recipes[1]), "Bestellungen")
 
         let old = try JSONDecoder().decode(TafsCloud.Recipes.self, from: Data(#"{"categories":[{"id":"money","title":"Money"}],"recipes":[{"id":"refunds","title":"Refunds","category":"money","line":"Refunds up to 40 EUR.","say":"Refund customers."}],"shown":true}"#.utf8))
         XCTAssertNil(old.home)

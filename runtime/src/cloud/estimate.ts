@@ -1,6 +1,5 @@
 import type { CreditRun, KIFFBalance } from "./credits.js";
 import { type Lang, plural, wordsIn } from "./words/index.js";
-import ESTIMATES from "./estimates.json" with { type: "json" };
 
 /**
  * A taf's likely monthly credits, said before the owner approves it (docs/api.md, "A taf's estimate"):
@@ -11,7 +10,8 @@ import ESTIMATES from "./estimates.json" with { type: "json" };
  *          pace once 7 days of history cover it;
  *   trial  a new version's trial runs, which KIFF doesn't count, with the credits KIFF says each would have
  *          used: credits per run only;
- *   tests  the same job's runs in our Evals (estimates.json, by recipe, in credits): credits per run only;
+ *   tests  the same job's runs in our Evals (tafs cloud's store, under ESTIMATES_KEY, by recipe, in credits):
+ *          credits per run only;
  *   none   nothing to go on, said as such.
  *
  * Quiet firings cost nothing (a schedule reads its work list without the model), so a run here is a
@@ -32,7 +32,7 @@ export interface Sample { at: string; credits: number }
 /** The taf's own runs: the counted ones that did work, and from when the record covers. */
 export interface Own { runs: Sample[]; from: string }
 
-/** Our Evals' figures for a recipe's job (estimates.json). */
+/** Our Evals' figures for a recipe's job (the store's ESTIMATES_KEY). */
 export interface Tests { p50: number; p90: number; runs: number; from: string }
 
 /** The account's plan, as far as the estimate says it. */
@@ -59,12 +59,36 @@ export interface Estimate {
   words: string;
 }
 
-/** The figures our Evals measured, by recipe id, in credits: generated outside this repo from an Eval report, empty until one is read. */
-export function testsFor(recipe: string | undefined): Tests | undefined {
-  if (!recipe) return undefined;
-  const t = (ESTIMATES as Record<string, Partial<Tests>>)[recipe];
-  if (!t || !(Number(t.p50) > 0) || !(Number(t.p90) > 0) || !(Number(t.runs) > 0)) return undefined;
+/**
+ * Where our Evals' figures are kept: one item in tafs cloud's own store (the table CoachStore reads), a map
+ * of recipe id to Tests, in credits. It's written from outside this repo, from the private Eval reports, by
+ * whoever runs the Eval, and read here at runtime. No figure is in this repo: missing, there are none.
+ */
+export const ESTIMATES_KEY = "estimates#v1";
+
+/** The kept store, as far as our Evals' figures are read from it. */
+export interface EstimatesStore { get(key: string): Promise<unknown> }
+
+/** A recipe's figures in the kept table, when they're whole: anything else is none. */
+export function testsIn(table: unknown, recipe: string | undefined): Tests | undefined {
+  if (!recipe || !table || typeof table !== "object" || Array.isArray(table) || !Object.hasOwn(table, recipe)) return undefined;
+  const t = (table as Record<string, Partial<Tests> | null>)[recipe];
+  if (!t || typeof t !== "object" || !(Number(t.p50) > 0) || !(Number(t.p90) > 0) || !(Number(t.runs) > 0)) return undefined;
   return { p50: Number(t.p50), p90: Math.max(Number(t.p50), Number(t.p90)), runs: Number(t.runs), from: String(t.from ?? "") };
+}
+
+/**
+ * The figures our Evals measured for a recipe, read from the store at ESTIMATES_KEY. No store, no table, or a
+ * read that fails, is none: the line falls to the honest one, never a figure from elsewhere.
+ */
+export async function testsFor(recipe: string | undefined, store: EstimatesStore | undefined): Promise<Tests | undefined> {
+  if (!recipe || !store) return undefined;
+  try {
+    return testsIn(await store.get(ESTIMATES_KEY), recipe);
+  } catch (err) {
+    console.warn(`taf estimate: our tests' figures unreadable: ${String((err as Error)?.message ?? err).slice(0, 200)}`);
+    return undefined;
+  }
 }
 
 /** The p-th percentile of a list, by nearest rank. */
