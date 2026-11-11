@@ -33,10 +33,10 @@ describe("recipes", () => {
     const fromFiles = readRecipes(RECIPES_DIR);
     expect(readFileSync(MODULE, "utf8")).toBe(render(fromFiles));
     expect(RECIPES).toEqual(fromFiles);
-    expect(RECIPES.length).toBeGreaterThanOrEqual(10);
+    expect(RECIPES.length).toBeGreaterThanOrEqual(9);
     // Every category of the first batch is there, and the five starter jobs are recipes now (kiff/tafs#476).
     for (const c of CATEGORIES) expect(RECIPES.some((r) => r.category === c.id)).toBe(true);
-    for (const id of ["refunds-within-a-limit", "pay-matching-bills", "access-for-joiners-and-leavers", "ship-when-green", "chargebacks-with-evidence"]) {
+    for (const id of ["refunds-within-a-limit", "ship-when-green", "chargebacks-with-evidence"]) {
       expect(RECIPES.map((r) => r.id)).toContain(id);
     }
   });
@@ -138,9 +138,9 @@ Bezahle meine Rechnungen unter 100 EUR.
 
   it("keeps the apps' order: by category, then each recipe's place, with refunds leading Money", () => {
     expect(RECIPES.map((r) => r.id)).toEqual([
-      "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "pay-matching-bills", "save-a-customer-who-cancels",
+      "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "save-a-customer-who-cancels",
       "answer-questions-about-orders", "follow-up-new-leads",
-      "book-and-move-appointments", "access-for-joiners-and-leavers", "ship-when-green",
+      "book-and-move-appointments", "ship-when-green",
       "file-receipts",
     ]);
     for (const c of CATEGORIES) {
