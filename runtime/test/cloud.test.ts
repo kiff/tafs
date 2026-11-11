@@ -3643,17 +3643,28 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w2.tafs.held.get(`t_acme#${NEW}`)).not.toHaveProperty("recipe");
   });
 
-  // A result's answer carries only the taf's id: a first check that couldn't read reaches Coach as a line it reads
-  // with the owner's next message, with the read's reason, so it fixes the check it drafted.
+  // A first check that couldn't read is said in the result's answer itself (check), so Coach's closing message
+  // never calls the taf working (A4), and as a line it reads with the owner's next message, with the read's reason.
   it("tells Coach when the taf's first check couldn't read, with the reason, and still answers the taf as set up", async () => {
     const { w, note, answer, deps } = await paused();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: 'schedule: the check\'s items have no "created" field' });
     await note();
-    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(answer()).toEqual({ answer: { taf_id: NEW, check: 'schedule: the check\'s items have no "created" field' }, answered_by: "tafs cloud" });
     const lines = (await deps.coach.get(coachKeys.notes("t_acme", "u_ana"))) as Array<{ text: string; taf: string; said: string }>;
     expect(lines.map((l) => l.text)).toEqual(['[taf Refunds first check] The taf is set up, but its first check couldn\'t read: schedule: the check\'s items have no "created" field; fix the check with taf_dial.']);
     expect(lines[0]!.said).toBe("Its check couldn't read the work list: no run started.");
+  });
+
+  it("answers a kiff/agents from before check with the taf alone: the taf is made, and the line still tells Coach", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: "the read answered with an error" });
+    w.agents.old.rejectCheck = true;
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    const lines = (await deps.coach.get(coachKeys.notes("t_acme", "u_ana"))) as Array<{ text: string }>;
+    expect(lines.map((l) => l.text)).toEqual(["[taf Refunds first check] The taf is set up, but its first check couldn't read: the read answered with an error; fix the check with taf_dial."]);
   });
 
   it("makes a taf with the job Coach drafted, outside the five, and runs it (kiff/tafs#476)", async () => {
