@@ -373,9 +373,12 @@ struct RetainedRuns: View {
         }
         .task(id: tafID) { await model.loadRunPage(tafID, all: all) }
         .sheet(isPresented: $showAll) {
-            NavStack { ScrollView { RetainedRuns(tafID: tafID, all: true).padding(16) }.navigationTitle(Words.Taf.itsWork) }.environmentObject(model)
+            // Titled as the panel is, in tafs cloud's words for the runs it kept: not the work panel's "Its work".
+            NavStack { ScrollView { RetainedRuns(tafID: tafID, all: true).padding(16) }.navigationTitle(title) }.environmentObject(model)
         }
     }
+    /// tafs cloud's heading for the runs it kept (`title` with `/runs`), read from the panel's first page.
+    private var title: String { model.runPages[model.runKey(tafID, false)]?.pages.first?.title ?? Words.Taf.itsWork }
     @ViewBuilder private var content: some View {
         let cache = model.runPages[model.runKey(tafID, all)] ?? SourcePages()
         Eyebrow(text: cache.pages.first?.title ?? Words.Taf.itsWork)
