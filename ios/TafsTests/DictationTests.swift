@@ -55,6 +55,19 @@ final class DictationTests: XCTestCase {
         XCTAssertEqual(dictation.state, .idle)
     }
 
+    /// Dictation starts in the app's language, in the form the device has, even when the first
+    /// keyboard is another's; a language the owner switched to with the chip is kept; and with
+    /// the app's language not on the device, the device's first.
+    func testItStartsInTheAppsLanguageUnlessTheOwnerSwitched() {
+        let have = [Dictation.Language(id: "en-US"), Dictation.Language(id: "fr-CA"), Dictation.Language(id: "fr-FR")]
+        XCTAssertEqual(Dictation.starting(have: have, last: nil, app: "fr")?.id, "fr-CA")
+        XCTAssertEqual(Dictation.starting(have: have, last: nil, app: "fr-FR")?.id, "fr-CA", "the device's order picks the form")
+        XCTAssertEqual(Dictation.starting(have: have, last: "en-US", app: "fr")?.id, "en-US", "the chip's choice is kept")
+        XCTAssertEqual(Dictation.starting(have: have, last: "es-ES", app: "fr")?.id, "fr-CA", "a choice the device lost isn't")
+        XCTAssertEqual(Dictation.starting(have: have, last: nil, app: "de")?.id, "en-US")
+        XCTAssertNil(Dictation.starting(have: [], last: nil, app: "fr"))
+    }
+
     func testALanguageNotOnTheDeviceSaysSo() async {
         let speech = FakeSpeech()
         speech.notHere = "Dictation in Spanish isn't available on this device."

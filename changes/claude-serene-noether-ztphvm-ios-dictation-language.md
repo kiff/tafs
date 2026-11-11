@@ -1,0 +1,1 @@
+- **iPhone and iPad: dictation starts in the app's language.** A French iPad whose first keyboard is English dictated in English ("EN" on the mic's switch). Until the owner switches with that chip, dictation now starts in the app's language when the device has it; a language they switch to is still kept for next time (docs/chat.md).
