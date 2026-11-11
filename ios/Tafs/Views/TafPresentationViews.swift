@@ -257,7 +257,9 @@ struct TafActivityList: View {
     }
 }
 
-private struct SourceActivityRow: View {
+/// A call as a taf's Activity draws it: its receipt, and its own next step. The Record's search
+/// and its cases draw their calls with it too.
+struct SourceActivityRow: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     let entry: TafsCloud.ActivityEntry
