@@ -1854,7 +1854,7 @@
     <string name="setup_schedule">O seu agendamento</string>
     <string name="setup_section_description">%1$s. %2$s. Abrir</string>
     <string name="setup_send_again">Enviar novamente</string>
-    <string name="setup_skip_it">Ignorá-lo</string>
+    <string name="setup_skip_it">Saltar</string>
     <string name="setup_starts_when">Começa quando</string>
     <string name="setup_stop">Parar</string>
     <string name="setup_title">Configuração</string>

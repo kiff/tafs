@@ -1851,7 +1851,7 @@
   "setup.schedule": "Su programación",
   "setup.section_description": "{title}. {lines}. Abrir",
   "setup.send_again": "Volver a enviar",
-  "setup.skip_it": "Omitirla",
+  "setup.skip_it": "Omitir",
   "setup.starts_when": "Empieza cuando",
   "setup.stop": "Detener",
   "setup.title": "Configuración",

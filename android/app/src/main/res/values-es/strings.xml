@@ -1854,7 +1854,7 @@
     <string name="setup_schedule">Su programación</string>
     <string name="setup_section_description">%1$s. %2$s. Abrir</string>
     <string name="setup_send_again">Volver a enviar</string>
-    <string name="setup_skip_it">Omitirla</string>
+    <string name="setup_skip_it">Omitir</string>
     <string name="setup_starts_when">Empieza cuando</string>
     <string name="setup_stop">Detener</string>
     <string name="setup_title">Configuración</string>

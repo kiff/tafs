@@ -1851,7 +1851,7 @@
   "setup.schedule": "O seu agendamento",
   "setup.section_description": "{title}. {lines}. Abrir",
   "setup.send_again": "Enviar novamente",
-  "setup.skip_it": "Ignorá-lo",
+  "setup.skip_it": "Saltar",
   "setup.starts_when": "Começa quando",
   "setup.stop": "Parar",
   "setup.title": "Configuração",
