@@ -203,8 +203,8 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
 ```
 
 Needs a current Xcode (CI uses Xcode 26 on macOS 26) and runs on iOS 16 and
-later. `.github/workflows/ios.yml` builds and tests every push on GitHub's macOS 26
-runners. A `v*` tag or a manual run (Actions → iOS → Run workflow) also uploads
+later. `.github/workflows/ios.yml` builds and tests every change to the app on GitHub's
+macOS 26 runners (docs/ios-app.md). A `v*` tag or a manual run (Actions → iOS → Run workflow) also uploads
 to TestFlight: the internal testers ("Team") get it at once, and the external group
 "Beta testers" after Apple's Beta App Review, unless a manual run sets `external` to
 false. Its signing and upload credentials are repository secrets, set by the
