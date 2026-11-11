@@ -67,17 +67,31 @@ final class HealthTests: XCTestCase {
         XCTAssertNil(older.health, "an older tafs cloud sends none")
     }
 
-    /// Home's taf carries its health onto the taf the app draws, so its row says why it isn't
-    /// healthy in place of what it's doing.
-    func testHomeCarriesTheHealthOntoTheTaf() throws {
-        let entry = HomeJSON.rae.replacingOccurrences(of: #""waiting":0,"#, with: #""waiting":0,"health":\#(Self.tooLarge),"#)
-        XCTAssertNotEqual(entry, HomeJSON.rae, "the fixture took the health")
-        let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.list([entry]).utf8))
-        let taf = KIFFMapping.taf(try XCTUnwrap(home.tafs.first), id: UUID(), owner: "owner")
-        XCTAssertEqual(taf.health?.lines.first, "Its last check found work too big for one run, so nothing ran")
-        XCTAssertEqual(taf.health?.fixes(for: 0).first?.words, "Narrow it with Coach")
+    /// Home's taf carries its health onto the taf the app draws. Its row says why only where
+    /// tafs cloud does: an otherwise idle taf, by the list's `work.line`. A halted taf, or one
+    /// that needs its owner or is working, says that first.
+    func testHomeSaysWhyOnlyWhereTafsCloudDoes() throws {
+        func taf(state: String, work: String?) throws -> Taf {
+            var entry = HomeJSON.entry(agent: "rae-k3f9", name: "Rae", state: state)
+            let extra = #""health":\#(Self.tooLarge),"# + (work.map { #""work":\#($0),"# } ?? "")
+            entry = entry.replacingOccurrences(of: #""waiting":0,"#, with: #""waiting":0,"# + extra)
+            let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.list([entry]).utf8))
+            return KIFFMapping.taf(try XCTUnwrap(home.tafs.first), id: UUID(), owner: "owner")
+        }
+        let reason = "Its last check found work too big for one run, so nothing ran"
+        let idle = try taf(state: "working", work: #"{"status":"idle","line":"\#(reason)","needs_you":0}"#)
+        XCTAssertEqual(idle.health?.lines.first, reason)
+        XCTAssertEqual(idle.health?.fixes(for: 0).first?.words, "Narrow it with Coach")
+        XCTAssertEqual(idle.healthNow, reason, "idle: tafs cloud's line says why, where it would say the next run")
+        let halted = try taf(state: "halted", work: #"{"status":"halted","line":"Halted · resume it from Halt"}"#)
+        XCTAssertNil(halted.healthNow, "a halted taf says it's halted, never its failing line")
+        XCTAssertEqual(halted.now, Words.Taf.Now.halted)
+        XCTAssertNil(try taf(state: "waiting", work: #"{"status":"needs_you","line":"1 request needs you"}"#).healthNow, "one that needs its owner says that first")
+        XCTAssertNil(try taf(state: "working", work: nil).healthNow, "no work sent: the row says what it's doing")
+        XCTAssertNil(try taf(state: "working", work: #""broken""#).healthNow, "a work that isn't one never fails Home")
         let plain = KIFFMapping.taf(try XCTUnwrap(KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.list([HomeJSON.rae]).utf8)).tafs.first),
                                     id: UUID(), owner: "owner")
-        XCTAssertNil(plain.health, "no health sent, none drawn: the row shows what it's doing")
+        XCTAssertNil(plain.health, "no health sent, none drawn")
+        XCTAssertNil(plain.healthNow)
     }
 }

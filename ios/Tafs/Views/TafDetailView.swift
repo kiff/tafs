@@ -474,11 +474,15 @@ struct WorkPanel: View {
             if work != nil || error != nil {
                 Panel {
                     Eyebrow(text: Words.Taf.itsWork)
-                    if let line = work?.summary?.line, !line.isEmpty {
+                    // Its health, read with the work, else as Home read it.
+                    let health = work?.health ?? model.taf(tafID)?.health
+                    // An idle taf's line is its first health line (docs/reliability.md): said once,
+                    // with its colour and fix, below.
+                    if let line = work?.summary?.line, !line.isEmpty,
+                       !(health?.needsAttention == true && health?.lines.first == line) {
                         Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                     }
-                    // Its health, read with the work, else as Home read it.
-                    if let health = work?.health ?? model.taf(tafID)?.health {
+                    if let health {
                         HealthLines(health: health, tafID: tafID)
                     }
                     ForEach(work?.rows ?? []) { row in

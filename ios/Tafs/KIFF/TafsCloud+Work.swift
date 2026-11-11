@@ -63,8 +63,9 @@ extension TafsCloud {
             init(status: String = "idle", line: String = "", needsYou: Int = 0) {
                 self.status = status; self.line = line; self.needsYou = needsYou
             }
+            /// Never fails the read it's on: one that isn't an object reads as nothing to say.
             init(from decoder: Decoder) throws {
-                let c = try decoder.container(keyedBy: CodingKeys.self)
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { status = ""; return }
                 status = (try? c.decode(String.self, forKey: .status)) ?? "idle"
                 line = (try? c.decode(String.self, forKey: .line)) ?? ""
                 needsYou = (try? c.decode(Int.self, forKey: .needsYou)) ?? 0

@@ -285,9 +285,12 @@ final class TafsCloud {
         var results: [JSONValue]? = nil
         /// Its health, with tafs cloud's lines and fixes; nil when it couldn't be read in time.
         var health: Health? = nil
+        /// Where its work stands, as the list sends it (`work: {status, line}`): an idle taf that
+        /// isn't healthy says its first reason here, where it would say its next run.
+        var work: TafWork.Summary? = nil
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health
+            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work
             case avatarRim = "avatar_rim"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
             case scheduleTimeZoneWords = "schedule_time_zone_words"
