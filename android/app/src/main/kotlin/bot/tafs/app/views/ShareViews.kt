@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.shownName
 import androidx.compose.ui.text.style.TextOverflow
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
@@ -123,7 +124,7 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
               state.groups.forEach { group ->
                 Pick(Share(group = group.id), chosen, { chosen = it }) {
                   Column {
-                    Text(group.name, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                    Text(group.shownName, style = scaled(15, FontWeight.SemiBold, Theme.ink))
                     Text(PeopleWords.peopleOf(group, state.people), style = scaled(12, color = Theme.dim), maxLines = 1)
                   }
                 }

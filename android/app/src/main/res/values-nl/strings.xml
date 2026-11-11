@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">De woorden van KIFF voor deze koppeling konden niet worden gelezen. %1$s</string>
     <string name="connect_profile_words_unread">De woorden van KIFF voor deze koppeling zijn nog niet gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_prompt_connect">%1$s koppelen aan %2$s</string>
+    <string name="connect_prompt_connect_app">%1$s koppelen</string>
     <string name="connect_prompt_give_card">%1$s zijn Card geven</string>
     <string name="connect_prompt_give_key">%1$s zijn sleutel voor %2$s geven</string>
+    <string name="connect_prompt_give_key_app">%1$s zijn sleutel geven</string>
     <string name="connect_prompt_keep_sealed">De logins van je apps verzegeld houden</string>
     <string name="connect_reading_asks">Lezen waar het om vraagt…</string>
     <string name="connect_reading_request">Het verzoek lezen…</string>
@@ -1338,7 +1340,9 @@
     <string name="people_delete_group_button">%1$s verwijderen</string>
     <string name="people_delete_group_title">%1$s verwijderen?</string>
     <string name="people_delete_this_group_title">Deze groep verwijderen?</string>
+    <string name="people_everyone_group">Iedereen</string>
     <string name="people_everyone_in">Iedereen in het account zit in %1$s. Nodig mensen uit via het KIFF-dashboard.</string>
+    <string name="people_everyone_uses">Iedereen gebruikt %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Iedereen in het account · gebruikt geen taf</string>
     <string name="people_group_actions">Acties voor %1$s</string>
     <string name="people_group_name_hint">Support, Financiën…</string>
@@ -1388,6 +1392,7 @@
     <string name="people_share_who_gets">Wie %1$s krijgt</string>
     <string name="people_share_who_uses">Wie gebruikt %1$s?</string>
     <string name="people_shared_with">Gedeeld met %1$s</string>
+    <string name="people_shared_with_everyone">Gedeeld met iedereen</string>
     <string name="people_shared_with_prefix">"Gedeeld met "</string>
     <string name="people_sharing">Delen…</string>
     <string name="people_stops_using">%1$s gebruikt %2$s niet meer. Hun chats blijven van hen.</string>

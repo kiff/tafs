@@ -1630,10 +1630,14 @@ enum Words {
         enum Prompt {
             /// Connect {vendor} to {agent}
             static func connect(vendor: String, agent: String) -> String { Words.line("connect.prompt.connect", vendor, agent) }
+            /// Connect {vendor}
+            static func connectApp(vendor: String) -> String { Words.line("connect.prompt.connect_app", vendor) }
             /// Give {agent} its Card
             static func giveCard(agent: String) -> String { Words.line("connect.prompt.give_card", agent) }
             /// Give {vendor} its key for {agent}
             static func giveKey(vendor: String, agent: String) -> String { Words.line("connect.prompt.give_key", vendor, agent) }
+            /// Give {vendor} its key
+            static func giveKeyApp(vendor: String) -> String { Words.line("connect.prompt.give_key_app", vendor) }
             /// Keep your apps' sign-ins sealed
             static var keepSealed: String { Words.line("connect.prompt.keep_sealed") }
         }
@@ -2567,8 +2571,12 @@ enum Words {
         static func deleteGroupTitle(group: String) -> String { Words.line("people.delete_group_title", group) }
         /// Delete this group?
         static var deleteThisGroupTitle: String { Words.line("people.delete_this_group_title") }
+        /// Everyone
+        static var everyoneGroup: String { Words.line("people.everyone_group") }
         /// Everyone on the account is in {group}. Invite people from the KIFF dashboard.
         static func everyoneIn(group: String) -> String { Words.line("people.everyone_in", group) }
+        /// Everyone uses {taf}: {people}.
+        static func everyoneUses(taf: String, people: String) -> String { Words.line("people.everyone_uses", taf, people) }
         /// Everyone on the account · uses no taf
         static var everyoneUsesNone: String { Words.line("people.everyone_uses_none") }
         /// {group} actions
@@ -2671,6 +2679,8 @@ enum Words {
         }
         /// Shared with {names}
         static func sharedWith(names: String) -> String { Words.line("people.shared_with", names) }
+        /// Shared with everyone
+        static var sharedWithEveryone: String { Words.line("people.shared_with_everyone") }
         /// Shared with 
         static var sharedWithPrefix: String { Words.line("people.shared_with_prefix") }
         /// Sharing…

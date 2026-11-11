@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.shownName
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
@@ -137,9 +138,9 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
   deleting?.let { group ->
     DriveAlert(
       onDismissRequest = { deleting = null },
-      title = { Text(Words.People.deleteGroupTitle(group.name)) },
+      title = { Text(Words.People.deleteGroupTitle(group.shownName)) },
       text = { Text(Words.People.deleteGroupBody) },
-      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }, Modifier.confirms()) { Text(Words.People.deleteGroupButton(group.name), color = Theme.no) } },
+      confirmButton = { TextButton({ deleting = null; scope.launch { actions.deleteGroup(group) } }, Modifier.confirms()) { Text(Words.People.deleteGroupButton(group.shownName), color = Theme.no) } },
       dismissButton = { TextButton({ deleting = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       containerColor = Theme.panel,
     )
@@ -161,7 +162,7 @@ private fun GroupPanel(
   Panel {
     Row(verticalAlignment = Alignment.CenterVertically) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(group.name, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+        Text(group.shownName, style = scaled(16, FontWeight.SemiBold, Theme.ink))
         Text(PeopleWords.uses(group) { agent -> state.taf(agent)?.name }, style = scaled(12, color = Theme.dim))
       }
       if (state.canManagePeople && group.everyone != true) {
@@ -176,7 +177,7 @@ private fun GroupPanel(
     }
     PeopleWords.managersFirst(group.members, state.people).forEach { member -> MemberRow(member, group, state, setMember, removeMember) }
     if (state.managesGroup(group)) {
-      Text(Words.People.addSomeone(group.name), style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 8.dp))
+      Text(Words.People.addSomeone(group.shownName), style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 8.dp))
     }
   }
 }
@@ -206,7 +207,7 @@ private fun MemberRow(member: GroupMember, group: Group, state: AppState, setMem
         val role = if (member.isManager) "member" else "manager"
         DropdownMenuItem(text = { Text(if (member.isManager) Words.People.makeMember else Words.People.makeManager) }, onClick = { menu = false; setMember(member.subject, role) })
       }
-      if (mayRemove) DropdownMenuItem(text = { Text(Words.People.removeFrom(group.name), color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) }, modifier = Modifier.confirms())
+      if (mayRemove) DropdownMenuItem(text = { Text(Words.People.removeFrom(group.shownName), color = Theme.no) }, onClick = { menu = false; removeMember(member.subject) }, modifier = Modifier.confirms())
     }
   }
 }
@@ -220,7 +221,7 @@ private fun GroupNameDialog(group: Group?, onClose: () -> Unit, onSave: suspend 
   val trimmed = name.trim()
   DriveAlert(
     onDismissRequest = onClose,
-    title = { Text(if (group == null) Words.People.newGroup else Words.People.renameGroupTitle(group.name)) },
+    title = { Text(if (group == null) Words.People.newGroup else Words.People.renameGroupTitle(group.shownName)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Field(name, { name = it }, Words.People.groupNameHint)
@@ -251,7 +252,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(Words.People.addTo(group.name), style = scaled(24, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
+        Text(Words.People.addTo(group.shownName), style = scaled(24, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
         Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -282,7 +283,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
               Text(person.label, style = scaled(15, color = Theme.ink), maxLines = 1)
             }
           }
-          if (outside.isEmpty()) Text(Words.People.everyoneIn(group.name), style = scaled(14, color = Theme.dim))
+          if (outside.isEmpty()) Text(Words.People.everyoneIn(group.shownName), style = scaled(14, color = Theme.dim))
         }
         state.peopleError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
       }

@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">Les textes de KIFF pour cette connexion n\'ont pas pu être lus. %1$s</string>
     <string name="connect_profile_words_unread">Les textes de KIFF pour cette connexion ne sont pas encore lus. Rien n\'a été approuvé.</string>
     <string name="connect_prompt_connect">Connecter %1$s à %2$s</string>
+    <string name="connect_prompt_connect_app">Connecter %1$s</string>
     <string name="connect_prompt_give_card">Donner sa Card à %1$s</string>
     <string name="connect_prompt_give_key">Donner à %1$s sa clé pour %2$s</string>
+    <string name="connect_prompt_give_key_app">Donner à %1$s sa clé</string>
     <string name="connect_prompt_keep_sealed">Garder scellés les identifiants de vos apps</string>
     <string name="connect_reading_asks">Lecture de ce qu\'il demande…</string>
     <string name="connect_reading_request">Lecture de la demande…</string>
@@ -1338,7 +1340,9 @@
     <string name="people_delete_group_button">Supprimer %1$s</string>
     <string name="people_delete_group_title">Supprimer %1$s ?</string>
     <string name="people_delete_this_group_title">Supprimer ce groupe ?</string>
+    <string name="people_everyone_group">Tout le monde</string>
     <string name="people_everyone_in">Tout le monde sur le compte fait partie de %1$s. Invitez des personnes depuis le tableau de bord KIFF.</string>
+    <string name="people_everyone_uses">Tout le monde utilise %1$s : %2$s.</string>
     <string name="people_everyone_uses_none">Tout le monde sur le compte · n\'utilise aucun taf</string>
     <string name="people_group_actions">Actions de %1$s</string>
     <string name="people_group_name_hint">Support, Finance…</string>
@@ -1388,6 +1392,7 @@
     <string name="people_share_who_gets">Qui reçoit %1$s</string>
     <string name="people_share_who_uses">Qui utilise %1$s ?</string>
     <string name="people_shared_with">Partagé avec %1$s</string>
+    <string name="people_shared_with_everyone">Partagé avec tout le monde</string>
     <string name="people_shared_with_prefix">"Partagé avec "</string>
     <string name="people_sharing">Partage…</string>
     <string name="people_stops_using">%1$s cesse d\'utiliser %2$s. Ses chats restent les siens.</string>

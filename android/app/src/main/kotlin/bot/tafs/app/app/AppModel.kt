@@ -3556,7 +3556,7 @@ class AppModel(
         _state.value.profileWordsFor(grant) ?: return false.also { note(noteKey, Words.Connect.profileWordsUnread) }
       }
       try {
-        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), Words.Connect.Prompt.giveKey(vendor = grant.vendor, agent = grant.request.agent))
+        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), bot.tafs.app.model.ConnectionWords.giveKeyPrompt(grant, _state.value.connectApps) { _state.value.taf(it)?.name })
       } catch (_: SignerException) {
         return false.also { note(noteKey, Words.Common.notDoneUnconfirmed) }
       }
@@ -3685,7 +3685,7 @@ class AppModel(
         _state.value.profileWordsFor(grant) ?: return Connected.Failed(Words.Connect.profileWordsUnread, told = "KIFF's words for this connection aren't read yet. Nothing was approved.")
       }
       try {
-        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), Words.Connect.Prompt.connect(vendor = grant.vendor, agent = grant.request.agent))
+        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), bot.tafs.app.model.ConnectionWords.connectPrompt(grant, _state.value.connectApps) { _state.value.taf(it)?.name })
       } catch (_: SignerException) {
         note(cardId, Words.Common.notDoneUnconfirmed)
         return Connected.Stopped

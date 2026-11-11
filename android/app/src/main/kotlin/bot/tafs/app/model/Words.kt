@@ -883,8 +883,10 @@ object Words {
     val profileWordsUnread: String get() = Res.s(R.string.connect_profile_words_unread)
     object Prompt {
       fun connect(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_connect, vendor, agent)
+      fun connectApp(vendor: String): String = Res.s(R.string.connect_prompt_connect_app, vendor)
       fun giveCard(agent: String): String = Res.s(R.string.connect_prompt_give_card, agent)
       fun giveKey(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_give_key, vendor, agent)
+      fun giveKeyApp(vendor: String): String = Res.s(R.string.connect_prompt_give_key_app, vendor)
       val keepSealed: String get() = Res.s(R.string.connect_prompt_keep_sealed)
     }
     val readingAsks: String get() = Res.s(R.string.connect_reading_asks)
@@ -1387,7 +1389,9 @@ object Words {
     fun deleteGroupButton(group: String): String = Res.s(R.string.people_delete_group_button, group)
     fun deleteGroupTitle(group: String): String = Res.s(R.string.people_delete_group_title, group)
     val deleteThisGroupTitle: String get() = Res.s(R.string.people_delete_this_group_title)
+    val everyoneGroup: String get() = Res.s(R.string.people_everyone_group)
     fun everyoneIn(group: String): String = Res.s(R.string.people_everyone_in, group)
+    fun everyoneUses(taf: String, people: String): String = Res.s(R.string.people_everyone_uses, taf, people)
     val everyoneUsesNone: String get() = Res.s(R.string.people_everyone_uses_none)
     fun groupActions(group: String): String = Res.s(R.string.people_group_actions, group)
     val groupNameHint: String get() = Res.s(R.string.people_group_name_hint)
@@ -1441,6 +1445,7 @@ object Words {
       fun whoUses(taf: String): String = Res.s(R.string.people_share_who_uses, taf)
     }
     fun sharedWith(names: String): String = Res.s(R.string.people_shared_with, names)
+    val sharedWithEveryone: String get() = Res.s(R.string.people_shared_with_everyone)
     val sharedWithPrefix: String get() = Res.s(R.string.people_shared_with_prefix)
     val sharing: String get() = Res.s(R.string.people_sharing)
     fun stopsUsing(who: String, taf: String): String = Res.s(R.string.people_stops_using, who, taf)

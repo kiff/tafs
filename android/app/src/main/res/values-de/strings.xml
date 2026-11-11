@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. %1$s</string>
     <string name="connect_profile_words_unread">KIFFs Worte zu dieser Verbindung sind noch nicht gelesen. Es wurde nichts genehmigt.</string>
     <string name="connect_prompt_connect">%1$s mit %2$s verbinden</string>
+    <string name="connect_prompt_connect_app">%1$s verbinden</string>
     <string name="connect_prompt_give_card">%1$s seine Card geben</string>
     <string name="connect_prompt_give_key">%1$s seinen Schlüssel für %2$s geben</string>
+    <string name="connect_prompt_give_key_app">%1$s seinen Schlüssel geben</string>
     <string name="connect_prompt_keep_sealed">Die Anmeldungen deiner Apps versiegelt halten</string>
     <string name="connect_reading_asks">Liest, worum es bittet…</string>
     <string name="connect_reading_request">Anfrage wird gelesen…</string>
@@ -1338,7 +1340,9 @@
     <string name="people_delete_group_button">%1$s löschen</string>
     <string name="people_delete_group_title">%1$s löschen?</string>
     <string name="people_delete_this_group_title">Diese Gruppe löschen?</string>
+    <string name="people_everyone_group">Alle</string>
     <string name="people_everyone_in">Alle im Konto sind in %1$s. Lade Personen über das KIFF-Dashboard ein.</string>
+    <string name="people_everyone_uses">Alle nutzen %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Alle im Konto · nutzt keinen taf</string>
     <string name="people_group_actions">Aktionen für %1$s</string>
     <string name="people_group_name_hint">Support, Finanzen…</string>
@@ -1388,6 +1392,7 @@
     <string name="people_share_who_gets">Wer %1$s bekommt</string>
     <string name="people_share_who_uses">Wer nutzt %1$s?</string>
     <string name="people_shared_with">Geteilt mit %1$s</string>
+    <string name="people_shared_with_everyone">Geteilt mit allen</string>
     <string name="people_shared_with_prefix">"Geteilt mit "</string>
     <string name="people_sharing">Wird geteilt…</string>
     <string name="people_stops_using">%1$s nutzt %2$s nicht mehr. Die Chats bleiben bei ihnen.</string>

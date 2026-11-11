@@ -937,8 +937,10 @@
     <string name="connect_profile_words_not_read">Nie udało się odczytać opisu KIFF dla tego połączenia. %1$s</string>
     <string name="connect_profile_words_unread">Opis KIFF dla tego połączenia nie został jeszcze odczytany. Nic nie zostało zatwierdzone.</string>
     <string name="connect_prompt_connect">Połącz %1$s z %2$s</string>
+    <string name="connect_prompt_connect_app">Połącz %1$s</string>
     <string name="connect_prompt_give_card">Daj %1$s jego Card</string>
     <string name="connect_prompt_give_key">Przekaż %1$s klucz dla %2$s</string>
+    <string name="connect_prompt_give_key_app">Przekaż %1$s klucz</string>
     <string name="connect_prompt_keep_sealed">Zachowaj logowania swoich aplikacji zapieczętowane</string>
     <string name="connect_reading_asks">Odczytywanie, o co prosi…</string>
     <string name="connect_reading_request">Odczytywanie prośby…</string>
@@ -1440,7 +1442,9 @@
     <string name="people_delete_group_button">Usuń %1$s</string>
     <string name="people_delete_group_title">Usunąć %1$s?</string>
     <string name="people_delete_this_group_title">Usunąć tę grupę?</string>
+    <string name="people_everyone_group">Wszyscy</string>
     <string name="people_everyone_in">Wszyscy na koncie są w %1$s. Zapraszaj osoby z panelu KIFF.</string>
+    <string name="people_everyone_uses">Wszyscy używają %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Wszyscy na koncie · nie używa żadnego tafa</string>
     <string name="people_group_actions">Akcje grupy %1$s</string>
     <string name="people_group_name_hint">Wsparcie, Finanse…</string>
@@ -1490,6 +1494,7 @@
     <string name="people_share_who_gets">Kto dostaje %1$s</string>
     <string name="people_share_who_uses">Kto używa %1$s?</string>
     <string name="people_shared_with">Udostępniono: %1$s</string>
+    <string name="people_shared_with_everyone">Udostępniono wszystkim</string>
     <string name="people_shared_with_prefix">"Udostępniono: "</string>
     <string name="people_sharing">Udostępnianie…</string>
     <string name="people_stops_using">%1$s przestaje używać %2$s. Czaty tej osoby pozostaną jej.</string>

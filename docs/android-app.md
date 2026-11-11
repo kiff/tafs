@@ -439,7 +439,9 @@ moved came to, by unit (`spentOn`).
 
 ## The taf's screen
 
-Four tabs, each with one job (`TafDetailView`):
+Four tabs, each with one job (`TafDetailView`). It opens on Chat, except from a door's knock alert
+(tafs cloud's `knock`, `AlertPayload.opensActivity`), which opens it on Activity, where knocks are
+answered:
 - **Chat:** talking to it.
 - **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
@@ -598,6 +600,12 @@ new sign-in. Whether the phone can approve is read each time the app comes back
 (`approvalReadiness`), and while it can't, each approval's button gives way to the state and what
 to do ([approvals.md](approvals.md#set-up-approvals-on-this-device)). A debug build on a phone with no screen lock signs without asking, as the iOS
 Simulator does; a release never does.
+
+**What the prompt says** is the last thing read before signing. Connecting an app names the app and
+the taf as the person knows them (`ConnectionWords.connectPrompt`, `giveKeyPrompt`): tafs cloud's
+Connect apps title for that connection, else planque's vendor name, and the taf's name, else the
+name planque keeps (`agent_name`). It never shows an agent id or a server's slug. With no name for
+the taf, it names the app alone ("Connect Stripe").
 
 ## The calendar
 

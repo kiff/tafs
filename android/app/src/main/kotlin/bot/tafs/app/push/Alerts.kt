@@ -43,8 +43,17 @@ object AlertPayload {
   /** Where a door's alert goes: the taf, by its id in tafs cloud. */
   fun taf(cloudId: String) = "$TAF:$cloudId"
 
+  private const val KNOCK = "knock"
+
+  /** Where a door's knock goes: its taf, on Activity, where its knocks are answered. */
+  fun knock(cloudId: String) = "$KNOCK:$cloudId"
+
   /** The taf a destination opens, by its id in tafs cloud; null for any other destination. */
-  fun tafOf(open: String?): String? = open?.takeIf { it.startsWith("$TAF:") }?.removePrefix("$TAF:")?.takeIf { it.isNotEmpty() }
+  fun tafOf(open: String?): String? =
+    open?.let { o -> listOf("$TAF:", "$KNOCK:").firstOrNull { o.startsWith(it) }?.let { o.removePrefix(it) } }?.takeIf { it.isNotEmpty() }
+
+  /** Whether a destination opens its taf on Activity: a door's knock does, as the knocks are answered there. */
+  fun opensActivity(open: String?): Boolean = open?.startsWith("$KNOCK:") == true
 
   /** What a message asks of the phone; null for one it doesn't understand, so a message of a newer kind never breaks the phone. */
   fun parse(data: Map<String, String>, now: Instant = Instant.now()): Alert? {
@@ -54,7 +63,9 @@ object AlertPayload {
       "background" -> data["change"]?.takeIf { it in CHANGES }?.let { Alert.Changed(it, data["taf_id"]?.takeIf(String::isNotBlank)) }
       "alert" -> {
         val tafId = data["taf_id"]?.takeIf { it.isNotBlank() }
-        val open = if (data["open"] == TAF && tafId != null) taf(tafId) else data["open"]?.takeIf { it in OPEN } ?: NEEDS_YOU
+        // A door's knock (tafs cloud's `knock`, the knock's id) opens its taf on Activity; any other taf alert, its taf as before.
+        val knocked = data["knock"]?.isNotBlank() == true
+        val open = if (data["open"] == TAF && tafId != null) (if (knocked) knock(tafId) else taf(tafId)) else data["open"]?.takeIf { it in OPEN } ?: NEEDS_YOU
         val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
         // A held call that has expired is not shown: there is nothing to answer.
         if (expires != null && !expires.isAfter(now)) return null
