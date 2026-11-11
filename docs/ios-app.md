@@ -254,6 +254,12 @@ the app in sample mode.
   with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
   API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
   the device signs only its SHA-256 with the grant's digest. Its list and open approval are cleared when the account changes; delayed replies from the previous account or a cancelled search are discarded.
+- **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
+  digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
+  it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
+  the words the person reads (`text`, in their language) and that language are what's signed. An
+  unknown version, or a v2 grant without its words or language, never matches. Every request to
+  planque carries the person's languages (`Accept-Language`), for the words it writes.
 - **Did this happen?** (`DidThisHappenCard`, in Needs you): KIFF's money calls whose outcome
   it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
   Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the

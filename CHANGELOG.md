@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **iPhone and iPad: ready for the approval text in the person's language.** The app tells planque the person's languages, and checks a grant marked `digest_v: 2` over its words and their language as well as its request, so the words shown are the words signed. Grants without the mark are checked as before, so this changes nothing until planque issues v2 grants (docs/ios-app.md).
 - **iPhone and iPad: the runs a taf kept, titled as tafs cloud says.** Their full list (the panel's More) is titled with tafs cloud's heading for the runs, as the panel is, instead of the work panel's "Its work". So once tafs cloud names them apart, the two don't read the same (docs/ios-app.md).
 - **One log line per Coach tool call (tafs cloud).** `{event: "coach_tool", tool, outcome, taf?}`: the tool, how it ended (done, refused, a repeat, failed…) and the taf's own id when the call named it by id. Never the call's arguments or answer, a name, an address or a vendor's id (docs/maintaining.md › Request logs).
 - **iPhone and iPad: a taf's knocks on its Activity.** As on Android 1.6. For whoever manages the taf, its doors' knocks come first on its Activity: strangers' knocks, in amber, with Do it, Pair them and Ignore, then a paired sender's message, calmly. They're still in its chat at their times (docs/ios-app.md).
