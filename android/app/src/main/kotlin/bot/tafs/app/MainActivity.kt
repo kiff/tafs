@@ -131,6 +131,9 @@ class MainActivity : FragmentActivity() {
   /** Where a tapped alert asked to go, until the model has it. */
   private var openFromAlert by mutableStateOf<String?>(null)
 
+  /** Play's flexible in-app update; null where Play isn't there to ask. */
+  private val updates: bot.tafs.app.push.PlayUpdates? by lazy { runCatching { bot.tafs.app.push.PlayUpdates(this) }.getOrNull() }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // The words in this screen's language, which follows the app's own when the person picked one: a language changed while
@@ -214,7 +217,9 @@ class MainActivity : FragmentActivity() {
           openFromAlert = null
         }
         val logos = remember(model) { bot.tafs.app.design.LogoStore(java.io.File(cacheDir, "logos"), model::logo) }
-        CompositionLocalProvider(LocalBiometry provides biometry, bot.tafs.app.design.LocalLogos provides logos) { RootView(model) }
+        val stage = updates?.stage?.collectAsState()?.value ?: bot.tafs.app.push.UpdateStage.None
+        val updateRow = bot.tafs.app.push.AppUpdateRow(stage, update = { updates?.start(this@MainActivity) }, restart = { updates?.restart() })
+        CompositionLocalProvider(LocalBiometry provides biometry, bot.tafs.app.design.LocalLogos provides logos, bot.tafs.app.push.LocalAppUpdate provides updateRow) { RootView(model) }
       }
     }
   }
@@ -228,6 +233,8 @@ class MainActivity : FragmentActivity() {
   override fun onResume() {
     super.onResume()
     app.vendorSignIn.resumed(lifecycleScope)
+    // A newer tafs on the track is offered on Home; Play answers "none" for a build it didn't install.
+    runCatching { updates?.check() }
   }
 
   /** An alert was tapped while the app was up. */
@@ -248,6 +255,7 @@ class MainActivity : FragmentActivity() {
     bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
     app.push.askPermission = null
+    runCatching { updates?.close() }
     super.onDestroy()
   }
 }

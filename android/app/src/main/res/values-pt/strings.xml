@@ -2030,6 +2030,11 @@
         <item quantity="one">Trabalha ao abrigo de %1$s Card do KIFF.</item>
         <item quantity="other">Trabalha ao abrigo de %1$s Cards do KIFF.</item>
     </plurals>
+    <string name="update_available">Há uma nova versão do tafs.</string>
+    <string name="update_downloading">A transferir a atualização…</string>
+    <string name="update_ready">A atualização está pronta.</string>
+    <string name="update_restart">Reiniciar</string>
+    <string name="update_update">Atualizar</string>
     <string name="usage_admin_answers">%1$s Um administrador responde.</string>
     <string name="usage_balance">Saldo</string>
     <string name="usage_balance_not_read">Não foi possível ler o saldo. %1$s</string>

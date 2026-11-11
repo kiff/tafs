@@ -121,6 +121,8 @@ dependencies {
   // alerts are on only in a build that has the project's google-services.json (see push/Alerts.kt).
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.messaging)
+  // Play's flexible in-app update: a new version on the track is offered in one tap, then a restart.
+  implementation(libs.play.app.update.ktx)
 
   // Navigation
   implementation(libs.androidx.navigation3.ui)

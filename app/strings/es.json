@@ -2027,6 +2027,11 @@
     "one": "Trabaja con {count} Card de KIFF.",
     "other": "Trabaja con {count} Cards de KIFF."
   },
+  "update.available": "Hay una versión nueva de tafs.",
+  "update.downloading": "Descargando la actualización…",
+  "update.ready": "La actualización está lista.",
+  "update.restart": "Reiniciar",
+  "update.update": "Actualizar",
   "usage.admin_answers": "{detail} Responde un administrador.",
   "usage.balance": "Saldo",
   "usage.balance_not_read": "No se pudo leer el saldo. {why}",

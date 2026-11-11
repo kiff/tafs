@@ -537,6 +537,15 @@ the taf's name, what to do, and why. Needs you counts each once, as tafs cloud d
   KIFF's vector signature verifies with the key derived from its seed, and for no other answer,
   hand-off, account or version.
 
+## A newer version
+
+When Play's track has a newer tafs, Home says so in one line under the account's name, with one button
+(`push/AppUpdates.kt`, Play's flexible in-app update): **Update** opens Play's own confirmation and downloads it in the
+background, the line says it's downloading, then **Restart** installs it and opens tafs again. Play is asked each
+time the app comes to the front; it decides what's newer and installs it, and the app decides no version. A build Play
+didn't install (a debug build, an emulator without Play) is never offered one. Test it on the internal track: install an
+older build from the track, publish a newer one, open tafs.
+
 ## Alerts
 
 In Account (Settings), **Alerts** shows how each kind looks on the lock screen (a hold, with

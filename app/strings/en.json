@@ -2027,6 +2027,11 @@
     "one": "Works under {count} KIFF Card.",
     "other": "Works under {count} KIFF Cards."
   },
+  "update.available": "A new version of tafs is out.",
+  "update.downloading": "Downloading the update…",
+  "update.ready": "The update is ready.",
+  "update.restart": "Restart",
+  "update.update": "Update",
   "usage.admin_answers": "{detail} An admin answers.",
   "usage.balance": "Balance",
   "usage.balance_not_read": "The balance couldn't be read. {why}",

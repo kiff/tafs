@@ -2027,6 +2027,11 @@
     "one": "Travaille sous {count} Card KIFF.",
     "other": "Travaille sous {count} Cards KIFF."
   },
+  "update.available": "Une nouvelle version de tafs est disponible.",
+  "update.downloading": "Téléchargement de la mise à jour…",
+  "update.ready": "La mise à jour est prête.",
+  "update.restart": "Redémarrer",
+  "update.update": "Mettre à jour",
   "usage.admin_answers": "{detail} Un administrateur répond.",
   "usage.balance": "Solde",
   "usage.balance_not_read": "Le solde n'a pas pu être lu. {why}",
