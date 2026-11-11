@@ -77,14 +77,18 @@ final class RecipeGalleryTests: XCTestCase {
         XCTAssertEqual(g.category(of: g.recipes[0])?.id, "money")
     }
 
-    /// A logo loads only from tafs cloud, by the path it sent: an absolute URL, another host,
-    /// another path or a path that climbs out loads nothing, so the phone never asks anyone else.
+    /// A logo loads only from tafs cloud, by the path it sent, `/v1/logos/` and a 32-hex key as
+    /// Android checks it: an absolute URL, another host, another path, a path that climbs out, or
+    /// a key of another length, case or alphabet loads nothing, so the phone never asks anyone else.
     func testALogoLoadsOnlyFromTafsCloud() {
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "x")
         XCTAssertEqual(cloud.logoURL("/v1/logos/3f9c0a1b2c3d4e5f60718293a4b5c6d7")?.absoluteString,
                        "https://cloud.test/v1/logos/3f9c0a1b2c3d4e5f60718293a4b5c6d7")
         for bad in ["https://logos.example/stripe.svg", "//logos.example/v1/logos/abc", "/v1/logos/", "/v1/logos/../tafs",
-                    "/v1/logos/abc?x=https://logos.example", "/v1/tafs", "v1/logos/abc", "/v1/logos/a/b", ""] {
+                    "/v1/logos/abc?x=https://logos.example", "/v1/tafs", "v1/logos/abc", "/v1/logos/a/b", "",
+                    "/v1/logos/abc", "/v1/logos/3F9C0A1B2C3D4E5F60718293A4B5C6D7", "/v1/logos/3f9c0a1b2c3d4e5f60718293a4b5c6d7e",
+                    "/v1/logos/3f9c0a1b2c3d4e5f60718293a4b5c6d", "/v1/logos/éf9c0a1b2c3d4e5f60718293a4b5c6d7",
+                    "/v1/logos/3f9c0a1b2c3d4e5f60718293a4b5c6d7?x=1", "/v1/logos/3f9c0a1b2c3d4e5f60718293a4b5c6d7/"] {
             XCTAssertNil(cloud.logoURL(bad), bad)
         }
         XCTAssertNil(cloud.logoURL(nil))

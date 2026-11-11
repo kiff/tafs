@@ -1839,13 +1839,15 @@ final class TafsCloud {
         try await send("GET", "/v1/recipes/gallery")
     }
 
-    /// Where an app's logo loads from: a path tafs cloud sent (`/v1/logos/{key}`), on tafs cloud
-    /// itself. Anything else, an absolute URL or another path, loads nothing: the phone only
-    /// ever asks tafs cloud, so no one else sees its address.
+    /// Where an app's logo loads from: a path tafs cloud sent, `/v1/logos/` and the 32 lowercase
+    /// hex of the key tafs cloud mints, as Android checks it, on tafs cloud itself. Anything else,
+    /// an absolute URL or another path, loads nothing: the phone only ever asks tafs cloud, so no
+    /// one else sees its address.
     func logoURL(_ path: String?) -> URL? {
-        guard let path, path.hasPrefix("/v1/logos/"), !path.contains("//"), !path.contains(".."),
-              path.dropFirst("/v1/logos/".count).allSatisfy({ $0.isLetter || $0.isNumber }),
-              path.count > "/v1/logos/".count else { return nil }
+        let prefix = "/v1/logos/"
+        guard let path, path.hasPrefix(prefix) else { return nil }
+        let key = path.utf8.dropFirst(prefix.utf8.count)
+        guard key.count == 32, key.allSatisfy({ (0x30...0x39).contains($0) || (0x61...0x66).contains($0) }) else { return nil }
         return URL(string: path, relativeTo: baseURL)?.absoluteURL
     }
 

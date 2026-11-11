@@ -281,9 +281,9 @@ it, in tafs cloud's words.
   in that order, only while `strip.shown`. tafs cloud leaves out jobs the account runs and puts
   first those whose apps are connected; the app picks nothing. On iPad it's a sidebar section.
 - **App logos** (`AppMarks`): each job's apps by name, after the app's logo, and the same in
-  Connect apps. A logo loads only from tafs cloud, by the path it sent (`/v1/logos/{key}`,
-  `TafsCloud.logoURL`); an absolute URL or any other path loads nothing, so no one else sees the
-  phone's address. With no logo, or one that doesn't load, the name alone.
+  Connect apps. A logo loads only from tafs cloud, by the path it sent: `/v1/logos/` and a key of
+  32 lowercase hex, as on Android (`TafsCloud.logoURL`). An absolute URL or any other path loads
+  nothing, so no one else sees the phone's address. With no logo, or one that doesn't load, the name alone.
 - **A colour per category** (`RecipeTint`): tafs cloud's token, `#RRGGBB` for light and dark,
   on the chip and the card's edge. One the app can't read is no colour, never a guess
   (`RecipeGalleryTests`).
