@@ -31,6 +31,15 @@ class Check(unittest.TestCase):
     def test_the_folders_readme_isnt_a_fragment(self):
         self.assertEqual(changelog.check([("A", "changes/a-b.md"), ("M", "changes/README.md")], "a/b"), [])
 
+    def test_a_release_carries_the_fold(self):
+        fold = [("M", "CHANGELOG.md"), ("D", "changes/a-b.md"), ("D", "changes/c.md"), ("M", "ios/project.yml")]
+        self.assertEqual(changelog.check(fold, "release/1.8.0"), [])
+        # A release can't add or change a fragment, nor remove them without folding them in.
+        self.assertEqual(len(changelog.check(fold + [("A", "changes/release-1.8.0.md")], "release/1.8.0")), 1)
+        self.assertEqual(len(changelog.check([("D", "changes/a-b.md")], "release/1.8.0")), 1)
+        # The same fold on any other branch is refused.
+        self.assertTrue(changelog.check(fold, "claude/x"))
+
     def test_dependabot_is_exempt(self):
         self.assertEqual(changelog.check([("M", "android/build.gradle.kts")], "dependabot/gradle/x"), [])
 

@@ -7,7 +7,9 @@ the same line. A change with nothing user-visible adds an empty file.
 
     changelog.py check --base origin/main --branch <head branch>
         In a pull request: exactly one fragment added, named for the branch,
-        and CHANGELOG.md untouched. Dependabot's pull requests are exempt.
+        and CHANGELOG.md untouched. Dependabot's pull requests are exempt. A
+        release branch (release/...) carries the fold instead: CHANGELOG.md
+        edited and fragments only removed, none added or changed.
     changelog.py fold [--release "1.8.0 (2026-11-12)"]
         At a release: each fragment's lines go to the top of Unreleased,
         newest first (or under a new version heading), and the fragments are
@@ -37,11 +39,20 @@ def check(changed: list[tuple[str, str]], branch: str) -> list[str]:
     """What's wrong with a pull request's changes ((status, path) pairs against its base)."""
     if branch.startswith("dependabot/"):
         return []
+    fragments = [(status, path) for status, path in changed
+                 if path.startswith(CHANGES + "/") and path.endswith(".md") and path != f"{CHANGES}/README.md"]
+    if branch.startswith("release/"):
+        # The fold's shape: CHANGELOG.md takes the entries, the fragments go.
+        errors = []
+        kept = [path for status, path in fragments if not status.startswith("D")]
+        if kept:
+            errors.append(f"a release only removes fragments (scripts/changelog.py fold); added or changed: {', '.join(kept)}")
+        if len(kept) < len(fragments) and not any(path == CHANGELOG for _, path in changed):
+            errors.append(f"fragments are removed but {CHANGELOG} is unchanged: run scripts/changelog.py fold so no entry is lost")
+        return errors
     errors = []
     if any(path == CHANGELOG for _, path in changed):
         errors.append(f"{CHANGELOG} is edited: put the entry in {fragment_name(branch)} instead")
-    fragments = [(status, path) for status, path in changed
-                 if path.startswith(CHANGES + "/") and path.endswith(".md") and path != f"{CHANGES}/README.md"]
     added = [path for status, path in fragments if status.startswith("A")]
     others = [path for status, path in fragments if not status.startswith("A")]
     want = fragment_name(branch)
