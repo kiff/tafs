@@ -141,16 +141,19 @@ describe("Setup's definition on kiff/agents", () => {
   // What Coach answers about holds, usage and halting. In October it read none of these when
   // they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218); now tafs cloud
   // loads the skill the conversation needs, never the model (the Coach skills design).
-  it("knows holds, tasks and packs, and halting", () => {
+  it("knows holds, credits and packs, and halting", () => {
     const flat = COACH_TEXT.replace(/\s+/g, " ");
     expect(flat).toContain("Refused: nothing was sent, and nothing waits for anyone. Never say it waits for the owner, or that the owner refused it unless they did");
     expect(flat).toContain("a call past a total the Card keeps across calls, such as a day's, can't: the owner gives extra room for it from the hold");
     // When extra room ends, which Coach said it couldn't see (the 755 retest).
     expect(flat).toContain("ends when the total resets: a day's at midnight in the account's time zone");
     expect(flat).toContain("say the limit and the extra room apart");
-    expect(flat).toContain("a task is an action a taf took that KIFF allowed, sent, and that worked");
-    expect(flat).toContain("With no tasks left, the tafs stop until a pack adds some");
-    expect(flat).toContain("never buy, request or approve a pack");
+    expect(flat).toContain("A taf's run uses credits for the AI it used, in whole credits, counted once when the run ends");
+    expect(flat).toContain("Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.");
+    expect(flat).toContain("never turn an AI cost into credits or euros");
+    expect(flat).toContain("Never buy, request or approve a plan, a pack or a raise");
+    // Nothing from before credits: no tasks, no free week.
+    expect(flat).not.toMatch(/free week|a task is an action/);
     expect(flat).toContain("You can't halt or resume: say so in one sentence");
     expect(flat).toContain("Pause is different: a taf's schedule stops, and it still takes work in its chat");
   });

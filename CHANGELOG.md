@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Coach answers about cost in credits (usage-and-plans@2).** Coach describes today's plans in kiff.dev's and Plan & usage's words: credits per run, Solo at €12.50 with 500 credits a month, packs that never expire, Company per seat with a spend limit, no free trial, and "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits." Nothing about tasks or a free week, and never a figure it works out. Live after the next Eval and Upgrade.
 - **What Coach includes, under the Solo offer (Android 1.3).** Plan & usage shows tafs cloud's sentence about Coach's help (`buy.coach`) under Solo's terms, as kiff.dev says it. A tafs cloud without it shows no line.
 - **Coach's tools are given in their own step only (Android 1.3).** A Start on a phone new to a Coach already there, and installing a version, no longer give the tools inside their own confirmation: where tools are still to give, the tools step is asked, in tafs cloud's words, as iOS does.
 - **What Coach's help includes, under the Solo offer (tafs cloud).** The balance read's `buy` carries `coach`, in the person's language: "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.", the same sentence as kiff.dev. The apps draw it under the Solo offer in their next batches (docs/accounts.md).
