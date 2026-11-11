@@ -1423,6 +1423,60 @@ describe("removing a taf", () => {
     expect(w.archived.held.size).toBe(0); // its archived chats are forgotten too
   });
 
+  // A removal is the phone's act: signed by the phone, checked by KIFF. Until both apps sign it, unsigned still removes.
+  it("takes the phone's signature on a removal, and refuses an unsigned one once signing is required", async () => {
+    const asked: Array<{ method: string; uri: string; signature: string }> = [];
+    const withKIFF = (w: World, signed: boolean, key = "critical") => {
+      const base = depsOf(w);
+      return { ...base, fetch: (async (url: string, init?: RequestInit) => {
+        if (String(url).endsWith("/v1/me/device-signature")) {
+          asked.push(JSON.parse(String(init?.body)));
+          return new Response(JSON.stringify({ signed, key }), { status: signed ? 200 : 403 });
+        }
+        return (base.fetch as typeof fetch)(url, init);
+      }) as typeof fetch };
+    };
+    const del = (w: World, signed: boolean, headers: Record<string, string> = {}, key = "critical") =>
+      handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana", ...headers } }, withKIFF(w, signed, key));
+    const sig = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+    // Signed by this phone: removed, and KIFF was asked about exactly this DELETE.
+    const w1 = world();
+    expect((await del(w1, true, sig)).statusCode).toBe(200);
+    expect(asked.at(-1)).toMatchObject({ method: "DELETE", uri: `/v1/tafs/${RAE}`, signature: sig["kiff-device-signature"] });
+    expect(w1.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+    // Signed with the device key, not the approval key behind the screen lock: refused, in the person's words.
+    const wd = world();
+    const device = await del(wd, true, sig, "device");
+    expect(device.statusCode).toBe(403);
+    expect(JSON.parse(device.body)).toMatchObject({ code: "critical_key_required", error: "Remove it from your device: removing a taf asks for your screen lock each time. Nothing was removed." });
+    expect(wd.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    // A signature that isn't this phone's: refused, nothing removed.
+    const w2 = world();
+    expect((await del(w2, false, sig)).statusCode).toBe(403);
+    expect(w2.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    // Unsigned, while signing isn't required yet: still removed.
+    const w3 = world();
+    expect((await del(w3, true)).statusCode).toBe(200);
+    // Once it is: an unsigned removal is refused with its code, but one a signed DELETE began finishes unsigned.
+    const was = process.env.TAFS_SIGNED_REMOVE;
+    process.env.TAFS_SIGNED_REMOVE = "on";
+    try {
+      const w4 = world();
+      const refused = await del(w4, true);
+      expect(refused.statusCode).toBe(403);
+      expect(JSON.parse(refused.body)).toMatchObject({ code: "signature_required" });
+      expect(w4.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+      w4.agents.fail.set("deleteAgent", new Error("timeout"));
+      expect(JSON.parse((await del(w4, true, sig)).body)).toMatchObject({ done: false });
+      w4.agents.fail.delete("deleteAgent");
+      const asks = asked.length;
+      expect(JSON.parse((await del(w4, true)).body)).toMatchObject({ done: true });
+      expect(asked.length).toBe(asks);
+    } finally {
+      if (was === undefined) delete process.env.TAFS_SIGNED_REMOVE; else process.env.TAFS_SIGNED_REMOVE = was;
+    }
+  });
+
   it("takes the right to manage Cards, and another account's taf answers like a missing one", async () => {
     const w = world();
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "viewer" })).status).toBe(403);

@@ -48,7 +48,8 @@ class TafDetailTest {
     val rule = CardRule(action = "send", label = "Sends", perWindow = Money.bare(30_000), window = Window.day)
     val card = TafCard.merged("c", "Sends", listOf(rule), null)
     assertTrue(card.hero!!.words.endsWith(" · no currency"))
-    assertEquals("30,000".replace(",", java.text.DecimalFormatSymbols.getInstance().groupingSeparator.toString()), card.hero!!.figure)
+    // Written in the app's language (English lines here), never the phone's region.
+    assertEquals("30,000", card.hero!!.figure)
   }
 
   @Test fun aCardWithNoLimitsShowsItsFirstLinesInsteadOfAFigure() {
