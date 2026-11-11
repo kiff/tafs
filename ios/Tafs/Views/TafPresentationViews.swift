@@ -190,14 +190,15 @@ struct TafActivityList: View {
     @Binding var selection: String
     @State private var filter = "all"
 
-    /// What a taf's Activity draws above its record, in order, as on Android. This is the Activity
-    /// a taf on tafs cloud uses (`TafDetailView.pane`), so its runs (when it runs next, Run now)
-    /// and its work (health and its fixes, its oldest waiting case, Answer within, skipped
-    /// firings, requests) are drawn here; the runs it kept stand for its latest run's report. The
-    /// older `activity(_:)` view is the sample's alone. A taf's knocks are in its chat.
-    enum Part: Hashable { case held, cardUnits, runs, work, retainedRuns }
+    /// What a taf's Activity draws above its record, in order, as on Android: what needs the owner
+    /// first, then how it's doing, then its runs. This is the Activity a taf on tafs cloud uses
+    /// (`TafDetailView.pane`), so its work (health and its fixes, its oldest waiting case, Answer
+    /// within, skipped firings, requests) and its runs (when it runs next, Run now) are drawn here;
+    /// the runs it kept stand for its latest run's report. The older `activity(_:)` view is the
+    /// sample's alone. A taf's knocks are in its chat.
+    enum Part: Hashable { case held, cardUnits, work, runs, retainedRuns }
     static func parts(cloud: Bool) -> [Part] {
-        cloud ? [.held, .cardUnits, .runs, .work, .retainedRuns] : [.held, .cardUnits, .retainedRuns]
+        cloud ? [.held, .cardUnits, .work, .runs, .retainedRuns] : [.held, .cardUnits, .retainedRuns]
     }
 
     var body: some View {
@@ -211,10 +212,10 @@ struct TafActivityList: View {
                     case .cardUnits:
                         ForEach(cache.pages.last?.card_unit_exceptions ?? model.cardUnitExceptions.filter { $0.taf == model.cloudTaf(for: tafID)?.id }) { exception in CardUnitExceptionPanel(ask: exception) }
                         if let notice = cache.pages.last?.card_unit_exceptions_notice { Text(notice).scaledFont(13).foregroundColor(Theme.dim) }
-                    case .runs:
-                        RunsPanel(tafID: tafID)
                     case .work:
                         WorkPanel(tafID: tafID)
+                    case .runs:
+                        RunsPanel(tafID: tafID)
                     case .retainedRuns:
                         RetainedRuns(tafID: tafID)
                     }

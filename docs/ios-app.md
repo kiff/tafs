@@ -89,8 +89,8 @@ cloud's line, then its recent requests and skipped firings, newest first, in taf
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
 given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`). Then its
 runs (`RunsPanel`): when it runs next, or that it works from its chat, and **Run now**; then the
-runs it kept (`RetainedRuns`). The runs come before the work, as on Android
-(`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
+runs it kept (`RetainedRuns`), which stand for its latest run's report. What needs the owner
+comes first, then the work, then the runs, as on Android (`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
 (`oldest_waiting.words`, tafs cloud's line, amber once `late`) and, for whoever manages the taf,
 **Answer within** (`PromiseRow`): the promise as tafs cloud keeps it (`promise.hours`) or Not set,
 and a menu of None, 1, 2, 4, 8, 24, 48 or 168 hours that sends `PUT /v1/tafs/{id}/promise`
