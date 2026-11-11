@@ -55,8 +55,14 @@ object Res {
   /** A number in order, as the lines' language writes it: "21st" in English, "21." in German. */
   fun ordinal(n: Long): String = source.ordinal(n, language)
 
+  /**
+   * The lines' language as a locale, for numbers and money: an English app on a French phone writes "€2,000", a French app
+   * "2 000 €", whatever the phone's region.
+   */
+  val locale: Locale get() = Locale.forLanguageTag(language)
+
   /** A count's number as the lines' language writes it: "1,000" in English, "1.000" in German. */
-  fun number(n: Int): String = java.text.NumberFormat.getIntegerInstance(Locale.forLanguageTag(language)).format(n.toLong())
+  fun number(n: Int): String = java.text.NumberFormat.getIntegerInstance(locale).format(n.toLong())
 
   /** A string with no arguments, as written. */
   fun s(id: Int): String = source.string(id)

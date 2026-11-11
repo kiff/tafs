@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">KIFF\'s words for this connection couldn\'t be read. %1$s</string>
     <string name="connect_profile_words_unread">KIFF\'s words for this connection aren\'t read yet. Nothing was approved.</string>
     <string name="connect_prompt_connect">Connect %1$s to %2$s</string>
+    <string name="connect_prompt_connect_app">Connect %1$s</string>
     <string name="connect_prompt_give_card">Give %1$s its Card</string>
     <string name="connect_prompt_give_key">Give %1$s its key for %2$s</string>
+    <string name="connect_prompt_give_key_app">Give %1$s its key</string>
     <string name="connect_prompt_keep_sealed">Keep your apps\' sign-ins sealed</string>
     <string name="connect_reading_asks">Reading what it asks for…</string>
     <string name="connect_reading_request">Reading the request…</string>
@@ -1341,7 +1343,9 @@
     <string name="people_delete_group_button">Delete %1$s</string>
     <string name="people_delete_group_title">Delete %1$s?</string>
     <string name="people_delete_this_group_title">Delete this group?</string>
-    <string name="people_everyone_in">Everyone on the account is in %1$s. Invite people from the KIFF dashboard.</string>
+    <string name="people_everyone_group">Everyone</string>
+    <string name="people_everyone_in">Everyone on the account is here. Invite people from the KIFF dashboard.</string>
+    <string name="people_everyone_uses">Everyone uses %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Everyone on the account · uses no taf</string>
     <string name="people_group_actions">%1$s actions</string>
     <string name="people_group_name_hint">Support, Finance…</string>
@@ -1391,6 +1395,7 @@
     <string name="people_share_who_gets">Who gets %1$s</string>
     <string name="people_share_who_uses">Who uses %1$s?</string>
     <string name="people_shared_with">Shared with %1$s</string>
+    <string name="people_shared_with_everyone">Shared with everyone</string>
     <string name="people_shared_with_prefix">"Shared with "</string>
     <string name="people_sharing">Sharing…</string>
     <string name="people_stops_using">%1$s stops using %2$s. Their chats stay theirs.</string>
@@ -1728,6 +1733,7 @@
     <string name="settings_alerts_off_text">They went off when this phone signed out. Turn them on to get an alert when a taf needs you.</string>
     <string name="settings_alerts_off_title_device">Alerts are off on this %1$s</string>
     <string name="settings_alerts_off_turn_on">Turn on</string>
+    <string name="settings_change_language">Change language</string>
     <string name="settings_chargebacks_needs_you">Chargebacks needs you</string>
     <string name="settings_choose_time_zone">Choose time zone…</string>
     <string name="settings_clear_sample">Clear the sample</string>
@@ -1766,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Each sends who was answered and through which door, never its words. Turn it off in the taf\'s Setup › Results go to.</string>
     <string name="settings_find_time_zone">Find a time zone</string>
     <string name="settings_kiff_account">KIFF account</string>
+    <string name="settings_language_title">Language</string>
     <string name="settings_legal">Legal</string>
     <string name="settings_light_taps_when_you_send">The light taps when you send or answer.</string>
     <string name="settings_mode">Mode</string>

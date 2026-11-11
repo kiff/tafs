@@ -42740,6 +42740,59 @@
         }
       }
     },
+    "connect.prompt.connect_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ verbinden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecter %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collega %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ koppelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połącz %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligar %1$@"
+          }
+        }
+      }
+    },
     "connect.prompt.give_card": {
       "extractionState": "manual",
       "localizations": {
@@ -42842,6 +42895,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dar a %1$@ a sua chave para %2$@"
+          }
+        }
+      }
+    },
+    "connect.prompt.give_key_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ seinen Schlüssel geben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give %1$@ its key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar a %1$@ su clave"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donner à %1$@ sa clé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dai a %1$@ la sua chiave"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ zijn sleutel geven"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekaż %1$@ klucz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar a %1$@ a sua chave"
           }
         }
       }
@@ -58893,7 +58999,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ils tafent. Vous kiffez."
+            "value": "They taf. You kiff."
           }
         },
         "it": {
@@ -66898,55 +67004,161 @@
         }
       }
     },
+    "people.everyone_group": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout le monde"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutti"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iedereen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszyscy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos"
+          }
+        }
+      }
+    },
     "people.everyone_in": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle im Konto sind in %1$@. Lade Personen über das KIFF-Dashboard ein."
+            "value": "Alle im Konto sind hier. Lade Personen über das KIFF-Dashboard ein."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everyone on the account is in %1$@. Invite people from the KIFF dashboard."
+            "value": "Everyone on the account is here. Invite people from the KIFF dashboard."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todas las personas de la cuenta están en %1$@. Invita a gente desde el panel de KIFF."
+            "value": "Todas las personas de la cuenta están aquí. Invita a gente desde el panel de KIFF."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout le monde sur le compte fait partie de %1$@. Invitez des personnes depuis le tableau de bord KIFF."
+            "value": "Tout le monde sur le compte est ici. Invitez des personnes depuis le tableau de bord KIFF."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutti nell'account sono in %1$@. Invita persone dalla dashboard di KIFF."
+            "value": "Tutti nell'account sono qui. Invita persone dalla dashboard di KIFF."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iedereen in het account zit in %1$@. Nodig mensen uit via het KIFF-dashboard."
+            "value": "Iedereen in het account staat hier. Nodig mensen uit via het KIFF-dashboard."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wszyscy na koncie są w %1$@. Zapraszaj osoby z panelu KIFF."
+            "value": "Wszyscy na koncie są tutaj. Zapraszaj osoby z panelu KIFF."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todas as pessoas da conta estão em %1$@. Convide pessoas a partir do painel do KIFF."
+            "value": "Todas as pessoas da conta estão aqui. Convide pessoas a partir do painel do KIFF."
+          }
+        }
+      }
+    },
+    "people.everyone_uses": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle nutzen %1$@: %2$@."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone uses %1$@: %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo el mundo usa %1$@: %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout le monde utilise %1$@ : %2$@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutti usano %1$@: %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iedereen gebruikt %1$@: %2$@."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszyscy używają %1$@: %2$@."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos usam %1$@: %2$@."
           }
         }
       }
@@ -69544,6 +69756,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Partilhado com %1$@"
+          }
+        }
+      }
+    },
+    "people.shared_with_everyone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geteilt mit allen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared with everyone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartido con todo el mundo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partagé avec tout le monde"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condiviso con tutti"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedeeld met iedereen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udostępniono wszystkim"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partilhado com todos"
           }
         }
       }
@@ -86989,6 +87254,59 @@
         }
       }
     },
+    "settings.change_language": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache ändern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar idioma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer de langue"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia lingua"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taal wijzigen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmień język"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alterar idioma"
+          }
+        }
+      }
+    },
     "settings.chargebacks_needs_you": {
       "extractionState": "manual",
       "localizations": {
@@ -88999,6 +89317,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conta KIFF"
+          }
+        }
+      }
+    },
+    "settings.language_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langue"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lingua"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taal"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Język"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma"
           }
         }
       }

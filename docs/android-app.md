@@ -287,6 +287,16 @@ searches across their tafs, opens one case, and exports receipts
 
 ## Words and languages
 
+**Account › Language** shows the lines' language named in itself ("Français", `AppLanguage.name`) and **Change
+language**, which opens the phone's own setting: Android 13+'s per-app language for tafs, which offers the 8 because the
+manifest declares the generated `locales_config` (`android:localeConfig`), else the phone's languages on Android 11 and
+12. There's no picker of the app's own.
+
+**Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
+region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and
+symbol, and is never converted (`Money.figure`, `MoneyFormatTest`). Amounts in KIFF's or tafs cloud's own words are
+shown as they come.
+
 Every line the app writes itself is in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
 iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.py` writes, from it,
 `res/values/strings.xml` (counts as `<plurals>`), `res/xml/locales_config.xml` and `model/Words.kt`, a typed accessor per
@@ -446,7 +456,9 @@ moved came to, by unit (`spentOn`).
 
 ## The taf's screen
 
-Four tabs, each with one job (`TafDetailView`):
+Four tabs, each with one job (`TafDetailView`). It opens on Chat, except from a door's knock alert
+(tafs cloud's `knock`, `AlertPayload.opensActivity`), which opens it on Activity, where knocks are
+answered:
 - **Chat:** talking to it.
 - **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
@@ -640,6 +652,12 @@ new sign-in. Whether the phone can approve is read each time the app comes back
 (`approvalReadiness`), and while it can't, each approval's button gives way to the state and what
 to do ([approvals.md](approvals.md#set-up-approvals-on-this-device)). A debug build on a phone with no screen lock signs without asking, as the iOS
 Simulator does; a release never does.
+
+**What the prompt says** is the last thing read before signing. Connecting an app names the app and
+the taf as the person knows them (`ConnectionWords.connectPrompt`, `giveKeyPrompt`): tafs cloud's
+Connect apps title for that connection, else planque's vendor name, and the taf's name, else the
+name planque keeps (`agent_name`). It never shows an agent id or a server's slug. With no name for
+the taf, it names the app alone ("Connect Stripe").
 
 ## The calendar
 

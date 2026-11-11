@@ -56,19 +56,21 @@ data class Money(val minor: Long, val currency: String? = null, val scale: Int =
   /** The amount without the "no currency" note: for a figure whose words say it once. */
   val figure: String
     get() {
-      val unit = currency ?: return NumberFormat.getIntegerInstance().format(minor)
+      // In the app's language, never the phone's region, with the amount's own currency: its symbol, never converted.
+      val locale = Res.locale
+      val unit = currency ?: return NumberFormat.getIntegerInstance(locale).format(minor)
       val whole = minor % power(scale) == 0L
       val digits = if (whole) 0 else scale
       val code = unit.uppercase()
       val iso = runCatching { Currency.getInstance(code) }.getOrNull()
       if (iso != null) {
-        val f = NumberFormat.getCurrencyInstance(Locale.getDefault())
+        val f = NumberFormat.getCurrencyInstance(locale)
         f.currency = iso
         f.minimumFractionDigits = digits
         f.maximumFractionDigits = digits
         return f.format(value)
       }
-      val f = NumberFormat.getNumberInstance(Locale.getDefault())
+      val f = NumberFormat.getNumberInstance(locale)
       f.minimumFractionDigits = digits
       f.maximumFractionDigits = digits
       return "${f.format(value)} $unit"

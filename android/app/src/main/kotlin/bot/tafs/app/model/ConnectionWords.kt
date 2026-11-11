@@ -28,6 +28,29 @@ object ConnectionWords {
 
   /** Ends a grant whose sign-in never came back (it's never connected); the owner connects it again afterwards. */
   val CANCEL_SIGN_IN get() = Words.Common.cancel
+  /**
+   * The app as the person knows it: tafs cloud's Connect apps title for this connection when it's listed, else planque's vendor
+   * name. Never a server's URL when either is known.
+   */
+  fun appName(g: Grant, apps: bot.tafs.app.kiff.ConnectApps?): String =
+    apps?.apps?.firstOrNull { it.grant == g.id || (g.entry != null && it.entry == g.entry) }?.title?.takeIf { it.isNotBlank() } ?: g.vendor
+
+  /** The taf a connection is for, by its name: the app's taf for that agent, else the name planque keeps; never its agent id. */
+  fun tafName(g: Grant, taf: (String) -> String?): String? =
+    taf(g.request.agent)?.takeIf { it.isNotBlank() } ?: g.agentName?.takeIf { it.isNotBlank() }
+
+  /** The prompt read last before connecting: "Connect Stripe to Disputes", or "Connect Stripe" when the taf has no name yet. */
+  fun connectPrompt(g: Grant, apps: bot.tafs.app.kiff.ConnectApps?, taf: (String) -> String?): String {
+    val app = appName(g, apps)
+    return tafName(g, taf)?.let { Words.Connect.Prompt.connect(vendor = app, agent = it) } ?: Words.Connect.Prompt.connectApp(vendor = app)
+  }
+
+  /** The same, for a connection by key: "Give Stripe its key for Disputes". */
+  fun giveKeyPrompt(g: Grant, apps: bot.tafs.app.kiff.ConnectApps?, taf: (String) -> String?): String {
+    val app = appName(g, apps)
+    return tafName(g, taf)?.let { Words.Connect.Prompt.giveKey(vendor = app, agent = it) } ?: Words.Connect.Prompt.giveKeyApp(vendor = app)
+  }
+
   fun cancelTitle(g: Grant): String = Words.Connect.CancelSignIn.title(g.vendor)
   fun cancelBody(g: Grant): String = Words.Connect.CancelSignIn.body(g.vendor)
 

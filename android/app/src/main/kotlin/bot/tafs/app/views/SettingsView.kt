@@ -171,6 +171,19 @@ fun SettingsSheet(
               }
             }
           }
+          // The language tafs's lines are in, and the phone's own setting to change it: Android 13+'s per-app language
+          // (tafs lists its 8 in locales_config), else the phone's languages. No picker of the app's own.
+          Section(Words.Settings.languageTitle) {
+            Value(Words.Settings.languageTitle, bot.tafs.app.model.AppLanguage.name())
+            Action(Words.Settings.changeLanguage, Theme.amberText) {
+              val intent = if (android.os.Build.VERSION.SDK_INT >= 33) {
+                android.content.Intent(android.provider.Settings.ACTION_APP_LOCALE_SETTINGS, android.net.Uri.fromParts("package", context.packageName, null))
+              } else {
+                android.content.Intent(android.provider.Settings.ACTION_LOCALE_SETTINGS)
+              }
+              runCatching { context.startActivity(intent) }
+            }
+          }
           if (state.mode == Mode.kiff) Section(Words.Settings.timeZoneTitle) {
             Value(Words.Settings.timeZoneTitle, state.kiffAccount?.timeZone ?: "UTC")
             Action(Words.Settings.chooseTimeZone, Theme.amberText) { zonePicker = true }

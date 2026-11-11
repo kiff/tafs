@@ -8,6 +8,7 @@ import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.Person
 import bot.tafs.app.kiff.Share
 import bot.tafs.app.model.PeopleWords
+import bot.tafs.app.model.shownName
 import java.net.URI
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
@@ -120,6 +121,31 @@ class PeopleTest {
     assertEquals("Sharing…", PeopleWords.sharedWith(null, listOf(support), listOf(maria, ana)))
     assertEquals("Not shared", PeopleWords.sharedWith(emptyList(), listOf(support), listOf(maria, ana)))
     assertEquals("Shared with Support and ana@acme.com", PeopleWords.sharedWith(listOf(Share(group = "g_sup"), Share(subject = "u_ana")), listOf(support), listOf(maria, ana)))
+  }
+
+  @Test fun kiffsDefaultGroupReadsInThePersonsLanguageNeverAsKiffStoresIt() {
+    // KIFF keeps its default group as "Everyone": the app names it with its own words, and its own sentences where it's inflected.
+    val everyone = Group("g_all", "Everyone", everyone = true, members = listOf(GroupMember("u_ana", "member")))
+    assertEquals("the app's word, not the stored name", "Everyone", everyone.copy(name = "All staff").shownName)
+    assertEquals("Support", support.shownName)
+    assertEquals("Shared with everyone", PeopleWords.sharedWith(listOf(Share(group = "g_all")), listOf(everyone), listOf(ana)))
+    assertEquals("Shared with Everyone and maria@acme.com", PeopleWords.sharedWith(listOf(Share(group = "g_all"), Share(subject = "u_maria")), listOf(everyone), listOf(maria, ana)))
+    val lines = PeopleWords.consequences("Refunds", had = emptySet(), chosen = setOf(Share(group = "g_all")), groups = listOf(everyone), people = listOf(ana))
+    assertTrue(lines.contains("Everyone uses Refunds: ana@acme.com."))
+  }
+
+  @Test fun noOneIsAddedToOrTakenOutOfKiffsDefaultGroupHere() = runTest {
+    val m = model()
+    m.refreshPeople()
+    val s = m.state.value
+    val everyone = s.groups.single { it.everyone == true }
+    val member = everyone.members.first()
+    assertTrue("a manager of people may manage it", s.managesGroup(everyone))
+    assertFalse(bot.tafs.app.views.mayAddTo(everyone, s))
+    assertFalse(bot.tafs.app.views.mayRemoveFrom(everyone, member, s))
+    // Any other group, as before.
+    val other = s.groups.first { it.everyone != true }
+    assertTrue(bot.tafs.app.views.mayAddTo(other, s))
   }
 
   @Test fun theConsequencesSayWhoGetsItAndWhoStops() {

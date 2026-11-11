@@ -388,6 +388,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
   // The taf open on the Tafs tab: the screens inside a tab keep its bar, as a navigation stack does.
   var openTaf by rememberSaveable { mutableStateOf<String?>(null) }
+  // The taf a door's knock alert opened, to show on Activity once, where its knocks are answered.
+  var openOnActivity by rememberSaveable { mutableStateOf<String?>(null) }
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
@@ -582,6 +584,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         val taf = state.tafs.firstOrNull { it.cloudId == cloudId }
         if (taf == null && state.tafs.isEmpty()) return@LaunchedEffect
         tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = taf?.id
+        if (AlertPayload.opensActivity(open)) openOnActivity = taf?.id
       }
     }
     model.openRequestTaken()
@@ -666,6 +669,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               people = people,
               onConnectApps = { showingConnectApps = true },
               showBack = !wide,
+              openActivity = openOnActivity == id,
+              onActivityOpened = { if (openOnActivity == id) openOnActivity = null },
             ) }
           }
           val calendar: @Composable (Boolean) -> Unit = { phone ->
