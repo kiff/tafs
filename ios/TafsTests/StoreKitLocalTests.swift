@@ -25,6 +25,33 @@ final class StoreKitLocalTests: XCTestCase {
         if try await Product.products(for: [solo]).isEmpty {
             throw XCTSkip("StoreKit's local testing has no store on this machine: no products load.")
         }
+        // A store that lists the products but can't sell them (a simulator that finds the App Store's
+        // sandbox products, with no sandbox account; a pack the App Store doesn't offer) either never
+        // answers a purchase or refuses it at once. Each product the tests buy is bought first, ten
+        // seconds at most, and only a completed purchase runs the tests. In a working local StoreKit
+        // session those always complete, so a purchase that then comes out wrong still fails.
+        for id in [rayo, solo] {
+            guard let probe = try await Product.products(for: [id]).first,
+                  await Self.completes(probe, within: 10) else {
+                session.resetToDefaultState()
+                throw XCTSkip("StoreKit's local testing can't complete a purchase of \(id) on this machine within 10 seconds.")
+            }
+        }
+        session.clearTransactions()
+    }
+
+    /// Whether a purchase of product completes (`.success`) within the time. An error, pending,
+    /// cancelled or no answer at all is no. The purchase runs on its own, so one that never returns
+    /// can't hold the test (a task group would wait for it).
+    private static func completes(_ product: Product, within seconds: UInt64) async -> Bool {
+        await withCheckedContinuation { (done: CheckedContinuation<Bool, Never>) in
+            let once = Once(done)
+            Task {
+                guard case .success = try? await product.purchase() else { return once.resume(false) }
+                once.resume(true)
+            }
+            Task { try? await Task.sleep(nanoseconds: seconds * 1_000_000_000); once.resume(false) }
+        }
     }
 
     override func tearDown() async throws {
@@ -105,6 +132,20 @@ final class StoreKitLocalTests: XCTestCase {
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         XCTAssertGreaterThan(sent.lines.count, bought, "the refund reached KIFF")
+    }
+}
+
+/// Resumes a continuation once, whichever of its racers comes first.
+final class Once: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Bool, Never>?
+    init(_ continuation: CheckedContinuation<Bool, Never>) { self.continuation = continuation }
+    func resume(_ value: Bool) {
+        lock.lock()
+        let c = continuation
+        continuation = nil
+        lock.unlock()
+        c?.resume(returning: value)
     }
 }
 
