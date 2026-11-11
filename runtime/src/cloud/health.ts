@@ -5,12 +5,14 @@
  */
 import type { Fired, Run } from "./agents.js";
 import { type Lang, wordsIn } from "./words/index.js";
+import { timeIn } from "./work.js";
 
 export type HealthLevel = "healthy" | "at_risk" | "failing";
 
 /** Why a taf isn't healthy. `n` of `of` where it counts; `since` is when the spell it names began. */
 export interface HealthReason {
-  code: "dropped" | "streak" | "check_failing" | "all_failed" | "capped" | "failed_some" | "skipped" | "retrying" | "streak_one" | "check_failing_one";
+  code: "dropped" | "streak" | "check_failing" | "all_failed" | "capped" | "failed_some" | "skipped" | "retrying" | "streak_one" | "check_failing_one"
+    | "too_large" | "too_large_one" | "credits";
   level: Exclude<HealthLevel, "healthy">;
   n?: number;
   of?: number;
@@ -19,8 +21,22 @@ export interface HealthReason {
 
 export interface Health { level: HealthLevel; reasons: HealthReason[] }
 
-/** What the apps get: the level, and each reason as a line that says what happened and what to do. */
-export interface HealthView { level: HealthLevel; lines: string[] }
+/**
+ * What the apps get: the level, and each reason as a line that says what happened and what to do. `fixes`
+ * are the buttons to draw for the lines that have one, decided here (docs/api.md): Coach opened with `say`,
+ * or Plan & usage for credits.
+ */
+export interface HealthView { level: HealthLevel; lines: string[]; fixes?: HealthFix[] }
+
+/** A way to fix what a line says: `line` is its index in `lines`. */
+export interface HealthFix {
+  line: number;
+  kind: "coach" | "credits";
+  /** The button's words. */
+  words: string;
+  /** What Coach's message box opens with, for `coach`. */
+  say?: string;
+}
 
 /** How far back health looks, and how many of each. Older work has stopped counting. */
 export const HEALTH_DAYS = 7;
@@ -38,8 +54,13 @@ export const SKIPPED_AT_RISK = 3;
 const CAPS = new Set(["turn_cap", "cost_cap", "max_token"]);
 /** A firing that failed: nothing started, its check couldn't read the app, or its run dropped its work. */
 const FAILED_FIRING = new Set(["failed_unworked", "failed_check", "failed_unfinished"]);
-/** A firing that worked: a run started, or its check read the app and found nothing new or nothing it could take. */
-const GOOD_FIRING = new Set(["run", "quiet", "skipped_too_large"]);
+/**
+ * A firing that worked: a run started, or its check read the app and found nothing new. Not one that found
+ * work too big for a run: kiff/agents sets that work aside for good, so nothing was done (TOO_LARGE_FAILING).
+ */
+const GOOD_FIRING = new Set(["run", "quiet"]);
+/** This many of its newest firings in a row found only work too big for one run: failing. One: at risk. */
+export const TOO_LARGE_FAILING = 2;
 /** A firing skipped because the taf couldn't keep up: it came too late, or its last run was still working. */
 const SKIPPED_FIRING = new Set(["skipped_missed", "skipped_busy"]);
 
@@ -74,8 +95,9 @@ function failed(r: Run): boolean {
 
 /**
  * The taf's health from its recent runs and its schedule's recent firings, both newest first. Only the
- * last HEALTH_DAYS count. Skips for a halt, a version switch or credits, a run paused for its owner and
- * one its owner stopped never count, and neither does an outcome this code doesn't know.
+ * last HEALTH_DAYS count. Skips for a halt or a version switch, a run paused for its owner and one its owner
+ * stopped never count, and neither does an outcome this code doesn't know. Work skipped as too big for a run,
+ * or waiting for credits, is never healthy: it says so, with the way to fix it (healthView).
  */
 export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   const since = now.getTime() - HEALTH_DAYS * 86_400_000;
@@ -104,6 +126,23 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
     else reasons.push(streak.length >= STREAK_FAILING ? { code: "streak", level: "failing", n: streak.length, since: began } : { code: "streak_one", level: "at_risk", since: began });
   }
   if (retrying) reasons.push({ code: "retrying", level: "at_risk" });
+  // Its newest firings that found only work too big for one run: that work is set aside, not done.
+  const tooLarge: Fired[] = [];
+  for (const f of firings) {
+    if (f.outcome !== "skipped_too_large") break;
+    tooLarge.push(f);
+  }
+  if (tooLarge.length) {
+    const began = tooLarge[tooLarge.length - 1]!.due;
+    reasons.push(tooLarge.length >= TOO_LARGE_FAILING ? { code: "too_large", level: "failing", n: tooLarge.length, since: began } : { code: "too_large_one", level: "at_risk", since: began });
+  }
+  // Its newest firings that waited for credits: its work waits too, since the first of them.
+  const credits: Fired[] = [];
+  for (const f of firings) {
+    if (f.outcome !== "skipped_credits") break;
+    credits.push(f);
+  }
+  if (credits.length) reasons.push({ code: "credits", level: "at_risk", since: credits[credits.length - 1]!.due });
   const skipped = firings.filter((f) => SKIPPED_FIRING.has(f.outcome)).length;
   if (skipped >= SKIPPED_AT_RISK) reasons.push({ code: "skipped", level: "at_risk", n: skipped, of: firings.length });
 
@@ -122,9 +161,12 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
 }
 
 /** What happened, in words, with no "what to do": the line the list shows, and the alert's start. */
-export function healthLine(r: HealthReason, lang: Lang = "en"): string {
+export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now = new Date()): string {
   const w = wordsIn(lang);
   switch (r.code) {
+    case "too_large": return w.health_too_large(r.n ?? TOO_LARGE_FAILING);
+    case "too_large_one": return w.health_too_large_one;
+    case "credits": return w.health_credits(timeIn(r.since ?? now.toISOString(), zone, now, lang));
     case "dropped": return w.health_dropped;
     case "streak": return w.health_streak(r.n ?? STREAK_FAILING);
     case "streak_one": return w.health_streak_one;
@@ -147,11 +189,33 @@ function healthDo(r: HealthReason, lang: Lang): string {
     case "streak_one": case "check_failing_one": return w.health_do_wait;
     case "check_failing": return w.health_do_connection;
     case "capped": return w.health_do_limit;
+    case "too_large": case "too_large_one": return w.health_do_narrow;
+    case "credits": return "";
     case "retrying": return "";
   }
 }
 
-/** The level and each reason as a whole line: what happened, then what to do. */
-export function healthView(h: Health, lang: Lang = "en"): HealthView {
-  return { level: h.level, lines: h.reasons.map((r) => [healthLine(r, lang) + ".", healthDo(r, lang)].filter(Boolean).join(" ")) };
+/** Who reads the health, for its fixes: whether they may buy credits (`billing.manage`). */
+export interface Reader {
+  billing?: boolean;
+}
+
+/** The button for a reason, or none: Coach to narrow what the taf reads, or Plan & usage for credits. */
+function healthFix(r: HealthReason, lang: Lang, reader: Reader): Omit<HealthFix, "line"> | undefined {
+  const w = wordsIn(lang);
+  switch (r.code) {
+    case "too_large": case "too_large_one": return { kind: "coach", words: w.health_fix_narrow, say: w.health_fix_narrow_say };
+    case "credits": return { kind: "credits", words: reader.billing ? w.health_fix_credits : w.health_fix_credits_ask };
+    default: return undefined;
+  }
+}
+
+/** The level and each reason as a whole line: what happened, then what to do; and the buttons that fix them. */
+export function healthView(h: Health, lang: Lang = "en", reader: Reader = {}, zone = "UTC", now = new Date()): HealthView {
+  const lines = h.reasons.map((r) => [healthLine(r, lang, zone, now) + ".", healthDo(r, lang)].filter(Boolean).join(" "));
+  const fixes = h.reasons.flatMap((r, line) => {
+    const fix = healthFix(r, lang, reader);
+    return fix ? [{ line, ...fix }] : [];
+  });
+  return { level: h.level, lines, ...(fixes.length ? { fixes } : {}) };
 }

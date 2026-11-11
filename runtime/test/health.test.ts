@@ -80,8 +80,8 @@ describe("a taf's health", () => {
     expect(level([], firings("quiet", "quiet", "quiet", "quiet"))).toBe("healthy");
   });
 
-  it("never counts a skip for a halt, a switch or credits, a run paused for its owner, or one its owner stopped", () => {
-    for (const outcome of ["skipped_halted", "skipped_switching", "skipped_credits", "skipped_by_owner", "waiting", "skipped_replaced", "skipped_dropped"]) {
+  it("never counts a skip for a halt or a switch, a run paused for its owner, or one its owner stopped", () => {
+    for (const outcome of ["skipped_halted", "skipped_switching", "skipped_by_owner", "waiting", "skipped_replaced", "skipped_dropped"]) {
       expect(level([], firings(...Array.from({ length: 20 }, () => outcome))), outcome).toBe("healthy");
     }
     const waits = Array.from({ length: 10 }, (_, i) => run(10 + i, "PAUSED"));
@@ -93,6 +93,34 @@ describe("a taf's health", () => {
     expect(level(needs)).toBe("healthy");
     const retrying = Array.from({ length: 5 }, (_, i) => run(10 + i, "ERROR", { state: "retrying" } as Partial<Run>));
     expect(level(retrying)).toBe("healthy");
+  });
+
+  it("is never healthy when its check found work too big for one run: at risk once, failing twice in a row, with Coach to narrow it", () => {
+    // The wave-1 case: an oversized batch starts no run, and the taf doesn't read healthy.
+    const once = healthOf([ok(60)], firings("skipped_too_large", "run"), NOW);
+    expect(once.level).toBe("at_risk");
+    expect(once.reasons.map((r) => r.code)).toEqual(["too_large_one"]);
+    const twice = healthOf([], firings("skipped_too_large", "skipped_too_large", "run"), NOW);
+    expect(twice).toMatchObject({ level: "failing", reasons: [{ code: "too_large", n: 2 }] });
+    expect(healthView(twice)).toEqual({
+      level: "failing",
+      lines: ["Its last 2 checks found work too big for one run, so nothing ran. Have Coach narrow what it reads, so each piece fits one run."],
+      fixes: [{ line: 0, kind: "coach", words: "Narrow it with Coach", say: "Its last check found work too big for one run. Narrow what it reads, so each piece fits one run." }],
+    });
+    // A firing that ran ends it, as any spell.
+    expect(level([], firings("run", "skipped_too_large", "skipped_too_large"))).toBe("healthy");
+  });
+
+  it("is never healthy while its work waits for credits, with the way to add them, or to ask an admin", () => {
+    const h = healthOf([], firings("skipped_credits", "skipped_credits", "run"), NOW);
+    expect(h).toMatchObject({ level: "at_risk", reasons: [{ code: "credits", since: ago(30) }] });
+    expect(healthView(h, "en", { billing: true }, "UTC", NOW)).toEqual({
+      level: "at_risk", lines: ["Waiting for credits since 09:30."], fixes: [{ line: 0, kind: "credits", words: "Add credits" }],
+    });
+    expect(healthView(h, "en", {}, "UTC", NOW).fixes).toEqual([{ line: 0, kind: "credits", words: "Ask an admin for credits" }]);
+    expect(level([], firings("run", "skipped_credits"))).toBe("healthy");
+    // A reason with no fix carries none, so an app that reads `lines` alone sees what it always did.
+    expect(healthView(healthOf([bad(1), bad(2), bad(3)], [], NOW)).fixes).toBeUndefined();
   });
 
   it("says a scheduled run that never started once, from its schedule, never a second time from its runs", () => {
@@ -184,11 +212,15 @@ describe("a taf's health", () => {
       healthOf([], firings("failed_unfinished", "run"), NOW), healthOf([bad(1), bad(2), bad(3)], [], NOW),
       healthOf([bad(1), ok(2), bad(3), ok(4)], [], NOW), healthOf([capped(1), capped(2), ok(3)], [], NOW),
       healthOf([], firings("skipped_busy", "skipped_busy", "skipped_missed", "run"), NOW), healthOf([], firings("failed_retrying", "run"), NOW),
+      healthOf([], firings("skipped_too_large", "skipped_too_large", "run"), NOW), healthOf([], firings("skipped_too_large", "run"), NOW),
+      healthOf([], firings("skipped_credits", "run"), NOW),
     ];
-    expect(new Set(every.flatMap((h) => h.reasons.map((r) => r.code))).size).toBe(10);
+    expect(new Set(every.flatMap((h) => h.reasons.map((r) => r.code))).size).toBe(13);
     for (const lang of LANGUAGES) {
       for (const h of every) {
-        for (const line of [...healthView(h, lang).lines, ...h.reasons.map((r) => healthLine(r, lang))]) {
+        const view = healthView(h, lang, { billing: true });
+        const fixes = [...(view.fixes ?? []), ...(healthView(h, lang).fixes ?? [])].flatMap((f) => [f.words, f.say ?? "the button's words"]);
+        for (const line of [...view.lines, ...h.reasons.map((r) => healthLine(r, lang)), ...fixes]) {
           expect(line.length, `${lang}: ${line}`).toBeGreaterThan(10);
           expect(line, lang).not.toMatch(/cursor|firing|failed_|skipped_|undefined/i);
           expect(line, lang).not.toMatch(/NaN/);
