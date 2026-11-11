@@ -1182,7 +1182,7 @@
     <string name="home_status">État</string>
     <string name="home_status_retrying">%1$s · nouvel essai</string>
     <string name="home_tafs_shared_you_show">Les tafs partagés avec vous s\'affichent ici.</string>
-    <string name="home_tagline">Ils tafent. Vous kiffez.</string>
+    <string name="home_tagline">They taf. You kiff.</string>
     <string name="home_title">Tafs</string>
     <plurals name="home_working">
         <item quantity="one">%1$s taf en cours.</item>

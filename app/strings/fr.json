@@ -1179,7 +1179,7 @@
   "home.status": "État",
   "home.status_retrying": "{words} · nouvel essai",
   "home.tafs_shared_you_show": "Les tafs partagés avec vous s'affichent ici.",
-  "home.tagline": "Ils tafent. Vous kiffez.",
+  "home.tagline": "They taf. You kiff.",
   "home.title": "Tafs",
   "home.working": {
     "one": "{count} taf en cours.",
