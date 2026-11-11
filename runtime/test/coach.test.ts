@@ -1,6 +1,6 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { COACH_CARDS, COACH_TOOL_GROUPS, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
@@ -291,6 +291,35 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect((await w.tool("run_stop", { taf: RAE, run: run.id })).json).toMatchObject({ status: "CANCELLED" });
     expect((await w.tool("taf_pause", { taf: RAE, action: "pause" })).json).toMatchObject({ schedule: "paused" });
     expect(await w.tool("taf_pause", { taf: "nobody", action: "pause" })).toMatchObject({ isError: true, text: expect.stringContaining("no taf") });
+  });
+
+  it("log one line per call: the tool, how it ended, and the taf's id only when it was named by id", async () => {
+    const w = world();
+    const lines: Array<Record<string, unknown>> = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((s: unknown) => {
+      try { const l = JSON.parse(String(s)); if (l.event === "coach_tool") lines.push(l); } catch { /* another line */ }
+    });
+    try {
+      await w.tool("taf_pause", { taf: RAE, action: "pause" });
+      await w.tool("taf_pause", { taf: "Rae the refunds taf", action: "pause" });
+      await w.tool("tafs_state", {});
+      await w.tool("taf_pause", { taf: RAE, action: "pause" }, { token: "not-a-permit" });
+      const args = { taf: RAE, text: "Refund order 42 for ana@example.com", [OP_ARG]: "op_logged" };
+      await w.rpc("tools/call", { name: "taf_task", arguments: args }, w.permit("taf_task", args));
+      await w.rpc("tools/call", { name: "taf_task", arguments: args }, w.permit("taf_task", args));
+    } finally {
+      spy.mockRestore();
+    }
+    expect(lines).toEqual([
+      { event: "coach_tool", tool: "taf_pause", outcome: "done", taf: RAE },
+      { event: "coach_tool", tool: "taf_pause", outcome: "refused_by_tool" },
+      { event: "coach_tool", tool: "tafs_state", outcome: "done" },
+      { event: "coach_tool", tool: "taf_pause", outcome: "refused", taf: RAE },
+      { event: "coach_tool", tool: "taf_task", outcome: "done", taf: RAE },
+      { event: "coach_tool", tool: "taf_task", outcome: "repeat", taf: RAE },
+    ]);
+    // Never what was asked or answered: no name, no address, no text.
+    expect(JSON.stringify(lines)).not.toMatch(/Rae the refunds|ana@|order 42/);
   });
 
   it("hands a task over as Coach itself, in Coach's own chat with the taf", async () => {
