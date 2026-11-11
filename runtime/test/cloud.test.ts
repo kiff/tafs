@@ -4788,7 +4788,7 @@ describe("a step a taf handed its owner", () => {
       { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
     w.agents.runs.unshift({ tenant: "t_acme", id: "run_step", agent: RAE, session: "sess_step", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
       created: ago(pausedAgo), updated: ago(pausedAgo - 1),
-      requirements: [{ call_id: "c1", tool: "your_step", operation: "op-1", exception: "ho_1", expires: "2026-11-18T17:00:00Z",
+      requirements: [{ call_id: "c1", tool: "your_step", operation: "op-1", exception: "ho_1", expires: new Date(AT.getTime() - pausedAgo * 60_000 + 7 * 24 * 3600_000).toISOString(),
         input: { what: "Approve 3 supplier payments", why: "Your bank asks you to approve transfers yourself", link: "https://app.example.com/r/1" } }] });
     const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
     return { w, deps };
@@ -4802,7 +4802,7 @@ describe("a step a taf handed its owner", () => {
     expect(home.status).toBe(200);
     expect(home.body.your_steps).toEqual([expect.objectContaining({
       handoff: "ho_1", run: "run_step", taf: { id: RAE, name: "Rae" }, what: "Approve 3 supplier payments", link: "https://app.example.com/r/1", link_host: "app.example.com",
-      words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in example.com", line: "Your step: Approve 3 supplier payments" } })]);
+      words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in Example", line: "Your step: Approve 3 supplier payments" } })]);
     const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
     expect(rae.work).toMatchObject({ status: "needs_you", line: "Your step: Approve 3 supplier payments" });
     if (home.body.needs_you) expect(home.body.needs_you.count).toBeGreaterThanOrEqual(1);

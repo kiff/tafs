@@ -22,8 +22,8 @@ describe("Your step: a step a taf handed its owner", () => {
     const [s] = yourStepsOf(run({ requirements: [step()] }));
     expect(s).toMatchObject({
       handoff: "ho_1", run: "r1", what: "Approve 3 supplier payments, €4,210 in all", why: "Your bank asks you to approve transfers yourself",
-      link: "https://app.example.com/requests/r1?token=x", link_host: "app.example.com", since: "2026-11-11T16:00:00Z", expires: "2026-11-18T16:05:00Z",
-      words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in example.com", line: "Your step: Approve 3 supplier payments, €4,210 in all" },
+      link: "https://app.example.com/requests/r1?token=x", link_host: "app.example.com", since: "2026-11-11T16:05:00.000Z", expires: "2026-11-18T16:05:00Z",
+      words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in Example", line: "Your step: Approve 3 supplier payments, €4,210 in all" },
     });
   });
 
@@ -63,7 +63,17 @@ describe("Your step: a step a taf handed its owner", () => {
       if (lang !== "en") expect(w.your_step_skip, lang).not.toBe("Skip it");
     }
     expect(wordsIn("en").your_step_reminder("Approve it")).toBe("Your step is still waiting: Approve it");
-    expect(yourStepsOf(run({ requirements: [step()] }), "fr")[0]!.words).toMatchObject({ title: "Votre étape", done: "Terminé", skip: "Passer", open: "Ouvrir dans example.com" });
+    expect(yourStepsOf(run({ requirements: [step()] }), "fr")[0]!.words).toMatchObject({ title: "Votre étape", done: "Terminé", skip: "Passer", open: "Ouvrir dans Example" });
+  });
+
+  it("names the vendor on the button by its name, and dates the step from KIFF's hand-off, not the run's start", () => {
+    const [s] = yourStepsOf(run({ created: "2026-11-11T09:00:00Z", requirements: [step({ expires: "2026-11-18T16:30:00Z" }, { link: "https://app.stripe.com/payments/1" })] }));
+    expect(s!.words.open).toBe("Open in Stripe");
+    expect(s!.since).toBe("2026-11-11T16:30:00.000Z");
+    // A cloud function's host names no vendor: the host, as it is.
+    expect(yourStepsOf(run({ requirements: [step({}, { link: "https://abc.execute-api.eu-west-1.amazonaws.com/x" })] }))[0]!.words.open).toBe("Open in abc.execute-api.eu-west-1.amazonaws.com");
+    // An expiry that can't be read: the run's start.
+    expect(yourStepsOf(run({ requirements: [step({ expires: "" })] }))[0]!.since).toBe("2026-11-11T16:00:00Z");
   });
 });
 

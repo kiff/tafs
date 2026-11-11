@@ -9,7 +9,8 @@
  * a URL to decide what to show; anything else is no link, only the words. Every word is tafs cloud's, in the
  * person's language.
  */
-import type { Run } from "./agents.js";
+import type { Requirement, Run } from "./agents.js";
+import { vendorName } from "./steps.js";
 import { type Lang, wordsIn } from "./words/index.js";
 
 /** kiff/agents' tool through which a taf hands its owner a step. */
@@ -42,9 +43,21 @@ export function linkHost(link: unknown): string | undefined {
   return u.hostname.toLowerCase();
 }
 
-/** The vendor as the button names it: the host without a leading www. or app. */
+/** How long KIFF waits for the owner's answer: its hand-offs expire a week after they're raised. */
+export const HANDOFF_WAIT_MS = 7 * 24 * 3600_000;
+
+/** The vendor as the button names it: its name from the link's host ("Stripe" for app.stripe.com), else the host without www. or app. */
 function vendorOf(host: string): string {
-  return host.replace(/^(www|app)\./, "");
+  return vendorName(`https://${host}/`) || host.replace(/^(www|app)\./, "");
+}
+
+/**
+ * When the step was handed over: KIFF's hand-off time, a week before it expires, so a run that worked a while
+ * before handing it over isn't reminded early. A requirement without a readable expiry falls back to the run's start.
+ */
+function handedAt(q: Requirement, r: Run): string {
+  const expires = Date.parse(q.expires);
+  return Number.isNaN(expires) ? r.created : new Date(expires - HANDOFF_WAIT_MS).toISOString();
 }
 
 /** The open steps a run waits on, oldest first. */
@@ -61,7 +74,7 @@ export function yourStepsOf(r: Run, lang: Lang = "en"): YourStepView[] {
     out.push({
       handoff: q.exception, run: r.id, what, why,
       ...(host ? { link: (input.link as string).trim(), link_host: host } : {}),
-      since: r.created, expires: q.expires,
+      since: handedAt(q, r), expires: q.expires,
       words: { title: w.your_step_title, done: w.your_step_done, skip: w.your_step_skip, ...(host ? { open: w.your_step_open(vendorOf(host)) } : {}), line: w.your_step_line(what) },
     });
   }
