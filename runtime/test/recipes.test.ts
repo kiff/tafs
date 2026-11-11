@@ -41,6 +41,15 @@ describe("recipes", () => {
     }
   });
 
+  it("takes its categories from the data: recipes/categories.txt orders them, and each has a title in every language", () => {
+    const listed = readFileSync(`${RECIPES_DIR}/categories.txt`, "utf8").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+    // The apps' order is the file's, for the categories the recipes use.
+    expect(CATEGORIES.map((c) => c.id)).toEqual(listed.filter((id) => RECIPES.some((r) => r.category === id)));
+    for (const lang of LANGUAGES) {
+      for (const c of categoriesIn(lang)) expect(c.title, `${lang} ${c.id}`).not.toBe(c.id);
+    }
+  });
+
   it("reads a recipe file: the front matter and the words to say to Coach", () => {
     expect(parseRecipe(FILE, "pay-a-bill.md")).toEqual({
       id: "pay-a-bill", title: "Pay a bill", category: "money", order: 1, line: "Pays one bill.", headline: "Bills paid on time.", today: "Bills wait until someone has the time.",
