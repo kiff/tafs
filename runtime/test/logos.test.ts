@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type dns from "node:dns";
 import { beforeEach, describe, expect, it } from "vitest";
-import { fetchable, fetchSource, forgetRecorded, LOGO_PX, logoFor, logoKey, logoPath, nameLogos, NEW_A_DAY, pngOK, publicAddress, publicLookup, render, type Source, unsafeSVG } from "../src/cloud/logos.js";
+import { fetchable, fetchSource, forgetRecorded, LOGO_PX, logoFor, logoKey, logoPath, nameLogos, NEW_A_DAY, pngOK, publicAddress, publicLookup, render, type Source, unsafeSVG, withoutPublicDoctype } from "../src/cloud/logos.js";
 import { memoryCoach } from "./fakes.js";
 
 const NOW = new Date("2026-11-11T08:00:00Z");
@@ -80,6 +80,19 @@ describe("logos", () => {
     expect(unsafeSVG(hostile["billion laughs"])).toBe("a DOCTYPE or an entity");
     expect(unsafeSVG(hostile["external url()"])).toBe("a url() that points outside");
     expect(unsafeSVG(STRIPE)).toBe("");
+  });
+
+  it("draws an SVG with the public SVG 1.1 DOCTYPE many editors write, and still refuses one that declares anything", async () => {
+    const doctype = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">`;
+    const editor = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${doctype}\n${STRIPE}`;
+    const { store, deps } = setup(svg(editor));
+    await nameLogos(store, [URL_OK], NOW);
+    expect(pngOK((await logoFor(store, logoKey(URL_OK), deps))!.png)).toBe(true);
+    expect(withoutPublicDoctype(editor)).not.toContain("DOCTYPE");
+    // An internal subset is where entities are declared: it stays, and is refused.
+    const subset = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [<!ENTITY a "x">]>${STRIPE}`;
+    expect(unsafeSVG(withoutPublicDoctype(subset))).toBe("a DOCTYPE or an entity");
+    expect(unsafeSVG(withoutPublicDoctype(`<!DOCTYPE svg SYSTEM "file:///etc/passwd">${STRIPE}`))).toBe("a DOCTYPE or an entity");
   });
 
   it("stops a drawing that takes too long", async () => {

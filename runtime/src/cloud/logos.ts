@@ -50,7 +50,8 @@ export function logoPath(key: string): string {
 
 const srcKey = (key: string) => `logo#src#${key}`;
 const pngKey = (key: string) => `logo#png#${key}`;
-const badKey = (key: string) => `logo#bad#${key}`;
+// "bad2": sources refused before a public DOCTYPE was accepted are tried again, not kept blank for a day.
+const badKey = (key: string) => `logo#bad2#${key}`;
 const dayKey = (now: Date) => `logo#new#${now.toISOString().slice(0, 10)}`;
 
 /** Whether a source URL may be fetched: https on the default port, with a host name and no credentials. */
@@ -132,7 +133,9 @@ export async function logoFor(store: CoachStore | undefined, key: string, deps: 
   let png: Uint8Array;
   try {
     png = await drawn(await (deps.fetchSource ?? fetchSource)(src.url), deps.render ?? render);
-  } catch {
+  } catch (err) {
+    // Said in the log, so a logo that stays blank says why; the source's key, never the account.
+    console.warn(JSON.stringify({ event: "logo_refused", key, why: err instanceof Error ? err.message : String(err) }));
     await store.put(badKey(key), { at: now.toISOString() }, new Date(now.getTime() + BAD_MS)).catch(() => undefined);
     return undefined;
   }
@@ -150,7 +153,7 @@ async function drawn(source: Source, draw: (svg: string) => Promise<Uint8Array>)
     return source.bytes;
   }
   if (source.type !== "image/svg+xml") throw new Error(`not an image we draw: ${source.type}`);
-  const svg = new TextDecoder("utf-8", { fatal: true }).decode(source.bytes);
+  const svg = withoutPublicDoctype(new TextDecoder("utf-8", { fatal: true }).decode(source.bytes));
   const why = unsafeSVG(svg);
   if (why) throw new Error(why);
   const png = await draw(svg);
@@ -174,6 +177,15 @@ export function pngOK(b: Uint8Array): boolean {
  * points outside it. Every href is a fragment or an embedded raster image, and every url() a fragment.
  * The renderer loads nothing either way; this refuses such a logo outright.
  */
+/**
+ * The SVG without its public DOCTYPE, the line many editors write (`<!DOCTYPE svg PUBLIC "…" "…">`): it names
+ * the SVG 1.1 DTD, loads nothing and declares nothing. One with an internal subset (`[`), where entities are
+ * declared, is left as it is, so unsafeSVG refuses it.
+ */
+export function withoutPublicDoctype(svg: string): string {
+  return svg.replace(/<!DOCTYPE\s+svg\s+PUBLIC\s+"[^"[\]<>]*"\s+"[^"[\]<>]*"\s*>/i, "");
+}
+
 export function unsafeSVG(svg: string): string {
   if (!/<svg[\s>]/i.test(svg)) return "no svg element";
   if (/<!DOCTYPE|<!ENTITY/i.test(svg)) return "a DOCTYPE or an entity";
