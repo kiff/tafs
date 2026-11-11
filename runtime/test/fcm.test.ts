@@ -52,6 +52,13 @@ describe("the message an Android phone gets", () => {
     expect(m.data).toEqual({ kind: "alert", title: "Refunds", body: "A new email at the door.", open: "taf", taf_id: "taf_9", level: "quiet" });
   });
 
+  it("carries the hand-off of a step handed to the owner, so Android tags its alert by the step", () => {
+    const step: Notification = { kind: "alert", payload: { aps: { alert: { title: "Rae", body: "Your step: Approve 3 supplier payments" } }, open: "taf", taf_id: "taf_9", handoff: "ho_1" }, collapseID: "step-ho_1" };
+    const m = fcmMessage(step, NOW);
+    expect(m.data).toEqual({ kind: "alert", title: "Rae", body: "Your step: Approve 3 supplier payments", open: "taf", taf_id: "taf_9", handoff: "ho_1", level: "quiet" });
+    expect(m.android).toMatchObject({ collapse_key: "step-ho_1" });
+  });
+
   it("is quiet for a phone whose Sound for alerts is off, as it is for an iPhone", () => {
     const quiet = quietFor({ ...phone, silent: true }, hold);
     expect(fcmMessage(quiet, NOW).data.level).toBe("quiet");
