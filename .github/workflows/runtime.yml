@@ -31,6 +31,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # The tests run the TypeScript; Lambda runs the bundle. A bundle that can't load answers 502 to
+      # every route, so it fails here, before main deploys it.
+      - run: npm run bundle-loads
 
   deploy:
     needs: test
