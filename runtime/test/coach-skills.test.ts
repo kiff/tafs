@@ -137,8 +137,8 @@ describe("Coach's core", () => {
     expect(dial).toContain("A taf with a check keeps one timetable: when taf_dial refuses a second one, offer the nearest it names.");
   });
 
-  // The owner's French iPad test: a taf paged through 2,487 open disputes for 4 minutes, its check failed, and
-  // Coach said it was set up (A4).
+  // A taf on a large list paged through it until its cost cap, its first check failed, and Coach called it set up:
+  // size the job first, and never call a taf working after its check failed.
   it("sizes the job before drafting it, and never calls a taf working after its first check failed", () => {
     const body = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Size the job first: make the check's read once (its arguments, limit 1, the total if given); never hand over a check you haven't seen read.");
