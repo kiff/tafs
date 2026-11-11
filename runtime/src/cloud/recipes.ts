@@ -8,13 +8,22 @@ import { RECIPES } from "../recipes.js";
 import type { CatalogApp } from "./connect.js";
 import { type Lang, wordsIn } from "./words/index.js";
 
-const CATEGORY_IDS = ["money", "customers", "operations", "errands"] as const;
+/**
+ * The recipes' categories, in the order the apps show them: as the recipes name them, in recipe order
+ * (recipes/README.md orders them). No list here: a recipe with a new category brings it, and its title
+ * comes from the words, `recipes_category_<id>`, which a test holds in every language.
+ */
+const CATEGORY_IDS: readonly string[] = [...new Set(RECIPES.map((r) => r.category as string))];
+
+/** A category's title in a language: its words, or its id when they're missing. */
+export function categoryTitle(id: string, lang: Lang): string {
+  const title = (wordsIn(lang) as unknown as Record<string, unknown>)[`recipes_category_${id}`];
+  return typeof title === "string" && title ? title : id;
+}
 
 /** The recipes' categories in a language, in the order the apps show them. */
 export function categoriesIn(lang: Lang): Array<{ id: string; title: string }> {
-  const w = wordsIn(lang);
-  const title = { money: w.recipes_category_money, customers: w.recipes_category_customers, operations: w.recipes_category_operations, errands: w.recipes_category_errands };
-  return CATEGORY_IDS.map((id) => ({ id, title: title[id] }));
+  return CATEGORY_IDS.map((id) => ({ id, title: categoryTitle(id, lang) }));
 }
 
 /** The categories in English. */
@@ -152,5 +161,138 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     suggestions: { show: true, reason: "on", words: suggestionWords(lang).on },
     home: { shown: home, words: home ? wordsIn(lang).recipes_home_lead : emptyLine(lang, manages) },
     labels: labelsIn(lang),
+  };
+}
+
+/** One app a recipe needs, as the apps draw it: its name, and its logo's path on tafs cloud when there is one. */
+export interface RecipeApp {
+  name: string;
+  /** A path on tafs cloud (`/v1/logos/{key}`), never a URL: the phones load nothing from anywhere else. */
+  logo?: string;
+}
+
+/** A recipe with its apps, as the gallery and Coach's sheet draw it. */
+export interface RecipeWithApps extends Recipe {
+  /** One per connection: a vendor already connected, else the first the catalog lists, else the recipe's first. */
+  apps: RecipeApp[];
+  /** Every app it needs is connected already. */
+  connected: boolean;
+  /** A taf on the account was built from it: only for someone who manages the account's tafs, who can see them all. */
+  running?: boolean;
+}
+
+/** The catalog by vendor, a connected entry preferred where a vendor has several. */
+function byVendor(catalog: CatalogApp[] | undefined): Map<string, CatalogApp> {
+  const out = new Map<string, CatalogApp>();
+  for (const app of catalog ?? []) {
+    for (const v of vendorOf(app)) {
+      const had = out.get(v);
+      if (!had || (had.state !== "connected" && app.state === "connected")) out.set(v, app);
+    }
+  }
+  return out;
+}
+
+/** For each of a recipe's connections, the catalog entry it would use (a connected one first, else the first listed) and the name to draw. */
+function pickApps(r: Recipe, vendors: Map<string, CatalogApp>): Array<{ app?: CatalogApp; name: string }> {
+  return r.connections.map((group) => {
+    const listed = group.map((v) => vendors.get(fold(v))).filter((a): a is CatalogApp => a !== undefined);
+    const app = listed.find((a) => a.state === "connected") ?? listed[0];
+    return { app, name: app?.title || group[0] || "" };
+  });
+}
+
+/**
+ * Each recipe with its apps. `catalog` is the account's catalog as read (undefined when it couldn't be):
+ * a vendor's name and logo come from its entry. `logos` maps an entry's `icon` to its path on tafs cloud.
+ * `running`, for someone who manages the tafs, is the recipes the account's tafs were built from.
+ */
+export function withApps(recipes: Recipe[], catalog: CatalogApp[] | undefined, logos: Map<string, string>, running?: Set<string>): RecipeWithApps[] {
+  const vendors = byVendor(catalog);
+  return recipes.map((r) => {
+    const picked = pickApps(r, vendors);
+    const apps = picked.map(({ app, name }): RecipeApp => {
+      const logo = app?.icon ? logos.get(app.icon) : undefined;
+      return logo ? { name, logo } : { name };
+    });
+    return { ...r, apps, connected: picked.length > 0 && picked.every((p) => p.app?.state === "connected"),
+      ...(running ? { running: running.has(r.id) } : {}) };
+  });
+}
+
+/** The icons of the catalog entries withApps draws for these recipes, to record as logos. */
+export function iconsFor(recipes: Recipe[], catalog: CatalogApp[] | undefined): string[] {
+  const vendors = byVendor(catalog);
+  return recipes.flatMap((r) => pickApps(r, vendors).flatMap(({ app }) => (app?.icon ? [app.icon] : [])));
+}
+
+/** The strip under the tafs list: a few jobs the account doesn't run yet, in the order the apps draw them. */
+export interface Strip {
+  shown: boolean;
+  title: string;
+  /** Recipe ids, at most STRIP_MAX: every app connected first, then some, then none, each in recipe order. */
+  ids: string[];
+}
+
+/** The most jobs the strip lists. */
+export const STRIP_MAX = 3;
+
+/** The gallery's own words: its title, its "all jobs" heading, and the way to say a job in one's own words. */
+export interface GalleryWords {
+  title: string;
+  all: string;
+  own_words: string;
+  own_words_line: string;
+}
+
+/** What `GET /v1/recipes/gallery` answers: every job the catalog can connect, the strip, and the words to draw them. */
+export interface GalleryView {
+  categories: Array<{ id: string; title: string }>;
+  recipes: RecipeWithApps[];
+  /** False when the catalog couldn't be read: every recipe is listed. */
+  filtered: boolean;
+  strip: Strip;
+  words: GalleryWords;
+  labels: Labels;
+}
+
+/** Where the person and the account stand, for the gallery. */
+export interface GalleryState {
+  /** The person manages the account's tafs (`cards.manage`). */
+  manages: boolean;
+  /** The account has a live taf, Setup aside. */
+  live: boolean;
+  /** The account's "Show suggestions" setting is on. */
+  suggestions: boolean;
+  /** The recipes the account's tafs were built from; read only for someone who manages them. */
+  running?: Set<string>;
+}
+
+/**
+ * The gallery (+ New): every job the catalog can connect, also once a taf is live, whatever "Show
+ * suggestions" says. The strip is shown only to someone who manages the tafs, once the account has a
+ * live taf (before that, Home leads with every job), with suggestions on and a job left to show.
+ */
+export function galleryFor(catalog: CatalogApp[] | undefined, lang: Lang, state: GalleryState, logos: Map<string, string>): GalleryView {
+  const base = recipesFor(catalog, lang, state.manages);
+  const running = state.manages ? state.running ?? new Set<string>() : undefined;
+  const recipes = withApps(base.recipes, catalog, logos, running);
+  const vendors = byVendor(catalog);
+  // Every app connected first, then some, then none.
+  const rank = (r: RecipeWithApps) => {
+    const linked = pickApps(r, vendors).filter((p) => p.app?.state === "connected").length;
+    return r.connected ? 0 : linked > 0 ? 1 : 2;
+  };
+  const left = recipes.filter((r) => !r.running);
+  const ids = left.map((r, i) => ({ r, i })).sort((a, b) => rank(a.r) - rank(b.r) || a.i - b.i).slice(0, STRIP_MAX).map(({ r }) => r.id);
+  const w = wordsIn(lang);
+  const shown = state.manages && state.live && state.suggestions && ids.length > 0;
+  return {
+    categories: base.categories,
+    recipes,
+    filtered: base.filtered,
+    strip: { shown, title: w.gallery_strip_title, ids: shown ? ids : [] },
+    words: { title: w.gallery_title, all: w.gallery_all, own_words: w.gallery_own_words, own_words_line: w.gallery_own_words_line },
+    labels: base.labels,
   };
 }

@@ -6,7 +6,9 @@ the recipe's words, which they can edit before sending. Coach builds the taf fro
 connections and a Card, as for any other request: there is no recipe-specific code anywhere.
 Recipes are suggestions, not finished products: each is tried in Coach on a test account to find
 where Coach falls short, and every gap gets a generic fix (a connection, how Coach picks tools, a
-Card rule), never recipe-specific code. The five starter jobs tafs began with are recipes here.
+Card rule), never recipe-specific code. Three of the five starter jobs tafs began with are recipes here. Bill pay and Access aren't, because
+the apps they connect can't do their Card's work today, and a recipe is only listed when its Card's "does on its own" can be
+done.
 
 One file per recipe, `<id>.md`, with a front matter and the words to say to Coach as the body:
 
@@ -33,7 +35,7 @@ card:
 Handle refund requests from my help desk. Refund in my payment provider up to 150 EUR each…
 ```
 
-- `id` is the file's name. `category` is `money`, `customers`, `operations` or `errands`.
+- `id` is the file's name. `category` is one of the ids in [categories.txt](categories.txt), which orders them; each one's title is in tafs cloud's words, in every language.
 - `order` is the recipe's place in its category, from 1: the apps and kiff.dev/tafs show them
   in that order (refunds leads Money). Two recipes in one category never share a place.
 - `line` says in one line what the taf does. `title` and `line` are what the apps show.

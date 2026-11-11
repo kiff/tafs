@@ -1,0 +1,7 @@
+# The recipes' categories, one id a line, in the order the apps and kiff.dev/tafs show them.
+# A recipe's `category` is one of these. Each id's title is in tafs cloud's words, as
+# recipes_category_<id>, in every language: runtime/test/recipes.test.ts holds it.
+money
+customers
+operations
+errands
