@@ -1126,6 +1126,21 @@
   "halt.now": "Jetzt anhalten",
   "halt.row_running": "Bis zum Fortsetzen stoppen",
   "halt.your_tafs_lower": "deine tafs",
+  "halt_all.description": "Hält jeden taf sofort an. Nichts Neues wird gesendet, bis du sie in tafs fortsetzt.",
+  "halt_all.failed": "tafs konnte deine tafs nicht anhalten. {why} Öffne tafs, um sie anzuhalten.",
+  "halt_all.halted": {
+    "one": "{count} taf angehalten. Nichts Neues wird gesendet, bis du fortsetzt.",
+    "other": "{count} tafs angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
+  },
+  "halt_all.halted_all": "Deine tafs sind angehalten. Nichts Neues wird gesendet, bis du fortsetzt.",
+  "halt_all.halting": {
+    "one": "{count} taf wird angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.",
+    "other": "{count} tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
+  },
+  "halt_all.halting_all": "Deine tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.",
+  "halt_all.running": "tafs konnte deine tafs nicht anhalten. Öffne tafs, um sie anzuhalten.",
+  "halt_all.signed_out": "Du bist bei tafs abgemeldet. Melde dich an, um deine tafs anzuhalten.",
+  "halt_all.title": "Alle tafs anhalten",
   "home.calendar_not_read": "Der Kalender konnte nicht gelesen werden. {why}",
   "home.cant_reach_kiff": "KIFF nicht erreichbar",
   "home.choose_taf": "Wähle einen taf.",
@@ -1878,21 +1893,6 @@
   "sign_in.welcome.title": "They taf.\nYou kiff.",
   "sign_in.with_kiff": "Mit KIFF anmelden",
   "sign_in.your_code": "Dein Code",
-  "siri.halt_all.description": "Hält jeden taf sofort an. Nichts Neues wird gesendet, bis du sie in tafs fortsetzt.",
-  "siri.halt_all.failed": "tafs konnte deine tafs nicht anhalten. {why} Öffne tafs, um sie anzuhalten.",
-  "siri.halt_all.halted": {
-    "one": "{count} taf angehalten. Nichts Neues wird gesendet, bis du fortsetzt.",
-    "other": "{count} tafs angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
-  },
-  "siri.halt_all.halted_all": "Deine tafs sind angehalten. Nichts Neues wird gesendet, bis du fortsetzt.",
-  "siri.halt_all.halting": {
-    "one": "{count} taf wird angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.",
-    "other": "{count} tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
-  },
-  "siri.halt_all.halting_all": "Deine tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.",
-  "siri.halt_all.running": "tafs konnte deine tafs nicht anhalten. Öffne tafs, um sie anzuhalten.",
-  "siri.halt_all.signed_out": "Du bist bei tafs abgemeldet. Melde dich an, um deine tafs anzuhalten.",
-  "siri.halt_all.title": "Alle tafs anhalten",
   "taf.activity.all_apps": "Alle Apps",
   "taf.activity.checking_waits": "Prüft, was auf dich wartet…",
   "taf.activity.reading_notes": "Liest seine Notizen…",

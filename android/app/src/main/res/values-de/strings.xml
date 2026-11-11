@@ -1129,6 +1129,21 @@
     <string name="halt_now">Jetzt anhalten</string>
     <string name="halt_row_running">Bis zum Fortsetzen stoppen</string>
     <string name="halt_your_tafs_lower">deine tafs</string>
+    <string name="halt_all_description">Hält jeden taf sofort an. Nichts Neues wird gesendet, bis du sie in tafs fortsetzt.</string>
+    <string name="halt_all_failed">tafs konnte deine tafs nicht anhalten. %1$s Öffne tafs, um sie anzuhalten.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">%1$s taf angehalten. Nichts Neues wird gesendet, bis du fortsetzt.</item>
+        <item quantity="other">%1$s tafs angehalten. Nichts Neues wird gesendet, bis du fortsetzt.</item>
+    </plurals>
+    <string name="halt_all_halted_all">Deine tafs sind angehalten. Nichts Neues wird gesendet, bis du fortsetzt.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">%1$s taf wird angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.</item>
+        <item quantity="other">%1$s tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Deine tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.</string>
+    <string name="halt_all_running">tafs konnte deine tafs nicht anhalten. Öffne tafs, um sie anzuhalten.</string>
+    <string name="halt_all_signed_out">Du bist bei tafs abgemeldet. Melde dich an, um deine tafs anzuhalten.</string>
+    <string name="halt_all_title">Alle tafs anhalten</string>
     <string name="home_calendar_not_read">Der Kalender konnte nicht gelesen werden. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF nicht erreichbar</string>
     <string name="home_choose_taf">Wähle einen taf.</string>
@@ -1881,21 +1896,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Mit KIFF anmelden</string>
     <string name="sign_in_your_code">Dein Code</string>
-    <string name="siri_halt_all_description">Hält jeden taf sofort an. Nichts Neues wird gesendet, bis du sie in tafs fortsetzt.</string>
-    <string name="siri_halt_all_failed">tafs konnte deine tafs nicht anhalten. %1$s Öffne tafs, um sie anzuhalten.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">%1$s taf angehalten. Nichts Neues wird gesendet, bis du fortsetzt.</item>
-        <item quantity="other">%1$s tafs angehalten. Nichts Neues wird gesendet, bis du fortsetzt.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">Deine tafs sind angehalten. Nichts Neues wird gesendet, bis du fortsetzt.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">%1$s taf wird angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.</item>
-        <item quantity="other">%1$s tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Deine tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.</string>
-    <string name="siri_halt_all_running">tafs konnte deine tafs nicht anhalten. Öffne tafs, um sie anzuhalten.</string>
-    <string name="siri_halt_all_signed_out">Du bist bei tafs abgemeldet. Melde dich an, um deine tafs anzuhalten.</string>
-    <string name="siri_halt_all_title">Alle tafs anhalten</string>
     <string name="taf_activity_all_apps">Alle Apps</string>
     <string name="taf_activity_checking_waits">Prüft, was auf dich wartet…</string>
     <string name="taf_activity_reading_notes">Liest seine Notizen…</string>

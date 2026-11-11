@@ -1126,6 +1126,21 @@
   "halt.now": "Blocca ora",
   "halt.row_running": "Fermalo finché non riprendi",
   "halt.your_tafs_lower": "i tuoi tafs",
+  "halt_all.description": "Blocca tutti i tafs in una volta. Non viene inviato nulla di nuovo finché non li riprendi in tafs.",
+  "halt_all.failed": "tafs non è riuscita a bloccare i tuoi tafs. {why} Apri tafs per bloccarli.",
+  "halt_all.halted": {
+    "one": "{count} taf bloccato. Non viene inviato nulla di nuovo finché non riprendi.",
+    "other": "{count} tafs bloccati. Non viene inviato nulla di nuovo finché non riprendi."
+  },
+  "halt_all.halted_all": "I tuoi tafs sono bloccati. Non viene inviato nulla di nuovo finché non riprendi.",
+  "halt_all.halting": {
+    "one": "Blocco di {count} taf in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto.",
+    "other": "Blocco di {count} tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
+  },
+  "halt_all.halting_all": "Blocco dei tuoi tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto.",
+  "halt_all.running": "tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli.",
+  "halt_all.signed_out": "Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs.",
+  "halt_all.title": "Blocca tutti i tafs",
   "home.calendar_not_read": "Non è stato possibile leggere il calendario. {why}",
   "home.cant_reach_kiff": "Impossibile raggiungere KIFF",
   "home.choose_taf": "Scegli un taf.",
@@ -1878,21 +1893,6 @@
   "sign_in.welcome.title": "They taf.\nYou kiff.",
   "sign_in.with_kiff": "Accedi con KIFF",
   "sign_in.your_code": "Il tuo codice",
-  "siri.halt_all.description": "Blocca tutti i tafs in una volta. Non viene inviato nulla di nuovo finché non li riprendi in tafs.",
-  "siri.halt_all.failed": "tafs non è riuscita a bloccare i tuoi tafs. {why} Apri tafs per bloccarli.",
-  "siri.halt_all.halted": {
-    "one": "{count} taf bloccato. Non viene inviato nulla di nuovo finché non riprendi.",
-    "other": "{count} tafs bloccati. Non viene inviato nulla di nuovo finché non riprendi."
-  },
-  "siri.halt_all.halted_all": "I tuoi tafs sono bloccati. Non viene inviato nulla di nuovo finché non riprendi.",
-  "siri.halt_all.halting": {
-    "one": "Blocco di {count} taf in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto.",
-    "other": "Blocco di {count} tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
-  },
-  "siri.halt_all.halting_all": "Blocco dei tuoi tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto.",
-  "siri.halt_all.running": "tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli.",
-  "siri.halt_all.signed_out": "Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs.",
-  "siri.halt_all.title": "Blocca tutti i tafs",
   "taf.activity.all_apps": "Tutte le app",
   "taf.activity.checking_waits": "Controllo di cosa ti aspetta…",
   "taf.activity.reading_notes": "Lettura delle sue note…",
