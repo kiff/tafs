@@ -6394,6 +6394,7 @@ async function mcpRoute(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
     coachOf: (tenant) => coachOf(tenant, deps), notifyURL: `${self}/v1/runs/ended`,
     run: (name, args, call) => coachTool(name, args, call, deps),
     now: deps.now ?? (() => new Date()), log: (msg, err) => console.error(`${msg}:`, err),
+    called: (line) => console.log(JSON.stringify({ event: "coach_tool", ...line })),
   });
   return r.body === undefined ? { statusCode: r.status, headers: { "cache-control": "no-store" }, body: "" } : json(r.status, r.body);
 }

@@ -195,18 +195,23 @@ struct TafActivityList: View {
     /// (`TafDetailView.pane`), so its work (health and its fixes, its oldest waiting case, Answer
     /// within, skipped firings, requests) and its runs (when it runs next, Run now) are drawn here;
     /// the runs it kept stand for its latest run's report. The older `activity(_:)` view is the
-    /// sample's alone. A taf's knocks are in its chat.
-    enum Part: Hashable { case held, cardUnits, work, runs, retainedRuns }
-    static func parts(cloud: Bool) -> [Part] {
-        cloud ? [.held, .cardUnits, .work, .runs, .retainedRuns] : [.held, .cardUnits, .retainedRuns]
+    /// sample's alone. For whoever manages the taf, its doors' knocks come first (Do it, Pair them,
+    /// Ignore), as Needs you counts them; they're in its chat too, at their times.
+    enum Part: Hashable { case knocks, held, cardUnits, work, runs, retainedRuns }
+    static func parts(cloud: Bool, manages: Bool = false) -> [Part] {
+        guard cloud else { return [.held, .cardUnits, .retainedRuns] }
+        let all: [Part] = [.held, .cardUnits, .work, .runs, .retainedRuns]
+        return manages ? [Part.knocks] + all : all
     }
 
     var body: some View {
         let cache = model.activityPages[model.activityKey(tafID, filter, selection)] ?? SourcePages()
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 14) {
-                ForEach(Self.parts(cloud: model.cloudTaf(for: tafID) != nil), id: \.self) { part in
+                ForEach(Self.parts(cloud: model.cloudTaf(for: tafID) != nil, manages: model.mode == .kiff && model.manages(tafID)), id: \.self) { part in
                     switch part {
+                    case .knocks:
+                        if let doors = model.doors(for: tafID) { TafKnocksPanel(tafID: tafID, doors: doors) }
                     case .held:
                         ForEach(model.heldCalls(for: tafID)) { HeldCallCard(call: $0) }
                     case .cardUnits:
@@ -252,7 +257,9 @@ struct TafActivityList: View {
     }
 }
 
-private struct SourceActivityRow: View {
+/// A call as a taf's Activity draws it: its receipt, and its own next step. The Record's search
+/// and its cases draw their calls with it too.
+struct SourceActivityRow: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     let entry: TafsCloud.ActivityEntry
@@ -319,6 +326,38 @@ private struct NextStepRow: View {
         } else {
             Text(next.words).scaledFont(13).foregroundColor(Theme.soft)
         }
+    }
+}
+
+/// What waits for the owner at the taf's doors, on its Activity (as on Android): strangers' knocks
+/// (Do it, Pair them, Ignore), then a paired sender's message kept from its knock, apart and calmly.
+/// The doors are read when the list opens, and again on tafs cloud's `knock` push.
+struct TafKnocksPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+    @ObservedObject var doors: DoorsModel
+
+    var body: some View {
+        let open = doors.openKnocks.filter { !$0.isLine }
+        let waiting = open.filter { !$0.paired }, paired = open.filter(\.paired)
+        VStack(alignment: .leading, spacing: 14) {
+            if !waiting.isEmpty {
+                Panel(stroke: Theme.amber.opacity(0.45)) {
+                    Eyebrow(text: Words.Door.knocksWaiting, color: Theme.amber)
+                    ForEach(waiting) { KnockCard(knock: $0, taf: model.taf(tafID), doors: doors, compact: true) }
+                }
+            }
+            if !paired.isEmpty {
+                Panel {
+                    Eyebrow(text: Words.Door.paired)
+                    ForEach(paired) { KnockCard(knock: $0, taf: model.taf(tafID), doors: doors, compact: true) }
+                }
+            }
+            if !open.isEmpty, let error = doors.error {
+                Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+            }
+        }
+        .task(id: tafID) { if model.mode == .kiff, !model.doorsOffered.isEmpty { await doors.load() } }
     }
 }
 

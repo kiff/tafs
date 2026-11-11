@@ -49,3 +49,9 @@ tafs cloud logs one line per request (`logRequest` in `handler.ts`): `{event: "r
 route, status, ms}`, with every id in the route masked as `:id`. It never logs a body, a token, a
 query or an id. A check such as "did the phone register for alerts" is read from these lines in the
 function's CloudWatch logs.
+
+Each of Coach's tool calls adds one line (`called` in `coach.ts`): `{event: "coach_tool", tool,
+outcome, taf?}`. `outcome` is `done`, `done_with_error`, `refused_by_tool`, `refused` (no permit, or
+not the account's Coach), `repeat` (a retried operation's kept answer), `busy` or `failed`. `taf` is
+the taf's own id, and only when the call named the taf by its id. It never logs the call's arguments
+or answer, a name, an address or a vendor's id.
