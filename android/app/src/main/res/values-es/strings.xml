@@ -1733,6 +1733,7 @@
     <string name="settings_alerts_off_text">Se desactivaron cuando este teléfono cerró sesión. Actívalas para recibir una alerta cuando un taf te necesite.</string>
     <string name="settings_alerts_off_title_device">Las alertas están desactivadas en este %1$s</string>
     <string name="settings_alerts_off_turn_on">Activar</string>
+    <string name="settings_change_language">Cambiar idioma</string>
     <string name="settings_chargebacks_needs_you">Chargebacks te necesita</string>
     <string name="settings_choose_time_zone">Elegir zona horaria…</string>
     <string name="settings_clear_sample">Borrar el ejemplo</string>
@@ -1771,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Cada una indica a quién se respondió y por qué puerta, nunca sus palabras. Desactívalo en el taf, en Configuración › Los resultados van a.</string>
     <string name="settings_find_time_zone">Buscar una zona horaria</string>
     <string name="settings_kiff_account">Cuenta de KIFF</string>
+    <string name="settings_language_title">Idioma</string>
     <string name="settings_legal">Legal</string>
     <string name="settings_light_taps_when_you_send">Una vibración suave al enviar o responder.</string>
     <string name="settings_mode">Modo</string>

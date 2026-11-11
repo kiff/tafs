@@ -1733,6 +1733,7 @@
     <string name="settings_alerts_off_text">Elles se sont désactivées quand ce téléphone s\'est déconnecté. Activez-les pour recevoir une alerte quand un taf vous attend.</string>
     <string name="settings_alerts_off_title_device">Les alertes sont désactivées sur cet %1$s</string>
     <string name="settings_alerts_off_turn_on">Activer</string>
+    <string name="settings_change_language">Changer de langue</string>
     <string name="settings_chargebacks_needs_you">Chargebacks vous attend</string>
     <string name="settings_choose_time_zone">Choisir un fuseau horaire…</string>
     <string name="settings_clear_sample">Effacer l\'exemple</string>
@@ -1771,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Chacune indique à qui il a été répondu et par quelle porte, jamais son contenu. Désactivez-la dans Configuration du taf › Les résultats vont vers.</string>
     <string name="settings_find_time_zone">Rechercher un fuseau horaire</string>
     <string name="settings_kiff_account">Compte KIFF</string>
+    <string name="settings_language_title">Langue</string>
     <string name="settings_legal">Mentions légales</string>
     <string name="settings_light_taps_when_you_send">Une légère vibration quand vous envoyez ou répondez.</string>
     <string name="settings_mode">Mode</string>

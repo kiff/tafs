@@ -3413,6 +3413,8 @@ enum Words {
             /// Turn on
             static var turnOn: String { Words.line("settings.alerts_off.turn_on") }
         }
+        /// Change language
+        static var changeLanguage: String { Words.line("settings.change_language") }
         /// Chargebacks needs you
         static var chargebacksNeedsYou: String { Words.line("settings.chargebacks_needs_you") }
         /// Choose time zone…
@@ -3493,6 +3495,8 @@ enum Words {
         static var findTimeZone: String { Words.line("settings.find_time_zone") }
         /// KIFF account
         static var kiffAccount: String { Words.line("settings.kiff_account") }
+        /// Language
+        static var languageTitle: String { Words.line("settings.language_title") }
         /// Legal
         static var legal: String { Words.line("settings.legal") }
         /// The light taps when you send or answer.

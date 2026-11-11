@@ -287,6 +287,11 @@ searches across their tafs, opens one case, and exports receipts
 
 ## Words and languages
 
+**Account › Language** shows the lines' language named in itself ("Français", `AppLanguage.name`) and **Change
+language**, which opens the phone's own setting: Android 13+'s per-app language for tafs, which offers the 8 because the
+manifest declares the generated `locales_config` (`android:localeConfig`), else the phone's languages on Android 11 and
+12. There's no picker of the app's own.
+
 **Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
 region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and
 symbol, and is never converted (`Money.figure`, `MoneyFormatTest`). Amounts in KIFF's or tafs cloud's own words are

@@ -1733,6 +1733,7 @@
     <string name="settings_alerts_off_text">They went off when this phone signed out. Turn them on to get an alert when a taf needs you.</string>
     <string name="settings_alerts_off_title_device">Alerts are off on this %1$s</string>
     <string name="settings_alerts_off_turn_on">Turn on</string>
+    <string name="settings_change_language">Change language</string>
     <string name="settings_chargebacks_needs_you">Chargebacks needs you</string>
     <string name="settings_choose_time_zone">Choose time zone…</string>
     <string name="settings_clear_sample">Clear the sample</string>
@@ -1771,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Each sends who was answered and through which door, never its words. Turn it off in the taf\'s Setup › Results go to.</string>
     <string name="settings_find_time_zone">Find a time zone</string>
     <string name="settings_kiff_account">KIFF account</string>
+    <string name="settings_language_title">Language</string>
     <string name="settings_legal">Legal</string>
     <string name="settings_light_taps_when_you_send">The light taps when you send or answer.</string>
     <string name="settings_mode">Mode</string>

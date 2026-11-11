@@ -1853,6 +1853,7 @@ object Words {
       fun titleDevice(device: String): String = Res.s(R.string.settings_alerts_off_title_device, device)
       val turnOn: String get() = Res.s(R.string.settings_alerts_off_turn_on)
     }
+    val changeLanguage: String get() = Res.s(R.string.settings_change_language)
     val chargebacksNeedsYou: String get() = Res.s(R.string.settings_chargebacks_needs_you)
     val chooseTimeZone: String get() = Res.s(R.string.settings_choose_time_zone)
     val clearSample: String get() = Res.s(R.string.settings_clear_sample)
@@ -1895,6 +1896,7 @@ object Words {
     val eachSendsWhoAnsweredThrough: String get() = Res.s(R.string.settings_each_sends_who_answered_through)
     val findTimeZone: String get() = Res.s(R.string.settings_find_time_zone)
     val kiffAccount: String get() = Res.s(R.string.settings_kiff_account)
+    val languageTitle: String get() = Res.s(R.string.settings_language_title)
     val legal: String get() = Res.s(R.string.settings_legal)
     val lightTapsWhenYouSend: String get() = Res.s(R.string.settings_light_taps_when_you_send)
     val mode: String get() = Res.s(R.string.settings_mode)

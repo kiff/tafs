@@ -1733,6 +1733,7 @@
     <string name="settings_alerts_off_text">Ze gingen uit toen deze telefoon werd uitgelogd. Zet ze aan om een melding te krijgen als een taf op jou wacht.</string>
     <string name="settings_alerts_off_title_device">Meldingen staan uit op deze %1$s</string>
     <string name="settings_alerts_off_turn_on">Aanzetten</string>
+    <string name="settings_change_language">Taal wijzigen</string>
     <string name="settings_chargebacks_needs_you">Chargebacks wacht op jou</string>
     <string name="settings_choose_time_zone">Tijdzone kiezen…</string>
     <string name="settings_clear_sample">Het voorbeeld wissen</string>
@@ -1771,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Elke melding vermeldt wie er is beantwoord en via welke deur, nooit de woorden. Zet het uit in Configuratie › Resultaten gaan naar van het taf.</string>
     <string name="settings_find_time_zone">Een tijdzone zoeken</string>
     <string name="settings_kiff_account">KIFF-account</string>
+    <string name="settings_language_title">Taal</string>
     <string name="settings_legal">Juridisch</string>
     <string name="settings_light_taps_when_you_send">Een lichte tik als je verzendt of antwoordt.</string>
     <string name="settings_mode">Modus</string>
