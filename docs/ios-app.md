@@ -199,8 +199,9 @@ the app in sample mode.
 - **Record** (`RecordView`): chips for "All tafs" and each taf (its colour) above the type
   filter, combined with it. Each entry starts with its taf's dot and name; each day's header
   shows that day's spend (`RecordView.spent`, a sum per currency of the money moved).
-- **A taf's tabs** (`TafDetailView`): **Chat · Activity · Card · Setup**. Activity: the taf's
-  Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
+- **A taf's tabs** (`TafDetailView`): **Chat · Activity · Card · Setup**. Activity: for whoever
+  manages it, its doors' knocks first (`TafKnocksPanel`: Do it, Pair them, Ignore, as on Android),
+  then the taf's Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
   Refused). Card: the Card, its limits, how they're counted, usage, Halt, Revoke. Setup: The job
   (Improve in Coach), Starts when, Connected apps (`ConnectionsPanel`: **Choose actions**, through Coach, for one signed in with none chosen, then **Connect an app…**), Results go to, what it
   remembers, Versions, Pause (sample mode) and Remove for good.
