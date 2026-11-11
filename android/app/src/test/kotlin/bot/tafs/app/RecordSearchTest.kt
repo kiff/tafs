@@ -96,8 +96,8 @@ class RecordSearchTest {
       """{"about":"Order 1042","steps":[${hit("s1", "Order 1042")},${hit("s2", "Order 1042")}],"failed":{"id":"s2","words":"The reply to Mara didn't go.","next":{"kind":"try_later","words":"Try later"}}}""",
     )
     m.openRecordCase("Order 1042")
-    // The case's key is sent URL-encoded.
-    assertTrue(transport.requests.last().url.endsWith("/v1/record/cases/Order%201042"))
+    // The case's key is sent URL-encoded. Found by its route, not by being the last request: other reads may land after it.
+    assertTrue(transport.requestsTo("GET /v1/record/cases/Order 1042").single().url.endsWith("/v1/record/cases/Order%201042"))
     val case = m.state.value.recordCase!!
     assertEquals(listOf("s1", "s2"), case.steps.map { it.id })
     assertEquals("The reply to Mara didn't go.", case.failed?.words)
