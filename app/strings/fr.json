@@ -1499,6 +1499,17 @@
   "record.event.someone": "Quelqu'un",
   "record.expired": "Expiré : {summary}",
   "record.expired_detail": "Personne n'a répondu à temps",
+  "record.export_last_days": {
+    "one": "{count} dernier jour",
+    "other": "{count} derniers jours"
+  },
+  "record.export_missing": {
+    "one": "{count} appel n'a pas encore de reçu.",
+    "other": "{count} appels n'ont pas encore de reçu."
+  },
+  "record.export_not_exported": "Impossible de les exporter. {why}",
+  "record.export_preparing": "Préparation des reçus…",
+  "record.export_receipts": "Exporter les reçus",
   "record.extra_room": "Marge supplémentaire par vous · {at} · {summary}",
   "record.extra_room_detail": "Sa Card a obtenu la marge pour ce total, jusqu'à sa remise à zéro. Si l'appel dépasse aussi une limite pour un appel, il est à nouveau retenu pour celle-ci",
   "record.filter.all": "Tout",
@@ -1546,6 +1557,7 @@
     "other": "Aucune nouvelle action ne passe. {count} actions en attente refusées."
   },
   "record.revoked.title": "Vous avez révoqué la Card de {taf}",
+  "record.search_hint": "Rechercher par commande, facture, montant ou action",
   "record.sent_waiting": "{allowed}, et envoyé : en attente de la réponse de l'app",
   "record.show": "Afficher",
   "record.shows_receipt": "Affiche le reçu",

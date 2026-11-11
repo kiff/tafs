@@ -1499,6 +1499,17 @@
   "record.event.someone": "Someone",
   "record.expired": "Expired: {summary}",
   "record.expired_detail": "Nobody answered in time",
+  "record.export_last_days": {
+    "one": "Last {count} day",
+    "other": "Last {count} days"
+  },
+  "record.export_missing": {
+    "one": "{count} call has no receipt yet.",
+    "other": "{count} calls have no receipt yet."
+  },
+  "record.export_not_exported": "They couldn't be exported. {why}",
+  "record.export_preparing": "Preparing receipts…",
+  "record.export_receipts": "Export receipts",
   "record.extra_room": "Extra room by you · {at} · {summary}",
   "record.extra_room_detail": "Its Card got the room for this total, until it resets. Over a limit for one call as well, the call is held again for that",
   "record.filter.all": "All",
@@ -1546,6 +1557,7 @@
     "other": "No new action goes through. {count} waiting actions refused."
   },
   "record.revoked.title": "You revoked {taf|possessive} Card",
+  "record.search_hint": "Search by order, invoice, amount or action",
   "record.sent_waiting": "{allowed}, and sent: waiting for the app's answer",
   "record.show": "Show",
   "record.shows_receipt": "Shows the receipt",

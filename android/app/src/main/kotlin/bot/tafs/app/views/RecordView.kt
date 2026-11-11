@@ -41,6 +41,7 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.RecordEntry.Kind
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 
@@ -95,13 +96,21 @@ internal fun spentOn(entries: List<RecordEntry>): String? {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun RecordView(state: AppState, modifier: Modifier = Modifier) {
+fun RecordView(
+  state: AppState,
+  modifier: Modifier = Modifier,
+  record: RecordActions? = null,
+  tafActions: TafActions? = null,
+  onConnectApps: () -> Unit = {},
+) {
   var filter by rememberSaveable { mutableStateOf(RecordFilter.All) }
   // One taf's Record, or every taf's (null).
   var taf by rememberSaveable { mutableStateOf<String?>(null) }
   // The days whose reads are shown, not folded.
   var openReads by rememberSaveable { mutableStateOf(setOf<String>()) }
   val days = days(state.record, filter, taf)
+  // One case, open from a search: drawn over the Record.
+  state.recordCase?.let { case -> RecordCaseSheet(case, state.recordCaseError, state, tafActions, onClose = { record?.closeCase?.invoke() }, onConnectApps = onConnectApps) }
 
   LazyColumn(
     modifier.fillMaxSize().statusBarsPadding(),
@@ -110,6 +119,30 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
   ) {
     item { ScreenTitle(Words.Record.title) }
     item { Text(Words.Record.lead, style = scaled(14, color = Theme.soft)) }
+    // Signed in: search across the person's tafs, and export receipts for whoever sees every taf's Record.
+    if (record != null && state.mode == bot.tafs.app.app.Mode.kiff) {
+      item(key = "search") {
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        androidx.compose.runtime.LaunchedEffect(Unit) { record.loadHint() }
+        RecordSearchBox(state.recordHint) { q -> scope.launch { record.search(q, false) } }
+      }
+      if (state.seesEveryTaf) item(key = "export") { ExportReceiptsRow(record.export) }
+      state.recordSearch?.let { search ->
+        item(key = "results") {
+          val scope = androidx.compose.runtime.rememberCoroutineScope()
+          RecordResults(
+            search, state, tafActions,
+            onCase = { about -> scope.launch { record.openCase(about) } },
+            onMore = { scope.launch { record.search(search.q, true) } },
+            onConnectApps = onConnectApps,
+          )
+        }
+      }
+    }
+    // While a search is shown, it stands in for the list below.
+    if (record != null && state.recordSearch != null) {
+      return@LazyColumn
+    }
     // Which taf, above what kind: the two combine.
     if (state.tafs.size > 1) {
       item {

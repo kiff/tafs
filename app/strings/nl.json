@@ -1499,6 +1499,17 @@
   "record.event.someone": "Iemand",
   "record.expired": "Verlopen: {summary}",
   "record.expired_detail": "Niemand antwoordde op tijd",
+  "record.export_last_days": {
+    "one": "Afgelopen {count} dag",
+    "other": "Afgelopen {count} dagen"
+  },
+  "record.export_missing": {
+    "one": "{count} aanroep heeft nog geen bon.",
+    "other": "{count} aanroepen hebben nog geen bon."
+  },
+  "record.export_not_exported": "Ze konden niet worden geëxporteerd. {why}",
+  "record.export_preparing": "Bonnen worden voorbereid…",
+  "record.export_receipts": "Bonnen exporteren",
   "record.extra_room": "Extra ruimte door jou · {at} · {summary}",
   "record.extra_room_detail": "Zijn Card kreeg de ruimte voor dit totaal, tot het wordt gereset. Gaat de aanroep ook boven een limiet voor één aanroep, dan wordt hij daarvoor opnieuw vastgehouden",
   "record.filter.all": "Alles",
@@ -1546,6 +1557,7 @@
     "other": "Er gaat geen nieuwe actie meer door. {count} wachtende acties geweigerd."
   },
   "record.revoked.title": "Je hebt de Card van {taf} ingetrokken",
+  "record.search_hint": "Zoek op bestelling, factuur, bedrag of actie",
   "record.sent_waiting": "{allowed}, en verzonden: wacht op het antwoord van de app",
   "record.show": "Tonen",
   "record.shows_receipt": "Toont het ontvangstbewijs",

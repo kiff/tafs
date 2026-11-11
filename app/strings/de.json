@@ -1499,6 +1499,17 @@
   "record.event.someone": "Jemand",
   "record.expired": "Abgelaufen: {summary}",
   "record.expired_detail": "Niemand hat rechtzeitig geantwortet",
+  "record.export_last_days": {
+    "one": "Letzter {count} Tag",
+    "other": "Letzte {count} Tage"
+  },
+  "record.export_missing": {
+    "one": "{count} Aufruf hat noch keinen Beleg.",
+    "other": "{count} Aufrufe haben noch keinen Beleg."
+  },
+  "record.export_not_exported": "Sie konnten nicht exportiert werden. {why}",
+  "record.export_preparing": "Belege werden vorbereitet…",
+  "record.export_receipts": "Belege exportieren",
   "record.extra_room": "Zusatzspielraum von dir · {at} · {summary}",
   "record.extra_room_detail": "Seine Card hat den Spielraum für diese Summe bekommen, bis sie zurückgesetzt wird. Liegt der Aufruf auch über einem Limit für einen Aufruf, wird er dafür erneut zurückgehalten",
   "record.filter.all": "Alle",
@@ -1546,6 +1557,7 @@
     "other": "Keine neue Aktion geht durch. {count} wartende Aktionen abgelehnt."
   },
   "record.revoked.title": "Du hast {taf|possessive} Card widerrufen",
+  "record.search_hint": "Nach Bestellung, Rechnung, Betrag oder Aktion suchen",
   "record.sent_waiting": "{allowed} und gesendet: wartet auf die Antwort der App",
   "record.show": "Zeigen",
   "record.shows_receipt": "Zeigt den Beleg",

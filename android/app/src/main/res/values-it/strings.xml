@@ -1502,6 +1502,17 @@
     <string name="record_event_someone">Qualcuno</string>
     <string name="record_expired">Scaduta: %1$s</string>
     <string name="record_expired_detail">Nessuno ha risposto in tempo</string>
+    <plurals name="record_export_last_days">
+        <item quantity="one">Ultimo %1$s giorno</item>
+        <item quantity="other">Ultimi %1$s giorni</item>
+    </plurals>
+    <plurals name="record_export_missing">
+        <item quantity="one">%1$s chiamata non ha ancora una ricevuta.</item>
+        <item quantity="other">%1$s chiamate non hanno ancora una ricevuta.</item>
+    </plurals>
+    <string name="record_export_not_exported">Non è stato possibile esportarle. %1$s</string>
+    <string name="record_export_preparing">Preparazione delle ricevute…</string>
+    <string name="record_export_receipts">Esporta ricevute</string>
     <string name="record_extra_room">Margine extra da te · %1$s · %2$s</string>
     <string name="record_extra_room_detail">La sua Card ha ricevuto il margine per questo totale, finché non si azzera. Se supera anche un limite per singola chiamata, la chiamata viene trattenuta di nuovo per quello</string>
     <string name="record_filter_all">Tutte</string>
@@ -1549,6 +1560,7 @@
         <item quantity="other">Nessuna nuova azione va a buon fine. %1$s azioni in attesa rifiutate.</item>
     </plurals>
     <string name="record_revoked_title">Hai revocato la Card di %1$s</string>
+    <string name="record_search_hint">Cerca per ordine, fattura, importo o azione</string>
     <string name="record_sent_waiting">%1$s, e inviata: in attesa della risposta dell\'app</string>
     <string name="record_show">Mostra</string>
     <string name="record_shows_receipt">Mostra la ricevuta</string>

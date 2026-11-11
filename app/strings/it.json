@@ -1499,6 +1499,17 @@
   "record.event.someone": "Qualcuno",
   "record.expired": "Scaduta: {summary}",
   "record.expired_detail": "Nessuno ha risposto in tempo",
+  "record.export_last_days": {
+    "one": "Ultimo {count} giorno",
+    "other": "Ultimi {count} giorni"
+  },
+  "record.export_missing": {
+    "one": "{count} chiamata non ha ancora una ricevuta.",
+    "other": "{count} chiamate non hanno ancora una ricevuta."
+  },
+  "record.export_not_exported": "Non è stato possibile esportarle. {why}",
+  "record.export_preparing": "Preparazione delle ricevute…",
+  "record.export_receipts": "Esporta ricevute",
   "record.extra_room": "Margine extra da te · {at} · {summary}",
   "record.extra_room_detail": "La sua Card ha ricevuto il margine per questo totale, finché non si azzera. Se supera anche un limite per singola chiamata, la chiamata viene trattenuta di nuovo per quello",
   "record.filter.all": "Tutte",
@@ -1546,6 +1557,7 @@
     "other": "Nessuna nuova azione va a buon fine. {count} azioni in attesa rifiutate."
   },
   "record.revoked.title": "Hai revocato la Card di {taf}",
+  "record.search_hint": "Cerca per ordine, fattura, importo o azione",
   "record.sent_waiting": "{allowed}, e inviata: in attesa della risposta dell'app",
   "record.show": "Mostra",
   "record.shows_receipt": "Mostra la ricevuta",

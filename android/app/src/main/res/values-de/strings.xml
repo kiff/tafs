@@ -1502,6 +1502,17 @@
     <string name="record_event_someone">Jemand</string>
     <string name="record_expired">Abgelaufen: %1$s</string>
     <string name="record_expired_detail">Niemand hat rechtzeitig geantwortet</string>
+    <plurals name="record_export_last_days">
+        <item quantity="one">Letzter %1$s Tag</item>
+        <item quantity="other">Letzte %1$s Tage</item>
+    </plurals>
+    <plurals name="record_export_missing">
+        <item quantity="one">%1$s Aufruf hat noch keinen Beleg.</item>
+        <item quantity="other">%1$s Aufrufe haben noch keinen Beleg.</item>
+    </plurals>
+    <string name="record_export_not_exported">Sie konnten nicht exportiert werden. %1$s</string>
+    <string name="record_export_preparing">Belege werden vorbereitet…</string>
+    <string name="record_export_receipts">Belege exportieren</string>
     <string name="record_extra_room">Zusatzspielraum von dir · %1$s · %2$s</string>
     <string name="record_extra_room_detail">Seine Card hat den Spielraum für diese Summe bekommen, bis sie zurückgesetzt wird. Liegt der Aufruf auch über einem Limit für einen Aufruf, wird er dafür erneut zurückgehalten</string>
     <string name="record_filter_all">Alle</string>
@@ -1549,6 +1560,7 @@
         <item quantity="other">Keine neue Aktion geht durch. %1$s wartende Aktionen abgelehnt.</item>
     </plurals>
     <string name="record_revoked_title">Du hast %2$s Card widerrufen</string>
+    <string name="record_search_hint">Nach Bestellung, Rechnung, Betrag oder Aktion suchen</string>
     <string name="record_sent_waiting">%1$s und gesendet: wartet auf die Antwort der App</string>
     <string name="record_show">Zeigen</string>
     <string name="record_shows_receipt">Zeigt den Beleg</string>

@@ -1502,6 +1502,17 @@
     <string name="record_event_someone">Quelqu\'un</string>
     <string name="record_expired">Expiré : %1$s</string>
     <string name="record_expired_detail">Personne n\'a répondu à temps</string>
+    <plurals name="record_export_last_days">
+        <item quantity="one">%1$s dernier jour</item>
+        <item quantity="other">%1$s derniers jours</item>
+    </plurals>
+    <plurals name="record_export_missing">
+        <item quantity="one">%1$s appel n\'a pas encore de reçu.</item>
+        <item quantity="other">%1$s appels n\'ont pas encore de reçu.</item>
+    </plurals>
+    <string name="record_export_not_exported">Impossible de les exporter. %1$s</string>
+    <string name="record_export_preparing">Préparation des reçus…</string>
+    <string name="record_export_receipts">Exporter les reçus</string>
     <string name="record_extra_room">Marge supplémentaire par vous · %1$s · %2$s</string>
     <string name="record_extra_room_detail">Sa Card a obtenu la marge pour ce total, jusqu\'à sa remise à zéro. Si l\'appel dépasse aussi une limite pour un appel, il est à nouveau retenu pour celle-ci</string>
     <string name="record_filter_all">Tout</string>
@@ -1549,6 +1560,7 @@
         <item quantity="other">Aucune nouvelle action ne passe. %1$s actions en attente refusées.</item>
     </plurals>
     <string name="record_revoked_title">Vous avez révoqué la Card de %1$s</string>
+    <string name="record_search_hint">Rechercher par commande, facture, montant ou action</string>
     <string name="record_sent_waiting">%1$s, et envoyé : en attente de la réponse de l\'app</string>
     <string name="record_show">Afficher</string>
     <string name="record_shows_receipt">Affiche le reçu</string>

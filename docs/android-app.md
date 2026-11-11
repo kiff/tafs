@@ -259,6 +259,31 @@ icons dark on the light ground and light on the dark one when the choice changes
 | `views/` | One file per screen or feature: `HomeView`, `TafDetailView`, `TafChatView`, `CoachViews`, `CoachChats`, `NeedsYouView`, `RecordView`, `ReceiptSheet`, `UsageViews`, `TaskRequestViews`, `SettingsView`, `PeopleViews`, `ShareViews`, `DevicesView`, `DoorViews`, `SetupViews`, `EventApproval`, `VersionViews`, `HaltViews`, `AttachViews`, `MicButton`… |
 | `design/` | `Theme` (colours, the amber accent, type), `Components`, `MarkdownText` |
 
+## The Record
+
+The Record tab lists every call the person's tafs made, by day (`RecordView`). Signed in, it also
+searches across their tafs, opens one case, and exports receipts
+([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`, `/v1/record/receipts`;
+`RecordSearchViews.kt`, `AppModel.searchRecord`):
+
+- **Search:** the box's placeholder is tafs cloud's `hint` ("Search by order, invoice, amount or
+  action"), read once when the tab opens; the app's own line stands in until it comes. Search
+  sends what's typed. The results take the list's place: tafs cloud's `groups`, each call drawn as
+  its taf's Activity draws it (`SourceActivityRow`, with its receipt and its own next step) under
+  its taf's name, and **More** for `next_cursor`. A cursor tafs cloud refuses (409, a call made
+  since) searches again. Nothing found shows `none_words`. Clearing the box shows the Record as
+  before. Never by a customer's name: KIFF keeps none.
+- **One case:** a call with an `about` ("Order 1042 ›") opens a sheet with every call about the
+  same thing, oldest first. The step that didn't go through is named first, in tafs cloud's words
+  (`failed.words`), and its own next step on its row is the only retry, through the taf under its
+  Card. The Record never sends anything again itself.
+- **Export receipts,** for someone who oversees or manages every taf (`AppState.seesEveryTaf`;
+  tafs cloud's 403 still decides): Last 7, 30 or 90 days, inside tafs cloud's 92, counted in the
+  account's zone as tafs cloud counts them, not the phone's. Two files go to
+  the share sheet (`shareReceipts`): tafs cloud's answer byte for byte as JSON, so KIFF's receipts
+  are exactly as issued, never re-encoded, and its CSV. They live only in the app's cache and are
+  replaced at each export. `missing` shows as a line ("2 calls have no receipt yet.").
+
 ## Words and languages
 
 Every line the app writes itself is in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file

@@ -180,6 +180,16 @@ internal fun allows(capabilities: List<String>?, capability: String): Boolean = 
 data class Relink(val userCode: String, val link: String)
 
 /** What the screens draw. */
+/** A search of the Record: what was asked, the pages read so far, and whether one is on its way or failed. */
+data class RecordSearch(
+  val q: String,
+  val pages: List<bot.tafs.app.kiff.RecordSearchPage> = emptyList(),
+  val loading: Boolean = false,
+  val error: String? = null,
+) {
+  val nextCursor: String? get() = pages.lastOrNull()?.nextCursor
+}
+
 data class AppState(
   val mode: Mode = Mode.signedOut,
   /** Where the owner left off has been looked up: until then no screen draws, so none flashes up wrongly. */
@@ -462,6 +472,14 @@ data class AppState(
   val tafSetupErrors: Map<String, String> = emptyMap(),
   val activityPages: Map<String, SourcePages<bot.tafs.app.kiff.TafActivityPage>> = emptyMap(),
   val runPages: Map<String, SourcePages<bot.tafs.app.kiff.TafRunsPage>> = emptyMap(),
+  /** The Record's search box words, as tafs cloud says them ("Search by order, invoice, amount or action"); null until read. */
+  val recordHint: String? = null,
+  /** The Record searched across the person's tafs; null while nothing is searched. */
+  val recordSearch: RecordSearch? = null,
+  /** The case open from a search: every call about the same thing, oldest first. */
+  val recordCase: bot.tafs.app.kiff.RecordCase? = null,
+  /** Why the case couldn't be read, in words. */
+  val recordCaseError: String? = null,
   /** Where a tapped alert asked to go ("needs-you", "usage"), until the screen has gone there. */
   val requestedOpen: String? = null,
   /** The doors tafs cloud offers this account: none, and no taf shows Doors. */
@@ -631,6 +649,14 @@ data class AppState(
    */
   val mayUseCoach: Boolean
     get() = mode == Mode.kiff && (access[COACH_AGENT]?.use ?: (kiffAccount?.capabilities?.contains("members.manage") ?: false))
+
+  /** Whether this person sees every taf's Record (oversees or manages each), which the receipts export needs; tafs cloud still decides. */
+  val seesEveryTaf: Boolean
+    get() = mode == Mode.kiff && tafs.any { it.cloudId != null } &&
+      tafs.filter { it.cloudId != null }.all { access[it.id]?.let { a -> a.oversee || a.manage } == true }
+
+  /** The app's taf for tafs cloud's id, when the person has it on Home. */
+  fun tafByCloudId(cloudId: String): Taf? = tafs.firstOrNull { it.cloudId == cloudId }
 
   /** Coach's chat drawn as a taf, so the one chat screen serves both. */
   private fun coachTaf(chatId: String): Taf? {
@@ -3214,6 +3240,76 @@ class AppModel(
   private fun knobError(tafId: String, words: String): Boolean {
     _state.update { it.copy(knobErrors = it.knobErrors + (tafId to words)) }
     return false
+  }
+
+  /** The Record's search box words, read once from tafs cloud; the app's own stand in until they come. */
+  suspend fun loadRecordHint() {
+    if (_state.value.mode != Mode.kiff || _state.value.recordHint != null) return
+    val hint = try { cloud.searchRecord("", limit = 1).hint } catch (e: CancellationException) { throw e } catch (_: Exception) { return }
+    if (hint.isNotBlank()) _state.update { it.copy(recordHint = hint) }
+  }
+
+  /**
+   * Searches the Record across the person's tafs (`GET /v1/record?q=`). A blank [q] clears the search and shows the Record as before.
+   * [more] reads the next page of the same search; a cursor tafs cloud refuses (409, a call made since) searches again from the top.
+   */
+  suspend fun searchRecord(q: String, more: Boolean = false) {
+    if (_state.value.mode != Mode.kiff) return
+    val asked = q.trim()
+    if (asked.isEmpty()) { _state.update { it.copy(recordSearch = null) }; return }
+    val current = _state.value.recordSearch?.takeIf { it.q == asked }
+    if (more && (current == null || current.loading || current.nextCursor == null)) return
+    val cursor = if (more) current?.nextCursor else null
+    _state.update { it.copy(recordSearch = (if (more) current!! else RecordSearch(asked)).copy(loading = true, error = null)) }
+    val generation = accountGeneration
+    val page = try {
+      cloud.searchRecord(asked, cursor)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: CloudError) {
+      if (generation != accountGeneration) return
+      if (more && e.status == 409) { searchRecord(asked); return }
+      _state.update { s -> s.copy(recordSearch = s.recordSearch?.takeIf { it.q == asked }?.copy(loading = false, error = ErrorWords.of(e))) }
+      return
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { s -> s.copy(recordSearch = s.recordSearch?.takeIf { it.q == asked }?.copy(loading = false, error = ErrorWords.of(e))) }
+      return
+    }
+    if (generation != accountGeneration) return
+    _state.update { s ->
+      val now = s.recordSearch?.takeIf { it.q == asked } ?: return@update s
+      s.copy(recordSearch = now.copy(pages = (if (more) now.pages else emptyList()) + page, loading = false, error = null), recordHint = page.hint.ifBlank { s.recordHint ?: "" }.ifBlank { null })
+    }
+  }
+
+  /** Opens one case from the Record: every call about [about], oldest first, and the step that didn't go through. */
+  suspend fun openRecordCase(about: String) {
+    if (_state.value.mode != Mode.kiff || about.isBlank()) return
+    val generation = accountGeneration
+    _state.update { it.copy(recordCase = bot.tafs.app.kiff.RecordCase(about), recordCaseError = null) }
+    val case = try {
+      cloud.recordCase(about)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(recordCaseError = ErrorWords.of(e)) }
+      return
+    }
+    if (generation == accountGeneration) _state.update { s -> if (s.recordCase?.about == about) s.copy(recordCase = case) else s }
+  }
+
+  fun closeRecordCase() = _state.update { it.copy(recordCase = null, recordCaseError = null) }
+
+  /** The receipts of [from] to [to] for an accountant, as tafs cloud exports them; why not, in words, when it can't. */
+  suspend fun exportReceipts(from: String, to: String): ReceiptsResult {
+    if (_state.value.mode != Mode.kiff) return ReceiptsResult.NotExported(Words.Error.signInFirst)
+    return try {
+      ReceiptsResult.Ready(cloud.exportReceipts(from, to))
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      ReceiptsResult.NotExported(ErrorWords.of(e))
+    }
   }
 
   /**
@@ -6743,4 +6839,10 @@ fun AppState.tafsUsing(grant: bot.tafs.app.kiff.Grant, except: String? = null): 
     t.id != except && t.state != TafState.revoked && !t.card.revoked &&
       (t.card.rules.any { it.action in actions } || t.tools.any { it in actions })
   }
+}
+
+/** A receipts export: the files to offer, or why it couldn't be made. */
+sealed interface ReceiptsResult {
+  data class Ready(val export: bot.tafs.app.kiff.ReceiptsExport) : ReceiptsResult
+  data class NotExported(val why: String) : ReceiptsResult
 }
