@@ -11,6 +11,7 @@ import { type ActivityCall, heldCards, improveContext, ownerWords, recentCalls }
 import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
+import { RECIPES } from "../src/recipes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -318,6 +319,93 @@ describe("tafs cloud", () => {
       .toEqual({ shown: false, words: "Aucun taf pour l'instant. Connectez une app pour configurer votre premier taf." });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } })).body.suggestions.show).toBe(true);
     expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.shown).toBe(true);
+  });
+
+  it("serves the gallery at any time, each job with its apps and logos from tafs cloud, and the strip under the tafs list", async () => {
+    const w = world();
+    for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k);
+    const coach = memoryCoach(() => new Date());
+    // A catalog that lists every recipe's vendors, with Stripe and Gmail connected.
+    const vendors = [...new Set(RECIPES.flatMap((r) => r.connections.flat() as string[]))];
+    const entries = vendors.map((v) => ({ entry: `connector:composio:${v}`, title: v[0]!.toUpperCase() + v.slice(1), how: "oauth", icon: `https://logos.composio.dev/api/${v}`,
+      ...(v === "stripe" || v === "gmail" ? { state: "connected" } : {}) }));
+    const fetched: string[] = [];
+    const deps = { ...depsOf(w), coach, planqueBase: "https://planque.test",
+      logos: { fetchSource: async (url: string) => { fetched.push(url); return { type: "image/svg+xml", bytes: new TextEncoder().encode(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 2h20v20H2z"/></svg>`) }; } },
+      fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
+        ? new Response(JSON.stringify({ entries }), { status: 200 })
+        : depsOf(w).fetch!(url, init)) as Deps["fetch"] };
+    const get = async (path: string, token?: string, headers: Record<string, string> = {}) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method: "GET" } }, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...headers } }, deps);
+      return { status: r.statusCode, headers: r.headers, raw: r, body: r.headers["content-type"] === "image/png" ? undefined : JSON.parse(r.body) };
+    };
+    expect((await get("/v1/recipes/gallery")).status).toBe(401);
+    expect((await get("/v1/recipes/gallery", "key_rae")).status).toBe(403);
+
+    // No taf yet: every job, and no strip (Home leads with them all).
+    const first = (await get("/v1/recipes/gallery", "ana")).body;
+    expect(first.recipes.map((r: { id: string }) => r.id)).toEqual(RECIPES.map((r) => r.id));
+    expect(first.filtered).toBe(true);
+    expect(first.strip).toEqual({ shown: false, title: "More jobs to hand off", ids: [] });
+    expect(first.words).toEqual({ title: "New taf", all: "All jobs", own_words: "Say it in your own words", own_words_line: "Coach builds the taf with you." });
+    expect(first.labels).toEqual({ allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" });
+    const refunds = first.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit");
+    // A connected vendor is drawn for its connection, and every logo is a path on tafs cloud.
+    expect(refunds.apps.map((a: { name: string }) => a.name)).toEqual(["Gmail", "Stripe"]);
+    for (const a of refunds.apps) expect(a.logo).toMatch(/^\/v1\/logos\/[0-9a-f]{32}$/);
+    expect(refunds.connected).toBe(true);
+    expect(JSON.stringify(first)).not.toContain("logos.composio.dev");
+
+    // A live taf built from refunds: the gallery still lists every job; /v1/recipes keeps its meaning (empty).
+    await w.tafs.put("t_acme", { id: "taf-aaaaaaaaaaaaaaaaaaaa", name: "Refunds", job: "custom", kiffAgent: "rae", nameClaim: "c", created: "2026-11-10T09:00:00Z", recipe: "refunds-within-a-limit" });
+    const live = (await get("/v1/recipes/gallery", "ana")).body;
+    expect(live.recipes).toHaveLength(RECIPES.length);
+    expect(live.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit").running).toBe(true);
+    expect((await get("/v1/recipes", "ana")).body).toMatchObject({ recipes: [], shown: false });
+    // The strip: at most 3, never one that's running, every app connected first, then some, then none.
+    expect(live.strip.shown).toBe(true);
+    expect(live.strip.ids.length).toBeGreaterThan(0);
+    expect(live.strip.ids.length).toBeLessThanOrEqual(3);
+    expect(live.strip.ids).not.toContain("refunds-within-a-limit");
+    const rank = (id: string) => {
+      const r = live.recipes.find((x: { id: string }) => x.id === id);
+      const linked = r.connections.filter((g: string[]) => g.some((v) => v === "stripe" || v === "gmail")).length;
+      return r.connected ? 0 : linked > 0 ? 1 : 2;
+    };
+    const ranks = live.strip.ids.map(rank);
+    expect(ranks).toEqual([...ranks].sort());
+
+    // Someone who doesn't manage the tafs: every job, no strip, and nothing about which tafs exist.
+    const viewer = (await get("/v1/recipes/gallery", "viewer")).body;
+    expect(viewer.recipes).toHaveLength(RECIPES.length);
+    expect(viewer.strip.shown).toBe(false);
+    expect(viewer.recipes.some((r: Record<string, unknown>) => "running" in r)).toBe(false);
+
+    // Suggestions off: the gallery stays, the strip goes.
+    await coach.put("t_acme#suggestions", { show: false }, new Date(Date.now() + 86_400_000));
+    const off = (await get("/v1/recipes/gallery", "ana")).body;
+    expect(off.recipes).toHaveLength(RECIPES.length);
+    expect(off.strip).toMatchObject({ shown: false, ids: [] });
+
+    // In the person's language.
+    const de = (await get("/v1/recipes/gallery", "ana", { "Accept-Language": "de" })).body;
+    expect(de.words.own_words).toBe("Sag es in deinen eigenen Worten");
+    expect(de.strip.title).toBe("Weitere Aufgaben zum Abgeben");
+
+    // The logo itself: no session needed, a PNG, fetched once by tafs cloud; an unknown key is a 404.
+    const logo = await get(refunds.apps[1].logo);
+    expect(logo.status).toBe(200);
+    expect(logo.headers).toMatchObject({ "content-type": "image/png", "cache-control": "public, max-age=604800" });
+    expect(logo.raw.isBase64Encoded).toBe(true);
+    expect(Buffer.from(logo.raw.body, "base64").subarray(1, 4).toString()).toBe("PNG");
+    await get(refunds.apps[1].logo);
+    expect(fetched).toEqual(["https://logos.composio.dev/api/stripe"]);
+    expect((await get(`/v1/logos/${"0".repeat(32)}`)).status).toBe(404);
+
+    // Connect apps: each app's logo as a path on tafs cloud, and planque's icon URL never passed on.
+    const apps = (await get("/v1/connect/apps", "ana")).body;
+    expect(apps.apps.find((a: { entry: string }) => a.entry === "connector:composio:stripe").logo).toMatch(/^\/v1\/logos\/[0-9a-f]{32}$/);
+    expect(apps.apps.some((a: Record<string, unknown>) => "icon" in a)).toBe(false);
   });
 
   it("serves the recipes to a person, filtered to what the account's catalog can connect (kiff/tafs#476)", async () => {

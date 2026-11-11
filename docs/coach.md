@@ -646,7 +646,8 @@ one with `shown: false` and the words why. A manager turns them off for good wit
 `PUT /v1/me/suggestions {show: false}` (on by default). The apps draw only what comes.
 
 The source is one file per recipe in [`recipes/`](../recipes/README.md): its title, category
-(money, customers, operations, errands), the problem it ends (`headline`) and what that costs
+(one of the ids in [`recipes/categories.txt`](../recipes/categories.txt), which orders them; each
+id's title is in tafs cloud's words, in every language), the problem it ends (`headline`) and what that costs
 today (`today`), one line on what the taf does, the vendors each
 connection needs (any of several where one stands in for another), what its Card allows, holds and
 never does, in words. Each recipe's words are also in the seven other languages the apps speak,
@@ -658,6 +659,23 @@ the suggestions words. It also says whether **Home** leads with them (`home: {sh
 while the list is shown, for a person who manages the account's tafs (`cards.manage`), and with
 at least one recipe listed. Otherwise `home.words` is Home's empty line, so a catalog that connects
 none of them, or suggestions turned off, leave Home as it was.
+
+### The gallery
+
+Once the first taf is live, the recipes are still one tap away. Two ways in, both drawn from
+`GET /v1/recipes/gallery`, which tafs cloud decides and the apps only draw:
+
+- **+ New** on Tafs opens the gallery: the category chips, every job the catalog can connect, and
+  **Say it in your own words**, which opens Coach empty. It's there at any time, whatever "Show
+  suggestions" says.
+- **The strip** under the tafs list shows up to three jobs the account doesn't run yet, the ones
+  whose apps are already connected first. Only for someone who manages the tafs, once a taf is
+  live, with suggestions on. A taf made before tafs kept its `recipe` can't be matched, so it
+  leaves nothing out.
+
+Each job shows its apps, one per connection, with the app's logo next to its name ([api.md](api.md#logos)):
+tafs cloud fetches, checks and keeps each logo, and the phones load it only from tafs cloud. A job
+tapped in the gallery or the strip opens the same sheet as on Home, with the same `labels`.
 
 tafs cloud serves them at `GET /v1/recipes` ([api.md](api.md#recipes), `runtime/src/cloud/recipes.ts`):
 the recipes whose every connection has a vendor the account's catalog lists, read from planque

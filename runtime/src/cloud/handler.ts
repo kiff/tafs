@@ -23,7 +23,8 @@ import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
-import { noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions } from "./recipes.js";
+import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
+import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
@@ -93,6 +94,8 @@ import { RECIPES } from "../recipes.js";
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
+ *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
+ *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
  *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
  *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
@@ -163,6 +166,8 @@ export interface HTTPResult {
   statusCode: number;
   headers: Record<string, string>;
   body: string;
+  /** The body is base64 of bytes (a logo's PNG): the function URL sends the bytes. */
+  isBase64Encoded?: boolean;
 }
 
 /** What tafs cloud calls on kiff/agents. */
@@ -223,6 +228,8 @@ export interface Deps {
    * Missing: the tools aren't served here.
    */
   coach?: CoachStore;
+  /** How logos are fetched and drawn (logos.ts): the real ones when missing. */
+  logos?: LogoDeps;
   /** KIFF's permit keys, by kid; missing, the ones KIFF publishes. */
   permitKeys?: PermitKeys;
   /** A taf's doors: where work reaches it from outside the app. Missing: no doors here. */
@@ -546,7 +553,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats coach components connect continue conversation drive " +
   "activity delete deletions deliveries doors door email whatsapp ended estimate events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
-  "memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
+  "logos gallery recipes memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
 
 /**
@@ -583,6 +590,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const parts = event.rawPath.split("/").filter(Boolean);
   if (parts[0] !== "v1") throw new HTTPError(404, "not found");
 
+  // An app's logo: no session, as image loaders send none; only keys tafs cloud recorded are served.
+  if (method === "GET" && parts.length === 3 && parts[1] === "logos") return logoRoute(parts[2]!, deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "jobs") {
     return { jobs: JOBS.map((j) => ({ id: j.id, name: j.name, summary: j.summary, cron: j.cron })) };
   }
@@ -642,6 +651,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
+  if (method === "GET" && parts.length === 3 && parts[1] === "recipes" && parts[2] === "gallery") return gallery(event, await person(event, deps), deps);
   if (parts.length === 3 && parts[1] === "me" && parts[2] === "suggestions" && (method === "GET" || method === "PUT")) {
     // The account's "Show suggestions" setting (kiff/tafs#476): on by default; a manager turns it off for good.
     const me = await person(event, deps);
@@ -7090,7 +7100,10 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
           { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined }),
         removedTafs(event, me, deps),
       ]);
-      return { ...page, removed_tafs: removed };
+      // Each app's logo as a path on tafs cloud, and never planque's icon URL: no phone loads anything from a third party.
+      const logos = await nameLogos(deps.coach, page.apps.map((a) => a.icon), new Date());
+      const apps = page.apps.map(({ icon, ...app }) => (icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app));
+      return { ...page, apps, removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");
@@ -7185,10 +7198,41 @@ async function suggestionsOf(me: KIFFIdentity, deps: Deps, lang: Lang): Promise<
 }
 
 /**
+ * The account's whole catalog, read with the person's own session: the reviewed entries, then the managed
+ * provider's apps, a page at a time. Undefined when it can't be read whole: a catalog longer than the pages
+ * read, or planque not answering. A recipe is never hidden for a vendor on a page that wasn't read.
+ */
+async function wholeCatalog(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<CatalogApp[] | undefined> {
+  if (!deps.planqueBase) return undefined;
+  try {
+    const apps: CatalogApp[] = [];
+    let page: { cursor?: string; provider?: string } = {};
+    for (let i = 0; i < CATALOG_PAGES; i++) {
+      const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
+      apps.push(...got.apps);
+      if (!got.next_cursor && !got.partial) return apps;
+      if (got.partial) return undefined;
+      page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
+    }
+    return undefined;
+  } catch (err) {
+    if (!(err instanceof ConnectError)) throw err;
+    return undefined;
+  }
+}
+
+/** The recipes the account's tafs were built from (#671 keeps it on the taf): Setup and tafs being removed aside. */
+async function runningRecipes(me: KIFFIdentity, deps: Deps): Promise<{ live: boolean; running: Set<string> }> {
+  const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => t.job !== SETUP_JOB && !t.removing);
+  return { live: tafs.length > 0, running: new Set(tafs.flatMap((t) => (t.recipe ? [t.recipe] : []))) };
+}
+
+/**
  * Recipes (docs/coach.md, "Recipes"): the recipes whose connections the account's catalog can
  * make, read with the person's own session, in their language. When the catalog can't be read, every
  * recipe is listed and `filtered` says so: a new person still opens Coach to recipes, and Coach says
- * what it can't connect.
+ * what it can't connect. Each recipe also carries its apps with their logos, and `connected`; `running`
+ * only for someone who manages the tafs.
  */
 async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
   const lang = langOf(event);
@@ -7198,29 +7242,40 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   // list is empty and the words say why, so the apps draw only what comes.
   const suggestions = await suggestionsOf(me, deps, lang);
   if (suggestions.reason !== "on") return noRecipes(suggestions, lang, manages);
-  let apps: CatalogApp[] | undefined;
-  if (deps.planqueBase) {
-    try {
-      apps = [];
-      let page: { cursor?: string; provider?: string } = {};
-      // The whole catalog: the reviewed entries, then the managed provider's apps, a page at a time.
-      // A catalog longer than the pages read isn't filtered on: a recipe is never hidden for a vendor
-      // on a page that wasn't read, so every recipe is listed and `filtered` says so.
-      let whole = false;
-      for (let i = 0; i < CATALOG_PAGES; i++) {
-        const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
-        apps.push(...got.apps);
-        if (!got.next_cursor && !got.partial) { whole = true; break; }
-        if (got.partial) break;
-        page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
-      }
-      if (!whole) apps = undefined;
-    } catch (err) {
-      if (!(err instanceof ConnectError)) throw err;
-      apps = undefined;
-    }
-  }
-  return recipesFor(apps, lang, manages);
+  const catalog = await wholeCatalog(event, me, deps);
+  const view = recipesFor(catalog, lang, manages);
+  const logos = await nameLogos(deps.coach, iconsFor(view.recipes, catalog), new Date());
+  const running = manages ? (await runningRecipes(me, deps)).running : undefined;
+  return { ...view, recipes: withApps(view.recipes, catalog, logos, running) };
+}
+
+/**
+ * The gallery (docs/coach.md, "The gallery"): every ready-made job the catalog can connect, at any time,
+ * whatever "Show suggestions" says, and the strip under the tafs list. tafs cloud decides what each shows;
+ * the apps draw it.
+ */
+async function gallery(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<GalleryView> {
+  const lang = langOf(event);
+  const manages = me.capabilities.includes("cards.manage");
+  const [catalog, suggestions, tafs] = await Promise.all([wholeCatalog(event, me, deps), suggestionsOf(me, deps, lang), runningRecipes(me, deps)]);
+  const all = recipesFor(catalog, lang, manages).recipes;
+  const logos = await nameLogos(deps.coach, iconsFor(all, catalog), new Date());
+  return galleryFor(catalog, lang, { manages, live: tafs.live, suggestions: suggestions.show, ...(manages ? { running: tafs.running } : {}) }, logos);
+}
+
+/**
+ * GET /v1/logos/{key}: an app's logo as a PNG, kept a week by the phone. A key tafs cloud didn't record, or a
+ * logo that can't be had, answers 404, and the app shows the name alone.
+ */
+async function logoRoute(key: string, deps: Deps): Promise<PageResponse> {
+  const logo = await logoFor(deps.coach, key, deps.logos ?? {});
+  if (!logo) throw new HTTPError(404, "no logo");
+  return new PageResponse({
+    statusCode: 200,
+    headers: { "content-type": "image/png", "cache-control": "public, max-age=604800", "x-content-type-options": "nosniff" },
+    body: Buffer.from(logo.png).toString("base64"),
+    isBase64Encoded: true,
+  });
 }
 
 /** The taf's open knocks, for its thread: someone without a key wrote, and waits for the owner. */

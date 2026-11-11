@@ -35,7 +35,7 @@ card:
 Handle refund requests from my help desk. Refund in my payment provider up to 150 EUR each…
 ```
 
-- `id` is the file's name. `category` is `money`, `customers`, `operations` or `errands`.
+- `id` is the file's name. `category` is one of the ids in [categories.txt](categories.txt), which orders them; each one's title is in tafs cloud's words, in every language.
 - `order` is the recipe's place in its category, from 1: the apps and kiff.dev/tafs show them
   in that order (refunds leads Money). Two recipes in one category never share a place.
 - `line` says in one line what the taf does. `title` and `line` are what the apps show.

@@ -5,11 +5,12 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "bundle": "esbuild src/cloud/lambda.ts --bundle --platform=node --target=node22 --format=esm --sourcemap --outfile=dist-lambda/index.mjs --external:@aws-sdk/* --banner:js=\"import{createRequire}from\\\"module\\\";const require=createRequire(import.meta.url);\" && cd dist-lambda && rm -f ../lambda.zip && zip -qr ../lambda.zip ."
+    "bundle": "esbuild src/cloud/lambda.ts --bundle --platform=node --target=node22 --format=esm --sourcemap --outfile=dist-lambda/index.mjs --external:@aws-sdk/* --banner:js=\"import{createRequire}from\\\"module\\\";const require=createRequire(import.meta.url);\" && esbuild src/cloud/logo-worker.mjs --bundle --platform=node --target=node22 --format=esm --outfile=dist-lambda/logo-worker.mjs && cp node_modules/@resvg/resvg-wasm/index_bg.wasm dist-lambda/ && cd dist-lambda && rm -f ../lambda.zip && zip -qr ../lambda.zip ."
   },
   "license": "SEE LICENSE IN ../README.md",
   "description": "tafs cloud: the phone's API, running every taf on kiff/agents, governed by KIFF",
   "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
     "@smithy/signature-v4": "5.7.5"
   },
   "devDependencies": {
