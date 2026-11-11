@@ -25,6 +25,7 @@ import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js"
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
+import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
@@ -78,6 +79,7 @@ import { RECIPES } from "../recipes.js";
  *   GET  /v1/tafs
  *   POST /v1/tafs                       {name, draft_id + claim_secret | from_setup + draft_id | agent_key, summary?, kickoff, instructions?, cron | unscheduled, timezone?, budget_cents?, notes?, recipe?}: a taf with its own job (kiff/tafs#476); `job` names one of the five starter jobs instead, never with from_setup
  *   POST /v1/tafs/{id}/pause | resume | run
+ *   PUT  /v1/tafs/{id}/promise          {hours | null}: how long a case may wait before the owner is told (waiting.ts)
  *   GET | POST | DELETE /v1/tafs/{id}/halt  one taf's halt
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
@@ -379,6 +381,8 @@ export interface Taf {
   appEvents?: Trigger[];
   /** The recipe it was built from, by id (recipes/*.md), when its start said so: what its estimate's tests are read for. */
   recipe?: string;
+  /** The owner's promise: how many hours a case may wait before they're told (waiting.ts). None: never told. */
+  respondWithin?: number;
   /** What its first week used, once its week-one note is posted in its chat (estimate.ts): posted once, so kept here. */
   weekOne?: WeekOne;
 }
@@ -739,6 +743,19 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (action === "doors") return doorRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && action === "halt") return haltRoute(event, method, me, taf, deps);
+  if (parts.length === 4 && method === "PUT" && action === "promise") {
+    // The owner's promise (waiting.ts): set by someone who manages the taf, whole hours up to a week, or none.
+    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
+    const hours = parseBody(event).hours;
+    if (hours !== null && !(Number.isInteger(hours) && (hours as number) >= 1 && (hours as number) <= PROMISE_MAX_HOURS)) {
+      throw new HTTPError(400, `hours is a whole number from 1 to ${PROMISE_MAX_HOURS}, or null for no promise`);
+    }
+    const { respondWithin: _old, ...rest } = taf;
+    await deps.tafs.put(me.tenantID, hours === null ? rest : { ...rest, respondWithin: hours as number });
+    await tellChange(me.tenantID, "taf", taf.id, deps);
+    return { taf: taf.id, promise: hours === null ? null : { hours } };
+  }
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume" || action === "run") && taf.unscheduled) {
     throw new HTTPError(409, `${taf.name} works from its chat: it has no schedule to ${action === "run" ? "run" : action}. Tell it what to do there`);
   }
@@ -764,7 +781,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}) };
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
+      ...waitingOf(runs, fired, taf, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
     // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
@@ -5471,7 +5489,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const runs = recent[i];
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now, langOf(event), health) : undefined;
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}) };
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
+      // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
+      ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
@@ -6591,6 +6611,18 @@ async function firingsFor(deps: Deps, tenant: string, taf: Taf): Promise<Fired[]
 }
 
 /**
+ * A taf's oldest waiting case and its promise, for its page and the list (waiting.ts): `oldest_waiting` only
+ * when a case waits, and `promise` only when the owner set one. Firings that couldn't be read count for nothing.
+ */
+function waitingOf(runs: Run[], fired: Fired[] | undefined, taf: Taf, now: Date, lang: Lang): { oldest_waiting?: ReturnType<typeof waitingView>; promise?: { hours: number } } {
+  const waiting = oldestWaiting(runs, fired ?? []);
+  return {
+    ...(waiting ? { oldest_waiting: waitingView(waiting, taf.respondWithin, now, lang) } : {}),
+    ...(taf.respondWithin ? { promise: { hours: taf.respondWithin } } : {}),
+  };
+}
+
+/**
  * The sweep's look at each taf's health (health.ts): a taf that turns failing is said once for that bad
  * spell, to the phones that answer its holds, as a failing schedule is. Only what the failing alert hasn't
  * said already: its runs failing one after another. A run of failures at its schedule, and work a run
@@ -6667,6 +6699,45 @@ async function weekOneOnRead(token: string, tenant: string, taf: Taf, deps: Deps
   if (!(await deps.tafs.putIf(tenant, { ...read, weekOne }, read))) return undefined;
   await tellChange(tenant, "taf", taf.id, deps);
   return weekOne;
+}
+
+/**
+ * The sweep's look at each promise (waiting.ts): a taf whose oldest waiting case has passed the hours its owner
+ * set is said once for that case, to the phones that answer its holds, in each phone's language. Only tafs with
+ * a promise are read. A halted, paused or removed taf says nothing; a case that ends and another that waits
+ * later is another spell.
+ */
+export async function sweepLate(deps: Deps): Promise<Array<{ tenant: string; taf: string }>> {
+  const store = deps.coach;
+  if (!store) return [];
+  const now = deps.now?.() ?? new Date();
+  const told: Array<{ tenant: string; taf: string }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const tafs = (await deps.tafs.list(tenant).catch(() => [] as Taf[])).filter((t) => t.respondWithin && !t.removing && !t.paused && t.job !== SETUP_JOB);
+    for (const taf of tafs) {
+      const [runs, fired] = await Promise.all([
+        deps.agents.runs(tenant, taf.id, false, 20).catch(() => undefined),
+        taf.unscheduled ? Promise.resolve([] as Fired[]) : deps.agents.scheduleFirings(tenant, taf.id, HEALTH_FIRINGS).catch(() => [] as Fired[]),
+      ]);
+      if (!runs) continue;
+      const waiting = oldestWaiting(runs, fired);
+      if (!waiting || !late(waiting, taf.respondWithin, now)) continue;
+      if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
+      if (!(await store.once(`${tenant}#late#${taf.id}#${waiting.since}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      await tellPhones(deps, tenant, (lang) => lateNotification(taf, lateAlert(taf.name, waiting, taf.respondWithin!, now, lang)));
+      told.push({ tenant, taf: taf.id });
+    }
+  }
+  return told;
+}
+
+/** A case past the promise, as the phones show it: the taf, then how long and the promise; it opens the taf. */
+function lateNotification(taf: Taf, words: { title: string; body: string }): Notification {
+  return {
+    kind: "alert",
+    payload: { aps: { alert: words, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id },
+    collapseID: `late-${taf.id}`.slice(0, 64),
+  };
 }
 
 function healthNotification(taf: Taf, reason: Health["reasons"][number], lang: Lang = "en"): Notification {
