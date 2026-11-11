@@ -152,7 +152,7 @@ final class PresentationTests: XCTestCase {
         XCTAssertTrue(StubProtocol.sent.last?.url?.absoluteString.hasSuffix("cursor=opaque%2B%2F%3D") == true)
     }
 
-    /// The owner's iPhone test: two Stripe connections on one taf drew two Stripe nodes, one
+    /// Two Stripe connections on one taf must not draw two Stripe nodes, one
     /// "Choose actions", one "2 actions". One node per app now, the one with actions in front,
     /// the other sign-in inside its sheet.
     func testOneRingNodePerApp() throws {

@@ -101,7 +101,7 @@ struct TafsBar: View {
                     .frame(maxWidth: .infinity, minHeight: 56)
                 } else {
                     // One line, its own width: the tabs give room first (they shrink their
-                    // words), never "C/oa/ch" down three lines (the owner's iPhone test).
+                    // words), never "C/oa/ch" down three lines.
                     Label(drive.isOn ? Words.Coach.driving : Words.Coach.title, systemImage: drive.isOn ? "sparkles" : "sparkle").scaledFont(15, weight: .semibold)
                         .lineLimit(1).fixedSize()
                         .padding(.horizontal, 14).frame(minHeight: 44)

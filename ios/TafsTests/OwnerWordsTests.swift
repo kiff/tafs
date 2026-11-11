@@ -8,7 +8,7 @@ final class OwnerWordsTests: XCTestCase {
         try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(json.utf8))
     }
 
-    /// The owner's iPhone test: "€ 2.000 a day" in an English app, the phone's region writing it.
+    /// Never "€ 2.000 a day" in an English app, the phone's region writing it.
     /// Amounts follow the app's language, each in its own currency and symbol.
     func testMoneyIsWrittenInTheAppsLanguageNotTheRegion() {
         let english = Words.locale.language.languageCode?.identifier == "en"

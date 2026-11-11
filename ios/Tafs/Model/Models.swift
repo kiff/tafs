@@ -44,7 +44,7 @@ struct Money: Hashable, Comparable, Codable {
 
     /// The amount without the "no currency" note: for a figure whose words say it once.
     /// Written the way the app's language writes it, never the phone's region: "€2,000" in an
-    /// English app on a German phone, not "€ 2.000" (the owner's iPhone test). The currency
+    /// English app on a German phone, not "€ 2.000". The currency
     /// keeps its own symbol and is never converted.
     var figure: String {
         guard let currency else { return Words.number(Int(minor)) }

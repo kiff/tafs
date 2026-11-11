@@ -197,14 +197,14 @@ struct TafDetailView: View {
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
             HStack(spacing: 10) {
                 // A row that says what it opens, with its mark and caret, in the line's quiet
-                // colour: not a lone orange "Versions" (the owner's iPhone test).
+                // colour: never a lone orange "Versions".
                 NavigationLink { VersionsScreen(tafID: taf.id) } label: {
                     let live = model.versions[taf.id]?.first(where: \.live)?.n
                     HStack(spacing: 6) {
                         Image(systemName: "clock.arrow.circlepath").scaledFont(13, weight: .semibold)
                             .accessibilityHidden(true)
                         Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
-                            .scaledFont(13, weight: .semibold).lineLimit(1)
+                            .scaledFont(13, weight: .semibold).oneLineUnlessLarge()
                         Image(systemName: "chevron.right").scaledFont(11, weight: .semibold).foregroundColor(Theme.dim)
                             .accessibilityHidden(true)
                     }
@@ -288,8 +288,8 @@ struct TafDetailView: View {
         if (model.mode == .kiff && cloud != nil) || screenshot {
             PanelLink { StartsWhenView(tafID: taf.id) } label: {
                 Label(StartsWhenView.title, systemImage: "clock").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-                // No "Open" beside it: read as its value ("Starts when: Open", the owner's
-                // iPhone test). The caret says it opens.
+                // No "Open" beside it: it read as its value ("Starts when: Open"). The caret
+                // says it opens.
             }
             .accessibilityIdentifier("setup.startsWhen")
         }
@@ -1205,8 +1205,7 @@ struct CardBar: View {
     var body: some View {
         Button(action: open) {
             HStack(spacing: 12) {
-                // A small Card, with the Card's mark on it: not an empty coloured rectangle
-                // (the owner's iPhone test).
+                // A small Card, with the Card's mark on it: never an empty coloured rectangle.
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(TafCardFace.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
                     .frame(width: 46, height: 29)
@@ -1216,7 +1215,7 @@ struct CardBar: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
                     // Up to two lines each, so a long Card's name reads whole ("Lister vos litiges
-                    // Stripe (mode test)" was cut, the owner's iPhone test).
+                    // Stripe (mode test)" was cut).
                     Text(card.hero.map { "\($0.figure) \($0.words)" } ?? card.title)
                         .scaledFont(15, weight: .semibold).monospacedDigit().foregroundColor(Theme.ink)
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)

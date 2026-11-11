@@ -96,7 +96,7 @@ struct CalendarView: View {
             Button { show(CalendarMath.step(state, by: 1)) } label: { Image(systemName: "chevron.right") }
                 .accessibilityLabel(state.mode == .day ? Words.Calendar.nextDay : state.mode == .week ? Words.Calendar.nextWeek : Words.Calendar.nextMonth)
             // On a phone the range has a line of its own, above: beside the buttons it was cut
-            // to "9 – 15 No…" (the owner's iPhone test).
+            // to "9 – 15 No…".
             if !compact { title.oneLineUnlessLarge() }
             Spacer(minLength: 0)
             DatePicker(Words.Calendar.datePicker, selection: dateBinding, displayedComponents: .date)

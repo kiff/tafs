@@ -71,7 +71,7 @@ struct ConnectedToolsRing: View {
 
     /// One node per app: the connection that does the work, with any other sign-in to the same
     /// app inside its sheet. Two "Stripe" nodes, one "Choose actions" and one "2 actions", read
-    /// as two Stripes (the owner's iPhone test).
+    /// as two Stripes.
     struct Node: Identifiable {
         let app: TafsCloud.ConnectedApp
         let others: [TafsCloud.ConnectedApp]
@@ -443,7 +443,7 @@ struct RetainedRuns: View {
             ForEach(page.requests) { request in
                 NavigationLink { KnobRequestDetail(tafID: tafID, run: request.id) } label: {
                     // Leading, every line: a link centres a wrapped line by default, which put a
-                    // stop line's second line in the middle (the owner's iPhone test).
+                    // stop line's second line in the middle.
                     VStack(alignment: .leading, spacing: 4) {
                         Text(request.line).scaledFont(14)
                         ForEach(Array(request.deliveries.enumerated()), id: \.offset) { _, delivery in Text(delivery.line).scaledFont(12).foregroundColor(Theme.dim) }

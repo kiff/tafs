@@ -27,7 +27,7 @@ struct NotificationSettingsView: View {
                         set: { enabled in Task { if enabled { await model.turnOnAlerts() } else { await model.turnOffAlerts() } } }))
                         .disabled(model.phoneAlertsBusy || model.turningOnAlerts)
                     // No alerts, no sound: off and greyed while alerts are off on this device,
-                    // its choice kept for when they're back (the owner's iPhone test).
+                    // its choice kept for when they're back.
                     Toggle(isOn: Binding(get: { alertsOn && model.alertSound }, set: { model.alertSound = $0 })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Words.Alert.sound)

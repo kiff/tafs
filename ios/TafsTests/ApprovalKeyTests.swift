@@ -515,7 +515,7 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(sent("POST", "/v1/me/device/relink").isEmpty)
     }
 
-    /// The owner's iPhone test: Face ID turned off for tafs and the key gone said two things at
+    /// Face ID turned off for tafs and the key gone must never say two things at
     /// once. One state shows: the device's words while it can't approve, the lost key after.
     func testTheLostKeyWaitsForTheDeviceToBeReady() async throws {
         let signer = TwoKeySigner()
