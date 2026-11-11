@@ -102,6 +102,9 @@ final class YourStepTests: XCTestCase {
                              cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
         StubProtocol.responses["GET /v1/home"] = (200, Self.home(steps))
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        for id in ["ho_1", "ho_2"] {
+            StubProtocol.responses["GET /v1/me/handoffs/\(id)"] = (200, #"{"id":"\#(id)","agent":"rae-k3f9","version":1,"status":"waiting"}"#)
+        }
         await model.useSession("synthetic-session", tenant: "t_01")
         return model
     }
@@ -114,7 +117,7 @@ final class YourStepTests: XCTestCase {
 
     private func sent(_ path: String) -> [URLRequest] { StubProtocol.sent.filter { $0.httpMethod == "POST" && $0.url?.path == path } }
 
-    /// "Done" signs KIFF's message for this hand-off with the device key and sends it to KIFF,
+    /// "Done" reads the hand-off from KIFF, signs KIFF's message for it with the device key and sends it to KIFF,
     /// never to tafs cloud. Home may list it until the run hears the answer: it stays out of
     /// Needs you and its count meanwhile, and is forgotten once Home stops listing it.
     func testDoneIsSignedAndSentToKIFFAndLeavesNeedsYou() async throws {
@@ -137,6 +140,8 @@ final class YourStepTests: XCTestCase {
         XCTAssertEqual(signature["value"] as? String, "signature")
         let expected = KIFFClient.handoffMessage(tenant: "t_01", handoffID: "ho_1", answer: "done", signedAt: signedAt)
         XCTAssertEqual(signer.signed, [String(decoding: expected, as: UTF8.self)])
+        XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "GET" && $0.url?.path == "/v1/me/handoffs/ho_1" }.count, 1,
+                       "read from KIFF first, for its version")
         XCTAssertFalse(StubProtocol.sent.contains { $0.url?.host == "cloud.test" && $0.httpMethod == "POST" }, "tafs cloud is never told")
 
         // Home, read again, still lists it: it stays answered here.
@@ -150,6 +155,30 @@ final class YourStepTests: XCTestCase {
         StubProtocol.responses["GET /v1/home"] = (200, Self.home([]))
         await model.refresh()
         XCTAssertTrue(model.canAnswer(step: "ho_1"))
+        XCTAssertEqual(model.needsYouCount, 0)
+    }
+
+    /// The version signed is KIFF's for the hand-off, not one the app assumes.
+    func testTheSignedVersionIsKIFFs() async throws {
+        let signer = RecordingSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/me/handoffs/ho_1"] = (200, #"{"id":"ho_1","version":2,"status":"waiting"}"#)
+        StubProtocol.responses["POST /v1/me/handoffs/ho_1/answer"] = (200, #"{"id":"ho_1","status":"done"}"#)
+        await model.answerYourStep(try XCTUnwrap(model.yourSteps.first), done: true)
+        XCTAssertTrue(signer.signed.first?.hasPrefix("kiff.handoff.v1\nt_01\nho_1\ndone\n2\n") == true, signer.signed.first ?? "")
+    }
+
+    /// A step KIFF no longer waits on (answered elsewhere, or past its week) isn't signed or sent:
+    /// tafs cloud's shared words say so, and it leaves Needs you.
+    func testAStepKIFFNoLongerWaitsOnIsntSent() async throws {
+        let signer = RecordingSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/me/handoffs/ho_1"] = (200, #"{"id":"ho_1","version":1,"status":"no_answer"}"#)
+        await model.answerYourStep(try XCTUnwrap(model.yourSteps.first), done: true)
+        XCTAssertTrue(signer.signed.isEmpty)
+        XCTAssertTrue(sent("/v1/me/handoffs/ho_1/answer").isEmpty)
+        XCTAssertEqual(model.lastError, Words.NeedsYou.YourStep.ended)
+        XCTAssertTrue(model.yourSteps.isEmpty)
         XCTAssertEqual(model.needsYouCount, 0)
     }
 
@@ -170,12 +199,13 @@ final class YourStepTests: XCTestCase {
         StubProtocol.responses["POST /v1/me/handoffs/ho_1/answer"] = (409, #"{"error":"already_answered"}"#)
         await model.answerYourStep(try XCTUnwrap(model.yourStep("ho_1")), done: true)
         XCTAssertEqual(model.yourSteps.map(\.handoff), ["ho_2"])
+        XCTAssertEqual(model.lastError, Words.NeedsYou.YourStep.ended)
 
         model.lastError = nil
         StubProtocol.responses["POST /v1/me/handoffs/ho_2/answer"] = (403, #"{"error":"role_forbidden"}"#)
         await model.answerYourStep(try XCTUnwrap(model.yourStep("ho_2")), done: true)
         XCTAssertEqual(model.yourSteps.map(\.handoff), ["ho_2"])
-        XCTAssertNotNil(model.lastError)
+        XCTAssertEqual(model.lastError, Words.NeedsYou.YourStep.notAnswered(why: Words.NeedsYou.Refused.role))
         XCTAssertTrue(model.answeringSteps.isEmpty)
     }
 

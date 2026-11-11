@@ -11,13 +11,13 @@ struct NeedsYouView: View {
                 if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
                     AlertsCard()
                 }
+                // A step a taf handed its owner comes first, oldest first (docs/api.md › Your step), as on Android.
+                ForEach(model.yourSteps) { step in YourStepCard(step: step).id(step.id) }
                 // A knock at a taf's door waits for the owner too (kiff/tafs#236, item 17).
                 let knocked = model.tafs.filter { knocks($0) > 0 }
                 // A money call whose outcome KIFF can't prove: the owner says whether it happened.
                 ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
                 ForEach(model.cardUnitExceptions) { ask in CardUnitExceptionPanel(ask: ask).id(ask.id) }
-                // A step a taf handed its owner, oldest first (docs/api.md › Your step).
-                ForEach(model.yourSteps) { step in YourStepCard(step: step).id(step.id) }
                 if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty && model.yourSteps.isEmpty {
                     Panel {
                         Text(Words.NeedsYou.nothingWaiting).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)

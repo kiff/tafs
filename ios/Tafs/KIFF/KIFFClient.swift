@@ -778,6 +778,26 @@ final class KIFFClient {
         Data(["kiff.handoff.v1", tenant, handoffID, answer, String(version), signedAt].joined(separator: "\n").utf8)
     }
 
+    /// A step a taf handed its owner, as KIFF keeps it: its `version` is what the phone signs, and a
+    /// `status` other than "waiting" means it was answered or has ended.
+    struct Handoff: Decodable, Equatable {
+        let id: String
+        var version = 1
+        var status = ""
+        enum CodingKeys: String, CodingKey { case id, version, status }
+        init(id: String, version: Int = 1, status: String = "") { self.id = id; self.version = version; self.status = status }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            version = (try? c.decodeIfPresent(Int.self, forKey: .version)) ?? 1
+            status = (try? c.decodeIfPresent(String.self, forKey: .status)) ?? ""
+        }
+    }
+
+    func handoff(_ id: String) async throws -> Handoff {
+        try await send("GET", "/v1/me/handoffs/\(escaped(id))")
+    }
+
     private struct HandoffAnswerBody: Encodable {
         let answer: String
         let signature: AnswerSignature

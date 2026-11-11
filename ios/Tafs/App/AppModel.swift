@@ -6130,10 +6130,12 @@ final class AppModel: ObservableObject {
     }
 
     /// Answers a step a taf handed its owner (docs/api.md › Your step): "done" or "skipped", to
-    /// KIFF, signed with the device key over `kiff.handoff.v1`. It grants nothing, so the
-    /// approval key isn't asked for. KIFF tells the taf's run, which goes on: "Done" checks the
-    /// vendor where it can, and "Skip it" withdraws what it prepared.
-    /// `tafID` is the taf whose page it was answered on; Needs you's steps name their taf.
+    /// KIFF, as Android does. The hand-off is read from KIFF first, for the version the phone
+    /// signs; one KIFF no longer waits on isn't sent. The answer is signed with the device key over
+    /// `kiff.handoff.v1`: it grants nothing, so the approval key isn't asked for. KIFF tells the
+    /// taf's run, which goes on: "Done" checks the vendor where it can, and "Skip it" withdraws
+    /// what it prepared. `tafID` is the taf whose page it was answered on; Needs you's steps name
+    /// their taf.
     func answerYourStep(_ step: TafsCloud.YourStep, done: Bool, tafID: UUID? = nil) async {
         guard mode == .kiff, !answeringSteps.contains(step.handoff), !answeredSteps.contains(step.handoff) else { return }
         guard canAnswerSteps, let tenant = kiffTenant else {
@@ -6144,35 +6146,56 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         defer { if gen == accountGeneration { answeringSteps.remove(step.handoff) } }
         let answer = done ? "done" : "skipped"
+        let current: KIFFClient.Handoff
+        do {
+            current = try await kiff.handoff(step.handoff)
+        } catch {
+            if gen == accountGeneration { lastError = Words.NeedsYou.YourStep.notAnswered(why: Self.answerRefusedWords(error)) }
+            return
+        }
+        guard gen == accountGeneration else { return }
+        guard current.status.isEmpty || current.status == "waiting" else {
+            lastError = Words.NeedsYou.YourStep.ended
+            drop(step)
+            return
+        }
         let at = SigningTime.next(now: clock())
-        let message = KIFFClient.handoffMessage(tenant: tenant, handoffID: step.handoff, answer: answer, signedAt: at)
+        let message = KIFFClient.handoffMessage(tenant: tenant, handoffID: current.id, answer: answer, version: current.version, signedAt: at)
         let value: String
         do {
-            // The prompt says what's being answered, in tafs cloud's words.
-            value = try await signer.sign(message, reason: step.words.line.isEmpty ? step.what : step.words.line)
+            // The prompt is tafs cloud's words for the answer and the step: "Done · Approve the transfer to Acme".
+            let prompt = [done ? step.words.done : step.words.skip, step.what].filter { !$0.isEmpty }.joined(separator: " · ")
+            value = try await signer.sign(message, reason: prompt)
         } catch {
             guard gen == accountGeneration else { return }
-            lastError = ApprovalReadiness.cancelled(error) ?? Words.Common.notSentUnconfirmed
+            lastError = ApprovalReadiness.cancelled(error) ?? Words.NeedsYou.YourStep.notAnsweredUnconfirmed
             return
         }
         guard gen == accountGeneration else { return }
         do {
-            try await kiff.answerHandoff(step.handoff, answer: answer, signature: .init(signedAt: at, value: value))
+            try await kiff.answerHandoff(current.id, answer: answer, signature: .init(signedAt: at, value: value))
         } catch KIFFClient.KIFFError.server(409, _, _) {
-            // Answered already, from another phone or this one: nothing more to do here.
+            // Answered meanwhile, on another phone, or ended: nothing more to do here.
+            if gen == accountGeneration { lastError = Words.NeedsYou.YourStep.ended; drop(step) }
+            return
         } catch {
-            if gen == accountGeneration { lastError = Self.answerRefusedWords(error) }
+            if gen == accountGeneration { lastError = Words.NeedsYou.YourStep.notAnswered(why: Self.answerRefusedWords(error)) }
             return
         }
         guard gen == accountGeneration else { return }
-        answeredSteps.insert(step.handoff)
-        if yourSteps.contains(where: { $0.handoff == step.handoff }) { answeredStillCounted += 1 }
-        yourSteps.removeAll { $0.handoff == step.handoff }
-        if requestedStep == step.handoff { requestedStep = nil }
+        drop(step)
         // The taf's work shows the run going on once it hears the answer.
         let taf = tafID ?? step.taf.flatMap { t in cloudTafs.first { $0.value.id == t.id }.flatMap { holderIDs[$0.key] } }
         await refresh()
         if let taf, works[taf] != nil { await loadWork(taf) }
+    }
+
+    /// Takes an answered or ended step off Needs you at once, and its count, while Home still lists it.
+    private func drop(_ step: TafsCloud.YourStep) {
+        answeredSteps.insert(step.handoff)
+        if yourSteps.contains(where: { $0.handoff == step.handoff }) { answeredStillCounted += 1 }
+        yourSteps.removeAll { $0.handoff == step.handoff }
+        if requestedStep == step.handoff { requestedStep = nil }
     }
 
     func dismissCardUnit(_ exception: TafsCloud.CardUnitException) async {
