@@ -1,6 +1,56 @@
 import Foundation
 
 extension TafsCloud {
+    /// A taf's health, as tafs cloud reads it (docs/reliability.md, "Its health"): its level,
+    /// each reason as a line in the person's language, and the fixes tafs cloud decides for the
+    /// lines that have one. The app draws them and decides nothing: an unknown level is drawn as
+    /// its lines, and a fix of a kind it doesn't know is no button.
+    struct Health: Codable, Hashable {
+        /// A way to fix what one line says: Coach opened with `say` in its box (`coach`), or Plan
+        /// & usage (`credits`). `line` is the line's index.
+        struct Fix: Codable, Hashable {
+            var line = 0
+            var kind = ""
+            var words = ""
+            var say: String?
+            init(line: Int = 0, kind: String = "", words: String = "", say: String? = nil) {
+                self.line = line; self.kind = kind; self.words = words; self.say = say
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                line = (try? c.decode(Int.self, forKey: .line)) ?? -1
+                kind = (try? c.decode(String.self, forKey: .kind)) ?? ""
+                words = (try? c.decode(String.self, forKey: .words)) ?? ""
+                say = (try? c.decodeIfPresent(String.self, forKey: .say)) ?? nil
+            }
+        }
+        var level = "healthy"
+        var lines: [String] = []
+        var fixes: [Fix] = []
+
+        private enum CodingKeys: String, CodingKey { case level, lines, fixes }
+        init(level: String = "healthy", lines: [String] = [], fixes: [Fix] = []) {
+            self.level = level; self.lines = lines; self.fixes = fixes
+        }
+        /// Never fails the read it's on: a health that isn't one reads as healthy, with nothing to draw.
+        init(from decoder: Decoder) throws {
+            guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+            level = (try? c.decode(String.self, forKey: .level)) ?? "healthy"
+            lines = ((try? c.decode([LenientItem<String>].self, forKey: .lines)) ?? []).compactMap(\.value)
+                .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            fixes = ((try? c.decode([LenientItem<Fix>].self, forKey: .fixes)) ?? []).compactMap(\.value)
+        }
+
+        /// Something to show: a level other than healthy, with a line to say why.
+        var needsAttention: Bool { level != "healthy" && !lines.isEmpty }
+        var failing: Bool { level == "failing" }
+        /// The fixes for one line, of the kinds the app can act on, in tafs cloud's order.
+        func fixes(for line: Int) -> [Fix] {
+            fixes.filter { $0.line == line && Self.knownKinds.contains($0.kind) && !$0.words.isEmpty && ($0.kind != "coach" || !($0.say ?? "").isEmpty) }
+        }
+        static let knownKinds: Set<String> = ["coach", "credits"]
+    }
+
     /// Where a taf's work stands, as tafs cloud says it (`GET /v1/tafs/{id}/work`,
     /// docs/reliability.md): its summary line, and its recent requests and skipped firings.
     /// Every line and time is tafs cloud's, in the account's zone: the app formats none.
@@ -13,8 +63,9 @@ extension TafsCloud {
             init(status: String = "idle", line: String = "", needsYou: Int = 0) {
                 self.status = status; self.line = line; self.needsYou = needsYou
             }
+            /// Never fails the read it's on: one that isn't an object reads as nothing to say.
             init(from decoder: Decoder) throws {
-                let c = try decoder.container(keyedBy: CodingKeys.self)
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { status = ""; return }
                 status = (try? c.decode(String.self, forKey: .status)) ?? "idle"
                 line = (try? c.decode(String.self, forKey: .line)) ?? ""
                 needsYou = (try? c.decode(Int.self, forKey: .needsYou)) ?? 0
@@ -92,10 +143,12 @@ extension TafsCloud {
         var summary: Summary?
         var requests: [Request] = []
         var skipped: [Skipped] = []
+        /// Its health, when tafs cloud could read it in time.
+        var health: Health?
 
-        enum CodingKeys: String, CodingKey { case summary, requests, skipped }
-        init(summary: Summary? = nil, requests: [Request] = [], skipped: [Skipped] = []) {
-            self.summary = summary; self.requests = requests; self.skipped = skipped
+        enum CodingKeys: String, CodingKey { case summary, requests, skipped, health }
+        init(summary: Summary? = nil, requests: [Request] = [], skipped: [Skipped] = [], health: Health? = nil) {
+            self.summary = summary; self.requests = requests; self.skipped = skipped; self.health = health
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -103,6 +156,7 @@ extension TafsCloud {
             requests = (try? c.decode([Request].self, forKey: .requests)) ?? []
             // An older tafs cloud sends none.
             skipped = (try? c.decode([Skipped].self, forKey: .skipped)) ?? []
+            health = (try? c.decodeIfPresent(Health.self, forKey: .health)) ?? nil
         }
 
         /// Open the work still asking for attention, otherwise the newest request.

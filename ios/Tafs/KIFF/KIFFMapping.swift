@@ -138,6 +138,11 @@ enum KIFFMapping {
         }
         taf.doors = h.doors
         taf.avatarRim = h.avatarRim
+        taf.health = h.health
+        if let work = h.work, work.status == "idle", h.health?.needsAttention == true,
+           !work.line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            taf.healthNow = work.line
+        }
         taf.used = h.card.used.compactMapValues { amount($0) }
         taf.usageUnknown = Set(h.card.usageUnknown)
         return taf

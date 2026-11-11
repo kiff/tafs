@@ -382,6 +382,14 @@ struct Taf: Identifiable, Hashable, Codable {
     /// Its doors, as its avatar's rim shows them; nil when it has none, or before doors.
     var doors: [DoorLight]? = nil
     var avatarRim: AvatarRim? = nil
+    /// Its health, as tafs cloud reads it (docs/reliability.md): nil when it wasn't read, and
+    /// in the sample.
+    var health: TafsCloud.Health? = nil
+    /// What Home's row says in place of what it's doing, in tafs cloud's order: an otherwise
+    /// idle taf that isn't healthy says its first reason (the list's `work.line`). A taf that's
+    /// halted, needs its owner, is working, retrying, waiting or paused says that instead, so
+    /// this is nil.
+    var healthNow: String? = nil
     /// A short word beside its name, as tafs cloud sends it: "Trial" for an open trial's
     /// entry (kiff/tafs#247); nil for a taf.
     var badge: String? = nil
