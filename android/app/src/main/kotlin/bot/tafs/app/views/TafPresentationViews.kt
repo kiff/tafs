@@ -221,7 +221,7 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
 
 /** The adapter copies signed evidence; it does not derive a decision or a display sentence. */
 @Composable
-private fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppState, actions: TafActions, onConnectApps: () -> Unit) {
+internal fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppState, actions: TafActions, onConnectApps: () -> Unit) {
   var open by remember { mutableStateOf(false) }
   val kind = runCatching { RecordEntry.Kind.valueOf(if (source.kind == "not_done") "notDone" else source.kind) }.getOrDefault(RecordEntry.Kind.unknown)
   val call = source.call
