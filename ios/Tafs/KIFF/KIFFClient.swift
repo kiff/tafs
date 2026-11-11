@@ -771,6 +771,25 @@ final class KIFFClient {
         return Data(lines.joined(separator: "\n").utf8)
     }
 
+    /// What the phone signs to answer a step a taf handed its owner (docs/api.md › Your step):
+    /// KIFF's `kiff.handoff.v1`, one field per line. `answer` is "done" or "skipped"; `version` is
+    /// the hand-off's shape, 1 until it changes. Pinned by KIFF's vector (YourStepTests).
+    static func handoffMessage(tenant: String, handoffID: String, answer: String, version: Int = 1, signedAt: String) -> Data {
+        Data(["kiff.handoff.v1", tenant, handoffID, answer, String(version), signedAt].joined(separator: "\n").utf8)
+    }
+
+    private struct HandoffAnswerBody: Encodable {
+        let answer: String
+        let signature: AnswerSignature
+    }
+
+    /// Answers a step handed to the owner, "done" or "skipped", signed with the device key.
+    /// It grants nothing, so the approval key isn't asked for; KIFF answers it once.
+    func answerHandoff(_ id: String, answer: String, signature: AnswerSignature) async throws {
+        let _: Empty = try await send("POST", "/v1/me/handoffs/\(escaped(id))/answer",
+                                      body: HandoffAnswerBody(answer: answer, signature: signature))
+    }
+
     /// What the phone signs for a setup call: KIFF's signed request message,
     /// `kiff.request.v1`.
     static func requestMessage(tenant: String, method: String, uri: String, body: Data, signedAt: String) -> Data {

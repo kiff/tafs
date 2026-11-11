@@ -404,6 +404,30 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 Tests: `TafsTests/RecordSearchTests.swift`.
 
+## Your step
+
+A step a taf may never take itself, prepared and handed to its owner ([api.md](api.md) › Your
+step; `KIFF/TafsCloud+YourStep.swift`, `Views/YourStepCard.swift`, `AppModel.answerYourStep`):
+
+- **Where:** Needs you lists Home's `your_steps`, oldest first, after the currency requests, each
+  card naming its taf. A taf's page shows the step on the request that waits on it (its
+  `your_step`), with Home's copy when Home has it. The card is tafs cloud's words only: `title`,
+  what, why, and `done` and `skip`.
+- **The vendor's page:** a button only when tafs cloud sent `link`, `link_host` and `words.open`,
+  the link is https, and `link_host` is the link's own host. The host shows under the button,
+  so the person sees where it goes. The app never decides from a URL it parsed itself, and a
+  link without all of that shows no button. A taf's request carries no link.
+- **The answer** goes to KIFF, never to tafs cloud: `POST /v1/me/handoffs/{handoff}/answer`
+  with `done` or `skipped`, signed with the device key over `kiff.handoff.v1`
+  (`KIFFClient.handoffMessage`, pinned by KIFF's vector), under Face ID or the passcode as a
+  Refuse is. It grants nothing, so the approval key isn't asked for. Only a person who answers
+  the account's holds, with the session's device key, sees the buttons. A 409 means it was
+  answered already, or it expired: it leaves Needs you. Answered here, it stays out of Needs
+  you and its count while Home still lists it, until the run hears the answer.
+- **Its notification** (`handoff` in the payload) opens Needs you on that step.
+
+Tests: `TafsTests/YourStepTests.swift`.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,
