@@ -275,7 +275,7 @@ refresh (`AppModel.loadGallery`). tafs cloud decides what shows and in what orde
 it, in tafs cloud's words.
 - **+ New** (Home's +, the iPad sidebar's New taf) opens the gallery (`RecipeGallerySheet`):
   `words.title`, then "Say it in your own words" (`words.own_words`), which opens Coach with
-  nothing in it, then the chips and every job as on Home. A job opens the same sheet, with the
+  nothing in it, then `words.all` ("All jobs") over the chips and every job as on Home. A job opens the same sheet, with the
   gallery's `labels`. From a tafs cloud without the route (404), + New opens Coach as before.
 - **The strip** (`RecipeStrip`): under the tafs list, `strip.title` and the jobs in `strip.ids`,
   in that order, only while `strip.shown`. tafs cloud leaves out jobs the account runs and puts

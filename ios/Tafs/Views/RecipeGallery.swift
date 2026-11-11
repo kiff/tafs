@@ -8,8 +8,9 @@ enum GalleryChoice: Equatable {
 }
 
 /// + New: every ready-made job, at any time, as tafs cloud sends them (`GET /v1/recipes/gallery`):
-/// its chips, every job by category with its apps and colour, and a row that opens Coach with
-/// nothing in it, to say the job in one's own words. Every word is tafs cloud's.
+/// a row that opens Coach with nothing in it, to say the job in one's own words, then under its
+/// "All jobs" heading its chips and every job by category with its apps and colour. Every word is
+/// tafs cloud's.
 struct RecipeGallerySheet: View {
     let gallery: TafsCloud.Gallery
     /// The job sheet's words from `/v1/recipes`, for a tafs cloud whose gallery sends none.
@@ -27,6 +28,7 @@ struct RecipeGallerySheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if canHand, !gallery.words.ownWords.isEmpty { ownWords }
+                    if !gallery.words.all.isEmpty { Eyebrow(text: gallery.words.all) }
                     HomeRecipes(recipes: recipes, logo: logo) { open = $0 }
                 }
                 .padding(.horizontal, 20).padding(.vertical, 16)

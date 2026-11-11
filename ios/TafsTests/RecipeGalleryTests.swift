@@ -19,7 +19,7 @@ final class RecipeGalleryTests: XCTestCase {
        "apps":[{"name":"QuickBooks"}],"connected":true,"running":false},
       {"id":"answer-questions-about-orders","title":"Answer questions about orders","category":"customers","headline":"Stop answering \"where is my order?\"","say":"Answer order questions."}],
      "strip":{"shown":true,"title":"More jobs to hand off","ids":["chase-overdue-invoices","gone-since","answer-questions-about-orders"]},
-     "words":{"title":"New taf","own_words":"Say it in your own words","own_words_line":"Tell Coach the job, and it builds the taf with you."},
+     "words":{"title":"New taf","all":"All jobs","own_words":"Say it in your own words","own_words_line":"Tell Coach the job, and it builds the taf with you."},
      "labels":{"allows":"Does on its own","holds":"Asks you first","never":"Never does","hand":"Hand it to Coach"}}
     """#
 
@@ -44,6 +44,7 @@ final class RecipeGalleryTests: XCTestCase {
         XCTAssertEqual(g.recipes[2].apps, [], "a job with no apps sent has none")
         XCTAssertEqual(g.words.title, "New taf")
         XCTAssertEqual(g.words.ownWords, "Say it in your own words")
+        XCTAssertEqual(g.words.all, "All jobs")
         XCTAssertEqual(g.labels?.hand, "Hand it to Coach")
     }
 
@@ -59,6 +60,7 @@ final class RecipeGalleryTests: XCTestCase {
         let none = try read(#"{"categories":[],"recipes":[]}"#)
         XCTAssertTrue(none.stripRecipes.isEmpty, "no strip sent, none shown")
         XCTAssertNil(none.labels)
+        XCTAssertEqual(none.words.all, "", "no heading sent, none drawn")
     }
 
     /// The gallery draws as Home's list does, its sheet with the gallery's words, else those

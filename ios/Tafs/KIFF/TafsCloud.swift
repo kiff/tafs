@@ -1785,15 +1785,18 @@ final class TafsCloud {
         /// The gallery's own words: its title, and the row that opens Coach with nothing in it.
         struct Words: Decodable, Equatable {
             var title = ""
+            /// The heading over every job ("All jobs").
+            var all = ""
             var ownWords = ""
             var ownWordsLine = ""
-            private enum CodingKeys: String, CodingKey { case title, ownWords = "own_words", ownWordsLine = "own_words_line" }
-            init(title: String = "", ownWords: String = "", ownWordsLine: String = "") {
-                self.title = title; self.ownWords = ownWords; self.ownWordsLine = ownWordsLine
+            private enum CodingKeys: String, CodingKey { case title, all, ownWords = "own_words", ownWordsLine = "own_words_line" }
+            init(title: String = "", all: String = "", ownWords: String = "", ownWordsLine: String = "") {
+                self.title = title; self.all = all; self.ownWords = ownWords; self.ownWordsLine = ownWordsLine
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 title = ((try? c.decodeIfPresent(String.self, forKey: .title)) ?? nil) ?? ""
+                all = ((try? c.decodeIfPresent(String.self, forKey: .all)) ?? nil) ?? ""
                 ownWords = ((try? c.decodeIfPresent(String.self, forKey: .ownWords)) ?? nil) ?? ""
                 ownWordsLine = ((try? c.decodeIfPresent(String.self, forKey: .ownWordsLine)) ?? nil) ?? ""
             }
