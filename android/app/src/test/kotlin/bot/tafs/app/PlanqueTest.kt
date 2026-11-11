@@ -1570,4 +1570,24 @@ class PlanqueTest {
     testScheduler.runCurrent()
     assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
   }
+
+  @Test fun aVendorThatRefusesPlanquesClientIsSaidInPlanquesWords() = runTest {
+    val words = "mcp.qonto.com doesn't allow tafs to sign in yet, so nothing was connected. It isn't something you can change from here."
+    transport.answer("GET /v1/accounts/t_01/grants", 502, """{"error":"$words","code":"vendor_refused_client"}""")
+    try {
+      planque().grants(); fail("refused")
+    } catch (e: PlanqueError.Server) {
+      assertEquals("vendor_refused_client", e.code)
+      // planque's words, which say whose it is, not "it isn't working on our side".
+      assertEquals(words, bot.tafs.app.model.ErrorWords.of(e))
+    }
+    // Any other 502 is still the app's line for a service that's down.
+    transport.answer("GET /v1/accounts/t_01/grants", 502, """{"error":"upstream timeout"}""")
+    try {
+      planque().grants(); fail("refused")
+    } catch (e: PlanqueError.Server) {
+      assertEquals(null, e.code)
+      assertEquals(bot.tafs.app.model.ErrorWords.DOWN, bot.tafs.app.model.ErrorWords.of(e))
+    }
+  }
 }
