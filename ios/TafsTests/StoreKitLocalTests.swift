@@ -25,6 +25,26 @@ final class StoreKitLocalTests: XCTestCase {
         if try await Product.products(for: [solo]).isEmpty {
             throw XCTSkip("StoreKit's local testing has no store on this machine: no products load.")
         }
+        // A store that lists the products but can't complete a purchase (a simulator that finds the
+        // App Store's sandbox products, with no sandbox account to buy them) would hang every test
+        // here: one purchase first, ten seconds at most. A store that answers, however it answers,
+        // runs the tests, so a purchase that comes out wrong still fails.
+        guard let probe = try await Product.products(for: [rayo]).first,
+              await Self.answers(probe, within: 10) else {
+            throw XCTSkip("StoreKit's local testing can't complete a purchase on this machine within 10 seconds.")
+        }
+        session.clearTransactions()
+    }
+
+    /// Whether the store answers a purchase of product within the time: a result or an error, as
+    /// opposed to no answer at all. The purchase runs on its own, so one that never returns can't
+    /// hold the test (a task group would wait for it).
+    private static func answers(_ product: Product, within seconds: UInt64) async -> Bool {
+        await withCheckedContinuation { (done: CheckedContinuation<Bool, Never>) in
+            let once = Once(done)
+            Task { _ = try? await product.purchase(); once.resume(true) }
+            Task { try? await Task.sleep(nanoseconds: seconds * 1_000_000_000); once.resume(false) }
+        }
     }
 
     override func tearDown() async throws {
@@ -105,6 +125,20 @@ final class StoreKitLocalTests: XCTestCase {
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         XCTAssertGreaterThan(sent.lines.count, bought, "the refund reached KIFF")
+    }
+}
+
+/// Resumes a continuation once, whichever of its racers comes first.
+final class Once: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Bool, Never>?
+    init(_ continuation: CheckedContinuation<Bool, Never>) { self.continuation = continuation }
+    func resume(_ value: Bool) {
+        lock.lock()
+        let c = continuation
+        continuation = nil
+        lock.unlock()
+        c?.resume(returning: value)
     }
 }
 
