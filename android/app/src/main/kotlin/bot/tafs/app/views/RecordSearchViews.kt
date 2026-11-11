@@ -155,12 +155,13 @@ internal fun RecordCaseSheet(case: RecordCase, error: String?, state: AppState, 
 internal val EXPORT_DAYS = listOf(7, 30, 90)
 
 /**
- * Export receipts, for someone who sees every taf's Record: a range of days, then tafs cloud's export offered as two files through
- * the share sheet (KIFF's receipts as tafs cloud passed them, and its CSV). [share] hands the files on; a test passes its own.
+ * Export receipts, for someone who sees every taf's Record: a range of days, counted in the account's zone as tafs cloud counts
+ * them (not the phone's), then tafs cloud's export offered as two files through the share sheet (KIFF's receipts as tafs cloud
+ * passed them, and its CSV). [share] hands the files on; a test passes its own.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun ExportReceiptsRow(onExport: suspend (String, String) -> ReceiptsResult, today: () -> LocalDate = { LocalDate.now() }, share: ((ReceiptsExport) -> Unit)? = null) {
+internal fun ExportReceiptsRow(onExport: suspend (String, String) -> ReceiptsResult, today: () -> LocalDate = { LocalDate.now(bot.tafs.app.model.zone) }, share: ((ReceiptsExport) -> Unit)? = null) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   var open by remember { mutableStateOf(false) }

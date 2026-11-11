@@ -278,7 +278,8 @@ searches across their tafs, opens one case, and exports receipts
   (`failed.words`), and its own next step on its row is the only retry, through the taf under its
   Card. The Record never sends anything again itself.
 - **Export receipts,** for someone who oversees or manages every taf (`AppState.seesEveryTaf`;
-  tafs cloud's 403 still decides): Last 7, 30 or 90 days, inside tafs cloud's 92. Two files go to
+  tafs cloud's 403 still decides): Last 7, 30 or 90 days, inside tafs cloud's 92, counted in the
+  account's zone as tafs cloud counts them, not the phone's. Two files go to
   the share sheet (`shareReceipts`): tafs cloud's answer byte for byte as JSON, so KIFF's receipts
   are exactly as issued, never re-encoded, and its CSV. They live only in the app's cache and are
   replaced at each export. `missing` shows as a line ("2 calls have no receipt yet.").
