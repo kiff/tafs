@@ -49,6 +49,7 @@ class YourStepScreenTest {
     rule.onNodeWithText("Your step · Payouts", substring = true, ignoreCase = true).assertExists()
     rule.onNodeWithText("Approve the payout to Acme").assertExists()
     rule.onNodeWithText("A payout needs your own approval.").assertExists()
+    rule.onNodeWithText("dashboard.stripe.com").assertExists()
     rule.onNodeWithText("Open in Stripe").performClick()
     rule.waitForIdle()
     assertEquals(listOf("https://dashboard.stripe.com/payouts/po_1"), opened)
@@ -61,6 +62,12 @@ class YourStepScreenTest {
 
   @Test fun withoutALinkThereIsNoButtonButTheWordsStay() {
     show(step.copy(link = null, linkHost = null), mutableListOf(), mutableListOf())
+    rule.onAllNodesWithText("Open in Stripe").assertCountEquals(0)
+    rule.onNodeWithText("Approve the payout to Acme").assertExists()
+  }
+
+  @Test fun aLinkWhoseHostIsntTafsCloudsHasNoButton() {
+    show(step.copy(link = "https://dashboard.stripe.com.evil.example/login"), mutableListOf(), mutableListOf())
     rule.onAllNodesWithText("Open in Stripe").assertCountEquals(0)
     rule.onNodeWithText("Approve the payout to Acme").assertExists()
   }

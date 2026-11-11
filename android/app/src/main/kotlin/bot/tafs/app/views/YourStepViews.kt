@@ -28,8 +28,8 @@ val LocalYourStepActions = staticCompositionLocalOf<YourStepActions?> { null }
 
 /**
  * A step a taf may never take itself, handed to its owner (docs/api.md › Your step), in tafs cloud's words: its title, the taf,
- * what to do and why. **Open in {vendor}** shows only when tafs cloud sent a link and its words, and opens the browser on it; the
- * app never builds or checks a link. Done and Skip it are signed by this phone and go to KIFF, for those who answer holds.
+ * what to do and why. **Open in {vendor}** shows only for an https link whose host is tafs cloud's `link_host`, with its words, and
+ * opens the browser on it, the host under it; the app never builds a link. Done and Skip it are signed by this phone and go to KIFF, for those who answer holds.
  */
 @Composable
 fun YourStepPanel(step: YourStep, state: AppState) {
@@ -41,8 +41,10 @@ fun YourStepPanel(step: YourStep, state: AppState) {
     Eyebrow(listOfNotNull(step.words.title.ifBlank { null }, step.taf?.name?.ifBlank { null }).joinToString(" · "), color = Theme.amberText)
     Text(step.what, style = scaled(16, FontWeight.SemiBold, Theme.ink))
     if (step.why.isNotBlank()) Text(step.why, style = scaled(14, color = Theme.soft))
-    step.open?.let { (words, link) ->
-      OutlineButton(words, { val open = actions?.open; if (open != null) open(link) else runCatching { uri.openUri(link) } }, Modifier.fillMaxWidth())
+    step.open?.let { o ->
+      OutlineButton(o.words, { val open = actions?.open; if (open != null) open(o.link) else runCatching { uri.openUri(o.link) } }, Modifier.fillMaxWidth())
+      // Where it really goes, as tafs cloud read the link.
+      Text(o.host, style = scaled(12, color = Theme.dim, mono = true))
     }
     if (actions != null && state.canAnswerHolds != false) {
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

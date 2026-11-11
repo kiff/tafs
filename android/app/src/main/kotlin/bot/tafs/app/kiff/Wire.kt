@@ -168,9 +168,23 @@ data class YourStep(
   val expires: String? = null,
   val words: YourStepWords = YourStepWords(),
 ) {
-  /** The button's words and link, only when tafs cloud sent both. */
-  val open: Pair<String, String>? get() = link?.takeIf { it.startsWith("https://") }?.let { l -> words.open?.takeIf { it.isNotBlank() }?.let { it to l } }
+  /**
+   * The vendor's page, only as tafs cloud vouched for it: an https link, its host apart ([linkHost]) and the button's words. The
+   * host must be the link's own, so the line under the button names where it really goes; anything else is no button, only the
+   * words. As iOS's `openLink`.
+   */
+  val open: OpenLink? get() {
+    val l = link ?: return null
+    val host = linkHost?.takeIf { it.isNotBlank() } ?: return null
+    val w = words.open?.takeIf { it.isNotBlank() } ?: return null
+    val uri = runCatching { java.net.URI(l) }.getOrNull() ?: return null
+    if (!uri.scheme.equals("https", ignoreCase = true) || !uri.host.equals(host, ignoreCase = true)) return null
+    return OpenLink(w, l, host)
+  }
 }
+
+/** A step's button: its words, the link it opens, and the host shown under it. */
+data class OpenLink(val words: String, val link: String, val host: String)
 
 @Serializable
 data class YourStepTaf(val id: String, val name: String = "")

@@ -511,9 +511,10 @@ A step a taf may never take itself, such as approving a bank transfer, is handed
 first, each a panel (`YourStepPanel`, `views/YourStepViews.kt`) in tafs cloud's words: its title and
 the taf's name, what to do, and why. Needs you counts each once, as tafs cloud does.
 
-- **Open in {vendor}** shows only when tafs cloud sent both `link` and `words.open` (`YourStep.open`),
-  and opens the browser on that link. The app never builds, parses or checks a link: one tafs cloud
-  left out shows the words with no button.
+- **Open in {vendor}** shows only for an https `link` whose own host is tafs cloud's `link_host`,
+  with `words.open` (`YourStep.open`, as iOS's `openLink`). It opens the browser on that link, and
+  the host shows under the button, so the line names where it really goes. A link with no host apart,
+  another host, or plain http shows the words with no button, as does one tafs cloud left out.
 - **Done** and **Skip it** are for those who answer holds (`canAnswerHolds`). Each reads the hand-off
   from KIFF (`GET /v1/me/handoffs/{id}`) for its version, signs KIFF's `kiff.handoff.v1` (tenant,
   hand-off, `done` or `skipped`, version, signed_at) with the **device key** (the signing key KIFF

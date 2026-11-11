@@ -100,9 +100,15 @@ class YourStepTest {
 
   @Test fun theButtonShowsOnlyWithTafsCloudsLinkAndWords() {
     fun home(s: String) = KiffClient.json.decodeFromString<Home>("""{"tafs":[],"your_steps":[$s]}""").yourSteps!!.single()
-    assertEquals("Open in Stripe" to "https://dashboard.stripe.com/payouts/po_1", home(step()).open)
+    assertEquals(bot.tafs.app.kiff.OpenLink("Open in Stripe", "https://dashboard.stripe.com/payouts/po_1", "dashboard.stripe.com"), home(step()).open)
     assertNull("no link: words only", home(step(link = "")).open)
     assertNull("no words for the button: none", home(step(open = "")).open)
+    assertNull("no host apart: none", home(step(link = ""","link":"https://dashboard.stripe.com/payouts/po_1"""")).open)
+    assertNull("a host that isn't the link's: none",
+      home(step(link = ""","link":"https://dashboard.stripe.com.evil.example/login","link_host":"dashboard.stripe.com"""")).open)
+    assertNull("plain http: none", home(step(link = ""","link":"http://dashboard.stripe.com/payouts/po_1","link_host":"dashboard.stripe.com"""")).open)
+    assertEquals("the host's case doesn't matter", "dashboard.stripe.com",
+      home(step(link = ""","link":"https://Dashboard.Stripe.com/payouts","link_host":"dashboard.stripe.com"""")).open?.host)
   }
 
   @Test fun stepsAreReadFromHomeAndCountedInNeedsYou() = runTest {
