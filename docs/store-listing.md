@@ -33,41 +33,45 @@ release.
 
 **Title:** tafs: AI Agents for Business
 
-**Short description:** AI agents for critical work, under your control: open code, privacy first.
+**Short description:** AI agents that do your routine work. You keep the final say.
 
 **Full description:**
 
 ```
-tafs is where a business hands jobs to AI agents, or AI teammates, called tafs, and gives each one a Card: the limits it works inside.
+They taf. You kiff.
+AI agents that do your routine work. You keep the final say.
 
-Use it to automate refunds, bill pay, access and deploys. Each AI agent works on its own inside its Card, and never past it.
+Pick the job that eats your mornings: refunds, disputes, unpaid invoices, new leads. Coach builds a taf for it. The taf does the routine, and anything big waits for your yes.
 
-Inside its Card, a taf acts and leaves a receipt. Outside it, the taf waits for your answer on your phone. Revoke the Card and no new action goes through.
+tafs is where a business hands jobs to AI agents, or AI teammates, called tafs, to automate the routine. Each one works on a Card: what it does on its own, what it asks you first, and what it never does. It works on its own inside its Card, and never past it. Revoke the Card and no new action goes through.
 
-WHY YOU CAN HAND IT THE WORK
-• Limits it can't talk its way past: every action is checked against its Card by KIFF, outside the AI, before it reaches your app. No prompt changes a limit.
-• Your sign-ins stay sealed: the taf never sees your passwords or tokens. KIFF's connection service and its sign-in provider hold them, never the phone.
-• Your fingerprint for what matters: routine work goes ahead within its limits. Anything past its Card is refused, or, if its Card says Ask, waits for you, approved with your fingerprint or face.
-• You decide what really happened: when an app can't confirm a payment went through, tafs asks you "Did this happen?" Nothing is counted as done on a guess.
+READY-MADE JOBS, FOR EXAMPLE
+• No refund waits overnight: answers refund requests from the support queue and refunds within the Card, for example up to €150 each and €2,000 a day.
+• Stop losing disputes you could win: answers card disputes with the order, delivery proof and the customer's messages before the deadline.
+• Get paid without chasing: reminds customers of overdue invoices on a schedule and moves no money.
+• Never lose a lead to a slow reply: turns each new form entry into a deal and sends a first reply within the hour.
+• Stop answering "where is my order?": answers order questions from the shop and passes anything about money to you.
+More come ready too: bookings, bills, joiners and leavers, deploys and receipts. Every limit is yours to change.
 
-JOBS A TAF CAN TAKE, FOR EXAMPLE
-• Refunds: settles refund and credit requests from the support queue, for example up to €150 each and €2,000 a day.
-• Bill pay: pays vendor bills that match a purchase order; wires always ask.
-• Access: gives joiners their apps and removes leavers; elevated access always asks.
-• Deploys: ships fixes when CI is green and rolls back; migrations always ask.
-• Chargebacks: answers card disputes with evidence.
+THE CARD: YOUR CONTROL
+• Does on its own: the routine, within its limits, with a receipt for each action.
+• Asks you first: anything over a limit waits on your phone. Approve it once or refuse it, with your fingerprint or face. No answer means no.
+• Never does: what you rule out, such as a payout or a new payee.
+Every action is checked against its Card by KIFF, outside the AI, before it reaches your app. No prompt changes a limit, not even a trick in an email.
 
 HOW IT WORKS
-• Coach: say the job in your own words. Coach, the AI assistant in tafs, connects your apps, drafts the taf and its Card, and you confirm.
-• Needs you: when a taf wants to go past its Card, the call is held. Approve it once or refuse it, with your fingerprint or face unlock.
+• Coach: pick a job or say it in your own words. Coach, the AI assistant in tafs, connects your apps and drafts the taf and its Card. You change the numbers before you sign.
+• Needs you: what's waiting for your yes.
 • Chat: ask a taf what it did, or tell it what to do differently, and watch its work as it goes.
 • Record: everything your tafs did, newest first, with a receipt for each action that went through.
 • Doors: let customers or colleagues reach a taf by email or chat.
+• You decide what really happened: when an app can't confirm a payment went through, tafs asks you "Did this happen?" Nothing is counted as done on a guess.
 
 YOUR DATA
-Approvals are signed with a key kept in your phone's secure hardware. No ads, no trackers. Delete your account in Settings, or see kiff.dev/privacy#delete-account.
+The taf never sees your passwords or tokens. Approvals are signed with a key kept in your phone's secure hardware. Halt stops one taf, or all of them, with one tap. No ads, no trackers. Delete your account in Settings, or see kiff.dev/privacy#delete-account.
 
-Plans: Solo, with {SOLO_MONTHLY_CREDITS} credits a month, and packs of credits that never expire, both bought in the app through Google Play. Each run of a taf uses credits for the AI it used. There's no free trial.
+PLANS
+Solo, with {SOLO_MONTHLY_CREDITS} credits a month, and packs of credits that never expire, both bought in the app through Google Play. Each run of a taf uses credits for the AI it used. A quiet check, when nothing is new, costs nothing. Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits. There's no free trial. Plans and prices: kiff.dev/tafs
 ```
 
 ## German (de)
