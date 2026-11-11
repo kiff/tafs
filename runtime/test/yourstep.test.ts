@@ -112,6 +112,19 @@ describe("a step's link and the taf's own vendors", () => {
     expect(of("https://myshopify.com/").link).toBeUndefined();
   });
 
+  it("vouch for nothing beside the connection on a shared host or a two-part suffix", () => {
+    const reach = vendorReach([
+      { agent: "agent-a", vendor: "Good", kind: "provider", server: "https://good.netlify.app/mcp", status: "approved" },
+      { agent: "agent-a", vendor: "Vendor", kind: "key", api: { url: "https://api.vendor.co.uk/v1" }, status: "approved" },
+    ], "agent-a");
+    const of = (link: string) => yourStepsOf(run({ requirements: [step({}, { link })] }), "en", reach)[0]!;
+    expect(of("https://good.netlify.app/approve").link_host).toBe("good.netlify.app");
+    expect(of("https://api.vendor.co.uk/x").link_host).toBe("api.vendor.co.uk");
+    for (const evil of ["https://evil.netlify.app/login", "https://bank-verify.netlify.app/", "https://evil.co.uk/x", "https://vendor.co.uk/x"]) {
+      expect(of(evil).link, evil).toBeUndefined();
+    }
+  });
+
   it("show the link only on one of them: a look-alike host a crafted message slipped in is words only", () => {
     const reach = vendorReach(conns, "agent-a");
     const of = (link: string) => yourStepsOf(run({ requirements: [step({}, { link })] }), "en", reach)[0]!;
