@@ -576,6 +576,16 @@ the same rows with **Sign in again**, **Disconnect** and **Cancel**, then **From
 with **Clear these connections** on tafs cloud's `used_by` (`AppModel.clearRemovedConnections`),
 one fingerprint for them all, and **Other connections** last.
 
+
+**What the phone signs.** Before it shows or signs a grant, the phone recomputes its digest from
+what planque sent and refuses one that doesn't match (`PlanqueClient.digestCovers`,
+`Grant.digestMatches`). Without `digest_v`, the digest covers the request alone (v1). With
+`digest_v: 2`, it covers `{"lang", "request", "text"}`, so the words the person reads (`text`, in
+their language) and that language are what's signed. An unknown version, or a v2 grant without its
+words or its language, never matches. Every request to planque carries the person's language
+(`Accept-Language`, as tafs cloud gets it), for the words planque writes. Nothing changes on screen
+until planque issues v2 grants; iOS checks the same.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android: ready for the approval text in the person's language (Android 1.7.2).** The app tells planque the person's language, and checks a grant marked `digest_v: 2` over its words and their language as well as its request, so the words shown are the words signed. Grants without the mark are checked as before, so nothing changes until planque issues v2 grants (docs/android-app.md › Connect apps).
 - **A vendor that won't let tafs sign in says so (Android 1.7.1).** When a vendor refuses planque's sign-in client (planque's `vendor_refused_client`), Connect shows planque's words, which say it's the vendor's and nothing was connected, instead of "it isn't working on our side".
 - **Answer within's menu opens under its value (Android 1.7.1).** It opened at the row's start, over the tabs; it now opens under the hours it changes.
 - **The runs a taf kept are titled "Its runs" (tafs cloud).** `/v1/tafs/{id}/work/runs` answered `title: "Its work"`, the same words as the work panel above it, so a taf's Activity showed two "Its work" headings on both apps. It's "Its runs" now, in all 8 languages ("Ses exécutions", "Seine Läufe"…). The apps draw tafs cloud's title, so no app release is needed.
