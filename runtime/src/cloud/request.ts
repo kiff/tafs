@@ -62,7 +62,7 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
     if (e.kind === "usage") {
       for (const c of callsOf(e.body)) {
         // A tool nothing names says it worked, with no tool name.
-        const words = stepWords(c.tool, titles) ?? w.step_worked;
+        const words = stepWords(c.tool, titles, lang) ?? w.step_worked;
         const step: RequestStep = { label: words, line: c.notMade ? w.step_not_made(at(e.time)) : c.error ? w.step_call_failed(at(e.time)) : at(e.time),
           state: c.notMade ? "not_made" : c.error ? "failed" : "done" };
         calls.push({ tool: c.tool, ...(c.error && !c.notMade ? { error: true as const } : {}), ...(c.inputHash ? { inputHash: c.inputHash } : {}), step });

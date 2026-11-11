@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { attachWhys, failedStep, foldRetried, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
+import { LANGUAGES } from "../src/cloud/words/index.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
   it("names a vendor from its server's host, and none from a cloud's own URL", () => {
@@ -115,5 +116,30 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     expect(foldRetried([{ tool: "a", error: true as const, inputHash: "x" }, { tool: "a", error: true as const, inputHash: "x" }])).toEqual([{ tool: "a", error: true, inputHash: "x" }]);
     // No digest (a record from before kiff/agents wrote one): nothing folds.
     expect(foldRetried([{ tool: "a", error: true as const }, { tool: "a" }])).toEqual([{ tool: "a", error: true }, { tool: "a" }]);
+  });
+});
+
+describe("Coach's steps in the person's language", () => {
+  it("writes each step in the language asked for, with the vendor and KIFF's title written in", () => {
+    const pl = new Steps(new Map([["refund_k3f9", "Refund a payment"]]), "pl");
+    expect(pl.call("show", {})).toBe("Pokazuję Ci kartę…");
+    expect(pl.call("planque", { action: "request", server: "https://mcp.stripe.com/mcp", tools: ["x"] }, "c1")).toBe("Przygotowuję narzędzia Stripe do Twojego zatwierdzenia…");
+    expect(pl.call("kiff_draft", {})).toBe("Przygotowuję Card…");
+    // A tool KIFF titles keeps the vendor's title, as it is.
+    expect(pl.call("refund_k3f9", {})).toBe("Refund a payment…");
+    expect(new Steps(new Map(), "fr").call("planque", { action: "status" })).toBe("Je vérifie votre connexion…");
+    expect(stepWords("taf_pause", new Map(), "de")).toBe("Ich pausiere den taf");
+  });
+
+  it("has a line for every one of Coach's tools in every language, never English outside English", () => {
+    const tools = ["show", "taf_results", "memory", "workspace", "kiff_draft", "kiff_card", "kiff_pending", "tafs_state", "taf_run", "taf_check",
+      "taf_estimate", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"];
+    for (const lang of LANGUAGES) {
+      for (const tool of tools) {
+        const line = new Steps(new Map(), lang).call(tool, {});
+        expect(line, `${lang} ${tool}`).toBeTruthy();
+        if (lang !== "en") expect(line, `${lang} ${tool}`).not.toBe(new Steps(new Map(), "en").call(tool, {}));
+      }
+    }
   });
 });

@@ -2201,7 +2201,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (!Number.isNaN(at)) part.seen = Math.max(part.seen, at);
         // A call refused back unmade (an act beside a read) isn't failed work: it shows as not made.
         for (const t of turn?.waited ?? []) {
-          const words = stepWords(t.tool, titles);
+          const words = stepWords(t.tool, titles, lang);
           part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}), ...(t.inputHash ? { inputHash: t.inputHash } : {}) });
         }
         continue;
@@ -2391,12 +2391,15 @@ const UNMARKED_OWNER = new Set(["confirm", "questions", "approval", "sign_in", "
 /**
  * A plan (a `steps` component) with its one-line form, `line`: "Step 3 of 6 · Your rules", the step
  * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
- * counting of its own. Any other component is as it came.
+ * counting of its own. A sign-in card gets its buttons in the app's language. Any other component is as it came.
  */
 export function withLine(component: unknown, lang: Lang = "en"): unknown {
   const c = component as { type?: unknown; steps?: unknown; waits?: unknown } | null | undefined;
   // A card from before kiff/agents marked who it waits on gets the mark here, so an app reads `waits` on every card.
   if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) }, lang);
+  // A sign-in card's buttons are the app's chrome, in the app's language (Accept-Language), whatever language
+  // Coach wrote the card in; its title, text and note are Coach's message, as written.
+  if (c && c.type === "sign_in") return { ...c, yes: wordsIn(lang).signin_yes, no: wordsIn(lang).signin_no };
   if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
   const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
   const n = steps.length;
@@ -4975,7 +4978,7 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
 }
 
 async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en"): AsyncGenerator<string> {
-  const steps = new Steps(titles);
+  const steps = new Steps(titles, lang);
   const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.

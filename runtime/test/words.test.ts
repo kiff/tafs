@@ -66,7 +66,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   const SAME_AS_ENGLISH: Record<string, string[]> = {
     // "Company" is a plan name, kept in every language (docs/languages.md); the seats around it are translated.
     // "25 min" and "5 h" are written alike in most of the eight (Dutch writes "5 u", Polish "5 godz.").
-    all: ["cr_company", "waiting_minutes", "waiting_hours"],
+    all: ["cr_company", "waiting_minutes", "waiting_hours", "doing_titled"], // doing_titled: the tool's own title and "…"
     de: ["push_credits_title", "dial_app"], // "Credits" is the German term in the glossary; "App" is German too
     fr: ["cr_actions", "dial_app"], // "action", "actions" and "App" are French words too
     es: ["dial_app"], // "App" is used as is
