@@ -2525,6 +2525,14 @@ enum Words {
         static var waitingForBrowser: String { Words.line("needs_you.waiting_for_browser") }
         /// When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this {device} and its lock screen, even with tafs closed.
         static func whenTafAsksSomethingOutside(device: String) -> String { Words.line("needs_you.when_taf_asks_something_outside", device) }
+        enum YourStep {
+            /// This step was already answered or has ended.
+            static var ended: String { Words.line("needs_you.your_step.ended") }
+            /// Your answer didn't go through. {why}
+            static func notAnswered(why: String) -> String { Words.line("needs_you.your_step.not_answered", why) }
+            /// Not answered: it wasn't confirmed.
+            static var notAnsweredUnconfirmed: String { Words.line("needs_you.your_step.not_answered_unconfirmed") }
+        }
     }
     enum Overview {
         /// {figure} {words}
