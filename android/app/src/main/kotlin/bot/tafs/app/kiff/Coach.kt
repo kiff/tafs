@@ -297,9 +297,42 @@ data class CoachCardDraft(
 data class TafWork(
   val summary: WorkSummary? = null,
   val requests: List<WorkRequest> = emptyList(),
-  /** Scheduled runs that didn't happen: the last one was still working (busy), or the time passed (missed). */
+  /** Scheduled runs that didn't happen: busy, missed, too large, waiting for credits, and others, each in tafs cloud's words. */
   val skipped: List<SkippedFiring> = emptyList(),
+  /** How the taf is doing, with tafs cloud's reasons and fixes (docs/reliability.md › Its health); absent when it can't be read. */
+  val health: TafHealth? = null,
 )
+
+/**
+ * A taf's health as tafs cloud decides it: `healthy`, `at_risk` or `failing`, each reason a line, and a fix for the lines that have
+ * one. The app draws them and decides nothing: it never works out a level or a fix itself.
+ */
+@Serializable
+data class TafHealth(
+  val level: String = "healthy",
+  val lines: List<String> = emptyList(),
+  val fixes: List<HealthFix> = emptyList(),
+) {
+  /** The fix for line [index], if tafs cloud sent one. */
+  fun fixFor(index: Int): HealthFix? = fixes.firstOrNull { it.line == index }
+
+  /**
+   * Whether a work's line is this health's first reason, as tafs cloud says it on an idle taf's work (docs/reliability.md): the first
+   * line is that reason, then what to do ("…, so nothing ran" and "…, so nothing ran. Narrow it with Coach."), so the page says it once.
+   */
+  fun repeats(workLine: String): Boolean {
+    val line = workLine.trim()
+    if ((level != "at_risk" && level != "failing") || line.isEmpty()) return false
+    return lines.firstOrNull()?.startsWith(line) == true
+  }
+}
+
+/**
+ * A button for one of the health's lines: `coach` opens Coach with [say] in its box; `credits` opens Plan & usage. [words] is the
+ * button's text. A kind the app doesn't know draws no button.
+ */
+@Serializable
+data class HealthFix(val line: Int, val kind: String, val words: String = "", val say: String? = null)
 
 @Serializable
 data class WorkSummary(val status: String = "idle", val line: String = "", @SerialName("needs_you") val needsYou: Int = 0)
@@ -366,7 +399,7 @@ data class WorkDelivery(
   val sendPlace: String get() = if (place == "door_reply") place else key ?: place
 }
 
-/** A scheduled run that was skipped: when it was due, why (missed or busy), and tafs cloud's words for it. */
+/** A scheduled run that was skipped: when it was due, why (`missed`, `busy`, `too_large`, `credits`, …), and tafs cloud's words for it. */
 @Serializable
 data class SkippedFiring(
   @Serializable(with = bot.tafs.app.model.InstantAsString::class) val due: Instant,
