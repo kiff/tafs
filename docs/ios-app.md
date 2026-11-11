@@ -196,8 +196,9 @@ the app in sample mode.
     of its own, and an older tafs cloud's bare `null` shows nothing.
   - **Gone:** the tasks, packs of tasks and counted tasks, AI use and Go on, and the plan's
     trial.
-- **Record** (`RecordView`): chips for "All tafs" and each taf (its colour) above the type
-  filter, combined with it. Each entry starts with its taf's dot and name; each day's header
+- **Record** (`RecordView`): signed in, a search box and Export receipts above the list
+  ([The Record across tafs](#the-record-across-tafs)); chips for "All tafs" and each taf (its
+  colour) above the type filter, combined with it. Each entry starts with its taf's dot and name; each day's header
   shows that day's spend (`RecordView.spent`, a sum per currency of the money moved).
 - **A taf's tabs** (`TafDetailView`): **Chat · Activity · Card · Setup**. Activity: the taf's
   Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
@@ -372,6 +373,35 @@ under them; compact otherwise, with a scrolling week strip and the selected day'
 work under it. What it shows (`CalendarState`) is kept on `AppModel`, so a rotation
 or a new layout keeps it, and cleared with the rest of an account's state. A tap
 opens the taf. Read-only; no new dependency. Tests: `TafsTests/CalendarTests.swift`.
+
+## The Record across tafs
+
+Signed in, the Record tab also searches across the person's tafs, opens one case, and
+exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`,
+`/v1/record/receipts`; `Views/RecordSearchViews.swift`, `KIFF/TafsCloud+Record.swift`,
+`AppModel.searchRecord`), the same reads and words as Android:
+
+- **Search:** the box's placeholder is tafs cloud's `hint` ("Search by order, invoice, amount
+  or action"), read once when the tab opens; the app's own line stands in until it comes.
+  Search sends what's typed. The results take the list's place: tafs cloud's `groups`, each
+  call drawn as its taf's Activity draws it (`SourceActivityRow`, with its receipt and its own
+  next step) under its taf's name, and **More** for `next_cursor`. A taf the phone doesn't
+  list shows the call as tafs cloud words it, without a next step. A cursor tafs cloud refuses
+  (409, a call made since) searches again. Nothing found shows `none_words`. Clearing the box
+  shows the Record as before. Never by a customer's name: KIFF keeps none.
+- **One case:** a call with an `about` ("Order 1042 ›") opens a sheet (`RecordCaseSheet`) with
+  every call about the same thing, oldest first. The step that didn't go through is named
+  first, in tafs cloud's words (`failed.words`), and its own next step on its row is the only
+  retry, through the taf under its Card. The Record never sends anything again itself. A
+  reference with a `/` (an invoice's "F-2026/001") goes escaped, as one segment.
+- **Export receipts,** for someone who oversees or manages every taf (`AppModel.seesEveryTaf`;
+  tafs cloud's 403 still decides): Last 7, 30 or 90 days, today among them, as the account's
+  calendar days, inside tafs cloud's 92. Two files go to the share sheet: tafs cloud's answer
+  byte for byte as JSON, so KIFF's receipts are exactly as issued, never re-encoded, and its
+  CSV. They're written under the export folder, replaced at each export and removed at
+  sign-out with the opened files. `missing` shows as a line ("2 calls have no receipt yet.").
+
+Tests: `TafsTests/RecordSearchTests.swift`.
 
 ## Tests and CI
 
