@@ -432,7 +432,22 @@ export interface MCPConfig {
   run: RunTool;
   now: () => Date;
   log?: (msg: string, err?: unknown) => void;
+  /** One line per tool call: the tool, how it ended, and the taf's id when the call named one by id. */
+  called?: (line: ToolCallLine) => void;
 }
+
+/**
+ * How a Coach tool call ended, for its log line. Never its arguments, its answer, a name, an address or a
+ * vendor's id: only the tool, the outcome and the taf's own id.
+ */
+export interface ToolCallLine {
+  tool: string;
+  outcome: "done" | "done_with_error" | "refused_by_tool" | "refused" | "repeat" | "busy" | "failed";
+  taf?: string;
+}
+
+/** A taf's own id, as tafs cloud makes it: a call that names a taf by its name logs no taf. */
+const TAF_ID = /^taf-[a-z0-9]{8,40}$/;
 
 interface RPC {
   jsonrpc?: string;
@@ -500,8 +515,17 @@ function text(value: unknown, isError = false) {
  * of the same operation gets the same answer.
  */
 async function call(name: unknown, rawArgs: unknown, token: string | undefined, cfg: MCPConfig) {
-  const refused = (why: string) => text(`Refused by tafs: ${why}. Nothing was done.`, true);
   const tool = TOOLS.find((t) => t.name === name);
+  const named = (rawArgs as { taf?: unknown } | null)?.taf;
+  const done = await callOnce(name, tool, rawArgs, token, cfg);
+  try {
+    cfg.called?.({ tool: tool?.name ?? "unknown", outcome: done.outcome, ...(typeof named === "string" && TAF_ID.test(named) ? { taf: named } : {}) });
+  } catch { /* a log line never fails the call */ }
+  return done.answer;
+}
+
+async function callOnce(name: unknown, tool: ToolDef | undefined, rawArgs: unknown, token: string | undefined, cfg: MCPConfig): Promise<{ answer: unknown; outcome: ToolCallLine["outcome"] }> {
+  const refused = (why: string) => ({ answer: text(`Refused by tafs: ${why}. Nothing was done.`, true), outcome: "refused" as const });
   if (!tool) return refused(`there is no tool ${String(name)}`);
   const args = rawArgs === undefined ? {} : rawArgs;
   if (typeof args !== "object" || args === null || Array.isArray(args)) return refused("the arguments are not a JSON object");
@@ -520,16 +544,18 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
   // Kept per person: a retry gets the answer only in the chat that asked for it.
   const opKey = keys.op(p.tenant, p.op, p.actor);
   const kept = await cfg.store.get(opKey);
-  if (kept !== undefined) return kept;
+  if (kept !== undefined) return { answer: kept, outcome: "repeat" };
   if (!(await cfg.store.once(keys.jti(p.tenant, p.id), new Date(now.getTime() + JTI_KEPT_MS)))) return refused("this permit was used already");
   // One run of the operation at a time: a retry while the first is at work waits for its answer.
   if (!(await cfg.store.once(`${opKey}#claim`, new Date(now.getTime() + OP_KEPT_MS)))) {
-    return (await cfg.store.get(opKey)) ?? text("This call is already under way: ask again in a moment for its answer.", true);
+    const answer = await cfg.store.get(opKey);
+    return answer !== undefined ? { answer, outcome: "repeat" } : { answer: text("This call is already under way: ask again in a moment for its answer.", true), outcome: "busy" };
   }
   const { [OP_ARG]: _op, [SESSION_ARG]: sent, ...toolArgs } = a;
   const session = tool.session && typeof sent === "string" && sent ? sent : undefined;
   let answer;
   let keep: unknown;
+  let outcome: ToolCallLine["outcome"] = "done";
   try {
     const out = await cfg.run(tool.name, toolArgs, {
       tenant: p.tenant, coach, notify: () => ({ url: cfg.notifyURL, ref: newRef(p.tenant) }),
@@ -539,20 +565,22 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
     if (out instanceof Rich) {
       answer = { content: out.content, isError: out.isError };
       keep = text(out.kept, out.isError);
+      if (out.isError) outcome = "done_with_error";
     } else answer = text(out);
   } catch (err) {
     if (!(err instanceof ToolRefusal)) {
       cfg.log?.(`coach tool ${tool.name} failed`, err);
       // Free the operation, so a retry isn't "already under way" for an hour.
       await cfg.store.remove(`${opKey}#claim`).catch((e) => cfg.log?.("coach claim not freed", e));
-      return text(tool.read
+      return { answer: text(tool.read
         ? "tafs couldn't read that just now: try again in a moment."
-        : "tafs couldn't finish that just now, and it may have started before it failed. Check with tafs_state before trying again.", true);
+        : "tafs couldn't finish that just now, and it may have started before it failed. Check with tafs_state before trying again.", true), outcome: "failed" };
     }
     answer = text(err.message, true);
+    outcome = "refused_by_tool";
   }
   await cfg.store.put(opKey, keep ?? answer, new Date(now.getTime() + OP_KEPT_MS));
-  return answer;
+  return { answer, outcome };
 }
 
 /** A task Coach handed a taf, kept under its ref until its run ends. */
