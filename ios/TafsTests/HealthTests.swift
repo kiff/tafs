@@ -67,6 +67,19 @@ final class HealthTests: XCTestCase {
         XCTAssertNil(older.health, "an older tafs cloud sends none")
     }
 
+    /// On the taf's page, an idle taf's work line is its first reason without what to do, as tafs
+    /// cloud sends them: the page says it once, under its health, and any other line as it is.
+    func testTheTafsPageSaysTheFirstReasonOnce() throws {
+        let h = try health(#"{"level":"at_risk","lines":["Its last check found work too big for one run, so nothing ran. Narrow what it reads with Coach.","Two of its last ten runs failed."]}"#)
+        XCTAssertTrue(h.repeats(workLine: "Its last check found work too big for one run, so nothing ran"), "the work's line is the first reason")
+        XCTAssertTrue(h.repeats(workLine: "Its last check found work too big for one run, so nothing ran. Narrow what it reads with Coach."))
+        XCTAssertFalse(h.repeats(workLine: "Next run today at 14:00"), "any other line is said")
+        XCTAssertFalse(h.repeats(workLine: "Two of its last ten runs failed"), "only the first reason")
+        XCTAssertFalse(h.repeats(workLine: "  "))
+        XCTAssertFalse(try health(#"{"level":"healthy","lines":["Its last check found work too big for one run"]}"#)
+            .repeats(workLine: "Its last check found work too big for one run"), "a healthy taf's line is said")
+    }
+
     /// Home's taf carries its health onto the taf the app draws. Its row says why only where
     /// tafs cloud does: an otherwise idle taf, by the list's `work.line`. A halted taf, or one
     /// that needs its owner or is working, says that first.
