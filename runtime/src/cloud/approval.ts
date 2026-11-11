@@ -33,6 +33,8 @@ export interface ApprovalGrant {
   status: string;
   digest: string;
   vendor?: string;
+  /** The name of the taf it was made for, as planque keeps it: named before the taf exists, during its setup. */
+  agent_name?: string;
   reason?: string;
   /** The app's sign-in was set up on the owner's pick, not by an operator (kiff/planque#87). */
   on_demand?: boolean;
@@ -205,10 +207,13 @@ function vendorOf(g: ApprovalGrant): string {
   return g.vendor || g.request.server || "the vendor";
 }
 
-/** The taf's name for its agent, when tafs cloud has it: never the agent id. */
-async function nameOf(ctx: DecideContext, agent?: string): Promise<string | undefined> {
+/**
+ * The taf's name for the phone's signing prompt: tafs cloud's taf by that agent first; then, for a taf still
+ * being set up and not listed yet, the names it was given (planque's `agent_name`, a draft's label). Never the agent id.
+ */
+async function nameOf(ctx: DecideContext, agent: string | undefined, ...given: Array<string | undefined>): Promise<string | undefined> {
   const name = await ctx.tafName?.(agent).catch(() => undefined);
-  return name?.trim() || undefined;
+  return [name, ...given].map((n) => (typeof n === "string" ? n.trim() : "")).find((n) => n !== "") || undefined;
 }
 
 /** The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else the grant's vendor. */
@@ -307,7 +312,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     const pending: Pending = { step: "cards", grant: grant.id, vendor, draft: ask.draft, version: draft.version, made: ctx.now.toISOString(), key };
     await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
     await noteSending(grant, ctx);
-    return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: W.reasonCard(await nameOf(ctx, draft.agent)), key, kiff: { draft: ask.draft, version: draft.version } } };
+    return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: W.reasonCard(await nameOf(ctx, draft.agent, draft.label, grant.agent_name)), key, kiff: { draft: ask.draft, version: draft.version } } };
   }
   // Signed in already, its tools listed and waiting for their own approval: an earlier approval
   // went through even if its report didn't reach here (the phone lost it, or it was refused), so
@@ -336,7 +341,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   return {
     outcome: "sign",
     ask: {
-      id, step: "connect", message: `tafs.connect.v1|${ctx.tenant}|${grant.id}|${grant.digest}`, reason: W.reasonConnect(appNameOf(grant) || vendor, await nameOf(ctx, grant.request.agent)), key: "window",
+      id, step: "connect", message: `tafs.connect.v1|${ctx.tenant}|${grant.id}|${grant.digest}`, reason: W.reasonConnect(appNameOf(grant) || vendor, await nameOf(ctx, grant.request.agent, grant.agent_name)), key: "window",
       planque: { grant: grant.id, body: { digest: grant.digest, ...(kiffProfile ? { kiff_profile: kiffProfile } : {}) } },
     },
   };

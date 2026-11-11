@@ -28,7 +28,7 @@ function grant(over: Record<string, unknown> = {}, request: Record<string, unkno
 
 interface Services {
   grants: unknown[];
-  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[]; confirm_key?: string }>;
+  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[]; confirm_key?: string; label?: string }>;
   /** What KIFF answers the device-signature check: signed, or a status. */
   signed: true | number;
   /** Which key KIFF says signed, and the window it named (kiff/tafs#494); none, as a KIFF from before. */
@@ -253,6 +253,24 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const unnamed = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant({}, { agent: "taf-x9" }).request) }, { "accept-language": "fr-FR" });
     expect((unnamed.body.ask as { reason: string }).reason).toBe("Connecter Stripe");
     expect(JSON.stringify(unnamed.body)).not.toContain("taf-x9\"");
+  });
+
+  it("a connect while Coach sets the taf up, before it's listed: the prompt names it as planque keeps it, and a Card by the draft's label", async () => {
+    const s = services();
+    const setup = { agent: "remb-x2" };
+    s.grants = [grant({ vendor: "stripe-mcp", agent_name: "Remboursements du lundi" }, setup)];
+    const w = await world(s);
+    const fr = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant({}, setup).request) }, { "accept-language": "fr-FR" });
+    expect((fr.body.ask as { reason: string }).reason).toBe("Connecter Stripe à Remboursements du lundi");
+    // Its Cards, the vendor connected: the draft's label names it, and with none, planque's agent_name does.
+    s.grants = [grant({ status: "connected", agent_name: "Remboursements du lundi" }, setup)];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "remb-x2", label: "Remboursements" };
+    const card = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect((card.body.ask as { reason: string }).reason).toBe("Give Remboursements its Card");
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "remb-x2" };
+    const unlabelled = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect((unlabelled.body.ask as { reason: string }).reason).toBe("Give Remboursements du lundi its Card");
+    expect(JSON.stringify([fr.body, card.body, unlabelled.body])).not.toContain("remb-x2\"");
   });
 
   it("the Cards over a connected vendor: KIFF's draft at the version shown, one message to sign", async () => {
