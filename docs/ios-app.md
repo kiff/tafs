@@ -246,6 +246,16 @@ the app in sample mode.
   it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
   Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the
   Card its room back; the first answer stands.
+- **A held call's card** (`HeldCallCard`, in Needs you) has the decision on its face: KIFF's
+  amount, the action, and the Card rule it crossed, from KIFF's record. Under them, **The taf
+  says**: what the call is on and the customer's reason, in the taf's own words, as KIFF keeps
+  them with the hold (`taf_about`, a business reference such as "Order 1042"; `taf_reason`).
+  - They may come from a customer's text, so each is one plain line, drawn verbatim
+    (`KIFFMapping.tafWords`): no markup, no link, line breaks and control characters as spaces,
+    cut at KIFF's 120 and 280 characters.
+  - They never stand in for KIFF's amount, rule or action, and nothing is read from them.
+  - The gateway's `kiff_about` and `kiff_reason` arguments aren't listed again under Details,
+    where the ids stay (`TafSaysTests`).
 
 ### Connect apps
 

@@ -1290,6 +1290,7 @@
   "needs_you.sign_in_again_to_answer": "Melde dich ab und erneut an, um von diesem Telefon zu antworten, damit KIFF seinen Schlüssel kennt. Oder beantworte diese hier in KIFF.",
   "needs_you.someone_answers": "Jemand, der in diesem Konto genehmigt, beantwortet das. Die Antwort erscheint hier.",
   "needs_you.tab_label": "Braucht dich, {n}",
+  "needs_you.taf_says": "Der taf sagt",
   "needs_you.title": "Braucht dich",
   "needs_you.turn_alerts": "Benachrichtigungen einschalten",
   "needs_you.turning_on": "Wird eingeschaltet…",

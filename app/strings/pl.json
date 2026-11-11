@@ -1386,6 +1386,7 @@
   "needs_you.sign_in_again_to_answer": "Wyloguj się i zaloguj ponownie, aby odpowiadać z tego telefonu, żeby KIFF znał jego klucz. Albo odpowiedz na to w KIFF.",
   "needs_you.someone_answers": "Odpowiada na to osoba zatwierdzająca na tym koncie. Jej odpowiedź pojawi się tutaj.",
   "needs_you.tab_label": "Czeka na Ciebie, {n}",
+  "needs_you.taf_says": "Taf pisze",
   "needs_you.title": "Czeka na Ciebie",
   "needs_you.turn_alerts": "Włącz alerty",
   "needs_you.turning_on": "Włączanie…",
