@@ -135,6 +135,8 @@ export const en = {
   cr_no_plan_line: "No plan · choose one to start",
   cr_w_again: (day: string) => `they go on when the period starts again on ${day}`,
   cr_w_no_plan: "Choose a plan to start your tafs.",
+  // What Coach's help includes, under the Solo offer in the store (buy.coach).
+  cr_buy_coach: "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.",
   cr_w_limit_raise: (again: string) => `Your tafs are waiting: the spend limit is reached. Raise it to let them go on, or ${again}.`,
   cr_w_limit_ceiling: (again: string) => `Your tafs are waiting: the spend limit is reached, and it can't go higher from the app. Contact KIFF to raise it further, or ${again}.`,
   cr_w_limit_admin: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it.",
