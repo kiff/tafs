@@ -234,7 +234,10 @@ row.
 
 A taf keeps notes in kiff/agents through its memory tool, shared by its runs and chats.
 It reads them before it starts and writes down what it learns about the owner and their
-customers. Notes shape how it works; they never change what its Card allows.
+customers. Notes shape how it works; they never change what its Card allows. They hold
+lasting facts only, never a run's working state: no list cursors, page tokens, ids to
+resume from, progress or scratch. Its check keeps where the work stands, and the owner
+reads every note in What it remembers.
 
 - `GET /v1/tafs/{id}/memory` shows the shared notes and the person's own, never another
   person's.
