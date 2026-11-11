@@ -14,6 +14,14 @@ final class ActivityPartsTests: XCTestCase {
                        "what needs the owner first, then how it's doing, then its runs and Run now, then the runs it kept")
     }
 
+    /// As on Android 51: for whoever manages the taf, its doors' knocks come first, before its held
+    /// calls; someone who doesn't manage it, and the sample, get none there.
+    func testKnocksComeFirstForWhoeverManagesTheTaf() {
+        XCTAssertEqual(TafActivityList.parts(cloud: true, manages: true), [.knocks, .held, .cardUnits, .work, .runs, .retainedRuns])
+        XCTAssertFalse(TafActivityList.parts(cloud: true, manages: false).contains(.knocks), "only whoever manages it answers a knock")
+        XCTAssertFalse(TafActivityList.parts(cloud: false, manages: true).contains(.knocks), "the sample has no doors there")
+    }
+
     func testTheOtherTabsAndTheSample() {
         XCTAssertEqual(TafDetailView.pane(section: 0, kiff: true, canChat: true), .chat)
         XCTAssertEqual(TafDetailView.pane(section: 2, kiff: true, canChat: true), .scroll, "the Card")
