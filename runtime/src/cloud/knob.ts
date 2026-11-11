@@ -433,11 +433,19 @@ function wordsOf(t: Trigger, lang: Lang = "en"): { label: string; words: string 
 /** The calendar day of an instant in zone, as YYYY-MM-DD: what "today" means for the rim. */
 export function dayIn(at: string, zone: string): string {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(at));
+    let format = dayFormats.get(zone);
+    if (!format) {
+      format = new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" });
+      dayFormats.set(zone, format);
+    }
+    return format.format(new Date(at));
   } catch {
     return at.slice(0, 10);
   }
 }
+
+/** One day formatter per zone: making one is slow, and an export reads a day for each of thousands of calls. */
+const dayFormats = new Map<string, Intl.DateTimeFormat>();
 
 /** What each job does, in one word, for the dial's face. */
 export const DOES: Record<string, string> = { refunds: "Refund", billpay: "Pay bills", access: "Access", deploys: "Deploy", chargebacks: "Chargebacks" };

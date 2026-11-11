@@ -33,6 +33,8 @@ export interface ActivityCall {
   amount?: { value: string; unit?: string | null } | null;
   read_only?: boolean; entity_id?: string; on_hash?: string; on_arg?: string;
   answer?: unknown; receipt?: unknown; reasons?: string[]; made_at?: string; reason?: string;
+  /** What the call is about, in the taf's words ("Order 1042"), as KIFF kept it from the call's kiff_about. */
+  about?: string;
 }
 
 export interface ActivityEntry {
