@@ -315,6 +315,24 @@ class CoachStartTest {
     assertTrue(m.state.value.planqueReady)
   }
 
+  @Test fun aCoachAlreadyThereWithToolsStillToGiveAsksTheirStepAndGivesNothingInsideTheStart() = runTest {
+    reads()
+    // Coach was started from another phone, its tools not all given: this phone's Start asks their own step instead.
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
+    val m = model()
+    m.loadCoach()
+    assertTrue(m.startCoach())
+    assertEquals(listOf("Connect your apps"), auth.asked)
+    assertTrue(m.state.value.coachToolsAsked)
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+  }
+
   @Test fun aMemberWhoIsNotAnAdminIsToldOnlyAnAdminConnectsTools() = runTest {
     reads()
     startAnswers(keys = 403 to """{"error":"forbidden"}""")
