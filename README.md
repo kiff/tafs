@@ -69,7 +69,7 @@ limit still waits for you.
 Solo or Company, in credits. Credits are used only when a taf works; a quiet check, when
 nothing is new, costs nothing. At 80% you're told, and at 100% your tafs wait: nothing is
 billed after. Coach is included, enough to set up about 4 new jobs a month. Packs are
-bought in the app and never expire. There's no free trial. Prices:
+bought in the Android app, not yet on iPhone and iPad, and never expire. There's no free trial. Prices:
 [kiff.dev/tafs](https://kiff.dev/tafs).
 
 ## Why you can trust it
