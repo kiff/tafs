@@ -989,109 +989,16 @@ final class KIFFClient {
 
     // MARK: Coach's tools (kiff/tafs#206)
 
-    /// Coach's tools on tafs cloud's MCP server, each its own connection in KIFF; the reads
-    /// are declared read-only.
-    static let coachTools: [(name: String, readOnly: Bool)] = [
-        ("tafs_state", true), ("taf_run", true), ("taf_task", false), ("run_stop", false),
-        ("taf_pause", false), ("version_try", false), ("version_install", false),
-    ]
-
-    /// One of the account's tool connections in KIFF's gateway: its name (a held call's action),
-    /// the server it reaches, and whether it's the account's control server.
-    struct Connection: Decodable, Equatable {
-        let name: String
-        let url: String?
-        let control: Bool?
+    /// Gives Coach's tools their connections: tafs cloud's batch (`tools.connect.body`), sent
+    /// to the gateway as these bytes and signed. The phone builds none of it (docs/coach.md).
+    func connectBatch(_ body: Data) async throws {
+        let _: Empty = try await send("POST", "/v1/connections/batch", body: RawJSON(data: body), base: gatewayURL)
     }
 
-    /// The account's tool connections in KIFF's gateway.
-    func connections() async throws -> [Connection] {
-        struct Wrapped: Decodable { let connections: [Connection] }
-        let raw: RawBody = try await send("GET", "/v1/connections", base: gatewayURL)
-        return (try? JSONDecoder().decode(Wrapped.self, from: raw.data).connections) ?? (try? JSONDecoder().decode([Connection].self, from: raw.data)) ?? []
-    }
-
-    /// What giving Coach its tools needs, from the account's connections: the tools still to
-    /// connect, or the first name another connection holds. One there counts as Coach's only
-    /// when it's tafs cloud's server (`mcp`) as the control server: Coach's Cards grant by name,
-    /// so any other would put a vendor's tool on them.
-    static func coachToolsPlan(_ there: [Connection], mcp: URL) -> (missing: [(name: String, readOnly: Bool)], taken: String?) {
-        let byName = Dictionary(there.map { ($0.name, $0) }, uniquingKeysWith: { a, _ in a })
-        var missing: [(name: String, readOnly: Bool)] = []
-        for tool in coachTools {
-            guard let c = byName[tool.name] else { missing.append(tool); continue }
-            if c.url != mcp.absoluteString || c.control != true { return ([], tool.name) }
-        }
-        return (missing, nil)
-    }
-
-    /// Connects one of Coach's tools on tafs cloud's server (`mcp`) as the account's own control
-    /// server: verify mode, so the server checks KIFF's permit on each call and KIFF holds no
-    /// credential for it. A signed setup call to the gateway; one at a time, since each rewrites
-    /// the account's gateway contract.
-    func connectCoachTool(_ name: String, readOnly: Bool, mcp: URL) async throws {
-        struct Body: Encodable {
-            let name: String
-            let url: String
-            let tool: String
-            let mode = "verify"
-            let audience: String
-            let control = true
-            let idempotencyArgument = "tafs_op"
-            let readOnly: Bool?
-            enum CodingKeys: String, CodingKey {
-                case name, url, tool, mode, audience, control
-                case idempotencyArgument = "idempotency_argument", readOnly = "read_only"
-            }
-        }
-        let _: Empty = try await send("POST", "/v1/connections", body: Body(name: name, url: mcp.absoluteString, tool: name,
-                                                                           audience: mcp.absoluteString, readOnly: readOnly ? true : nil),
-                                      base: gatewayURL)
-    }
-
-    /// Coach's Cards (kiff/tafs#206), for the account's Setup agent: the reads share one, 500 a
-    /// day; a task 50 a day and a trial 20, then asked; stopping and pausing 50 a day each, then
-    /// refused; and every install held for the owner. Stable ids, so sending them again revises
-    /// the same Cards. From the phone, signed, they are issued at once.
-    func submitCoachCards(agentID: String) async throws {
-        struct Grant: Encodable { let action: String }
-        struct Aggregate: Encodable {
-            let quantity = "count"
-            let limit: Int
-            let window = "calendar_day"
-        }
-        struct Card: Encodable {
-            let id: String
-            let subject: String
-            let domain = "gateway"
-            let onExceed: String
-            let holdExpiry: String?
-            let grants: [Grant]
-            let aggregates: [Aggregate]
-            enum CodingKeys: String, CodingKey {
-                case id, subject, domain, grants, aggregates
-                case onExceed = "on_exceed", holdExpiry = "hold_expiry"
-            }
-        }
-        struct Body: Encodable {
-            let agentID: String
-            let label = "Coach"
-            let cards: [Card]
-            enum CodingKeys: String, CodingKey { case label, cards, agentID = "agent_id" }
-        }
-        func card(_ id: String, _ actions: [String], limit: Int, asks: Bool) -> Card {
-            Card(id: id, subject: agentID, onExceed: asks ? "owner" : "refuse", holdExpiry: asks ? "10m" : nil,
-                 grants: actions.map(Grant.init), aggregates: [Aggregate(limit: limit)])
-        }
-        let cards = [
-            card("coach-reads", ["tafs_state", "taf_run"], limit: 500, asks: false),
-            card("coach-taf-task", ["taf_task"], limit: 50, asks: true),
-            card("coach-version-try", ["version_try"], limit: 20, asks: true),
-            card("coach-run-stop", ["run_stop"], limit: 50, asks: false),
-            card("coach-taf-pause", ["taf_pause"], limit: 50, asks: false),
-            card("coach-version-install", ["version_install"], limit: 0, asks: true),
-        ]
-        let _: AgentDraft = try await send("POST", "/v1/me/agent-drafts", body: Body(agentID: agentID, cards: cards))
+    /// Submits a draft exactly as tafs cloud sent it (Coach's Cards, `tools.card.body`): from
+    /// the phone, signed by the approval key, it is issued at once.
+    func submitDraft(_ body: Data) async throws {
+        let _: Empty = try await send("POST", "/v1/me/agent-drafts", body: RawJSON(data: body))
     }
 
     // MARK: Alerts
@@ -1311,7 +1218,7 @@ final class KIFFClient {
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
         let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key" || path == "/v1/me/device/relink")
-            : (base == gatewayURL && path == "/v1/connections")
+            : (base == gatewayURL && (path == "/v1/connections" || path == "/v1/connections/batch"))
         // What grants authority is signed by the approval key, once the session has one,
         // within a step the owner confirmed; KIFF picks the key by route, so the header is
         // the same (kiff/tafs#233).

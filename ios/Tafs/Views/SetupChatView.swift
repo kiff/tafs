@@ -47,6 +47,8 @@ struct SetupChatView: View {
     @State private var turn = PinnedTurn()
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
+    /// Coach's tools step, opened from its row; a first Start opens it too (`coachToolsAsked`).
+    @State private var toolsOpen = false
     /// New conversation on a chat that's already empty: the thread shows its top.
     @State private var toTop = 0
     /// The answer of Coach's being reported, from its menu (kiff/tafs#421).
@@ -75,6 +77,8 @@ struct SetupChatView: View {
                         DictationBar(dictation: model.dictation)
                     }
                 } else {
+                    // Coach's tools still to give: one line, which opens the step (docs/coach.md).
+                    CoachToolsRow { toolsOpen = true }
                     // Beside the chat, the plan is in the panel.
                     if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
                     thread
@@ -106,6 +110,10 @@ struct SetupChatView: View {
         }
         .setupChrome(wide: sizeClass == .regular)
         .sheet(item: $reporting) { ReportAnswerSheet(answer: $0).environmentObject(model) }
+        .sheet(isPresented: Binding(get: { toolsOpen || model.coachToolsAsked },
+                                    set: { shown in if !shown { toolsOpen = false; model.notNowCoachTools() } })) {
+            CoachToolsSheet(close: { toolsOpen = false; model.notNowCoachTools() }).environmentObject(model)
+        }
         .sheet(isPresented: $showingChats) {
             SetupChatsList { session in
                 showingChats = false

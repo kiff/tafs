@@ -1,6 +1,5 @@
 {
   "App/AppModel.swift": {
-    "coachTools.\\(tenant).\\(agent).\\(mcp.absoluteString)": "a cache key",
     "hold off": "the sample's keywords, never shown",
     "carry on": "the sample's keywords, never shown",
     "the account changed": "sent to tafs cloud as data: the drive's why",
@@ -20,8 +19,7 @@
     "Mara": "the sample's people"
   },
   "KIFF/KIFFClient.swift": {
-    "not a re-link": "developer-only",
-    "Coach": "a label sent to KIFF"
+    "not a re-link": "developer-only"
   },
   "KIFF/ReceiptCheck.swift": {
     "secp256k1+keccak256": "the receipt's signature scheme"
