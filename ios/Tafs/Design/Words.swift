@@ -4429,6 +4429,8 @@ enum Words {
     enum Work {
         /// Answer within
         static var answerWithin: String { Words.line("work.answer_within") }
+        /// {count} days
+        static func answerWithinDays(count: Int) -> String { Words.count("work.answer_within_days", count) }
         /// {count} hours
         static func answerWithinHours(count: Int) -> String { Words.count("work.answer_within_hours", count) }
         /// You're told when a case waits longer.

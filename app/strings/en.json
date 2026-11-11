@@ -2225,6 +2225,10 @@
   "voice.voice_becomes_text_device_not": "Your voice becomes text on this device. It isn't sent until you send it.",
   "voice.what_you_said_stays_message": "What you said stays in the message box, unsent.",
   "work.answer_within": "Answer within",
+  "work.answer_within_days": {
+    "one": "{count} day",
+    "other": "{count} days"
+  },
   "work.answer_within_hours": {
     "one": "{count} hour",
     "other": "{count} hours"

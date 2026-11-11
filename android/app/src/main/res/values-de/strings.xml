@@ -2228,6 +2228,10 @@
     <string name="voice_voice_becomes_text_device_not">Deine Stimme wird auf diesem Gerät zu Text. Sie wird erst gesendet, wenn du sendest.</string>
     <string name="voice_what_you_said_stays_message">Was du gesagt hast, bleibt ungesendet im Nachrichtenfeld.</string>
     <string name="work_answer_within">Antwort innerhalb</string>
+    <plurals name="work_answer_within_days">
+        <item quantity="one">%1$s Tag</item>
+        <item quantity="other">%1$s Tage</item>
+    </plurals>
     <plurals name="work_answer_within_hours">
         <item quantity="one">%1$s Stunde</item>
         <item quantity="other">%1$s Stunden</item>

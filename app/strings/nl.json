@@ -2225,6 +2225,10 @@
   "voice.voice_becomes_text_device_not": "Je stem wordt op dit apparaat tekst. Er wordt niets verzonden tot je het verzendt.",
   "voice.what_you_said_stays_message": "Wat je zei, blijft onverzonden in het berichtvak.",
   "work.answer_within": "Antwoord binnen",
+  "work.answer_within_days": {
+    "one": "{count} dag",
+    "other": "{count} dagen"
+  },
   "work.answer_within_hours": {
     "one": "{count} uur",
     "other": "{count} uur"

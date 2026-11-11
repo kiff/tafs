@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// The Record's search box: tafs cloud's words as its placeholder. Search sends what's typed,
-/// and an emptied box shows the Record again.
+/// The Record's search box: tafs cloud's words as its placeholder. What's typed is searched once
+/// the person stops typing (`AppModel.recordQueryTyped`), the Search key searches at once, and an
+/// emptied box shows the Record again.
 struct RecordSearchBox: View {
     @EnvironmentObject private var model: AppModel
     @State private var query = ""
@@ -13,8 +14,8 @@ struct RecordSearchBox: View {
                 .scaledFont(15).foregroundColor(Theme.ink)
                 .submitLabel(.search)
                 .autocorrectionDisabled()
-                .onSubmit { search(query) }
-                .onChange(of: query) { typed in if typed.trimmingCharacters(in: .whitespaces).isEmpty { search("") } }
+                .onSubmit { Task { await model.recordQuerySubmitted(query) } }
+                .onChange(of: query) { typed in model.recordQueryTyped(typed) }
                 .accessibilityIdentifier("record-search")
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
@@ -24,7 +25,6 @@ struct RecordSearchBox: View {
         .task { await model.loadRecordHint() }
     }
 
-    private func search(_ q: String) { Task { await model.searchRecord(q) } }
 }
 
 /// What a search found, in tafs cloud's groups, each call as its taf's Activity draws it, under
