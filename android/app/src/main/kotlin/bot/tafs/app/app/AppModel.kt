@@ -3333,6 +3333,26 @@ class AppModel(
   }
 
   /**
+   * How long a case of the taf may wait before its phones are told (`PUT …/promise`), for whoever manages it; then its work is read
+   * again, which says the promise as tafs cloud keeps it. A refusal says why on the work's panel.
+   */
+  suspend fun setPromise(tafId: String, hours: Int?) {
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    try {
+      cloud.setPromise(cloudId, hours)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(workErrors = it.workErrors + (tafId to Words.Work.answerWithinNotSet(why = ErrorWords.of(e)))) }
+      return
+    }
+    if (generation != accountGeneration) return
+    loadWork(tafId)
+  }
+
+  /**
    * Where the taf's results go, of tafs' own places (`PUT …/results`), for whoever manages it; then the dial is read again, which
    * says which places are on. tafs cloud keeps at least one on.
    */
