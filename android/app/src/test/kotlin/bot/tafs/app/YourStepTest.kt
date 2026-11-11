@@ -129,7 +129,12 @@ class YourStepTest {
     val key = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.publicKeyDER))
     val message = KiffClient.handoffMessage("t_01", "ho_1", "done", 1, signedAt)
     val value = Base64.getDecoder().decode(sig["value"]!!.jsonPrimitive.content)
-    assertTrue(Signature.getInstance("SHA256withECDSA").run { initVerify(key); update(message); verify(value) })
+    assertTrue("signed by the device key", Signature.getInstance("SHA256withECDSA").run { initVerify(key); update(message); verify(value) })
+    // Never the approval key: answering grants nothing, so no fingerprint is asked for it.
+    if (signer.approvalPublicKeyDER.isNotEmpty()) {
+      val approval = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER))
+      assertFalse(Signature.getInstance("SHA256withECDSA").run { initVerify(approval); update(message); verify(value) })
+    }
     // Gone from Needs you at once.
     assertTrue(m.state.value.yourSteps.isEmpty())
     assertTrue(m.state.value.answeringSteps.isEmpty())
