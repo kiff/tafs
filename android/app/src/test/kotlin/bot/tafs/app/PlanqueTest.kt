@@ -1590,4 +1590,48 @@ class PlanqueTest {
       assertEquals(bot.tafs.app.model.ErrorWords.DOWN, bot.tafs.app.model.ErrorWords.of(e))
     }
   }
+
+  // The signed text in the person's language (docs/android-app.md › Connect apps): with digest_v 2 the digest covers
+  // {"lang", "request", "text"}. The digests below were computed apart (SHA-256 of the JCS bytes), not by this app.
+  private val v2Request =
+    """{"agent":"books","asked_by":"setup-agent","created_at":"2026-11-11T16:00:00Z","grant":"g_02","server":"https://mcp.vendor.example/mcp","tenant":"t_01","tools":[{"read_only":true,"tool":"list_invoices"}],"v":"planque.grant.v1"}"""
+  private val v2Text = "books pourra lire vos factures sur mcp.vendor.example"
+  private val v1Digest = "8aff552abc7aa96bf12361f93dabacf39fd0f70a32d31ba3397e83b8642547b5"
+  private val v2DigestFr = "b82a762ea92a268da2c458a10b797cc58e09c2b67238c04d0fb5b06e05adca64"
+
+  private fun v2Grant(digest: String, lang: String? = "fr", version: String? = "2", text: String = v2Text) =
+    """{"id":"g_02","status":"pending","text":"$text",""" + (lang?.let { "\"lang\":\"$it\"," } ?: "") +
+      (version?.let { "\"digest_v\":$it," } ?: "") + """"digest":"$digest","request":$v2Request,"audience":"https://planque.kiff.dev/mcp/t_01/g_02","events":[]}"""
+
+  private suspend fun readGrant(json: String): bot.tafs.app.kiff.Grant {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[$json]}""")
+    return planque().grants().single()
+  }
+
+  @Test fun aV2GrantsDigestCoversItsWordsAndTheirLanguage() = runTest {
+    assertTrue(readGrant(v2Grant(v2DigestFr)).digestMatches)
+    // One word changed, or the language relabelled: it no longer matches, so nothing is signed.
+    assertFalse(readGrant(v2Grant(v2DigestFr, text = "books pourra payer vos factures sur mcp.vendor.example")).digestMatches)
+    assertFalse(readGrant(v2Grant(v2DigestFr, lang = "en")).digestMatches)
+    // The v2 digest of the same request alone isn't accepted as v2, nor v1's as v2.
+    assertFalse(readGrant(v2Grant(v1Digest)).digestMatches)
+  }
+
+  @Test fun withoutDigestVTheRequestAloneAsBefore() = runTest {
+    assertTrue(readGrant(v2Grant(v1Digest, lang = null, version = null)).digestMatches)
+    // A grant with its words in a language but no digest_v is still v1: the words aren't what it covers.
+    assertTrue(readGrant(v2Grant(v1Digest, lang = "fr", version = null)).digestMatches)
+  }
+
+  @Test fun anUnknownVersionOrAV2GrantWithoutItsLanguageMatchesNothing() = runTest {
+    assertFalse(readGrant(v2Grant(v2DigestFr, version = "3")).digestMatches)
+    assertFalse(readGrant(v2Grant(v1Digest, version = "3")).digestMatches)
+    assertFalse(readGrant(v2Grant(v2DigestFr, lang = null)).digestMatches)
+  }
+
+  @Test fun everyRequestToPlanqueSaysThePersonsLanguage() = runTest {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    planque().grants()
+    assertEquals(bot.tafs.app.kiff.KiffClient.screenLanguage(), transport.requests.single().headers["Accept-Language"])
+  }
 }
