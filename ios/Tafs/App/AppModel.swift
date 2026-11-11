@@ -715,7 +715,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1070,7 +1070,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1560,6 +1560,10 @@ final class AppModel: ObservableObject {
                 await loadRecipes()
                 guard gen == accountGeneration else { return }
             }
+            // The gallery, with each refresh: + New opens it, and the strip under the list
+            // leaves out what the account runs now.
+            await loadGallery()
+            guard gen == accountGeneration else { return }
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
             if let done {
@@ -5830,6 +5834,10 @@ final class AppModel: ObservableObject {
     /// The recipes a new Coach conversation opens to, from tafs cloud (kiff/tafs#476); nil until
     /// read, or when they couldn't be.
     @Published var recipes: TafsCloud.Recipes?
+    /// Every ready-made job, at any time: + New's gallery and the strip under the tafs list
+    /// (`GET /v1/recipes/gallery`). Nil before it's read, or from a tafs cloud without it, where
+    /// + New opens Coach as before.
+    @Published var gallery: TafsCloud.Gallery?
     /// The account's "Show suggestions" setting as tafs cloud last said it, while it's being
     /// changed, and why a change didn't go.
     @Published var suggestions: TafsCloud.Suggestions?
@@ -6117,6 +6125,20 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let r = try? await cloud.recipes(), gen == accountGeneration else { return }
         recipes = r
+    }
+
+    /// Reads the gallery of ready-made jobs. A read that fails keeps what was read; a tafs
+    /// cloud without the route leaves none, so + New opens Coach as before.
+    func loadGallery() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        do {
+            let g = try await cloud.recipesGallery()
+            guard gen == accountGeneration else { return }
+            gallery = g
+        } catch let e as TafsCloud.CloudError where e.status == 404 {
+            if gen == accountGeneration { gallery = nil }
+        } catch {}
     }
 
     /// Reads the account's "Show suggestions" setting, for Account.

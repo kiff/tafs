@@ -268,6 +268,26 @@ language: the app has none of its own for it.
 - **When it's read:** with each refresh that finds no taf, as well as when Coach opens
   (`HomeRecipesTests`).
 
+## Every ready-made job, at any time
+
+The jobs stay reachable after the first taf, from `GET /v1/recipes/gallery`, read with each
+refresh (`AppModel.loadGallery`). tafs cloud decides what shows and in what order; the app draws
+it, in tafs cloud's words.
+- **+ New** (Home's +, the iPad sidebar's New taf) opens the gallery (`RecipeGallerySheet`):
+  `words.title`, then "Say it in your own words" (`words.own_words`), which opens Coach with
+  nothing in it, then `words.all` ("All jobs") over the chips and every job as on Home. A job opens the same sheet, with the
+  gallery's `labels`. From a tafs cloud without the route (404), + New opens Coach as before.
+- **The strip** (`RecipeStrip`): under the tafs list, `strip.title` and the jobs in `strip.ids`,
+  in that order, only while `strip.shown`. tafs cloud leaves out jobs the account runs and puts
+  first those whose apps are connected; the app picks nothing. On iPad it's a sidebar section.
+- **App logos** (`AppMarks`): each job's apps by name, after the app's logo, and the same in
+  Connect apps. A logo loads only from tafs cloud, by the path it sent: `/v1/logos/` and a key of
+  32 lowercase hex, as on Android (`TafsCloud.logoURL`). An absolute URL or any other path loads
+  nothing, so no one else sees the phone's address. With no logo, or one that doesn't load, the name alone.
+- **A colour per category** (`RecipeTint`): tafs cloud's token, `#RRGGBB` for light and dark,
+  on the chip and the card's edge. One the app can't read is no colour, never a guess
+  (`RecipeGalleryTests`).
+
 ## Coach's tools
 
 As on Android ([coach.md](coach.md#coachs-tools-step)). The phone builds none of it: the tools,

@@ -69,6 +69,15 @@ struct ConnectAppsView: View {
 
     private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
         HStack(spacing: 12) {
+            // Its logo, from tafs cloud only, small beside its name; none, the name alone.
+            if let url = model.cloud.logoURL(app.logo) {
+                AsyncImage(url: url) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().interpolation(.high).scaledToFit().frame(width: 24, height: 24)
+                    }
+                }
+                .accessibilityHidden(true)
+            }
             Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                 .accessibilityIdentifier("connect.title." + app.entry)
             Spacer()
