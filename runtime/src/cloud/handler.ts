@@ -5412,9 +5412,11 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
   if (parts.length === 2) {
     return conditionalPage(event, await recordPage({ token: bearer(event), scope: `${me.tenantID}#${me.subject}`, tafs, zone, now, query: q, lang }, deps.fetch, deps.kiffBase));
   }
-  if (parts.length === 4 && parts[2] === "cases") {
+  if (parts.length >= 4 && parts[2] === "cases") {
+    // A reference may hold a "/" (an invoice's "F-2026/001"): the rest of the path is the reference, whether "/" came
+    // escaped (%2F) or was decoded on the way.
     let about: string;
-    try { about = decodeURIComponent(parts[3] ?? ""); } catch { throw new HTTPError(400, "that case's reference isn't readable"); }
+    try { about = decodeURIComponent(parts.slice(3).join("/")); } catch { throw new HTTPError(400, "that case's reference isn't readable"); }
     const view = await caseView({ token: bearer(event), about, tafs, zone, now, lang }, deps.fetch, deps.kiffBase);
     if (!view) throw new HTTPError(404, "no such case in the Record");
     return view;

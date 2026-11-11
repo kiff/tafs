@@ -4747,6 +4747,15 @@ describe("the Record across the person's tafs", () => {
     expect(view.body.steps.map((s: { title: string }) => s.title)).toEqual(["Refund a payment", "Reply to the customer"]);
     expect(view.body.failed).toMatchObject({ next: { kind: "ask_coach", taf: "Rae" } });
     expect((await call(w, "GET", "/v1/record/cases/Order%209999", { token: "ana_paris" })).status).toBe(404);
+    // An invoice's reference with a "/" is one case, whether the "/" arrives escaped or decoded.
+    w.account.calls = [...calls(), { proposal_id: "p-inv", actor_id: "rae", action_name: "send_invoice", title: "Send an invoice", outcome: "allowed",
+      created_at: at(1), about: "F-2026/001" } as ActivityCall];
+    for (const path of [`/v1/record/cases/${encodeURIComponent("F-2026/001")}`, "/v1/record/cases/F-2026/001"]) {
+      const inv = await call(w, "GET", path, { token: "ana_paris" });
+      expect(inv.status, path).toBe(200);
+      expect(inv.body.steps.map((s: { title: string }) => s.title)).toEqual(["Send an invoice"]);
+    }
+    w.account.calls = calls();
     // Someone KIFF says may not use or oversee Rae sees none of its Record.
     w.account.access = { rae: { use: false, oversee: false, manage: false } };
     expect((await call(w, "GET", "/v1/record", { token: "ana_paris", query: "q=1042" })).body.entries).toEqual([]);
