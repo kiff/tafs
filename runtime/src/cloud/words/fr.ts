@@ -61,6 +61,7 @@ export const fr: Words = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} a été configuré aujourd'hui : chaque modification doit d'abord vous être demandée, et cette Card laisserait « ${tool} » s'exécuter sans demander. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_critical_key: "Cela élargit ce que le taf peut faire, il faut donc votre empreinte digitale. Rien n'a été approuvé ; approuvez à nouveau avec votre empreinte digitale.",
   approval_drive_key: "Laisser Coach piloter l'app demande votre empreinte digitale. Rien n'a démarré ; approuvez à nouveau avec votre empreinte digitale.",
+  remove_signed: "Supprimez-le depuis votre appareil : supprimer un taf demande chaque fois le verrouillage de l'écran. Rien n'a été supprimé.",
   approval_window_closed: "Le délai d'approbation est terminé. Rien n'a été approuvé ; approuvez à nouveau avec votre empreinte digitale.",
   approval_sign_in_closed: "La connexion a été fermée. Rien n'a été connecté.",
   approval_no_code: (vendor: string) => `La connexion à ${vendor} est revenue sans son code de confirmation. Rien n'a été connecté.`,

@@ -61,6 +61,7 @@ export const pl: Words = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} skonfigurowano dziś, więc każda zmiana musi najpierw zapytać Ciebie; ta Card pozwoliłaby „${tool}” działać bez pytania. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_critical_key: "To poszerza, co taf może robić, więc potrzebny jest odcisk palca. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.",
   approval_drive_key: "Pozwolenie Coachowi na obsługę aplikacji wymaga odcisku palca. Nic się nie rozpoczęło; zatwierdź ponownie odciskiem palca.",
+  remove_signed: "Usuń go na urządzeniu: usunięcie tafa za każdym razem wymaga blokady ekranu. Nic nie zostało usunięte.",
   approval_window_closed: "Czas na zatwierdzenie minął. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.",
   approval_sign_in_closed: "Logowanie zostało zamknięte. Nic nie zostało połączone.",
   approval_no_code: (vendor: string) => `Logowanie w ${vendor} wróciło bez kodu potwierdzenia. Nic nie zostało połączone.`,

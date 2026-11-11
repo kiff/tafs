@@ -61,6 +61,7 @@ export const pt: Words = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} foi configurado hoje, por isso cada alteração tem de lhe perguntar primeiro; este Card deixaria «${tool}» executar sem perguntar. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_critical_key: "Isto alarga o que o taf pode fazer, por isso precisa da sua impressão digital. Nada foi aprovado; aprove novamente com a sua impressão digital.",
   approval_drive_key: "Deixar o Coach usar a app precisa da sua impressão digital. Nada começou; aprove novamente com a sua impressão digital.",
+  remove_signed: "Remova-o no seu dispositivo: remover um taf pede sempre o bloqueio do ecrã. Nada foi removido.",
   approval_window_closed: "O prazo de aprovação terminou. Nada foi aprovado; aprove novamente com a sua impressão digital.",
   approval_sign_in_closed: "O início de sessão foi fechado. Nada foi ligado.",
   approval_no_code: (vendor: string) => `O início de sessão em ${vendor} voltou sem o seu código de confirmação. Nada foi ligado.`,
