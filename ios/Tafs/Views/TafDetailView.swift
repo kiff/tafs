@@ -18,7 +18,6 @@ struct TafDetailView: View {
     /// What removing it did, shown once it's done.
     @State private var removal: String?
     /// Set on the tap itself, before the request starts, so a second tap can't send one.
-    @State private var runTapped = false
     /// The Card in front of the stack (kiff/tafs#211); nil for the first, the live one.
     @State private var frontCard: String?
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -209,32 +208,7 @@ struct TafDetailView: View {
         }
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil { WorkPanel(tafID: taf.id) }
         if let cloud = model.cloudTaf(for: taf.id) {
-            let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
-            Panel {
-                Eyebrow(text: Words.Taf.runs)
-                if cloud.worksFromChat {
-                    // Its tools can't find its work by themselves (kiff/tafs#138): no schedule.
-                    Text(Words.Taf.worksFromChat)
-                        .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
-                        .scaledFont(15).foregroundColor(Theme.ink)
-                    Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
-                        guard !runTapped else { return }
-                        runTapped = true
-                        Task {
-                            if await model.runNow(cloud) != nil { await model.loadReport(cloud) }
-                            runTapped = false
-                        }
-                    }
-                    .buttonStyle(OutlineButtonStyle())
-                    .disabled(inFlight)
-                    // Run now started no run: tafs cloud's words, as they are.
-                    if let words = model.runNowWords[cloud.id] {
-                        Text(words).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
+            RunsPanel(tafID: taf.id)
             RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }
                 .task(id: cloud.id) { await model.loadReport(cloud) }
         }
@@ -463,6 +437,48 @@ struct HealthLines: View {
 /// recent requests and skipped firings, newest first, each in tafs cloud's words. A request
 /// needing the owner is amber, a failed one red; a skipped firing isn't a failure, so it's dim.
 /// A door reply given up on offers Send again to whoever manages the taf.
+/// A taf's runs on tafs cloud: when it runs next (or that it works from its chat), and Run now,
+/// with tafs cloud's words when Run now started nothing. Drawn on a cloud taf's Activity.
+struct RunsPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+    @State private var runTapped = false
+
+    var body: some View {
+        if let cloud = model.cloudTaf(for: tafID) {
+            let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
+            Panel {
+                Eyebrow(text: Words.Taf.runs)
+                if cloud.worksFromChat {
+                    // Its tools can't find its work by themselves (kiff/tafs#138): no schedule.
+                    Text(Words.Taf.worksFromChat)
+                        .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
+                        .scaledFont(15).foregroundColor(Theme.ink)
+                    Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
+                        guard !runTapped else { return }
+                        runTapped = true
+                        Task {
+                            if await model.runNow(cloud) != nil {
+                                await model.loadReport(cloud)
+                                await model.loadRunPage(tafID)
+                            }
+                            runTapped = false
+                        }
+                    }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(inFlight)
+                    // Run now started no run: tafs cloud's words, as they are.
+                    if let words = model.runNowWords[cloud.id] {
+                        Text(words).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct WorkPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
