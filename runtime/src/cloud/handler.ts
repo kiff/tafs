@@ -5669,12 +5669,13 @@ async function keptPlan(tenant: string, deps: Deps): Promise<Plan | undefined> {
 async function estimateRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Estimate> {
   const token = bearer(event), lang = langOf(event), now = deps.now?.() ?? new Date();
   if (!listable(await creditsRead(() => readAccess(token, deps.fetch, deps.kiffBase), lang), taf.kiffAgent)) throw new HTTPError(404, "no such taf");
-  const [record, balance] = await Promise.all([
+  const [record, balance, tests] = await Promise.all([
     creditsRead(() => recordFromKIFF(token, taf, now, deps), lang),
     readBalance(token, deps.fetch, deps.kiffBase).catch(() => undefined),
+    testsFor(taf.recipe, deps.coach),
   ]);
   if (balance) await keepPlan(me.tenantID, balance, deps);
-  return estimate({ own: record.own, trial: record.trial, tests: testsFor(taf.recipe), plan: balance ? planOf(balance) : undefined, now }, lang);
+  return estimate({ own: record.own, trial: record.trial, tests, plan: balance ? planOf(balance) : undefined, now }, lang);
 }
 
 /**
@@ -5695,7 +5696,7 @@ async function estimateTool(args: Record<string, unknown>, call: CoachCall, deps
     const recipe = typeof args.recipe === "string" && args.recipe ? args.recipe : taf?.recipe;
     const out = await within((async () => {
       const permit = call.person?.permit;
-      const [may, runs, plan, kept] = await Promise.all([
+      const [may, runs, plan, kept, tests] = await Promise.all([
         // In a person's chat, only a taf they may see: KIFF not answering is no estimate, as any failure here.
         taf && call.person ? coachAct(call, taf.kiffAgent, deps).catch(() => undefined) : Promise.resolve(null),
         // KIFF's credits for the taf, read sooner than the whole tool must answer: late, or failed, they're left out.
@@ -5705,12 +5706,13 @@ async function estimateTool(args: Record<string, unknown>, call: CoachCall, deps
         }) : Promise.resolve(undefined),
         keptPlan(call.tenant, deps),
         (LANGUAGES as readonly string[]).includes(asked) ? Promise.resolve(asked as Lang) : taf?.ownerLang ? Promise.resolve(taf.ownerLang) : languageKept(call.tenant, deps),
+        testsFor(recipe, deps.coach),
       ]);
       if (may === undefined) return undefined;
       if (may && taf && !may.use && !may.oversee && !may.manage) throw new ToolRefusal(`${taf.name} isn't shared with them`);
       return estimate({
         ...(taf && runs ? { own: ownOf(runs, taf, now), trial: trialsFromKIFF(runs) } : {}),
-        tests: testsFor(recipe), plan, now,
+        tests, plan, now,
       }, kept);
     })(), ESTIMATE_MS);
     if (!out) return none;
