@@ -287,6 +287,11 @@ searches across their tafs, opens one case, and exports receipts
 
 ## Words and languages
 
+**Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
+region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and
+symbol, and is never converted (`Money.figure`, `MoneyFormatTest`). Amounts in KIFF's or tafs cloud's own words are
+shown as they come.
+
 Every line the app writes itself is in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
 iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.py` writes, from it,
 `res/values/strings.xml` (counts as `<plurals>`), `res/xml/locales_config.xml` and `model/Words.kt`, a typed accessor per
