@@ -44,6 +44,15 @@ extension TafsCloud {
         /// Something to show: a level other than healthy, with a line to say why.
         var needsAttention: Bool { level != "healthy" && !lines.isEmpty }
         var failing: Bool { level == "failing" }
+        /// Whether a work's line is this health's first reason, as tafs cloud says it on an idle
+        /// taf's work (docs/reliability.md): the first line is that reason, then what to do
+        /// ("…, so nothing ran" and "…, so nothing ran. Narrow it with Coach."), so the page says
+        /// it once.
+        func repeats(workLine line: String) -> Bool {
+            let line = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard needsAttention, !line.isEmpty, let first = lines.first else { return false }
+            return first.hasPrefix(line)
+        }
         /// The fixes for one line, of the kinds the app can act on, in tafs cloud's order.
         func fixes(for line: Int) -> [Fix] {
             fixes.filter { $0.line == line && Self.knownKinds.contains($0.kind) && !$0.words.isEmpty && ($0.kind != "coach" || !($0.say ?? "").isEmpty) }
