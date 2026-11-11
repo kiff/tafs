@@ -5,7 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
-- **Answer within's menu opens under its value (Android 1.7.1).** It opened at the row's start, over the tabs; it now opens under the hours it changes (docs/android-app.md).
+- **Answer within's menu opens under its value (Android 1.7.1).** It opened at the row's start, over the tabs; it now opens under the hours it changes.
 - **One log line per Coach tool call (tafs cloud).** `{event: "coach_tool", tool, outcome, taf?}`: the tool, how it ended (done, refused, a repeat, failed…) and the taf's own id when the call named it by id. Never the call's arguments or answer, a name, an address or a vendor's id (docs/maintaining.md › Request logs).
 - **iPhone and iPad: a taf's knocks on its Activity.** As on Android 1.6. For whoever manages the taf, its doors' knocks come first on its Activity: strangers' knocks, in amber, with Do it, Pair them and Ignore, then a paired sender's message, calmly. They're still in its chat at their times (docs/ios-app.md).
 - **iPhone and iPad: search the Record, open a case, export receipts.** As on Android 1.7. Signed in, the Record tab searches across the person's tafs by order, invoice, amount or action, in tafs cloud's words, each call drawn as its taf's Activity draws it. A call's reference ("Order 1042 ›") opens every call about the same thing, oldest first, with the step that didn't go through named first and its own next step the only retry. Whoever oversees or manages every taf can export the last 7, 30 or 90 days of receipts: tafs cloud's answer as it came, so KIFF's receipts are exactly as issued, and its CSV, through the share sheet (docs/ios-app.md › The Record across tafs).
