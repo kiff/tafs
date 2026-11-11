@@ -531,6 +531,15 @@ export const en = {
   // A card's steps (handler.ts withLine): where they stand.
   steps_done: (n: number) => `Done · ${n} of ${n}`,
   steps_at: (i: number, n: number, label: string) => `Step ${i} of ${n}${label ? ` · ${label}` : ""}`,
+  // The loop card (kiff/agents' confirm tafs-loop-N): tafs cloud's words, with the read by its title (withLine).
+  loop_title: "Still reading",
+  loop_line: (pages: number, what: string) => `Read ${pages} pages of ${what}, and there's more. Read on, or stop here and answer with what's been read?`,
+  loop_read_on: "Read on",
+  loop_stop: "Stop here",
+  // The read, when the taf's Card has no title for it: never its tool name.
+  loop_what: "the same list",
+  // A check-fired run's start, in place of the items the check handed it (checkStart).
+  check_found: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "Its check found 1 new item." : `Its check found ${n} new items.`),
   cal_folded: (words: string, n: number, first: string, last: string) => `${words}: ${n} times from ${first} to ${last}`,
   // Coach's own tools, as the phone lists them when it connects them (coach.ts coachConnect).
   ct_tafs_state: "See your tafs, their versions and their runs",
