@@ -62,7 +62,9 @@ one of the owner's languages, a switch before the mic shows the one in use ("FR"
 goes to the next, and while dictating, listening starts again in it after what was heard.
 The owner's languages are their keyboards', then the phone's, among those its recognizer has
 on the phone (`SpeechLanguage.owners`, Android 13 and later), and the one chosen is kept for
-next time.
+next time. On iPhone and iPad, until the owner switches, dictation starts in the app's
+language when the device has it (`Dictation.starting`), so a French iPad whose first keyboard
+is English starts in French.
 
 The recognizer's models are per variant, so a phone set to English in France (`en-FR`)
 dictates in a variant of its language (`SpeechLanguage.choose`, from Android 13

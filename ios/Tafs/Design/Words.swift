@@ -3705,8 +3705,8 @@ enum Words {
         static var howWorks: String { Words.line("sign_in.how_works") }
         /// iOS didn't open the sign-in page (error {code}; {context}). Try again with tafs open.
         static func iosDidNotOpenSign(code: String, context: String) -> String { Words.line("sign_in.ios_did_not_open_sign", code, context) }
-        /// Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here.
-        static var lead: String { Words.line("sign_in.lead") }
+        /// Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.
+        static func lead(device: String) -> String { Words.line("sign_in.lead", device) }
         /// Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices.
         static var notSignedOut: String { Words.line("sign_in.not_signed_out") }
         /// Not signed out at KIFF yet: {why}. Try again, or sign this {device} out from another device's Devices.

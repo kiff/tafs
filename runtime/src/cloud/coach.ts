@@ -167,7 +167,7 @@ export const TOOLS: ToolDef[] = [
   },
   // Coach drives the app (kiff/tafs#544, docs/drive.md): only while the person's drive is on.
   {
-    name: "app_look", line: "See the app on your phone while it drives", read: true, session: true,
+    name: "app_look", line: "See the app on your device while it drives", read: true, session: true,
     properties: {
       tree: { type: "boolean", description: "Also the view tree: each element's id, words, role and bounds. Cheaper to read than the image for text." },
       diagnostics: { type: "boolean", description: "Also the app's recent errors and failed requests (route and status), version, platform, layout and display settings." },
@@ -179,7 +179,7 @@ export const TOOLS: ToolDef[] = [
       "Look before every step. Without a drive, it's refused: offer to show them with a drive card, and wait for their approval.",
   },
   {
-    name: "app_act", line: "Tap, type and scroll in the app on your phone while it drives", session: true,
+    name: "app_act", line: "Tap, type and scroll in the app on your device while it drives", session: true,
     properties: {
       action: { type: "string", enum: ["tap", "long_press", "swipe", "scroll", "type", "back", "done"] },
       line: { type: "string", description: "The caption the person sees for this step, in their words, at most 60 characters: \"Tapping Run now\"." },

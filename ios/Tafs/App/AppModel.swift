@@ -2021,7 +2021,7 @@ final class AppModel: ObservableObject {
         guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: Words.Connect.Prompt.giveKey(vendor: "\(grant.vendor)", agent: "\(grant.request.agent)"), grants: true)
+                                      reason: Words.Connect.Prompt.giveKey(vendor: "\(Self.promptApp(grant))", agent: "\(promptTaf(grant.request.agent, grant: grant))"), grants: true)
         } catch {
             quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return false
@@ -5618,7 +5618,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                          reason: Words.Connect.Prompt.giveCard(agent: "\(draft.agentID)"), grants: true)
+                                          reason: Words.Connect.Prompt.giveCard(agent: "\(promptTaf(draft.agentID, label: draft.label))"), grants: true)
             } catch {
                 quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                 return nil
@@ -5661,7 +5661,7 @@ final class AppModel: ObservableObject {
 
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: Words.Connect.Prompt.connect(vendor: "\(grant.vendor)", agent: "\(grant.request.agent)"), grants: true)
+                                      reason: Words.Connect.Prompt.connect(vendor: "\(Self.promptApp(grant))", agent: "\(promptTaf(grant.request.agent, grant: grant))"), grants: true)
         } catch {
             quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return nil
@@ -6113,6 +6113,20 @@ final class AppModel: ObservableObject {
         improveTaf(taf.id)
         setupDraft = ask.coach_text
         coachOpen = true
+    }
+
+    /// The app as the owner knows it, for a Face ID or Touch ID prompt: "Stripe", never a server's
+    /// slug ("stripe-mcp") or host.
+    nonisolated static func promptApp(_ grant: PlanqueClient.Grant) -> String {
+        KIFFMapping.vendorWords(grant.vendor)
+    }
+
+    /// The taf as its owner knows it, for a Face ID or Touch ID prompt, the last thing read before
+    /// signing: its name, as planque or the draft keeps it or as Home lists it, never its agent id.
+    func promptTaf(_ agent: String?, grant: PlanqueClient.Grant? = nil, label: String? = nil) -> String {
+        let named = [grant?.agentName, label, agent.flatMap { holderIDs[$0] }.flatMap { taf($0)?.name }]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.first { !$0.isEmpty }
+        return named ?? Words.NeedsYou.aTaf
     }
 
     func dismissCardUnit(_ exception: TafsCloud.CardUnitException) async {

@@ -25,7 +25,8 @@ struct NeedsYouView: View {
                 } else {
                     ForEach(model.held) { call in HeldCallCard(call: call).id(call.id) }
                     ForEach(knocked) { taf in
-                        NavigationLink { TafDetailView(tafID: taf.id) } label: {
+                        // Its door requests are answered on Activity, so it opens there, not on Chat.
+                        NavigationLink { TafDetailView(tafID: taf.id, opensOn: TafDetailView.activitySection) } label: {
                             Panel(stroke: Theme.amber.opacity(0.4)) {
                                 HStack(spacing: 10) {
                                     TafAvatar(taf: taf, size: 32)

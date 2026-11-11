@@ -353,7 +353,8 @@ struct DoorDial: View {
 
     private var centerLine: String {
         guard selected < doors.count else { return Words.Door.Dial.addStamp }
-        return "\(doors[selected].label.uppercased()) · \(doors[selected].open ? "OPEN" : "CLOSED")"
+        // In the app's language, as the door's status is (it read "OPEN" or "CLOSED" in every language).
+        return "\(doors[selected].label.uppercased()) · \((doors[selected].open ? Words.Door.Status.open : Words.Door.Status.closed).uppercased())"
     }
 
     private var centerColor: Color {
@@ -767,7 +768,7 @@ struct DoorStamp: View {
 
     private var text: String {
         if fromOwner {
-            return "BY \(label.uppercased())\(mark.from.map { " · \($0)" } ?? "")"
+            return Words.Door.Stamp.by(app: "\(label.uppercased())") + (mark.from.map { " · \($0)" } ?? "")
         }
         switch mark.reply {
         case "sent": return Words.Door.Stamp.sentBack(app: "\(label.uppercased())")

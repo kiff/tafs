@@ -7,6 +7,15 @@ struct TafDetailView: View {
     /// the main thing.
     @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2
         : ["setup", "starts", "results"].contains(Screenshots.screen ?? "") ? 3 : 0
+
+    /// The Activity tab, where a taf's door requests are answered.
+    static let activitySection = 1
+
+    /// `opensOn` is the tab to open on, such as Activity for the taf's door requests; else Chat.
+    init(tafID: UUID, opensOn: Int? = nil) {
+        self.tafID = tafID
+        if let opensOn { _section = State(initialValue: opensOn) }
+    }
     /// Activity's filter of its record.
     @State private var activityFilter: ActivityFilter = .all
     @State private var activitySelection = ""

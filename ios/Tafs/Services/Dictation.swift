@@ -25,7 +25,7 @@ final class Dictation: ObservableObject {
         static let english = Language(id: "en-US")
         static let spanish = Language(id: "es-ES")
 
-        private var code: String { String(id.prefix { $0 != "-" && $0 != "_" }).lowercased() }
+        fileprivate var code: String { String(id.prefix { $0 != "-" && $0 != "_" }).lowercased() }
         /// The switch's label: "FR".
         var label: String { code.uppercased() }
         /// Its own name, as its speakers write it: "Français", "Español", "English".
@@ -119,8 +119,17 @@ final class Dictation: ObservableObject {
         // device's recognizer keeps it, never a stand-in.
         remembers = engine is DeviceSpeech
         let have = engine.languages()
-        let last = remembers ? UserDefaults.standard.string(forKey: Self.lastLanguageKey).flatMap { id in have.first { $0.id == id } } : nil
-        self.language = language ?? last ?? have.first ?? .english
+        let last = remembers ? UserDefaults.standard.string(forKey: Self.lastLanguageKey) : nil
+        self.language = language ?? Self.starting(have: have, last: last, app: KIFFClient.appLanguage) ?? .english
+    }
+
+    /// The language dictation starts in: the one the owner last switched to with the chip, when
+    /// the device still has it; else the app's language, in the form the device has (a French
+    /// iPad whose first keyboard is English starts in French); else the device's first.
+    static func starting(have: [Language], last: String?, app: String) -> Language? {
+        if let last, let chosen = have.first(where: { $0.id == last }) { return chosen }
+        let code = Language(id: app).code
+        return have.first { $0.code == code } ?? have.first
     }
 
     /// Whether the language chosen is kept for next time.
