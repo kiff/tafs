@@ -231,6 +231,16 @@ and `openCreditsRun` in `AppModel`); on iPhone and iPad, `CreditsViews.swift`
   period, then credits beyond them on the period's invoice, up to the account's **spend limit**.
   At the limit, the tafs wait until someone who manages billing raises it.
 - **An agreement**, a plan arranged with KIFF (KIFF's `company`), and **internal**: no limit.
+- **The prices**, as [kiff.dev/tafs](https://kiff.dev/tafs) and
+  [kiff.dev/pricing](https://kiff.dev/pricing) publish them:
+  - Solo: €12.50 a month, VAT included, with 500 credits a month.
+  - Packs: 500 credits for €11.50, 1,500 for €29.99, 5,000 for €84.99, VAT included.
+  - The First month pack: 7,000 credits for €99.99, once.
+  - Company: €10.50 a seat a month, plus VAT, with 500 credits a seat, pooled. Then €0.01 a
+    credit, up to the spend limit (€50 to start).
+  - There's no free trial on any plan.
+
+  The apps show the store's own price for what it sells. They never write one of their own.
 - **No plan:** no taf runs. A person can sign in, look around, and ask Coach what tafs do. Coach
   answers within a small allowance per account, which KIFF pays for, and has none of its tools, so
   it sets nothing up ([Under the hood](#under-the-hood)).
@@ -435,9 +445,11 @@ above. The app shows the words. Builds from before this show `words` as for any 
 - **Solo**, a monthly subscription, offered where `buy.solo` is set. Its screen shows the store's
   price and every term: the period, that it renews until cancelled, how to cancel, and the Terms
   and Privacy Policy.
-- **Packs of credits**, which never expire, offered where `buy.packs` is set.
+- **Packs of credits**, which never expire, offered where `buy.packs` is set. Today they're sold
+  in the Android app. The App Store doesn't sell them yet, as kiff.dev says.
 - **The First month pack**, bought once per account, shown first among the packs where
-  `buy.first_month` is set, which is only while Solo runs.
+  `buy.first_month` is set, which is only while Solo runs. It's on Google Play only: KIFF lists it
+  with no App Store product, so iPhone and iPad don't show it.
 - **The products and their store ids** come from KIFF's usage read (`store`), with each pack's
   `credits`.
 - **Each purchase goes to KIFF** for this account (Apple's signed transaction, or Google's purchase
