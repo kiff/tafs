@@ -181,6 +181,21 @@ tafs cloud leaves it out (it couldn't read all of it), the app counts what it ha
 Android shows each alert on the lock screen as it comes, with no count of its own there. An app's
 sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
+**A held call's card** (`HeldCallCard`) has KIFF's face: the amount in its declared unit, the
+action as KIFF titles it, and the Card rule it crossed in KIFF's words (`reason_text`). Under it,
+when KIFF kept the taf's words with the call, **The taf says** (`needs_you.taf_says`) shows them
+under their own heading:
+- `taf_about`, what the call is on, as a business reference ("Order 1042");
+- `taf_reason`, the customer's reason ("Arrived broken, photo attached").
+
+These come from text a customer wrote, so they're drawn as plain text, one paragraph each, with
+control characters and line breaks made spaces, and format characters (bidi overrides, zero-width
+marks) dropped so nothing can reorder or hide words (`KiffMapping.tafSays`). They're capped at what
+KIFF keeps, 120 and 280 code points, so an emoji is never cut in half. A link or markup shows only as words. They never stand in for KIFF's amount,
+rule or action. The gateway's own arguments (`kiff_operation_id`, `kiff_about`, `kiff_reason`)
+aren't repeated under Details, where the call's ids stay. A KIFF that keeps neither shows the card
+as before.
+
 **A Card asked to take another currency** (KIFF's `card_unit` exception, as tafs cloud draws it in
 `card_unit_exceptions`): one panel (`CardUnitExceptionPanel`) with tafs cloud's title, words and
 history, in Needs you (and its count), at the top of the taf's Setup, and above its Activity, where
@@ -332,6 +347,26 @@ task. It signs nothing, and the work is read again after. One still not delivere
 Coach** (`open_coach`): a new conversation about the taf with tafs cloud's `coach_words` in the
 message box, sent only by the owner (`askCoachAbout`). The request sheet's **Try the reply now**
 is the door reply's alone. A `taf` live update reads it again where the page has.
+
+**Its health** ([reliability.md](reliability.md#its-health); `HealthLines`, `TafWork.health`)
+shows under the summary line. An idle taf's summary line is its first reason, and health's first
+line is that reason followed by what to do, so the summary line is left out when it begins health's
+first line (`TafHealth.repeats`, as on iOS). Health shows: each of tafs cloud's `health.lines`, amber when `at_risk` and red
+when `failing`. Skipped work is never healthy, so a check that found work too big for one run,
+or a time that waited for credits, shows here and among the skipped firings (`why: too_large`,
+`credits`, in tafs cloud's words). Under a line with a fix (`health.fixes[].line`), its button
+shows in tafs cloud's `words`:
+- `coach` opens a new Coach conversation about the taf with `say` in the message box, sent only
+  by the owner (`askCoachAbout`). It isn't shown to someone who can't use Coach.
+- `credits` opens Plan & usage. The words say "Add credits", or "Ask an admin for credits" for
+  someone without `billing.manage`.
+
+A kind the app doesn't know draws no button, and its line still shows. The app works out no
+level and no fix. A healthy taf with no lines shows nothing. On Home, tafs cloud orders what a
+taf's row says: its work's `line` carries health's first reason only while `work.status` is
+`idle`, since halted, needs you, retrying, working, waiting on an app and paused come first. While
+idle and at risk or failing, the row shows that line amber or red (`HomeTaf.health`,
+`Taf.nowHealth`). Otherwise it reads as before, untinted.
 
 ## When something doesn't go through
 

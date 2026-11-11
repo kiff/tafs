@@ -162,6 +162,11 @@ object KiffMapping {
       // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
       else -> taf.copy(state = TafState.idle, now = h.work?.line.orEmpty())
     }
+    // tafs cloud orders what the row says: its work's line carries health's first reason only while the work is idle (halted,
+    // needs you, retrying, working, waiting on an app and paused come first). Then that line shows, tinted by tafs cloud's level.
+    val level = h.health?.level?.takeIf { it == "at_risk" || it == "failing" }
+    val line = h.work?.takeIf { it.status == "idle" }?.line?.takeIf { it.isNotBlank() }
+    if (level != null && line != null) taf = taf.copy(now = line, nowHealth = level)
     return taf.copy(
       cloudId = h.id,
       paused = h.status == "paused",
@@ -318,9 +323,40 @@ object KiffMapping {
       accountingVersion = e.accountingVersion,
       nextSteps = e.nextSteps ?: emptyList(),
       details = details(e),
+      tafSays = tafSays(e.tafReason),
+      tafAbout = tafSays(e.tafAbout, TAF_ABOUT_MAX),
       install = install(e, coach),
     )
   }
+
+  /**
+   * The taf's line as the card shows it: plain text on one paragraph, with control characters and line breaks made spaces, and no
+   * more than KIFF keeps ([max]: 280 for the reason, 120 for what it's on). It's drawn as text alone, so a link or markup in it is
+   * only words. Blank is none.
+   */
+  fun tafSays(reason: String?, max: Int = TAF_REASON_MAX): String? {
+    if (reason == null) return null
+    val plain = StringBuilder()
+    var i = 0
+    while (i < reason.length) {
+      val c = reason.codePointAt(i)
+      when {
+        // Format characters (Cf: bidi overrides such as U+202E, zero-width marks) are dropped: they could reorder or hide words.
+        Character.getType(c) == Character.FORMAT.toInt() -> Unit
+        // Controls and line or paragraph separators become a space: one paragraph.
+        Character.isISOControl(c) || c == 0x2028 || c == 0x2029 -> plain.append(' ')
+        else -> plain.appendCodePoint(c)
+      }
+      i += Character.charCount(c)
+    }
+    val text = plain.toString().replace(Regex("\\s+"), " ").trim()
+    // Capped by code points, as KIFF caps it, so an emoji is never cut in half.
+    val capped = if (text.codePointCount(0, text.length) > max) text.substring(0, text.offsetByCodePoints(0, max)) else text
+    return capped.takeIf { it.isNotBlank() }
+  }
+
+  const val TAF_REASON_MAX = 280
+  const val TAF_ABOUT_MAX = 120
 
   /**
    * The one breach a held call names (kiff/tafs#236, item 33). A call over both its limit for one call
@@ -392,7 +428,8 @@ object KiffMapping {
     val shown = (e.parameterUnits?.keys.orEmpty() + e.parameters?.keys.orEmpty()).map { it.lowercase() }.toSet()
     return arguments.keys.sorted().mapNotNull { key ->
       val k = key.lowercase()
-      if (k in shown || k == "kiff_operation_id") return@mapNotNull null
+      // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
+      if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@mapNotNull null
       val text = argumentText(arguments[key]).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
       "$key: $text"
     }
