@@ -9,7 +9,6 @@ import { createHash } from "node:crypto";
 import dns from "node:dns";
 import { existsSync } from "node:fs";
 import https from "node:https";
-import { createRequire } from "node:module";
 import net from "node:net";
 import { fileURLToPath } from "node:url";
 import { Worker } from "node:worker_threads";
@@ -188,11 +187,15 @@ export function unsafeSVG(svg: string): string {
   return "";
 }
 
-/** The renderer's files: next to the bundle in the Lambda, or in node_modules in tests. */
+/**
+ * The renderer's files: next to the bundle in the Lambda (`npm run bundle` puts them there), or in the
+ * runtime's node_modules when run from the source. No `createRequire`: the bundle's banner declares it,
+ * and a second declaration stops the bundle loading.
+ */
 function rendererFiles(): { worker: URL; wasm: string } {
   const worker = new URL("./logo-worker.mjs", import.meta.url);
-  const beside = new URL("./index_bg.wasm", import.meta.url);
-  const wasm = existsSync(fileURLToPath(beside)) ? fileURLToPath(beside) : createRequire(import.meta.url).resolve("@resvg/resvg-wasm/index_bg.wasm");
+  const beside = fileURLToPath(new URL("./index_bg.wasm", import.meta.url));
+  const wasm = existsSync(beside) ? beside : fileURLToPath(new URL("../../node_modules/@resvg/resvg-wasm/index_bg.wasm", import.meta.url));
   return { worker, wasm };
 }
 

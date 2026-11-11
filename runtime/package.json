@@ -4,6 +4,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "bundle-loads": "npm run bundle && node scripts/bundle-loads.mjs",
     "test": "vitest run",
     "bundle": "esbuild src/cloud/lambda.ts --bundle --platform=node --target=node22 --format=esm --sourcemap --outfile=dist-lambda/index.mjs --external:@aws-sdk/* --banner:js=\"import{createRequire}from\\\"module\\\";const require=createRequire(import.meta.url);\" && esbuild src/cloud/logo-worker.mjs --bundle --platform=node --target=node22 --format=esm --outfile=dist-lambda/logo-worker.mjs && cp node_modules/@resvg/resvg-wasm/index_bg.wasm dist-lambda/ && cd dist-lambda && rm -f ../lambda.zip && zip -qr ../lambda.zip ."
   },
