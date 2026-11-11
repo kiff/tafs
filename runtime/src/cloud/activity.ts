@@ -175,6 +175,15 @@ export function amountWords(amount: ActivityCall["amount"], lang: Lang = "en"): 
   } catch { return `${amount.value} ${amount.unit}`; }
 }
 
+/**
+ * KIFF's words for a call, when they are words: a bare code ("cancelled", "policy_denied") is never shown as a
+ * line, and the line falls back to tafs cloud's own words.
+ */
+function worded(s: string | null | undefined): string | undefined {
+  const flat = (s ?? "").trim();
+  return flat && !/^[a-z0-9_.-]+$/.test(flat) ? flat : undefined;
+}
+
 export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string, lang: Lang = "en"): ActivityEntry {
   const kind = kindOf(c);
   const w = wordsIn(lang);
@@ -183,8 +192,8 @@ export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: st
   // anything was done, which the outcome says (kiff/tafs#476, gap 10).
   const said = saidWhy(c.tool_outcome?.message);
   const details = { done: w.act_done, approved: w.act_approved, held: w.act_held,
-    refused: w.act_refused(c.reason || undefined), not_done: connection
-      ? c.detail || connection : c.tool_outcome?.status === "refused_by_tool" ? (said ? w.act_app_refused(said) : w.act_app_refused_none) : w.act_not_reached,
+    refused: w.act_refused(worded(c.reason)), not_done: connection
+      ? worded(c.detail) ?? connection : c.tool_outcome?.status === "refused_by_tool" ? (said ? w.act_app_refused(said) : w.act_app_refused_none) : w.act_not_reached,
     sending: w.act_sending, unknown: w.act_unknown };
   const raw = hash(c.proposal_id).slice(0, 32);
   const id = `${raw.slice(0, 8)}-${raw.slice(8, 12)}-5${raw.slice(13, 16)}-8${raw.slice(17, 20)}-${raw.slice(20)}`;

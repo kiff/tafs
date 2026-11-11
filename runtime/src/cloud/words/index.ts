@@ -87,7 +87,7 @@ export const ZONE_LINE = "[tafs time zone]";
 /**
  * A Coach message with the account's time zone said, when it isn't UTC: kiff/agents' date line is in UTC, and
  * a taf's cron and times are in the account's zone, so Coach writes the hour the owner said, never one
- * converted to UTC (the owner's 09:00 drafted as "0 8 * * 1"). Placed as the language line is.
+ * converted to UTC (a 09:00 drafted as "0 8 * * 1"). Placed as the language line is.
  */
 export function withZone(text: string, zone: string | undefined, now: Date): string {
   if (!zone || zone === "UTC") return text;

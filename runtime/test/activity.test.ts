@@ -73,6 +73,8 @@ describe("Activity pages from the source", () => {
     expect(entry.call).toBe(original); expect(original.tool_outcome.status).toBe("refused_by_tool"); expect(original.held).toBe(true);
     const detail = "Not sent: the connection refused it. It still counts toward today's limits.";
     expect(activityEntry({ ...original, detail }, "UTC", now).detail).toBe(detail);
+    // A bare code from KIFF is never the line: a raw lowercase "cancelled" read as broken.
+    expect(activityEntry({ ...original, detail: "cancelled" }, "UTC", now).detail).toBe(entry.detail);
     // An app's words are its own, quoted: never read as the connection's, nor as nothing done (gap 10).
     const vendor = { ...original, tool_outcome: { status: "refused_by_tool", code: "halt_unknown", message: "Refused by planque: nothing was sent" } };
     expect(activityEntry(vendor, "UTC", now).detail).toBe(`The app refused it: "Refused by planque: nothing was sent"`);
