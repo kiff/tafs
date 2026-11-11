@@ -1129,6 +1129,21 @@
     <string name="halt_now">Bloquear ahora</string>
     <string name="halt_row_running">Detenlo hasta que lo reanudes</string>
     <string name="halt_your_tafs_lower">tus tafs</string>
+    <string name="halt_all_description">Bloquea todos los tafs a la vez. No se envía nada nuevo hasta que los reanudes en tafs.</string>
+    <string name="halt_all_failed">tafs no pudo bloquear tus tafs. %1$s Abre tafs para bloquearlos.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">%1$s taf bloqueado. No se envía nada nuevo hasta que reanudes.</item>
+        <item quantity="other">%1$s tafs bloqueados. No se envía nada nuevo hasta que reanudes.</item>
+    </plurals>
+    <string name="halt_all_halted_all">Tus tafs están bloqueados. No se envía nada nuevo hasta que reanudes.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">Bloqueando %1$s taf: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga.</item>
+        <item quantity="other">Bloqueando %1$s tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Bloqueando tus tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga.</string>
+    <string name="halt_all_running">tafs no pudo bloquear tus tafs. Abre tafs para bloquearlos.</string>
+    <string name="halt_all_signed_out">Has cerrado sesión en tafs. Inicia sesión para bloquear tus tafs.</string>
+    <string name="halt_all_title">Bloquear todos los tafs</string>
     <string name="home_calendar_not_read">No se pudo leer el calendario. %1$s</string>
     <string name="home_cant_reach_kiff">No se puede contactar con KIFF</string>
     <string name="home_choose_taf">Elige un taf.</string>
@@ -1881,21 +1896,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Iniciar sesión con KIFF</string>
     <string name="sign_in_your_code">Tu código</string>
-    <string name="siri_halt_all_description">Bloquea todos los tafs a la vez. No se envía nada nuevo hasta que los reanudes en tafs.</string>
-    <string name="siri_halt_all_failed">tafs no pudo bloquear tus tafs. %1$s Abre tafs para bloquearlos.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">%1$s taf bloqueado. No se envía nada nuevo hasta que reanudes.</item>
-        <item quantity="other">%1$s tafs bloqueados. No se envía nada nuevo hasta que reanudes.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">Tus tafs están bloqueados. No se envía nada nuevo hasta que reanudes.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">Bloqueando %1$s taf: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga.</item>
-        <item quantity="other">Bloqueando %1$s tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Bloqueando tus tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga.</string>
-    <string name="siri_halt_all_running">tafs no pudo bloquear tus tafs. Abre tafs para bloquearlos.</string>
-    <string name="siri_halt_all_signed_out">Has cerrado sesión en tafs. Inicia sesión para bloquear tus tafs.</string>
-    <string name="siri_halt_all_title">Bloquear todos los tafs</string>
     <string name="taf_activity_all_apps">Todas las apps</string>
     <string name="taf_activity_checking_waits">Comprobando lo que te espera…</string>
     <string name="taf_activity_reading_notes">Leyendo sus notas…</string>

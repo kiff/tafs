@@ -2170,6 +2170,26 @@ enum Words {
         /// your tafs
         static var yourTafsLower: String { Words.line("halt.your_tafs_lower") }
     }
+    enum HaltAll {
+        /// Stops every taf at once. Nothing new is sent until you resume them in tafs.
+        static var description: String { Words.line("halt_all.description") }
+        /// tafs couldn't halt your tafs. {why} Open tafs to halt them.
+        static func failed(why: String) -> String { Words.line("halt_all.failed", why) }
+        /// Halted {count} tafs. Nothing new is sent until you resume.
+        static func halted(count: Int) -> String { Words.count("halt_all.halted", count) }
+        /// Halted your tafs. Nothing new is sent until you resume.
+        static var haltedAll: String { Words.line("halt_all.halted_all") }
+        /// Halting {count} tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.
+        static func halting(count: Int) -> String { Words.count("halt_all.halting", count) }
+        /// Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.
+        static var haltingAll: String { Words.line("halt_all.halting_all") }
+        /// tafs couldn't halt your tafs. Open tafs to halt them.
+        static var running: String { Words.line("halt_all.running") }
+        /// You're signed out of tafs. Sign in to halt your tafs.
+        static var signedOut: String { Words.line("halt_all.signed_out") }
+        /// Halt all tafs
+        static var title: String { Words.line("halt_all.title") }
+    }
     enum Home {
         /// The calendar couldn't be read. {why}
         static func calendarNotRead(why: String) -> String { Words.line("home.calendar_not_read", why) }
@@ -3743,28 +3763,6 @@ enum Words {
         static var withKiff: String { Words.line("sign_in.with_kiff") }
         /// Your code
         static var yourCode: String { Words.line("sign_in.your_code") }
-    }
-    enum Siri {
-        enum HaltAll {
-            /// Stops every taf at once. Nothing new is sent until you resume them in tafs.
-            static var description: String { Words.line("siri.halt_all.description") }
-            /// tafs couldn't halt your tafs. {why} Open tafs to halt them.
-            static func failed(why: String) -> String { Words.line("siri.halt_all.failed", why) }
-            /// Halted {count} tafs. Nothing new is sent until you resume.
-            static func halted(count: Int) -> String { Words.count("siri.halt_all.halted", count) }
-            /// Halted your tafs. Nothing new is sent until you resume.
-            static var haltedAll: String { Words.line("siri.halt_all.halted_all") }
-            /// Halting {count} tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.
-            static func halting(count: Int) -> String { Words.count("siri.halt_all.halting", count) }
-            /// Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.
-            static var haltingAll: String { Words.line("siri.halt_all.halting_all") }
-            /// tafs couldn't halt your tafs. Open tafs to halt them.
-            static var running: String { Words.line("siri.halt_all.running") }
-            /// You're signed out of tafs. Sign in to halt your tafs.
-            static var signedOut: String { Words.line("siri.halt_all.signed_out") }
-            /// Halt all tafs
-            static var title: String { Words.line("siri.halt_all.title") }
-        }
     }
     enum Taf {
         enum Activity {

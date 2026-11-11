@@ -1126,6 +1126,21 @@
   "halt.now": "Halt now",
   "halt.row_running": "Stop it until you resume",
   "halt.your_tafs_lower": "your tafs",
+  "halt_all.description": "Stops every taf at once. Nothing new is sent until you resume them in tafs.",
+  "halt_all.failed": "tafs couldn't halt your tafs. {why} Open tafs to halt them.",
+  "halt_all.halted": {
+    "one": "Halted {count} taf. Nothing new is sent until you resume.",
+    "other": "Halted {count} tafs. Nothing new is sent until you resume."
+  },
+  "halt_all.halted_all": "Halted your tafs. Nothing new is sent until you resume.",
+  "halt_all.halting": {
+    "one": "Halting {count} taf: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.",
+    "other": "Halting {count} tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
+  },
+  "halt_all.halting_all": "Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.",
+  "halt_all.running": "tafs couldn't halt your tafs. Open tafs to halt them.",
+  "halt_all.signed_out": "You're signed out of tafs. Sign in to halt your tafs.",
+  "halt_all.title": "Halt all tafs",
   "home.calendar_not_read": "The calendar couldn't be read. {why}",
   "home.cant_reach_kiff": "Can't reach KIFF",
   "home.choose_taf": "Choose a taf.",
@@ -1878,21 +1893,6 @@
   "sign_in.welcome.title": "They taf.\nYou kiff.",
   "sign_in.with_kiff": "Sign in with KIFF",
   "sign_in.your_code": "Your code",
-  "siri.halt_all.description": "Stops every taf at once. Nothing new is sent until you resume them in tafs.",
-  "siri.halt_all.failed": "tafs couldn't halt your tafs. {why} Open tafs to halt them.",
-  "siri.halt_all.halted": {
-    "one": "Halted {count} taf. Nothing new is sent until you resume.",
-    "other": "Halted {count} tafs. Nothing new is sent until you resume."
-  },
-  "siri.halt_all.halted_all": "Halted your tafs. Nothing new is sent until you resume.",
-  "siri.halt_all.halting": {
-    "one": "Halting {count} taf: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.",
-    "other": "Halting {count} tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
-  },
-  "siri.halt_all.halting_all": "Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.",
-  "siri.halt_all.running": "tafs couldn't halt your tafs. Open tafs to halt them.",
-  "siri.halt_all.signed_out": "You're signed out of tafs. Sign in to halt your tafs.",
-  "siri.halt_all.title": "Halt all tafs",
   "taf.activity.all_apps": "All apps",
   "taf.activity.checking_waits": "Checking what waits for you…",
   "taf.activity.reading_notes": "Reading its notes…",

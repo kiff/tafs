@@ -375,5 +375,52 @@ class AndroidLiterals(unittest.TestCase):
                 self.assertTrue(why, f"{rel}: {body!r} has no reason")
                 self.assertIn(body, found, f"{rel}: {body!r} is kept but no longer in the file")
 
+class AppIntentWords(unittest.TestCase):
+    """Apple reads an App Intent's title and description keys as its words when it processes a build, and
+    refuses a build whose words contain "siri" (ITMS 90626: "App Intent description … cannot contain
+    'siri'"), as it refused 1.0 (1930) over `siri.halt_all.description`. So no key an intent uses, and no
+    phrase Siri hears, says it."""
+
+    SOURCES = os.path.join(REPO, "ios", "Tafs")
+    RESOURCE = re.compile(r'LocalizedStringResource\(\s*"([^"]+)"')
+    PHRASE = re.compile(r'"((?:[^"\\]|\\.)*)"')
+
+    def intent_files(self):
+        for root, _, files in os.walk(self.SOURCES):
+            for name in files:
+                if not name.endswith(".swift"):
+                    continue
+                path = os.path.join(root, name)
+                with open(path, encoding="utf-8") as f:
+                    text = f.read()
+                if re.search(r":\s*(AppIntent|AppShortcutsProvider)\b", text):
+                    yield os.path.relpath(path, REPO), text
+
+    def test_no_intent_key_or_phrase_contains_siri(self):
+        found = 0
+        for rel, text in self.intent_files():
+            for key in self.RESOURCE.findall(text):
+                found += 1
+                self.assertNotIn("siri", key.lower(), f"{rel}: {key!r}")
+            for block in re.findall(r"phrases:\s*\[(.*?)\]", text, re.S):
+                for phrase in self.PHRASE.findall(block):
+                    self.assertNotIn("siri", phrase.lower(), f"{rel}: {phrase!r}")
+        self.assertGreaterEqual(found, 2, "the scan found no intent's words")
+        for root, _, files in os.walk(self.SOURCES):
+            for name in files:
+                if name == "AppShortcuts.strings":
+                    path = os.path.join(root, name)
+                    with open(path, encoding="utf-8") as f:
+                        for k, v in re.findall(r'^"(.*?)"\s*=\s*"(.*?)";', f.read(), re.M):
+                            self.assertNotIn("siri", (k + v).lower(), os.path.relpath(path, REPO))
+
+    def test_every_intent_key_is_a_shared_line(self):
+        with open(os.path.join(HERE, "en.json"), encoding="utf-8") as f:
+            lines = json.load(f)
+        for rel, text in self.intent_files():
+            for key in self.RESOURCE.findall(text):
+                self.assertIn(key, lines, f"{rel}: {key!r} isn't in app/strings")
+
+
 if __name__ == "__main__":
     unittest.main()

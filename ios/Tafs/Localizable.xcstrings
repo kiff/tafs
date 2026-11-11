@@ -56334,6 +56334,633 @@
         }
       }
     },
+    "halt_all.description": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hält jeden taf sofort an. Nichts Neues wird gesendet, bis du sie in tafs fortsetzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stops every taf at once. Nothing new is sent until you resume them in tafs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquea todos los tafs a la vez. No se envía nada nuevo hasta que los reanudes en tafs."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloque tous les tafs d'un coup. Rien de nouveau n'est envoyé tant que vous ne les reprenez pas dans tafs."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocca tutti i tafs in una volta. Non viene inviato nulla di nuovo finché non li riprendi in tafs."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokuje wszystkie tafs naraz. Nic nowego nie zostanie wysłane, dopóki ich nie wznowisz w tafs."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueia todos os tafs de uma vez. Nada de novo é enviado até os retomar no tafs."
+          }
+        }
+      }
+    },
+    "halt_all.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs konnte deine tafs nicht anhalten. %1$@ Öffne tafs, um sie anzuhalten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs couldn't halt your tafs. %1$@ Open tafs to halt them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs no pudo bloquear tus tafs. %1$@ Abre tafs para bloquearlos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs n'a pas pu bloquer vos tafs. %1$@ Ouvrez tafs pour les bloquer."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs non è riuscita a bloccare i tuoi tafs. %1$@ Apri tafs per bloccarli."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs kon je tafs niet stilzetten. %1$@ Open tafs om ze stil te zetten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nie mógł zablokować Twoich tafs. %1$@ Otwórz tafs, aby je zablokować."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tafs não conseguiu bloquear os seus tafs. %1$@ Abra o tafs para os bloquear."
+          }
+        }
+      }
+    },
+    "halt_all.halted_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine tafs sind angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halted your tafs. Nothing new is sent until you resume."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus tafs están bloqueados. No se envía nada nuevo hasta que reanudes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos tafs sont bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I tuoi tafs sono bloccati. Non viene inviato nulla di nuovo finché non riprendi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twoje tafs są zablokowane. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os seus tafs estão bloqueados. Nada de novo é enviado até retomar."
+          }
+        }
+      }
+    },
+    "halt_all.halted|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zablokowano %1$@ tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
+          }
+        }
+      }
+    },
+    "halt_all.halted|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zablokowano %1$@ tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
+          }
+        }
+      }
+    },
+    "halt_all.halted|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halted %1$@ taf. Nothing new is sent until you resume."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf bloqueado. No se envía nada nuevo hasta que reanudes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf bloqué. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf bloccato. Non viene inviato nulla di nuovo finché non riprendi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf stilgezet. Er wordt niets nieuws verzonden tot je hervat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zablokowano %1$@ taf. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf bloqueado. Nada de novo é enviado até retomar."
+          }
+        }
+      }
+    },
+    "halt_all.halted|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halted %1$@ tafs. Nothing new is sent until you resume."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs bloqueados. No se envía nada nuevo hasta que reanudes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs bloccati. Non viene inviato nulla di nuovo finché non riprendi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zablokowano %1$@ tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs bloqueados. Nada de novo é enviado até retomar."
+          }
+        }
+      }
+    },
+    "halt_all.halting_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueando tus tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocage de vos tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocco dei tuoi tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokowanie Twoich tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bloquear os seus tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
+          }
+        }
+      }
+    },
+    "halt_all.halting|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokowanie %1$@ tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
+          }
+        }
+      }
+    },
+    "halt_all.halting|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokowanie %1$@ tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
+          }
+        }
+      }
+    },
+    "halt_all.halting|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf wird angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halting %1$@ taf: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueando %1$@ taf: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocage de %1$@ taf : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocco di %1$@ taf in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokowanie %1$@ tafa: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bloquear %1$@ taf: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
+          }
+        }
+      }
+    },
+    "halt_all.halting|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halting %1$@ tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueando %1$@ tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocage de %1$@ tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocco di %1$@ tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokowanie %1$@ tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bloquear %1$@ tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
+          }
+        }
+      }
+    },
+    "halt_all.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs konnte deine tafs nicht anhalten. Öffne tafs, um sie anzuhalten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs couldn't halt your tafs. Open tafs to halt them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs no pudo bloquear tus tafs. Abre tafs para bloquearlos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs n'a pas pu bloquer vos tafs. Ouvrez tafs pour les bloquer."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs nie mógł zablokować Twoich tafs. Otwórz tafs, aby je zablokować."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tafs não conseguiu bloquear os seus tafs. Abra o tafs para os bloquear."
+          }
+        }
+      }
+    },
+    "halt_all.signed_out": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du bist bei tafs abgemeldet. Melde dich an, um deine tafs anzuhalten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're signed out of tafs. Sign in to halt your tafs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has cerrado sesión en tafs. Inicia sesión para bloquear tus tafs."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous êtes déconnecté de tafs. Connectez-vous pour bloquer vos tafs."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wylogowano z tafs. Zaloguj się, aby zablokować swoje tafs."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminou sessão no tafs. Inicie sessão para bloquear os seus tafs."
+          }
+        }
+      }
+    },
+    "halt_all.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle tafs anhalten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halt all tafs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear todos los tafs"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquer tous les tafs"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocca tutti i tafs"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle tafs stilzetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zablokuj wszystkie tafs"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear todos os tafs"
+          }
+        }
+      }
+    },
     "home.calendar_not_read": {
       "extractionState": "manual",
       "localizations": {
@@ -95262,633 +95889,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "O seu código"
-          }
-        }
-      }
-    },
-    "siri.halt_all.description": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hält jeden taf sofort an. Nichts Neues wird gesendet, bis du sie in tafs fortsetzt."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stops every taf at once. Nothing new is sent until you resume them in tafs."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloquea todos los tafs a la vez. No se envía nada nuevo hasta que los reanudes en tafs."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloque tous les tafs d'un coup. Rien de nouveau n'est envoyé tant que vous ne les reprenez pas dans tafs."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocca tutti i tafs in una volta. Non viene inviato nulla di nuovo finché non li riprendi in tafs."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blokuje wszystkie tafs naraz. Nic nowego nie zostanie wysłane, dopóki ich nie wznowisz w tafs."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueia todos os tafs de uma vez. Nada de novo é enviado até os retomar no tafs."
-          }
-        }
-      }
-    },
-    "siri.halt_all.failed": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs konnte deine tafs nicht anhalten. %1$@ Öffne tafs, um sie anzuhalten."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs couldn't halt your tafs. %1$@ Open tafs to halt them."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs no pudo bloquear tus tafs. %1$@ Abre tafs para bloquearlos."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs n'a pas pu bloquer vos tafs. %1$@ Ouvrez tafs pour les bloquer."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs non è riuscita a bloccare i tuoi tafs. %1$@ Apri tafs per bloccarli."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs kon je tafs niet stilzetten. %1$@ Open tafs om ze stil te zetten."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs nie mógł zablokować Twoich tafs. %1$@ Otwórz tafs, aby je zablokować."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O tafs não conseguiu bloquear os seus tafs. %1$@ Abra o tafs para os bloquear."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halted_all": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine tafs sind angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halted your tafs. Nothing new is sent until you resume."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tus tafs están bloqueados. No se envía nada nuevo hasta que reanudes."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vos tafs sont bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I tuoi tafs sono bloccati. Non viene inviato nulla di nuovo finché non riprendi."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Twoje tafs są zablokowane. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Os seus tafs estão bloqueados. Nada de novo é enviado até retomar."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halted|few": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zablokowano %1$@ tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halted|many": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zablokowano %1$@ tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halted|one": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halted %1$@ taf. Nothing new is sent until you resume."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf bloqueado. No se envía nada nuevo hasta que reanudes."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf bloqué. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf bloccato. Non viene inviato nulla di nuovo finché non riprendi."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf stilgezet. Er wordt niets nieuws verzonden tot je hervat."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zablokowano %1$@ taf. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf bloqueado. Nada de novo é enviado até retomar."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halted|other": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halted %1$@ tafs. Nothing new is sent until you resume."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs bloqueados. No se envía nada nuevo hasta que reanudes."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs bloccati. Non viene inviato nulla di nuovo finché non riprendi."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zablokowano %1$@ tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs bloqueados. Nada de novo é enviado até retomar."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halting_all": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueando tus tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocage de vos tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocco dei tuoi tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blokowanie Twoich tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A bloquear os seus tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halting|few": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blokowanie %1$@ tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halting|many": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blokowanie %1$@ tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halting|one": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf wird angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halting %1$@ taf: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueando %1$@ taf: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocage de %1$@ taf : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocco di %1$@ taf in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blokowanie %1$@ tafa: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A bloquear %1$@ taf: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
-          }
-        }
-      }
-    },
-    "siri.halt_all.halting|other": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halting %1$@ tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueando %1$@ tafs: no empieza ninguna ejecución. KIFF aún no ha confirmado todas las partes; tafs lo muestra cuando lo haga."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocage de %1$@ tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocco di %1$@ tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blokowanie %1$@ tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A bloquear %1$@ tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
-          }
-        }
-      }
-    },
-    "siri.halt_all.running": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs konnte deine tafs nicht anhalten. Öffne tafs, um sie anzuhalten."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs couldn't halt your tafs. Open tafs to halt them."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs no pudo bloquear tus tafs. Abre tafs para bloquearlos."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs n'a pas pu bloquer vos tafs. Ouvrez tafs pour les bloquer."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tafs nie mógł zablokować Twoich tafs. Otwórz tafs, aby je zablokować."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O tafs não conseguiu bloquear os seus tafs. Abra o tafs para os bloquear."
-          }
-        }
-      }
-    },
-    "siri.halt_all.signed_out": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du bist bei tafs abgemeldet. Melde dich an, um deine tafs anzuhalten."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You're signed out of tafs. Sign in to halt your tafs."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Has cerrado sesión en tafs. Inicia sesión para bloquear tus tafs."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous êtes déconnecté de tafs. Connectez-vous pour bloquer vos tafs."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wylogowano z tafs. Zaloguj się, aby zablokować swoje tafs."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Terminou sessão no tafs. Inicie sessão para bloquear os seus tafs."
-          }
-        }
-      }
-    },
-    "siri.halt_all.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle tafs anhalten"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halt all tafs"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloquear todos los tafs"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloquer tous les tafs"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Blocca tutti i tafs"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle tafs stilzetten"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zablokuj wszystkie tafs"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloquear todos os tafs"
           }
         }
       }
