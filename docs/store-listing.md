@@ -313,7 +313,7 @@ Solo, com {SOLO_MONTHLY_CREDITS} créditos por mês, e pacotes de créditos que 
 They taf. You kiff.
 AI-agents die je routinewerk doen. Het laatste woord blijft bij jou.
 
-Kies het werk dat je ochtenden opslokt: terugbetalingen, geschillen, onbetaalde facturen, nieuwe leads. Coach bouwt er een taf voor. De taf doet het routinewerk, en alles wat groot is, wacht op jouw ja.
+Kies het werk dat je ochtenden opslokt: terugbetalingen, geschillen, onbetaalde facturen, nieuwe leads. Coach bouwt er een taf voor. Het taf doet het routinewerk, en alles wat groot is, wacht op jouw ja.
 
 tafs is waar een bedrijf taken overdraagt aan AI-agents, of AI-collega's, tafs genoemd, om het routinewerk te automatiseren. Elk werkt met een Card: wat het zelf doet, wat het je eerst vraagt en wat het nooit doet. Het werkt zelfstandig binnen zijn Card, en nooit daarbuiten. Trek de Card in en er gaat geen nieuwe actie meer door.
 
