@@ -13,6 +13,12 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const de: Words = {
   work_working: "Wird bearbeitet",
   work_waiting_approval: "Wartet auf deine Genehmigung",
+  your_step_title: "Dein Schritt",
+  your_step_done: "Erledigt",
+  your_step_skip: "Überspringen",
+  your_step_open: (vendor: string) => `In ${vendor} öffnen`,
+  your_step_reminder: (what: string) => `Dein Schritt wartet noch: ${what}`,
+  your_step_line: (what: string) => `Dein Schritt: ${what}`,
   work_waiting_answer: "Wartet auf eine Antwort",
   work_waiting_event: (event) => `Wartet auf das Ereignis ${event} der App`,
   work_done_at: (t) => `Erledigt ${at(t)}`,

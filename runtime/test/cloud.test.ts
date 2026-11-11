@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -4774,5 +4774,65 @@ describe("the Record across the person's tafs", () => {
     expect(r.body.receipts).toEqual([{ trace_id: "tr-refund", signature: "sig" }]);
     expect(r.body.csv.split("\r\n").filter(Boolean)).toHaveLength(3);
     expect((await call(w, "GET", "/v1/record/receipts", { token: "ana_paris", query: "from=2026-01-01&to=2026-11-05" })).status).toBe(400);
+  });
+});
+
+// "Your step": a step a taf handed its owner, read from the paused run (yourstep.ts).
+describe("a step a taf handed its owner", () => {
+  const AT = new Date("2026-11-11T17:00:00Z");
+  const ago = (m: number) => new Date(AT.getTime() - m * 60_000).toISOString();
+  const setUp = (pausedAgo = 30) => {
+    const w = world();
+    w.now = AT;
+    w.phones.push({ token: "a".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "" },
+      { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_step", agent: RAE, session: "sess_step", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
+      created: ago(pausedAgo), updated: ago(pausedAgo - 1),
+      requirements: [{ call_id: "c1", tool: "your_step", operation: "op-1", exception: "ho_1", expires: "2026-11-18T17:00:00Z",
+        input: { what: "Approve 3 supplier payments", why: "Your bank asks you to approve transfers yourself", link: "https://app.example.com/r/1" } }] });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    return { w, deps };
+  };
+  const before = process.env.TAFS_YOUR_STEP;
+  afterEach(() => { if (before === undefined) delete process.env.TAFS_YOUR_STEP; else process.env.TAFS_YOUR_STEP = before; });
+
+  it("lists it on Home for Needs you, counted once, with tafs cloud's words and the link's host apart", async () => {
+    const { w } = setUp();
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.status).toBe(200);
+    expect(home.body.your_steps).toEqual([expect.objectContaining({
+      handoff: "ho_1", run: "run_step", taf: { id: RAE, name: "Rae" }, what: "Approve 3 supplier payments", link: "https://app.example.com/r/1", link_host: "app.example.com",
+      words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in example.com", line: "Your step: Approve 3 supplier payments" } })]);
+    const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(rae.work).toMatchObject({ status: "needs_you", line: "Your step: Approve 3 supplier payments" });
+    if (home.body.needs_you) expect(home.body.needs_you.count).toBeGreaterThanOrEqual(1);
+  });
+
+  it("is said to the phones that answer once when it starts waiting, and once more after a day; never before the tool is on", async () => {
+    delete process.env.TAFS_YOUR_STEP;
+    const { w, deps } = setUp();
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    process.env.TAFS_YOUR_STEP = "on";
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: false }]);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", payload: {
+      aps: { alert: { title: "Rae", body: "Your step: Approve 3 supplier payments" } }, open: "taf", taf_id: RAE, handoff: "ho_1" } } });
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    w.now = new Date(AT.getTime() + 24 * 3600_000);
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: true }]);
+    expect(w.pushed.at(-1)).toMatchObject({ n: { payload: { aps: { alert: { body: "Your step is still waiting: Approve 3 supplier payments" } } } } });
+    w.now = new Date(AT.getTime() + 72 * 3600_000);
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(2);
+  });
+
+  it("says only the reminder for a step first seen past a day, and nothing for a halted taf", async () => {
+    process.env.TAFS_YOUR_STEP = "on";
+    const { w, deps } = setUp(25 * 60);
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: true }]);
+    expect(w.pushed).toHaveLength(1);
+    const { w: w2, deps: d2 } = setUp();
+    w2.agents.halts.set(`t_acme|${RAE}`, { on: true, at: ago(10) });
+    expect(await sweepYourSteps(d2)).toEqual([]);
   });
 });

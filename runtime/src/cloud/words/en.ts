@@ -8,6 +8,13 @@ export const en = {
   // A taf's work (work.ts): a request's line, the list's summary, and the firings it skipped.
   work_working: "Working on it",
   work_waiting_approval: "Waiting for your approval",
+  // "Your step": a step a taf may never take, handed to its owner to finish (docs/api.md, "Your step").
+  your_step_title: "Your step",
+  your_step_done: "Done",
+  your_step_skip: "Skip it",
+  your_step_open: (vendor: string) => `Open in ${vendor}`,
+  your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
+  your_step_line: (what: string) => `Your step: ${what}`,
   work_waiting_answer: "Waiting for an answer",
   work_waiting_event: (event: string) => `Waiting for the app's ${event} event`,
   work_done_at: (t: When) => `Done at ${bare(t)}`,

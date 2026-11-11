@@ -225,7 +225,17 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     ...(job.disclose?.length ? { disclose: { line: disclosureLine(job), ...linesOf(job), in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
     // Its one card: a setting's request for Coach, with Coach's button (kiff/tafs#476, gap 15).
     show: true, show_types: ["ask_coach"],
+    // "Your step" (yourstep.ts): it hands its owner a step it may never take, once kiff/agents offers the tool.
+    ...(yourStepOn() ? { your_step: true } : {}),
   };
+}
+
+/**
+ * Whether tafs get kiff/agents' your_step tool: on once kiff/agents and KIFF serve hand-offs (TAFS_YOUR_STEP=on).
+ * Off, a definition is as before, so turning it on changes each taf's definition, and the upgrade applies it.
+ */
+export function yourStepOn(): boolean {
+  return process.env.TAFS_YOUR_STEP === "on";
 }
 
 /** The disclosure's lines in other languages, left out when none fits (a long name stored before the cap). */

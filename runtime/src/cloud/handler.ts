@@ -10,10 +10,11 @@ import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletion
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
-import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
+import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, workOf } from "./work.js";
+import { YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
 import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
@@ -2208,8 +2209,9 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       }
       if (e.kind === "tool_result") {
         // A call KIFF held, where it was held: the app reads the call itself from KIFF.
-        const b = (e.body ?? {}) as { state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
-        if (b.state === "held" && typeof b.hold?.exception === "string" && b.hold.exception) {
+        const b = (e.body ?? {}) as { tool?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
+        // A step handed to the owner pauses the run the same way, but isn't a call KIFF holds: Needs you lists it.
+        if (b.state === "held" && b.tool !== YOUR_STEP_TOOL && typeof b.hold?.exception === "string" && b.hold.exception) {
           held.push({ at: iso(e.time), session: r.session.id, run: e.run, exception: b.hold.exception, ...(typeof b.invocation === "string" ? { invocation: b.invocation } : {}) });
         }
         continue;
@@ -5547,20 +5549,23 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
   const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
   const unitExceptions = tafs.flatMap((taf) => cardUnitExceptions(taf, kiff.held, summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now, langOf(event)));
+  // The steps tafs handed their owner, from the runs read above (yourstep.ts): Needs you lists each, oldest first.
+  const yourSteps = tafs.flatMap((t, i) => (recent[i] ?? []).flatMap((r) => yourStepsOf(r, langOf(event)).map((s) => ({ ...s, taf: { id: t.id, name: t.name } }))))
+    .sort((a, b) => a.since.localeCompare(b.since));
   // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
   // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
     const count = kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length + unsure + unitExceptions.length
-      + lights.filter((l) => l.some((d) => d.knocks > 0)).length;
+      + lights.filter((l) => l.some((d) => d.knocks > 0)).length + yourSteps.length;
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
     const lang = langOf(event);
     const w = wordsIn(lang);
     return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
   return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
-    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
 /**
@@ -6766,6 +6771,53 @@ export async function sweepLate(deps: Deps): Promise<Array<{ tenant: string; taf
     }
   }
   return told;
+}
+
+/** How long a step handed to the owner waits before its one reminder (yourstep.ts). */
+export const YOUR_STEP_REMIND_MS = 24 * 3600_000;
+
+/**
+ * The sweep's look at the steps tafs handed their owner (yourstep.ts): each is said to the phones that answer
+ * the account's holds once when it starts waiting, and once more as a reminder after a day, in each phone's
+ * language. Never again: it stays in Needs you until it's answered or KIFF stops waiting, and no answer is
+ * never done. A halted or removed taf says nothing.
+ */
+export async function sweepYourSteps(deps: Deps): Promise<Array<{ tenant: string; taf: string; handoff: string; reminder: boolean }>> {
+  const store = deps.coach;
+  // Before tafs have the tool, no run can wait on a step: nothing is read.
+  if (!store || !yourStepOn()) return [];
+  const now = deps.now?.() ?? new Date();
+  const told: Array<{ tenant: string; taf: string; handoff: string; reminder: boolean }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const tafs = (await deps.tafs.list(tenant).catch(() => [] as Taf[])).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    for (const taf of tafs) {
+      const runs = await deps.agents.runs(tenant, taf.id, false, 20).catch(() => undefined);
+      const steps = (runs ?? []).flatMap((r) => yourStepsOf(r));
+      if (!steps.length) continue;
+      if (await deps.agents.halted(tenant, taf.id).then((h) => h.halted, () => true)) continue;
+      for (const step of steps) {
+        const reminder = now.getTime() - Date.parse(step.since) >= YOUR_STEP_REMIND_MS;
+        // Past a day, only the reminder is said: a step first seen late isn't announced twice.
+        const key = `${tenant}#yourstep#${step.handoff}#${reminder ? "remind" : "start"}`;
+        if (!(await store.once(key, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+        await tellPhones(deps, tenant, (lang) => yourStepNotification(taf, step.handoff, (() => {
+          const w = wordsIn(lang);
+          return reminder ? w.your_step_reminder(step.what) : w.your_step_line(step.what);
+        })()));
+        told.push({ tenant, taf: taf.id, handoff: step.handoff, reminder });
+      }
+    }
+  }
+  return told;
+}
+
+/** A step handed to the owner, as the phones show it: the taf, then the step; it opens the taf. */
+function yourStepNotification(taf: Taf, handoff: string, body: string): Notification {
+  return {
+    kind: "alert",
+    payload: { aps: { alert: { title: taf.name, body }, ...apsFor(levelOf("failing", false)) }, open: "taf", taf_id: taf.id, handoff },
+    collapseID: `step-${handoff}`.slice(0, 64),
+  };
 }
 
 /** A case past the promise, as the phones show it: the taf, then how long and the promise; it opens the taf. */

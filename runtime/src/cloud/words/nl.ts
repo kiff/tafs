@@ -13,6 +13,12 @@ const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri
 export const nl: Words = {
   work_working: "Bezig",
   work_waiting_approval: "Wacht op je goedkeuring",
+  your_step_title: "Jouw stap",
+  your_step_done: "Klaar",
+  your_step_skip: "Overslaan",
+  your_step_open: (vendor: string) => `Openen in ${vendor}`,
+  your_step_reminder: (what: string) => `Jouw stap wacht nog: ${what}`,
+  your_step_line: (what: string) => `Jouw stap: ${what}`,
   work_waiting_answer: "Wacht op een antwoord",
   work_waiting_event: (event) => `Wacht op het ${event}-event van de app`,
   work_done_at: (t) => `Klaar ${at(t)}`,
