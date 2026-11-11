@@ -514,8 +514,9 @@ the taf's name, what to do, and why. Needs you counts each once, as tafs cloud d
   left out shows the words with no button.
 - **Done** and **Skip it** are for those who answer holds (`canAnswerHolds`). Each reads the hand-off
   from KIFF (`GET /v1/me/handoffs/{id}`) for its version, signs KIFF's `kiff.handoff.v1` (tenant,
-  hand-off, `done` or `skipped`, version, signed_at) with the **signing key** behind the screen lock,
-  as a refusal is signed, since answering grants nothing, and sends it to KIFF
+  hand-off, `done` or `skipped`, version, signed_at) with the **device key** (the signing key KIFF
+  binds to the session), after the screen lock, as a refusal is signed. It's never the approval key
+  and never needs a fingerprint, since answering grants nothing. It then sends it to KIFF
   (`POST /v1/me/handoffs/{id}/answer`, `AppModel.answerYourStep`). KIFF tells the taf's run. The
   prompt reads tafs cloud's words: "Done · {what}".
 - **A step KIFF no longer waits on** (answered elsewhere, or past its week) isn't signed: the app
