@@ -5524,7 +5524,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now, langOf(event), health) : undefined;
     return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
-      ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : {}) };
+      // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
+      ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.

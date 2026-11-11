@@ -273,6 +273,15 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
         modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 5.dp),
       )
     }
+    // The taf's line on why, under its own heading: the taf's words, from text a customer wrote, drawn as plain text and never in
+    // place of KIFF's amount, rule or action above.
+    if (call.tafAbout != null || call.tafSays != null) {
+      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Eyebrow(Words.NeedsYou.tafSays)
+        call.tafAbout?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
+        call.tafSays?.let { Text(it, style = scaled(14, color = Theme.ink)) }
+      }
+    }
     // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and a vendor's own values aren't
     // words for the card's face (kiff/tafs#236, item 7).
     call.details?.takeIf { it.isNotEmpty() }?.let { details -> Details(details) }

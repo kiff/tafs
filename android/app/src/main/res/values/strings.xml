@@ -1293,6 +1293,7 @@
     <string name="needs_you_sign_in_again_to_answer">Sign out and in again to answer from this phone, so KIFF knows its key. Or answer this one in KIFF.</string>
     <string name="needs_you_someone_answers">Someone who approves on this account answers this. Their answer shows here.</string>
     <string name="needs_you_tab_label">Needs you, %1$s</string>
+    <string name="needs_you_taf_says">The taf says</string>
     <string name="needs_you_title">Needs you</string>
     <string name="needs_you_turn_alerts">Turn on alerts</string>
     <string name="needs_you_turning_on">Turning on…</string>

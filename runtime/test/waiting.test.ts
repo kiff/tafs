@@ -14,10 +14,20 @@ describe("a taf's oldest waiting case", () => {
   it("is the oldest of a call waiting for the owner and found work that couldn't start", () => {
     // A held call since 50 minutes ago, and work waiting for credits since 90: the work is older.
     expect(oldestWaiting([held(50)], [fired(15, "skipped_credits"), fired(90, "skipped_busy"), fired(120, "run")])).toEqual({ since: ago(90), kind: "work" });
-    // Only the held call.
-    expect(oldestWaiting([held(50), run(200, {})], [fired(15, "quiet")])).toEqual({ since: ago(50), kind: "held" });
+    // Only the held call, since its run began.
+    expect(oldestWaiting([held(50), run(200, {})], [fired(15, "quiet")])).toEqual({ since: ago(51), kind: "held" });
     // A run past its last try, waiting for the owner, counts the same.
     expect(oldestWaiting([run(70, { status: "ERROR", state: "needs_you" })], [])).toEqual({ since: ago(70), kind: "held" });
+  });
+
+  it("keeps a held case's time while its run moves: a partial answer, steering or a note's retry never makes it younger", () => {
+    const paused = held(50);
+    // The owner answers one of its holds 5 minutes ago; the run, still paused on another, moves.
+    const moved = { ...paused, updated: ago(5), requirements: [...paused.requirements!, { call_id: "c2", tool: "t", input: {}, operation: "o2", exception: "exc_2", expires: ago(-60), answered: ago(5) }] };
+    expect(oldestWaiting([moved], [])).toEqual({ since: ago(51), kind: "held" });
+    expect(oldestWaiting([moved], [])!.since).toBe(oldestWaiting([paused], [])!.since);
+    // Still late against a 30 min promise: the line never says it waited 5 minutes.
+    expect(waitingView(oldestWaiting([moved], [])!, 0.5, NOW).words).toBe("Oldest case waiting 51 min, past the 30 min you set");
   });
 
   it("ends at the last firing that ran or was quiet, and never counts work set aside as too big", () => {

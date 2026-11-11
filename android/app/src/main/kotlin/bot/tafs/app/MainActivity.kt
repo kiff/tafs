@@ -526,6 +526,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       setDraft = model::setDraft,
       sendAgain = model::sendAgain,
       askCoachAbout = model::askCoachAbout,
+      openPlan = { usageOpen = true },
       openRequest = model::openRequest,
       setPaused = model::setPaused,
       remove = model::removeTaf,

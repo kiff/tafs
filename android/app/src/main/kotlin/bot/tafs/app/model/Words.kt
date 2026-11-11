@@ -1343,6 +1343,7 @@ object Words {
     val signInAgainToAnswer: String get() = Res.s(R.string.needs_you_sign_in_again_to_answer)
     val someoneAnswers: String get() = Res.s(R.string.needs_you_someone_answers)
     fun tabLabel(n: String): String = Res.s(R.string.needs_you_tab_label, n)
+    val tafSays: String get() = Res.s(R.string.needs_you_taf_says)
     val title: String get() = Res.s(R.string.needs_you_title)
     val turnAlerts: String get() = Res.s(R.string.needs_you_turn_alerts)
     val turningOn: String get() = Res.s(R.string.needs_you_turning_on)

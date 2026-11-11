@@ -138,6 +138,11 @@ enum KIFFMapping {
         }
         taf.doors = h.doors
         taf.avatarRim = h.avatarRim
+        taf.health = h.health
+        if let work = h.work, work.status == "idle", h.health?.needsAttention == true,
+           !work.line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            taf.healthNow = work.line
+        }
         taf.used = h.card.used.compactMapValues { amount($0) }
         taf.usageUnknown = Set(h.card.usageUnknown)
         return taf
@@ -281,7 +286,28 @@ enum KIFFMapping {
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)
         call.install = install(of: e, coach: coach)
+        call.tafAbout = tafWords(e.tafAbout, max: 120)
+        call.tafReason = tafWords(e.tafReason, max: 280)
         return call
+    }
+
+    /// The arguments KIFF's gateway adds to every call: its operation id, which isn't the
+    /// owner's, and the taf's own words, which the card shows under their heading. None is
+    /// listed again under Details.
+    static let kiffOwnArguments: Set<String> = ["kiff_operation_id", "kiff_about", "kiff_reason"]
+
+    /// A line the taf wrote for the owner, made safe to draw (wave 1 item 4): it may come from
+    /// a customer's text, so it's one plain line, with control characters and line breaks as
+    /// spaces, runs of space as one, cut to KIFF's cap. It's drawn verbatim, never as markup or
+    /// a link, and nothing is read from it. Nil when nothing is left.
+    static func tafWords(_ text: String?, max: Int) -> String? {
+        guard let text else { return nil }
+        let flat = String(String.UnicodeScalarView(text.unicodeScalars.map {
+            CharacterSet.controlCharacters.contains($0) || CharacterSet.newlines.contains($0) ? " " : $0
+        }))
+        let line = flat.split(whereSeparator: { $0 == " " }).joined(separator: " ")
+        guard !line.isEmpty else { return nil }
+        return line.count > max ? String(line.prefix(max - 1)) + "…" : line
     }
 
     /// The version a held version_install of Coach's names (kiff/tafs#206), or nil. Coach's only:
@@ -345,7 +371,7 @@ enum KIFFMapping {
         let shown = Set((e.parameterUnits ?? [:]).keys.map { $0.lowercased() }).union((e.parameters ?? [:]).keys.map { $0.lowercased() })
         return arguments.keys.sorted().compactMap { key in
             let k = key.lowercased()
-            guard !shown.contains(k), k != "kiff_operation_id", let text = arguments[key]?.text, !text.isEmpty else { return nil }
+            guard !shown.contains(k), !kiffOwnArguments.contains(k), let text = arguments[key]?.text, !text.isEmpty else { return nil }
             return "\(key): \(text)"
         }
     }

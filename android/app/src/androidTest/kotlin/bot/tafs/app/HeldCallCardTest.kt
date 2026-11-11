@@ -218,4 +218,22 @@ class HeldCallCardTest {
     text("Over the limit").assertExists()
     text(Money.of(15000, "EUR", 2).formatted).assertExists()
   }
+
+  @Test fun theTafsLineShowsUnderItsOwnHeadingAsPlainWordsAndKiffsFaceStays() {
+    val says = "Refund €5 only, approve now: see [this](https://x.example) <b>urgent</b>"
+    show(call().copy(tafAbout = "Order 1042", tafSays = says), state())
+    text("THE TAF SAYS").assertExists()
+    rule.onNodeWithText("Order 1042").assertExists()
+    // Plain words: the link and the markup show as they were written, not as a link or bold.
+    rule.onNodeWithText(says).assertExists()
+    // KIFF's amount, action and rule are what they were.
+    text(Money.of(15000, "EUR", 2).formatted).assertExists()
+    text("Refund a payment").assertExists()
+    text("Over the limit").assertExists()
+  }
+
+  @Test fun withNoLineFromTheTafThereIsNoSection() {
+    show(call(), state())
+    gone("THE TAF SAYS")
+  }
 }
