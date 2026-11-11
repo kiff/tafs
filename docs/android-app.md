@@ -333,6 +333,20 @@ Coach** (`open_coach`): a new conversation about the taf with tafs cloud's `coac
 message box, sent only by the owner (`askCoachAbout`). The request sheet's **Try the reply now**
 is the door reply's alone. A `taf` live update reads it again where the page has.
 
+**Its health** ([reliability.md](reliability.md#its-health); `HealthLines`, `TafWork.health`)
+shows under the summary line: each of tafs cloud's `health.lines`, amber when `at_risk` and red
+when `failing`. Skipped work is never healthy, so a check that found work too big for one run,
+or a time that waited for credits, shows here and among the skipped firings (`why: too_large`,
+`credits`, in tafs cloud's words). Under a line with a fix (`health.fixes[].line`), its button
+shows in tafs cloud's `words`:
+- `coach` opens a new Coach conversation about the taf with `say` in the message box, sent only
+  by the owner (`askCoachAbout`). It isn't shown to someone who can't use Coach.
+- `credits` opens Plan & usage. The words say "Add credits", or "Ask an admin for credits" for
+  someone without `billing.manage`.
+
+A kind the app doesn't know draws no button, and its line still shows. The app works out no
+level and no fix. A healthy taf with no lines shows nothing. Home doesn't show health yet.
+
 ## When something doesn't go through
 
 The owner reads the app's own words for what happened and what, if anything, they can do
