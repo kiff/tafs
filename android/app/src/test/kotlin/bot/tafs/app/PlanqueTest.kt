@@ -1572,7 +1572,7 @@ class PlanqueTest {
   }
 
   @Test fun aVendorThatRefusesPlanquesClientIsSaidInPlanquesWords() = runTest {
-    val words = "mcp.qonto.com doesn't allow tafs to sign in yet, so nothing was connected. It isn't something you can change from here."
+    val words = "mcp.vendor.example doesn't allow tafs to sign in yet, so nothing was connected. It isn't something you can change from here."
     transport.answer("GET /v1/accounts/t_01/grants", 502, """{"error":"$words","code":"vendor_refused_client"}""")
     try {
       planque().grants(); fail("refused")

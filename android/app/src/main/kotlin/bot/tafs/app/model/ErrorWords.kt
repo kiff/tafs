@@ -17,7 +17,7 @@ object ErrorWords {
     val status = when (e) {
       is CloudError -> e.words?.let { return it } ?: e.status
       is KiffError.Server -> e.status
-      // A vendor that refuses planque's client (Qonto allow-lists who may sign in): planque's own words, which say whose it is,
+      // A vendor that refuses planque's client (one that allow-lists who may sign in): planque's own words, which say whose it is,
       // not "it isn't working on our side".
       is PlanqueError.Server -> if (e.code in PLANQUE_WORDED && !e.message.isNullOrBlank()) return e.message!! else e.status
       is SignerException, is KiffError, is PlanqueError, is OwnWords -> return e.message.orEmpty()
