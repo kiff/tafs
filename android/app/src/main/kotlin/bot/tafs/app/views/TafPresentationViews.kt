@@ -185,21 +185,22 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     if (atEnd && next != null && !loading && !failed) scope.launch { actions.loadActivity(taf.id, filter, true, selection) }
   }
   LazyColumn(modifier, state = list, contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    // What needs the owner first, the same on both apps: its doors' knocks (for whoever manages it, as Needs you counts them), its
+    // held calls, then its work, then its runs.
+    if (state.mode == Mode.kiff && state.manages(taf.id)) item(key = "knocks") {
+      LaunchedEffect(taf.id) { actions.doors.load(taf.id) }
+      KnocksPanel(taf, state, actions.doors)
+    }
     item { state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) } }
     // Its open currency requests, as the newest page read has them (ahead of what Home last said): loading older pages updates them
     // without dropping history. Their refused calls are folded under them by tafs cloud, and every one stays in the Record.
     val latest = cache?.pages?.lastOrNull()
     items(latest?.cardUnitExceptions.orEmpty(), key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     latest?.cardUnitExceptionsNotice?.let { notice -> item { Text(notice, style = scaled(13, color = Theme.dim)) } }
-    // Strangers' knocks at its doors, for whoever manages it: what Needs you counts, on the taf's own page, ahead of its runs.
-    if (state.mode == Mode.kiff && state.manages(taf.id)) item(key = "knocks") {
-      LaunchedEffect(taf.id) { actions.doors.load(taf.id) }
-      KnocksPanel(taf, state, actions.doors)
-    }
-    // When it runs, with Run now and Pause, ahead of what it did.
-    item(key = "runs") { RunsPanel(taf, taf.id in state.runsInFlight, actions, state.runNowQuiet[taf.id]) }
     // Where its work stands, as tafs cloud says it: its health with its fixes, its oldest waiting case, Answer within, its requests.
     item(key = "work") { WorkPanel(taf, state, actions) }
+    // When it runs, with Run now and Pause, ahead of what it did.
+    item(key = "runs") { RunsPanel(taf, taf.id in state.runsInFlight, actions, state.runNowQuiet[taf.id]) }
     item { RetainedRuns(taf, state, actions) }
     if (selection.isNotBlank()) item { TextButton(clearSelection) { Text(Words.Taf.Activity.allApps, color = Theme.amberText) } }
     item {

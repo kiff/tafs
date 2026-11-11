@@ -337,8 +337,8 @@ app's own lines stand in only where tafs cloud sends none.
 
 The Activity tab of a taf on tafs cloud (`TafActivityList`) shows, for whoever manages it, its
 doors' knocks first (`KnocksPanel`: strangers' knocks with Do it, Pair them and Ignore, then paired
-senders), so a knock Needs you counts is on the taf's page too. Then it shows where its work stands under
-its runs, from `GET /v1/tafs/{id}/work` ([reliability.md](reliability.md#the-tafs-view);
+senders), so a knock Needs you counts is on the taf's page too. Then come its held calls, then where its
+work stands, then its runs (the same order on iOS: what needs the owner first), from `GET /v1/tafs/{id}/work` ([reliability.md](reliability.md#the-tafs-view);
 `WorkPanel`, `AppModel.loadWork`): tafs cloud's
 summary line, then its recent requests and skipped firings, newest first, each in tafs cloud's
 words (`Chat.workRows`). A request that needs the owner is amber, a failed one red; a skipped

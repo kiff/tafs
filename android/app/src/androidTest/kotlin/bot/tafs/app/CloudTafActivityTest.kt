@@ -69,7 +69,13 @@ class CloudTafActivityTest {
     coach: MutableList<Pair<String, String>> = mutableListOf(),
     doorsLoaded: MutableList<String> = mutableListOf(),
   ) {
-    val actions = TafActions(
+    val actions = actions(loaded, coach, doorsLoaded)
+    val state = state(manage)
+    rule.setShown { TafsTheme { TafActivityList(taf, state, actions, selection = "", clearSelection = {}) } }
+  }
+
+  private fun actions(loaded: MutableList<String>, coach: MutableList<Pair<String, String>>, doorsLoaded: MutableList<String>) =
+    TafActions(
       answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
       sendChat = { _, _, _, _ -> }, issuer = "You",
       doors = DoorActions({ doorsLoaded += it }, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {}),
@@ -78,14 +84,13 @@ class CloudTafActivityTest {
       loadWork = { loaded += it },
       askCoachAbout = { id, words -> coach += id to words },
     )
-    val state = AppState(
+
+  private fun state(manage: Boolean) = AppState(
       mode = Mode.kiff, ready = true, tafs = listOf(taf), works = mapOf(taf.id to work),
       kiffAccount = Account("t_01", "acme", capabilities = listOf("members.manage", "cards.manage")),
       access = mapOf(taf.id to Access(use = true, oversee = true, manage = manage)),
       doors = mapOf(taf.id to TafDoors(knocks = listOf(knock), loaded = true)),
     )
-    rule.setShown { TafsTheme { TafActivityList(taf, state, actions, selection = "", clearSelection = {}) } }
-  }
 
   @Test fun aCloudTafsActivityShowsItsHealthWithItsFixItsOldestWaitingCaseAndAnswerWithin() {
     val loaded = mutableListOf<String>()
@@ -131,5 +136,25 @@ class CloudTafActivityTest {
     rule.waitForIdle()
     rule.onAllNodesWithText("KNOCKS · WAITING ON YOU").assertCountEquals(0)
     assertTrue(doorsLoaded.isEmpty())
+  }
+
+  @Test fun theTafsPageOpensThisActivityForATafOnTafsCloud() {
+    // The view choice is what broke in Android 1.5: the whole page, Activity tapped, shows the work, ahead of the runs.
+    val loaded = mutableListOf<String>()
+    rule.setShown {
+      TafsTheme {
+        androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.design.LocalBiometry provides "your fingerprint") {
+          bot.tafs.app.views.TafDetailView(taf.id, state(manage = true), actions(loaded, mutableListOf(), mutableListOf()), onBack = {}, onHalt = {}, onUsage = {}, onVersions = {})
+        }
+      }
+    }
+    rule.onNodeWithText("Activity").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").performScrollTo().assertIsDisplayed()
+    rule.onNodeWithText("Answer within").performScrollTo().assertIsDisplayed()
+    val work = rule.onNodeWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").fetchSemanticsNode().boundsInRoot.top
+    val runs = rule.onNodeWithText("RUNS").performScrollTo().fetchSemanticsNode().boundsInRoot.top
+    assertTrue("its work comes before its runs, as on iOS", work < runs)
+    assertEquals(listOf("refunds-1"), loaded.distinct())
   }
 }
