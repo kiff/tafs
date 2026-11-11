@@ -2,31 +2,77 @@
 
 # tafs
 
-**AI that works on a Card.**
+**They taf. You kiff.**
+
+AI agents that do your routine work. You keep the final say.
 
 <p align="center">
   <img src="docs/screenshots/hero.png" width="760" alt="Three phones: Tafs on iPhone with three working and two needing you; Needs you on Android with a migration and an €8,400 payment held, each with Approve once and Refuse; Coach on Android: Ask anything about your tafs">
 </p>
 
-A taf is an AI agent a business hands one job to, such as refunds, bill pay or deploys. It
-works inside a Card, the limits [KIFF](https://kiff.dev) checks before any of its calls
-reaches a tool. Inside the Card it acts and leaves a receipt; outside it, it waits for the
-owner's answer on their phone.
+Pick the job that eats your mornings: refunds, disputes, unpaid invoices, new leads.
+Coach builds a taf for it. The taf does the routine, and anything big waits for your yes.
 
-tafs is an app for iPhone, iPad and Android, with **They taf. You kiff.** as its line.
+Get it on [Google Play](https://play.google.com/store/apps/details?id=dev.kiff.tafs), in
+Europe, the UK and Switzerland. For iPhone and iPad, tafs is on TestFlight. The same story,
+with each job's Card in full: [kiff.dev/tafs](https://kiff.dev/tafs).
 
-## A good agent harness vs a taf
+## Pick the headache to hand off
 
-| | A good agent harness | A taf |
+Each job comes ready: the words for Coach, and a Card you can change before you sign.
+In the app, **Hand it to Coach** opens Coach with those words. All of them, in 8 languages:
+[recipes/](recipes/README.md).
+
+| | The job | What the taf does |
 |---|---|---|
-| Where the rules live | Rules in the harness, on the machine it runs on | A Card, checked by a separate service before every call |
-| Your sign-ins | Tools reach whatever the account running them can read | Sign-ins sit in a separate vault the agent never holds |
-| What a rule can say | A rule allows or denies a tool | A Card limits how much, how often, and until when |
-| Approvals | You approve in the session that's running | You approve on your phone, signed, for that exact call, once |
-| The record | A transcript on the same machine | A signed receipt your phone checks |
-| Stopping | Stop the process | One tap halts it in every system it works through |
+| Money | [No refund waits overnight](recipes/refunds-within-a-limit.md) | Answers refund requests and refunds within the Card |
+| Money | [Stop losing disputes you could win](recipes/chargebacks-with-evidence.md) | Answers card disputes with evidence before the deadline |
+| Money | [Get paid without chasing](recipes/chase-overdue-invoices.md) | Reminds customers of overdue invoices; moves no money |
+| Money | [Pay the right bills on time](recipes/pay-matching-bills.md) | Pays vendor bills that match their purchase order |
+| Money | [Keep the customer who's about to leave](recipes/save-a-customer-who-cancels.md) | Offers a cancelling subscriber a free month or a discount |
+| Customers | [Stop answering "where is my order?"](recipes/answer-questions-about-orders.md) | Answers order questions from the shop; passes money to you |
+| Customers | [Never lose a lead to a slow reply](recipes/follow-up-new-leads.md) | Adds each new lead to the CRM and replies within the hour |
+| Operations | [End the back-and-forth over bookings](recipes/book-and-move-appointments.md) | Books and moves appointments; cancelling always asks |
+| Operations | [A leaver's access ends the day they leave](recipes/access-for-joiners-and-leavers.md) | Gives joiners their apps, removes leavers |
+| Operations | [Stop babysitting deploys](recipes/ship-when-green.md) | Ships green, approved changes and rolls back a failing one |
+| Errands | [No more hunting for receipts at tax time](recipes/file-receipts.md) | Files receipts from the mailbox into a folder and a sheet |
 
-## What's new in it
+Don't see yours? Say it to Coach in your own words. It asks what's missing, connects
+your apps and drafts the Card.
+
+## The Card keeps you in charge
+
+Every taf works on a Card. It's the whole job description. You read it, then you sign it.
+
+- **Does on its own.** Inside the Card, it just does the work, and leaves a receipt.
+- **Asks you first.** Past a limit, one tap on your phone. No answer means no.
+- **Never does.** Whatever an email, a customer or the AI itself says.
+- **Change it, or stop it, any time.** Only you can change the Card. One tap halts one
+  taf, or all of them.
+
+The Card is checked by [KIFF](https://kiff.dev), outside the AI, before any call reaches
+a tool. So an email that tells a taf to ignore its rules changes nothing: what's over the
+limit still waits for you.
+
+## How it works
+
+1. **Hand a job to Coach.** Pick one, change the limits to yours, and send it. Coach asks
+   only what it needs and connects your apps. You sign in yourself; the taf never sees
+   your passwords.
+2. **Sign the Card.** Coach drafts it, you set the limits and sign on your phone.
+3. **The routine gets done.** Inside the Card, each piece of work is done, with a receipt.
+   What's over a limit waits in Needs you.
+4. **You decide what matters.** You just stop doing the rest.
+
+## What it costs
+
+Solo or Company, in credits. Credits are used only when a taf works; a quiet check, when
+nothing is new, costs nothing. At 80% you're told, and at 100% your tafs wait: nothing is
+billed after. Coach is included, enough to set up about 4 new jobs a month. Packs are
+bought in the Android app, not yet on iPhone and iPad, and never expire. There's no free trial. Prices:
+[kiff.dev/tafs](https://kiff.dev/tafs).
+
+## Why you can trust it
 
 - **Signed approvals.** An answer to a held call is signed with the phone's key and checked
   by KIFF, so no server can answer for the owner ([approvals](docs/approvals.md#how-an-answer-is-signed)).
@@ -41,23 +87,21 @@ tafs is an app for iPhone, iPad and Android, with **They taf. You kiff.** as its
 - **A memory you can read.** A taf's notes shape how it works, never what its Card allows,
   and each one can be read and forgotten ([memory](docs/tafs.md#memory)).
 
-## The first five jobs
+### For builders: an agent harness vs a taf
 
-Each is a consequential job companies want agents to do and are afraid to let
-them do.
-
-| Taf | What it does | Card, for example |
+| | A good agent harness | A taf |
 |---|---|---|
-| Refunds | Settles refund and credit requests from the support queue | ≤ €150 each, €2,000 a day; payouts never |
-| Bill pay | Pays vendor bills that match a purchase order | ≤ €5,000 each, €25,000 a week; wires always ask; bank detail changes never |
-| Access | Gives joiners their apps, removes leavers | Approved roles only; elevated access always asks; admin and deleting users never |
-| Deploys | Ships fixes when CI is green, rolls back | 10 deploys a day; migrations always ask; dropping data never |
-| Chargebacks | Answers card disputes with evidence | Evidence ≤ €500 each; accepting a loss ≤ €100 each |
+| Where the rules live | Rules in the harness, on the machine it runs on | A Card, checked by a separate service before every call |
+| Your sign-ins | Tools reach whatever the account running them can read | Sign-ins sit in a separate vault the agent never holds |
+| What a rule can say | A rule allows or denies a tool | A Card limits how much, how often, and until when |
+| Approvals | You approve in the session that's running | You approve on your phone, signed, for that exact call, once |
+| The record | A transcript on the same machine | A signed receipt your phone checks |
+| Stopping | Stop the process | One tap halts it in every system it works through |
 
-## How to get it
+## Get it
 
 - **Android:** on [Google Play](https://play.google.com/store/apps/details?id=dev.kiff.tafs), for
-  phones and tablets on Android 11 and later.
+  phones and tablets on Android 11 and later, in Europe, the UK and Switzerland.
 - **iPhone and iPad:** in testing, on TestFlight, on iOS 16 and later.
 
 Both work signed in with KIFF, or with sample data on the phone. More screens, on each
