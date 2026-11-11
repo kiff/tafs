@@ -202,7 +202,8 @@ private fun RecipeRow(recipe: bot.tafs.app.kiff.Recipe, enabled: Boolean, onTap:
       .padding(horizontal = 14.dp, vertical = 12.dp),
     verticalArrangement = Arrangement.spacedBy(2.dp),
   ) {
-    Text(recipe.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    // One name per job: led by the problem it ends, as the gallery and Home name it; a recipe without a headline by its title.
+    Text(recipe.headline.ifBlank { recipe.title }, style = scaled(15, FontWeight.SemiBold, Theme.ink))
     if (recipe.line.isNotBlank()) Text(recipe.line, style = scaled(13, color = Theme.soft))
   }
 }
