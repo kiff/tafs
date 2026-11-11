@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -237,17 +239,37 @@ class PlanqueClient(
     decode(raw("POST", "enrolment", body("device_key" to java.util.Base64.getEncoder().encodeToString(deviceKey), "connector_key" to connectorKey)))
 
   /**
+   * What a grant's digest covers, as its `digest_v` says (docs/android-app.md › Connect apps). Without one, the request alone (v1).
+   * With `digest_v: 2`, the request with the words the person reads and their language, `{"lang", "request", "text"}`, so the phone
+   * proves the words it shows, in that language, are the ones signed. Null for a version this app doesn't know, or a v2 grant
+   * without its words or language: nothing is covered, so nothing matches and nothing is signed.
+   */
+  internal fun digestCovers(raw: JsonObject): JsonElement? {
+    val request = raw["request"] ?: return null
+    return when (val v = raw["digest_v"]) {
+      null -> request
+      else -> {
+        if ((v as? JsonPrimitive)?.content != "2") return null
+        val lang = (raw["lang"] as? JsonPrimitive)?.takeIf { it.isString && it.content.isNotEmpty() } ?: return null
+        val text = (raw["text"] as? JsonPrimitive)?.takeIf { it.isString } ?: return null
+        JsonObject(mapOf("lang" to lang, "request" to request, "text" to text))
+      }
+    }
+  }
+
+  /**
    * Every grant for the account, each with its digest checked against its request. [signedBy] signs this read alone, leaving
    * [signer] as it is: a refresh that runs while a confirmed step waits on the vendor's page must not end that step's signer.
    */
   suspend fun grants(signedBy: ((ByteArray) -> String)? = null): List<Grant> {
     val data = raw("GET", "grants", null, signedBy)
     val grants = KiffClient.json.decodeFromString<Grants>(String(data)).grants
-    // The request as planque sent it, numbers as written, so the digest is planque's.
+    // The grant as planque sent it, numbers as written, so the digest is planque's.
     val raws = runCatching { KiffClient.json.parseToJsonElement(String(data)).jsonObject["grants"]?.jsonArray }.getOrNull().orEmpty()
     return grants.map { grant ->
-      val request = raws.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.content == grant.id }?.jsonObject?.get("request")
-      val matches = request != null && runCatching { sha256Hex(Jcs.canonical(request).toByteArray()) == grant.digest }.getOrDefault(false)
+      val raw = raws.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.content == grant.id } as? JsonObject
+      val covered = raw?.let(::digestCovers)
+      val matches = covered != null && runCatching { sha256Hex(Jcs.canonical(covered).toByteArray()) == grant.digest }.getOrDefault(false)
       grant.copy(digestMatches = matches)
     }
   }
@@ -388,6 +410,8 @@ class PlanqueClient(
     val sent = linkedMapOf(
       "Accept" to "application/json",
       "User-Agent" to "tafs-android",
+      // The person's language, as tafs cloud gets it: planque writes the words they approve in it, and says which (`lang`).
+      "Accept-Language" to KiffClient.screenLanguage(),
       "Planque-Device-Signature" to if (held != null) "t=$signedAt,v2=${sign(message)},w=$held,d=$device" else "t=$signedAt,v1=${sign(message)},d=$device",
     )
     if (body != null) sent["Content-Type"] = "application/json"
