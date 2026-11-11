@@ -169,6 +169,9 @@ describe("the receipts export", () => {
     // As many before the range don't count: it stops at the first day before it.
     const before = Array.from({ length: all }, (_, i) => call(5000 + i, 48, { receipt: null }));
     await expect(exportOf([...many(10), ...before], "2026-11-11", "2026-11-11").out).resolves.toMatchObject({ missing: 0 });
+    // Exactly as many as it reads in the range, with older calls after them: whole, not refused.
+    const exact = await exportOf([...many(all), ...before.slice(0, 5)], "2026-11-11", "2026-11-11").out;
+    expect(exact.csv.trim().split("\r\n")).toHaveLength(all + 1);
   });
 
   it("keeps a negative amount a number, and still writes a formula as text", async () => {

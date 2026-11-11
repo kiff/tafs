@@ -133,7 +133,7 @@ export async function recordPage(input: { token: string; scope: string; tafs: Re
 
 /**
  * Every call the Record reads (at most MAX_SCAN pages), newest first, while `keep` says to read on. `cut` says it
- * stopped at MAX_SCAN with calls left that `keep` might still want: what it read isn't all there is.
+ * stopped at MAX_SCAN while the next call is still one `keep` wants: what it read isn't all there is.
  */
 async function scan(token: string, net: Fetch, base: string, keep: (c: ActivityCall) => boolean): Promise<{ calls: ActivityCall[]; cut: boolean }> {
   const out: ActivityCall[] = [];
@@ -147,7 +147,10 @@ async function scan(token: string, net: Fetch, base: string, keep: (c: ActivityC
     offset += page.calls.length;
     if (!page.calls.length || offset >= page.shown) return { calls: out, cut: false };
   }
-  return { calls: out, cut: true };
+  // At the cap with calls left: cut only if the next one is still one `keep` wants. A range of exactly the cap,
+  // with older calls after it, is whole.
+  const next = (await read(token, offset, net, base)).calls[0];
+  return { calls: out, cut: next !== undefined && keep(next) };
 }
 
 export interface CaseView {

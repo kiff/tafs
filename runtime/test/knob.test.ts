@@ -248,5 +248,9 @@ describe("a schedule in words", () => {
   it("today is the account's day", () => {
     expect(dayIn("2026-11-02T23:30:00Z", "Europe/Paris")).toBe("2026-11-03");
     expect(dayIn("2026-11-02T23:30:00Z", "UTC")).toBe("2026-11-02");
+    // One instant, a day apart across the date line: each zone keeps its own formatter.
+    expect(dayIn("2026-11-02T12:00:00Z", "Pacific/Kiritimati")).toBe("2026-11-03");
+    expect(dayIn("2026-11-02T12:00:00Z", "Pacific/Pago_Pago")).toBe("2026-11-02");
+    expect(dayIn("2026-11-02T12:00:00Z", "Pacific/Kiritimati")).toBe("2026-11-03");
   });
 });
