@@ -89,7 +89,35 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
    names the vendor's tool that holds one of Coach's names, and `unknown` asks to try
    again, both sending nothing. A replaced connection's line says what it replaces.
-   (Android: `AppModel.giveCoachTools`, `CoachToolsPanel`.)
+   (Android: `AppModel.giveCoachTools`, `CoachToolsSheet`.)
+
+On Android (1.2), Coach's conversation shows before Coach is started on the account, and the
+first Send starts it (`AppModel.sendChat`, `startCoach`):
+- **No step before the words.** A job handed to Coach from Home lands in the box with nothing to
+  tap first. Above the conversation, what Coach is, and "Starting asks for your fingerprint once."
+- **One fingerprint, the draft's.** On a first Start the draft with no tools is signed by the
+  approval key, and its prompt is the only one. planque's enrolment and the connector key come
+  after that yes, so nothing is made before it.
+- **Coach's tools are the step that ends a first Start.** Coach's Card is another draft, signed over
+  its own bytes, so it takes its own fingerprint. A sheet asks for it (`CoachToolsSheet`,
+  `AppState.coachToolsAsked`). Its words are tafs cloud's (`tools.coach_tools_step`: `title`,
+  `intro`, a few `groups` up front, each tool's `does` and `why` folded under `details`, closed at
+  first, then `ask`, `give` and `not_now`). The connections' `lines` and KIFF's words for the Card
+  sit in the same fold. A tafs cloud from before the step shows the `lines`, the Card and the app's
+  own button. **Not now** puts it off. Then one line above the conversation (`row`) opens the same
+  sheet; it's never a panel there.
+- **The message box keeps its room.** With the keyboard open, what sits above the conversation
+  steps aside, and the attach, mic and send buttons keep their 40 dp.
+- **A Coach already on the account,** started from another phone, asks this phone for the owner's
+  yes once, then enrols it with planque. It makes no draft.
+- **Coach's tools are given in their own step only,** never inside another confirmation: not inside a
+  Start on a phone new to a Coach already there, and not inside installing a version. Still to give,
+  the step is asked (`AppState.coachToolsAsked`), as iOS does.
+- **Then the message goes, once.** A Start that's closed or fails sends nothing: the words go
+  back to the box, and why shows above it.
+- **A phone that can't approve yet** shows what Coach is and why it can't start, with no box.
+
+iOS follows.
 
 ## What Coach shows
 

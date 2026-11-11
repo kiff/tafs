@@ -159,6 +159,7 @@
     <string name="billing_not_bought">La compra no se completó: %1$s</string>
     <string name="billing_not_restored">No se pudieron restaurar las compras: %1$s</string>
     <string name="billing_not_signed_in">No has iniciado sesión.</string>
+    <string name="billing_nothing_to_restore">No hay compras que restaurar.</string>
     <string name="billing_one_person_tafs_kiff_your">Una persona: tafs, con créditos incluidos en cada periodo.</string>
     <string name="billing_only_someone_who_manages_account">Solo quien gestiona la facturación de la cuenta compra créditos.</string>
     <string name="billing_open_tafs_to_buy">Abre tafs para comprar.</string>
@@ -2019,6 +2020,7 @@
     <string name="usage_buy">Añadir créditos</string>
     <string name="usage_buying">Comprando…</string>
     <string name="usage_cancel_solo">Cancelar Solo</string>
+    <string name="usage_choose_plan">Elegir un plan</string>
     <string name="usage_company_billed_kiff_solo_bought">Company ahora la factura KIFF. El Solo comprado en App Store se renueva el %1$s salvo que se cancele, desde la cuenta de Apple que lo compró.</string>
     <string name="usage_credits">Créditos</string>
     <string name="usage_credits_not_read">No se pudieron leer los créditos. %1$s</string>

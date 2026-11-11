@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -136,7 +137,7 @@ fun AttachButton(tafId: String, state: AppState, files: FileActions) {
   Box {
     Box(
       Modifier
-        .size(40.dp)
+        .requiredSize(40.dp)
         .clip(CircleShape)
         .background(Theme.panel)
         .border(BorderStroke(1.dp, Theme.line), CircleShape)

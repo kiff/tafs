@@ -86,6 +86,8 @@ data class BalanceNow(
   val raise: BalanceRaise? = null,
   /** What the store may offer this person: Solo, packs, or neither. */
   val buy: kotlinx.serialization.json.JsonElement? = null,
+  /** Whether Plan & usage shows the Credits panel: false only with no plan and no run lately. A tafs cloud without it: shown. */
+  @SerialName("credits_panel") val creditsPanel: Boolean = true,
 ) {
   val waiting: Boolean get() = state == WAITING
 
@@ -111,6 +113,11 @@ data class BalanceNow(
     }
 
   data class FirstMonth(val ready: Boolean, val words: String?)
+
+  /** What Coach's help includes (`buy.coach`), tafs cloud's sentence for under the Solo offer; null when it sent none. */
+  val coachIncluded: String?
+    get() = ((buy as? kotlinx.serialization.json.JsonObject)?.get("coach") as? kotlinx.serialization.json.JsonPrimitive)
+      ?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() }
 
   companion object {
     const val OK = "ok"

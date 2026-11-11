@@ -478,6 +478,13 @@ data class AppState(
   /** How the latest purchase or restore went, said under what was tapped (Start Solo, a pack, Restore purchases). */
   val purchaseNote: PurchaseNote? = null,
   /**
+   * Restore purchases is offered: while Play knows a purchase not finished yet, or couldn't say, or after one KIFF didn't record.
+   * Launch and sign-in already send what's unfinished, so with nothing there it has nothing to do.
+   */
+  val restoreShown: Boolean = false,
+  /** A first Start just made Coach, with tools still to give: the tools step is asked, until given or put off. */
+  val coachToolsAsked: Boolean = false,
+  /**
    * What a refresh the app made by itself couldn't do, said quietly under the account's name ("Can't reach KIFF"), never as
    * "Not done"; null once one goes through. And whether the app is still trying again by itself.
    */
@@ -2585,23 +2592,41 @@ class AppModel(
     val signer = signer
     val sign: (ByteArray) -> String = { signer.signConfirmed(it) }
     try {
-      try {
-        // The owner says yes before anything is made: Coach's connector key and its drafts. Its drafts grant authority, so
-        // with the approval key in KIFF each asks for its own fingerprint as well.
-        signer.sign("tafs.setup.v1|$tenant".toByteArray(), Words.Coach.Prompt.connectTools)
-      } catch (e: SignerException) {
-        notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
-        return false
-      }
-      if (generation != accountGeneration) return false
       kiff.tenant = tenant
       kiff.setupSigner = sign
       planque.tenant = tenant
       planque.deviceLoader = { kiff.thisDeviceId() }
       planque.signer = sign
       var setup = _state.value.coachCloudId?.let { id -> CloudSetup(id, kiffAgent = _state.value.coachAgent) }
+      // The draft this Start made, and its claim: set only when Coach wasn't there yet.
+      var claim: Pair<String, String>? = null
       try {
+        // Whether Coach is there yet: a read, which makes nothing.
         if (setup == null) setup = cloud.setup()
+        if (generation != accountGeneration) return false
+        // One yes, before anything is made (Coach's connector key, its drafts). A first Start whose draft is signed by the
+        // approval key in KIFF asks for that fingerprint and no other, so "once" stays true; otherwise the owner says yes here.
+        val draftAsks = setup == null && sessionHasApprovalKey
+        if (!draftAsks) {
+          try {
+            signer.sign("tafs.setup.v1|$tenant".toByteArray(), Words.Coach.Prompt.connectTools)
+          } catch (e: SignerException) {
+            notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
+            return false
+          }
+          if (generation != accountGeneration) return false
+        }
+        if (setup == null) {
+          approvalReason = Words.Coach.Prompt.start
+          val draft = kiff.submitNoToolsDraft(COACH_AGENT, "Coach")
+          val secret = draft.claimSecret
+          if (generation != accountGeneration) return false
+          if (secret == null) {
+            startFailed(Words.Coach.didntStart(why = ErrorWords.OURS))
+            return false
+          }
+          claim = draft.id to secret
+        }
         if (!_state.value.planqueReady) {
           try {
             planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
@@ -2623,17 +2648,7 @@ class AppModel(
           }
           if (generation != accountGeneration) return false
         }
-        if (setup == null) {
-          approvalReason = Words.Coach.Prompt.start
-          val draft = kiff.submitNoToolsDraft(COACH_AGENT, "Coach")
-          val secret = draft.claimSecret
-          if (generation != accountGeneration) return false
-          if (secret == null) {
-            startFailed(Words.Coach.didntStart(why = ErrorWords.OURS))
-            return false
-          }
-          setup = cloud.startSetup(draft.id, secret)
-        }
+        claim?.let { (draft, secret) -> setup = cloud.startSetup(draft, secret) }
       } catch (e: SignerException) {
         if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
         return false
@@ -2643,10 +2658,14 @@ class AppModel(
         if (generation == accountGeneration) startFailed(Words.Coach.couldntStart(why = ErrorWords.of(e)))
         return false
       }
+      val started = setup ?: return false
       if (generation != accountGeneration) return false
-      _state.update { it.copy(coachCloudId = setup.id, coachAgent = setup.kiffAgent, coachChecked = true) }
-      // Within the step the owner just confirmed: Coach's tools, as tafs cloud says they're still to give.
-      giveCoachTools()
+      _state.update { it.copy(coachCloudId = started.id, coachAgent = started.kiffAgent, coachChecked = true) }
+      // Coach's tools are given in one place only, their own step, in tafs cloud's words, behind their own fingerprint: never
+      // inside another confirmation. Still to give, the step is asked: at the end of a first Start, or on a phone that just
+      // enrolled for a Coach already there.
+      loadCoachTools()
+      if (generation == accountGeneration && _state.value.coachTools?.toGive == true) _state.update { it.copy(coachToolsAsked = true) }
     } finally {
       planque.signer = null
       kiff.setupSigner = null
@@ -2656,6 +2675,9 @@ class AppModel(
     readThread(COACH_CHAT)
     return true
   }
+
+  /** The tools step put off, or done: the row above the conversation opens it again. */
+  fun notNowCoachTools() = _state.update { it.copy(coachToolsAsked = false) }
 
   private fun startFailed(words: String) = _state.update { it.copy(coachStartError = words) }
 
@@ -4198,7 +4220,13 @@ class AppModel(
    * didn't go, so the screen can keep them.
    */
   fun sendChat(text: String, tafId: String, withFiles: Boolean = false, onNotSent: (String) -> Unit) {
-    viewModelScope.launch {
+    scope.launch {
+      // Coach not started on this phone yet: the first message starts it, behind its one fingerprint, then goes. Not started
+      // (the fingerprint cancelled, or Start refused), nothing is sent and the words go back to the box; why shows above it.
+      if (tafId == COACH_CHAT && _state.value.coachCloudId == null && !startCoach()) {
+        onNotSent(text)
+        return@launch
+      }
       // One that was tried and refused stays in the thread, marked not sent: it never comes back to the box as well.
       if (!deliverChat(text, tafId, withFiles) && _state.value.chatUnsent[tafId].orEmpty().none { it.message.text == text.trim() }) onNotSent(text)
     }
@@ -5303,8 +5331,8 @@ class AppModel(
         }
         return false
       }
-      // Within the step the owner just confirmed: Coach's tools, if this phone hasn't given them yet.
-      if (_state.value.coachTools?.toGive == true) giveCoachTools()
+      // Coach's tools are never given inside another confirmation: still to give, their own step is asked.
+      if (_state.value.coachTools?.toGive == true) _state.update { it.copy(coachToolsAsked = true) }
     } else if (held != null && holdAnswered(held.call) != null) {
       // Coach's install with no Card: approving Coach's held call is the confirmation, signed now, before the version goes
       // live, and sent once it is. One fingerprint, and nothing goes live unless the owner gave it.
@@ -6159,7 +6187,13 @@ class AppModel(
     val store = _state.value.usage?.store ?: return
     if (!_state.value.offersPurchases) return
     purchases.load(store.googleProducts)
-    _state.update { it.copy(storeProducts = purchases.products.value, storeLoaded = purchases.loaded.value, storeFailed = purchases.loadFailed.value) }
+    val unfinished = purchases.anyUnfinished()
+    _state.update {
+      it.copy(
+        storeProducts = purchases.products.value, storeLoaded = purchases.loaded.value, storeFailed = purchases.loadFailed.value,
+        restoreShown = unfinished != false || it.purchaseNote?.offersRestore == true,
+      )
+    }
   }
 
   // MARK: Asking an admin for tasks
@@ -6258,6 +6292,8 @@ class AppModel(
     val outcome = purchases.restore()
     val words = when (val o = outcome) {
       PurchaseOutcome.Done -> Words.Billing.restored
+      // Never "restored" when nothing came back.
+      PurchaseOutcome.NothingToRestore -> Words.Billing.nothingToRestore
       is PurchaseOutcome.NotRecorded -> Words.Billing.restoredNotRecorded
       is PurchaseOutcome.NotAdded -> o.why
       is PurchaseOutcome.NeedsSupport -> o.why
@@ -6269,7 +6305,7 @@ class AppModel(
   }
 
   private fun buyWords(o: PurchaseOutcome): String? = when (o) {
-    PurchaseOutcome.Done, PurchaseOutcome.Cancelled -> null
+    PurchaseOutcome.Done, PurchaseOutcome.Cancelled, PurchaseOutcome.NothingToRestore -> null
     PurchaseOutcome.Pending -> Words.Billing.pendingCredits
     is PurchaseOutcome.NotRecorded -> Words.Billing.boughtNotRecorded
     is PurchaseOutcome.NotAdded -> o.why

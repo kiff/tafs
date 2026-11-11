@@ -159,6 +159,7 @@
     <string name="billing_not_bought">De aankoop is niet gelukt: %1$s</string>
     <string name="billing_not_restored">Aankopen konden niet worden hersteld: %1$s</string>
     <string name="billing_not_signed_in">Niet ingelogd.</string>
+    <string name="billing_nothing_to_restore">Geen aankopen om te herstellen.</string>
     <string name="billing_one_person_tafs_kiff_your">Eén persoon: tafs, met credits inbegrepen per periode.</string>
     <string name="billing_only_someone_who_manages_account">Alleen iemand die de facturatie van het account beheert, koopt credits.</string>
     <string name="billing_open_tafs_to_buy">Open tafs om te kopen.</string>
@@ -2019,6 +2020,7 @@
     <string name="usage_buy">Credits toevoegen</string>
     <string name="usage_buying">Kopen…</string>
     <string name="usage_cancel_solo">Solo opzeggen</string>
+    <string name="usage_choose_plan">Abonnement kiezen</string>
     <string name="usage_company_billed_kiff_solo_bought">Company wordt nu gefactureerd door KIFF. De Solo die in de App Store is gekocht, wordt op %1$s verlengd tenzij die wordt opgezegd, via het Apple-account waarmee hij is gekocht.</string>
     <string name="usage_credits">Credits</string>
     <string name="usage_credits_not_read">Credits konden niet worden gelezen. %1$s</string>

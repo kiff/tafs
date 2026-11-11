@@ -137,12 +137,15 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
   val store = usage.store ?: return
   val offer = state.balance?.balance ?: return
   Panel {
-    Eyebrow(UsageWords.BUY)
+    // The plan while Solo is offered; credits once it runs.
+    Eyebrow(if (offer.offers("solo")) UsageWords.CHOOSE_PLAN else UsageWords.BUY)
     if (offer.offers("solo")) {
       store.googleSoloProduct?.let { id ->
         state.storeProducts[id]?.let { solo ->
           Text(Words.Usage.solo, style = scaled(16, FontWeight.SemiBold, Theme.ink))
           Text(UsageWords.soloTerms(solo.price, solo.period, solo.freeTrial), style = scaled(13, color = Theme.soft))
+          // What Coach's help includes, in tafs cloud's words: the same sentence kiff.dev says.
+          offer.coachIncluded?.let { Text(it, style = scaled(13, color = Theme.soft)) }
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.terms()) }.padding(vertical = 6.dp))
             Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.privacy()) }.padding(vertical = 6.dp))
@@ -152,8 +155,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
         }
       }
     }
-    // The First month pack, right under Solo, once per account: while it waits on Solo, tafs cloud's words take its button's place.
-    offer.firstMonth?.let { first ->
+    // The First month pack, first among the packs, once per account, only while it can be bought: never alone, greyed, waiting on Solo.
+    offer.firstMonth?.takeIf { it.ready }?.let { first ->
       val pack = store.firstMonthPack ?: return@let
       val id = pack.googleProduct ?: return@let
       val product = state.storeProducts[id] ?: return@let
@@ -162,15 +165,11 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
           Text(pack.line.ifEmpty { pack.name }, style = scaled(15, FontWeight.SemiBold, Theme.ink))
           first.words?.let { Text(it, style = scaled(12, color = Theme.dim)) }
         }
-        if (first.ready) {
-          Text(
-            if (state.buying == id) Words.Usage.buying else product.price,
-            style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-            modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
-          )
-        } else {
-          Text(product.price, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(8.dp))
-        }
+        Text(
+          if (state.buying == id) Words.Usage.buying else product.price,
+          style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
+          modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+        )
       }
       PurchaseNoteLine(state, id, actions)
     }
@@ -193,13 +192,14 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
     // Play lists none of what's offered: said, rather than an empty panel (Play billing off for this app on this phone, or unreachable).
     val offered = buildList {
       if (offer.offers("solo")) store.googleSoloProduct?.let { add(it) }
-      if (offer.firstMonth != null) store.firstMonthPack?.googleProduct?.let { add(it) }
+      if (offer.firstMonth?.ready == true) store.firstMonthPack?.googleProduct?.let { add(it) }
       if (offer.offers("packs")) store.repeatPacks.forEach { p -> p.googleProduct?.let { add(it) } }
     }
     bot.tafs.app.billing.Purchases.buyNote(offered, state.storeProducts.keys, state.storeLoaded, state.storeFailed)?.let {
       Text(it, style = scaled(13, color = Theme.soft))
     }
-    Text(
+    // Only while there's something to send again: an account that bought nothing has no Restore.
+    if (state.restoreShown || state.buying == PurchaseNote.RESTORE) Text(
       if (state.buying == PurchaseNote.RESTORE) Words.Usage.restoring else Words.Usage.restorePurchases,
       style = scaled(14, FontWeight.SemiBold, Theme.amberText),
       modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 6.dp),
@@ -236,6 +236,8 @@ private fun CreditsPanel(state: AppState, actions: AccountActions) {
   val credits = state.credits
   val why = state.creditsError
   if (state.mode == Mode.signedOut || (credits == null && why == null)) return
+  // tafs cloud's word: no plan and no run lately, nothing to show.
+  if (state.balance?.balance?.creditsPanel == false) return
   val scope = rememberCoroutineScope()
   Panel {
     Eyebrow(UsageWords.CREDITS)

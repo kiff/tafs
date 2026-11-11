@@ -42,7 +42,9 @@ class FakePlayStore : PlayStore {
     asked += id to accountToken
     return bought(id)
   }
-  override suspend fun unfinished(): List<StorePurchase> = held.toList()
+  /** Play can't list what's unfinished. */
+  var unfinishedFails = false
+  override suspend fun unfinished(): List<StorePurchase> = if (unfinishedFails) throw IllegalStateException("Play didn't answer") else held.toList()
 }
 
 class PurchasesTest {
@@ -260,9 +262,40 @@ class PurchasesTest {
 
   @Test fun aRestoreSaysHowItWentUnderRestore() = runTest {
     val m = model(playBilling = true)
+    play.held = mutableListOf(play.made("pack_rayo", token = "tok_back"))
     m.restorePurchases()
     assertEquals(bot.tafs.app.app.PurchaseNote(bot.tafs.app.app.PurchaseNote.RESTORE, "Purchases restored."), m.state.value.purchaseNote)
     assertNull(m.state.value.buying)
+  }
+
+  @Test fun aRestoreThatFindsNothingNeverSaysRestored() = runTest {
+    val m = model(playBilling = true)
+    m.restorePurchases()
+    assertEquals(bot.tafs.app.app.PurchaseNote(bot.tafs.app.app.PurchaseNote.RESTORE, "Nothing to restore."), m.state.value.purchaseNote)
+    assertTrue(transport.requestsTo("POST /v1/me/billing/google/purchases").isEmpty())
+  }
+
+  @Test fun restoreIsOfferedOnlyWhileAPurchaseIsUnfinishedOrPlayCantSay() = runTest {
+    val m = model(playBilling = true)
+    // Nothing ever bought: nothing to send again.
+    m.loadStore()
+    assertFalse(m.state.value.restoreShown)
+    // Play knows one KIFF hasn't recorded.
+    play.held = mutableListOf(play.made("pack_rayo", token = "tok_left"))
+    m.loadStore()
+    assertTrue(m.state.value.restoreShown)
+    // Play can't list them: offered, and a tap says what came of it.
+    play.held = mutableListOf()
+    play.unfinishedFails = true
+    m.loadStore()
+    assertTrue(m.state.value.restoreShown)
+  }
+
+  @Test fun aPurchaseKiffDidntRecordOffersRestore() = runTest {
+    val m = model(playBilling = true, records = 500)
+    m.buy("pack_rayo")
+    assertTrue(m.state.value.purchaseNote!!.offersRestore)
+    assertTrue(m.state.value.restoreShown)
   }
 
   @Test fun whatWasntFinishedIsSentAtSignIn() = runTest {

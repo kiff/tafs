@@ -2914,7 +2914,7 @@ final class AppModel: ObservableObject {
         }
         switch await purchases.buy(product, accountToken: token, requestID: request?.id) {
         case .done: planMessage = nil
-        case .cancelled: break
+        case .cancelled, .nothingToRestore: break
         case .pending: planMessage = Words.Billing.pendingCredits
         case .notRecorded: planMessage = Words.Billing.boughtNotRecorded
         case .notAdded(let why), .needsSupport(let why): planMessage = why
@@ -2923,12 +2923,24 @@ final class AppModel: ObservableObject {
         await refreshUsage()
     }
 
-    /// Brings back this Apple account's purchases, and sends each to KIFF.
+    /// The packs Plan & usage lists (docs/accounts.md): the First month pack first, only while
+    /// tafs cloud says it can be bought, then the packs that can be bought again.
+    var offeredPacks: [KIFFClient.Usage.Store.Pack] {
+        usage?.store?.offered(firstMonth: balance?.balance.buy?.firstMonthReady == true) ?? []
+    }
+
+    /// Whether Plan & usage shows the Credits panel: tafs cloud's word, and yes where it
+    /// doesn't say or the balance isn't read.
+    var showsCreditsPanel: Bool { balance?.balance.creditsPanel != false }
+
+    /// Brings back this Apple account's purchases, and sends each to KIFF. One that finds
+    /// nothing says so.
     func restorePurchases() async {
         planMessage = nil
         guard mode == .kiff else { return }
         switch await purchases.restore() {
         case .done: planMessage = Words.Billing.restored
+        case .nothingToRestore: planMessage = Words.Billing.nothingToRestore
         case .notRecorded: planMessage = Words.Billing.restoredNotRecorded
         case .notAdded(let why), .needsSupport(let why): planMessage = why
         case .failed(let why): planMessage = Words.Billing.notRestored(why: "\(why)")

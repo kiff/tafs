@@ -37,8 +37,16 @@ class PlayOffersTest {
       {"id":"credits-firstmonth","name":"First month pack","line":"First month pack · 7,000 credits","credits":7000,"once":true${if (google) ""","google_product":"bot.tafs.credits.firstmonth"""" else ""}}]}}""",
   )
 
-  private fun balance(solo: Boolean, packs: Boolean, firstMonth: String = "null") = KiffClient.json.decodeFromString<Balance>(
-    """{"balance":{"state":"ok","words":"Solo · 260 of 500 credits left this period","buy":{"solo":$solo,"packs":$packs,"first_month":$firstMonth}},"plan_line":"Solo · 260 credits left"}""",
+  private val coachIncluded = "Coach is included: enough to set up about 4 new jobs a month."
+
+  private fun balance(solo: Boolean, packs: Boolean, firstMonth: String = "null", creditsPanel: Boolean = true) = KiffClient.json.decodeFromString<Balance>(
+    """{"balance":{"state":"ok","words":"Solo · 260 of 500 credits left this period","buy":{"solo":$solo,"packs":$packs,"first_month":$firstMonth,"coach":"$coachIncluded"},"credits_panel":$creditsPanel},"plan_line":"Solo · 260 credits left"}""",
+  )
+
+  /** This period's credits, as tafs cloud words them for someone who ran nothing yet. */
+  private val noCredits = bot.tafs.app.kiff.Credits(
+    bot.tafs.app.kiff.CreditsPeriod(java.time.Instant.parse("2026-11-01T00:00:00Z"), java.time.Instant.parse("2026-12-01T00:00:00Z")),
+    words = "This period: no credits used yet · ends on 30 Nov",
   )
 
   private val products = mapOf(
@@ -47,10 +55,10 @@ class PlayOffersTest {
     "bot.tafs.credits.firstmonth" to StoreProduct("bot.tafs.credits.firstmonth", "First month pack", "€99.99"),
   )
 
-  private fun show(google: Boolean, solo: Boolean = true, packs: Boolean = true, firstMonth: String = "null", note: bot.tafs.app.app.PurchaseNote? = null) = rule.setShown {
+  private fun show(google: Boolean, solo: Boolean = true, packs: Boolean = true, firstMonth: String = "null", note: bot.tafs.app.app.PurchaseNote? = null, restore: Boolean = false, creditsPanel: Boolean = true) = rule.setShown {
     TafsTheme {
       UsageSheet(
-        AppState(mode = Mode.kiff, ready = true, playBilling = true, usage = usage(google), balance = balance(solo, packs, firstMonth), storeProducts = products, purchaseNote = note),
+        AppState(mode = Mode.kiff, ready = true, playBilling = true, usage = usage(google), balance = balance(solo, packs, firstMonth, creditsPanel), storeProducts = products, purchaseNote = note, restoreShown = restore, credits = noCredits),
         AccountActions(halt = {}, refreshHalt = {}, resumeHalt = { false }, refreshUsage = {}, buy = { bought += it }, restorePurchases = { bought += "restore" }),
         onClose = {},
       )
@@ -64,14 +72,53 @@ class PlayOffersTest {
     rule.onNodeWithText("Pack · 500 credits").performScrollTo().assertIsDisplayed()
     rule.onNodeWithText(UsageWords.PACKS_KEEP).assertIsDisplayed()
     rule.onNodeWithText("€9.99").assertIsDisplayed().performClick()
-    rule.onNodeWithText("Restore purchases").performScrollTo().assertIsDisplayed()
     rule.waitUntil(5_000) { bought.isNotEmpty() }
     assertEquals(listOf("pack_rayo"), bought)
+    // Solo offered: the panel is about choosing a plan. Nothing bought yet: no Restore.
+    rule.onNodeWithText("CHOOSE A PLAN").assertExists()
+    assertEquals(0, rule.onAllNodesWithTextCount("ADD CREDITS"))
+    assertEquals(0, rule.onAllNodesWithTextCount("Restore purchases"))
+  }
+
+  @Test fun whatCoachIncludesShowsUnderTheSoloOffer() {
+    show(google = true, solo = true, packs = false)
+    val terms = rule.onNodeWithText(UsageWords.soloTerms("€4.99", "month", "1 week")).performScrollTo().fetchSemanticsNode().boundsInRoot
+    val coach = rule.onNodeWithText(coachIncluded).assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+    assertEquals(true, coach.top > terms.top)
+  }
+
+  @Test fun withNoSoloOfferThereIsNoLineAboutCoach() {
+    show(google = true, solo = false, packs = true)
+    assertEquals(0, rule.onAllNodesWithTextCount(coachIncluded))
+  }
+
+  @Test fun onceSoloRunsThePanelAddsCredits() {
+    show(google = true, solo = false, packs = true)
+    rule.onNodeWithText("ADD CREDITS").assertExists()
+    assertEquals(0, rule.onAllNodesWithTextCount("CHOOSE A PLAN"))
+  }
+
+  @Test fun theCreditsPanelShowsUnlessTafsCloudSaysNot() {
+    show(google = true, creditsPanel = true)
+    rule.onNodeWithText(noCredits.words).performScrollTo().assertIsDisplayed()
+  }
+
+  @Test fun aNewAccountWithNoPlanAndNoRunGetsNoCreditsPanel() {
+    show(google = true, creditsPanel = false)
+    rule.onNodeWithText("Start Solo").performScrollTo().assertIsDisplayed()
+    assertEquals(0, rule.onAllNodesWithTextCount(noCredits.words))
+  }
+
+  @Test fun restoreShowsWhileSomethingIsLeftToSendAgain() {
+    show(google = true, restore = true)
+    rule.onNodeWithText("Restore purchases").performScrollTo().assertIsDisplayed().performClick()
+    rule.waitUntil(5_000) { bought.isNotEmpty() }
+    assertEquals(listOf("restore"), bought)
   }
 
   @Test fun aPurchasesOutcomeShowsUnderWhatWasTappedWithRestoreThere() {
     val note = bot.tafs.app.app.PurchaseNote("pack_rayo", "Bought. KIFF hasn't added it yet: tafs tries again when it opens.", offersRestore = true)
-    show(google = true, note = note)
+    show(google = true, note = note, restore = true)
     // Right under the pack's row, above the panel's own Restore purchases.
     val line = rule.onNodeWithText(note.words).performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
     val pack = rule.onNodeWithText("Pack · 500 credits").fetchSemanticsNode().boundsInRoot
@@ -90,21 +137,18 @@ class PlayOffersTest {
     assertEquals("no pack offered", 0, rule.onAllNodesWithTextCount("Pack · 500 credits"))
   }
 
-  @Test fun beforeSoloTheFirstMonthPackShowsUnderItWithTafsCloudsWordsAndNoButton() {
+  @Test fun aFirstMonthPackThatCantBeBoughtYetIsNeverShownGreyed() {
     show(google = true, solo = true, packs = false, firstMonth = """{"ready":false,"words":"Add it once Solo starts."}""")
-    val solo = rule.onNodeWithText("Start Solo").performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-    val first = rule.onNodeWithText("First month pack · 7,000 credits").performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-    assertEquals(true, first.top > solo.top)
-    rule.onNodeWithText("Add it once Solo starts.").assertIsDisplayed()
-    rule.onNodeWithText("€99.99").assertIsDisplayed().performClick()
-    rule.waitForIdle()
-    assertEquals("its price is no button while it waits", emptyList<String>(), bought)
-    assertEquals("never with the other packs", 0, rule.onAllNodesWithTextCount("Pack · 500 credits"))
+    rule.onNodeWithText("Start Solo").performScrollTo().assertIsDisplayed()
+    assertEquals(0, rule.onAllNodesWithTextCount("First month pack · 7,000 credits"))
+    assertEquals(0, rule.onAllNodesWithTextCount("Add it once Solo starts."))
   }
 
   @Test fun onceSoloRunsTheFirstMonthPackIsBoughtAtPlaysPrice() {
     show(google = true, solo = false, packs = true, firstMonth = """{"ready":true,"words":null}""")
-    rule.onNodeWithText("First month pack · 7,000 credits").performScrollTo().assertIsDisplayed()
+    val first = rule.onNodeWithText("First month pack · 7,000 credits").performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+    // First among the packs.
+    assertEquals(true, first.top < rule.onNodeWithText("Pack · 500 credits").fetchSemanticsNode().boundsInRoot.top)
     rule.onNodeWithText("€99.99").assertIsDisplayed().performClick()
     rule.waitUntil(5_000) { bought.isNotEmpty() }
     assertEquals(listOf("bot.tafs.credits.firstmonth"), bought)

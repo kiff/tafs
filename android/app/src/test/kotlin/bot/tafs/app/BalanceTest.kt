@@ -88,6 +88,23 @@ class BalanceTest {
     assertFalse(offers("""{"solo":null}""").offers("solo"))
   }
 
+  @Test fun whatCoachIncludesIsTafsCloudsSentenceOrNothing() {
+    fun offers(buy: String) = KiffClient.json.decodeFromString(BalanceNow.serializer(), """{"words":"x","buy":$buy}""")
+    assertEquals("Coach is included.", offers("""{"solo":true,"packs":false,"coach":"Coach is included."}""").coachIncluded)
+    // A tafs cloud from before it, or a blank one: no line.
+    assertNull(offers("""{"solo":true,"packs":false}""").coachIncluded)
+    assertNull(offers("""{"solo":true,"coach":"  "}""").coachIncluded)
+    assertNull(offers("null").coachIncluded)
+  }
+
+  @Test fun theCreditsPanelShowsUnlessTafsCloudSaysNot() {
+    fun read(extra: String) = KiffClient.json.decodeFromString(BalanceNow.serializer(), """{"words":"x"$extra}""")
+    assertFalse(read(""","credits_panel":false""").creditsPanel)
+    assertTrue(read(""","credits_panel":true""").creditsPanel)
+    // A tafs cloud from before the flag: shown, as before.
+    assertTrue(read("").creditsPanel)
+  }
+
   @Test fun theFirstMonthPackIsReadyWhenOfferedAndWaitsWithTafsCloudsWords() {
     fun offers(buy: String) = KiffClient.json.decodeFromString(BalanceNow.serializer(), """{"words":"x","buy":$buy}""")
     assertEquals(BalanceNow.FirstMonth(ready = true, words = null), offers("""{"solo":false,"packs":true,"first_month":{"ready":true,"words":null}}""").firstMonth)

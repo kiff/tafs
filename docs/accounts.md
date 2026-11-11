@@ -127,7 +127,7 @@ counts once, when it ends, in the period it ends in, so a run that waits on an a
 when it ends. A run that used no AI (refused before it began) isn't listed.
 
 **What isn't counted:**
-- Coach and setting tafs up, within Coach's fair use (`coach`). Past it, Coach's runs count, and
+- Coach, as far as it's included: enough to set up about 4 new jobs a month (`coach`). Past it, Coach's runs count, and
   show as their own row;
 - a trial of a new version, which sends nothing (`trial`);
 - a run that failed on our side: it couldn't start, or kiff/agents or the model failed it
@@ -153,12 +153,12 @@ is the period:
       "pace": "At this pace, about 1,300 this month" },
     { "taf": "taf-0b7c2e9d4a1f6e3b8c50", "credits": 374, "runs": 18, "words": "Chargebacks · 374 credits · 18 runs" }
   ],
-  "coach": { "credits": 46, "runs": 2, "words": "Coach, past its fair use · 46 credits · 2 runs" },
+  "coach": { "credits": 46, "runs": 2, "words": "Coach, past what's included · 46 credits · 2 runs" },
   "not_counted": {
     "runs": 12,
     "words": "Not counted: 12 runs",
     "lines": [
-      { "why": "coach", "runs": 7, "words": "Coach, within its fair use · 7 runs" },
+      { "why": "coach", "runs": 7, "words": "Coach, included · 7 runs" },
       { "why": "trial", "runs": 3, "words": "Trials of a new version · 3 runs" },
       { "why": "failed", "runs": 2, "words": "Failed on our side · 2 runs" }
     ]
@@ -237,7 +237,7 @@ and `openCreditsRun` in `AppModel`); on iPhone and iPad, `CreditsViews.swift`
 
 **While the tafs wait:**
 - **No new run starts:** a chat, Run now, a schedule's firing, a follow-up a taf set for itself,
-  an app's event, a door's message, or Coach past its fair use. A chat and Run now answer with
+  an app's event, a door's message, or Coach past what's included. A chat and Run now answer with
   words that say why.
 - **A run already going finishes,** and what it uses counts as any run's does. On Company it goes
   on the invoice past the limit. On Solo it isn't charged past the balance: KIFF records it as free
@@ -276,7 +276,7 @@ and `openCreditsRun` in `AppModel`); on iPhone and iPad, `CreditsViews.swift`
   - **Also unanswered:** one kiff/agents refuses 3 times for anything but credits (a 4xx), so it
     doesn't hold its taf's later ones for two days; a server error isn't counted. And one past the
     200 a taf keeps: told once an hour for the taf, not once a message.
-- **Coach within its fair use doesn't wait** while a plan runs. Past it, Coach waits as the tafs do.
+- **Coach within what's included doesn't wait** while a plan runs. Past it, Coach waits as the tafs do.
 
 **Warnings,** each once a period, by push to the people who manage billing (`billing.manage`) and
 in Plan & usage: at 80% and at 100%. On Solo that's of the period's included credits and packs, on
@@ -349,7 +349,7 @@ the spend limit, which the samples here leave out:
   change it.
 - `raise` is `{words, from_cents}` only for someone who may raise the spend limit (Company,
   `billing.manage`), else `null`. `from_cents` is the limit now, which the raise sends back.
-- `buy` is `null`, or `{solo, packs, first_month}`: what the app may offer this person
+- `buy` is `null`, or `{solo, packs, first_month, coach}`: what the app may offer this person
   (`billing.manage`) in the store. `solo` is set on an account with no plan billed, and `packs`
   while Solo runs. The products and their store ids come from KIFF's usage read (`store`).
   - `first_month` is the First month pack, which an account buys once. It's offered only while
@@ -358,6 +358,9 @@ the spend limit, which the samples here leave out:
     once bought, or when KIFF lists none. Its row is the entry of KIFF's `store.packs[]` marked
     `once`, which KIFF drops once the account has bought it. (`ready` false with `words` came
     from tafs cloud before 10 Nov 2026; apps still read it as before.)
+  - `coach` says what Coach's help includes, in the person's language, for the app to show under
+    the Solo offer: "Coach is included: enough to set up about 4 new jobs a month. Past that,
+    Coach's help uses your credits." It's the same sentence kiff.dev/tafs and /pricing say.
 - `credits_panel` is whether Plan & usage shows the Credits panel. It's false only with no plan
   and no run this period or the last, the two periods the panel shows: an account just made has
   nothing there. If last period can't be read, it's true. An app that predates the flag shows

@@ -26,7 +26,7 @@ private struct BuyCreditsContent: View {
                     Text(BuyCreditsView.explain)
                         .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
-                    ForEach(model.usage?.store?.packs ?? []) { pack in
+                    ForEach(model.offeredPacks) { pack in
                         Panel {
                             HStack(alignment: .center, spacing: 12) {
                                 Text(pack.line).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
@@ -82,7 +82,7 @@ struct AskAdminView: View {
                     if raise == false {
                         Panel {
                             Eyebrow(text: Words.Usage.Requests.whichPack)
-                            ForEach(model.usage?.store?.packs ?? []) { p in
+                            ForEach(model.offeredPacks) { p in
                                 Button { pack = p.id } label: {
                                     HStack {
                                         Text(p.line).scaledFont(15).foregroundColor(Theme.ink)
@@ -106,7 +106,7 @@ struct AskAdminView: View {
                     }
                     Button(sending ? Words.Usage.Requests.asking : Words.Usage.Requests.ask) {
                         guard let raise else { return }
-                        let chosen = model.usage?.store?.packs.first { $0.id == pack }
+                        let chosen = model.offeredPacks.first { $0.id == pack }
                         guard raise || chosen != nil else { return }
                         sending = true
                         Task {
