@@ -21,7 +21,8 @@ sealed class PlanqueError(message: String?) : Exception(message) {
   /** The grant's digest isn't the hash of the request shown: nothing is approved. */
   data object DigestMismatch : PlanqueError(null) { override val message: String get() = Words.Error.requestMismatch }
 
-  class Server(val status: Int, message: String) : PlanqueError(message)
+  /** planque's refusal: its status, its words ([message]) and its [code], when it sends one (`vendor_refused_client`…). */
+  class Server(val status: Int, message: String, val code: String? = null) : PlanqueError(message)
 
   /** Signed in an approval window that has ended (kiff/tafs#494): nothing was done; a new window, then the same call again. */
   class WindowRequired(message: String) : PlanqueError(message)
@@ -399,7 +400,8 @@ class PlanqueClient(
         if (window == held) window = null
         throw PlanqueError.WindowRequired(said ?: Words.Error.approvalWindowEnded)
       }
-      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()))
+      val code = runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull()
+      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()), code)
     }
     return response.body
   }

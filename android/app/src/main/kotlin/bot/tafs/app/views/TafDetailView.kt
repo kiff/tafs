@@ -593,19 +593,20 @@ internal val PROMISE_CHOICES = listOf(1, 2, 4, 8, 24, 48, 168)
 internal fun PromiseRow(hours: Int?, onPick: (Int?) -> Unit) {
   var open by remember { mutableStateOf(false) }
   Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-    Box {
-      Row(
-        Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = true }.padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(Words.Work.answerWithin, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
+    Row(
+      Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = true }.padding(vertical = 6.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(Words.Work.answerWithin, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
+      // The menu opens under the value it changes, not at the row's start.
+      Box {
         Text((hours?.let { Words.Work.answerWithinHours(count = it) } ?: Words.Work.answerWithinNone) + " ⌄", style = scaled(15, FontWeight.SemiBold, Theme.amberText))
-      }
-      DriveMenu(expanded = open, onDismissRequest = { open = false }, containerColor = Theme.panel) {
-        DropdownMenuItem(text = { Text(Words.Work.answerWithinNone) }, onClick = { open = false; if (hours != null) onPick(null) })
-        PROMISE_CHOICES.forEach { h ->
-          DropdownMenuItem(text = { Text(Words.Work.answerWithinHours(count = h)) }, onClick = { open = false; if (h != hours) onPick(h) })
+        DriveMenu(expanded = open, onDismissRequest = { open = false }, containerColor = Theme.panel) {
+          DropdownMenuItem(text = { Text(Words.Work.answerWithinNone) }, onClick = { open = false; if (hours != null) onPick(null) })
+          PROMISE_CHOICES.forEach { h ->
+            DropdownMenuItem(text = { Text(Words.Work.answerWithinHours(count = h)) }, onClick = { open = false; if (h != hours) onPick(h) })
+          }
         }
       }
     }
