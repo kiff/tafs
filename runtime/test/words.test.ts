@@ -19,6 +19,7 @@ const run = (o: Partial<Run>): Run => ({ id: "r1", agent: "a", session: "s", tri
 
 /** The words whose arguments aren't strings or counts, with what they're given. */
 const ARGS: Record<string, unknown[][]> = {
+  approval_status: [["needs_reconnect"], ["connected"], ["pending"]],
   door_name: [["email", "Email"], ["slack", "Slack"]],
   delivered: [["Invoices", { hm: "09:00" }], ["Invoices", { hm: "09:00", day: "Fri" }]],
   handed: [["Rae", { hm: "09:00" }]],
@@ -239,12 +240,13 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
       "powiązani nadawcy": ["powiązanych nadawców"],
       uruchomienie: ["uruchomienia", "uruchomieniu"], // "nie rozpoczęto uruchomienia", "przy następnym uruchomieniu"
       "próba": ["próbę"], // "uruchom wersję jako próbę"
+      "połączenie": ["połączenia"], // "tekst KIFF dla tego połączenia", "stan połączenia"
     },
   };
 
   /** Lines where the English word isn't the glossary's term (a verb where the term is a noun), by catalog key. */
   const NOT_THE_TERM: Record<string, string[]> = {
-    run: ["dial_run_tap", "dial_tap_latest", "failing_follow_up", "waited_follow_up", "cts_g_run", "cts_version_try_does", "est_never_past_solo"], // "to run" (and "run out"): the verb, not a run
+    run: ["dial_run_tap", "dial_tap_latest", "failing_follow_up", "waited_follow_up", "cts_g_run", "cts_version_try_does", "est_never_past_solo", "approval_on_demand"], // "to run" (and "run out"): the verb, not a run
   };
 
   it("uses the glossary's word for each glossary term, in every line of every language", () => {

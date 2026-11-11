@@ -122,7 +122,7 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
 describe("Coach's steps in the person's language", () => {
   it("writes each step in the language asked for, with the vendor and KIFF's title written in", () => {
     const pl = new Steps(new Map([["refund_k3f9", "Refund a payment"]]), "pl");
-    expect(pl.call("show", {})).toBe("Pokazuję Ci kartę…");
+    expect(pl.call("show", {})).toBe("Coś Ci pokazuję…");
     expect(pl.call("planque", { action: "request", server: "https://mcp.stripe.com/mcp", tools: ["x"] }, "c1")).toBe("Przygotowuję narzędzia Stripe do Twojego zatwierdzenia…");
     expect(pl.call("kiff_draft", {})).toBe("Przygotowuję Card…");
     // A tool KIFF titles keeps the vendor's title, as it is.
