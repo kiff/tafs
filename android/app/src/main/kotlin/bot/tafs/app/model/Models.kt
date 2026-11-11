@@ -396,6 +396,8 @@ data class Taf(
   val card: Card,
   val state: TafState = TafState.idle,
   val now: String = Words.Taf.State.ready,
+  /** `at_risk` or `failing` while [now] is tafs cloud's idle work line, its health reason, which Home tints amber or red. */
+  val nowHealth: String? = null,
   /** Spent so far in the current window, per rule action. */
   val used: Map<String, Money> = emptyMap(),
   /** Rule actions whose use KIFF could not read: shown as unknown, never as zero. Null in sample mode. */
@@ -510,6 +512,10 @@ data class HeldCall(
   val nextSteps: List<String> = emptyList(),
   /** What the call is on, one line each, as KIFF keeps its arguments. */
   val details: List<String>? = null,
+  /** The taf's line on why, as KIFF kept it (`taf_reason`), as plain text: drawn under "The taf says", apart from KIFF's face. */
+  val tafSays: String? = null,
+  /** What it's on, in the taf's words, as KIFF kept it (`taf_about`): "Order 1042". Plain text, under "The taf says". */
+  val tafAbout: String? = null,
   /**
    * Coach asks to install a version (kiff/tafs#206): approving it is installing it, switch and Card first, then this answer, in one
    * confirmation. Null for any other call.

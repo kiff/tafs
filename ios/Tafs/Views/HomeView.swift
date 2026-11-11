@@ -324,6 +324,9 @@ struct TafRow: View {
                     // what it's doing: it waits on the owner.
                     if let out = model.signedOut(taf.id) {
                         Text(out.signedOutWords).scaledFont(13).foregroundColor(Theme.amberText).oneLineUnlessLarge()
+                    } else if let line = taf.healthNow {
+                        // Idle and not healthy: tafs cloud's line says why, where it would say the next run.
+                        Text(line).scaledFont(13).foregroundColor(taf.health?.failing == true ? Theme.no : Theme.amberText).oneLineUnlessLarge()
                     } else {
                         Text(taf.now).scaledFont(13).foregroundColor(Theme.dim).oneLineUnlessLarge()
                     }

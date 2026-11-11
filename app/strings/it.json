@@ -1290,6 +1290,7 @@
   "needs_you.sign_in_again_to_answer": "Esci e accedi di nuovo per rispondere da questo telefono, così KIFF conosce la sua chiave. Oppure rispondi a questa in KIFF.",
   "needs_you.someone_answers": "Risponde chi approva in questo account. La sua risposta compare qui.",
   "needs_you.tab_label": "Ti aspetta, {n}",
+  "needs_you.taf_says": "Il taf dice",
   "needs_you.title": "Ti aspetta",
   "needs_you.turn_alerts": "Attiva avvisi",
   "needs_you.turning_on": "Attivazione…",

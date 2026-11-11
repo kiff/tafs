@@ -344,7 +344,14 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
           }
         }
         // A connection its vendor signed out says so, in planque's words, in place of what it's doing: it waits on the owner.
-        Text(signedOut ?: taf.now, style = scaled(13, color = if (signedOut != null) Theme.amberText else Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // At risk or failing, tafs cloud's first reason, amber or red.
+        val tone = when {
+          signedOut != null -> Theme.amberText
+          taf.nowHealth == "failing" -> Theme.no
+          taf.nowHealth == "at_risk" -> Theme.amberText
+          else -> Theme.dim
+        }
+        Text(signedOut ?: taf.now, style = scaled(13, color = tone), maxLines = 1, overflow = TextOverflow.Ellipsis)
       }
       StateChip(taf.state, onClick = onHalted?.takeIf { taf.state == TafState.halted })
     }

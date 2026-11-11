@@ -263,6 +263,29 @@ struct HeldCallCard: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Self.sentence(call, taf: model.holderName(call.tafID)))
 
+            // What the call is on and why, in the taf's own words (wave 1 item 4). They may come
+            // from a customer's text, so they sit under their own heading, drawn verbatim (no
+            // markup, no link), and never stand in for KIFF's amount, rule or action above.
+            if call.tafAbout != nil || call.tafReason != nil {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Words.NeedsYou.tafSays)
+                        .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.soft)
+                    if let about = call.tafAbout {
+                        Text(verbatim: about).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let reason = call.tafReason {
+                        Text(verbatim: reason).scaledFont(14).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.soft.opacity(0.08)))
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("held.taf-says")
+            }
+
             // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and
             // a vendor's own values aren't words for the card's face (kiff/tafs#236, item 7).
             if let details = call.details, !details.isEmpty {

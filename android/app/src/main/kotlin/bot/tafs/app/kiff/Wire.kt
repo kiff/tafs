@@ -126,6 +126,8 @@ data class HomeTaf(
   @SerialName("avatar_rim") val avatarRim: bot.tafs.app.model.AvatarRim? = null,
   /** Where its work stands, in tafs cloud's words: its status and line (`GET /v1/tafs/{id}/work`'s `summary`). */
   val work: bot.tafs.app.kiff.WorkSummary? = null,
+  /** How it's doing, in tafs cloud's words (docs/reliability.md › Its health); absent when it can't be read in time. */
+  val health: bot.tafs.app.kiff.TafHealth? = null,
 )
 
 /** A taf whose removal began and didn't finish: archived, so no longer listed as a taf. */
@@ -313,6 +315,14 @@ data class CardException(
   @SerialName("can_approve_once") val canApproveOnce: Boolean? = null,
   /** What kind of exception: a held call, or `card_unit`, a currency its Card has no limit for, which tafs cloud draws itself. */
   val kind: String? = null,
+  /**
+   * The taf's one line on why, kept by KIFF with the held call (its `kiff_reason`): the order as the owner knows it and the customer's
+   * reason. The taf's words, from text a customer wrote: never signed, never used to decide, and never in place of KIFF's amount,
+   * rule or action.
+   */
+  @SerialName("taf_reason") val tafReason: String? = null,
+  /** What the call is on, in the taf's words (its `kiff_about`): a business reference only, such as "Order 1042". As [tafReason]. */
+  @SerialName("taf_about") val tafAbout: String? = null,
 )
 
 @Serializable

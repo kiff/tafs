@@ -114,6 +114,8 @@ class TafActions(
   val sendAgain: suspend (String, String, String) -> Unit = { _, _, _ -> },
   /** Opens Coach about a taf with tafs cloud's words in the message box (taf, words). */
   val askCoachAbout: (String, String) -> Unit = { _, _ -> },
+  /** Plan & usage, from a health fix that asks for credits. */
+  val openPlan: () -> Unit = {},
   /** Opens a request step by step (taf, run). */
   val openRequest: suspend (String, String) -> Unit = { _, _ -> },
   /** Pauses or resumes its schedule. */
@@ -418,7 +420,11 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
   if (work == null && error == null) return
   Panel {
     Eyebrow(Words.Taf.itsWork)
-    work?.summary?.line?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
+    // An idle taf's work line is its first health reason: said once, under its health.
+    work?.summary?.line?.takeIf { it.isNotBlank() && work.health?.repeats(it) != true }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
+    work?.health?.let { h ->
+      HealthLines(h, canUseCoach = state.mayUseCoach, onCoach = { say -> actions.askCoachAbout(taf.id, say) }, onPlan = actions.openPlan)
+    }
     work?.let { Chat.workRows(it) }?.forEach { row ->
       when (row) {
         is Chat.WorkRow.Skipped -> Text(row.firing.words, style = scaled(13, color = Theme.dim))
@@ -574,6 +580,35 @@ private fun HowCounted(counted: List<bot.tafs.app.kiff.CountedTool>) {
     if (open) counted.forEach { tool ->
       Text(tool.title.ifBlank { tool.tool }, style = scaled(13, FontWeight.SemiBold, Theme.ink))
       tool.lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+    }
+  }
+}
+
+/**
+ * How the taf is doing, as tafs cloud decides it (docs/reliability.md › Its health): each reason in its words, amber when at risk and
+ * red when failing, and under a line its fix, when tafs cloud sends one. `coach` opens Coach with tafs cloud's words in the box;
+ * `credits` opens Plan & usage. A healthy taf with no lines shows nothing. The app works out no level and no fix.
+ */
+@Composable
+internal fun HealthLines(health: bot.tafs.app.kiff.TafHealth, canUseCoach: Boolean, onCoach: (String) -> Unit, onPlan: () -> Unit) {
+  if (health.lines.isEmpty()) return
+  val color = when (health.level) {
+    "failing" -> Theme.no
+    "at_risk" -> Theme.amberText
+    else -> Theme.soft
+  }
+  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    health.lines.forEachIndexed { i, line ->
+      Text(line, style = scaled(14, FontWeight.SemiBold, color))
+      health.fixFor(i)?.takeIf { it.words.isNotBlank() }?.let { fix ->
+        when (fix.kind) {
+          "coach" -> fix.say?.takeIf { canUseCoach && it.isNotBlank() }?.let { say ->
+            OutlineButton(fix.words, { onCoach(say) }, Modifier.fillMaxWidth())
+          }
+          "credits" -> OutlineButton(fix.words, onPlan, Modifier.fillMaxWidth())
+          else -> Unit
+        }
+      }
     }
   }
 }
