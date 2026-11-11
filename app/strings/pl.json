@@ -2359,6 +2359,12 @@
     "many": "{count} godzin",
     "other": "{count} godziny"
   },
+  "work.answer_within_days": {
+    "one": "{count} dzień",
+    "few": "{count} dni",
+    "many": "{count} dni",
+    "other": "{count} dnia"
+  },
   "work.answer_within_line": "Dostaniesz powiadomienie, gdy sprawa czeka dłużej.",
   "work.answer_within_none": "Nie ustawiono",
   "work.answer_within_not_set": "Nie udało się tego ustawić. {why}",

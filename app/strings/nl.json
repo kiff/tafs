@@ -2229,6 +2229,10 @@
     "one": "{count} uur",
     "other": "{count} uur"
   },
+  "work.answer_within_days": {
+    "one": "{count} dag",
+    "other": "{count} dagen"
+  },
   "work.answer_within_line": "Je hoort het als een zaak langer wacht.",
   "work.answer_within_none": "Niet ingesteld",
   "work.answer_within_not_set": "Dat kon niet worden ingesteld. {why}",

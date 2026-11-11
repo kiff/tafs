@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,7 @@ import bot.tafs.app.kiff.RecordHit
 import bot.tafs.app.model.Words
 import java.io.File
 import java.time.LocalDate
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -63,18 +65,32 @@ class RecordActions(
   val export: suspend (String, String) -> ReceiptsResult = { _, _ -> ReceiptsResult.NotExported("") },
 )
 
-/** The Record's search box: tafs cloud's words as its placeholder; Search sends what's typed, and an empty box shows the Record. */
+/** How long the box waits after the last key before it searches. */
+internal const val RECORD_SEARCH_PAUSE_MS = 400L
+
+/**
+ * The Record's search box: tafs cloud's words as its placeholder. It searches as you type, [RECORD_SEARCH_PAUSE_MS] after the
+ * last key, and at once on the keyboard's Search; an empty box shows the Record.
+ */
 @Composable
 internal fun RecordSearchBox(hint: String?, onSearch: (String) -> Unit) {
   var query by rememberSaveable { mutableStateOf("") }
+  // What was last searched, so a pause or a rotation doesn't send the same search twice.
+  var sent by rememberSaveable { mutableStateOf("") }
+  val search: (String) -> Unit = { q -> sent = q; onSearch(q) }
+  LaunchedEffect(query) {
+    if (query.trim() == sent.trim()) return@LaunchedEffect
+    if (query.isNotBlank()) delay(RECORD_SEARCH_PAUSE_MS)
+    search(query)
+  }
   OutlinedTextField(
     query,
-    driveTyped({ query = it; if (it.isBlank()) onSearch("") }),
+    driveTyped({ query = it }),
     Modifier.fillMaxWidth(),
     placeholder = { Text(hint ?: Words.Record.searchHint) },
     singleLine = true,
     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-    keyboardActions = KeyboardActions(onSearch = { onSearch(query) }),
+    keyboardActions = KeyboardActions(onSearch = { search(query) }),
   )
 }
 

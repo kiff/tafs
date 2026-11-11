@@ -2229,6 +2229,10 @@
     "one": "{count} hour",
     "other": "{count} hours"
   },
+  "work.answer_within_days": {
+    "one": "{count} day",
+    "other": "{count} days"
+  },
   "work.answer_within_line": "You're told when a case waits longer.",
   "work.answer_within_none": "Not set",
   "work.answer_within_not_set": "It couldn't be set. {why}",

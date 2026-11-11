@@ -2229,6 +2229,10 @@
     "one": "{count} Stunde",
     "other": "{count} Stunden"
   },
+  "work.answer_within_days": {
+    "one": "{count} Tag",
+    "other": "{count} Tage"
+  },
   "work.answer_within_line": "Du wirst benachrichtigt, wenn ein Fall länger wartet.",
   "work.answer_within_none": "Nicht festgelegt",
   "work.answer_within_not_set": "Das konnte nicht festgelegt werden. {why}",

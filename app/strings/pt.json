@@ -2229,6 +2229,10 @@
     "one": "{count} hora",
     "other": "{count} horas"
   },
+  "work.answer_within_days": {
+    "one": "{count} dia",
+    "other": "{count} dias"
+  },
   "work.answer_within_line": "Avisamos quando um caso espera mais.",
   "work.answer_within_none": "Não definido",
   "work.answer_within_not_set": "Não foi possível definir. {why}",

@@ -1,5 +1,7 @@
 package bot.tafs.app
 
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.design.TafsTheme
@@ -32,11 +34,23 @@ class PromiseRowTest {
   @Test fun aPromiseShowsItsHoursAndNotSetClearsIt() {
     val picked = mutableListOf<Int?>()
     rule.setShown { TafsTheme { PromiseRow(hours = 24) { picked += it } } }
-    rule.onNodeWithText("24 hours", substring = true).performClick()
+    rule.onNodeWithText("1 day", substring = true).performClick()
     rule.waitForIdle()
     rule.onNodeWithText("Not set").performClick()
     rule.waitForIdle()
     assertEquals(listOf<Int?>(null), picked)
+  }
+
+  @Test fun wholeDaysReadAsDaysAndAreStillSentAsHours() {
+    val picked = mutableListOf<Int?>()
+    rule.setShown { TafsTheme { PromiseRow(hours = 8) { picked += it } } }
+    rule.onNodeWithText("8 hours", substring = true).performClick()
+    rule.waitForIdle()
+    listOf("1 hour", "2 hours", "4 hours", "1 day", "2 days", "7 days").forEach { rule.onNodeWithText(it).assertExists() }
+    rule.onAllNodesWithText("168 hours").assertCountEquals(0)
+    rule.onNodeWithText("7 days").performClick()
+    rule.waitForIdle()
+    assertEquals(listOf<Int?>(168), picked)
   }
 
   @Test fun theMenuOpensUnderItsValueNotAtTheRowsStart() {
