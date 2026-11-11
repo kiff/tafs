@@ -117,12 +117,12 @@ describe("a drive's tools are told the chat (kiff/tafs#544)", () => {
 });
 
 describe("Coach's tools (kiff/tafs#206)", () => {
-  it("speak MCP, and list the twelve tools, each with KIFF's operation argument", async () => {
+  it("speak MCP, and list the thirteen tools, each with KIFF's operation argument", async () => {
     const w = world();
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install", "app_look", "app_act"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "version_try", "version_install", "app_look", "app_act"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });

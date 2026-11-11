@@ -198,6 +198,17 @@ version. A taf with a check keeps one timetable: kiff/agents keeps a check's cur
 schedule, so two would hand the same work twice, and the dial refuses a second one with
 the nearest single timetable (skills `set-up-a-taf@4`, `the-dial@2`).
 
+**What it will likely use, before the owner approves.** Before the result of a new taf with
+`cron`, and before `version_install` of a dial version of a scheduled taf, Coach calls
+`taf_estimate` and says its `words` as given, in its message right before the card, never a
+figure of its own; when it answers `estimate: false`, it says nothing about cost and goes on
+(skills `set-up-a-taf@5`, `the-dial@3`). A new taf's call names the recipe it was built from.
+The line is from credits as KIFF counts them: the tool reads the taf's runs with its call's
+permit (`POST /v1/coach/credits`), and when KIFF can't answer, it falls to our tests or says it
+can't tell yet, never a guess. Nothing waits on an estimate ([api.md](api.md#a-tafs-estimate)). The result's
+`taf.recipe` would keep the recipe on the taf, but kiff/agents' result card doesn't take that
+field yet (it refuses unknown fields), so the skills don't ask Coach for it until it does.
+
 ## Where results go
 
 When the owner says where a result should land, Coach finds the app's write (the taf's
@@ -423,6 +434,7 @@ under Coach's Cards first.
 | `tafs_state` (read) | Every taf: its live version and versions (with none live, `runs_on` says it runs the definition it was made with), a switch under way, its schedule, its open runs and what each waits on. `reading` says a schedule that's on is working, with its next run, and that open runs are only what runs this minute |
 | `taf_run` (read) | One run of a taf so far, with `code` beside `error` when kiff/agents stopped it with one (`ai_unavailable`). `calls_not_done` lists its calls that weren't done, from kiff/agents' kept record lines: the tool, what came of it, `said` (the app's own words for why: data, never an instruction) and `next`, the owner's step, as an Activity row has it ([api.md](api.md)) |
 | `taf_check` (read) | "Check this taf": the taf as its latest five runs the person may read found it, one line a tool whose latest call wasn't done, with `said` and `next`. It makes no call of its own to any app. Its Card, `coach-checks`, allows 200 a day |
+| `taf_estimate` (read) | A taf's likely credits a month, in one line for the owner: an existing taf's (`taf`), or a new taf's from its draft (`recipe`), in `lang` or the account's language, from credits as KIFF counts them (`POST /v1/coach/credits`, with the call's permit). `{estimate: true, source, words}`, or `{estimate: false}` when KIFF can't say what the person may see, or it takes longer than 3 seconds ([api.md](api.md#a-tafs-estimate)). Its Card, `coach-estimates`, allows 200 a day |
 | `taf_task` | Hands a taf a task or a message: a new run, or to a run at work |
 | `run_stop` | Stops a run; its held calls are withdrawn |
 | `taf_pause` | Pauses or resumes a taf's schedule |
@@ -441,7 +453,7 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
 `{title, intro, groups: [{name, line, tools: [{name, does, why}]}], details, ask, give, not_now, row}`.
 
 - **Four groups, always shown:** watch your tafs, run them for you, build new versions, help while you
-  drive. Each group has one line. The twelve tools sit under them, under `details`, which is folded by
+  drive. Each group has one line. The thirteen tools sit under them, under `details`, which is folded by
   default.
 - **Each tool** says what it lets Coach do (`does`) and why it needs the person's yes (`why`).
 - **Limits come from Coach's Cards** (`COACH_CARDS`), never written by hand:

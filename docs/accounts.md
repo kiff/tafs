@@ -149,7 +149,8 @@ is the period:
   "runs": 61,
   "words": "This period: 1,240 credits used · ends on 30 Nov",
   "tafs": [
-    { "taf": "taf-3f9a1c0b7d2e4a6f8b91", "credits": 820, "runs": 41, "words": "Refunds · 820 credits · 41 runs" },
+    { "taf": "taf-3f9a1c0b7d2e4a6f8b91", "credits": 820, "runs": 41, "words": "Refunds · 820 credits · 41 runs",
+      "pace": "At this pace, about 1,300 this month" },
     { "taf": "taf-0b7c2e9d4a1f6e3b8c50", "credits": 374, "runs": 18, "words": "Chargebacks · 374 credits · 18 runs" }
   ],
   "coach": { "credits": 46, "runs": 2, "words": "Coach, past what's included · 46 credits · 2 runs" },
@@ -188,6 +189,14 @@ taf's runs, newest first:
   "next": "MjAyNi0xMS0wNVQxMDozMTo1NVp8MGE5ZTc3ZDE"
 }
 ```
+
+**A taf's pace:** in this period's view, a taf's row gets a second line, `pace` ("At this pace,
+about 1,300 this month"), once its own counted runs cover 7 days: its credits as KIFF counts them
+over the last 30 days (or since it started), × 30 / the days they cover, rounded. It's read from
+KIFF's runs for that taf with the person's session, the same computation as a taf's estimate
+([api.md](api.md#a-tafs-estimate)), and left out when they can't be read within a second and a
+half, so the panel never waits on it. The period before has none. Neither app draws it yet: both
+follow, drawing it under the row as given; until then the key is ignored.
 
 `taf` is the taf's id, as `GET /v1/tafs` gives it (`taf-` and 20 hex digits, which is its id on
 kiff/agents too), never the name of its agent in KIFF. `run` is the run's id on kiff/agents, the
