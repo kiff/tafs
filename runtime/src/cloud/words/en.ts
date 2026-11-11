@@ -60,7 +60,7 @@ export const en = {
   approval_critical_key: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
   approval_drive_key: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
   // A taf's removal unsigned, or signed without the screen lock, once signing is required (handler.ts, removalSigned).
-  remove_signed: "Remove it from your phone: removing a taf asks for your screen lock each time. Nothing was removed.",
+  remove_signed: "Remove it from your device: removing a taf asks for your screen lock each time. Nothing was removed.",
   approval_window_closed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
   approval_sign_in_closed: "The sign-in was closed. Nothing was connected.",
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,

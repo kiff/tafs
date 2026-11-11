@@ -61,7 +61,7 @@ export const es: Words = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} se configuró hoy, así que cada cambio debe preguntarte primero; esta Card dejaría que «${tool}» se ejecute sin preguntar. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_critical_key: "Esto amplía lo que el taf puede hacer, así que necesita tu huella digital. No se aprobó nada; vuelve a aprobarlo con tu huella digital.",
   approval_drive_key: "Dejar que Coach maneje la app necesita tu huella digital. No se inició nada; vuelve a aprobarlo con tu huella digital.",
-  remove_signed: "Elimínalo desde tu teléfono: eliminar un taf pide cada vez el bloqueo de pantalla. No se ha eliminado nada.",
+  remove_signed: "Elimínalo desde tu dispositivo: eliminar un taf pide cada vez el bloqueo de pantalla. No se ha eliminado nada.",
   approval_window_closed: "El plazo de aprobación terminó. No se aprobó nada; vuelve a aprobarlo con tu huella digital.",
   approval_sign_in_closed: "El inicio de sesión se cerró. No se conectó nada.",
   approval_no_code: (vendor: string) => `El inicio de sesión en ${vendor} volvió sin su código de confirmación. No se conectó nada.`,

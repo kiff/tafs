@@ -61,7 +61,7 @@ export const nl: Words = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} is vandaag ingesteld, dus elke wijziging moet het je eerst vragen; deze Card zou "${tool}" zonder vragen laten uitvoeren. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_critical_key: "Dit verruimt wat het taf mag, dus het vraagt je vingerafdruk. Er is niets goedgekeurd; keur het opnieuw goed met je vingerafdruk.",
   approval_drive_key: "Coach de app laten bedienen vraagt je vingerafdruk. Er is niets gestart; keur het opnieuw goed met je vingerafdruk.",
-  remove_signed: "Verwijder het op je telefoon: een taf verwijderen vraagt elke keer om je schermvergrendeling. Er is niets verwijderd.",
+  remove_signed: "Verwijder het op je apparaat: een taf verwijderen vraagt elke keer om je schermvergrendeling. Er is niets verwijderd.",
   approval_window_closed: "De tijd om goed te keuren is voorbij. Er is niets goedgekeurd; keur het opnieuw goed met je vingerafdruk.",
   approval_sign_in_closed: "Het inloggen is gesloten. Er is niets gekoppeld.",
   approval_no_code: (vendor: string) => `Het inloggen bij ${vendor} kwam terug zonder bevestigingscode. Er is niets gekoppeld.`,

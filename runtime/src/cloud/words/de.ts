@@ -61,7 +61,7 @@ export const de: Words = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} wurde heute eingerichtet, also muss jede Änderung dich zuerst fragen; diese Card würde „${tool}“ ohne Nachfrage laufen lassen. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_critical_key: "Das erweitert, was der taf darf, also braucht es deinen Fingerabdruck. Es wurde nichts genehmigt; genehmige es erneut mit deinem Fingerabdruck.",
   approval_drive_key: "Damit Coach die App bedienen darf, braucht es deinen Fingerabdruck. Nichts wurde gestartet; genehmige es erneut mit deinem Fingerabdruck.",
-  remove_signed: "Entferne ihn auf deinem Telefon: Das Entfernen eines taf fragt jedes Mal nach deiner Displaysperre. Nichts wurde entfernt.",
+  remove_signed: "Entferne ihn auf deinem Gerät: Das Entfernen eines taf fragt jedes Mal nach deiner Displaysperre. Nichts wurde entfernt.",
   approval_window_closed: "Das Zeitfenster für die Genehmigung ist abgelaufen. Es wurde nichts genehmigt; genehmige es erneut mit deinem Fingerabdruck.",
   approval_sign_in_closed: "Die Anmeldung wurde geschlossen. Es wurde nichts verbunden.",
   approval_no_code: (vendor: string) => `Die Anmeldung bei ${vendor} kam ohne ihren Bestätigungscode zurück. Es wurde nichts verbunden.`,

@@ -1448,7 +1448,7 @@ describe("removing a taf", () => {
     const wd = world();
     const device = await del(wd, true, sig, "device");
     expect(device.statusCode).toBe(403);
-    expect(JSON.parse(device.body)).toMatchObject({ code: "critical_key_required", error: "Remove it from your phone: removing a taf asks for your screen lock each time. Nothing was removed." });
+    expect(JSON.parse(device.body)).toMatchObject({ code: "critical_key_required", error: "Remove it from your device: removing a taf asks for your screen lock each time. Nothing was removed." });
     expect(wd.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
     // A signature that isn't this phone's: refused, nothing removed.
     const w2 = world();
