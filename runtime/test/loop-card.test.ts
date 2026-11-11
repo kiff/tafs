@@ -15,10 +15,14 @@ describe("the loop card", () => {
   it("says the read by its title, in the person's language, with tafs cloud's two answers", () => {
     expect(withLine(card, "en", titles)).toMatchObject({
       title: "Still reading",
-      text: "Read 10 pages of Lister vos litiges Stripe (mode test), and there's more. Read on, or stop here and answer with what's been read?",
+      text: "Read 10 pages of \"Lister vos litiges Stripe (mode test)\", and there's more. Read on, or stop here and answer with what's been read?",
       options: [{ value: "tafs_loop_continue", label: "Read on" }, { value: "tafs_loop_summarise", label: "Stop here" }],
     });
     expect(withLine(card, "fr", titles)).toMatchObject({ title: "Lecture en cours", options: [{ label: "Continuer la lecture" }, { label: "S'arrêter ici" }] });
+    // A title is a name, quoted as each language quotes, so no case ending follows the preposition.
+    expect((withLine(card, "pl", titles) as typeof card).text).toContain("z „Lister vos litiges Stripe (mode test)”");
+    expect((withLine(card, "de", titles) as typeof card).text).toContain("von „Lister vos litiges Stripe (mode test)“");
+    expect((withLine(card, "fr", titles) as typeof card).text).toContain("de « Lister vos litiges Stripe (mode test) »");
   });
 
   it("keeps what kiff/agents takes back: its id, its answers' values, loop and waits", () => {
@@ -33,15 +37,16 @@ describe("the loop card", () => {
   it("has its words in every language", () => {
     for (const lang of LANGUAGES) {
       const w = wordsIn(lang);
-      for (const s of [w.loop_title, w.loop_read_on, w.loop_stop, w.loop_line(10, "X")]) expect(s.trim()).not.toBe("");
-      expect(w.loop_line(10, "X")).toContain("10");
-      expect(w.loop_line(10, "X")).toContain("X");
+      for (const s of [w.loop_title, w.loop_read_on, w.loop_stop, w.loop_what, w.loop_named("X"), w.loop_line(10, w.loop_what)]) expect(s.trim()).not.toBe("");
+      expect(w.loop_line(10, w.loop_named("X"))).toContain("10");
+      expect(w.loop_line(10, w.loop_named("X"))).toContain("X");
     }
   });
 
   it("says \"the same list\" when the taf's Card has no title for the read, never its name", () => {
     expect((withLine(card, "en") as typeof card).text).toBe("Read 10 pages of the same list, and there's more. Read on, or stop here and answer with what's been read?");
     expect((withLine(card, "pl") as typeof card).text).toContain("z tej samej listy");
+    expect((withLine(card, "pt") as typeof card).text).toContain("páginas da mesma lista");
   });
 
   it("leaves a confirm that isn't kiff/agents' loop card as it came", () => {

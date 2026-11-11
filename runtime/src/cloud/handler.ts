@@ -2422,7 +2422,7 @@ const LOOP_SUMMARISE = "tafs_loop_summarise";
 /**
  * The loop card (kiff/agents' confirm, id tafs-loop-N, with `loop: {tool, pages}`) in tafs cloud's words: kiff/agents
  * writes it in English and names the read by its tool name. Here it says the read by its title (KIFF's, as the taf's
- * Card shows it), else as "the same list", never by its name, in the person's language, and its two answers keep their values. Undefined for any
+ * Card shows it) in quotes, else as "the same list", never by its name, in the person's language, and its two answers keep their values. Undefined for any
  * other component, or a loop card that isn't kiff/agents' shape, which stays as it came.
  */
 export function loopCardWords(component: unknown, lang: Lang = "en", titles: ToolTitles = new Map()): unknown {
@@ -2433,7 +2433,7 @@ export function loopCardWords(component: unknown, lang: Lang = "en", titles: Too
   if (!tool || !pages) return undefined;
   const w = wordsIn(lang);
   return {
-    ...c, title: w.loop_title, text: w.loop_line(pages, titles.get(tool)?.trim() || w.loop_what),
+    ...c, title: w.loop_title, text: w.loop_line(pages, titles.get(tool)?.trim() ? w.loop_named(titles.get(tool)!.trim()) : w.loop_what),
     options: [{ value: LOOP_CONTINUE, label: w.loop_read_on }, { value: LOOP_SUMMARISE, label: w.loop_stop }],
   };
 }

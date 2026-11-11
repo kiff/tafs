@@ -533,11 +533,12 @@ export const en = {
   steps_at: (i: number, n: number, label: string) => `Step ${i} of ${n}${label ? ` · ${label}` : ""}`,
   // The loop card (kiff/agents' confirm tafs-loop-N): tafs cloud's words, with the read by its title (withLine).
   loop_title: "Still reading",
-  loop_line: (pages: number, what: string) => `Read ${pages} pages of ${what}, and there's more. Read on, or stop here and answer with what's been read?`,
+  loop_line: (pages: number, of: string) => `Read ${pages} pages ${of}, and there's more. Read on, or stop here and answer with what's been read?`,
   loop_read_on: "Read on",
   loop_stop: "Stop here",
-  // The read, when the taf's Card has no title for it: never its tool name.
-  loop_what: "the same list",
+  // The read with its preposition: its KIFF title quoted (loop_named), else the same list, never its tool name.
+  loop_what: "of the same list",
+  loop_named: (title: string) => `of "${title}"`,
   // A check-fired run's start, in place of the items the check handed it (checkStart).
   check_found: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "Its check found 1 new item." : `Its check found ${n} new items.`),
   cal_folded: (words: string, n: number, first: string, last: string) => `${words}: ${n} times from ${first} to ${last}`,
