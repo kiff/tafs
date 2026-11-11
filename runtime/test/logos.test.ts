@@ -1,4 +1,5 @@
 import { writeFileSync } from "node:fs";
+import { inflateSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -11,6 +12,30 @@ const NOW = new Date("2026-11-11T08:00:00Z");
 const URL_OK = "https://logos.composio.dev/api/stripe";
 const STRIPE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#635BFF" d="M2 2h20v20H2z"/></svg>`;
 const svg = (text: string): Source => ({ type: "image/svg+xml", bytes: new TextEncoder().encode(text) });
+
+/** An 8-bit RGBA PNG's pixels, for checking what was drawn: its size, and the [r, g, b, a] at (x, y). */
+function pixels(png: Uint8Array) {
+  const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
+  const w = view.getUint32(16), h = view.getUint32(20);
+  const idat: Buffer[] = [];
+  for (let at = 8; at < png.length;) {
+    const len = view.getUint32(at), type = Buffer.from(png.subarray(at + 4, at + 8)).toString("ascii");
+    if (type === "IDAT") idat.push(Buffer.from(png.subarray(at + 8, at + 8 + len)));
+    at += 12 + len;
+  }
+  const raw = inflateSync(Buffer.concat(idat)), stride = w * 4, out = new Uint8Array(h * stride);
+  for (let y = 0; y < h; y++) {
+    const f = raw[y * (stride + 1)]!;
+    for (let x = 0; x < stride; x++) {
+      const v = raw[y * (stride + 1) + 1 + x]!, a = x >= 4 ? out[y * stride + x - 4]! : 0;
+      const b = y > 0 ? out[(y - 1) * stride + x]! : 0, c = x >= 4 && y > 0 ? out[(y - 1) * stride + x - 4]! : 0;
+      const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+      const pred = f === 1 ? a : f === 2 ? b : f === 3 ? Math.floor((a + b) / 2) : f === 4 ? (pa <= pb && pa <= pc ? a : pb <= pc ? b : c) : 0;
+      out[y * stride + x] = (v + pred) & 255;
+    }
+  }
+  return { w, h, at: (x: number, y: number) => Array.from(out.subarray(y * stride + x * 4, y * stride + x * 4 + 4)) };
+}
 
 /** A store, a source fetcher that counts, and the real renderer unless a test swaps it. */
 function setup(source: Source | Error = svg(STRIPE)) {
@@ -95,6 +120,15 @@ describe("logos", () => {
     expect(unsafeSVG(withoutPublicDoctype(`<!DOCTYPE svg SYSTEM "file:///etc/passwd">${STRIPE}`))).toBe("a DOCTYPE or an entity");
   });
 
+  it("draws every logo centred on a light rounded tile, so a dark one reads on a dark screen", async () => {
+    const black = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#000"/></svg>`;
+    const img = pixels(await render(black));
+    expect([img.w, img.h]).toEqual([LOGO_PX, LOGO_PX]);
+    expect(img.at(0, 0)[3]).toBe(0); // a rounded corner
+    expect(img.at(LOGO_PX / 2, 2)).toEqual([255, 255, 255, 255]); // the tile, around the logo
+    expect(img.at(LOGO_PX / 2, LOGO_PX / 2)).toEqual([0, 0, 0, 255]); // the logo, in the middle
+  });
+
   it("stops a drawing that takes too long", async () => {
     const hang = join(tmpdir(), `logo-hang-${process.pid}.mjs`);
     writeFileSync(hang, "setInterval(() => {}, 1000);\n");
@@ -116,11 +150,14 @@ describe("logos", () => {
     expect(spent.fetched).toEqual([]);
   });
 
-  it("keeps a PNG source as it is, and refuses one too big or not a PNG", async () => {
+  it("draws a PNG source on its tile too, and refuses one too big or not a PNG", async () => {
     const png = await render(STRIPE);
     const ok = setup({ type: "image/png", bytes: png });
     await nameLogos(ok.store, [URL_OK], NOW);
-    expect((await logoFor(ok.store, logoKey(URL_OK), ok.deps))?.png).toEqual(png);
+    const tiled = (await logoFor(ok.store, logoKey(URL_OK), ok.deps))!.png;
+    expect(pngOK(tiled)).toBe(true);
+    expect(pixels(tiled).w).toBe(LOGO_PX);
+    expect(pixels(tiled).at(LOGO_PX / 2, 2)).toEqual([255, 255, 255, 255]);
     forgetRecorded();
     const fake = setup({ type: "image/png", bytes: new TextEncoder().encode("<svg/>") });
     await nameLogos(fake.store, [URL_OK], NOW);
