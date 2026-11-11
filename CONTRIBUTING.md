@@ -33,9 +33,11 @@ references that an outside contributor can read.
 4. Add regression coverage for changed behavior, including relevant failure,
    retry, concurrency, and cross-account cases. For documentation-only edits,
    checking links and configuration syntax is sufficient.
-5. Add a short entry under Unreleased in [CHANGELOG.md](CHANGELOG.md) for
-   user-visible behavior, security fixes safe to disclose, or compatibility
-   changes. Pure refactors and routine documentation corrections need no entry.
+5. Add the changelog entry as one file, `changes/<branch>.md` (each `/` in the
+   branch's name as `-`), for user-visible behavior, security fixes safe to
+   disclose, or compatibility changes; never edit [CHANGELOG.md](CHANGELOG.md)
+   itself. Pure refactors and routine documentation corrections add the file
+   empty. See [changes/README.md](changes/README.md).
 6. Update the feature's page in [docs/](docs/README.md) when the change adds or
    changes what a feature does, a route, a limit, or a screen's behavior. A new
    feature gets its page, linked from `docs/README.md`. A page that no longer
