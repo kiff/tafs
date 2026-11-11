@@ -578,14 +578,18 @@ struct SetupChatView: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    /// One recipe, as tafs cloud words it: its title, and its line under it.
+    /// A recipe's name on Coach's start list: the one the gallery and Home lead with, its
+    /// headline (the problem it ends), else its title, so every list names a job the same way.
+    static func recipeName(_ recipe: TafsCloud.Recipes.Recipe) -> String { recipe.lead }
+
+    /// One recipe, as tafs cloud words it: its name, and its line under it.
     private func recipeRow(_ recipe: TafsCloud.Recipes.Recipe) -> some View {
         Button {
             Haptics.tap()
             model.fillRecipe(recipe)
         } label: {
             VStack(alignment: .leading, spacing: 2) {
-                Text(recipe.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Self.recipeName(recipe)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                     .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 if !recipe.line.isEmpty {
                     Text(recipe.line).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)

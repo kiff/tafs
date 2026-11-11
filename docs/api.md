@@ -244,9 +244,13 @@ since a schedule reads its work list without the model.
 2. `trial`: a new version's trial runs, which KIFF doesn't count. KIFF's record gives each the credits
    it would have used. Credits per run only: runs a month still come from the taf's own runs. KIFF's
    record doesn't name the version a trial ran, so every trial run in the 30 days counts.
-3. `tests`: the same job's runs in our Evals, by the taf's `recipe`, from
-   `runtime/src/cloud/estimates.json`, a table in credits generated outside this repo from an Eval
-   report. Credits per run only, said as "in our tests". The table is empty until a report is read.
+3. `tests`: the same job's runs in our Evals, by the taf's `recipe`, read at runtime from tafs cloud's
+   own store (the table Coach's state is kept in), under the key `estimates#v1`: a map of recipe id to
+   `{p50, p90, runs, from}`, in credits. It's written from outside this repo, from the Eval reports, by
+   whoever runs the Eval, with an expiry it sets (past it, the item reads as none, as any in that table);
+   no figure is in this repo. Credits per run only, said as "in our tests". A
+   recipe the store doesn't keep, a figure that isn't whole, or a read that fails is no figure: the line
+   falls to the honest one.
 4. `none`: nothing to go on, said so.
 
 Runs that failed, or are free for any reason but a trial, are left out. A new taf's runs a month
