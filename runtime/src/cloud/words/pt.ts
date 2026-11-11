@@ -48,7 +48,7 @@ export const pt: Words = {
   approval_digest_mismatch: "Este pedido não corresponde ao que pede. Nada foi aprovado.",
   approval_no_grant: "Não existe nenhuma ligação com esse id.",
   approval_cards_not_issued: (why: string) => `O KIFF não emitiu os Cards do taf: ${why}`,
-  approval_draft_is: (status: string) => `o rascunho está ${status}`,
+  approval_draft_is: (status: string) => `estado do rascunho: ${status}`,
   approval_no_draft: "O KIFF não tem esse rascunho",
   approval_cards_unread: "O Card ainda não pôde ser verificado. Leia-o novamente e depois aprove.",
   approval_uncovered: (tool: string) => `Este Card não cobre «${tool}», que o taf recebeu, por isso cada chamada seria recusada. Nada foi aprovado. O Coach volta a redigi-lo.`,
