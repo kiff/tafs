@@ -81,6 +81,8 @@ internal fun RecordSearchBox(hint: String?, onSearch: (String) -> Unit) {
   LaunchedEffect(query) {
     if (query.trim() == sent.trim()) return@LaunchedEffect
     if (query.isNotBlank()) delay(RECORD_SEARCH_PAUSE_MS)
+    // Search pressed during the pause already sent it.
+    if (query.trim() == sent.trim()) return@LaunchedEffect
     search(query)
   }
   OutlinedTextField(

@@ -86,6 +86,18 @@ class RecordSearchScreenTest {
     rule.mainClock.autoAdvance = true
   }
 
+  @Test fun searchPressedDuringThePauseSendsItOnce() {
+    val asked = mutableListOf<String>()
+    rule.setShown { TafsTheme { RecordSearchBox(hint = null) { asked += it } } }
+    val box = rule.onNode(hasSetTextAction())
+    rule.mainClock.autoAdvance = false
+    box.performTextInput("80")
+    box.performImeAction()
+    rule.mainClock.advanceTimeBy(RECORD_SEARCH_PAUSE_MS * 2)
+    assertEquals(listOf("80"), asked)
+    rule.mainClock.autoAdvance = true
+  }
+
   @Test fun nothingFoundSaysSoInTafsCloudsWords() {
     val search = RecordSearch(q = "zzz", pages = listOf(RecordSearchPage(q = "zzz", noneWords = "Nothing in your Record matches “zzz”.")))
     rule.setShown { TafsTheme { RecordResults(search, AppState(mode = Mode.kiff, ready = true), null, {}, {}, {}) } }

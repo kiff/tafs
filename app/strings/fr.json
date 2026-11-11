@@ -2225,13 +2225,13 @@
   "voice.voice_becomes_text_device_not": "Votre voix devient du texte sur cet appareil. Elle n'est envoyée que lorsque vous l'envoyez.",
   "voice.what_you_said_stays_message": "Ce que vous avez dit reste dans le champ de message, non envoyé.",
   "work.answer_within": "Répondre sous",
-  "work.answer_within_hours": {
-    "one": "{count} heure",
-    "other": "{count} heures"
-  },
   "work.answer_within_days": {
     "one": "{count} jour",
     "other": "{count} jours"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} heure",
+    "other": "{count} heures"
   },
   "work.answer_within_line": "Vous êtes prévenu quand un cas attend plus longtemps.",
   "work.answer_within_none": "Non défini",
