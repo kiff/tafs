@@ -421,7 +421,7 @@ export const nl: Words = {
   cal_follow_up: "Controleert opnieuw, zoals het zelf instelde",
   trial_label: "Proef",
   trial_title: (n) => `Versie ${n} wordt uitgeprobeerd`,
-  runs_title: "Zijn werk",
+  runs_title: "Zijn runs",
   runs_more: "Alle runs tonen",
   runs_end: "Niets ouders in de bewaarde runs",
   tz_words: (zone) => `Tijden in ${zone}`,

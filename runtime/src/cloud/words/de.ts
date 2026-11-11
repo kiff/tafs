@@ -421,7 +421,7 @@ export const de: Words = {
   cal_follow_up: "Prüft erneut, wie selbst festgelegt",
   trial_label: "Test",
   trial_title: (n) => `Version ${n} wird getestet`,
-  runs_title: "Seine Arbeit",
+  runs_title: "Seine Läufe",
   runs_more: "Alle Läufe zeigen",
   runs_end: "Nichts Älteres in den aufbewahrten Läufen",
   tz_words: (zone) => `Zeiten in ${zone}`,

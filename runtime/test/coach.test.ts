@@ -322,6 +322,34 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(JSON.stringify(lines)).not.toMatch(/Rae the refunds|ana@|order 42/);
   });
 
+  it("log an answer marked as an error, a failure and a call already under way as such", async () => {
+    const w = world();
+    const lines: Array<Record<string, unknown>> = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((s: unknown) => {
+      try { const l = JSON.parse(String(s)); if (l.event === "coach_tool") lines.push(l); } catch { /* another line */ }
+    });
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      // A drive's look from Coach's own chat: answered, as an error, in the tool's words.
+      await w.tool("app_look", {});
+      // kiff/agents fails under a task: tafs cloud didn't expect that.
+      w.agents.fail.set("startRun", new Error("kiff/agents is down"));
+      await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+      w.agents.fail.delete("startRun");
+      // The same operation while the first still holds its claim.
+      const args = { taf: RAE, action: "pause", [OP_ARG]: "op_busy" };
+      await w.coach.once(`${T}#coach-op2##op_busy#claim`, new Date(Date.parse("2026-10-16T13:00:00Z")));
+      await w.rpc("tools/call", { name: "taf_pause", arguments: args }, w.permit("taf_pause", args));
+    } finally {
+      spy.mockRestore(); quiet.mockRestore();
+    }
+    expect(lines).toEqual([
+      { event: "coach_tool", tool: "app_look", outcome: "done_with_error" },
+      { event: "coach_tool", tool: "taf_task", outcome: "failed", taf: RAE },
+      { event: "coach_tool", tool: "taf_pause", outcome: "busy", taf: RAE },
+    ]);
+  });
+
   it("hands a task over as Coach itself, in Coach's own chat with the taf", async () => {
     const w = world();
     const first = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });

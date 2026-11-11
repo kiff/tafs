@@ -452,7 +452,7 @@ export const en = {
   // A trial, a taf's runs page, and the account's time zone.
   trial_label: "Trial",
   trial_title: (n: number) => `Trying version ${n}`,
-  runs_title: "Its work",
+  runs_title: "Its runs",
   runs_more: "Show all runs",
   runs_end: "Nothing older in the retained runs",
   tz_words: (zone: string) => `Times in ${zone}`,
