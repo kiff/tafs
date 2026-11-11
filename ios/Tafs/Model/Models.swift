@@ -468,6 +468,11 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// Coach asks to install a version (kiff/tafs#206): approving it is installing it,
     /// switch and Card first, then this answer, in one Face ID. Nil for any other call.
     var install: VersionInstall?
+    /// The taf's own words, as KIFF keeps them with the hold (wave 1 item 4): what the call is
+    /// on ("Order 1042") and the customer's reason. Plain lines, drawn under the taf's name and
+    /// never in place of KIFF's amount, rule or action. Nil when the taf sent none.
+    var tafAbout: String?
+    var tafReason: String?
 }
 
 /// The taf and version a held version_install names, as Coach sent them: the taf's id in

@@ -84,3 +84,6 @@ struct LenientItem<T: Decodable>: Decodable {
     let value: T?
     init(from decoder: Decoder) throws { value = try? T(from: decoder) }
 }
+
+extension LenientItem: Equatable where T: Equatable {}
+extension LenientItem: Sendable where T: Sendable {}
