@@ -142,7 +142,8 @@ final class RecordSearchTests: XCTestCase {
 
     func testTheExportKeepsTafsCloudsAnswerByteForByteAndItsCsv() async throws {
         let model = await kiffModel()
-        let body = #"{"from":"2026-11-05","to":"2026-11-11","time_zone":"Europe/Paris","receipts":[{"trace_id":"t1","sig":"0xab","amount":15000}],"csv":"day,taf\n2026-11-05,Rae\n","missing":2}"#
+        // Spaced, and with 150.50: a re-encoded copy would differ, so the file is proven to be the answer as it came.
+        let body = #"{"from": "2026-11-05", "to": "2026-11-11", "time_zone": "Europe/Paris", "receipts": [{"trace_id": "t1", "sig": "0xab", "amount": 150.50}], "csv": "day,taf\n2026-11-05,Rae\n", "missing": 2}"#
         StubProtocol.responses["GET /v1/record/receipts?from=2026-11-05&to=2026-11-11"] = (200, body)
         let result = await model.exportReceipts(from: "2026-11-05", to: "2026-11-11")
         let files = try XCTUnwrap(result.files, result.why ?? "")
