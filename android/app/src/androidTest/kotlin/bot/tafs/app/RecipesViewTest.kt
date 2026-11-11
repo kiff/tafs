@@ -46,4 +46,24 @@ class RecipesViewTest {
     assertEquals(listOf("Chase my overdue invoices."), filled)
     assertTrue("a recipe is never sent", sent.isEmpty())
   }
+
+  @Test fun eachJobIsNamedAsTheGalleryNamesItByItsHeadline() {
+    val named = Recipes(
+      categories = listOf(RecipeCategory("money", "Money")),
+      recipes = listOf(
+        Recipe("refunds", "Refunds within a limit", "money", "Refunds small orders on its own.", "Refund orders under 50 euros.", headline = "No refund waits overnight."),
+        // One from before headlines keeps its title.
+        Recipe("chase", "Chase overdue invoices", "money", "Reminds customers whose invoices are late.", "Chase my overdue invoices."),
+      ),
+    )
+    val filled = mutableListOf<String>()
+    rule.setShown { TafsTheme { CoachStarts(AppState(mode = Mode.kiff, ready = true, recipes = named), fill = { filled += it }) {} } }
+    rule.onNodeWithText("No refund waits overnight.").assertExists()
+    rule.onAllNodesWithText("Refunds within a limit").assertCountEquals(0)
+    rule.onNodeWithText("Refunds small orders on its own.").assertExists()
+    rule.onNodeWithText("Chase overdue invoices").assertExists()
+    rule.onNodeWithText("No refund waits overnight.").performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("Refund orders under 50 euros."), filled)
+  }
 }

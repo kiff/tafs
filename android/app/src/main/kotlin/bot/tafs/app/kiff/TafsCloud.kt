@@ -496,6 +496,17 @@ class TafsCloud(
     post<ScheduleBody>("/v1/tafs/${escaped(id)}/${if (paused) "pause" else "resume"}", emptyMap()).taf
 
   /**
+   * How long a case of the taf may wait before the phones that answer its holds are told (`PUT …/promise`, `cards.manage`): whole
+   * hours, which tafs cloud checks (1 to 168), or null to clear it.
+   */
+  suspend fun setPromise(id: String, hours: Int?) {
+    sendJson(
+      "PUT", "/v1/tafs/${escaped(id)}/promise",
+      kotlinx.serialization.json.JsonObject(mapOf("hours" to (hours?.let { kotlinx.serialization.json.JsonPrimitive(it) } ?: kotlinx.serialization.json.JsonNull))),
+    )
+  }
+
+  /**
    * Where its results go, of tafs' own places (`door_reply`, `app`, `owner_email`; `manages`), at once. Answers the places tafs
    * cloud now keeps, from its view of the taf; null when it sends none.
    */

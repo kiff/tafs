@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +47,7 @@ import bot.tafs.app.app.Mode
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.MarkdownText
 import bot.tafs.app.design.OutlineButton
+import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Segmented
 import bot.tafs.app.design.StateChip
@@ -116,6 +118,8 @@ class TafActions(
   val askCoachAbout: (String, String) -> Unit = { _, _ -> },
   /** Plan & usage, from a health fix that asks for credits. */
   val openPlan: () -> Unit = {},
+  /** Sets how long a case may wait, in whole hours, or clears it (null). */
+  val setPromise: suspend (String, Int?) -> Unit = { _, _ -> },
   /** Opens a request step by step (taf, run). */
   val openRequest: suspend (String, String) -> Unit = { _, _ -> },
   /** Pauses or resumes its schedule. */
@@ -325,21 +329,12 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
 }
 
 /**
- * What it did and what it's waiting for: what waits for you first (its holds, its doors' knocks), then its work and last run, then
- * its Record by day. Each request opens step by step; each call opens what KIFF signed.
+ * The Activity of a taf tafs cloud doesn't run (the sample's, or an agent with Cards only): what waits for you, then its Record by
+ * day. A taf on tafs cloud draws [TafActivityList] instead, with its runs and its work.
  */
 @Composable
 private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
   state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) }
-  if (state.mode == Mode.kiff && taf.cloudId != null) {
-    if (state.manages(taf.id)) {
-      LaunchedEffect(taf.id) { actions.doors.load(taf.id) }
-      KnocksPanel(taf, state, actions.doors)
-    }
-    RunsPanel(taf, taf.id in state.runsInFlight, actions, state.runNowQuiet[taf.id])
-    WorkPanel(taf, state, actions)
-    RunReportPanel(taf.id, state.reports[taf.id], actions)
-  }
   ActivityRecord(state.entries(taf.id), state)
 }
 
@@ -412,7 +407,7 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions, quiet: 
  * reply given up on offers Send again to whoever manages the taf.
  */
 @Composable
-private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
+internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
   val scope = rememberCoroutineScope()
   LaunchedEffect(taf.id) { actions.loadWork(taf.id) }
   val work = state.works[taf.id]
@@ -424,6 +419,13 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
     work?.summary?.line?.takeIf { it.isNotBlank() && work.health?.repeats(it) != true }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     work?.health?.let { h ->
       HealthLines(h, canUseCoach = state.mayUseCoach, onCoach = { say -> actions.askCoachAbout(taf.id, say) }, onPlan = actions.openPlan)
+    }
+    // Its oldest waiting case, in tafs cloud's words, amber once it's past the promise.
+    work?.oldestWaiting?.words?.takeIf { it.isNotBlank() }?.let { words ->
+      Text(words, style = scaled(14, if (work.oldestWaiting.late) FontWeight.SemiBold else FontWeight.Normal, if (work.oldestWaiting.late) Theme.amberText else Theme.soft))
+    }
+    if (work != null && state.mode == Mode.kiff && state.manages(taf.id)) {
+      PromiseRow(work.promise?.hours) { hours -> scope.launch { actions.setPromise(taf.id, hours) } }
     }
     work?.let { Chat.workRows(it) }?.forEach { row ->
       when (row) {
@@ -462,39 +464,6 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
       }
     }
     error?.let { Text(it, style = scaled(13, color = Theme.no)) }
-  }
-}
-
-/** The taf's latest run on tafs cloud and, once it stops, what it reported. */
-@Composable
-private fun RunReportPanel(tafId: String, report: RunReport?, actions: TafActions) {
-  val scope = rememberCoroutineScope()
-  LaunchedEffect(tafId) { actions.loadReport(tafId) }
-  Panel {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-      Eyebrow(Words.Taf.lastRun)
-      Spacer(Modifier.weight(1f))
-      Text(
-        Words.Taf.refresh,
-        style = scaled(13, color = Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.loadReport(tafId) } }.padding(top = 12.dp),
-      )
-    }
-    if (report == null) {
-      CircularProgressIndicator(Modifier.size(18.dp), color = Theme.amber, strokeWidth = 2.dp)
-    } else {
-      report.at?.let { at ->
-        val how = if (report.finished) Words.Taf.Report.finished else if (report.status == "running") Words.Taf.Report.stillRunning else Words.Taf.Report.noSession
-        Text("${shortTime(at)} · $how", style = scaled(12, color = Theme.dim, mono = true))
-      }
-      when {
-        // A taf writes markdown: shown as the chat shows it, never raw (kiff/tafs#96).
-        report.text.isNotEmpty() -> MarkdownText(report.text, size = 14, modifier = Modifier.fillMaxWidth())
-        report.session == null && report.error == null -> Text(Words.Taf.Report.noRunYet, style = scaled(14, color = Theme.dim))
-        !report.finished && report.error == null -> Text(Words.Taf.Report.whenRunEnds, style = scaled(14, color = Theme.dim))
-      }
-      report.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
-    }
   }
 }
 
@@ -610,5 +579,36 @@ internal fun HealthLines(health: bot.tafs.app.kiff.TafHealth, canUseCoach: Boole
         }
       }
     }
+  }
+}
+
+/** The hours a case may wait, as the owner picks them: tafs cloud checks the range (1 to 168). */
+internal val PROMISE_CHOICES = listOf(1, 2, 4, 8, 24, 48, 168)
+
+/**
+ * "Answer within", for whoever manages the taf: the promise as tafs cloud keeps it, or Not set, and a menu of whole hours to change it
+ * (or clear it). The phones that answer its holds are told when a case waits longer; tafs cloud sends that alert.
+ */
+@Composable
+internal fun PromiseRow(hours: Int?, onPick: (Int?) -> Unit) {
+  var open by remember { mutableStateOf(false) }
+  Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Box {
+      Row(
+        Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = true }.padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(Words.Work.answerWithin, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
+        Text((hours?.let { Words.Work.answerWithinHours(count = it) } ?: Words.Work.answerWithinNone) + " ⌄", style = scaled(15, FontWeight.SemiBold, Theme.amberText))
+      }
+      DriveMenu(expanded = open, onDismissRequest = { open = false }, containerColor = Theme.panel) {
+        DropdownMenuItem(text = { Text(Words.Work.answerWithinNone) }, onClick = { open = false; if (hours != null) onPick(null) })
+        PROMISE_CHOICES.forEach { h ->
+          DropdownMenuItem(text = { Text(Words.Work.answerWithinHours(count = h)) }, onClick = { open = false; if (h != hours) onPick(h) })
+        }
+      }
+    }
+    Text(Words.Work.answerWithinLine, style = scaled(12, color = Theme.dim))
   }
 }

@@ -301,7 +301,23 @@ data class TafWork(
   val skipped: List<SkippedFiring> = emptyList(),
   /** How the taf is doing, with tafs cloud's reasons and fixes (docs/reliability.md › Its health); absent when it can't be read. */
   val health: TafHealth? = null,
+  /** Its oldest waiting case, in tafs cloud's words (docs/reliability.md › Its oldest waiting case); only while a case waits. */
+  @SerialName("oldest_waiting") val oldestWaiting: OldestWaiting? = null,
+  /** How long a case may wait, as its owner set it; null when none is set. */
+  val promise: TafPromise? = null,
 )
+
+/** The oldest case a taf has waiting: since when, tafs cloud's line for it ("Oldest case waiting 5 h"), and whether it's past the promise. */
+@Serializable
+data class OldestWaiting(
+  @Serializable(with = bot.tafs.app.model.InstantAsString::class) val since: java.time.Instant? = null,
+  val words: String = "",
+  val late: Boolean = false,
+)
+
+/** The owner's promise for a taf: how many whole hours a case may wait before the phones that answer its holds are told. */
+@Serializable
+data class TafPromise(val hours: Int)
 
 /**
  * A taf's health as tafs cloud decides it: `healthy`, `at_risk` or `failing`, each reason a line, and a fix for the lines that have
