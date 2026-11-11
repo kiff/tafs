@@ -36,6 +36,8 @@ extension TafsCloud {
     }
     struct RunsPage: Decodable {
         let requests: [TafWork.Request]; let next_cursor: String?; let title: String; let more_title: String; var end_words: String? = nil
+        /// On the first page: recent firings that started no run (a Run now whose check couldn't read too).
+        var skipped: [TafWork.Skipped]? = nil
     }
     struct ConnectedAction: Decodable, Identifiable {
         var id: String { name }

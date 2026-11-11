@@ -382,6 +382,12 @@ struct RetainedRuns: View {
     @ViewBuilder private var content: some View {
         let cache = model.runPages[model.runKey(tafID, all)] ?? SourcePages()
         Eyebrow(text: cache.pages.first?.title ?? Words.Taf.itsWork)
+        // Firings that started no run, a Run now whose check couldn't read among them: no run, and
+        // said so here, in tafs cloud's words (docs/api.md). Dim: not a failure of a run.
+        ForEach(Array((cache.pages.first?.skipped ?? []).enumerated()), id: \.offset) { _, s in
+            Text(s.words).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
         ForEach(Array(cache.pages.enumerated()), id: \.offset) { _, page in
             ForEach(page.requests) { request in
                 NavigationLink { KnobRequestDetail(tafID: tafID, run: request.id) } label: {

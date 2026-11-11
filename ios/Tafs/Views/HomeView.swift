@@ -338,7 +338,8 @@ struct TafRow: View {
                         .buttonStyle(.borderless)
                         .accessibilityLabel(Words.Home.haltedOpenHalt)
                         .accessibilityIdentifier("taf.halted.\(taf.name)")
-                } else {
+                } else if !(taf.attention && taf.state == .working) {
+                    // What went wrong is said in its line, in place of "Working" (docs/reliability.md).
                     StateChip(state: taf.state)
                 }
             }
