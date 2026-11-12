@@ -294,7 +294,6 @@ final class DriveSession: ObservableObject {
                     guard self.live?.id == id, !Task.isCancelled else { return }
                     // tafs cloud had already ended it (halted, idle): its words go in the caption.
                     if let ended {
-                        self.telling = nil
                         self.finish(why: ended.why, words: ended.words ?? "")
                         return
                     }
@@ -302,11 +301,10 @@ final class DriveSession: ObservableObject {
                     wait = 1
                 } catch {
                     if Task.isCancelled { return }
-                    // Not this person's drive any more, or a tafs cloud without the route: nothing to
-                    // pause, so the touch is a takeover, as it was before pauses.
-                    if let e = error as? TafsCloud.CloudError, e.status == 404 {
-                        self.telling = nil
-                        if want { self.stop("owner_took_over") } else { self.finish(why: "replaced", words: e.errorDescription ?? "") }
+                    // Only a network error or tafs cloud's own failure is worth posting again. A 404 says
+                    // the drive isn't there for this person any more: it ends here, in tafs cloud's words.
+                    if let e = error as? TafsCloud.CloudError, (400..<500).contains(e.status) {
+                        await self.endAsTafsCloudSays(id)
                         return
                     }
                     try? await Task.sleep(nanoseconds: wait * 1_000_000_000)
@@ -349,6 +347,20 @@ final class DriveSession: ObservableObject {
                 }
                 if failures >= 8 { stop("left_app"); return }
             }
+        }
+    }
+
+    /// tafs cloud doesn't have this drive for the person any more. It ends in the app, with nothing
+    /// posted: with the end tafs cloud gives for it, else the app's own "Coach stopped". Never as a
+    /// takeover, which the person didn't make.
+    private func endAsTafsCloudSays(_ id: String) async {
+        let read = try? await cloud?.readDrive()
+        guard live?.id == id, !ending else { return }
+        if let drive = read?.drive, drive.id != id {
+            finish(why: "replaced", words: "")
+        } else {
+            let ended = read?.drive?.ended
+            finish(why: ended?.why ?? "", words: ended?.words ?? "")
         }
     }
 

@@ -141,18 +141,46 @@ final class DrivePauseTests: XCTestCase {
         XCTAssertTrue(drive.isOn)
     }
 
-    /// A drive tafs cloud doesn't know to pause (another person's, one that's gone, or a tafs cloud
-    /// without the route) ends as a takeover, as a touch did before pauses.
-    func testAPauseTafsCloudDoesntKnowEndsTheDriveAsATakeover() async throws {
+    /// tafs cloud's own failure is posted again too, as a dropped connection is.
+    func testAPauseTafsCloudFailedIsPostedAgain() async throws {
+        try await show(DriveTests.Probe())
+        StubProtocol.responses["POST /v1/coach/drive/pause"] = (503, #"{"error":"unavailable"}"#)
+        StubProtocol.thenRespond["POST /v1/coach/drive/pause"] = ["POST /v1/coach/drive/pause": (200, "{}")]
+        begin()
+        personTaps(CGPoint(x: 4, y: 300))
+        await settle(1.8)
+        XCTAssertEqual(sent("/v1/coach/drive/pause").count, 2)
+        XCTAssertTrue(drive.paused)
+        XCTAssertTrue(drive.isOn)
+    }
+
+    /// A `pause` answered 404: the drive isn't there for this person any more, so posting again can't
+    /// help. It ends in the app with the end tafs cloud gives for it, nothing is posted, and it's never
+    /// called a takeover.
+    func testAPauseAnswered404EndsTheDriveInTafsCloudsWords() async throws {
         try await show(DriveTests.Probe())
         StubProtocol.responses["POST /v1/coach/drive/pause"] = (404, #"{"error":"not found"}"#)
         begin()
+        StubProtocol.responses["GET /v1/coach/drive"] = (200, #"{"drive":{"id":"\#(id)","session":"s1","task":"Run Refunds","ended":{"why":"idle","words":"Nothing was done for 15 minutes, so Coach stopped"}},"steps":[]}"#)
         personTaps(CGPoint(x: 4, y: 300))
-        await settle(0.6)
+        await settle(0.8)
         XCTAssertFalse(drive.isOn)
-        XCTAssertEqual(drive.caption, "You took over, so Coach let you carry on")
-        let stop = try XCTUnwrap(sent("/v1/coach/drive/stop").first)
-        XCTAssertEqual(stop.url?.path, "/v1/coach/drive/stop")
+        XCTAssertEqual(drive.caption, "Nothing was done for 15 minutes, so Coach stopped")
+        XCTAssertEqual(sent("/v1/coach/drive/pause").count, 1, "a 404 isn't posted again")
+        XCTAssertEqual(sent("/v1/coach/drive/stop").count, 0)
+    }
+
+    /// With nothing to read of its end, the app says its own "Coach stopped".
+    func testAPauseAnswered404WithNoEndToReadSaysCoachStopped() async throws {
+        try await show(DriveTests.Probe())
+        StubProtocol.responses["POST /v1/coach/drive/pause"] = (404, #"{"error":"not found"}"#)
+        StubProtocol.responses["GET /v1/coach/drive"] = (200, #"{"drive":null,"steps":[]}"#)
+        begin()
+        personTaps(CGPoint(x: 4, y: 300))
+        await settle(0.8)
+        XCTAssertFalse(drive.isOn)
+        XCTAssertEqual(drive.caption, "Coach stopped")
+        XCTAssertEqual(sent("/v1/coach/drive/stop").count, 0)
     }
 
     /// A drive tafs cloud had already ended (the account halted while it was paused) ends here with
