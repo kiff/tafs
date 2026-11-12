@@ -80,6 +80,7 @@ enum HoldAllow {
         var domain: String
         var environment: String
         var location: String
+        /// When it starts and ends, as the instants KIFF's times name (`instant`): "" for none.
         var validFrom: String
         var validUntil: String
 
@@ -116,8 +117,20 @@ enum HoldAllow {
             self.domain = (domain ?? "").lowercased()
             self.environment = (environment ?? "").lowercased()
             self.location = location ?? ""
-            self.validFrom = validFrom ?? ""
-            self.validUntil = validUntil ?? ""
+            self.validFrom = Self.instant(validFrom)
+            self.validUntil = Self.instant(validUntil)
+        }
+
+        /// A time as KIFF writes it, as the instant it names, so the same moment written with
+        /// another offset or precision is the same term. None is "". A time that can't be read
+        /// is kept as written with a mark no instant has, so it matches only the same text.
+        static func instant(_ time: String?) -> String {
+            guard let time, !time.isEmpty else { return "" }
+            if time.hasPrefix("@") || time.hasPrefix("?") { return time }
+            let precise = ISO8601DateFormatter()
+            precise.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            guard let date = precise.date(from: time) ?? ISO8601DateFormatter().date(from: time) else { return "?" + time }
+            return "@" + String(Int64((date.timeIntervalSince1970 * 1000).rounded()))
         }
 
         private static func grants(_ grants: [KIFFClient.DraftCard.Grant]?) -> [Grant] {
