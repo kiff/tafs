@@ -63,8 +63,10 @@ own token, because a merge made with that starts no workflow on main, so main's 
 it. Run by hand, it only says what would merge and why the rest waits.
 
 A pull request that can't be read in a run (a request to GitHub failed, or its answer wasn't what
-was expected) is skipped with "couldn't be read, skipped", and the run goes on to the others. It
-is read again on the next run. The run fails only when none could be read.
+was expected) is skipped with "couldn't be read, skipped", and the run goes on to the others. So is
+one whose merge GitHub refuses (its branch moved meanwhile, or it can't be merged after all), with
+"couldn't be merged, skipped" and GitHub's status. Each is tried again on the next run. The run
+fails only when every pull request in it failed one of these ways.
 
 Adding a lane, an author or a reviewer is a change to `.github/automerge.json`, which never merges by
 itself. The rule's tests break each condition in turn (`scripts/test_automerge.py`).

@@ -144,6 +144,9 @@ class Pass(unittest.TestCase):
 
         def gh(*args):
             if args[0] == "-X":
+                refusal = answers.get("PUT " + args[2])
+                if refusal is not None:
+                    raise refusal
                 merged.append(args[2])
                 return {"merged": True}
             for start, answer in answers.items():
@@ -199,6 +202,35 @@ class Pass(unittest.TestCase):
         # One pull request asked for by number, unread: the same.
         code, lines, merged = self.run_pass(self.answers([772], broken=[772]), argv=["--pr", "772"])
         self.assertEqual((code, lines, merged), (1, ["#772: couldn't be read, skipped"], []))
+
+    def test_a_merge_github_refuses_is_skipped_and_the_next_still_merges(self):
+        # The head moved between the read and the merge: GitHub answers 409.
+        answers = self.answers([772, 773])
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="gh: Head branch was modified (HTTP 409)")
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be merged, skipped (HTTP 409)", "#773: merged (ios)"])
+        self.assertEqual(merged, ["repos/kiff/tafs/pulls/773/merge"])
+        self.assertEqual(code, 0, "one merge was refused, not all: the run passes")
+        # One that can't be merged after all (405), and a failure that names no status.
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="gh: Pull Request is not mergeable (HTTP 405)")
+        self.assertEqual(self.run_pass(answers)[1][0], "#772: couldn't be merged, skipped (HTTP 405)")
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"])
+        self.assertEqual(self.run_pass(answers)[1][0], "#772: couldn't be merged, skipped (failed)")
+
+    def test_a_run_where_every_pull_request_failed_on_github_fails(self):
+        # One unread and one refused at the merge: nothing went through, so the run fails.
+        answers = self.answers([772, 773], broken=[772])
+        answers["PUT repos/kiff/tafs/pulls/773/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="HTTP 409")
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be read, skipped", "#773: couldn't be merged, skipped (HTTP 409)"])
+        self.assertEqual((code, merged), (1, []))
+        # One refused at the merge and one that only waits for a maintainer: that isn't every one failing.
+        answers = self.answers([772, 773])
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="HTTP 409")
+        answers["repos/kiff/tafs/pulls/773/reviews"] = []
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be merged, skipped (HTTP 409)", "#773: waits for a maintainer: no listed reviewer approved its latest commit"])
+        self.assertEqual(code, 0)
 
     def test_a_run_with_every_pull_request_read_passes_as_before(self):
         code, lines, merged = self.run_pass(self.answers([772, 773]))

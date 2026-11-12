@@ -21,6 +21,7 @@ nothing; `main` gathers what it needs with `gh` and merges what `decide` allows.
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -155,6 +156,12 @@ def eval_running(repo, workflow):
 UNREAD = (subprocess.CalledProcessError, ValueError, KeyError, TypeError, AttributeError)
 
 
+def status_of(err):
+    """What GitHub answered a failed request with, as `gh` reports it: "HTTP 409", else "failed"."""
+    found = re.search(r"HTTP (\d{3})", getattr(err, "stderr", None) or "")
+    return f"HTTP {found.group(1)}" if found else "failed"
+
+
 def read(repo, n):
     """What `decide` needs of one pull request: itself, its files, its reviews, and the checks on
     its latest commit."""
@@ -183,7 +190,7 @@ def main(argv):
     if not hold and eval_repo and eval_workflow and eval_running(eval_repo, eval_workflow):
         hold = "the evals are running, or couldn't be read"
     numbers = [args.pr] if args.pr else [pr["number"] for pr in pages(f"repos/{repo}/pulls?state=open&base=main")]
-    unread = 0
+    unread = unmerged = 0
     for n in numbers:
         # One pull request that can't be read is skipped, and the pass goes on to the others: a
         # single failed request never keeps the rest from merging. It is read again next run.
@@ -200,12 +207,20 @@ def main(argv):
         if args.dry_run:
             print(f"#{n}: would merge ({lane})")
             continue
-        # The latest commit is named, so a push that lands meanwhile stops the merge.
-        gh("-X", "PUT", f"repos/{repo}/pulls/{n}/merge", "-f", "merge_method=squash", "-f", f"sha={pr['head']['sha']}",
-           "-f", f"commit_title={pr['title']} (#{n})")
+        # The latest commit is named, so a push that lands meanwhile stops the merge. GitHub then
+        # refuses it (409), as it does one that can't be merged after all (405): that pull request
+        # is skipped too, and the ones after it still get their turn.
+        try:
+            gh("-X", "PUT", f"repos/{repo}/pulls/{n}/merge", "-f", "merge_method=squash", "-f", f"sha={pr['head']['sha']}",
+               "-f", f"commit_title={pr['title']} (#{n})")
+        except UNREAD as err:
+            print(f"#{n}: couldn't be merged, skipped ({status_of(err)})")
+            unmerged += 1
+            continue
         print(f"#{n}: merged ({lane})")
-    # Nothing could be read at all: that is GitHub or the token, and the run says so by failing.
-    return 1 if numbers and unread == len(numbers) else 0
+    # Every pull request failed on a request to GitHub: that is GitHub or the token, and the run
+    # says so by failing. One that only waits for a maintainer is no failure.
+    return 1 if numbers and unread + unmerged == len(numbers) else 0
 
 
 if __name__ == "__main__":
