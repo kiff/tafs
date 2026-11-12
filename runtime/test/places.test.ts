@@ -55,10 +55,12 @@ describe("result places at connected apps", () => {
     expect(vendorPlace(NOTION)).toEqual(NOTION);
     expect(vendorPlace({ place: "taf", taf: "taf_inv1", name: "Invoices" })).toEqual({ place: "taf", taf: "taf_inv1", name: "Invoices" });
     expect(() => vendorPlace({ place: "email", to: "x" })).toThrow("a place is");
-    // The instructions: a hand-off section the taf ends its result with, for every taf place at once, one hop.
+    // The instructions: a hand-off section the taf ends its result with, for every taf place at once.
     const text = instructions(JOBS[0]!, undefined, [actionPlace(NOTION), invoices]);
     expect(text).toContain("Where your results also go:");
-    expect(text).toContain(`End every result with a section headed "${HANDOFF_HEADING}", the last one, written for a taf that takes it on without having seen your work: what you did, what it acts on (by its reference), and the invoice's number and amount, the customer, what was done. tafs cloud hands it over; you call nothing for it, and you never hand on a task that came to you as a hand-off.`);
+    expect(text).toContain(`End every result with a section headed "${HANDOFF_HEADING}", the last one, written for a taf that takes it on without having seen your work: what you did, what it acts on (by its reference), and the invoice's number and amount, the customer, what was done. When there is nothing for it to act on, write "Nothing to hand over" as the section's first line, in those words, then why in one line. tafs cloud hands it over and decides how far it goes; you call nothing for it.`);
+    // How far it goes is tafs cloud's rule, never the taf's: the instructions don't ask the taf to keep it.
+    expect(text).not.toContain("never hand on");
     expect(text).not.toContain("taf_inv1");
     expect(placesInstructions([tafPlace({ place: "taf", taf: "taf_inv1", name: "Invoices" })])).toContain("what it acts on (by its reference), and what it needs next.");
     expect(placesInstructions([tafPlace({ place: "taf", taf: "taf_inv1", name: "Invoices" })])).not.toContain("Where your results also go");

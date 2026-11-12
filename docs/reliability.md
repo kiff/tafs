@@ -171,9 +171,28 @@ wasn't checked is settled, once:
 - **another taf**: the "Hand-off" section the taf ended its result with becomes a run of the
   receiving taf, as its work under its own Card (`handed`, with the run), once per run (a dedup
   key), fenced as data with where it came from, never as the owner's words: what reached the
-  first taf from outside is in it, and nothing in it is an instruction to the second. The receiver is checked again then: removed, or Coach, is `not_sent`. A run that came as
-  a hand-off hands nothing on (its `source` says so: one hop), and a result with no hand-off
+  first taf from outside is in it, and nothing in it is an instruction to the second. The receiver is checked again then: removed, or Coach, is `not_sent`. A result with no hand-off
   section is `not_sent`, with Coach to open and nothing to send again.
+  - **The task tells the receiver to look again.** The hand-off says how things stood when the
+    sending taf wrote it. Before it changes anything, the receiving taf reads what the hand-off
+    names as it is now. If that has changed, or KIFF refuses the change because another taf has
+    it, it changes nothing and says why.
+  - **A taf with nothing to hand over says so.** It writes "Nothing to hand over" as the
+    section's first line, then why. The delivery is `none`: "Nothing to hand to Invoices: none of
+    the deals was won." No run starts, nobody is told, and Coach isn't offered. A result with no
+    section at all is still `not_sent`: that is a taf not following its instructions.
+  - **Work is handed on twice at most** (`DELIVERY.maxHops`): taf to taf to taf. A run that came
+    as a hand-off may hand its own result on once. Where the work has been is read from each
+    run's `source` in kiff/agents' record (`chainOf`), never from a taf's words.
+    - **A third hand-off is refused and said:** `not_sent`, "Not delivered to Books: this work was
+      already handed on twice", with Coach to open. Nothing is dropped silently.
+    - **Never to a taf that already had the work,** so nothing circles. Rae hands to Invoices, and
+      Invoices' results go to Rae: that stops there, as `none`, "Not handed back to Rae: it already
+      had this work". Calm, since two tafs that hand to each other are meant to stop.
+    - **When the run before it is no longer kept,** how far the work came isn't known, so it goes
+      no further. A read that only fails is tried again later, and nothing is handed on a guess.
+  - **How far a result goes is tafs cloud's rule, not the taf's.** The taf's instructions only ask
+    for the section.
 
 **What became of a hand-off comes back to the sending taf.** "Handed" only says the receiving run
 started. tafs cloud follows that run to its end (`settleHandoffs`), on the sweep and on every read
@@ -188,6 +207,7 @@ writes that went through) and `sent` (the writes it sent, one whose outcome isn'
 | is paused on a connected app's event, or on a card in its chat | "Handed to Invoices at 12:00": it is still at work | nobody |
 | ended, and a write of its went through | "Handed to Invoices · done" | nobody |
 | ended with `sent: 0` | "Handed to Invoices · nothing was done", with its own first line | nobody; one quiet note at the third in a row for that place |
+| ended having written nothing itself, and handed its own result on | "Handed to Invoices · it handed it on to Ledger" | nobody, and it doesn't count toward that note |
 | ended with more sent than went through | "Handed to Invoices · it may have been done: check Invoices's page" | nobody |
 | ended, on a kiff/agents that doesn't count `sent`, with no write through | "Handed to Invoices · it finished", with its own first line | nobody |
 | failed, was stopped, was cut off, is past its retries, or never started within 15 minutes | "Invoices didn't finish what Rae handed it · It failed", as `not_sent` with `send_again` and `needs_you` | the people who manage the sending taf, once |
@@ -206,6 +226,14 @@ writes that went through) and `sent` (the writes it sent, one whose outcome isn'
   to start can't work beside the new one.
 - **Any read settles the outcome, a viewer's too:** it's an observation, and starts no run. A dead
   hand-off's one note to the managers may come from it.
+- **Whether the receiving run handed its result on** is read from the receiving taf's own
+  deliveries for that run (`passedOn`). A manager's read or the sweep settles those first, so the
+  second hand-off starts then. A viewer's read starts nothing: the line stays "Handed to Invoices"
+  until one of those has run, for as long as a run has to start.
+- **A run that was held for the owner and is back at work** reads "Handed to Invoices" again,
+  not "waiting for you".
+- **The note for a dead hand-off that had acted, or may have,** doesn't say "Send it again": it
+  says to check the receiving taf's page first, as the request does.
 - **A run that only can't be read** (kiff/agents unreachable) is read again later, never called dead.
 - **The receiving request says where its work came from:** `from` is "Handed by Rae", or "Handed by
   another taf" once the sending taf is gone.

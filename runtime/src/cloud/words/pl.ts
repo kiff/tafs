@@ -303,10 +303,14 @@ export const pl: Words = {
   handoff_dead: (name, taf) => `${name}: nie dokończono pracy przekazanej przez: ${taf}`,
   handoff_never_started: "Nigdy nie rozpoczęto",
   handoff_note: (taf, name) => `${name}: nie dokończono pracy przekazanej przez: ${taf}. Wyślij ponownie ze strony: ${taf}.`,
+  handoff_note_acted: (taf, name) => `${name}: nie dokończono pracy przekazanej przez: ${taf}, a coś mogło już zostać zrobione. Sprawdź stronę: ${name}, zanim cokolwiek zostanie wysłane ponownie.`,
   handed_maybe: (name) => `Przekazano do: ${name} · możliwe, że zrobiono: sprawdź stronę: ${name}`,
+  handed_passed: (name, to) => `Przekazano do: ${name} · przekazano dalej do: ${to}`,
   handoff_already_acted: "wykonano już działanie: sprawdź stronę, zanim cokolwiek zostanie wysłane ponownie",
   handoff_maybe_acted: "możliwe, że działanie już wykonano: sprawdź stronę, zanim cokolwiek zostanie wysłane ponownie",
   handoff_nothing_note: (taf, name, n) => `${name}: nic nie zrobiono z ostatnimi ${n} przekazaniami od: ${taf}. Otwórz stronę: ${taf}, aby zobaczyć dlaczego.`,
+  handoff_none: (name, why) => `Nic do przekazania do: ${name}${why ? ` (${why})` : ""}`,
+  handoff_circle: (name) => `Nie przekazano z powrotem do: ${name} (ta praca już tam była)`,
   delivery_retrying: (name, t) => `Jeszcze nie dostarczono do: ${name}; ponowna próba ${t ? at(t) : "teraz"}`,
   delivery_not_sent: (name, why) => `Nie dostarczono do: ${name}${why ? ` (${why})` : ""}`,
   delivery_note: (taf, name, why) => `${taf}: nie dostarczono do: ${name}${why ? ` (${why})` : ""}. Wyślij ponownie ze strony: ${taf} lub otwórz Coacha, aby uzyskać pomoc.`,
@@ -317,6 +321,7 @@ export const pl: Words = {
   why_retry_failed: "ponowna próba nie została ukończona",
   why_retry_stopped: "ponowna próba została zatrzymana",
   why_handoff_failed: "przekazanie nie powiodło się",
+  why_too_far: "tę pracę przekazano już dwa razy",
   delivered_line: (went, not) => {
     const parts: string[] = [];
     if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "przekazano do:" : "wysłano do:"} ${d.name}`))));

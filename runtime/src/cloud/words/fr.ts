@@ -303,10 +303,14 @@ export const fr: Words = {
   handoff_dead: (name, taf) => `${name} n'a pas terminé ce que ${taf} lui a transmis`,
   handoff_never_started: "Jamais démarré",
   handoff_note: (taf, name) => `${name} n'a pas terminé ce que ${taf} lui a transmis. Renvoyez-le depuis la page de ${taf}.`,
+  handoff_note_acted: (taf, name) => `${name} n'a pas terminé ce que ${taf} lui a transmis, et a peut-être déjà agi. Vérifiez la page de ${name} avant de renvoyer quoi que ce soit.`,
   handed_maybe: (name) => `Transmis à ${name} · peut-être fait : vérifiez la page de ${name}`,
+  handed_passed: (name, to) => `Transmis à ${name} · retransmis à ${to}`,
   handoff_already_acted: "il avait déjà agi : vérifiez sa page avant tout renvoi",
   handoff_maybe_acted: "il a peut-être déjà agi : vérifiez sa page avant tout renvoi",
   handoff_nothing_note: (taf, name, n) => `${name} n'a rien fait des ${n} dernières transmissions de ${taf}. Ouvrez la page de ${taf} pour voir pourquoi.`,
+  handoff_none: (name, why) => `Rien à transmettre à ${name}${why ? ` : ${why}` : ""}`,
+  handoff_circle: (name) => `Non retransmis à ${name} : ce travail y est déjà passé`,
   delivery_retrying: (name, t) => `Pas encore livré à ${name} : nouvel essai ${t ? at(t) : "maintenant"}`,
   delivery_not_sent: (name, why) => `Non livré à ${name}${why ? ` : ${why}` : ""}`,
   delivery_note: (taf, name, why) => `${taf} n'a pas livré à ${name}${why ? ` : ${why}` : ""}. Renvoyez-le depuis la page de ${taf}, ou ouvrez Coach pour obtenir de l'aide.`,
@@ -317,6 +321,7 @@ export const fr: Words = {
   why_retry_failed: "le nouvel essai n'a pas abouti",
   why_retry_stopped: "le nouvel essai a été arrêté",
   why_handoff_failed: "la transmission a échoué",
+  why_too_far: "ce travail a déjà été transmis deux fois",
   delivered_line: (went, not) => {
     const parts: string[] = [];
     if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "transmis à" : "envoyé à"} ${d.name}`))));

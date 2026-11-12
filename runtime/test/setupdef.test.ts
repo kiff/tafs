@@ -118,7 +118,11 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("ask the owner's OK to read that list, as for the accounts list, read it on the taf's connection, and let the owner pick by name in a questions card.");
     expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026").');
     expect(flat).toContain("fill names each field the taf fills from its result, one line in words about the result");
-    expect(flat).toContain("one hop, never back to the sender, and never Coach.");
+    expect(flat).toContain("The result is handed to it as its work, under its own Card, and never Coach.");
+    // How far a result is handed on is tafs cloud's rule (delivery.ts): Coach says it, so the owner isn't promised a longer chain or a loop.
+    expect(flat).toContain("tafs cloud hands one piece of work on twice at most, and never to a taf that already had it");
+    expect(flat).toContain("A taf with nothing for the next one says so in its result, and nothing is handed.");
+    expect(flat).toContain("When the why is that the work was already handed on twice, nothing is broken");
     expect(flat).toContain("Draft it with taf_dial (results carries every place; the rest stays as it is), show the knob, then version_install");
     // Opened from a delivery note: diagnose, propose a version, never retry.
     expect(flat).toContain("read the taf's last request (taf_run) for why");

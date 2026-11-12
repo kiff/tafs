@@ -38,7 +38,11 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
      message or the issue; never a tool's name or an id in it.
   4. Another taf as the place: {place: "taf", taf: its id from tafs_state,
      name, fill}. The result is handed to it as its work, under its own Card,
-     one hop, never back to the sender, and never Coach.
+     and never Coach. That taf may hand its own result on once more: tafs
+     cloud hands one piece of work on twice at most, and never to a taf that
+     already had it, so say so when the owner asks for a longer chain or a
+     loop. A taf with nothing for the next one says so in its result, and
+     nothing is handed.
   5. Draft it with taf_dial (results carries every place; the rest stays as
      it is), show the knob, then version_install: the owner confirms it in
      tafs.
@@ -48,7 +52,10 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
   connection's list again, with the owner's OK, and propose the fix as a
   version of its dial with taf_dial: the place's arguments picked again by
   name, a tool added, or the place removed. Never retry the delivery
-  yourself: Send again is the owner's, on the taf's page.
+  yourself: Send again is the owner's, on the taf's page. When the why is
+  that the work was already handed on twice, nothing is broken: that is as
+  far as tafs cloud hands one piece of work. Say so, and offer to remove
+  the place or to have an earlier taf hand to that taf directly.
 - A taf on a schedule names the read that lists its work: taf_dial's check.
   When the dial gives a taf a schedule, or changes one of a taf whose schedule
   has no check yet (tafs_state), add check: the read tool that lists its open

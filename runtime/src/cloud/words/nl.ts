@@ -303,10 +303,14 @@ export const nl: Words = {
   handoff_dead: (name, taf) => `${name} heeft niet afgemaakt wat ${taf} doorgaf`,
   handoff_never_started: "Nooit gestart",
   handoff_note: (taf, name) => `${name} heeft niet afgemaakt wat ${taf} doorgaf. Verzend het opnieuw vanaf de pagina van ${taf}.`,
+  handoff_note_acted: (taf, name) => `${name} heeft niet afgemaakt wat ${taf} doorgaf, en heeft mogelijk al iets gedaan. Controleer de pagina van ${name} voordat er iets opnieuw wordt verzonden.`,
   handed_maybe: (name) => `Doorgegeven aan ${name} · mogelijk gedaan: controleer de pagina van ${name}`,
+  handed_passed: (name, to) => `Doorgegeven aan ${name} · die gaf het door aan ${to}`,
   handoff_already_acted: "het had al gehandeld: controleer de pagina voordat er iets opnieuw wordt verzonden",
   handoff_maybe_acted: "het heeft mogelijk al gehandeld: controleer de pagina voordat er iets opnieuw wordt verzonden",
   handoff_nothing_note: (taf, name, n) => `${name} heeft niets gedaan met de laatste ${n} overdrachten van ${taf}. Open de pagina van ${taf} om te zien waarom.`,
+  handoff_none: (name, why) => `Niets door te geven aan ${name}${why ? `: ${why}` : ""}`,
+  handoff_circle: (name) => `Niet teruggegeven aan ${name}: die had dit werk al`,
   delivery_retrying: (name, t) => `Nog niet afgeleverd bij ${name}: nieuwe poging ${t ? at(t) : "nu"}`,
   delivery_not_sent: (name, why) => `Niet afgeleverd bij ${name}${why ? `: ${why}` : ""}`,
   delivery_note: (taf, name, why) => `${taf} heeft niet afgeleverd bij ${name}${why ? `: ${why}` : ""}. Verzend het opnieuw vanaf de pagina van ${taf}, of open Coach voor hulp.`,
@@ -317,6 +321,7 @@ export const nl: Words = {
   why_retry_failed: "de nieuwe poging is niet afgerond",
   why_retry_stopped: "de nieuwe poging is gestopt",
   why_handoff_failed: "de overdracht is mislukt",
+  why_too_far: "dit werk is al twee keer doorgegeven",
   delivered_line: (went, not) => {
     const parts: string[] = [];
     if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "doorgegeven aan" : "verzonden naar"} ${d.name}`))));

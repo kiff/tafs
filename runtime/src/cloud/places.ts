@@ -29,7 +29,9 @@ export interface ActionPlace {
 /**
  * Another taf as a place (chaining): the result is handed to that taf as its work, a task it runs under
  * its own Card. tafs cloud hands it over when the run ends; the taf writes the hand-off at the end of
- * its result (HANDOFF_HEADING). One hop: a run from a hand-off hands nothing on.
+ * its result (HANDOFF_HEADING), or says there under NOTHING_TO_HAND that there is nothing to hand. How
+ * far a result is handed on is tafs cloud's to decide (delivery.ts: twice at most, and never to a taf
+ * that already had the work), never the taf's.
  */
 export interface TafPlace {
   place: "taf";
@@ -55,6 +57,9 @@ const MAX_FILL_WORDS = 200;
 
 /** The heading the taf writes its hand-off under, the last section of its result. */
 export const HANDOFF_HEADING = "Hand-off";
+
+/** What the taf writes first under that heading when it has nothing for the other taf to act on, then why. */
+export const NOTHING_TO_HAND = "Nothing to hand over";
 
 /** One line for people to read: control characters out, at most `max`. */
 function line(v: unknown, max: number): string {
@@ -200,7 +205,8 @@ export function placesInstructions(ps: VendorPlace[]): string | undefined {
     parts.push(`Your result is also handed to another taf as its work. End every result with a section headed "${HANDOFF_HEADING}", the last one, ` +
       "written for a taf that takes it on without having seen your work: what you did, what it acts on (by its reference), and " +
       (fills.length ? `${[...new Set(fills)].join("; ")}. ` : "what it needs next. ") +
-      "tafs cloud hands it over; you call nothing for it, and you never hand on a task that came to you as a hand-off.");
+      `When there is nothing for it to act on, write "${NOTHING_TO_HAND}" as the section's first line, in those words, then why in one line. ` +
+      "tafs cloud hands it over and decides how far it goes; you call nothing for it.");
   }
   return parts.join("\n\n");
 }
