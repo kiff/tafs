@@ -227,7 +227,11 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
       }
       return { ...base, state: "waiting", line: w.work_waiting_answer };
     }
-    case "COMPLETED":
+    case "COMPLETED": {
+      // A hand-off the receiving taf didn't finish (delivery.ts): the run's own work is done, and its
+      // managers have something to do, so it reads as theirs, never as "Done".
+      const dead = own.find((d) => d.needs_you);
+      if (dead) return { ...base, state: "needs_you", line: dead.line };
       // A run cut off at its turn or cost cap ended without finishing: it stopped, and says why (never "Done").
       if (r.stop === "turn_cap") return { ...base, state: "stopped", line: w.work_capped_turns(at(r.updated)) };
       if (r.stop === "cost_cap") return { ...base, state: "stopped", line: w.work_capped_cost(at(r.updated)) };
@@ -238,6 +242,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
       // included, reads as stopped, never as success.
       if (r.stop && r.stop !== "answered") return { ...base, state: "stopped", line: w.work_stopped_at(at(r.updated)) };
       return { ...base, state: "done", line: w.work_done_at(at(r.updated)) };
+    }
     case "CANCELLED":
       return { ...base, state: "stopped", line: w.work_stopped };
     default: {
@@ -249,16 +254,18 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
 }
 
 /** A taf's status and line on the list, from its recent runs, newest first. */
-export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date, lang: Lang = "en", health?: Health): WorkSummary {
+/** `dead`: the lines of its hand-offs the receiving taf didn't finish (delivery.ts), each one the managers' to send again. */
+export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date, lang: Lang = "en", health?: Health, dead: string[] = []): WorkSummary {
   const w = wordsIn(lang);
   const { paused = false, halted = false, unscheduled = false, next = null, fired = [] } = typeof how === "boolean" ? { paused: how } : how;
   // Halted stops everything, its holds included: that comes first.
   if (halted) return { status: "halted", line: w.work_halted, needs_you: 0 };
   const recent = runs.filter((r) => now.getTime() - Date.parse(r.updated) < NEEDS_YOU_DAYS * 86_400_000);
   const needs = recent.filter((r) => r.state === "needs_you" || (r.status === "PAUSED" && r.requirements?.some((q) => q.exception && !q.answered)));
-  if (needs.length) {
-    const first = requestOf(needs[0]!, zone, now, [], undefined, [], lang);
-    return { status: "needs_you", line: needs.length === 1 ? first.line : w.work_needs_you_count(needs.length, plural(lang, needs.length)), needs_you: needs.length };
+  const asking = needs.length + dead.length;
+  if (asking) {
+    const first = needs[0] ? requestOf(needs[0], zone, now, [], undefined, [], lang).line : dead[0]!;
+    return { status: "needs_you", line: asking === 1 ? first : w.work_needs_you_count(asking, plural(lang, asking)), needs_you: asking };
   }
   const retrying = runs.find((r) => r.state === "retrying");
   if (retrying) return { status: "retrying", line: requestOf(retrying, zone, now, [], undefined, [], lang).line, needs_you: 0 };

@@ -175,6 +175,43 @@ wasn't checked is settled, once:
   a hand-off hands nothing on (its `source` says so: one hop), and a result with no hand-off
   section is `not_sent`, with Coach to open and nothing to send again.
 
+**What became of a hand-off comes back to the sending taf.** "Handed" only says the receiving run
+started. tafs cloud follows that run to its end (`settleHandoffs`), on the sweep and on every read
+of the sending taf's page, and writes the outcome on the sending run's delivery. It reads
+kiff/agents' record of the run, never either taf's report: the run's state, and its `done` (the
+writes that went through) and `sent` (the writes it sent, one whose outcome isn't known included).
+
+| The receiving run | The sending request's delivery says | Who is told |
+|---|---|---|
+| still works | "Handed to Invoices at 12:00" | nobody |
+| is held for the owner (a call KIFF holds) | "Handed to Invoices · waiting for you" | Needs you already has the held call |
+| is paused on a connected app's event, or on a card in its chat | "Handed to Invoices at 12:00": it is still at work | nobody |
+| ended, and a write of its went through | "Handed to Invoices · done" | nobody |
+| ended with `sent: 0` | "Handed to Invoices · nothing was done", with its own first line | nobody; one quiet note at the third in a row for that place |
+| ended with more sent than went through | "Handed to Invoices · it may have been done: check Invoices's page" | nobody |
+| ended, on a kiff/agents that doesn't count `sent`, with no write through | "Handed to Invoices · it finished", with its own first line | nobody |
+| failed, was stopped, was cut off, is past its retries, or never started within 15 minutes | "Invoices didn't finish what Rae handed it · It failed", as `not_sent` with `send_again` and `needs_you` | the people who manage the sending taf, once |
+
+- **A dead hand-off is the sending taf's Needs you.** The sending request reads `needs_you` with
+  that line, never "Done", and it counts in the taf's summary on its page and on the list
+  (`deadHandoffs`), for a week or until it's sent again.
+- **Send again** (`POST …/deliveries/{key}/send`, the hand-off's `key`) hands the same section once
+  more, through the hand-off's own start with a dedup key for that sending. Two taps at once start
+  one receiving run. Once it's handed again the delivery is no longer dead, so a later tap is 400.
+- **One that died after it had acted, or may have, isn't sent again:** its `done` isn't empty, or
+  its `sent` counts a write whose answer was lost. The delivery then has no `send_again`, and says
+  "it had already acted" or "it may have already acted", with "check its page before anything is
+  sent again". Sending it again could do the same thing twice.
+- **Send again for one that never started stops the old run first,** so a run that was only slow
+  to start can't work beside the new one.
+- **Any read settles the outcome, a viewer's too:** it's an observation, and starts no run. A dead
+  hand-off's one note to the managers may come from it.
+- **A run that only can't be read** (kiff/agents unreachable) is read again later, never called dead.
+- **The receiving request says where its work came from:** `from` is "Handed by Rae", or "Handed by
+  another taf" once the sending taf is gone.
+- **A write KIFF refused,** such as one on an object another taf holds, didn't go through: with
+  nothing else through, that run reads "nothing was done".
+
 The run's report in the thread carries the outcome in one line above the taf's words
 (`delivered` on the message, `docs/chat.md`): "Sent to Google Sheets · Refunds 2026 and handed
 to Invoices. Not sent to Slack · #ops yet: trying again."
