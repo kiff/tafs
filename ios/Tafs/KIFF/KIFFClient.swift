@@ -1062,6 +1062,33 @@ final class KIFFClient {
         try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version])
     }
 
+    /// A request built in full before it's signed, so its message can be signed together with
+    /// another request's (`RequestsTogether`): its body's exact bytes, its `signed_at`, and the
+    /// `kiff.request.v1` message KIFF rebuilds from them.
+    struct Prepared: Equatable {
+        let method: String
+        let path: String
+        let body: Data
+        let signedAt: String
+        let message: Data
+    }
+
+    /// The confirm of a draft, at exactly `version`, built to be signed together with another request.
+    func prepareConfirmDraft(id: String, version: String, signedAt: String) throws -> Prepared {
+        guard let tenant else { throw KIFFError.unauthorized }
+        let path = "/v1/me/agent-drafts/\(escaped(id))/confirm"
+        guard let url = URL(string: path, relativeTo: baseURL) else { throw KIFFError.server(status: 0, message: Words.Error.badPath) }
+        let body = try JSONEncoder().encode(["version": version])
+        let uri = url.path + (url.query.map { "?" + $0 } ?? "")
+        return Prepared(method: "POST", path: path, body: body, signedAt: signedAt,
+                        message: Self.requestMessage(tenant: tenant, method: "POST", uri: uri, body: body, signedAt: signedAt))
+    }
+
+    /// Sends a prepared confirm with the signature header made for it: the bytes that were signed, unchanged.
+    func confirmDraft(_ prepared: Prepared, signatureHeader: String) async throws -> AgentDraft {
+        try await send(prepared.method, prepared.path, body: RawJSON(data: prepared.body), presigned: signatureHeader)
+    }
+
     /// As `confirmDraft`, naming the held call the draft answers: KIFF lets that call go once
     /// under the same signature, so one Face ID covers the Card and the call
     /// (docs/allow-from-now-on.md).
@@ -1314,8 +1341,10 @@ final class KIFFClient {
     }
 
     /// `signedBy` signs this one request, whatever `setupSigner` holds.
+    /// `presigned` is the whole signature header of a request built and signed beforehand
+    /// (`prepareConfirmDraft`): sent as it is, and nothing here signs.
     private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true,
-                                                   signedBy: (@MainActor (Data) throws -> String)? = nil) async throws -> T {
+                                                   signedBy: (@MainActor (Data) throws -> String)? = nil, presigned: String? = nil) async throws -> T {
         guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: Words.Error.badPath) }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -1338,7 +1367,9 @@ final class KIFFClient {
         let signer = signedBy ?? setupSigner.map { current in
             base == nil && Self.grantsAuthority(method, path) ? (approvalSigner ?? current) : current
         }
-        if ["POST", "PUT", "PATCH", "DELETE"].contains(method), signed, let signer, let tenant {
+        if let presigned {
+            request.setValue(presigned, forHTTPHeaderField: "KIFF-Device-Signature")
+        } else if ["POST", "PUT", "PATCH", "DELETE"].contains(method), signed, let signer, let tenant {
             let signedAt = SigningTime.next()
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)

@@ -310,7 +310,21 @@ the app in sample mode.
   and no text field.
   **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
   words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
-  Not built yet: the Card on the same sheet under one signature, which waits for the connection server and KIFF.
+  **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
+  opened from Coach's card and that card carries the taf's Card as a draft:
+  - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
+  - On Connect, the phone tells tafs cloud it can sign the step (`can: ["key_and_cards"]`). tafs cloud asks for it
+    only when it's on there; otherwise nothing is signed here and the key goes by itself, as before.
+  - The phone checks the ask is this card's (`keyAndCardIsThisCards`): its grant and the digest shown, its draft and
+    the version shown. Anything else is refused and nothing is signed.
+  - It builds both requests in full with one `signed_at` (`PlanqueClient.prepareKey`, `KIFFClient.prepareConfirmDraft`),
+    and the approval key signs once, over `kiff.requests.v1`, the account, the time and the two request messages'
+    hashes, sorted.
+  - It sends the key first, then the Card's confirm, each with `v3=` and `with=sha256:` naming the other's hash. The
+    Card is confirmed only for a key that went in.
+  - It reports what came of both, and tafs cloud checks them before Coach hears "approved". Closing the receipt then
+    doesn't approve the card again.
+  - If it doesn't finish, the card's note says why on the sheet, and the key is never given by itself after that.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so

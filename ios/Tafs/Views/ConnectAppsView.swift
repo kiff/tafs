@@ -418,6 +418,11 @@ struct ConnectApprovalSheet: View {
     /// Called once the key was given and its receipt read: Coach's card, which opened this
     /// sheet for the key, is then approved as any other.
     var onGiven: (() -> Void)? = nil
+    /// Coach's card this sheet was opened from, when it carries the taf's Card as a draft: the
+    /// key and that Card can then go under one Face ID (docs/secure-connection.md).
+    var card: SetupComponent? = nil
+    /// The key and the Card went under one signature: Coach's card is answered already.
+    @State private var together = false
     /// The pasted key. It's never drawn: only its last 4 characters are.
     @State private var key = ""
     /// Its last 4 characters, kept for the receipt after the key itself is forgotten.
@@ -433,6 +438,11 @@ struct ConnectApprovalSheet: View {
     @State private var disconnecting = false
 
     private var grant: PlanqueClient.Grant? { model.grants.first { $0.id == start.grant } }
+    /// The card's draft as this phone read it from KIFF: what Its Card shows, and the version that's signed.
+    private var cardDraft: KIFFClient.AgentDraft? {
+        guard let draft = card?.draft.flatMap({ model.setupDrafts[$0] }), !draft.confirmed, draft.cards != nil else { return nil }
+        return draft
+    }
 
     var body: some View {
         NavigationStack {
@@ -512,6 +522,22 @@ struct ConnectApprovalSheet: View {
         paste(what: sheet.paste.what,
               pasted: SecureKey.filled(sheet.paste.pasted, last4: last4, vendor: sheet.vendor.name),
               cleared: sheet.paste.cleared)
+        // Its Card, when the setup has one drafted: KIFF's own lines for the draft this phone read.
+        // Connect then signs the key and this Card together, when tafs cloud asks for that.
+        if let draft = cardDraft {
+            VStack(alignment: .leading, spacing: 6) {
+                Eyebrow(text: sheet.cardTitle ?? draft.cardTitle)
+                ForEach(Array(draft.lines.enumerated()), id: \.offset) { _, line in
+                    Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.raised)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .accessibilityIdentifier("connect.sheet.card")
+        }
         DisclosureGroup(isExpanded: $detailsOpen) {
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(Array((sheet.details?.lines ?? []).enumerated()), id: \.offset) { _, line in
@@ -632,7 +658,8 @@ struct ConnectApprovalSheet: View {
     /// The receipt was read: the key is forgotten, and Coach's card goes on.
     private func finish() {
         last4 = ""
-        onGiven?()
+        // Under one signature the card is answered already; else it's approved now, as any other.
+        if !together { onGiven?() }
         dismiss()
     }
 
@@ -695,6 +722,10 @@ struct ConnectApprovalSheet: View {
         if let error = model.lastError {
             Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
         }
+        // What tafs cloud said of the key and its Card together, when that didn't finish.
+        if let card, let note = model.cardNotes[card.id] {
+            Text(note).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     /// Approve only what's shown: its digest checked, KIFF's words read when it has a profile,
@@ -709,6 +740,22 @@ struct ConnectApprovalSheet: View {
         Task {
             defer { busy = false }
             if start.needsKey {
+                // The key and its Card under one Face ID, when the card has a Card drafted and tafs
+                // cloud asks for it. Not asked: the key goes by itself, as before.
+                if let card, let draft = cardDraft {
+                    switch await model.approveKeyAndCard(card, shown: grant.digest, shownDraft: draft.version, key: key) {
+                    case .done:
+                        key = ""
+                        together = true
+                        if sheet?.receipt != nil { given = true } else { finish() }
+                        await model.loadConnectApps()
+                        return
+                    case .failed:
+                        return
+                    case .notOffered:
+                        break
+                    }
+                }
                 if await model.giveKey(grantID: grant.id, shown: grant.digest, key: key) {
                     // The key is forgotten now. The receipt keeps its last 4 until the sheet closes.
                     key = ""

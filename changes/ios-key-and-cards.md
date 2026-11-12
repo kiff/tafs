@@ -1,0 +1,1 @@
+- **iOS: an app's key and its taf's Card are approved with one Face ID.** When Coach's card has the Card ready, the key's sheet shows it, and Connect gives the key and confirms the Card together. It takes effect once the service turns it on; until then the two steps work as before.
