@@ -22,6 +22,7 @@ import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from ".
 import { handedByOf, requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { type DeadHandoff, deadHandoffs, deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
+import { allowOffer } from "./allow.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
@@ -113,6 +114,7 @@ import { RECIPES } from "../recipes.js";
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
+ *   POST /v1/tafs/{id}/holds/{exception}/allow  {round?}: "Allow this from now on" on a held call: KIFF's draft with the narrowest Card change, checked and worded, with what it would have done (docs/allow-from-now-on.md)
  *   POST /v1/tafs/{id}/components/{component}/answer  {answer, session?}: the person's answer to a card that waits for it, as data
  *   POST /v1/tafs/{id}/components/{component}/approval  {grant, shown_digest?, draft?, shown_draft?, words?, session?}: Approve tapped on an approval card; tafs cloud decides what needs signing, if anything, and answers Coach itself when nothing does (kiff/tafs#413)
  *   POST /v1/tafs/{id}/components/{component}/approval/{ask}  {result, status?, why?}: what came of the signed call, signed as a setup call (KIFF-Device-Signature); tafs cloud checks it and answers Coach approved or failed
@@ -960,6 +962,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
     if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     return goOn(me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "allow") {
+    need(me, "cards.manage");
+    return allowRoute(event, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 6 && method === "POST" && action === "components" && parts[5] === "answer") {
     return answerRoute(event, me, taf, parts[4] ?? "", deps);
@@ -4449,6 +4455,22 @@ async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: s
  * sooner. `waiting` when KIFF still holds a call of the run, or the run
  * already went on.
  */
+/**
+ * POST /v1/tafs/{id}/holds/{exception}/allow, {} or {round: true}: "Allow this from now on" tapped on a held call
+ * (docs/allow-from-now-on.md). KIFF builds the draft with the narrowest change; tafs cloud checks that change
+ * against the hold's breaches on its own and words it, with what it would have done over the last 30 days. Only a
+ * draft: the phone reads it from KIFF, checks it, and confirms it with its own signature.
+ */
+async function allowRoute(event: HTTPEvent, taf: Taf, exception: string, deps: Deps): Promise<unknown> {
+  if (!exception) throw new HTTPError(404, "not found");
+  const body = parseBody(event);
+  if (body.round !== undefined && typeof body.round !== "boolean") throw new HTTPError(400, "round is true or false");
+  return allowOffer(exception, body.round === true, {
+    token: bearer(event), agent: taf.kiffAgent, lang: langOf(event), fetch: deps.fetch, base: deps.kiffBase,
+    log: (line) => console.warn(line),
+  });
+}
+
 async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): Promise<unknown> {
   if (!exception) throw new HTTPError(404, "not found");
   try {
