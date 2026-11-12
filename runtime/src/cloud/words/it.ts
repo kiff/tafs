@@ -91,6 +91,7 @@ export const it: Words = {
   run_failed_error: "Si è fermata per un errore. Dopo non è stato fatto nulla.",
   run_failed_time: "Ha raggiunto il suo limite di tempo e si è fermata.",
   run_failed_start: "Non è potuta partire, quindi non è stato fatto nulla.",
+  run_failed_tools: "Non è partita: gli strumenti del taf non si sono potuti usare. Non è stato fatto nulla.",
   run_failed_switching: "Non è partita: il taf stava cambiando versione.",
   run_failed_access: "Si è fermata: chi l'ha chiesta potrebbe non poter più usare questo taf.",
   run_failed_halted: "Non è andata avanti: il taf è bloccato.",

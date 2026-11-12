@@ -91,6 +91,7 @@ export const es: Words = {
   run_failed_error: "Se detuvo por un error. No se hizo nada después.",
   run_failed_time: "Alcanzó su límite de tiempo y se detuvo.",
   run_failed_start: "No pudo empezar, así que no se hizo nada.",
+  run_failed_tools: "No empezó: las herramientas del taf no se pudieron usar. No se hizo nada.",
   run_failed_switching: "No empezó: el taf estaba cambiando de versión.",
   run_failed_access: "Se detuvo: la persona que la pidió quizá ya no pueda usar este taf.",
   run_failed_halted: "No siguió: el taf está bloqueado.",

@@ -91,6 +91,7 @@ export const fr: Words = {
   run_failed_error: "Elle s'est arrêtée sur une erreur. Rien n'a été fait ensuite.",
   run_failed_time: "Elle a atteint sa limite de temps et s'est arrêtée.",
   run_failed_start: "Elle n'a pas pu démarrer, donc rien n'a été fait.",
+  run_failed_tools: "Elle n'a pas démarré : les outils du taf n'ont pas pu être utilisés. Rien n'a été fait.",
   run_failed_switching: "Elle n'a pas démarré : le taf changeait de version.",
   run_failed_access: "Elle s'est arrêtée : la personne qui l'a demandée n'a peut-être plus accès à ce taf.",
   run_failed_halted: "Elle n'a pas continué : le taf est bloqué.",
