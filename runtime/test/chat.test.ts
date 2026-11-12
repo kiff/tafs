@@ -530,6 +530,21 @@ describe("components (kiff/agents#91)", () => {
     expect(r.body.components[2].component.steps[0].status).toBe("done");
   });
 
+  it("marks an approval card whose connection tafs cloud saw connected, so it never repeats the connection's text", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Connect my bank", ANA);
+    w.agents.show(chat, { type: "approval", id: "connect", grant: "g_q" }, minutesAgo(59));
+    w.agents.show(chat, { type: "approval", id: "card", grant: "g_q", draft: "drf_1" }, minutesAgo(58));
+    w.agents.show(chat, { type: "approval", id: "other", grant: "g_other" }, minutesAgo(57));
+    await w.coach.put("t_acme#connected#g_q", { vendor: "Qonto", read_only: true }, new Date(NOW.getTime() + 86400_000));
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", headers: { "Accept-Language": "fr" } });
+    const cards = r.body.components.map((c: { component: Record<string, unknown> }) => c.component);
+    expect(cards[0].connection).toEqual({ done: true, words: "Qonto est connecté (lecture seule)" });
+    expect(cards[1]).toMatchObject({ draft: "drf_1", connection: { done: true } });
+    expect(cards[2].connection).toBeUndefined();
+  });
+
   it("a taf that shows nothing has no components", async () => {
     const w = world();
     const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });

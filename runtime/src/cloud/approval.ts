@@ -23,6 +23,7 @@ import { noteSendingOutside } from "./sends-outside.js";
 import { createHash } from "node:crypto";
 import type { CoachStore } from "./coach.js";
 import { sha256 } from "./jcs.js";
+import { readsOnly } from "./sheet.js";
 import { actionsInForce, draftInfo, type Fetch, issued, KIFF_API, KIFFError } from "./kiff.js";
 import { vendorName } from "./steps.js";
 import { type Lang, wordsIn } from "./words/index.js";
@@ -187,6 +188,25 @@ const HEX64 = /^[0-9a-f]{64}$/;
 
 const keyOf = (tenant: string, taf: string, component: string, ask: string) => `${tenant}#approval-ask#${taf}#${component}#${ask}`;
 
+/** Where tafs cloud keeps that a grant is connected, for a later card that names it (docs/secure-connection.md). */
+export const connectedKey = (tenant: string, grant: string) => `${tenant}#connected#${grant}`;
+
+/** How long a connected grant's note is kept: a setup's later cards come within it. */
+export const CONNECTED_KEPT_MS = 30 * 24 * 3600_000;
+
+/** What a later card says of a connection already made: its vendor, and whether every tool is a read. */
+export interface Connected { vendor: string; read_only: boolean }
+
+/**
+ * Notes that the connection server says this grant is connected, so a later card that names it says only that,
+ * and never repeats the connection's text. Never fails what it rides on: a note not kept is a card as before.
+ */
+async function noteConnected(store: CoachStore, tenant: string, grant: ApprovalGrant, now: Date): Promise<void> {
+  if (grant.status !== "connected" && grant.status !== "listed") return;
+  const note: Connected = { vendor: vendorOf(grant), read_only: readsOnly(grant) };
+  await store.put(connectedKey(tenant, grant.id), note, new Date(now.getTime() + CONNECTED_KEPT_MS)).catch(() => undefined);
+}
+
 /** The grants planque shows this phone, read with the proof the phone signed and tafs cloud forwards unchanged. */
 export async function readGrants(base: string, tenant: string, proof: string, net: Fetch): Promise<ApprovalGrant[]> {
   if (!proof || proof.length > 4096) throw new ApprovalError(503, "Connect this phone to read its connected apps");
@@ -270,6 +290,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant };
   const vendor = vendorOf(grant);
   if (grant.status === "connected") {
+    await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
     // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a
     // draft. A connection already connected with no Cards left signs nothing, so it isn't approved.
     // The card showed exactly what is connected (its digest): an approval signed earlier whose
@@ -455,7 +476,10 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   }
   const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
   const grant = grants.find((g) => g.id === pending.grant);
-  if (grant && (grant.status === "connected" || grant.status === "listed")) return { answer: "approved" };
+  if (grant && (grant.status === "connected" || grant.status === "listed")) {
+    await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
+    return { answer: "approved" };
+  }
   const vendor = pending.vendor;
   let why: string;
   switch (report.result) {

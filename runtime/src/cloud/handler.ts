@@ -24,6 +24,7 @@ import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { type DeadHandoff, deadHandoffs, deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { allowOffer } from "./allow.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
+import { sheetOf, takesKey } from "./sheet.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
@@ -48,7 +49,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, settle as settleApproval } from "./approval.js";
+import { ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 
@@ -100,6 +101,7 @@ import { RECIPES } from "../recipes.js";
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
+ *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -662,6 +664,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "balance" && method === "GET") return usageBalance(event, await person(event, deps), deps);
   if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 5 && parts[3] === "tafs") {
     return tafCredits(event, await person(event, deps), parts[4] ?? "", deps);
+  }
+  if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "sheet" && method === "GET") {
+    return grantSheet(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
   }
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
@@ -2386,7 +2391,9 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     ? (await Promise.all(picked.filter((x) => x.kind === "chat").map((x) => driveRecaps(deps.coach!, me.tenantID, x.id).catch(() => [])))).flat().map((r) => ({ ...r, words: endSaid(r.why, lang) }))
     : [];
   drives.sort((a, b) => a.at.localeCompare(b.at));
-  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
+  const shown = components.slice(-CHAT.maxThread);
+  await markConnected(me.tenantID, shown, deps, lang);
+  return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -2549,6 +2556,26 @@ function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang
   if (b.answer === "declined") return w.approval_answer_declined;
   if (b.answer.startsWith("failed: ")) return w.approval_answer_failed(b.answer.slice("failed: ".length));
   return undefined;
+}
+
+/**
+ * An approval card whose connection tafs cloud saw connected says only that (`connection: {done, words}`), so a
+ * later card, such as the taf's Card after its key went in, never repeats the connection's text as if it still
+ * waited (docs/secure-connection.md). The apps draw that line and the card's Card alone. A note that can't be
+ * read leaves the card as it was.
+ */
+async function markConnected(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
+  if (!deps.coach) return;
+  const w = wordsIn(lang);
+  const notes = new Map<string, Promise<unknown>>();
+  for (const c of components) {
+    const card = c.component as { type?: unknown; grant?: unknown } | undefined;
+    if (card?.type !== "approval" || typeof card.grant !== "string" || !card.grant) continue;
+    if (!notes.has(card.grant)) notes.set(card.grant, deps.coach.get(connectedKey(tenant, card.grant)).catch(() => undefined));
+    const note = (await notes.get(card.grant)) as Connected | undefined;
+    if (!note || typeof note.vendor !== "string") continue;
+    c.component = { ...card, connection: { done: true, words: w.sheet_done(note.vendor, note.read_only === true) } };
+  }
 }
 
 /** An `answered` event's body as the app shows it. */
@@ -7594,6 +7621,44 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
     throw err;
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * GET /v1/connect/grants/{grant}/sheet: the secure connection sheet's words for a grant that takes a key
+ * (docs/secure-connection.md), read with the phone's own read of its connected apps (`Planque-Device-Signature`,
+ * forwarded unchanged), in the request's language. The logo is the catalog entry's, served by tafs cloud, and
+ * left out when the catalog can't be read: the sheet never waits on it.
+ */
+async function grantSheet(event: HTTPEvent, id: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  need(me, "cards.manage");
+  if (!deps.planqueBase) throw new HTTPError(503, "Connect apps isn't set up here");
+  if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(id)) throw new HTTPError(404, "no such connection");
+  const fetchFn = deps.fetch ?? fetch;
+  let grants: Awaited<ReturnType<typeof readGrants>>;
+  try {
+    grants = await readGrants(deps.planqueBase, me.tenantID, event.headers?.["planque-device-signature"] ?? "", fetchFn);
+  } catch (err) {
+    if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message);
+    throw err;
+  }
+  const grant = grants.find((g) => g.id === id);
+  if (!grant) throw new HTTPError(404, "no such connection");
+  if (!takesKey(grant)) throw new HTTPError(409, "this connection takes no key");
+  const entry = (grant.request as { catalog_entry?: unknown }).catalog_entry;
+  let app: { name?: string; logo?: string } = {};
+  if (typeof entry === "string" && entry) {
+    try {
+      const page = await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), grant.vendor ?? "");
+      const found = page.apps.find((a) => a.entry === entry);
+      if (found) {
+        const logos = found.icon ? await nameLogos(deps.coach, [found.icon], new Date()) : new Map<string, string>();
+        app = { name: found.title || found.vendor, ...(found.icon && logos.has(found.icon) ? { logo: logos.get(found.icon)! } : {}) };
+      }
+    } catch (err) {
+      console.warn(`sheet: the catalog couldn't be read for ${id} (${err instanceof Error ? err.message : String(err)}); no logo`);
+    }
+  }
+  return sheetOf(grant, langOf(event), app);
 }
 
 /** A removed taf's live connection, and the live tafs whose Cards still use it, so Clear keeps it. */

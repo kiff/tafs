@@ -335,6 +335,12 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   a card that doesn't wait goes as a message. This form goes one release after the app build
   that uses the route.
 
+**A connection already made says so.** Once tafs cloud sees a connection's grant connected (an approval
+it settled, or one it found connected), it notes it, and every approval card in the thread that names that
+grant carries `connection: {done: true, words}`: "Qonto is connected (read only)". The apps draw that line and
+the card's Card alone, never the connection's text again, so the taf's Card after its key went in doesn't read
+as if the key still waited ([secure-connection.md](secure-connection.md)).
+
 ## Coming back to a run at work
 
 When the owner leaves the chat or the app and comes back while a run works, the app
