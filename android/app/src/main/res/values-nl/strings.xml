@@ -1043,7 +1043,9 @@
     <string name="drive_cant_scroll">Kan daar niet scrollen (%1$s)</string>
     <string name="drive_caption">Coach bedient de app: %1$s</string>
     <string name="drive_card_note">Coach tikt en typt in deze app terwijl je kijkt, alleen voor dit verzoek. Het bevestigt nooit iets. Raak de app aan of tik op Stoppen om het over te nemen.</string>
+    <string name="drive_card_note_pauses">Coach tikt en typt in deze app terwijl je kijkt, alleen voor dit verzoek. Het bevestigt nooit iets. Raak de app aan om het te pauzeren, of tik op Stoppen om het te beëindigen.</string>
     <string name="drive_card_note_scrolls">Coach tikt, typt en scrollt in deze app terwijl je kijkt. Het bevestigt nooit iets. Raak de app aan of tik op Stoppen om hem terug te nemen.</string>
+    <string name="drive_card_note_scrolls_pauses">Coach tikt, typt en scrollt in deze app terwijl je kijkt. Het bevestigt nooit iets. Raak de app aan om het te pauzeren, of tik op Stoppen om het te beëindigen.</string>
     <string name="drive_card_title">Coach vraagt de app te mogen bedienen</string>
     <string name="drive_coach_drove_app">Coach heeft de app bediend · %1$s</string>
     <string name="drive_declined_line">Nu niet: Coach heeft de app niet bediend</string>
@@ -1055,7 +1057,7 @@
     <string name="drive_ended_left_app">De app verliet het scherm, dus Coach is gestopt</string>
     <string name="drive_ended_locked">De telefoon werd vergrendeld, dus Coach is gestopt</string>
     <string name="drive_ended_other">Coach is gestopt</string>
-    <string name="drive_ended_owner_took_over">Je raakte de app aan, dus hij is nu van jou</string>
+    <string name="drive_ended_owner_took_over">Je nam het over, dus Coach laat je verdergaan</string>
     <string name="drive_ended_replaced">Er is een andere bediening gestart</string>
     <string name="drive_ended_signed_out">Je hebt je afgemeld, dus Coach is gestopt</string>
     <string name="drive_ended_stopped">Je hebt Coach gestopt</string>
@@ -1071,6 +1073,7 @@
     <string name="drive_not_on_screen">Dat staat nu niet op het scherm</string>
     <string name="drive_nothing_back">Er is niets om naar terug te gaan</string>
     <string name="drive_nothing_there">Daar is niets wat Coach kan gebruiken</string>
+    <string name="drive_paused">Gepauzeerd</string>
     <string name="drive_scrolled">Gescrold (%1$s)</string>
     <string name="drive_step_failed">Die stap is mislukt</string>
     <string name="drive_stop">Coach stoppen</string>

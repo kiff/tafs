@@ -51776,6 +51776,59 @@
         }
       }
     },
+    "drive.card_note_pauses": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach tippt und schreibt in dieser App, während du zusiehst, nur für diese Anfrage. Er bestätigt nie etwas. Berühre die App, um ihn anzuhalten, oder tippe auf „Stoppen“, um ihn zu beenden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app to pause it, or tap Stop to end it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach toca y escribe en esta app mientras miras, solo para esta solicitud. Nunca confirma nada. Toca la app para pausarlo o toca Detener para terminar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach touche et écrit dans cette app sous vos yeux, pour cette demande uniquement. Il ne confirme jamais rien. Touchez l'app pour le mettre en pause, ou touchez Arrêter pour terminer."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach tocca e scrive in questa app mentre guardi, solo per questa richiesta. Non conferma mai nulla. Tocca l'app per metterlo in pausa o tocca Ferma per terminare."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach tikt en typt in deze app terwijl je kijkt, alleen voor dit verzoek. Het bevestigt nooit iets. Raak de app aan om het te pauzeren, of tik op Stoppen om het te beëindigen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach dotyka i pisze w tej aplikacji, gdy patrzysz, tylko dla tej prośby. Nigdy niczego nie potwierdza. Dotknij aplikacji, aby go wstrzymać, lub Zatrzymaj, aby zakończyć."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Coach toca e escreve nesta app enquanto você observa, apenas para este pedido. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
+          }
+        }
+      }
+    },
     "drive.card_note_scrolls": {
       "extractionState": "manual",
       "localizations": {
@@ -51825,6 +51878,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Coach toca, escreve e desliza nesta app enquanto você observa. Nunca confirma nada. Toque na app ou em Parar para retomar o controlo."
+          }
+        }
+      }
+    },
+    "drive.card_note_scrolls_pauses": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach tippt, schreibt und scrollt in dieser App, während du zusiehst. Er bestätigt nie etwas. Berühre die App, um ihn anzuhalten, oder tippe auf „Stoppen“, um ihn zu beenden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app to pause it, or tap Stop to end it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach toca, escribe y se desplaza en esta app mientras miras. Nunca confirma nada. Toca la app para pausarlo o toca Detener para terminar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach touche, écrit et fait défiler dans cette app sous vos yeux. Il ne confirme jamais rien. Touchez l'app pour le mettre en pause, ou touchez Arrêter pour terminer."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach tocca, scrive e scorre in questa app mentre guardi. Non conferma mai nulla. Tocca l'app per metterlo in pausa o tocca Ferma per terminare."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach tikt, typt en scrollt in deze app terwijl je kijkt. Het bevestigt nooit iets. Raak de app aan om het te pauzeren, of tik op Stoppen om het te beëindigen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach dotyka, pisze i przewija w tej aplikacji, gdy patrzysz. Nigdy niczego nie potwierdza. Dotknij aplikacji, aby go wstrzymać, lub Zatrzymaj, aby zakończyć."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Coach toca, escreve e desliza nesta app enquanto você observa. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
           }
         }
       }
@@ -52418,49 +52524,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du hast die App berührt, also gehört sie jetzt dir"
+            "value": "Du hast übernommen, also lässt Coach dich weitermachen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You touched the app, so it's yours now"
+            "value": "You took over, so Coach let you carry on"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tocaste la app, así que ahora es tuya"
+            "value": "Tomaste el control, así que Coach te deja seguir"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous avez touché l'app, elle est à vous maintenant"
+            "value": "Vous avez pris la main, alors Coach vous laisse continuer"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hai toccato l'app, quindi ora è tua"
+            "value": "Hai preso il controllo, quindi Coach ti lascia continuare"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je raakte de app aan, dus hij is nu van jou"
+            "value": "Je nam het over, dus Coach laat je verdergaan"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aplikacja została dotknięta, więc jest teraz Twoja"
+            "value": "Przejęto sterowanie, więc Coach pozwala kontynuować"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tocou na app, por isso agora é sua"
+            "value": "Assumiu o controlo, por isso o Coach deixa que continue"
           }
         }
       }
@@ -53256,6 +53362,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada que o Coach possa usar aí"
+          }
+        }
+      }
+    },
+    "drive.paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausiert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pause"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In pausa"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gepauzeerd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wstrzymano"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em pausa"
           }
         }
       }

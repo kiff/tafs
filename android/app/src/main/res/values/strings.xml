@@ -1043,7 +1043,9 @@
     <string name="drive_cant_scroll">Can\'t scroll %1$s there</string>
     <string name="drive_caption">Coach is driving: %1$s</string>
     <string name="drive_card_note">Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app or tap Stop to take over.</string>
+    <string name="drive_card_note_pauses">Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app to pause it, or tap Stop to end it.</string>
     <string name="drive_card_note_scrolls">Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app or tap Stop to take it back.</string>
+    <string name="drive_card_note_scrolls_pauses">Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app to pause it, or tap Stop to end it.</string>
     <string name="drive_card_title">Coach asks to drive the app</string>
     <string name="drive_coach_drove_app">Coach drove the app · %1$s</string>
     <string name="drive_declined_line">Not now: Coach didn\'t drive the app</string>
@@ -1055,7 +1057,7 @@
     <string name="drive_ended_left_app">The app left the screen, so Coach stopped</string>
     <string name="drive_ended_locked">The phone locked, so Coach stopped</string>
     <string name="drive_ended_other">Coach stopped</string>
-    <string name="drive_ended_owner_took_over">You touched the app, so it\'s yours now</string>
+    <string name="drive_ended_owner_took_over">You took over, so Coach let you carry on</string>
     <string name="drive_ended_replaced">Another drive started</string>
     <string name="drive_ended_signed_out">You signed out, so Coach stopped</string>
     <string name="drive_ended_stopped">You stopped Coach</string>
@@ -1071,6 +1073,7 @@
     <string name="drive_not_on_screen">That isn\'t on screen now</string>
     <string name="drive_nothing_back">Nothing to go back to</string>
     <string name="drive_nothing_there">Nothing Coach can use there</string>
+    <string name="drive_paused">Paused</string>
     <string name="drive_scrolled">Scrolled %1$s</string>
     <string name="drive_step_failed">That step failed</string>
     <string name="drive_stop">Stop Coach</string>

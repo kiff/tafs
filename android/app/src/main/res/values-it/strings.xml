@@ -1043,7 +1043,9 @@
     <string name="drive_cant_scroll">Impossibile scorrere %1$s lì</string>
     <string name="drive_caption">Coach è alla guida: %1$s</string>
     <string name="drive_card_note">Coach tocca e scrive in questa app mentre guardi, solo per questa richiesta. Non conferma mai nulla. Tocca l\'app o tocca Ferma per riprendere il controllo.</string>
+    <string name="drive_card_note_pauses">Coach tocca e scrive in questa app mentre guardi, solo per questa richiesta. Non conferma mai nulla. Tocca l\'app per metterlo in pausa o tocca Ferma per terminare.</string>
     <string name="drive_card_note_scrolls">Coach tocca, scrive e scorre in questa app mentre guardi. Non conferma mai nulla. Tocca l\'app o tocca Ferma per riprenderla.</string>
+    <string name="drive_card_note_scrolls_pauses">Coach tocca, scrive e scorre in questa app mentre guardi. Non conferma mai nulla. Tocca l\'app per metterlo in pausa o tocca Ferma per terminare.</string>
     <string name="drive_card_title">Coach chiede di guidare l\'app</string>
     <string name="drive_coach_drove_app">Coach ha guidato l\'app · %1$s</string>
     <string name="drive_declined_line">Non ora: Coach non ha guidato l\'app</string>
@@ -1055,7 +1057,7 @@
     <string name="drive_ended_left_app">L\'app è uscita dallo schermo, quindi Coach si è fermato</string>
     <string name="drive_ended_locked">Il telefono si è bloccato, quindi Coach si è fermato</string>
     <string name="drive_ended_other">Coach si è fermato</string>
-    <string name="drive_ended_owner_took_over">Hai toccato l\'app, quindi ora è tua</string>
+    <string name="drive_ended_owner_took_over">Hai preso il controllo, quindi Coach ti lascia continuare</string>
     <string name="drive_ended_replaced">È iniziata un\'altra guida</string>
     <string name="drive_ended_signed_out">Sei uscito dall\'account, quindi Coach si è fermato</string>
     <string name="drive_ended_stopped">Hai fermato Coach</string>
@@ -1071,6 +1073,7 @@
     <string name="drive_not_on_screen">Non è sullo schermo ora</string>
     <string name="drive_nothing_back">Non c\'è nulla a cui tornare</string>
     <string name="drive_nothing_there">Lì non c\'è nulla che Coach possa usare</string>
+    <string name="drive_paused">In pausa</string>
     <string name="drive_scrolled">Scorrimento %1$s</string>
     <string name="drive_step_failed">Quel passo non è riuscito</string>
     <string name="drive_stop">Ferma Coach</string>
