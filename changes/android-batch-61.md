@@ -1,0 +1,1 @@
+- **Android 1.10.1: a drive that tafs cloud no longer has ends at once.** When pausing or continuing Coach's drive finds that it isn't your current drive any more, the app stops asking and ends it, saying why ("Another drive started", or "Coach stopped"), and never that you took over. Only a network error or a server error is asked again (docs/drive.md).

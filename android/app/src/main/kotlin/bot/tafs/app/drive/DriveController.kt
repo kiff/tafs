@@ -34,10 +34,13 @@ interface DriveApi {
   /** `POST /v1/coach/drive/stop {drive, why}`. */
   suspend fun stopDrive(drive: String, why: String)
 
-  /** `POST /v1/coach/drive/pause {drive}`: the person touched the app. A tafs cloud without the route answers 404, and the app's own pause stands. */
+  /**
+   * `POST /v1/coach/drive/pause {drive}`: the person touched the app. Throws [CloudError] for tafs cloud's refusal: a 404 means
+   * this isn't the person's current drive any more.
+   */
   suspend fun pauseDrive(drive: String) {}
 
-  /** `POST /v1/coach/drive/resume {drive}`: the person tapped Continue. Null when tafs cloud said nothing of use. */
+  /** `POST /v1/coach/drive/resume {drive}`: the person tapped Continue. Throws [CloudError] for tafs cloud's refusal, as [pauseDrive]. */
   suspend fun resumeDrive(drive: String): DriveResumed? = null
 
   /** `GET /v1/coach/drive`. */
@@ -216,7 +219,12 @@ class DriveController(
     pausing = scope.launch {
       var wait = PAUSE_RETRY_FIRST_MS
       while (stillPaused(on.drive)) {
-        if (runCatching { api.pauseDrive(on.drive.id) }.isSuccess) break
+        val failed = runCatching { api.pauseDrive(on.drive.id) }.exceptionOrNull() ?: break
+        // Posted again only on a network error or tafs cloud's 5xx. A 404 means the drive isn't this person's current one any
+        // more, so it ends here; any other refusal won't change by asking again, and the pause here stands.
+        if (failed is CancellationException) throw failed
+        if (failed is CloudError && failed.status == 404) { goneAtTafsCloud(on.drive); break }
+        if (failed is CloudError && failed.status < 500) break
         delay(wait)
         wait = minOf(wait * 2, PAUSE_RETRY_MAX_MS)
       }
@@ -237,8 +245,30 @@ class DriveController(
     set(on.copy(paused = false))
     scope.launch(NonCancellable) {
       // On a halted account tafs cloud ends the drive instead: it's over, in tafs cloud's words, and nothing is sent back.
-      val answer = runCatching { api.resumeDrive(on.drive.id) }.getOrNull()
+      val answer = try {
+        api.resumeDrive(on.drive.id)
+      } catch (e: CloudError) {
+        if (e.status == 404) goneAtTafsCloud(on.drive)
+        null
+      } catch (_: Exception) {
+        null
+      }
       answer?.ended?.takeIf { !answer.resumed }?.let { end(on.drive, it.why, it.words) }
+    }
+  }
+
+  /**
+   * tafs cloud answered 404: this isn't the person's current drive any more, because it ended or was never theirs. It ends here
+   * at once, and nothing more is posted. Why, from `GET /v1/coach/drive`: its own end in tafs cloud's words; "Another drive
+   * started" when another is current; else the app's own "Coach stopped". Never `owner_took_over`, which is only the person's
+   * own takeover, so the Record never says they took over when they didn't.
+   */
+  private suspend fun goneAtTafsCloud(drive: DriveInfo) {
+    val current = runCatching { api.readDrive() }.getOrNull()?.drive
+    when {
+      current?.id == drive.id && current.ended != null -> end(drive, current.ended.why, current.ended.words)
+      current != null && current.id != drive.id -> end(drive, "replaced", null)
+      else -> end(drive, "other", null)
     }
   }
 
