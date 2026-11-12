@@ -33,7 +33,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
+import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
@@ -2819,7 +2819,9 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     } else {
       await ownChat(me, setup, str(body.session).trim(), deps);
     }
+    const replaced = await currentDrive(store, me.tenantID, me.subject, now);
     const drive = await startDrive(store, me.tenantID, me.subject, body.session, body.task, now).catch(fail);
+    if (replaced && !replaced.ended) await releaseDrive(me.tenantID, replaced.id, { drive: "ended", why: "replaced", words: END_WORDS.replaced }, deps);
     await logEvent(deps.events, me.tenantID, { kind: "drive_started", title: "Coach started driving", detail: drive.task }, now);
     const told = shown ? await tellCoach(me, shown.setup, shown.card, component, "approved: the drive is on", deps) : undefined;
     return { drive: { id: drive.id, session: drive.session, task: drive.task, started: drive.started }, ...(told ? { coach: told } : {}) };
@@ -2835,13 +2837,18 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     if (before && before.id === id && !before.ended && (await deps.agents.halted(me.tenantID).then((h) => h.halted, () => false))) {
       await endDrive(store, me.tenantID, me.subject, "halted", now, id);
       await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS.halted }, now);
+      await releaseDrive(me.tenantID, id, { drive: "ended", why: "halted", words: END_WORDS.halted }, deps);
     }
     const wasPaused = before && before.id === id ? await drivePaused(store, me.tenantID, id) : undefined;
     const d = await resumeDrive(store, me.tenantID, me.subject, id, now).catch(fail);
     if (d.ended) return { resumed: false, ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } };
-    // Coach's turn ended while the person had the app: its next one starts in the drive's chat, and looks first.
-    const coach = wasPaused ? await coachGoesOn(event, me, d.session, deps) : undefined;
-    return { resumed: !!wasPaused, ...(coach ? { coach } : {}) };
+    if (!wasPaused) return { resumed: false };
+    // Coach's run parked while the person had the app: Continue is what it was waiting for, and it looks first.
+    const parked = await releaseDrive(me.tenantID, d.id, { drive: "continued", words: CONTINUE_SAID }, deps);
+    if (parked) return { resumed: true, coach: { run: parked, session: d.session } };
+    // No parked run (its turn ended instead): Coach's next turn starts in the drive's chat.
+    const coach = await coachGoesOn(event, me, d.session, deps);
+    return { resumed: true, ...(coach ? { coach } : {}) };
   }
   if (parts.length === 4 && parts[3] === "stop" && method === "POST") {
     const body = parseBody(event);
@@ -2849,6 +2856,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await endDrive(store, me.tenantID, me.subject, why, now, str(body.drive).trim() || undefined);
     if (d?.ended && d.ended.at === now.toISOString()) {
       await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS[why] }, now);
+      // A run parked on the pause goes on, told the drive is over.
+      await releaseDrive(me.tenantID, d.id, { drive: "ended", why, words: END_WORDS[why] }, deps);
     }
     return { ended: d?.ended ? { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } : null };
   }
@@ -2866,6 +2875,30 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { taken: true, outcome: t.result.outcome };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * Answers the wait a Coach run parked on while its drive was paused (the `coach-drive` wait, keyed
+ * by tenant and drive), so the run goes on with `payload` as its call's result. Returns the run that
+ * went on, or nothing when none was parked (the gateway didn't carry the wait, or the run already
+ * timed out or ended). Best effort: the drive's own state never depends on it.
+ */
+async function releaseDrive(tenant: string, drive: string, payload: Record<string, unknown>, deps: Deps): Promise<string | undefined> {
+  const setup = (await deps.tafs.list(tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!setup) return undefined;
+  const key = driveWaitKey(tenant, drive);
+  const paused = (await deps.agents.runs(tenant, setup.id, true, 20).catch(() => [])).filter((r) => r.status === "PAUSED");
+  for (const r of paused) {
+    const full = r.requirements ? r : await deps.agents.getRun(tenant, setup.id, r.id).catch(() => undefined);
+    const waiting = (full?.requirements ?? []).find((q) => q.kind === "event" && !q.answered && q.wait?.grant === DRIVE_WAIT_GRANT && q.wait.key === key);
+    if (!waiting) continue;
+    const went = await deps.agents.answerWait(tenant, setup.id, r.id, waiting.call_id, payload).then(() => true, (err) => {
+      console.error(`drive ${drive}: parked run ${r.id} not answered:`, err);
+      return false;
+    });
+    if (went) return r.id;
+  }
+  return undefined;
 }
 
 /**
@@ -6247,6 +6280,7 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   if (on && !on.ended && (await deps.agents.halted(call.tenant).then((h) => h.halted, () => false))) {
     await endDrive(store, call.tenant, person, "halted", now(), on.id);
     await logEvent(deps.events, call.tenant, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS.halted }, now());
+    await releaseDrive(call.tenant, on.id, { drive: "ended", why: "halted", words: END_WORDS.halted }, deps);
   }
   // The drive is the chat's that approved it. kiff/agents names the chat on the call (SESSION_ARG),
   // inside KIFF's permit: it must be the drive's, exactly. A call that doesn't name one (a kiff/agents
@@ -6289,6 +6323,9 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   }
   const { content, isError } = answerContent(a);
   const words = content.filter((c) => c.type === "text").map((c) => String(c.text)).join("\n");
+  // The first call in a pause parks Coach's run on the drive's wait (docs/drive.md): no error, so
+  // KIFF's gateway keeps it. It's never kept as an answer for a retry, which looks again instead.
+  if ("paused" in a && a.calls === 1) return new Rich(content, false, `${words}\n(Answered earlier: look again before your next step.)`, driveWait(call.tenant, a.drive));
   return new Rich(content, isError, `${words}\n(Answered earlier: look again before your next step.)`);
 }
 

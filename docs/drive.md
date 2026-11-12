@@ -259,24 +259,32 @@ drive; only a clear takeover ends it.
     request of the drive with `outcome: refused`, `line: "Paused"` until Continue, whatever
     tafs cloud says. That covers a request already on the stream, or one sent before tafs cloud
     has the pause.
-  - The app posts `POST /v1/coach/drive/pause {drive}`. If that fails, the app keeps its own
-    pause and posts it again; only Continue (`resume`) lifts it.
+  - The app posts `POST /v1/coach/drive/pause {drive}`. If that fails with a network error or a
+    5xx, the app keeps its own pause and posts it again; only Continue (`resume`) lifts it. **A
+    `pause` or `resume` answered 404 means this person's current drive isn't this one** (it ended,
+    or another started): the app posts nothing more, ends the drive locally, and shows why from
+    `GET /v1/coach/drive` ("Another drive started" when another is current, else the app's own
+    "Coach stopped"). It's never `owner_took_over`, which stays for the person's own takeover.
   - The step under way stops before its next event. A step that dispatched nothing yet answers
     `outcome: refused`, `line: "Paused"`; one that already acted answers as it would have.
   - Coach's events are never mixed into the person's: the event being dispatched when they
     touch finishes first.
 - **While it's paused:**
   - The border dims, and the caption reads **Paused · Continue / Stop**.
-  - tafs cloud sends the app no request. Coach's first look or act in the pause is answered at
-    once with "The person is using the app": Coach ends its turn with one short line ("I'll wait
-    while you use the app"). A second call in the same pause ends Coach's turn from tafs cloud's
-    side, with no further answer, so a pause costs two of Coach's turns at most, whatever the model
-    does, and none while the person has the app.
-  - **Continue** is what Coach hears next: its turn still at work in the drive's chat takes it, or
-    a new turn starts there with it ("The person tapped Continue: look before your next step").
-    Its first step is a look.
-  - Parking Coach's run while paused follows (owner, 12 Nov), once KIFF's gateway carries the
-    drive's wait.
+  - tafs cloud sends the app no request. **Coach's run parks:** its first look or act in the pause
+    is answered "The person is using the app" with a wait (`structuredContent`: `pending`,
+    `timeout_s` 900, `wait_for: {grant: "coach-drive", event: "drive.continue", key:
+    "<tenant>:<drive>"}`). KIFF's gateway keeps that wait only for Coach's own drive tools,
+    and kiff/agents pauses the run on it, the way a held call does: no invocation runs, and no
+    turns or credits are used while the person has the app.
+  - **Continue answers the wait** (kiff/agents' `answerWait`, `{drive: "continued", words}`): the
+    run goes on, told to look before its next step. **The drive's end answers it too** (`{drive:
+    "ended", why, words}`: a stop, a halt, another drive starting), and an idle end lets it time
+    out at the same 900 seconds.
+  - **Where nothing parked** (the gateway didn't carry the wait), Coach reads the same words, and
+    a second call in the same pause ends Coach's turn from tafs cloud's side, so a pause costs two
+    turns at most, whatever the model does. Continue then starts Coach's next turn in the drive's
+    chat ("The person tapped Continue: look before your next step").
   - The person uses the app as usual, and every touch of theirs is delivered.
 - **Continue** puts the keyboard away first: the field keeps its text and loses focus, so nothing
   the keyboard commits later reads as the person's typing. Then the app posts
