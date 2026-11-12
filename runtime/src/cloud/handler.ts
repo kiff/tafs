@@ -5104,12 +5104,13 @@ export function heldLine(text: string): boolean {
 }
 
 /**
- * The taf's messages that were lines before tool calls, by `<run>.<seq>`: a message one short line long
- * (heldLine) that its run's tool calls follow, and after which the run writes again before it shows a card,
- * waits on the owner (the next turn is marked resumed, or the owner's answer to a card comes first), ends or reads
- * the owner. A message the run waits on ("Falta que apruebes la conexión…", then the call that asks for the
- * approval) stays.
- * The live stream does the same (relay). kiff/agents records a turn's text before its calls.
+ * The taf's messages that were notes before its tool calls, by `<run>.<seq>`: a message its run's tool calls
+ * follow. Coach writes with progress notes (`thinking: "updates"`), so the stream showed it only on the live line,
+ * and kiff/agents records it as the turn's text. Only a run's final words reach the chat: a note is never a
+ * message, whatever follows its calls (the run writing again, a card, the owner's answer to one, a pause), so a
+ * retry or a self-correction before a card never reaches the person. One exception: a run that ends with no
+ * words after its tools keeps its last note as its message, and never an earlier one.
+ * The live stream does the same (relay).
  */
 export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
   const out = new Set<string>();
@@ -5122,20 +5123,15 @@ export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; k
       pending.delete(e.run);
       continue;
     }
-    // The first turn after a pause: the run waited on the owner after them, so they were its messages.
-    if (e.kind === "usage") {
-      if (turnTiming(e.body)?.resumed) called.delete(e.run);
-      continue;
-    }
     if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message" && e.kind !== "component" && e.kind !== "answered") continue;
-    // The run wrote again: what its calls followed were lines. A card, the owner's words or their answer to a card
-    // (a connection's approval) first: they were messages, as kiff/agents' grader reads them (kiff/agents#347).
-    if (e.kind === "agent_message" || e.kind === "report") for (const id of called.get(e.run) ?? []) out.add(id);
+    // Something shown or said after the run's calls: what they followed were notes.
+    for (const id of called.get(e.run) ?? []) out.add(id);
     called.delete(e.run);
     pending.delete(e.run);
     const text = (e.body as { text?: unknown } | undefined)?.text;
-    if (e.kind === "agent_message" && typeof text === "string" && text.trim() && heldLine(text)) pending.set(e.run, `${e.run}.${e.seq}`);
+    if (e.kind === "agent_message" && typeof text === "string" && text.trim()) pending.set(e.run, `${e.run}.${e.seq}`);
   }
+  // Nothing after the calls: the last note is the run's message (an earlier one was followed by that note, so it's out).
   return out;
 }
 
@@ -5334,16 +5330,17 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     return pace.flush();
   };
   // A turn's text is held while it is still one short line (heldLine), and shown on the live line. At its tool
-  // call it is kept (`stash`): it was the turn's line if the run writes again after its tools, and is dropped
-  // then; it was the run's message if a card or the end comes first ("Falta que apruebes la conexión…", then the
-  // card the run waits on), and goes out as text then. Anything else in the turn makes the held text the answer.
-  // Whatever goes out as text sets the line to thinking first, at once, so the words never show twice. A started
-  // run's only: a resumed one sends no text. The stored thread does the same (preToolLines).
+  // call it is kept (`stash`) as a note: dropped if the run writes again after its tools or shows a card (the card
+  // speaks for itself), and sent as text only if the run ends first, and then only the last one. Anything else in
+  // the turn makes the held text the answer. Whatever goes out as text sets the line to thinking first, at once, so
+  // the words never show twice. A started run's only: a resumed one sends no text. The stored thread does the same
+  // (preToolLines).
   let held = "";
   let holding = true;
   let stash: string[] = [];
   const release = (): string => {
-    const words = [...stash, held].filter((t) => t.trim()).join("\n\n");
+    // The run's last words only: the turn's own text, else the last note its calls followed, never an earlier one.
+    const words = held.trim() ? held : (stash.at(-1) ?? "");
     stash = [];
     held = "";
     if (!words) return "";
@@ -5376,6 +5373,8 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
       return as();
     }
     if (d.kind === "thinking" || d.kind === "update") return as();
+    // A card speaks for itself: what the run wrote before its calls was a note, never the message before it.
+    if (d.kind === "component") stash = [];
     return release() + as();
   };
   try {
