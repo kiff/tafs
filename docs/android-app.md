@@ -251,6 +251,37 @@ The status and navigation bars follow the app's own Light/Dark/System choice fro
 frame (`enableEdgeToEdge` with the saved choice in `MainActivity`), and `TafsTheme` keeps their
 icons dark on the light ground and light on the dark one when the choice changes.
 
+## Catalog operator
+
+An operator of the connection server's catalog publishes or retires a catalog revision from
+the phone, with a key kept for that alone (`CatalogOperator`, `KeystoreCatalogKeys`,
+`CatalogViews`). Drafting and reviewing happen elsewhere, with an operator's API
+credential; the phone holds no credential and only signs.
+
+- **Enrolling.** `tafs://catalog/enrol` opens the sheet. The operator id is typed once;
+  Make the key makes a P-256 key in the Keystore (StrongBox first), each use behind a
+  strong biometric and turned off by a new fingerprint, apart from every account's keys.
+  The sheet then shows the operator id and the key's public half (base64 SPKI DER) with
+  Copy, to send to whoever keeps the server's operators list. Once both are on the phone,
+  Settings shows a Catalog operator row.
+- **One revision.** The row opens a field for a revision id (`name@version`). The phone
+  reads `GET /v1/catalog/entries/{id}` and draws its state and each tool as the server
+  reads its description: Reads only or Can change things, with the method and path, each
+  argument that's fixed and its value, or why the server couldn't read it (amber). Read
+  or write comes from the server's reading only, never from the entry's own labels.
+- **Signing.** The phone computes the JCS SHA-256 of the entry itself. Only when that is
+  the server's digest, and the id is the one asked for, does the sheet offer the one
+  action the state allows: Publish for a reviewed revision, Retire for a published one;
+  otherwise it says the entry isn't what would be signed, or that there's nothing to sign.
+  The key signs, after one fingerprint, `planque.catalog.v1`, the server's base, the
+  action, the id, the digest, a nonce of its own (32 URL-safe characters) and the time,
+  one per line, and the phone posts `{operator, digest, nonce, signed_at, signature}` to
+  `…/{id}/publish` or `…/retire`. Then it reads the revision again. A refusal (a drafter
+  publishing their own revision, a stale digest, a reused signature) is shown in the
+  server's words.
+
+Tests: `CatalogOperatorTest`.
+
 ## The packages of `bot.tafs.app`
 
 | Package | What's in it |
@@ -259,8 +290,9 @@ icons dark on the light ground and light on the dark one when the choice changes
 | `app/` | `AppModel` (the one view model: state, and everything the screens ask of the backends), `SampleStore` |
 | `kiff/` | The clients: `KiffClient` (KIFF's API), `TafsCloud`, `Planque`, `Transport`; `KiffMapping` (KIFF's records into the app's), `Stream` (a chat's streamed events), `ReceiptCheck` (receipts checked on the phone), `Jcs`, `SigningTime`, `SecretStore`, the wire types (`Wire`, `Usage`, `Coach`, `Doors`, `Versions`) |
 | `model/` | The app's own types and words: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `Chat`, `Attachments`, `CardCheck` (the sample only), and one `…Words` object per feature, for words the backends don't send yet |
-| `signing/` | `KeystoreKeys` (the signing key and the approval key, in the Keystore), `DeviceSigner`, `BiometricAuthenticator` |
+| `signing/` | `KeystoreKeys` (the signing key and the approval key, in the Keystore), `KeystoreCatalogKeys` (the catalog operator's key), `DeviceSigner`, `BiometricAuthenticator` |
 | `push/` | Alerts through Firebase Cloud Messaging: `TafsMessagingService`, `AndroidPush`, `Alerts` |
+| `catalog/` | `CatalogOperator`: a catalog revision read, checked and signed |
 | `billing/` | `Purchases` and `PlayBillingStore`: Google Play, behind the flag |
 | `files/` | `PhotoPrep`: a photo redrawn as a JPEG, with no metadata |
 | `voice/` | `Dictation` and `DeviceSpeech`: dictation, recognised on the phone |

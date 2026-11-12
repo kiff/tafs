@@ -46,6 +46,13 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tafs" android:host="planque" android:path="/signed-in" />
             </intent-filter>
+            <!-- The catalog operator's enrolment: makes this phone's catalog-only key. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tafs" android:host="catalog" android:path="/enrol" />
+            </intent-filter>
         </activity>
 
         <!-- Firebase Cloud Messaging delivers tafs cloud's alerts here. -->

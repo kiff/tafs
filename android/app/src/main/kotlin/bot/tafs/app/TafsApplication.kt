@@ -54,6 +54,11 @@ class TafsApplication : Application() {
   /** planque, which keeps the vendor sign-ins Coach's connections use. */
   val planque: PlanqueClient by lazy { PlanqueClient(transport) }
 
+  /** The catalog operator: a catalog-only key on this phone, and the connection server's revisions to sign (docs/android-app.md). */
+  val catalog: bot.tafs.app.catalog.CatalogOperator by lazy {
+    bot.tafs.app.catalog.CatalogOperator(transport, planque.baseUrl, bot.tafs.app.signing.KeystoreCatalogKeys(), authenticator, secrets).also { it.restore() }
+  }
+
   /** The vendor's own sign-in page, in a browser tab. */
   val vendorSignIn: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this) }
 
