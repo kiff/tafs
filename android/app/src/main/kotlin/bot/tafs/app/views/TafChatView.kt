@@ -446,6 +446,14 @@ private fun MessageRow(
     }
     return
   }
+  // What the run did, counted from the record: tafs cloud's one line, under the taf's own words (docs/chat.md).
+  message.counted?.takeIf { message.from == ChatMessage.From.taf }?.let { line ->
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      MessageRow(message.copy(counted = null), tafId, files, onEdit, onResend, onReport)
+      Text(line, style = scaled(13, color = Theme.soft))
+    }
+    return
+  }
   val door = message.door
   if (door != null && message.kind != ChatMessage.Kind.kickoff) {
     // A door's message, or its answer: marked with where it came from and how it went back.

@@ -120,6 +120,11 @@ data class ChatMessage(
   val answers: String? = null,
   /** On a job run's report: where its result went, tafs cloud's line, shown above the taf's words. */
   val delivered: String? = null,
+  /**
+   * On a run's last message: what the run did, counted from the record ("From the record: 5 done · 1 refused"), tafs cloud's
+   * line, shown under the taf's words. The phone counts nothing itself: with none, no line.
+   */
+  val counted: String? = null,
 ) {
   enum class From { owner, taf }
   enum class Kind { kickoff, message }

@@ -377,6 +377,12 @@ tafs cloud answers its result, which the timer follows until Coach's closing wor
 A door shows tafs cloud's words for itself (`words`: `state`, `tap`, `settings`) as they come; the
 app's own lines stand in only where tafs cloud sends none.
 
+**What a run did, counted from the record.** A taf's message may carry tafs cloud's `counted`
+("From the record: 5 done · 1 waiting for you · 2 refused"), on a run's last message. Android
+draws it under the taf's words, small and as written (`ChatMessage.counted`); a blank one is none.
+The phone counts nothing itself, and with no `counted` no line is drawn. A message with both draws
+`delivered` above the words and `counted` under them.
+
 ## A taf's work
 
 **Its row's line** is tafs cloud's: the next run as `next_run_words` ("Next run Mon 08:00", with its day when it isn't
