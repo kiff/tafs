@@ -235,7 +235,7 @@ class AllowFromNowOnTest {
   }
 
   @Test fun theCardsHoldersDomainTimeZoneAndHoldTimeMustReadAsInForce() {
-    // The rest of what KIFF's sameTerms compares: a draft that differs from the Card in force only there is never signed.
+    // The rest of what KIFF compares between two Cards: a draft that differs from the Card in force only there is never signed.
     val g = "\"grants\":"
     val inForce = "$g[${refund(cap)}],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\"],\"domain\":\"Payments\",\"environment\":\"live\"," +
       "\"location\":\"Europe/Paris\",\"hold_expiry_seconds\":600"

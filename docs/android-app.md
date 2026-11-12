@@ -564,8 +564,8 @@ like this one go on their own.
   offered limit moved from `before` to `after` in the offer's unit: a per-call cap on the held
   call's action (`per_action`), or a total or count in its own window, the offer's `window` when it
   names one (`total`, `count`). A `resource` change is the held action's scope on the offer's
-  `parameter` with exactly its `value` added. Every other term is the same, compared as KIFF's own
-  `sameTerms` does:
+  `parameter` with exactly its `value` added. Every other term is the same, compared as KIFF compares
+  two Cards:
   - each action, its caps, the `entity_states` and `resources` it's limited to, and its `next_steps`;
   - each total, its window (none named is `calendar_day`), its `measure` (none named is `attempts`
     for a count, `effects` for a sum), and its `per`;

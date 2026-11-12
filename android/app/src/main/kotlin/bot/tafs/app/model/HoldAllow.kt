@@ -81,14 +81,14 @@ object HoldAllow {
     val per: String?,
   )
 
-  /** A Card's readable terms, as KIFF compares them (its `sameTerms`). KIFF's lines are words, not terms. */
+  /** A Card's readable terms, as KIFF compares two Cards. KIFF's lines are words, not terms. */
   private data class Terms(
     val grants: List<Grant>,
     val totals: List<Total>,
     val onExceed: String?,
     val card: Card,
   ) {
-    /** The Card's own terms beside its grants and totals, as KIFF's `sameTerms` compares them. */
+    /** The Card's own terms beside its grants and totals, as KIFF compares them. */
     data class Card(
       val holders: List<String>?,
       val validFrom: java.time.Instant?,
@@ -179,7 +179,7 @@ object HoldAllow {
       )
 
 
-      /** What a total counts when it doesn't say: calls for a count, what was done for a sum (KIFF's `EffectiveMeasure`). */
+      /** What a total counts when it doesn't say: calls for a count, what was done for a sum as KIFF counts it. */
       private fun defaultMeasure(quantity: String) = if (quantity.trim() == "count") "attempts" else "effects"
 
       /** A time as KIFF writes it, compared as the instant it names; one that can't be read never matches another. */
