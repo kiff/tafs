@@ -239,6 +239,8 @@ data class WireChatMessage(
   val answers: String? = null,
   /** On a job run's report: where its result went, in tafs cloud's words, one line drawn above the taf's own. */
   val delivered: String? = null,
+  /** On a run's last message: what the run did, counted from kiff/agents' record, in tafs cloud's words, drawn under the taf's. */
+  val counted: String? = null,
 )
 
 /** The run at work in a session. */
