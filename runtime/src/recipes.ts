@@ -1067,6 +1067,7 @@ export const RECIPES = [
         "Promising a refund or a credit"
       ]
     },
+    "proved": "help_desk",
     "languages": {
       "de": {
         "title": "Jedes Ticket bestätigen",

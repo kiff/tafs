@@ -353,7 +353,18 @@ describe("tafs cloud", () => {
     expect(first.recipes.map((r: { id: string }) => r.id)).toEqual(RECIPES.map((r) => r.id));
     expect(first.filtered).toBe(true);
     expect(first.strip).toEqual({ shown: false, title: "More jobs to hand off", ids: [] });
-    expect(first.words).toEqual({ title: "New taf", all: "All jobs", own_words: "Say it in your own words", own_words_line: "Coach builds the taf with you." });
+    expect(first.words).toEqual({ title: "New taf", all: "All jobs", own_words: "Say it in your own words", own_words_line: "Coach builds the taf with you.",
+      explore: "Explore jobs", see_all: "See all jobs", try: "Try it with Coach", sample: "What it reported after its test run" });
+    // Browsing: a job whose proof run passed says on what, ready to draw; a job with none has no line.
+    expect(first.recipes.find((r: { id: string }) => r.id === "acknowledge-every-ticket").proved).toBe("Proved on a test help desk.");
+    expect(first.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).not.toHaveProperty("proved");
+    expect(first.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).not.toHaveProperty("sample");
+    // Every word the apps draw a title or button from is there, in any language a phone asks for (an unknown one reads English).
+    for (const lang of ["de", "fr-CA", "es-419", "it", "pt-BR", "nl", "pl", "ja", "*", "garbage;q=x"]) {
+      const g = (await get("/v1/recipes/gallery", "ana", { "accept-language": lang })).body;
+      for (const k of ["title", "all", "explore", "see_all", "try", "sample"]) expect(g.words[k], `${lang} ${k}`).toMatch(/\S/);
+      expect(g.recipes.find((r: { id: string }) => r.id === "acknowledge-every-ticket").proved, lang).toMatch(/\S/);
+    }
     expect(first.labels).toEqual({ allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" });
     const refunds = first.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit");
     // A connected vendor is drawn for its connection, and every logo is a path on tafs cloud.

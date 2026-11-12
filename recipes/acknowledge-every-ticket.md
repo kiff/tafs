@@ -8,6 +8,7 @@ headline: No customer waits without an answer.
 today: A message sits unanswered until someone gets to it, and the customer writes again, or leaves.
 connections:
   - zendesk | freshdesk | gorgias | intercom
+proved: help_desk
 card:
   allows:
     - One acknowledgement per ticket, up to 50 a day

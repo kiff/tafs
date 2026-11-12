@@ -46,6 +46,10 @@ export interface Recipe {
   connections: string[][];
   /** What its Card allows, what waits for the person, and what is refused outright, in words. */
   card: { allows: string[]; holds: string[]; never: string[] };
+  /** What its proof run passed on, as a line ready to draw ("Proved on a test help desk."): absent for a job with none. */
+  proved?: string;
+  /** What it reported after that proof run, as written: absent for a job with none. */
+  sample?: string;
 }
 
 /** What the apps get: the recipes by category, whether the catalog filtered them, and whether Home leads with them. */
@@ -83,6 +87,20 @@ export interface Labels {
   never: string;
   /** The button that opens Coach with the recipe's words. */
   hand: string;
+}
+
+/** A recipe's proof line in a language, from what its proof run passed on (`proved`), or nothing. */
+function provedOf(r: (typeof RECIPES)[number], lang: Lang): { proved?: string } {
+  const key = (r as { proved?: string }).proved;
+  if (!key) return {};
+  const line = (wordsIn(lang) as unknown as Record<string, unknown>)[`recipes_proved_${key}`];
+  return typeof line === "string" && line ? { proved: line } : {};
+}
+
+/** A recipe's sample report in a language, as written, or nothing. */
+function sampleOf(w: object): { sample?: string } {
+  const sample = (w as { sample?: string }).sample;
+  return sample ? { sample } : {};
 }
 
 /** The sheet's words in a language. */
@@ -145,7 +163,8 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     .map((r): Recipe => {
       const w = lang === "en" ? r : r.languages[lang];
       return { id: r.id, title: w.title, category: r.category, headline: w.headline, today: w.today, line: w.line, say: w.say,
-        connections: r.connections.map((g) => [...g]), card: { allows: [...w.card.allows], holds: [...w.card.holds], never: [...w.card.never] } };
+        connections: r.connections.map((g) => [...g]), card: { allows: [...w.card.allows], holds: [...w.card.holds], never: [...w.card.never] },
+        ...provedOf(r, lang), ...sampleOf(w) };
     });
   const order = new Map<string, number>(CATEGORY_IDS.map((c, i) => [c, i]));
   // RECIPES is in the apps' order already (category, then each recipe's `order`); a stable sort keeps it within a category.
@@ -243,6 +262,14 @@ export interface GalleryWords {
   all: string;
   own_words: string;
   own_words_line: string;
+  /** Browse mode (looking without creating anything): the Tafs tab's entry that opens the gallery to browse. */
+  explore: string;
+  /** The row under the strip that opens the same gallery to browse. */
+  see_all: string;
+  /** A job sheet's only action while browsing: Coach opened with the job's words. Nothing is set up until it's tapped. */
+  try: string;
+  /** The label above a job's `sample`: what it reported after its test run. */
+  sample: string;
 }
 
 /** What `GET /v1/recipes/gallery` answers: every job the catalog can connect, the strip, and the words to draw them. */
@@ -292,7 +319,8 @@ export function galleryFor(catalog: CatalogApp[] | undefined, lang: Lang, state:
     recipes,
     filtered: base.filtered,
     strip: { shown, title: w.gallery_strip_title, ids: shown ? ids : [] },
-    words: { title: w.gallery_title, all: w.gallery_all, own_words: w.gallery_own_words, own_words_line: w.gallery_own_words_line },
+    words: { title: w.gallery_title, all: w.gallery_all, own_words: w.gallery_own_words, own_words_line: w.gallery_own_words_line,
+      explore: w.gallery_explore, see_all: w.gallery_see_all, try: w.gallery_try, sample: w.gallery_sample },
     labels: base.labels,
   };
 }

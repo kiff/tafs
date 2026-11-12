@@ -19,6 +19,11 @@ for (const c of CATEGORIES) if (!/^[a-z]+(?:-[a-z]+)*$/.test(c)) throw new Error
 /** The languages besides English a recipe's words are in (docs/languages.md): each has a file per recipe. */
 export const LANGS = ["de", "fr", "es", "it", "pt", "nl", "pl"];
 const LISTS = ["allows", "holds", "never"];
+/**
+ * What a recipe's proof run passed on, as `proved:` names it (English only): each key has its line in every
+ * language in tafs cloud's words (`recipes_proved_<key>`). A recipe with no proof run names none.
+ */
+export const PROVED = ["help_desk"];
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VENDOR = /^[a-z0-9_]+(?:-[a-z0-9_]+)*$/;
 
@@ -46,8 +51,8 @@ export function parseRecipe(text, file, of) {
   if (/^#|^---/m.test(say)) fail("the words to say to Coach are plain sentences, with no headings");
 
   // The front matter: top-level keys, `connections` as a list, `card` with three lists.
-  const out = { connections: [], card: {} };
-  const lists = { connections: out.connections };
+  const out = { connections: [], card: {}, sample: [] };
+  const lists = { connections: out.connections, sample: out.sample };
   let open = null;
   let inCard = false;
   for (const raw of m[1].split("\n")) {
@@ -62,11 +67,11 @@ export function parseRecipe(text, file, of) {
     if (line.indent === 0) {
       inCard = false;
       open = null;
-      if (line.key in out && line.key !== "connections" && line.key !== "card") fail(`${line.key} is given twice`);
-      if (line.key === "connections" || line.key === "card") {
+      if (line.key in out && !["connections", "card", "sample"].includes(line.key)) fail(`${line.key} is given twice`);
+      if (line.key === "connections" || line.key === "card" || line.key === "sample") {
         if (line.value) fail(`${line.key} is a list under its own line, not a value`);
-        if (line.key === "connections") open = lists.connections;
-        else inCard = true;
+        if (line.key === "card") inCard = true;
+        else open = lists[line.key];
         continue;
       }
       if (!line.value) fail(`${line.key} has no value`);
@@ -83,9 +88,11 @@ export function parseRecipe(text, file, of) {
   }
 
   const words = ["title", "headline", "today", "line"];
-  const known = of ? [...words, "card"] : ["id", "title", "category", "order", "line", "headline", "today", "connections", "card"];
+  const known = of ? [...words, "card", "sample"] : ["id", "title", "category", "order", "line", "headline", "today", "connections", "card", "proved", "sample"];
   // A translation names no connections: they're English's alone (an empty list reads as none given).
   if (of && !out.connections.length) delete out.connections;
+  // The sample report: its lines, joined as one text. Given in every language or in none.
+  const sample = out.sample.length ? out.sample.join("\n") : undefined;
   for (const key of Object.keys(out)) if (!known.includes(key)) fail(`${key} isn't a${of ? " translated" : ""} recipe's field (${known.join(", ")})`);
   for (const key of words) if (!out[key]) fail(`${key} is missing`);
   for (const key of LISTS) if (!out.card[key]) fail(`card.${key} is missing (an empty list is fine)`);
@@ -93,7 +100,9 @@ export function parseRecipe(text, file, of) {
     for (const key of LISTS) {
       if (out.card[key].length !== of.card[key].length) fail(`card.${key} has ${out.card[key].length} lines, and English has ${of.card[key].length}`);
     }
-    return { title: out.title, headline: out.headline, today: out.today, line: out.line, say, card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never } };
+    if (Boolean(sample) !== Boolean(of.sample)) fail(of.sample ? "sample is missing: English has one" : "sample is given, and English has none");
+    return { title: out.title, headline: out.headline, today: out.today, line: out.line, say, card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never },
+      ...(sample ? { sample } : {}) };
   }
   if (!out.id) fail("id is missing");
   if (!out.category) fail("category is missing");
@@ -109,9 +118,12 @@ export function parseRecipe(text, file, of) {
     return vendors;
   });
   if (!out.card.allows.length) fail("card.allows says what the Card allows, at least one line");
+  if (out.proved !== undefined && !PROVED.includes(out.proved)) fail(`proved is what its proof run passed on: one of ${PROVED.join(", ")}`);
+  if (sample && !out.proved) fail("sample is what its proof run reported: a recipe with a sample names what it was proved on (proved)");
   return {
     id: out.id, title: out.title, category: out.category, order: Number(out.order), line: out.line, headline: out.headline, today: out.today, say, connections,
     card: { allows: out.card.allows, holds: out.card.holds, never: out.card.never },
+    ...(out.proved ? { proved: out.proved } : {}), ...(sample ? { sample } : {}),
   };
 }
 
