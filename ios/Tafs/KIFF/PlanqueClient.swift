@@ -206,7 +206,25 @@ final class PlanqueClient {
         }
     }
 
-    /// Every grant for the account, each with its digest checked against its request.
+    /// What a grant's digest covers, as its `digest_v` says. Without one, the request alone (v1). With
+    /// `digest_v: 2`, the request with the words the person reads and their language,
+    /// `{"lang", "request", "text"}`, so the phone proves the words it shows, in that language, are the
+    /// ones signed. Nil for a version this app doesn't know, or a v2 grant without its words or language:
+    /// its digest then never matches, and nothing is approved that the person couldn't have read.
+    static func digestCovers(_ raw: JCS.Value) -> JCS.Value? {
+        guard let request = raw["request"] else { return nil }
+        switch raw["digest_v"] {
+        case nil:
+            return request
+        case .number("2")?:
+            guard let lang = raw["lang"], lang.string?.isEmpty == false, let text = raw["text"], text.string != nil else { return nil }
+            return .object(["lang": lang, "request": request, "text": text])
+        default:
+            return nil
+        }
+    }
+
+    /// Every grant for the account, each with its digest checked against what it covers (`digestCovers`).
     /// `readSigner` signs this read alone, leaving `signer` as it is: a refresh that runs
     /// while a Face ID step waits on the vendor's page must not end that step's signer.
     func grants(signedBy readSigner: (@MainActor (Data) throws -> String)? = nil) async throws -> [Grant] {
@@ -216,11 +234,11 @@ final class PlanqueClient {
         // The request as planque sent it, numbers as written, so the digest is planque's.
         let raws = (try? JCS.parse(data))?["grants"]?.array ?? []
         for i in grants.indices {
-            guard let raw = raws.first(where: { $0["id"]?.string == grants[i].id }), let request = raw["request"],
-                  let canonical = try? JCS.canonical(request) else { continue }
+            guard let raw = raws.first(where: { $0["id"]?.string == grants[i].id }), let request = raw["request"] else { continue }
+            grants[i].profile = request["profile"]
+            guard let covered = Self.digestCovers(raw), let canonical = try? JCS.canonical(covered) else { continue }
             let hash = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
             grants[i].digestMatches = hash == grants[i].digest
-            grants[i].profile = request["profile"]
         }
         return grants
     }
@@ -417,6 +435,9 @@ final class PlanqueClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("tafs-ios", forHTTPHeaderField: "User-Agent")
+        // The person's languages, as tafs cloud gets them: planque writes the words they approve in the first it has.
+        // Not part of what's signed (the method, the path and query, the body).
+        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = body
