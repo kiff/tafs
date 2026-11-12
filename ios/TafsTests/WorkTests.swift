@@ -73,6 +73,30 @@ final class WorkTests: XCTestCase {
         XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.httpMethod == "GET" })
     }
 
+    /// A run's credits are tafs cloud's words from KIFF's usage record, drawn as sent: a counted
+    /// run's figure, why a run used none, and no line for a run not counted yet. The phone counts nothing.
+    func testARunsCreditsAreTafsCloudsLineAndNoneIsNone() throws {
+        let json = #"""
+        {"summary":{"status":"idle","line":"Idle"},"requests":[
+          {"id":"r1","at":"2026-11-12T19:43:00Z","state":"done","line":"Done at 20:43","credits":{"credits":34,"counted":true,"words":"34 credits"}},
+          {"id":"r2","at":"2026-11-12T18:48:00Z","state":"failed","line":"It couldn't start","credits":{"credits":0,"counted":false,"words":"No credits: it failed"}},
+          {"id":"r3","at":"2026-11-12T18:00:00Z","state":"done","line":"Done at 19:00"},
+          {"id":"r4","at":"2026-11-12T17:00:00Z","state":"done","line":"Done at 18:00","credits":{"credits":12,"counted":true,"words":"  "}},
+          {"id":"r5","at":"2026-11-12T16:00:00Z","state":"done","line":"Done at 17:00","credits":"soon"}],"skipped":[]}
+        """#
+        let work = try KIFFClient.decoder.decode(TafsCloud.TafWork.self, from: Data(json.utf8))
+        XCTAssertEqual(work.requests.map(\.creditsLine), ["34 credits", "No credits: it failed", nil, nil, nil])
+        XCTAssertEqual(work.requests[0].credits?.credits, 34)
+        XCTAssertNil(work.requests[2].credits, "not counted yet: no line")
+        XCTAssertNil(work.requests[3].creditsLine, "blank words: no line, and no figure made up from the number")
+        XCTAssertEqual(work.requests[4].line, "Done at 18:00".replacingOccurrences(of: "18", with: "17"), "credits the phone can't read leave the run as it is")
+        // Both places a run's line is drawn draw this one under it.
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        for file in ["TafDetailView.swift", "TafPresentationViews.swift"] {
+            XCTAssertTrue(try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8).contains("creditsLine"), file)
+        }
+    }
+
     func testTheRimOpensUnfinishedWorkThenTheNewest() {
         let done = TafsCloud.TafWork.Request(id: "done", at: Date(), state: "done")
         let waiting = TafsCloud.TafWork.Request(id: "waiting", at: Date(), state: "waiting")

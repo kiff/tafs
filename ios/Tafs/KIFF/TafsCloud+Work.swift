@@ -95,9 +95,23 @@ extension TafsCloud {
             var deliveries: [Delivery] = []
             /// A step the taf handed its owner, which this request waits on: its line is the step's.
             var yourStep: YourStep? = nil
-            enum CodingKeys: String, CodingKey { case id, at, state, line, deliveries, yourStep = "your_step" }
-            init(id: String, at: Date, state: String = "", line: String = "", deliveries: [Delivery] = [], yourStep: YourStep? = nil) {
-                self.id = id; self.at = at; self.state = state; self.line = line; self.deliveries = deliveries; self.yourStep = yourStep
+            /// What the run used, from KIFF's usage record, in tafs cloud's words ("34 credits",
+            /// or why it used none). Nil until KIFF has counted the run. The phone counts nothing.
+            var credits: Credits? = nil
+            struct Credits: Decodable, Equatable {
+                var credits: Int64?
+                var counted: Bool?
+                var words: String?
+            }
+            /// The line under the run's own: tafs cloud's words for what it used, as sent; none
+            /// for a run not counted yet, or with no words.
+            var creditsLine: String? {
+                guard let words = credits?.words?.trimmingCharacters(in: .whitespacesAndNewlines), !words.isEmpty else { return nil }
+                return words
+            }
+            enum CodingKeys: String, CodingKey { case id, at, state, line, deliveries, yourStep = "your_step", credits }
+            init(id: String, at: Date, state: String = "", line: String = "", deliveries: [Delivery] = [], yourStep: YourStep? = nil, credits: Credits? = nil) {
+                self.id = id; self.at = at; self.state = state; self.line = line; self.deliveries = deliveries; self.yourStep = yourStep; self.credits = credits
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -107,6 +121,8 @@ extension TafsCloud {
                 line = (try? c.decode(String.self, forKey: .line)) ?? ""
                 deliveries = (try? c.decode([Delivery].self, forKey: .deliveries)) ?? []
                 yourStep = try? c.decodeIfPresent(YourStep.self, forKey: .yourStep)
+                // A figure KIFF hasn't counted, or one the phone can't read, is no line: never a guess.
+                credits = try? c.decodeIfPresent(Credits.self, forKey: .credits)
             }
         }
 

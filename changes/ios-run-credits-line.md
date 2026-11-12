@@ -1,0 +1,1 @@
+- **iOS: each run shows what it used.** Under a run's line, in a taf's work and in Its runs, the app shows its credits, or why it used none, once they're counted.

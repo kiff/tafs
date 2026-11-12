@@ -88,6 +88,10 @@ counted from the record ("From the record: 5 done · 1 refused"). Each is drawn 
 `delivered` above the taf's words and `counted` under them. A blank one is none, and with none sent
 nothing is drawn: the phone counts nothing itself. Only a taf's message draws them.
 
+**What a run used:** under a run's line, in the work and in Its runs, tafs cloud's `requests[].credits.words` as sent
+("34 credits", or why it used none; `TafWork.Request.creditsLine`). A run KIFF hasn't counted has no line, and the phone
+counts nothing.
+
 **A taf's work:** the Activity tab of a taf on tafs cloud (`TafActivityList`, chosen by
 `TafDetailView.pane`) shows the taf's Needs you items, then `GET /v1/tafs/{id}/work`
 ([reliability.md](reliability.md#the-tafs-view); `WorkPanel`, `AppModel.loadWork`): tafs
