@@ -921,6 +921,13 @@ final class AppModel: ObservableObject {
     /// Whether this person may delete the account (KIFF's account.delete): it's offered only then.
     var mayDeleteAccount: Bool { Self.allows(kiffAccount?.capabilities, "account.delete") }
 
+    /// Whether this person manages the account's billing (KIFF's billing.manage), as Android
+    /// reads it: they buy and raise, and answer members' requests; anyone else asks an admin.
+    /// Not KIFF's usage `can_add_tasks`, which it has sent as false since credits.
+    var managesBilling: Bool { Self.managesBilling(kiffAccount?.capabilities) }
+
+    nonisolated static func managesBilling(_ capabilities: [String]?) -> Bool { allows(capabilities, "billing.manage") }
+
     nonisolated static func allows(_ capabilities: [String]?, _ capability: String) -> Bool {
         capabilities.map { $0.contains(capability) } ?? true
     }
@@ -3164,7 +3171,7 @@ final class AppModel: ObservableObject {
     /// The sample's KIFF read: no store, nothing billed, no requests; the purchase screens'
     /// screenshots get the store, as an admin sees it.
     static func sampleUsage() -> KIFFClient.Usage {
-        KIFFClient.Usage(canAddTasks: Screenshots.purchases ? true : nil, store: Screenshots.purchases ? Screenshots.store : nil)
+        KIFFClient.Usage(store: Screenshots.purchases ? Screenshots.store : nil)
     }
 
     func refreshHalt(_ tafID: UUID?) async {

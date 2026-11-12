@@ -166,6 +166,10 @@ the app in sample mode.
     `buy.first_month` is set and `ready`, then the packs that can be bought again
     (`Store.offered(firstMonth:)`). Not ready, it isn't listed: never alone or greyed. KIFF
     lists it with no App Store product today, so iPhone and iPad don't show it yet.
+  - **Who manages billing** is KIFF's `billing.manage` in the account's capabilities
+    (`AppModel.managesBilling`), as on Android: they see members' open requests, with Raise the
+    limit or Approve, and never **Ask an admin**; anyone else sees Ask an admin, or their own
+    request waiting. Not KIFF's usage `can_add_tasks`, which it has sent as false since credits.
   - **Restore purchases** stays on Solo's screen and Add credits, as the App Store asks. A
     restore that finds nothing says "Nothing to restore.", never "Purchases restored."
     (`PurchaseOutcome.nothingToRestore`).
@@ -231,6 +235,10 @@ the app in sample mode.
   device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
   kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+- **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
+  `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
+  language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
+  of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
 - **Setup › Connected tools** (`ConnectedToolsRing`): one node per app (`ConnectedToolsRing.nodes`),
   the connection with actions in front; another sign-in to the same app is under Other
   connections in its sheet, with its own Disconnect. Starts when and Results go to are rows
