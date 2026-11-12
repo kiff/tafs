@@ -668,6 +668,28 @@ then. Given there (`AppModel.approveCoachWithKey`), the key goes as above, then 
 as any approval: tafs cloud finds the app connected, and Coach goes on or asks for its Cards. A key
 that didn't go answers nothing, and says why on the sheet.
 
+**The secure connection sheet** ([secure-connection.md](secure-connection.md)). When the key
+sheet opens, the phone reads tafs cloud's `GET /v1/connect/grants/{grant}/sheet` with its signed
+grants read (`Planque-Device-Signature`), once per grant (`AppModel.loadSecureSheet`,
+`TafsCloud.connectSheet`), and draws only its words (`SecureKeyContent`):
+- the title, with the vendor's logo and a lock;
+- the three plain lines. A `reads_only` line is checked against the grant this phone signs: at least
+  one tool, and every one `read_only` (`SecureSheetWords.firstLineHolds`). Otherwise the mismatch
+  line shows, with nothing to sign;
+- **Paste the key**, a button, never a typing field, so no keyboard opens. The pasted key is
+  trimmed, the clipboard is cleared at once, and only its last 4 show ("Key …ab12");
+- **Details**, collapsed: the technical lines, then the connection server's own words and KIFF's
+  words for the profile;
+- the legal line, its `{terms}` and `{privacy}` links opening in the browser (https only);
+- the button, which gives the key as above.
+
+Once the key went, the sheet shows the receipt with the last 4 and **Disconnect**
+(`AppState.keyReceipt`), until it closes; nothing keeps the last 4 after that. Without the sheet's
+words (an older tafs cloud, an error), the sheet stays as above. The sheet sits above the keyboard
+and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}` draws only
+those words and Its Card, never the connection's text again. One signature for the key and its
+Card (`tafs.setup.v1`) follows once the connection server and KIFF take it.
+
 A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed
 by the device's key with no fingerprint (it grants nothing), for the live sign-in view
