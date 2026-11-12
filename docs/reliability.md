@@ -181,6 +181,12 @@ wasn't checked is settled, once:
     section's first line, then why. The delivery is `none`: "Nothing to hand to Invoices: none of
     the deals was won." No run starts, nobody is told, and Coach isn't offered. A result with no
     section at all is still `not_sent`: that is a taf not following its instructions.
+  - **Unless its record shows it acted.** "Nothing to hand over" from a run whose record shows
+    calls that went through (kiff/agents' `done`) isn't believed: the record decides, as with a
+    run's count. The receiving taf gets the record's own lines, one a call, its tool and what it
+    acted on ("- stripe_close_dispute on T-2002", `recordLines`), never the model's words. The
+    request's line says so: "Handed to Invoices at 12:00 · handed from its record: it said there
+    was nothing to hand over, but its record shows it acted" (`from_record` on the delivery).
   - **Work is handed on twice at most** (`DELIVERY.maxHops`): taf to taf to taf. A run that came
     as a hand-off may hand its own result on once. Where the work has been is read from each
     run's `source` in kiff/agents' record (`chainOf`), never from a taf's words.

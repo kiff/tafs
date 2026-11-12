@@ -344,6 +344,8 @@ export const en = {
   handoff_nothing_note: (taf: string, name: string, n: number) => `${name} did nothing with the last ${n} hand-offs from ${taf}. Open ${taf}'s page to see why.`,
   // A hand-off the taf had nothing for, in its own words, and one stopped where the work would have gone back to a taf that had it.
   handoff_none: (name: string, why?: string) => `Nothing to hand to ${name}${why ? `: ${why}` : ""}`,
+  // Added to a hand-off's line when it was made from the run's record, its words having said nothing was left.
+  handed_from_record: "handed from its record: it said there was nothing to hand over, but its record shows it acted",
   handoff_circle: (name: string) => `Not handed back to ${name}: it already had this work`,
   delivery_retrying: (name: string, t?: When) => `Not delivered to ${name} yet: trying again${t ? ` at ${bare(t)}` : " now"}`,
   delivery_not_sent: (name: string, why?: string) => `Not delivered to ${name}${why ? `: ${why}` : ""}`,

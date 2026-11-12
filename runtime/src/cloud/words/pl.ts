@@ -319,6 +319,7 @@ export const pl: Words = {
   handoff_maybe_acted: "możliwe, że działanie już wykonano: sprawdź stronę, zanim cokolwiek zostanie wysłane ponownie",
   handoff_nothing_note: (taf, name, n) => `${name}: nic nie zrobiono z ostatnimi ${n} przekazaniami od: ${taf}. Otwórz stronę: ${taf}, aby zobaczyć dlaczego.`,
   handoff_none: (name, why) => `Nic do przekazania do: ${name}${why ? ` (${why})` : ""}`,
+  handed_from_record: "przekazano według rejestru: odpowiedź mówiła, że nie ma nic do przekazania, ale rejestr pokazuje wykonane działania",
   handoff_circle: (name) => `Nie przekazano z powrotem do: ${name} (ta praca już tam była)`,
   delivery_retrying: (name, t) => `Jeszcze nie dostarczono do: ${name}; ponowna próba ${t ? at(t) : "teraz"}`,
   delivery_not_sent: (name, why) => `Nie dostarczono do: ${name}${why ? ` (${why})` : ""}`,

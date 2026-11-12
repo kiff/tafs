@@ -319,6 +319,7 @@ export const nl: Words = {
   handoff_maybe_acted: "het heeft mogelijk al gehandeld: controleer de pagina voordat er iets opnieuw wordt verzonden",
   handoff_nothing_note: (taf, name, n) => `${name} heeft niets gedaan met de laatste ${n} overdrachten van ${taf}. Open de pagina van ${taf} om te zien waarom.`,
   handoff_none: (name, why) => `Niets door te geven aan ${name}${why ? `: ${why}` : ""}`,
+  handed_from_record: "doorgegeven volgens het logboek: het antwoord zei dat er niets door te geven was, maar het logboek toont dat er iets is gedaan",
   handoff_circle: (name) => `Niet teruggegeven aan ${name}: die had dit werk al`,
   delivery_retrying: (name, t) => `Nog niet afgeleverd bij ${name}: nieuwe poging ${t ? at(t) : "nu"}`,
   delivery_not_sent: (name, why) => `Niet afgeleverd bij ${name}${why ? `: ${why}` : ""}`,

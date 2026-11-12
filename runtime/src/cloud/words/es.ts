@@ -319,6 +319,7 @@ export const es: Words = {
   handoff_maybe_acted: "puede que ya haya actuado: revisa su página antes de volver a enviar nada",
   handoff_nothing_note: (taf, name, n) => `${name} no hizo nada con los últimos ${n} traspasos de ${taf}. Abre la página de ${taf} para ver por qué.`,
   handoff_none: (name, why) => `Nada que pasar a ${name}${why ? `: ${why}` : ""}`,
+  handed_from_record: "pasado según el registro: la respuesta decía que no había nada que pasar, pero el registro muestra que actuó",
   handoff_circle: (name) => `No se devolvió a ${name}: ya tuvo este trabajo`,
   delivery_retrying: (name, t) => `Aún no entregado a ${name}: nuevo intento ${t ? at(t) : "ahora"}`,
   delivery_not_sent: (name, why) => `No entregado a ${name}${why ? `: ${why}` : ""}`,
