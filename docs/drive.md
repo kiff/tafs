@@ -277,6 +277,11 @@ drive; only a clear takeover ends it.
     "<tenant>:<drive>"}`). KIFF's gateway keeps that wait only for Coach's own drive tools,
     and kiff/agents pauses the run on it, the way a held call does: no invocation runs, and no
     turns or credits are used while the person has the app.
+  - **A request already on the phone at the touch** is refused there as "Paused", with no screen,
+    and that answer can reach tafs cloud before the app's pause does. tafs cloud waits up to 3
+    seconds for the pause, then answers Coach's call as the pause's, wait and all, so the run
+    parks the same way. Only that refusal comes without a screen; its words, which are in the
+    app's language, are never read.
   - **Continue answers the wait** (kiff/agents' `answerWait`, `{drive: "continued", words}`): the
     run goes on, told to look before its next step. **The drive's end answers it too** (`{drive:
     "ended", why, words}`: a stop, a halt, another drive starting), and an idle end lets it time

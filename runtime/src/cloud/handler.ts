@@ -1143,8 +1143,8 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     const device = devices.find((d) => d.token === token && d.subject === me.subject);
     const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase);
     const answering = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent) && placesOf(t).includes("app"));
-    return { enabled: Boolean(device), sound: !device?.silent, kinds: alertChoices(device?.kinds),
-      answering: { title: `${answering.length} taf${answering.length === 1 ? "" : "s"}`, tafs: answering.map((t) => ({ id: t.id, name: t.name })) } };
+    return { enabled: Boolean(device), sound: !device?.silent, kinds: alertChoices(device?.kinds, langOf(event)),
+      answering: { title: wordsIn(langOf(event)).alerts_answering_tafs(answering.length, plural(langOf(event), answering.length)), tafs: answering.map((t) => ({ id: t.id, name: t.name })) } };
   }
   if (method === "DELETE" && parts.length === 2) {
     const r = registration(parseBody(event));
@@ -1171,7 +1171,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
     await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, kinds: r.kinds ?? devices.find((d) => d.token === r.token && d.subject === me.subject)?.kinds, lang: langOf(event), at });
-    return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0, ...(r.kinds ? { kinds: alertChoices(r.kinds) } : {}) };
+    return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0, ...(r.kinds ? { kinds: alertChoices(r.kinds, langOf(event)) } : {}) };
   }
   if (method === "DELETE" && parts.length === 3) {
     // The token as the phone wrote it in the path: Firebase's has colons, which come percent-encoded.
