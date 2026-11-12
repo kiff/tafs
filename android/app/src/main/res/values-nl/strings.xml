@@ -826,6 +826,7 @@
     <string name="connect_disconnect_button">Ontkoppelen</string>
     <string name="connect_disconnecting">Ontkoppelen…</string>
     <string name="connect_from_removed">Van verwijderde tafs</string>
+    <string name="connect_give_key_on_sheet">De sleutel geven op een beveiligd scherm</string>
     <string name="connect_give_key_with">De sleutel geven met %1$s</string>
     <string name="connect_kept_another_taf">een ander taf</string>
     <plurals name="connect_kept_for_card">
@@ -841,6 +842,8 @@
         <item quantity="other">Je %2$s-koppeling is behouden: %3$s gebruiken hem.</item>
     </plurals>
     <string name="connect_key">De sleutel</string>
+    <string name="connect_key_clipboard">Het klembord wordt gewist nadat je plakt.</string>
+    <string name="connect_key_goes_to">De sleutel gaat van deze telefoon naar de koppelingsserver, die hem alleen naar %1$s stuurt. Hij gaat nooit naar Coach.</string>
     <string name="connect_key_not_given">De sleutel is niet gegeven. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">De woorden van KIFF voor deze koppeling konden niet worden gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_last_failed">Laatst mislukt: %1$s · %2$s</string>

@@ -1,0 +1,1 @@
+- A new taf's hand-over waits while the owner hasn't approved its Card yet, instead of showing "not set up: waiting for your confirmation" (tafs cloud).

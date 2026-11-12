@@ -826,6 +826,7 @@
     <string name="connect_disconnect_button">Déconnecter</string>
     <string name="connect_disconnecting">Déconnexion…</string>
     <string name="connect_from_removed">De tafs supprimés</string>
+    <string name="connect_give_key_on_sheet">Donner la clé sur un écran sécurisé</string>
     <string name="connect_give_key_with">Donner la clé avec %1$s</string>
     <string name="connect_kept_another_taf">un autre taf</string>
     <plurals name="connect_kept_for_card">
@@ -841,6 +842,8 @@
         <item quantity="other">Votre connexion %2$s est conservée : %3$s l\'utilisent.</item>
     </plurals>
     <string name="connect_key">La clé</string>
+    <string name="connect_key_clipboard">Le presse-papiers est vidé après le collage.</string>
+    <string name="connect_key_goes_to">La clé va de ce téléphone au serveur de connexion, qui ne l\'envoie qu\'à %1$s. Elle ne va jamais à Coach.</string>
     <string name="connect_key_not_given">La clé n\'a pas été donnée. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Les textes de KIFF pour cette connexion n\'ont pas pu être lus. Rien n\'a été approuvé.</string>
     <string name="connect_last_failed">Dernier échec : %1$s · %2$s</string>
