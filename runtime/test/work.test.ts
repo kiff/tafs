@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { failedLine, requestOf, runFailure, skippedOf, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
+import { failedLine, needsYouLine, requestOf, runFailure, skippedOf, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
 import { requestDetail } from "../src/cloud/request.js";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
@@ -159,6 +159,20 @@ describe("the thread as one ordered list", () => {
 describe("a failed run's code", () => {
   const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
   // A French screen showed "Échec : the run failed": kiff/agents' own English words for a failed run.
+  // A French phone read kiff/agents' English under Needs you: a run past its last try.
+  it("says kiff/agents' reasons a run needs you in the person's language, and any other reason as it came", () => {
+    const needs = (reason: string | undefined, lang: "en" | "fr" | "pl" = "en") => requestOf(run({ status: "PAUSED", state: "needs_you", reason } as Partial<Run>), "UTC", NOW, [], undefined, [], lang).line;
+    expect(needs("It stopped 3 times while it worked, and was restarted each time from its last safe step. It needs you to look at it.", "fr"))
+      .toBe("Elle s'est arrêtée 3 fois pendant son travail et a redémarré chaque fois depuis sa dernière étape sûre. Elle a besoin que vous y jetiez un œil.");
+    expect(needs("It couldn't start: no invocation picked it up after 3 tries. It needs you to look at it.", "pl")).toBe("Nie mogło się rozpocząć po 3 próbach. Musisz na nie spojrzeć.");
+    expect(needs("It couldn't start: no invocation picked it up after 3 tries. It needs you to look at it.")).toBe("It couldn't start after 3 tries. It needs you to look at it.");
+    expect(needs("Stripe refused the refund.", "fr")).toBe("Stripe refused the refund.");
+    expect(needs(undefined)).toBe(needsYouLine(undefined));
+    // The two failures that fell back to a plain "failed" have their own words now.
+    expect(failedLine("it could not continue once KIFF resolved its held calls", "fr")).toBe("Elle n'a pas pu continuer une fois ses appels retenus réglés. Rien n'a été fait ensuite.");
+    expect(failedLine("it could not be started in the background", "fr")).toBe("Elle n'a pas pu démarrer, donc rien n'a été fait.");
+  });
+
   it("says kiff/agents' words for a failed run in the person's language, never its English", () => {
     const failed = (error: string, lang: "en" | "fr" | "de" | "pl" = "en") => requestOf(run({ status: "ERROR", error }), "UTC", NOW, [], undefined, [], lang).line;
     expect(failed("the run failed")).toBe("It stopped on an error. Nothing was done after it.");
