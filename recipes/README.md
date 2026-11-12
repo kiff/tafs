@@ -49,6 +49,12 @@ Handle refund requests from my help desk. Refund in my payment provider up to 15
 - `card` says in plain words what the Card allows, what waits for the person (`holds`) and
   what is refused outright (`never`). These are the owner's choices; the words to Coach carry
   the same limits, and the person edits them before sending.
+- `proved` (optional) names what the recipe's proof run passed on, once one has: `help_desk` for
+  a test help desk. tafs cloud turns it into a line in the person's language ("Proved on a test
+  help desk."), which the job's sheet shows. A recipe with no proof run has none.
+- `sample` (optional, only with `proved`) is what the taf reported after that proof run, as it
+  wrote it: a list of lines, one per paragraph. The job's sheet shows it read-only, under "What it
+  reported after its test run", so a person can see what they'd get before setting anything up.
 - The body is the words to say to Coach, in the person's own voice. **It names the kind of
   app, never a brand** ("my accounting app", "my email", "my help desk"): an app sold in one
   country isn't in another, and the account may already have a different one. Coach finds the
@@ -59,8 +65,8 @@ Handle refund requests from my help desk. Refund in my payment provider up to 15
 
 Each recipe's words are in the eight languages the apps speak: English in `<id>.md`, and each
 other language in `<lang>/<id>.md` (`de`, `fr`, `es`, `it`, `pt`, `nl`, `pl`). A translation has
-`title`, `headline`, `today`, `line`, `card` and the words to say to Coach, nothing else: `id`,
-`category` and `connections` are English's alone. Its Card lists have as many lines as English's
+`title`, `headline`, `today`, `line`, `card`, its own `sample` where English has one, and the words
+to say to Coach, nothing else: `id`, `category`, `connections` and `proved` are English's alone. Its Card lists have as many lines as English's
 and say the same limits; amounts are written as the language writes them (`2.000 EUR`, `2 000 EUR`).
 The words to say to Coach use the person's own voice in that language, and the app's register
 (formal in French and Portuguese, as the apps are). A recipe missing a language, or a translation
