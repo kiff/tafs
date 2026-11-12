@@ -1,6 +1,11 @@
 """The rule a pull request merges by itself on: each condition, broken in turn."""
+import contextlib
+import io
 import json
+import os
+import subprocess
 import unittest
+from unittest import mock
 
 import automerge
 
@@ -127,6 +132,115 @@ class Decide(unittest.TestCase):
         self.assertEqual(CONFIG["lanes"]["ios"], ["ios/", "docs/ios-app.md"])
         self.assertEqual(CONFIG["lanes"]["android"], ["android/", "docs/android-app.md"])
         self.assertEqual(CONFIG["required"], {"ios": ["test"], "android": ["test", "ui"]})
+
+
+class Pass(unittest.TestCase):
+    """One run over the open pull requests, with GitHub's answers made up."""
+
+    def run_pass(self, answers, argv=()):
+        """Runs `main` with `answers` for GitHub: a path's start → what it answers, or an
+        error to raise. Returns (exit code, what it printed, the merges it made)."""
+        merged = []
+
+        def gh(*args):
+            if args[0] == "-X":
+                refusal = answers.get("PUT " + args[2])
+                if refusal is not None:
+                    raise refusal
+                merged.append(args[2])
+                return {"merged": True}
+            for start, answer in answers.items():
+                if args[0].startswith(start):
+                    if isinstance(answer, Exception):
+                        raise answer
+                    return answer
+            raise AssertionError(f"not answered: {args[0]}")
+
+        env = {"GITHUB_REPOSITORY": "kiff/tafs", "AUTOMERGE": "on"}
+        out = io.StringIO()
+        with mock.patch.object(automerge, "gh", gh), mock.patch.dict(os.environ, env, clear=True), contextlib.redirect_stdout(out):
+            code = automerge.main(list(argv))
+        return code, out.getvalue().splitlines(), merged
+
+    def answers(self, numbers, broken=()):
+        """Open pull requests `numbers`, each green and approved, with `broken` failing to read."""
+        failed = subprocess.CalledProcessError(1, ["gh", "api"], stderr="HTTP 502")
+        out = {"repos/kiff/tafs/pulls?state=open": [{"number": n} for n in numbers]}
+        for n in numbers:
+            out[f"repos/kiff/tafs/pulls/{n}/files"] = [{"filename": f} for f in FILES]
+            out[f"repos/kiff/tafs/pulls/{n}/reviews"] = APPROVAL
+            out[f"repos/kiff/tafs/pulls/{n}"] = failed if n in broken else pr()
+        out[f"repos/kiff/tafs/commits/{HEAD}/check-runs"] = {"check_runs": CHECKS}
+        return out
+
+    def test_a_pull_request_that_cant_be_read_is_skipped_and_the_next_still_merges(self):
+        code, lines, merged = self.run_pass(self.answers([772, 773], broken=[772]))
+        self.assertEqual(lines, ["#772: couldn't be read, skipped", "#773: merged (ios)"])
+        self.assertEqual(merged, ["repos/kiff/tafs/pulls/773/merge"])
+        self.assertEqual(code, 0, "one read failed, not all: the run passes")
+
+    def test_a_read_that_fails_part_way_merges_nothing_of_that_pull_request(self):
+        # Its reviews can't be read: nothing is decided on half of what the rule needs.
+        answers = self.answers([772, 773])
+        answers["repos/kiff/tafs/pulls/772/reviews"] = subprocess.CalledProcessError(1, ["gh", "api"])
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be read, skipped", "#773: merged (ios)"])
+        self.assertEqual(merged, ["repos/kiff/tafs/pulls/773/merge"])
+        # An answer that isn't the shape expected is unread too, never a crash.
+        answers = self.answers([772, 773])
+        answers["repos/kiff/tafs/pulls/772/files"] = [{"name": "no filename here"}]
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines[0], "#772: couldn't be read, skipped")
+        self.assertEqual(merged, ["repos/kiff/tafs/pulls/773/merge"])
+        self.assertEqual(code, 0)
+
+    def test_a_run_where_nothing_could_be_read_fails(self):
+        code, lines, merged = self.run_pass(self.answers([772, 773], broken=[772, 773]))
+        self.assertEqual(lines, ["#772: couldn't be read, skipped", "#773: couldn't be read, skipped"])
+        self.assertEqual(merged, [])
+        self.assertEqual(code, 1)
+        # One pull request asked for by number, unread: the same.
+        code, lines, merged = self.run_pass(self.answers([772], broken=[772]), argv=["--pr", "772"])
+        self.assertEqual((code, lines, merged), (1, ["#772: couldn't be read, skipped"], []))
+
+    def test_a_merge_github_refuses_is_skipped_and_the_next_still_merges(self):
+        # The head moved between the read and the merge: GitHub answers 409.
+        answers = self.answers([772, 773])
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="gh: Head branch was modified (HTTP 409)")
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be merged, skipped (HTTP 409)", "#773: merged (ios)"])
+        self.assertEqual(merged, ["repos/kiff/tafs/pulls/773/merge"])
+        self.assertEqual(code, 0, "one merge was refused, not all: the run passes")
+        # One that can't be merged after all (405), and a failure that names no status.
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="gh: Pull Request is not mergeable (HTTP 405)")
+        self.assertEqual(self.run_pass(answers)[1][0], "#772: couldn't be merged, skipped (HTTP 405)")
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"])
+        self.assertEqual(self.run_pass(answers)[1][0], "#772: couldn't be merged, skipped (failed)")
+
+    def test_a_run_where_every_pull_request_failed_on_github_fails(self):
+        # One unread and one refused at the merge: nothing went through, so the run fails.
+        answers = self.answers([772, 773], broken=[772])
+        answers["PUT repos/kiff/tafs/pulls/773/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="HTTP 409")
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be read, skipped", "#773: couldn't be merged, skipped (HTTP 409)"])
+        self.assertEqual((code, merged), (1, []))
+        # One refused at the merge and one that only waits for a maintainer: that isn't every one failing.
+        answers = self.answers([772, 773])
+        answers["PUT repos/kiff/tafs/pulls/772/merge"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="HTTP 409")
+        answers["repos/kiff/tafs/pulls/773/reviews"] = []
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be merged, skipped (HTTP 409)", "#773: waits for a maintainer: no listed reviewer approved its latest commit"])
+        self.assertEqual(code, 0)
+
+    def test_a_run_with_every_pull_request_read_passes_as_before(self):
+        code, lines, merged = self.run_pass(self.answers([772, 773]))
+        self.assertEqual(lines, ["#772: merged (ios)", "#773: merged (ios)"])
+        self.assertEqual(code, 0)
+        # No open pull request at all is no failure.
+        self.assertEqual(self.run_pass(self.answers([]))[0], 0)
+        # A dry run reads and merges nothing.
+        code, lines, merged = self.run_pass(self.answers([772]), argv=["--dry-run"])
+        self.assertEqual((code, lines, merged), (0, ["#772: would merge (ios)"], []))
 
 
 if __name__ == "__main__":
