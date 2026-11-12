@@ -79,6 +79,17 @@ class GalleryTest {
     assertEquals("Try it with Coach", bot.tafs.app.model.HomeWords.tryIt(g))
   }
 
+  @Test fun aProofOrSampleThatIsntWordsDrawsNothingAndTheGalleryStillReads() {
+    val odd = gallery.replace(""""id":"follow-up-new-leads","title":"Follow up leads","category":"customers",""",
+      """"id":"follow-up-new-leads","title":"Follow up leads","category":"customers","proved":true,"sample":["a list"],""")
+    val g = read(odd)
+    assertEquals("every job still reads", 3, g.recipes.size)
+    val leads = g.recipes.first { it.id == "follow-up-new-leads" }
+    assertEquals("", leads.proved)
+    assertEquals("", leads.sample)
+    assertEquals("Proved.", read(gallery.replace(""""category":"customers",""", """"category":"customers","proved":"  Proved.  ",""")).recipes.last().proved)
+  }
+
   @Test fun whileTafsCloudSendsNoWordsTheAppsOwnStandInAndNewIsAlwaysNamed() {
     val g = read("""{"categories":[],"recipes":[]}""")
     val home = bot.tafs.app.model.HomeWords

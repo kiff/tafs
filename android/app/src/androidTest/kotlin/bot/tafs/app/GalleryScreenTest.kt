@@ -123,7 +123,7 @@ class GalleryScreenTest {
   }
 
   @Test fun aJobsSheetShowsItsAppsProofAndSampleAndTryItWithCoachIsTheOneAction() {
-    val proved = leads.copy(proved = "Proved on a test help desk.", sample = "3 tickets answered.")
+    val proved = leads.copy(provedSent = kotlinx.serialization.json.JsonPrimitive("Proved on a test help desk."), sampleSent = kotlinx.serialization.json.JsonPrimitive("3 tickets answered."))
     var tried = 0
     rule.setShown {
       TafsTheme {

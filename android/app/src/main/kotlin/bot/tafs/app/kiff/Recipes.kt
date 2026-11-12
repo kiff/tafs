@@ -119,11 +119,19 @@ data class Recipe(
   val connected: Boolean = false,
   /** A taf on the account was built from it. */
   val running: Boolean = false,
-  /** tafs cloud's line for where the job was proved ("Proved on a test help desk."); empty when it wasn't. */
-  val proved: String = "",
-  /** What the job reported after that proof run, as tafs cloud sends it; empty when there's none. */
-  val sample: String = "",
-)
+  /** As sent: read leniently, so a value that isn't words draws nothing and never fails the whole gallery. */
+  @kotlinx.serialization.SerialName("proved") val provedSent: kotlinx.serialization.json.JsonElement? = null,
+  @kotlinx.serialization.SerialName("sample") val sampleSent: kotlinx.serialization.json.JsonElement? = null,
+) {
+  /** tafs cloud's line for where the job was proved ("Proved on a test help desk."); empty when it wasn't, or isn't words. */
+  val proved: String get() = words(provedSent)
+
+  /** What the job reported after that proof run, as tafs cloud sends it; empty when there's none, or it isn't words. */
+  val sample: String get() = words(sampleSent)
+
+  private fun words(sent: kotlinx.serialization.json.JsonElement?): String =
+    (sent as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.trim().orEmpty()
+}
 
 /** The Card a recipe's taf would have, as its file says it: what it does on its own, asks first, and never does. */
 @Serializable
