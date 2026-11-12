@@ -1,0 +1,1 @@
+- **infra: a rerun of infra/aws.sh keeps tafs cloud's feature flags** (`TAFS_KEY_AND_CARDS`, `TAFS_SIGNED_REMOVE`, `TAFS_YOUR_STEP`), as it keeps the doors' settings, instead of turning them off. A test fails when the code reads a `TAFS_` flag the script doesn't keep.
