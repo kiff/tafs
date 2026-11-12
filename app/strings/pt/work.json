@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Responder em",
+  "work.answer_within_days": {
+    "one": "{count} dia",
+    "other": "{count} dias"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} hora",
+    "other": "{count} horas"
+  },
+  "work.answer_within_line": "Avisamos quando um caso espera mais.",
+  "work.answer_within_none": "Não definido",
+  "work.answer_within_not_set": "Não foi possível definir. {why}",
+  "work.asking_kiff_run": "A pedir ao KIFF para executar {tool}…",
+  "work.did_not_stop": "Não parou: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "As suas execuções",
+  "work.not_read": "Não foi possível ler o seu trabalho. {why}",
+  "work.not_sent_again": "Não foi enviado novamente. {why}",
+  "work.request.try_reply_now": "Tentar responder agora",
+  "work.requests_need_you": {
+    "one": "{count} pedido precisa de si",
+    "other": "{count} pedidos precisam de si"
+  },
+  "work.send_again": "Enviar novamente",
+  "work.sending_again": "A enviar novamente…",
+  "work.stop_run": "Parar a execução",
+  "work.stopped_part_way_before_finished": "{taf} parou a meio, antes de terminar."
+}

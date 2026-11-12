@@ -21,7 +21,7 @@ struct DriveCard: View {
                 Eyebrow(text: Words.Drive.needsYouLetCoachDrive, color: Theme.amber)
                 Text(task).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(Words.Drive.cardNoteScrolls)
+                Text(Words.Drive.cardNoteScrollsPauses)
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 10) {
                     Button(Words.Common.notNow) {

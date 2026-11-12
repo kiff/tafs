@@ -1,0 +1,8 @@
+{
+  "push.channel.holds_description": "Een aanroep wordt vastgehouden voor je antwoord. Er wordt niets verzonden tot je het goedkeurt.",
+  "push.channel.other": "Andere meldingen",
+  "push.channel.other_description": "Verzoeken om taken en de antwoorden erop, zonder geluid.",
+  "push.open_needs_you": "Open Wacht op jou om te antwoorden.",
+  "push.open_taf": "Open het taf om het te zien.",
+  "push.open_usage": "Open Abonnement en gebruik om het te zien."
+}

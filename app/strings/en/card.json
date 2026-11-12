@@ -1,0 +1,153 @@
+{
+  "card.all_of": {
+    "one": "All of the Card",
+    "other": "All of the Cards"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, then it asks you",
+  "card.calls_left": {
+    "one": "{count} call left",
+    "other": "{count} calls left"
+  },
+  "card.calls_used_of": {
+    "one": "{used} of {count} calls {window}",
+    "other": "{used} of {count} calls {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} call {window}",
+    "other": "{count} calls {window}"
+  },
+  "card.card_confirmed_kiff": "Card · confirmed by KIFF",
+  "card.card_draft_kiff": "Card · draft · by KIFF",
+  "card.card_got_room_call_needed": "Its Card got the room this call needed, until that total resets",
+  "card.card_not_issued": "The Card was not issued. ",
+  "card.card_revoked": "Card revoked",
+  "card.check.always_asks": "{rule}: always asks you",
+  "card.check.never_allowed": "{rule}: never allowed",
+  "card.check.not_on_card": "Not on this taf's Card",
+  "card.check.over_count": {
+    "one": "Over {count} {window}",
+    "other": "Over {count} {window}"
+  },
+  "card.check.over_each": "Over {amount} each",
+  "card.check.over_total": "Over {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Cards"
+  },
+  "card.ended": "Ended",
+  "card.ended_on": "Ended {date}",
+  "card.ends": "Ends",
+  "card.extra_room": "+{extra} extra room {window}",
+  "card.extra_room_prefix": "+{formatted} extra room ",
+  "card.extra_room_until": "+{extra} extra room until {ends}",
+  "card.figure_left": "{figure} left",
+  "card.heading": {
+    "one": "Card",
+    "other": "Cards"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} call {window}{each}: this would be the {nth}{item}",
+    "other": "{count} calls {window}{each}: this would be the {nth}{item}"
+  },
+  "card.held.each_call_asks": "Each call asks you first",
+  "card.held.for_each": " for each {name}",
+  "card.held.for_each_join": " for each ",
+  "card.held.for_item": " for {item}",
+  "card.held.over_count": {
+    "one": "Over its limit of {count} calls: this would be the {nth}",
+    "other": "Over its limit of {count} calls: this would be the {nth}"
+  },
+  "card.held.over_one_call": "{amount} is over the {cap} limit for one call",
+  "card.held.over_total": "{amount} would go over the {cap} total",
+  "card.hero.calls_left_of": {
+    "one": "call left {window} of {limit}",
+    "other": "calls left {window} of {limit}"
+  },
+  "card.hero.calls_use_unavailable": "calls {window} · use unavailable",
+  "card.hero.left_of": "left {window} of {limit}",
+  "card.hero.left_of_extra": "left {window} of {base} + {extra} extra room",
+  "card.hero.left_of_extra_until": "left {window} of {base} + {extra} extra room until {ends}",
+  "card.hero.left_of_note": "left {window} of {limit}{note}",
+  "card.hero.no_currency": "no currency",
+  "card.hero.no_currency_suffix": " · no currency",
+  "card.hero.use_unavailable": "{window} · use unavailable",
+  "card.hero.use_unavailable_note": "{label} · use unavailable{note}",
+  "card.how_counted": "How this is counted",
+  "card.issue_prompt": "Issue {taf|possessive} Card",
+  "card.issued_by": "Issued by",
+  "card.issued_by_account": "The account",
+  "card.issued_by_named": "Issued by {who}",
+  "card.its_card": "Its Card",
+  "card.kiff_did_not_revoke_cards": "KIFF didn't revoke {cards_left} of its Cards: revoke them in KIFF.",
+  "card.left": "{amount} left {window}",
+  "card.left_extra_room": "left {current} of {own} + {extra} extra room{until}{note}",
+  "card.limit_can_not_raised_right": "The limit can't be raised from here right now.",
+  "card.limit_raised_read_balance_again": "The limit was raised. Read the balance again before raising it once more.",
+  "card.line.calls_in_window": {
+    "one": "{count} call {window}{then}",
+    "other": "{count} calls {window}{then}"
+  },
+  "card.line.more_asks": "; more asks you first",
+  "card.line.then_asks": ", then it asks you",
+  "card.line.total_in_window": "{amount} in total {window}{then}",
+  "card.line.up_to_each": "up to {amount} each",
+  "card.more": {
+    "one": "{count} more",
+    "other": "{count} more"
+  },
+  "card.no_actions": "No actions yet",
+  "card.no_actions_short": "no actions yet",
+  "card.no_currency": "{amount} (no currency)",
+  "card.no_end_date": "No end date",
+  "card.outcome.not_a_resource": "Not one of the Card's resources",
+  "card.outcome.outside": "Outside the Card",
+  "card.outcome.over_one_action": "Over the Card's limit for one action",
+  "card.outcome.over_total": "Over the Card's total",
+  "card.outside_held": "Outside: held for you",
+  "card.outside_refused": "Outside: refused",
+  "card.over_limit_calls_would": "Over its limit of {limit} calls: this would be the {nth}",
+  "card.revoke_failed": "KIFF didn't revoke the Card. {why}",
+  "card.revoked": "Revoked",
+  "card.rule.always_asks": "always asks you",
+  "card.rule.at_most_each": "≤ {amount} each",
+  "card.rule.at_most_each_refused_above": "≤ {amount} each · refused above",
+  "card.rule.calls": {
+    "one": "{count} call {window}",
+    "other": "{count} calls {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} call {window}, then it asks you",
+    "other": "{count} calls {window}, then it asks you"
+  },
+  "card.rule.in_total": "{amount} in total {window}",
+  "card.rule.never": "never",
+  "card.rule.total_then_asks": "{amount} in total {window}, then it asks you",
+  "card.rule.up_to_each": "up to {amount} each; more asks you first",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "The taf's Card",
+  "card.tools": {
+    "one": "{count} tools",
+    "other": "{count} tools"
+  },
+  "card.until": "Until",
+  "card.until_date": "Until {date}",
+  "card.until_ends": " until {ends}",
+  "card.used_of": "{used} of {limit} {window}",
+  "card.window.a_day": "a day",
+  "card.window.a_month": "a month",
+  "card.window.a_week": "a week",
+  "card.window.any_day": "in any 24 hours",
+  "card.window.any_hour": "in any hour",
+  "card.window.any_week": "in any 7 days",
+  "card.window.in_total": "in total",
+  "card.window.in_total_window": "in total {window}",
+  "card.window.last_day": "in the last 24 hours",
+  "card.window.last_hour": "in the last hour",
+  "card.window.last_week": "in the last 7 days",
+  "card.window.so_far": "so far",
+  "card.window.this_month": "this month",
+  "card.window.this_week": "this week",
+  "card.window.today": "today",
+  "card.within_card": "within the Card"
+}

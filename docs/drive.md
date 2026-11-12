@@ -277,6 +277,11 @@ drive; only a clear takeover ends it.
     "<tenant>:<drive>"}`). KIFF's gateway keeps that wait only for Coach's own drive tools,
     and kiff/agents pauses the run on it, the way a held call does: no invocation runs, and no
     turns or credits are used while the person has the app.
+  - **A request already on the phone at the touch** is refused there as "Paused", with no screen,
+    and that answer can reach tafs cloud before the app's pause does. tafs cloud waits up to 3
+    seconds for the pause, then answers Coach's call as the pause's, wait and all, so the run
+    parks the same way. Only that refusal comes without a screen; its words, which are in the
+    app's language, are never read.
   - **Continue answers the wait** (kiff/agents' `answerWait`, `{drive: "continued", words}`): the
     run goes on, told to look before its next step. **The drive's end answers it too** (`{drive:
     "ended", why, words}`: a stop, a halt, another drive starting), and an idle end lets it time
@@ -367,8 +372,10 @@ the same either way. Coach, and the account's events, have their own words for i
 - **iOS:**
   - Coach's steps never come through the touch stream: they're the app's registered actions and `insertText`. So any `UITouch`, key press or gesture is the person's.
   - **The overlay takes no touch** but its caption's Continue and Stop: it draws above the app's other windows and passes every other touch through (its `hitTest` returns nil). The app's windows each carry a passive recognizer that sees every touch as it begins, without delaying or taking it (`cancelsTouchesInView` off, recognizing alongside every other recognizer), so the person's first touch pauses the drive and still reaches the control under it, edge swipes included. A window that opens mid-drive, such as a menu's, gets one too.
-  - **A tap on a control** is counted when the registry has an element with an action under the touch's end.
-  - The caption's Stop ends the drive as `stopped`. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back.
+  - **A tap on a control** is counted when the registry has an element with a tap action under the touch, and the finger lifts within 12 points of where it went down (`DriveSession.isControl`). A field isn't one: a tap on it only takes the focus.
+  - The caption's Stop ends the drive as `stopped`, and so does the Coach button, by its own action once the touch reaches it. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back: the app sees it as a navigation stack that is shallower once the touch has settled (`DriveHands.wentBack`). A sheet that closes took its stack with it, so closing one only pauses.
+  - **A request refused as "Paused" carries no screen:** the person is using the app, and Coach looks again after Continue.
+  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. One answered 404 ends it as [above](#when-the-person-touches-the-app), with the drive's own end when `GET /v1/coach/drive` has one. Anything else (a network error, a 5xx, a 429) is for a drive tafs cloud still has: it's posted again at 1, 2, 4, then every 8 seconds, and the app's own pause stands meanwhile.
   - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
 
 ### Typing
@@ -428,8 +435,7 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
 - **While it's paused:** "Paused", with **Continue** and **Stop**.
 - **The card that asks to drive** says what a touch does: "… It never confirms anything. Touch the
   app to pause it, or tap Stop to end it." (`drive.card_note_pauses`, `drive.card_note_scrolls_pauses`
-  in the apps' shared strings; `drive.card_note` and `drive.card_note_scrolls` keep the old note until iOS
-  pauses too, then go).
+  in the apps' shared strings).
 - **Once it's over:** `words`, for 3 seconds. When tafs cloud's words didn't come, the app's own words for the same end: "You took over, so Coach let you carry on", "The app left the screen, so Coach stopped", "You stopped Coach", "The phone locked, so Coach stopped", "You signed out, so Coach stopped", "The account is halted, so Coach stopped", "Coach is done", "Nothing was done for 15 minutes, so Coach stopped", "Another drive started".
 
 ### How each app sees and acts

@@ -1,0 +1,17 @@
+{
+  "report.already": "You've already reported this answer.",
+  "report.cant_from_here": "This answer can't be reported from here.",
+  "report.menu": "Report this answer",
+  "report.not_sent": "Your report wasn't sent. {why}",
+  "report.not_sent_why": "Not sent: {failed}",
+  "report.note_hint": "Add a note (optional)",
+  "report.note_most_characters": "A note is at most 1,000 characters.",
+  "report.person_kiff_reads_your_report": "A person at KIFF reads your report, with the answer as it was written.",
+  "report.reason.harmful": "Harmful",
+  "report.reason.offensive": "Offensive",
+  "report.reason.other": "Other",
+  "report.reason.wrong": "Wrong",
+  "report.runs_not_loaded": "Its runs couldn't be loaded. {why}",
+  "report.thanks": "Thanks. Someone at KIFF will read your report.",
+  "report.what_wrong": "What's wrong with it?"
+}

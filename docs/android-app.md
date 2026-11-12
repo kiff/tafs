@@ -297,8 +297,8 @@ region: an English app on a German phone writes "€2,000", a French one "2 000 
 symbol, and is never converted (`Money.figure`, `MoneyFormatTest`). Amounts in KIFF's or tafs cloud's own words are
 shown as they come.
 
-Every line the app writes itself is in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
-iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.py` writes, from it,
+Every line the app writes itself is in the shared `app/strings/en/`, one file per feature, by key
+(`needs_you.approve_once` is in `en/needs_you.json`), the same files iPhone and iPad read; the servers' own lines stay theirs. `app/strings/android.py` writes, from it,
 `res/values/strings.xml` (counts as `<plurals>`), `res/xml/locales_config.xml` and `model/Words.kt`, a typed accessor per
 key (`Words.NeedsYou.approveOnce`, `Words.Taf.worksUnderCards(count = n)`), so a missing key or a wrong value doesn't
 compile. Nobody edits those three files by hand: change the JSON and run the generator, and `--check` fails CI when they

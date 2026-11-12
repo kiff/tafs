@@ -23,6 +23,11 @@ export const DRIVE = {
   holdMs: 20_000,
   /** How often a held call and the stream look at the store. */
   pollMs: 250,
+  /**
+   * How long a refusal with no screen waits for the person's pause to land: the phone refuses a request
+   * it holds the moment the person touches the app, and that answer can reach tafs cloud before the pause does.
+   */
+  pauseGraceMs: 3_000,
   /** A drive with nothing done for this long ends. */
   idleMs: 15 * 60_000,
   /** The stream's own lifetime: the app opens it again after this (a function's limit is 15 minutes). */
@@ -449,6 +454,18 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
     const r = (await store.get(driveKeys.result(tenant, d.id, req.id))) as DriveResult | undefined;
     if (r) {
       await store.remove(driveKeys.result(tenant, d.id, req.id)).catch(() => undefined);
+      // Refused with no screen: the person touched the app while the phone held this request (only that
+      // refusal comes without one, docs/drive.md). Its pause may land a moment after; once it has, this call is
+      // the pause's, so Coach's run waits rather than reading a refusal. Words are never matched: they're the app's.
+      if (r.outcome === "refused" && !r.image) {
+        // Counted in polls, not read off the clock, so it ends however the wait is kept.
+        for (let left = Math.ceil(DRIVE.pauseGraceMs / DRIVE.pollMs); ; left--) {
+          const since = await drivePaused(store, tenant, d.id);
+          if (since) return pausedAnswer(since);
+          if (left <= 0) break;
+          await wait(DRIVE.pollMs);
+        }
+      }
       // The look after Continue came back: Coach may act again.
       if (mustLook && tool === "app_look" && r.outcome === "done") await store.remove(driveKeys.look(tenant, d.id)).catch(() => undefined);
       return { result: r, drive: d };

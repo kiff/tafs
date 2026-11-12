@@ -1,0 +1,14 @@
+{
+  "halt.again": "Blocca di nuovo",
+  "halt.all_now": "Blocca tutto ora",
+  "halt.explain.halted": "Bloccato. Non arriva nulla alle tue app. Quando riprendi, viene eseguito solo il lavoro nuovo: nulla di quanto c'era prima del blocco riparte.",
+  "halt.explain.halted_since": "Bloccato dalle {time}. Non arriva nulla alle tue app. Quando riprendi, viene eseguito solo il lavoro nuovo: nulla di quanto c'era prima del blocco riparte.",
+  "halt.explain.halting": "Non parte nulla di nuovo. Bloccato compare quando KIFF e il collegamento lo confermano entrambi.",
+  "halt.explain.running_all": "Bloccare ferma i tuoi tafs: non parte nessuna esecuzione, e non arriva nulla alle tue app finché non riprendi. Una chiamata già partita può ancora arrivare; non viene annullato nulla.",
+  "halt.explain.running_one": "Bloccare lo ferma: non parte nessuna esecuzione, e non arriva nulla alle tue app finché non riprendi. Una chiamata già partita può ancora arrivare; non viene annullato nulla.",
+  "halt.halted_nothing_reaches_your_tools": "Bloccato{since}. Non arriva nulla alle tue app. Quando riprendi, viene eseguito solo il lavoro nuovo: nulla di quanto c'era prima del blocco riparte.",
+  "halt.halting_stops_no_run_starts": "Bloccare ferma {who}: non parte nessuna esecuzione, e non arriva nulla alle tue app finché non riprendi. Una chiamata già partita può ancora arrivare; non viene annullato nulla.",
+  "halt.now": "Blocca ora",
+  "halt.row_running": "Fermalo finché non riprendi",
+  "halt.your_tafs_lower": "i tuoi tafs"
+}

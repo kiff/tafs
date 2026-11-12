@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} can't be attached.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs can't attach this file: it isn't a kind or size it takes. Pick another one.",
+  "attachment.photo": "Photo",
+  "attachment.photo_could_not_read": "That photo couldn't be read.",
+  "attachment.photo_numbered": "Photo {n}",
+  "attachment.too_large": "{name} is {size}; the most is {limit}.",
+  "attachment.wrong_kind": "{name} can't be attached. Photos, PDFs, text, CSV, Markdown, Word and Excel files can."
+}

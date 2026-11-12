@@ -26,13 +26,16 @@ class DriveContractTest {
   private fun files(): List<File> = sources.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
 
   /**
-   * Each `Words` accessor (`Words.Taf.Remove.button`) as the English it says, from the shared `app/strings/en.json`, a count by its
-   * `other` form: the scans read the words a control shows, wherever they're kept.
+   * Each `Words` accessor (`Words.Taf.Remove.button`) as the English it says, from the shared `app/strings/en/`, one file per
+   * feature, a count by its `other` form: the scans read the words a control shows, wherever they're kept. No words read is a
+   * failure, never an empty scan that passes.
    */
   private val english: Map<String, String> by lazy {
-    val en = kotlinx.serialization.json.Json.parseToJsonElement(File("../../app/strings/en.json").readText()).jsonObject
+    val files = File("../../app/strings/en").listFiles { f -> f.extension == "json" }.orEmpty().sortedBy { it.name }
+    val en = files.flatMap { kotlinx.serialization.json.Json.parseToJsonElement(it.readText()).jsonObject.entries }
+    check(en.size > 1_000) { "app/strings/en/ wasn't read: ${en.size} keys from ${files.size} files" }
     fun camel(part: String, upper: Boolean) = part.split("_").let { w -> (if (upper) w[0].replaceFirstChar(Char::uppercase) else w[0]) + w.drop(1).joinToString("") { it.replaceFirstChar(Char::uppercase) } }
-    en.entries.associate { (key, value) ->
+    en.associate { (key, value) ->
       val parts = key.split(".")
       val accessor = "Words." + parts.dropLast(1).joinToString(".") { camel(it, true) } + "." + camel(parts.last(), false)
       val text = (value as? kotlinx.serialization.json.JsonObject)?.get("other") ?: value

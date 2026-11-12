@@ -68,8 +68,46 @@ class SharedWords(unittest.TestCase):
             self.assertFalse([k for k in self.source if k.startswith(key + ".")], key)
 
     def test_the_files_are_sorted_by_key(self):
-        for lang, lines in self.lines.items():
-            self.assertEqual(list(lines), sorted(lines), f"{lang}.json isn't sorted by key")
+        for lang in self.lines:
+            for path, lines in generate.files_of(lang).items():
+                self.assertEqual(list(lines), sorted(lines), f"{os.path.relpath(path, REPO)} isn't sorted by key")
+
+    def test_each_feature_has_its_own_file(self):
+        # One file per feature in each language: a key lives in its area's file, and in one file only.
+        for lang in self.lines:
+            for path, lines in generate.files_of(lang).items():
+                name = os.path.splitext(os.path.basename(path))[0]
+                self.assertEqual(os.path.basename(os.path.dirname(path)), lang, f"{path}: {lang}'s words are in app/strings/{lang}/")
+                self.assertEqual([k for k in lines if generate.area(k) != name], [], f"{os.path.relpath(path, REPO)} holds another feature's keys")
+                self.assertTrue(lines, f"{os.path.relpath(path, REPO)} is empty: remove it")
+
+    def test_a_key_in_the_wrong_file_or_in_two_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            os.makedirs(os.path.join(folder, "en"))
+            with open(os.path.join(folder, "en", "home.json"), "w", encoding="utf-8") as f:
+                json.dump({"chat.title": "Chat"}, f)
+            with self.assertRaises(ValueError):
+                generate.load("en", folder)
+            with open(os.path.join(folder, "en", "home.json"), "w", encoding="utf-8") as f:
+                json.dump({"home.title": "Tafs"}, f)
+            with open(os.path.join(folder, "en", "chat.json"), "w", encoding="utf-8") as f:
+                json.dump({"chat.title": "Chat", "home.title": "Tafs"}, f)
+            with self.assertRaises(ValueError):
+                generate.load("en", folder)
+
+    def test_an_old_language_file_beside_its_folder_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            generate.save("en", {"home.title": "Tafs"}, folder)
+            with open(os.path.join(folder, "en.json"), "w", encoding="utf-8") as f:
+                json.dump({"home.title": "Old"}, f)
+            with self.assertRaises(ValueError):
+                generate.load("en", folder)
+
+    def test_saving_writes_one_sorted_file_per_feature(self):
+        with tempfile.TemporaryDirectory() as folder:
+            generate.save("en", {"home.title": "Tafs", "chat.waiting": "Waiting", "chat.title": "Chat"}, folder)
+            self.assertEqual(sorted(os.listdir(os.path.join(folder, "en"))), ["chat.json", "home.json"])
+            self.assertEqual(generate.load("en", folder), {"chat.title": "Chat", "chat.waiting": "Waiting", "home.title": "Tafs"})
 
     def test_no_language_has_a_key_english_lacks(self):
         for lang, lines in self.lines.items():
@@ -283,7 +321,7 @@ class IOSLiterals(unittest.TestCase):
 
     def test_every_ios_line_reads_through_words(self):
         left = ios_literals.scan()
-        self.assertEqual(left, [], "English still in code; give it a key in en.json, or keep it in ios_kept.json with why:\n"
+        self.assertEqual(left, [], "English still in code; give it a key in app/strings/en/, or keep it in ios_kept.json with why:\n"
                          + "\n".join(f"  {f}:{n}: {b}" for f, n, b in left))
 
     def test_the_scan_judges_each_literal_on_its_own(self):
@@ -332,7 +370,7 @@ class AndroidLiterals(unittest.TestCase):
 
     def test_every_android_line_reads_through_words(self):
         left = android_literals.scan()
-        self.assertEqual(left, [], "English still in code; give it a key in en.json, or keep it in android_kept.json with why:\n"
+        self.assertEqual(left, [], "English still in code; give it a key in app/strings/en/, or keep it in android_kept.json with why:\n"
                          + "\n".join(f"  {f}:{n}: {b}" for f, n, b in left))
 
     def test_the_scan_judges_each_literal_on_its_own(self):
@@ -415,8 +453,7 @@ class AppIntentWords(unittest.TestCase):
                             self.assertNotIn("siri", (k + v).lower(), os.path.relpath(path, REPO))
 
     def test_every_intent_key_is_a_shared_line(self):
-        with open(os.path.join(HERE, "en.json"), encoding="utf-8") as f:
-            lines = json.load(f)
+        lines = generate.load("en")
         for rel, text in self.intent_files():
             for key in self.RESOURCE.findall(text):
                 self.assertIn(key, lines, f"{rel}: {key!r} isn't in app/strings")

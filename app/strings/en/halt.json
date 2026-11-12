@@ -1,0 +1,14 @@
+{
+  "halt.again": "Halt again",
+  "halt.all_now": "Halt all now",
+  "halt.explain.halted": "Halted. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again.",
+  "halt.explain.halted_since": "Halted since {time}. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again.",
+  "halt.explain.halting": "Nothing new starts. Halted shows once KIFF and the connection both confirm.",
+  "halt.explain.running_all": "Halting stops your tafs: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone.",
+  "halt.explain.running_one": "Halting stops it: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone.",
+  "halt.halted_nothing_reaches_your_tools": "Halted{since}. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again.",
+  "halt.halting_stops_no_run_starts": "Halting stops {who}: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone.",
+  "halt.now": "Halt now",
+  "halt.row_running": "Stop it until you resume",
+  "halt.your_tafs_lower": "your tafs"
+}

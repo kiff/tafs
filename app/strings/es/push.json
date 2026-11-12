@@ -1,0 +1,8 @@
+{
+  "push.channel.holds_description": "Una llamada está retenida a la espera de tu respuesta. No se envía nada hasta que la apruebes.",
+  "push.channel.other": "Otras alertas",
+  "push.channel.other_description": "Solicitudes de tareas y sus respuestas, sin sonido.",
+  "push.open_needs_you": "Abre Te necesita para responder.",
+  "push.open_taf": "Abre el taf para verlo.",
+  "push.open_usage": "Abre Plan y uso para verlo."
+}

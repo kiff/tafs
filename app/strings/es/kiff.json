@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Consultando a KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "No llegó a KIFF. Vuelve a intentarlo.",
+  "kiff.kiff_can_not_do_sign": "KIFF aún no puede hacer esto: vuelve a iniciar sesión desde Ajustes para aprobar desde este {device}.",
+  "kiff.kiff_did_not_answer_expected": "KIFF no respondió como se esperaba. Vuelve a intentarlo.",
+  "kiff.kiff_words_do_not_match": "Las palabras de KIFF no coinciden con su comprobación. No se puede aprobar nada."
+}

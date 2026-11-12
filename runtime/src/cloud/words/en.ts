@@ -148,6 +148,16 @@ export const en = {
   health_do_that_run: "Open that run to see what it did.",
   work_halted: "Halted · resume it from Halt",
   work_needs_you_count: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 request needs you" : `${n} requests need you`),
+  // Account → Alerts: each kind a phone can turn off (alert-preferences.ts), and how many tafs answer here.
+  alert_needs_you_title: "A taf needs you",
+  alert_needs_you_words: "For a call waiting for your answer",
+  alert_halted_title: "Every taf halted",
+  alert_halted_words: "When a taf or the account is halted",
+  alert_answered_title: "A taf answered someone",
+  alert_answered_words: "Silent, for the tafs whose results include this phone",
+  alert_not_sent_title: "A reply wasn't sent",
+  alert_not_sent_words: "Silent, when a reply needs another try",
+  alerts_answering_tafs: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 taf" : `${n} tafs`),
   // Home's Needs you line (GET /v1/home, needs_you.words): what the count says, nothing or how many.
   home_needs_you_none: "Nothing needs you.",
   home_needs_you: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 needs you." : `${n} need you.`),

@@ -380,11 +380,18 @@ final class DriveTests: XCTestCase {
     }
 
     /// The app's words in English, by their accessor as the sources write it ("Words.NeedsYou.approveOnce"),
-    /// from Words.swift and the shared en.json.
+    /// from Words.swift and the shared app/strings/en/, one file per feature.
     static let english: [String: String] = {
         let root = DriveTests.sources.deletingLastPathComponent().deletingLastPathComponent()
-        guard let data = try? Data(contentsOf: root.appendingPathComponent("app/strings/en.json")),
-              let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+        let folder = root.appendingPathComponent("app/strings/en")
+        let files = ((try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? [])
+            .filter { $0.pathExtension == "json" }
+        var json: [String: Any] = [:]
+        for file in files {
+            guard let data = try? Data(contentsOf: file), let part = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { continue }
+            json.merge(part) { first, _ in first }
+        }
+        guard !json.isEmpty,
               let swift = try? String(contentsOf: DriveTests.sources.appendingPathComponent("Design/Words.swift"), encoding: .utf8) else { return [:] }
         let accessor = try! NSRegularExpression(pattern: #"static (?:var|func) (`?\w+`?).*Words\.(?:line|count)\("([^"]+)""#)
         var out: [String: String] = [:]
@@ -418,7 +425,7 @@ final class DriveTests: XCTestCase {
     }
 
     func testTheSourcesReadTheAppsWordsAsEnglish() {
-        XCTAssertGreaterThan(Self.english.count, 1000, "Words.swift or en.json wasn't read")
+        XCTAssertGreaterThan(Self.english.count, 1000, "Words.swift or app/strings/en/ wasn't read")
         XCTAssertEqual(Self.english["Words.NeedsYou.approveOnce"], "Approve once")
         XCTAssertEqual(Self.readable("Button(Words.NeedsYou.approveOnce) {"), #"Button("Approve once") {"#)
         XCTAssertEqual(Self.readable("Text(Words.Work.requestsNeedYou(count: n))"), #"Text("{count} requests need you"(count: n))"#)

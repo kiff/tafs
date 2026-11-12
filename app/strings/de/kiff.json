@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFF wird gefragt: {title}…",
+  "kiff.did_not_reach_kiff_try": "Es hat KIFF nicht erreicht. Versuch es erneut.",
+  "kiff.kiff_can_not_do_sign": "KIFF kann das noch nicht: Melde dich in den Einstellungen erneut an, um auf diesem {device} zu genehmigen.",
+  "kiff.kiff_did_not_answer_expected": "KIFF hat nicht wie erwartet geantwortet. Versuch es erneut.",
+  "kiff.kiff_words_do_not_match": "KIFFs Worte stimmen nicht mit ihrer Prüfung überein. Es kann nichts genehmigt werden."
+}

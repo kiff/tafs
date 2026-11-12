@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Your chats weren't exported. {why}",
+  "export.not_offered": "The files couldn't be saved on this phone. Free up some space, then try again.",
+  "export.own_chats_each_taf_coach": "Your own chats with each taf, Coach's included, the names of the files you attached, and your notes, as a readable file and as JSON. Only you can export them.",
+  "export.preparing": "Preparing your chats…",
+  "export.ready_share_again": "Ready: {files}. Share again",
+  "export.row": "Export my chats",
+  "export.sign_in_first": "Sign in with KIFF to export your chats."
+}

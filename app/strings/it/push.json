@@ -1,0 +1,8 @@
+{
+  "push.channel.holds_description": "Una chiamata è trattenuta in attesa della tua risposta. Non viene inviato nulla finché non la approvi.",
+  "push.channel.other": "Altri avvisi",
+  "push.channel.other_description": "Richieste di attività e le relative risposte, senza suono.",
+  "push.open_needs_you": "Apri Ti aspetta per rispondere.",
+  "push.open_taf": "Apri il taf per vedere.",
+  "push.open_usage": "Apri Piano e utilizzo per vedere."
+}
