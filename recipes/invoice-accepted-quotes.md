@@ -7,7 +7,7 @@ line: Drafts the invoice for each quote a customer accepted, from the quote's ow
 headline: No accepted quote goes uninvoiced.
 today: An accepted quote waits until someone finds the time to turn it into an invoice.
 connections:
-  - quickbooks | zohobooks | moneybird
+  - qonto | quickbooks | zohobooks | moneybird
 card:
   allows:
     - Invoice drafts from accepted quotes, up to 20 a day

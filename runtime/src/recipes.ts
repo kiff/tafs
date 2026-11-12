@@ -712,6 +712,7 @@ export const RECIPES = [
     "say": "Each weekday morning, find the quotes my customers accepted in my accounting app that have no invoice yet. Draft an invoice for each one with the quote's own customer, lines and prices, nothing else, up to 20 a day. Each invoice waits for my approval before it goes to the customer. Never change a quote, never offer a discount or a credit note, and never delete an invoice.",
     "connections": [
       [
+        "qonto",
         "quickbooks",
         "zohobooks",
         "moneybird"
