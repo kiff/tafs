@@ -101,6 +101,42 @@ class DriveCardTest {
   }
 
   @Test
+  fun aRunStillAtWorkWhenTheDriveEndsIsFollowedToItsEnd() = runTest {
+    reads()
+    val thread = "GET /v1/tafs/setup_1/conversation"
+    var queued = 1
+    val component = """{"at":"2026-11-06T00:29:00Z","session":"s1","run":"r1","component":$card}"""
+    // The thread's next reads, in this order, however often it was read before.
+    fun next(vararg bodies: String) {
+      repeat(transport.requestsTo(thread).size - queued) { transport.answer(thread, 200, """{"messages":[],"components":[$component]}"""); queued++ }
+      bodies.forEach { transport.answer(thread, 200, it); queued++ }
+    }
+    transport.answer("GET /v1/tafs/setup_1/runs/r1/stream", 200, "event: end\ndata: {\"status\":\"PAUSED\",\"stop\":\"waiting\"}\n")
+    transport.answer("POST /v1/coach/drive", 200, """{"drive":{"id":"dv_1","session":"s1","task":"Run Chargebacks","started":"2026-11-06T00:30:01Z"}}""")
+    transport.hold("GET /v1/coach/drive/dv_1/stream")
+    transport.answer("POST /v1/coach/drive/stop", 200, """{"ended":{"why":"stopped","at":"2026-11-06T00:31:00Z"}}""")
+    val m = model()
+    // Coach's run is picked up once while it works, then parks: the thread says nothing is at work.
+    next("""{"messages":[],"components":[$component],"working":{"session":"s1","run":"r1"}}""", """{"messages":[],"components":[$component]}""")
+    m.loadChat(COACH_CHAT)
+    runCurrent()
+    assertEquals(1, transport.requestsTo("GET /v1/tafs/setup_1/runs/r1/stream").size)
+    assertFalse(m.state.value.thinking(COACH_CHAT))
+    // The drive ends while the same run is back at work; it ends a moment later.
+    m.startDrive(shown)
+    next(
+      """{"messages":[],"components":[$component],"working":{"session":"s1","run":"r1"}}""",
+      """{"messages":[{"at":"2026-11-06T00:32:00Z","from":"taf","text":"Chargebacks has run.","session":"s1"}],"components":[$component]}""",
+    )
+    m.stopDrive("stopped")
+    runCurrent()
+    advanceTimeBy(AppModel.CHAT_POLL_MS * 3)
+    runCurrent()
+    assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().any { it.text == "Chargebacks has run." })
+    assertFalse("its end shows, and the chat isn't left thinking", m.state.value.thinking(COACH_CHAT))
+  }
+
+  @Test
   fun approveSignsTheStartWithTheApprovalKeyAndTheDriveIsOn() = runTest {
     reads()
     transport.answer("POST /v1/coach/drive", 200, """{"drive":{"id":"dv_1","session":"s1","task":"Run Chargebacks","started":"2026-11-06T00:30:01Z"}}""")
