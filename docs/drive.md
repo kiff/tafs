@@ -275,6 +275,8 @@ drive; only a clear takeover ends it.
   - **Continue** is what Coach hears next: its turn still at work in the drive's chat takes it, or
     a new turn starts there with it ("The person tapped Continue: look before your next step").
     Its first step is a look.
+  - Parking Coach's run while paused follows (owner, 12 Nov), once KIFF's gateway carries the
+    drive's wait.
   - The person uses the app as usual, and every touch of theirs is delivered.
 - **Continue** puts the keyboard away first: the field keeps its text and loses focus, so nothing
   the keyboard commits later reads as the person's typing. Then the app posts
