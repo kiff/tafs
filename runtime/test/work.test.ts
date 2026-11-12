@@ -181,6 +181,11 @@ describe("a failed run's code", () => {
     expect(failed("the run reached its time limit", "fr")).toBe("Elle a atteint sa limite de temps et s'est arrêtée.");
     expect(failed("no invocation claimed it in time", "pl")).toBe("Nie mogło się rozpocząć, więc nic nie zostało zrobione.");
     expect(failed("the agent is halted, so the run didn't go on", "fr")).toBe("Elle n'a pas continué : le taf est bloqué.");
+    // A run that never started reads apart from one that stopped partway (kiff/agents' FailedFirstTurn, FailedTools).
+    expect(failed("the run failed before its first step, so nothing was done")).toBe("It couldn't start, so nothing was done.");
+    expect(failed("the run failed before its first step, so nothing was done", "fr")).toBe("Elle n'a pas pu démarrer, donc rien n'a été fait.");
+    expect(failed("the AI provider refused the agent's tools, so the run didn't start")).toBe("It didn't start: its tools couldn't be used. Nothing was done.");
+    expect(failed("the AI provider refused the agent's tools, so the run didn't start", "de")).toBe("Er ist nicht gestartet: Die Werkzeuge des tafs konnten nicht verwendet werden. Es wurde nichts getan.");
     // Text tafs doesn't know: kept for an English reader, a plain "failed" in any other language.
     expect(failed("Stripe said no.", "fr")).toBe("Échec");
     expect(failedLine("Stripe said no.")).toBe("It failed: Stripe said no.");
@@ -215,5 +220,43 @@ describe("a check that found nothing", () => {
       { due: "2026-10-30T11:15:00Z", at: "2026-10-30T11:15:01Z", outcome: "quiet" },
     ];
     expect(skippedOf(fired, "UTC", NOW).map((s) => s.why)).toEqual(["check_failed"]);
+  });
+});
+
+describe("a run's credits on its row", () => {
+  it("says the counted credits from KIFF's usage record, or why a run used none, ready to draw", async () => {
+    const { runCredits } = await import("../src/cloud/credits.js");
+    const base = { run: "r", trigger: "schedule", ended: "2026-11-12T19:43:40Z", refused: 0, declined: 0 };
+    expect(runCredits({ ...base, counted: true, credits: 34 })).toEqual({ credits: 34, counted: true, words: "34 credits" });
+    expect(runCredits({ ...base, counted: true, credits: 1 })).toEqual({ credits: 1, counted: true, words: "1 credit" });
+    expect(runCredits({ ...base, counted: false, free: "failed", credits: 9 })).toMatchObject({ credits: 0, counted: false });
+    expect(runCredits({ ...base, counted: false, free: "failed", credits: 9 }).words).not.toMatch(/\d/);
+    expect(runCredits({ ...base, trigger: "trial", counted: false, credits: 5 }).counted).toBe(false);
+    expect(runCredits({ ...base, counted: true, credits: 34 }, "fr").words).toMatch(/34/);
+  });
+
+  it("goes on each request KIFF has counted, and none on a run it hasn't or a read that failed", async () => {
+    const { workOf } = await import("../src/cloud/work.js");
+    const runs = [run({ id: "a", status: "COMPLETED" }), run({ id: "b", status: "COMPLETED" })];
+    const credits = new Map([["a", { credits: 34, counted: true, words: "34 credits" }]]);
+    const { requests } = workOf(runs, "UTC", NOW, [], new Set(), new Map(), "en", credits);
+    expect(requests.find((q) => q.id === "a")?.credits).toEqual({ credits: 34, counted: true, words: "34 credits" });
+    expect(requests.find((q) => q.id === "b")).not.toHaveProperty("credits");
+    expect(workOf(runs, "UTC", NOW, []).requests.every((q) => !("credits" in q))).toBe(true);
+  });
+
+  it("reads the period's runs with the person's session, and gives none when KIFF can't be read", async () => {
+    const { runCreditsOf } = await import("../src/cloud/credits.js");
+    const seen: string[] = [];
+    const ok = (async (url: string, init?: RequestInit) => {
+      seen.push(`${url} ${new Headers(init?.headers).get("authorization") ?? ""}`);
+      return new Response(JSON.stringify({ items: [{ run: "a", trigger: "schedule", ended: "2026-11-12T19:43:40Z", counted: true, credits: 34, refused: 0, declined: 0 }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    const got = await runCreditsOf("tok", "taf-q", "en", ok, "https://kiff.test");
+    expect(got.get("a")?.words).toBe("34 credits");
+    expect(seen[0]).toContain("/v1/me/usage/credits/runs?runtime_agent=taf-q");
+    expect(seen[0]).toContain("Bearer tok");
+    const down = (async () => new Response("{}", { status: 503 })) as unknown as typeof fetch;
+    expect((await runCreditsOf("tok", "taf-q", "en", down, "https://kiff.test")).size).toBe(0);
   });
 });

@@ -1,0 +1,1 @@
+- **tafs cloud: the secure connection sheet's words.** For an app that takes a key, tafs cloud serves every word of the protected sheet in the 8 languages: the vendor with its logo, a read-only line only when every tool is a read, Paste the key, Details, the legal line and the receipt ([secure-connection.md](../docs/secure-connection.md)).

@@ -55,6 +55,10 @@ data class SetupTaf(
   val unscheduled: Boolean? = null,
 )
 
+/** tafs cloud's mark that an approval's connection is done, in its words. */
+@Serializable
+data class SetupConnection(val done: Boolean = false, val words: String = "")
+
 /**
  * One thing Coach shows in its chat: its plan, a notice, a question, an approval, a vendor sign-in or the hand-over. A card
  * grants nothing: an approval names planque's grant and KIFF's draft, which the owner reads and signs there.
@@ -96,6 +100,11 @@ data class SetupComponent(
   val note: String? = null,
   /** A plan's one-line form, from tafs cloud: "Step 3 of 6 · Your rules", or "Done · 6 of 6". */
   val line: String? = null,
+  /**
+   * On an approval whose connection is already connected, tafs cloud's mark (docs/secure-connection.md): the card draws only
+   * its words ("Qonto is connected (read only)") and Its Card, never the connection's text again.
+   */
+  val connection: SetupConnection? = null,
 ) {
   /** The hand-over's taf, when [tafValue] is one. */
   val taf: SetupTaf?
@@ -173,7 +182,7 @@ data class ApprovalDecision(
 @Serializable
 data class ApprovalAsk(
   val id: String,
-  /** `connect` or `cards`. */
+  /** `connect`, `cards`, or `key_and_cards` (the key and its Card under one `kiff.requests.v1` signature the phone builds). */
   val step: String,
   /** The exact bytes the device's key signs, under the fingerprint. */
   val message: String,
@@ -186,6 +195,8 @@ data class ApprovalAsk(
   val key: String? = null,
   val planque: PlanqueAsk? = null,
   val kiff: KiffAsk? = null,
+  /** For `key_and_cards`: `kiff.requests.v1`, the message the phone builds itself from the two requests (`message` is empty). */
+  val scheme: String? = null,
 )
 
 /** planque's approve, its body as tafs cloud built it: the phone sends it as it is. */

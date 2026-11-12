@@ -293,6 +293,37 @@ export function runWords(r: KIFFRun, lang: Lang = "en"): string {
   return `${from} · ${credits(count(r.credits), lang)}${blocked(r.refused, r.declined, lang)}`;
 }
 
+/**
+ * A run's credits as its Activity row draws them, ready to draw: the counted credits KIFF's usage record keeps
+ * for it (the number the Credits page and the usage record show), or why it used none. Apps draw `words` as
+ * they are; `credits` is 0 for a run that wasn't counted.
+ */
+export interface RunCredits {
+  credits: number;
+  counted: boolean;
+  words: string;
+}
+
+export function runCredits(r: KIFFRun, lang: Lang = "en"): RunCredits {
+  const w = wordsIn(lang);
+  if (r.free === "trial" || r.trigger === "trial") return { credits: 0, counted: false, words: w.cr_trial_run };
+  if (!r.counted) return { credits: 0, counted: false, words: r.free === "failed" ? w.cr_failed_not_counted : w.cr_not_counted_run };
+  return { credits: count(r.credits), counted: true, words: credits(count(r.credits), lang) };
+}
+
+/**
+ * Each run's credits by its id, from the first page of KIFF's record of a taf's runs in the period (newest
+ * first, as the Activity rows are). A read that fails gives none: a row then has no credits line, never a guess.
+ */
+export async function runCreditsOf(token: string, taf: string, lang: Lang = "en", doFetch: Fetch = fetch, base = KIFF_API): Promise<Map<string, RunCredits>> {
+  try {
+    const page = await readCreditRuns(token, taf, false, "", doFetch, base);
+    return new Map(page.items.filter((r) => typeof r.run === "string" && r.run).map((r) => [r.run, runCredits(r, lang)] as const));
+  } catch {
+    return new Map();
+  }
+}
+
 /** Whether a run's row opens its request: while kiff/agents keeps the run, and never a trial's. */
 export function opens(r: KIFFRun, now: Date): boolean {
   if (r.free === "trial" || r.trigger === "trial") return false;

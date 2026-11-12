@@ -38,19 +38,25 @@ struct ShareLine: View {
         }
     }
 
-    /// "Shared with Support and ana@acme.com", or not shared yet.
+    /// "Shared with Support and ana@acme.com", or not shared yet. The person reading it is
+    /// never named: a taf that only they use is "Not shared", not "Shared with" themselves.
     static func sharedWith(_ shares: [KIFFClient.Share]?, _ model: AppModel) -> String {
-        sharedWith(shares, groups: model.groups) { model.person($0)?.label ?? $0 }
+        let email = model.kiffAccount?.email?.lowercased()
+        return sharedWith(shares, groups: model.groups, you: { subject in
+            let person = model.person(subject)
+            return person?.you == true || (email != nil && (person?.email?.lowercased() == email || subject.lowercased() == email))
+        }) { model.person($0)?.label ?? $0 }
     }
 
-    static func sharedWith(_ shares: [KIFFClient.Share]?, groups: [KIFFClient.Group], label: (String) -> String) -> String {
+    /// `you` says whether a subject is the person reading the line.
+    static func sharedWith(_ shares: [KIFFClient.Share]?, groups: [KIFFClient.Group], you: (String) -> Bool = { _ in false }, label: (String) -> String) -> String {
         guard let shares else { return Words.People.sharing }
         // Shared with KIFF's default group alone: its own sentence, so the languages that inflect it read right.
         if let g = shares.first?.group, shares.count == 1, groups.first(where: { $0.id == g })?.everyone == true {
             return Words.People.sharedWithEveryone
         }
         let names = shares.compactMap { s in
-            s.group.flatMap { g in groups.first { $0.id == g }?.shownName } ?? s.subject.map(label)
+            s.group.flatMap { g in groups.first { $0.id == g }?.shownName } ?? s.subject.flatMap { you($0) ? nil : label($0) }
         }
         return names.isEmpty ? Words.People.notShared : Words.People.sharedWithPrefix + Words.list(names)
     }

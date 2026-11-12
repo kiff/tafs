@@ -28,6 +28,21 @@ final class EveryoneGroupTests: XCTestCase {
         XCTAssertEqual(ShareLine.sharedWith([], groups: groups) { $0 }, Words.People.notShared)
     }
 
+    /// The person reading the line is never named in it: a taf only they use is "Not shared",
+    /// and one they share reads with the others alone.
+    func testTheSharedLineNeverNamesThePersonReadingIt() {
+        let groups: [KIFFClient.Group] = []
+        let you: (String) -> Bool = { $0 == "usr_me" }
+        XCTAssertEqual(ShareLine.sharedWith([.init(subject: "usr_me")], groups: groups, you: you) { $0 }, Words.People.notShared)
+        XCTAssertEqual(ShareLine.sharedWith([.init(subject: "usr_me"), .init(subject: "ana@acme.test")], groups: groups, you: you) { $0 },
+                       Words.People.sharedWithPrefix + "ana@acme.test")
+        XCTAssertEqual(ShareLine.sharedWith([.init(subject: "ana@acme.test")], groups: groups, you: you) { $0 },
+                       Words.People.sharedWithPrefix + "ana@acme.test", "someone else is still named")
+        XCTAssertEqual(ShareLine.sharedWith([.init(subject: "usr_me")], groups: groups) { $0 }, Words.People.sharedWithPrefix + "usr_me",
+                       "with nobody known as the reader, every subject is named")
+        XCTAssertEqual(ShareLine.sharedWith([], groups: groups, you: you) { $0 }, Words.People.notShared)
+    }
+
     func testNoOneIsRemovedFromTheEveryoneGroup() {
         XCTAssertFalse(PeopleGroupsView.mayRemove(ana, from: everyone, canManagePeople: true, managesGroup: true))
         XCTAssertTrue(PeopleGroupsView.mayRemove(ana, from: support, canManagePeople: true, managesGroup: false))

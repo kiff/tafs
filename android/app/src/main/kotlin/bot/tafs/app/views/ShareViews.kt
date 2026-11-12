@@ -62,7 +62,7 @@ fun ShareLine(tafId: String, state: AppState, actions: PeopleActions) {
     )
     // The rest of the row, on up to two lines, so a longer language's words ("Compartido con") still leave room for the names.
     Text(
-      PeopleWords.sharedWith(shares, state.groups, state.people),
+      PeopleWords.sharedWith(shares, state.groups, state.people, state.kiffAccount?.email),
       Modifier.weight(1f),
       style = scaled(14, color = Theme.soft),
       maxLines = 2,

@@ -360,6 +360,11 @@ data class AllowChange(
   val before: Long? = null,
   val after: Long? = null,
   val unit: String? = null,
+  /** A total's or a count's window, as KIFF's draft writes it: the change moves the total in that window only. */
+  val window: String? = null,
+  /** A `resource` change: the grant's scope parameter, and the one value added to it. */
+  val parameter: String? = null,
+  val value: String? = null,
   @SerialName("words_before") val wordsBefore: String = "",
   @SerialName("words_after") val wordsAfter: String = "",
   val rounded: Boolean = false,
@@ -367,6 +372,49 @@ data class AllowChange(
 
 @Serializable
 data class AllowWould(val calls: Int = 0, val words: String = "")
+
+/**
+ * The secure connection sheet's words for one key grant (docs/secure-connection.md), from tafs cloud's
+ * `GET /v1/connect/grants/{grant}/sheet`, in the screen's language. The phone draws them and fills only `{last4}`, from the key it
+ * pasted, and `{vendor}`, `{terms}` and `{privacy}` from this answer.
+ */
+@Serializable
+data class SecureSheet(
+  val vendor: SecureVendor = SecureVendor(),
+  val title: String = "",
+  val lines: List<SecureLine> = emptyList(),
+  val paste: SecurePaste = SecurePaste(),
+  val details: SecureDetails? = null,
+  @SerialName("card_title") val cardTitle: String? = null,
+  val legal: SecureLegal? = null,
+  val button: String = "",
+  val receipt: SecureReceipt? = null,
+)
+
+@Serializable
+data class SecureVendor(val name: String = "", val logo: String? = null, val host: String? = null)
+
+/** One plain line: `reads_only` or `may_change`, `sealed`, `disconnect`. The phone draws `text`. */
+@Serializable
+data class SecureLine(val kind: String = "", val text: String = "")
+
+@Serializable
+data class SecurePaste(val button: String = "", val what: String? = null, val pasted: String = "", val cleared: String? = null)
+
+@Serializable
+data class SecureDetails(val title: String = "", val lines: List<SecureDetail> = emptyList())
+
+@Serializable
+data class SecureDetail(val label: String = "", val value: String = "")
+
+@Serializable
+data class SecureLegal(val text: String = "", val terms: SecureLink? = null, val privacy: SecureLink? = null)
+
+@Serializable
+data class SecureLink(val words: String = "", val url: String = "")
+
+@Serializable
+data class SecureReceipt(val text: String = "", val disconnect: String? = null)
 
 @Serializable
 data class AllowRound(val after: Long? = null, val words: String = "")
