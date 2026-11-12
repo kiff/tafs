@@ -520,6 +520,10 @@ data class HeldCall(
    * confirmation. Null for any other call.
    */
   val install: VersionInstall? = null,
+  /** KIFF's kind for the exception (`card_unit` for a currency the Card has no limit for), as it came. */
+  val kind: String? = null,
+  /** Each breach's outcome, as KIFF names it (`per_action_exceeded`, `limit_reached`, `resource_not_on_card`). */
+  val breachOutcomes: List<String> = emptyList(),
 )
 
 /** The taf and version a held version_install names, as Coach sent them: the taf's id in tafs cloud, or its name. */
