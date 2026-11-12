@@ -108,7 +108,15 @@ returns the offer, or why there's none:
     "draft": "drf_…", "confirm_key": "critical", "send_held": true } }
 ```
 
-or `{ "none": "never" | "unit" | "no_change" | "not_yours", "words": "…" }`.
+or `{ "none": "never" | "unit" | "no_change" | "not_yours" | "refused", "words": "…" }`. `refused` is
+tafs cloud's own check refusing KIFF's change: the person reads the same words as `no_change`, and
+the log names the rule that refused it, so a test and the logs tell a safety refusal from an empty
+offer. `not_yours` is a held call of another taf's; someone who can't manage Cards gets 403.
+
+**Built in** `runtime/src/cloud/allow.ts`: the check (`refusal`), the rounding (`roundUp`), and
+the words in the 8 languages. Whole amounts read without cents ("€350"). `would` is left out when
+KIFF's replay can't be read, so the change is still offered. A hold with no figure to stop at (no
+`draw`, or a resource with no `value`) gets no draft at all. A hold KIFF no longer holds answers 409.
 
 **A change's `kind`** is one of four, and the phone fails closed on any other:
 - `per_action`: a grant's per-call limit, `before` and `after` in the Card's unit (minor units
@@ -127,7 +135,7 @@ or `{ "none": "never" | "unit" | "no_change" | "not_yours", "words": "…" }`.
 - **tafs cloud checks KIFF's change on its own,** against the hold's `breaches` and the table
   below: one change per breach, on that breach's mandate, of the kind it allows, with the figure
   the call's own (or one rounding step above it with `round`). A change that doesn't match isn't
-  offered: the answer is `none` (`no_change`), and the draft is left to lapse. Two checks, KIFF's
+  offered: the answer is `none` (`refused`), and the draft is left to lapse. Two checks, KIFF's
   and tafs cloud's, so the change never widens past the held call. The phone's check against the
   draft itself is the third.
 

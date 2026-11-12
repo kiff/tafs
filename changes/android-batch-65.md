@@ -1,0 +1,1 @@
+- **Android 1.12: "Allow this from now on" on a held call.** Besides Approve once and Refuse, someone who manages Cards can change the Card so calls like this one go on their own: the sheet shows the change before and after, what it would have let go over the last 30 days, and the held call itself, and one fingerprint confirms it. The phone signs only the change it was offered.

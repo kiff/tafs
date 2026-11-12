@@ -1252,6 +1252,12 @@
         <item quantity="other">%2$s · %1$s standen</item>
     </plurals>
     <string name="needs_you_a_taf">Een taf</string>
+    <string name="needs_you_allow_from_now_on">Voortaan toestaan</string>
+    <string name="needs_you_allow_not_offered">Deze wijziging is niet wat werd aangeboden.</string>
+    <string name="needs_you_allow_round_up">Afronden naar %1$s</string>
+    <string name="needs_you_allow_send_this_too">Dit verzoek ook laten doorgaan</string>
+    <string name="needs_you_allow_switch_off">Staat dit uit, dan verandert de Card en wacht dit verzoek nog op je antwoord.</string>
+    <string name="needs_you_allow_title">De Card aanpassen zodat zulke verzoeken vanzelf doorgaan</string>
     <string name="needs_you_answer">Antwoorden</string>
     <string name="needs_you_answer_by">antwoord vóór %1$s</string>
     <string name="needs_you_answer_gone">Dit antwoord staat niet meer op tafs cloud.</string>

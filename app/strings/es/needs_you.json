@@ -1,5 +1,11 @@
 {
   "needs_you.a_taf": "Un taf",
+  "needs_you.allow_from_now_on": "Permitir a partir de ahora",
+  "needs_you.allow_not_offered": "Este cambio no es el que se ofreció.",
+  "needs_you.allow_round_up": "Redondear a {amount}",
+  "needs_you.allow_send_this_too": "Dejar pasar esta también",
+  "needs_you.allow_switch_off": "Si está desactivado, la Card cambia y esta sigue esperando tu respuesta.",
+  "needs_you.allow_title": "Cambiar la Card para que solicitudes así pasen solas",
   "needs_you.answer": "Responder",
   "needs_you.answer_by": "responde antes de {time}",
   "needs_you.answer_gone": "Esta respuesta ya no está en tafs cloud.",

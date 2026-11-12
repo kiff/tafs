@@ -778,6 +778,15 @@ class TafsCloud(
 
   private fun escaped(s: String): String = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 
+  /**
+   * `POST /v1/tafs/{id}/holds/{exception}/allow` (docs/allow-from-now-on.md), on the owner's tap: tafs cloud makes the draft and asks
+   * KIFF for the replay, then answers the offer, or why there's none. [round] asks for the rounded figure the offer named.
+   */
+  suspend fun allowOffer(id: String, exception: String, round: Boolean = false): AllowAnswer =
+    KiffClient.json.decodeFromString(
+      String(send("POST", "/v1/tafs/${escaped(id)}/holds/${escaped(exception)}/allow", (if (round) "{\"round\":true}" else "{}").toByteArray())),
+    )
+
   private suspend inline fun <reified T> get(path: String): T {
     val bytes = send("GET", path)
     return KiffClient.json.decodeFromString(String(bytes))

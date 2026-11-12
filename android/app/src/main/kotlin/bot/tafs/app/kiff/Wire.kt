@@ -333,6 +333,44 @@ data class Breach(
   val value: String? = null,
 )
 
+/**
+ * `POST /v1/tafs/{id}/holds/{exception}/allow` (docs/allow-from-now-on.md): tafs cloud's offer to change the Card so calls like a
+ * held one go on their own, or why there's none ([none], with tafs cloud's [words]).
+ */
+@Serializable
+data class AllowAnswer(val offer: AllowOffer? = null, val none: String? = null, val words: String? = null)
+
+/** The offer: the narrowest change, what it would have let go over the last 30 days, and the draft KIFF holds for it. */
+@Serializable
+data class AllowOffer(
+  val changes: List<AllowChange> = emptyList(),
+  val would: AllowWould? = null,
+  val draft: String = "",
+  @SerialName("confirm_key") val confirmKey: String? = null,
+  @SerialName("send_held") val sendHeld: Boolean = true,
+  /** What rounding would give, named before any tap; absent when rounding changes nothing. The app never rounds. */
+  val round: AllowRound? = null,
+)
+
+/** One limit the offer changes: on which Card (`mandate_id`), what kind, from what to what, in tafs cloud's words. */
+@Serializable
+data class AllowChange(
+  @SerialName("mandate_id") val mandateId: String,
+  val kind: String,
+  val before: Long? = null,
+  val after: Long? = null,
+  val unit: String? = null,
+  @SerialName("words_before") val wordsBefore: String = "",
+  @SerialName("words_after") val wordsAfter: String = "",
+  val rounded: Boolean = false,
+)
+
+@Serializable
+data class AllowWould(val calls: Int = 0, val words: String = "")
+
+@Serializable
+data class AllowRound(val after: Long? = null, val words: String = "")
+
 /** A parameter's declared unit and decimal places ("EUR", 2). */
 @Serializable
 data class ParameterUnit(val unit: String, val scale: Int = 0)

@@ -696,6 +696,23 @@ export const en = {
   est_pace_line: (n: string, _form: Intl.LDMLPluralRule) => `At this pace, about ${n} this month`,
   est_week_one: (name: string, n: string, form: Intl.LDMLPluralRule, month: string) => `${name} used ${n} ${form === "one" ? "credit" : "credits"} in its first week, so about ${month} a month at this pace.`,
   est_week_one_none: (name: string) => `${name} found no work in its first week, so it used no credits.`,
+  // "Allow this from now on" on a held call (docs/allow-from-now-on.md): a Card's limit before and after, and what the change would have done.
+  allow_each: (action: string, amount: string) => `${action}: up to ${amount} each`,
+  allow_total: (action: string, amount: string, window: string) => `${action}: ${amount} in total${window ? ` ${window}` : ""}`,
+  allow_from_now_on: (line: string) => `${line}, from now on`,
+  allow_count: (action: string, n: number, form: Intl.LDMLPluralRule, window: string) => `${action}: ${n} ${form === "one" ? "call" : "calls"}${window ? ` ${window}` : ""} on ${form === "one" ? "its" : "their"} own`,
+  allow_asks_first: (action: string) => `${action}: each call asks you first`,
+  allow_value_out: (action: string, value: string) => `${action}: not for ${value}`,
+  allow_value_in: (action: string, value: string) => `${action}: also for ${value}`,
+  // A window as KIFF names it, in words; a lifetime total has none ("€600 in total"), nor has a window KIFF adds later.
+  allow_window: (window: string) => (({ calendar_day: "a day", rolling_1h: "an hour", rolling_24h: "in any 24 hours", rolling_7d: "in any 7 days", lifetime: "" }) as Record<string, string>)[window] ?? "",
+  allow_rounded_from: (amount: string) => `rounded up from ${amount}`,
+  allow_would: (n: number, form: Intl.LDMLPluralRule, totals: string) => `With this Card, ${n} more ${form === "one" ? "call" : "calls"} would have gone out on ${form === "one" ? "its" : "their"} own${totals ? ` (${totals})` : ""}`,
+  allow_would_none: "Nothing else in the last 30 days would have gone out on its own",
+  allow_none_never: "A “never” on this Card refuses this call. Coach can explain why, and change it with you.",
+  allow_none_unit: "This Card counts in another currency. Coach can fix that with you.",
+  allow_none_no_change: "There's no narrow change to the Card that would let this call go on its own.",
+  allow_none_not_yours: "This call belongs to another taf.",
   // The secure connection sheet for an app's key (docs/secure-connection.md): every word the phone draws.
   sheet_title: (vendor: string) => `Secure connection to ${vendor}`,
   sheet_reads_only: (vendor: string) => `Read only: it can't pay, send or change anything in ${vendor}`,

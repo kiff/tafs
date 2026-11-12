@@ -1348,6 +1348,12 @@
         <item quantity="other">%2$s · %1$s pozycji</item>
     </plurals>
     <string name="needs_you_a_taf">Taf</string>
+    <string name="needs_you_allow_from_now_on">Zezwalaj od teraz</string>
+    <string name="needs_you_allow_not_offered">Ta zmiana nie jest tą, którą zaproponowano.</string>
+    <string name="needs_you_allow_round_up">Zaokrąglij do %1$s</string>
+    <string name="needs_you_allow_send_this_too">Pozwól przejść także tej</string>
+    <string name="needs_you_allow_switch_off">Gdy to wyłączone, Card się zmienia, a ta nadal czeka na Twoją odpowiedź.</string>
+    <string name="needs_you_allow_title">Zmień Card, aby takie prośby przechodziły same</string>
     <string name="needs_you_answer">Odpowiedz</string>
     <string name="needs_you_answer_by">odpowiedz do %1$s</string>
     <string name="needs_you_answer_gone">Tej odpowiedzi nie ma już w tafs cloud.</string>

@@ -157,6 +157,9 @@ class CoachInstalls(
 /** Null where installing isn't offered: the sample, and previews. */
 val LocalCoachInstalls = staticCompositionLocalOf<CoachInstalls?> { null }
 
+/** "Allow this from now on" on a held call (docs/allow-from-now-on.md): opens its sheet; null where it isn't offered. */
+val LocalAllowHold = staticCompositionLocalOf<((HeldCall) -> Unit)?> { null }
+
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun NeedsYouView(
@@ -304,6 +307,11 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
         val keyLost = state.mode == Mode.kiff && state.approvalKeyLost
         if (keyLost) ApprovalKeyLine()
         Answers(call, state, refuseOnly = lasting != null || keyLost, sending = sending, send = ::send, install = if (installs != null) ::install else null)
+        // A third answer: change the Card so calls like this go on their own. Shown by the app's own rule, from the call as KIFF
+        // sent it; the offer is made on the tap, never to draw the button.
+        LocalAllowHold.current?.takeIf { lasting == null && !keyLost && state.offersAllow(call) }?.let { allow ->
+          OutlineButton(Words.NeedsYou.allowFromNowOn, { allow(call) }, Modifier.fillMaxWidth(), enabled = !sending)
+        }
         // Why the install didn't go on: a run in the way, a Card that changed, a switch that didn't finish.
         if (call.install != null) installTaf(call, state)?.let { tafId -> state.versionErrors[tafId]?.let { Text(it, style = scaled(13, color = Theme.no)) } }
       }
