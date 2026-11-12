@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -1041,6 +1041,30 @@ describe("tafs cloud", () => {
     Object.assign(run, { status: "COMPLETED", output: "Refunded 3 orders; 1 waits on you." });
     expect((await call(w, "GET", `/v1/tafs/${RAE}/runs/${started.body.session}`, { token: "ana" })).body.report).toEqual({ status: "idle", text: "Refunded 3 orders; 1 waits on you." });
     expect((await call(w, "GET", `/v1/tafs/${RAE}/runs/sess_other`, { token: "ana" })).status).toBe(404);
+  });
+
+  // The count the owner reads is the record's (kiff/agents' tally), in their words, never the model's numbers:
+  // a taf once wrote "six submitted" with five sent and one held, and "none refused" with two reads refused.
+  it("gives a run's report its count from the record, in the owner's language, and none when nothing was counted", async () => {
+    const w = world();
+    const started = await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    const run = w.agents.runs[0]!;
+    Object.assign(run, { status: "COMPLETED", output: "Evidence went on the disputes; one waits for you.", tally: { submit_evidence: { sent: 5, held: 1 }, shop_get_order: { refused: 2 } } });
+    const read = (lang?: string) => call(w, "GET", `/v1/tafs/${RAE}/runs/${started.body.session}`, { token: "ana", ...(lang ? { headers: { "accept-language": lang } } : {}) });
+    expect((await read()).body.report).toEqual({ status: "idle", text: "Evidence went on the disputes; one waits for you.", counted: "From the Record — done: 5 · waiting for you: 1 · refused: 2" });
+    expect((await read("fr")).body.report.counted).toBe("D'après le registre — fait : 5 · vous attend : 1 · refusé : 2");
+    Object.assign(run, { tally: {} });
+    expect((await read()).body.report).not.toHaveProperty("counted");
+  });
+});
+
+describe("countedLine", () => {
+  it("sums the run's count over its tools, leaves out each part at 0, and says nothing for nothing counted", () => {
+    expect(countedLine({ tally: { a: { sent: 2, failed: 1 }, b: { sent: 1, unknown: 1 } } })).toBe("From the Record — done: 3 · failed: 1 · sent, outcome unknown: 1");
+    expect(countedLine({ tally: { a: {} } })).toBeUndefined();
+    expect(countedLine({})).toBeUndefined();
+    // Only whole counts above 0, whatever a reply holds.
+    expect(countedLine({ tally: { a: { sent: -3, refused: Number.NaN, held: 1.7 } } })).toBe("From the Record — waiting for you: 1");
   });
 });
 

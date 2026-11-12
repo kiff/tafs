@@ -289,6 +289,18 @@ describe("a taf's results reach their destination, checked by tafs cloud (result
     expect(thread.body.messages.filter((m: { delivered?: string }) => m.delivered)).toHaveLength(1);
     expect(run.id).toBeDefined();
   });
+
+  // Beside the line on where the result went, the run's count from its record (kiff/agents' tally): the numbers the
+  // owner reads are the record's, never the model's.
+  it("puts the run's count from the record on its report in the thread, and nothing on a run that counted nothing", async () => {
+    const w = world();
+    const run = await w.ran(RAE, "Refunded the orders.", [{ tool: "sheets_append_k3" }]);
+    Object.assign(run, { tally: { stripe_refund: { sent: 3, held: 1 }, shop_get_order: { refused: 2 } } });
+    const read = async () => (await w.call("GET", `/v1/tafs/${RAE}/conversation`)).body.messages.find((m: { from: string; text: string }) => m.from === "taf" && m.text === "Refunded the orders.");
+    expect((await read()).counted).toBe("From the Record — done: 3 · waiting for you: 1 · refused: 2");
+    Object.assign(run, { tally: undefined });
+    expect(await read()).not.toHaveProperty("counted");
+  });
 });
 
 describe("a hand-off's outcome comes back to the sending taf (docs/reliability.md, the taf's own places)", () => {

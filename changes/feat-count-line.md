@@ -1,0 +1,1 @@
+- A job run's report in the thread carries its count from the record (`counted`), in the owner's language, so the numbers the owner reads are never the model's. An unapproved Card is recognised by its code (`draft_not_ready`), not its words.

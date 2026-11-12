@@ -909,7 +909,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const session = parts[4] ?? "";
     const run = (await jobRuns(me, taf, deps)).find((r) => r.session === session);
     if (!run) throw new HTTPError(404, "no such run");
-    return { session, report: report(run) };
+    return { session, report: report(run, langOf(event)) };
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
     const managing = managesTaf(event, me, taf, deps);
@@ -1779,7 +1779,7 @@ async function setupDraftKey(me: KIFFIdentity, name: string, draftID: string, ta
       if (!held) await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
       throw new HTTPError(404, "Setup submitted no draft by that id on this account");
     }
-    if (refused(err, "draft_not_ready") && err.code) throw new HTTPError(409, WAITING_FOR_CONFIRMATION);
+    if (refused(err, "draft_not_ready") && err.code) throw new HTTPError(409, WAITING_FOR_CONFIRMATION, { code: "draft_not_ready" });
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw new HTTPError(502, `the taf's key couldn't be claimed: ${(err as Error).message}`);
   }
@@ -2030,10 +2030,31 @@ async function jobRuns(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Run[]> {
   return agentsCall(() => deps.agents.scheduleRuns(me.tenantID, taf.id, 20));
 }
 
-/** The run's report: the agent's last answer, and whether it is still working (a run waiting on the owner is). */
-function report(run: Run) {
+/**
+ * The run's report: the agent's last answer, whether it is still working (a run waiting on the owner is), and its
+ * count from the record in the owner's words (`counted`), when it counted anything.
+ */
+function report(run: Run, lang: Lang = "en") {
   const status = run.status === "COMPLETED" ? "idle" : run.status === "ERROR" || run.status === "CANCELLED" ? "terminated" : "running";
-  return { status, text: run.output ?? "" };
+  const counted = countedLine(run, lang);
+  return { status, text: run.output ?? "", ...(counted ? { counted } : {}) };
+}
+
+/**
+ * A run's count from its record (kiff/agents' `tally`), summed over its tools, in the owner's language: what the owner
+ * reads as the run's numbers, so a total the model got wrong never reaches them as the run's (Eval 43243736555). No line
+ * when the run counted nothing, or kiff/agents doesn't keep a count.
+ */
+export function countedLine(run: Pick<Run, "tally">, lang: Lang = "en"): string | undefined {
+  const n = { sent: 0, held: 0, refused: 0, failed: 0, unknown: 0 };
+  for (const t of Object.values(run.tally ?? {})) {
+    for (const k of Object.keys(n) as Array<keyof typeof n>) {
+      const v = t?.[k];
+      if (typeof v === "number" && Number.isFinite(v) && v > 0) n[k] += Math.floor(v);
+    }
+  }
+  if (!Object.values(n).some((v) => v > 0)) return undefined;
+  return wordsIn(lang).counted_line(n);
 }
 
 /** A message in a taf's thread. A run's opening instruction is the owner's, of kind "kickoff". */
@@ -2092,6 +2113,8 @@ export interface ThreadMessage {
   answers?: string;
   /** On a run's report: where its result went, in tafs cloud's words, above the taf's own (delivery.ts). */
   delivered?: string;
+  /** On a job run's report: its count from the record, in tafs cloud's words (`countedLine`), never the model's numbers. */
+  counted?: string;
   /** A note tafs cloud posted in the taf's chat (its week-one note): tafs cloud's words, never the model's. */
   note?: true;
   /**
@@ -2330,6 +2353,17 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         const line = deliveredLine(kept.get(id), lang);
         const report = messages.filter((m) => m.from === "taf" && m.session === r.session.id && m.id.startsWith(`${id}.`)).at(-1);
         if (line && report) report.delivered = line;
+      }
+    }
+    // A job run's count from its record (kiff/agents' tally), on its report, the run's last words: tafs cloud's words,
+    // never the model's numbers. One read a run; a run that can't be read gets no line.
+    if (r.session.kind === "run") {
+      for (const [id] of runs) {
+        const report = messages.filter((m) => m.from === "taf" && m.session === r.session.id && m.id.startsWith(`${id}.`)).at(-1);
+        if (!report) continue;
+        const run = await deps.agents.getRun(me.tenantID, taf.id, id).catch(() => undefined);
+        const line = run ? countedLine(run, lang) : undefined;
+        if (line) report.counted = line;
       }
     }
   }
@@ -7340,7 +7374,8 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       const now = (await deps.tafs.list(tenant)).find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
       if (now) return { taf_id: now.id };
       // The owner hasn't approved the Card yet: nothing failed, and the result waits for them.
-      if (err.status === 409 && err.message === WAITING_FOR_CONFIRMATION) throw new CardNotApproved();
+      // By its code, never its words: a reworded line still waits (agentgabo on #773).
+      if (err.status === 409 && err.extra?.code === "draft_not_ready") throw new CardNotApproved();
       return { failed: err.message };
     }
     throw err;

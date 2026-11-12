@@ -337,6 +337,7 @@ export const es: Words = {
     if (not.length) parts.push(`No enviado a ${list(not.map((d) => `${d.name}${d.retrying ? " (se vuelve a intentar)" : ""}`))}`);
     return parts.join(". ") + ".";
   },
+  counted_line: (n) => "Según el registro — " + ([[n.sent, "hecho"], [n.held, "te espera"], [n.refused, "rechazado"], [n.failed, "fallido"], [n.unknown, "enviado, resultado desconocido"]] as const).filter(([k]) => k > 0).map(([k, w]) => `${w}: ${k}`).join(" · "),
   step_received: "Recibido",
   step_worked: "Trabajó en ello",
   step_not_made: (t) => `No realizada · ${t}`,

@@ -337,6 +337,7 @@ export const nl: Words = {
     if (not.length) parts.push(`Niet verzonden naar ${list(not.map((d) => `${d.name}${d.retrying ? " (wordt opnieuw geprobeerd)" : ""}`))}`);
     return parts.join(". ") + ".";
   },
+  counted_line: (n) => "Volgens het logboek — " + ([[n.sent, "gedaan"], [n.held, "wacht op je"], [n.refused, "geweigerd"], [n.failed, "mislukt"], [n.unknown, "verstuurd, uitkomst onbekend"]] as const).filter(([k]) => k > 0).map(([k, w]) => `${w}: ${k}`).join(" · "),
   step_received: "Ontvangen",
   step_worked: "Eraan gewerkt",
   step_not_made: (t) => `Niet uitgevoerd · ${t}`,
