@@ -20,6 +20,7 @@ const run = (o: Partial<Run>): Run => ({ id: "r1", agent: "a", session: "s", tri
 /** The words whose arguments aren't strings or counts, with what they're given. */
 const ARGS: Record<string, unknown[][]> = {
   approval_status: [["needs_reconnect"], ["connected"], ["pending"]],
+  allow_window: [["calendar_day"], ["rolling_1h"], ["rolling_24h"], ["rolling_7d"]], // a lifetime total has no window words
   door_name: [["email", "Email"], ["slack", "Slack"]],
   delivered: [["Invoices", { hm: "09:00" }], ["Invoices", { hm: "09:00", day: "Fri" }]],
   handed: [["Rae", { hm: "09:00" }]],
