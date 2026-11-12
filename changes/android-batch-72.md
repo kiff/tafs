@@ -1,0 +1,1 @@
+- **Android 1.17: explore jobs without creating anything.** An Explore jobs row on Tafs, and a See all jobs row under the jobs strip, open every job to browse, with or without a taf. A job's sheet shows where it was proved, its apps, and what it reported after its test run, with Try it with Coach as its only action.

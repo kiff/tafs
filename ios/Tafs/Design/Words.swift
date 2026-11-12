@@ -2223,6 +2223,8 @@ enum Words {
             /// Tafs shared with you show here. Pull down to refresh.
             static var shared: String { Words.line("home.empty.shared") }
         }
+        /// Explore jobs
+        static var exploreJobs: String { Words.line("home.explore_jobs") }
         /// Signed in with KIFF. KIFF decides every action. Pull down to refresh.
         static var footer: String { Words.line("home.footer") }
         /// Halted. Open Halt
@@ -2267,6 +2269,10 @@ enum Words {
         static func reasonAnswerBy(why: String, time: String) -> String { Words.line("home.reason_answer_by", why, time) }
         /// Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach.
         static var sampleFoot: String { Words.line("home.sample_foot") }
+        /// What it reported after its test run
+        static var sampleLabel: String { Words.line("home.sample_label") }
+        /// See all jobs
+        static var seeAllJobs: String { Words.line("home.see_all_jobs") }
         /// Shared with you
         static var sharedYou: String { Words.line("home.shared_you") }
         /// You sign in and approve each step
@@ -2283,6 +2289,8 @@ enum Words {
         static var tagline: String { Words.line("home.tagline") }
         /// Tafs
         static var title: String { Words.line("home.title") }
+        /// Try it with Coach
+        static var tryWithCoach: String { Words.line("home.try_with_coach") }
         /// {count} tafs working.
         static func working(count: Int) -> String { Words.count("home.working", count) }
         /// Your tafs

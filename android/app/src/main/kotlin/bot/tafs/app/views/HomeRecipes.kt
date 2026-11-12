@@ -112,7 +112,15 @@ internal fun JobRow(recipe: Recipe, color: androidx.compose.ui.graphics.Color?, 
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-internal fun GallerySheet(gallery: bot.tafs.app.kiff.RecipesGallery, canUseCoach: Boolean, onOpen: (Recipe) -> Unit, onOwnWords: () -> Unit, onClose: () -> Unit) {
+internal fun GallerySheet(
+  gallery: bot.tafs.app.kiff.RecipesGallery,
+  canUseCoach: Boolean,
+  onOpen: (Recipe) -> Unit,
+  onOwnWords: () -> Unit,
+  onClose: () -> Unit,
+  /** Browsing (Explore jobs, See all jobs): every job to read, with nothing created, and no "own words" to start from. */
+  browsing: Boolean = false,
+) {
   var picked by rememberSaveable { mutableStateOf<String?>(null) }
   val groups = gallery.byCategory
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
@@ -120,10 +128,11 @@ internal fun GallerySheet(gallery: bot.tafs.app.kiff.RecipesGallery, canUseCoach
       Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-      gallery.words?.title?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(24, FontWeight.Bold, Theme.ink, display = true)) }
-      // In the person's own words: Coach, empty, to build the taf with them.
+      val title = if (browsing) bot.tafs.app.model.HomeWords.explore(gallery) else gallery.words?.title?.takeIf { it.isNotBlank() }
+      title?.let { Text(it, style = scaled(24, FontWeight.Bold, Theme.ink, display = true)) }
+      // In the person's own words: Coach, empty, to build the taf with them. Not while browsing: that starts something.
       val words = gallery.words
-      if (canUseCoach && words != null && words.ownWords.isNotBlank()) {
+      if (!browsing && canUseCoach && words != null && words.ownWords.isNotBlank()) {
         Panel(modifier = Modifier.fillMaxWidth().clickable(onClick = onOwnWords)) {
           Text(words.ownWords, style = scaled(16, FontWeight.SemiBold, Theme.amberText))
           if (words.ownWordsLine.isNotBlank()) Text(words.ownWordsLine, style = scaled(14, color = Theme.soft))
@@ -147,12 +156,14 @@ internal fun GallerySheet(gallery: bot.tafs.app.kiff.RecipesGallery, canUseCoach
 
 /** Under the tafs list: a few jobs the account doesn't run yet, as tafs cloud picks and orders them. Nothing when it shows none. */
 @Composable
-internal fun JobStrip(gallery: bot.tafs.app.kiff.RecipesGallery, onOpen: (Recipe) -> Unit) {
+internal fun JobStrip(gallery: bot.tafs.app.kiff.RecipesGallery, onOpen: (Recipe) -> Unit, onSeeAll: (() -> Unit)? = null) {
   val jobs = gallery.stripRecipes
   if (jobs.isEmpty()) return
   Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     gallery.strip?.title?.takeIf { it.isNotBlank() }?.let { Eyebrow(it) }
     jobs.forEach { recipe -> JobRow(recipe, categoryColor(gallery.category(recipe.category))) { onOpen(recipe) } }
+    // The strip shows a few: this row opens them all, to browse.
+    if (onSeeAll != null && gallery.holdsMoreThanStrip) ExploreRow(bot.tafs.app.model.HomeWords.seeAll(gallery), onSeeAll)
   }
 }
 
@@ -160,9 +171,19 @@ internal fun JobStrip(gallery: bot.tafs.app.kiff.RecipesGallery, onOpen: (Recipe
  * A recipe's sheet: what it removes and what that costs today, then its Card in three plain zones (what it does on its own, asks
  * first, never does) and one button that hands it to Coach with the recipe's words, to edit and send.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-internal fun RecipeSheet(recipe: Recipe, labels: RecipeLabels, canHand: Boolean, onHand: () -> Unit, onClose: () -> Unit) {
+internal fun RecipeSheet(
+  recipe: Recipe,
+  labels: RecipeLabels,
+  canHand: Boolean,
+  onHand: () -> Unit,
+  onClose: () -> Unit,
+  /** While browsing, the one action's words ("Try it with Coach"); else tafs cloud's hand-off words. */
+  tryWords: String? = null,
+  /** The label over the sample report, in tafs cloud's words or the app's. */
+  sampleLabel: String = bot.tafs.app.model.Words.Home.sampleLabel,
+) {
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(
       Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
@@ -171,10 +192,18 @@ internal fun RecipeSheet(recipe: Recipe, labels: RecipeLabels, canHand: Boolean,
       Text(recipe.headline.ifBlank { recipe.title }, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
       if (recipe.line.isNotBlank()) Text(recipe.line, style = scaled(15, color = Theme.ink))
       if (recipe.today.isNotBlank()) Text(recipe.today, style = scaled(14, color = Theme.soft))
+      // Where the job was proved, as tafs cloud says it; nothing for a job with no proof run.
+      if (recipe.proved.isNotBlank()) Text(recipe.proved, style = scaled(14, FontWeight.SemiBold, Theme.ok))
+      if (recipe.apps.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        recipe.apps.forEach { app -> if (app.name.isNotBlank()) bot.tafs.app.design.AppWithLogo(app.name, app.logo) }
+      }
       Zone(labels.allows, recipe.card.allows)
       Zone(labels.holds, recipe.card.holds)
       Zone(labels.never, recipe.card.never)
-      if (canHand && labels.hand.isNotBlank()) PrimaryButton(labels.hand, onHand, Modifier.fillMaxWidth())
+      // What it reported after that proof run, as sent.
+      if (recipe.sample.isNotBlank()) Zone(sampleLabel, listOf(recipe.sample))
+      val action = tryWords ?: labels.hand
+      if (canHand && action.isNotBlank()) PrimaryButton(action, onHand, Modifier.fillMaxWidth())
     }
   }
 }

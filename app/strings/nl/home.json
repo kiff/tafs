@@ -8,6 +8,7 @@
   "home.couldnt_load_tafs": "Kon je tafs niet laden",
   "home.empty.coach": "Koppel een app om je eerste taf in te stellen. Trek omlaag om te vernieuwen.",
   "home.empty.shared": "Tafs die met je zijn gedeeld, verschijnen hier. Trek omlaag om te vernieuwen.",
+  "home.explore_jobs": "Taken verkennen",
   "home.footer": "Ingelogd met KIFF. KIFF beslist over elke actie. Trek omlaag om te vernieuwen.",
   "home.halted_open_halt": "Stilgezet. Open Stilzetten",
   "home.loading": "Je tafs laden…",
@@ -29,6 +30,8 @@
   "home.plan_line_description": "{words} Opent Abonnement en gebruik.",
   "home.reason_answer_by": "{why} · antwoord vóór {time}",
   "home.sample_foot": "Voorbeeldgegevens. De Card wordt op deze telefoon gecontroleerd. Ingelogd met KIFF, KIFF beslist, en een nieuw taf begint in Coach.",
+  "home.sample_label": "Wat het meldde na de testrun",
+  "home.see_all_jobs": "Alle taken bekijken",
   "home.shared_you": "Met je gedeeld",
   "home.sign_approve_each_step": "Je logt in en keurt elke stap goed",
   "home.start_new_taf": "Een nieuw taf starten",
@@ -37,6 +40,7 @@
   "home.tafs_shared_you_show": "Tafs die met je zijn gedeeld, verschijnen hier.",
   "home.tagline": "They taf. You kiff.",
   "home.title": "Tafs",
+  "home.try_with_coach": "Probeer het met Coach",
   "home.working": {
     "one": "{count} taf bezig.",
     "other": "{count} tafs bezig."

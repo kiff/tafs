@@ -1159,6 +1159,7 @@
     <string name="home_couldnt_load_tafs">Kon je tafs niet laden</string>
     <string name="home_empty_coach">Koppel een app om je eerste taf in te stellen. Trek omlaag om te vernieuwen.</string>
     <string name="home_empty_shared">Tafs die met je zijn gedeeld, verschijnen hier. Trek omlaag om te vernieuwen.</string>
+    <string name="home_explore_jobs">Taken verkennen</string>
     <string name="home_footer">Ingelogd met KIFF. KIFF beslist over elke actie. Trek omlaag om te vernieuwen.</string>
     <string name="home_halted_open_halt">Stilgezet. Open Stilzetten</string>
     <string name="home_loading">Je tafs laden…</string>
@@ -1180,6 +1181,8 @@
     <string name="home_plan_line_description">%1$s Opent Abonnement en gebruik.</string>
     <string name="home_reason_answer_by">%1$s · antwoord vóór %2$s</string>
     <string name="home_sample_foot">Voorbeeldgegevens. De Card wordt op deze telefoon gecontroleerd. Ingelogd met KIFF, KIFF beslist, en een nieuw taf begint in Coach.</string>
+    <string name="home_sample_label">Wat het meldde na de testrun</string>
+    <string name="home_see_all_jobs">Alle taken bekijken</string>
     <string name="home_shared_you">Met je gedeeld</string>
     <string name="home_sign_approve_each_step">Je logt in en keurt elke stap goed</string>
     <string name="home_start_new_taf">Een nieuw taf starten</string>
@@ -1188,6 +1191,7 @@
     <string name="home_tafs_shared_you_show">Tafs die met je zijn gedeeld, verschijnen hier.</string>
     <string name="home_tagline">They taf. You kiff.</string>
     <string name="home_title">Tafs</string>
+    <string name="home_try_with_coach">Probeer het met Coach</string>
     <plurals name="home_working">
         <item quantity="one">%1$s taf bezig.</item>
         <item quantity="other">%1$s tafs bezig.</item>

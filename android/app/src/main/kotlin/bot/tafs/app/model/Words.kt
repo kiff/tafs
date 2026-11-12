@@ -1204,6 +1204,7 @@ object Words {
       val coach: String get() = Res.s(R.string.home_empty_coach)
       val shared: String get() = Res.s(R.string.home_empty_shared)
     }
+    val exploreJobs: String get() = Res.s(R.string.home_explore_jobs)
     val footer: String get() = Res.s(R.string.home_footer)
     val haltedOpenHalt: String get() = Res.s(R.string.home_halted_open_halt)
     val loading: String get() = Res.s(R.string.home_loading)
@@ -1227,6 +1228,8 @@ object Words {
     fun planLineDescription(words: String): String = Res.s(R.string.home_plan_line_description, words)
     fun reasonAnswerBy(why: String, time: String): String = Res.s(R.string.home_reason_answer_by, why, time)
     val sampleFoot: String get() = Res.s(R.string.home_sample_foot)
+    val sampleLabel: String get() = Res.s(R.string.home_sample_label)
+    val seeAllJobs: String get() = Res.s(R.string.home_see_all_jobs)
     val sharedYou: String get() = Res.s(R.string.home_shared_you)
     val signApproveEachStep: String get() = Res.s(R.string.home_sign_approve_each_step)
     val startNewTaf: String get() = Res.s(R.string.home_start_new_taf)
@@ -1235,6 +1238,7 @@ object Words {
     val tafsSharedYouShow: String get() = Res.s(R.string.home_tafs_shared_you_show)
     val tagline: String get() = Res.s(R.string.home_tagline)
     val title: String get() = Res.s(R.string.home_title)
+    val tryWithCoach: String get() = Res.s(R.string.home_try_with_coach)
     fun working(count: Int): String = Res.p(R.plurals.home_working, count, Res.number(count))
     val yourTafs: String get() = Res.s(R.string.home_your_tafs)
   }

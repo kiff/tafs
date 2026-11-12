@@ -21,6 +21,7 @@ import bot.tafs.app.model.Card
 import bot.tafs.app.model.Taf
 import bot.tafs.app.views.GallerySheet
 import bot.tafs.app.views.HomeView
+import bot.tafs.app.views.RecipeSheet
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -50,9 +51,12 @@ class GalleryScreenTest {
   )
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "Refund", tools = emptyList(), colorIndex = 1, card = Card(emptyList(), "You"), cloudId = "taf_1")
 
-  private fun home(state: AppState, opened: MutableList<String>, newTaf: MutableList<Unit>) = rule.setShown {
+  private fun home(state: AppState, opened: MutableList<String>, newTaf: MutableList<Unit>, explored: MutableList<Unit> = mutableListOf()) = rule.setShown {
     TafsTheme {
-      HomeView(state, onNeedsYou = {}, onPlayNext = {}, onOpenTaf = {}, onHaltAll = {}, onRecipe = { opened += it.id }, onNewTaf = { newTaf += Unit })
+      HomeView(
+        state, onNeedsYou = {}, onPlayNext = {}, onOpenTaf = {}, onHaltAll = {}, onRecipe = { opened += it.id },
+        onNewTaf = { newTaf += Unit }, onExplore = if (state.gallery != null) ({ explored += Unit }) else null,
+      )
     }
   }
 
@@ -81,8 +85,58 @@ class GalleryScreenTest {
 
   @Test fun withNoGalleryFromTafsCloudThereIsNoNewAndNoStrip() {
     home(signedIn.copy(gallery = null), mutableListOf(), mutableListOf())
-    rule.onAllNodesWithText("+ New taf").assertCountEquals(0)
     rule.onAllNodesWithText("MORE JOBS TO HAND OFF").assertCountEquals(0)
+    rule.onAllNodesWithText("Explore jobs").assertCountEquals(0)
+  }
+
+  @Test fun newIsNamedEvenWhenTafsCloudSendsNoTitle() {
+    val newTaf = mutableListOf<Unit>()
+    home(signedIn.copy(gallery = gallery.copy(words = gallery.words!!.copy(title = ""))), mutableListOf(), newTaf)
+    rule.onNodeWithText("+ New taf").assertExists().performClick()
+    rule.waitForIdle()
+    assertEquals(1, newTaf.size)
+  }
+
+  @Test fun exploreJobsAndSeeAllJobsOpenEveryJobToBrowse() {
+    val explored = mutableListOf<Unit>()
+    // No Coach needed to browse: someone a taf is shared with sees Explore jobs too, and no + New.
+    home(signedIn.copy(kiffAccount = Account("t_01", "acme", capabilities = emptyList())), mutableListOf(), mutableListOf(), explored)
+    rule.onAllNodesWithText("+ New taf").assertCountEquals(0)
+    rule.onNodeWithText("Explore jobs").assertExists().performClick()
+    rule.waitForIdle()
+    assertEquals(1, explored.size)
+  }
+
+  @Test fun theStripEndsWithARowThatOpensEveryJob() {
+    val explored = mutableListOf<Unit>()
+    home(signedIn, mutableListOf(), mutableListOf(), explored)
+    rule.onNodeWithText("See all jobs").performScrollTo().assertExists().performClick()
+    rule.waitForIdle()
+    assertEquals(1, explored.size)
+  }
+
+  @Test fun browsingTheGalleryOffersNoOwnWordsAndIsTitledExplore() {
+    rule.setShown { TafsTheme { GallerySheet(gallery, canUseCoach = true, onOpen = {}, onOwnWords = {}, onClose = {}, browsing = true) } }
+    rule.onNodeWithText("Explore jobs").assertExists()
+    rule.onAllNodesWithText("Say it in your own words").assertCountEquals(0)
+    rule.onNodeWithText("Never lose a lead to a slow reply.").performScrollTo().assertExists()
+  }
+
+  @Test fun aJobsSheetShowsItsAppsProofAndSampleAndTryItWithCoachIsTheOneAction() {
+    val proved = leads.copy(proved = "Proved on a test help desk.", sample = "3 tickets answered.")
+    var tried = 0
+    rule.setShown {
+      TafsTheme {
+        RecipeSheet(proved, gallery.labels!!, canHand = true, onHand = { tried++ }, onClose = {}, tryWords = "Try it with Coach", sampleLabel = "What it reported after its test run")
+      }
+    }
+    rule.onNodeWithText("Proved on a test help desk.").assertExists()
+    rule.onNodeWithText("HubSpot").assertExists()
+    rule.onNodeWithText("3 tickets answered.").performScrollTo().assertExists()
+    rule.onAllNodesWithText("Hand it to Coach").assertCountEquals(0)
+    rule.onNodeWithText("Try it with Coach").performScrollTo().performClick()
+    rule.waitForIdle()
+    assertEquals(1, tried)
   }
 
   @Test fun theGalleryHasEveryJobByCategoryWithItsAppsAndOwnWords() {

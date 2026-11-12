@@ -1159,6 +1159,7 @@
     <string name="home_couldnt_load_tafs">Deine tafs konnten nicht geladen werden</string>
     <string name="home_empty_coach">Verbinde eine App, um deinen ersten taf einzurichten. Zum Aktualisieren nach unten ziehen.</string>
     <string name="home_empty_shared">Mit dir geteilte tafs erscheinen hier. Zum Aktualisieren nach unten ziehen.</string>
+    <string name="home_explore_jobs">Aufgaben entdecken</string>
     <string name="home_footer">Mit KIFF angemeldet. KIFF entscheidet über jede Aktion. Zum Aktualisieren nach unten ziehen.</string>
     <string name="home_halted_open_halt">Angehalten. „Anhalten“ öffnen</string>
     <string name="home_loading">Deine tafs werden geladen…</string>
@@ -1180,6 +1181,8 @@
     <string name="home_plan_line_description">%1$s Öffnet Tarif &amp; Nutzung.</string>
     <string name="home_reason_answer_by">%1$s · antworte bis %2$s</string>
     <string name="home_sample_foot">Beispieldaten. Die Card wird auf diesem Telefon geprüft. Mit KIFF angemeldet entscheidet KIFF, und ein neuer taf beginnt in Coach.</string>
+    <string name="home_sample_label">Was es nach seinem Testlauf berichtet hat</string>
+    <string name="home_see_all_jobs">Alle Aufgaben ansehen</string>
     <string name="home_shared_you">Mit dir geteilt</string>
     <string name="home_sign_approve_each_step">Du meldest dich an und genehmigst jeden Schritt</string>
     <string name="home_start_new_taf">Einen neuen taf starten</string>
@@ -1188,6 +1191,7 @@
     <string name="home_tafs_shared_you_show">Mit dir geteilte tafs erscheinen hier.</string>
     <string name="home_tagline">They taf. You kiff.</string>
     <string name="home_title">Tafs</string>
+    <string name="home_try_with_coach">Mit Coach ausprobieren</string>
     <plurals name="home_working">
         <item quantity="one">%1$s taf arbeitet.</item>
         <item quantity="other">%1$s tafs arbeiten.</item>

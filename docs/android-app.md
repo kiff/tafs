@@ -60,16 +60,30 @@ person's language.
 
 **Every job, also once a taf runs** (`GET /v1/recipes/gallery`, read with each refresh;
 [coach.md](coach.md#the-gallery)). tafs cloud decides what shows; the app draws it.
-- **+ New** on Tafs, beside the tagline, in tafs cloud's `words.title`, opens the gallery
-  (`GallerySheet`): its title, "Say it in your own words" (`own_words`), which opens Coach on a new,
-  empty conversation (`AppModel.openCoachEmpty`), then `words.all`, a chip per category, and every
-  job. Only for someone who may use Coach. A tafs cloud without the route shows no + New.
+- **+ New** on Tafs, beside the tagline, in tafs cloud's `words.title` (the app's "New taf"
+  while it sends none), opens the gallery (`GallerySheet`): its title, "Say it in your own words"
+  (`own_words`), which opens Coach on a new, empty conversation (`AppModel.openCoachEmpty`), then
+  `words.all`, a chip per category, and every job. Only for someone who may use Coach. A tafs cloud
+  without the route shows no + New.
+- **Explore jobs**, a row under the headline (`words.explore`), opens the same gallery to browse:
+  every job to read, with nothing created. It shows with or without a taf, and for someone who
+  can't use Coach too. While browsing, the gallery is titled Explore jobs and offers no "own
+  words".
 - **The strip** under the tafs list (`JobStrip`) draws `strip.ids` in their order, under
-  `strip.title`, while `strip.shown`. An id the gallery doesn't list is left out.
+  `strip.title`, while `strip.shown`. An id the gallery doesn't list is left out. When the gallery
+  holds more jobs than the strip shows, a last row, **See all jobs** (`words.see_all`), opens it
+  to browse, as Explore jobs does.
 - **A job** (`JobRow`, also on Home with no taf) leads with its headline, then its line, then its
   apps, each with its logo. Its category's colour is its edge, and its chip's; the colour is tafs
   cloud's token for the theme on screen (`CategoryColor`), and without one the app's own colours
   show. A tap opens the same sheet as on Home, with the gallery's `labels`.
+- **A job's sheet** (`RecipeSheet`) creates nothing. It shows the headline, the line, what it
+  costs today, where it was proved (`proved`, "Proved on a test help desk."), its apps with
+  their logos, its Card as does / asks / never, and what it reported after that proof run
+  (`sample`, under `words.sample`). A job with no proof run has neither. Its one action hands
+  it to Coach: "Try it with Coach" (`words.try`) when opened while browsing, else `labels.hand`,
+  and only for someone who may use Coach.
+- **The words** are tafs cloud's; the app's own (`HomeWords`) stand in only while it sends none.
 - **Logos** (`LogoStore`, `AppWithLogo`) load only tafs cloud's own `/v1/logos/{key}` paths, with no
   session: any other value, a URL included, draws the name alone, so no request ever leaves for a
   third party. They're kept in memory and on disk for a week, as tafs cloud's `max-age` says.
