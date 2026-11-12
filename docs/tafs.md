@@ -224,6 +224,12 @@ refresh, from the home list's `removing`, unsigned: tafs cloud takes that only f
 as removing. On a tablet with no taf picked, the pane beside the list stays on the taf being
 removed, rather than following the list's first.
 
+On iPhone and iPad, Remove for good signs the same DELETE with the approval key, behind Face ID
+or Touch ID each time, as a drive's start is (`AppModel.removeTaf`): `kiff.request.v1` over
+`DELETE /v1/tafs/{id}` and its empty body, in `KIFF-Device-Signature`, signed before its Cards
+are revoked and its connections ended. Without that face or finger, nothing is revoked or sent.
+A removal left half way is finished on the next refresh, unsigned, as on Android.
+
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
 Doors tab (on Android, none of Setup's changes), or line saying who it's shared with. For whoever manages it, that line has a
