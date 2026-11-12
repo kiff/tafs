@@ -28,9 +28,9 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   included, as the vendor's own descriptions ask,
   and the operation that makes a tool the job's. A taf then never looks them
   up: a lookup is a wait on every message. Pin too what makes a write final
-  (draft or issued, save or send) to the value that can be
-  undone: the vendor's default may be final. A final step is its own tool,
-  under its own name. When one
+  (draft or issued) to the value that can be
+  undone: the vendor's default may be final. A final step the job needs is
+  its own tool, under its own name. When one
   vendor tool runs many operations chosen by an argument (an operation id, a
   method, a path or an endpoint), connect it once for each operation the job
   needs, each under its own name with that argument pinned to that operation:
