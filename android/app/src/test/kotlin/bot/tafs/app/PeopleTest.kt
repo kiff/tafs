@@ -129,6 +129,10 @@ class PeopleTest {
     assertEquals("Not shared", PeopleWords.sharedWith(listOf(Share(subject = "u_owner")), listOf(support), listOf(owner, ana)))
     assertEquals("Shared with ana@acme.com", PeopleWords.sharedWith(listOf(Share(subject = "u_owner"), Share(subject = "u_ana")), listOf(support), listOf(owner, ana)))
     assertEquals("someone else's own share still counts", "Shared with ana@acme.com", PeopleWords.sharedWith(listOf(Share(subject = "u_ana")), listOf(support), listOf(owner.copy(you = false), ana)))
+    // People not read yet, or no one marked: the account's own email still says who's reading, whatever its case.
+    assertEquals("Not shared", PeopleWords.sharedWith(listOf(Share(subject = "Owner@Acme.com")), listOf(support), emptyList(), email = "owner@acme.com"))
+    assertEquals("Not shared", PeopleWords.sharedWith(listOf(Share(subject = "u_owner")), listOf(support), listOf(owner.copy(you = null)), email = "OWNER@acme.com"))
+    assertEquals("with no one known as the reader, everyone is named", "Shared with u_owner", PeopleWords.sharedWith(listOf(Share(subject = "u_owner")), listOf(support), emptyList()))
   }
 
   @Test fun kiffsDefaultGroupReadsInThePersonsLanguageNeverAsKiffStoresIt() {
