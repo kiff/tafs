@@ -83,7 +83,7 @@ returns the offer, or why there's none:
 
 ```json
 { "offer": {
-    "changes": [{ "mandate_id": "…", "kind": "per_action", "before": 15000, "after": 35000,
+    "changes": [{ "mandate_id": "…", "kind": "per_action", "before": 15000, "after": 32000,
                   "unit": "EUR", "words_before": "Refunds up to €150 each", "words_after": "Refunds up to €320 each",
                   "rounded": false }],
     "would": { "calls": 4, "words": "With this Card, 4 more refunds would have gone out on their own (€1,180)" },
