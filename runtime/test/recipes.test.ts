@@ -126,6 +126,13 @@ Bezahle meine Rechnungen unter 100 EUR.
     // Served in the person's language: the proof line from tafs cloud's words, the sample as written.
     const ticket = recipesFor(undefined, "fr").recipes.find((r) => r.id === "acknowledge-every-ticket")!;
     expect(ticket.proved).toBe("Éprouvé sur un support de test.");
+    expect(ticket.sample).toMatch(/^Chaque ticket ouvert/);
+    // Every language keeps the ticket ids and labels as the taf wrote them, and its list stays one list.
+    for (const lang of LANGUAGES) {
+      const s = recipesFor(undefined, lang).recipes.find((r) => r.id === "acknowledge-every-ticket")!.sample!;
+      for (const kept of ["T-3001", "T-3099", "order-status", "wholesale"]) expect(s, `${lang} ${kept}`).toContain(kept);
+      expect(s, lang).toMatch(/\n- \*\*T-3001\*\*[^\n]*\n- \*\*T-3002\*\*/);
+    }
   });
 
   it("has every recipe in every language the apps speak, each word translated", () => {
