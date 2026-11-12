@@ -438,7 +438,8 @@ app's taps on that device (`Haptics.enabled`).
   KIFF says it runs again. What the taf was doing before the halt doesn't come back.
 - **A message or Run now refused for a halt** answers 409 with `{code: "halted", halted: "account" | "taf",
   words}`: `halted` says what is halted, so the app offers that Resume on the refusal itself, and the words
-  name no screen to resume from (an account with no tafs shows no halt row).
+  name no screen to resume from. When the account's halt can't be read, the words are the taf's and there's
+  no `halted`, so no Resume is offered on a guess.
 - "Halt all tafs" works from Siri and Shortcuts too (`HaltAllTafsIntent`), with the
   device unlocked. It says what happened, and when it can't finish it opens tafs on Halt
   all. Resume stays in the app.

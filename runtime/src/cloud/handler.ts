@@ -4907,17 +4907,18 @@ async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): P
 /**
  * A refusal for a halt, in the person's language, and what is halted (`halted`): the whole account when it is
  * (a Coach chat's refusal included), else the taf on its own, so the app can offer that Resume on the refusal
- * itself. The words name no screen: an account with no tafs shows no halt row. An account halt that can't be
- * read says the taf's.
+ * itself. The words name no screen to resume from. An account halt that can't be read says the taf's words, with
+ * no `halted`.
  */
-async function haltedRefusal(event: HTTPEvent, deps: Deps): Promise<{ words: string; halted: "account" | "taf" }> {
+async function haltedRefusal(event: HTTPEvent, deps: Deps): Promise<{ words: string; halted?: "account" | "taf" }> {
   const w = wordsIn(langOf(event));
   try {
     const me = await person(event, deps);
     const account = await deps.agents.halted(me.tenantID);
     return account.halted ? { words: w.refusal_halted_account, halted: "account" } : { words: w.refusal_halted_taf, halted: "taf" };
   } catch {
-    return { words: w.refusal_halted_taf, halted: "taf" };
+    // Not known which is halted: no `halted`, so the app offers no Resume that might be the wrong one.
+    return { words: w.refusal_halted_taf };
   }
 }
 

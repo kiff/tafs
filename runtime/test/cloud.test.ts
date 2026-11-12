@@ -777,8 +777,16 @@ describe("tafs cloud", () => {
       w.agents.fail.set("startRun", refused());
       const all = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" }, headers: { "accept-language": lang } });
       expect(all.body, lang).toMatchObject({ code: "halted", words: account[lang], halted: "account" });
-      // The words name no screen to resume from: an account with no tafs shows no halt row.
+      // The words name no screen to resume from.
       expect(all.body.words, lang).not.toMatch(/Halt|Anhalten|Bloquer|Bloquear|Blocca|Stilzetten|Zablokuj/);
+      // Whether the account is halted can't be read: the taf's words, and no `halted` to act on.
+      const halted = w.agents.api.halted;
+      w.agents.api.halted = async () => { throw new Error("down"); };
+      w.agents.fail.set("startRun", refused());
+      const unsure = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" }, headers: { "accept-language": lang } });
+      w.agents.api.halted = halted;
+      expect(unsure.body, lang).toMatchObject({ code: "halted", words: taf[lang] });
+      expect(unsure.body, lang).not.toHaveProperty("halted");
     }
   });
 
