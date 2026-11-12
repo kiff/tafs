@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Twoje czaty nie zostały wyeksportowane. {why}",
+  "export.not_offered": "Nie udało się zapisać plików na tym telefonie. Zwolnij trochę miejsca, a potem spróbuj ponownie.",
+  "export.own_chats_each_taf_coach": "Twoje własne czaty z każdym tafem, w tym z Coachem, nazwy załączonych plików i Twoje notatki, jako czytelny plik i jako JSON. Tylko Ty możesz je wyeksportować.",
+  "export.preparing": "Przygotowywanie Twoich czatów…",
+  "export.ready_share_again": "Gotowe: {files}. Udostępnij ponownie",
+  "export.row": "Eksportuj moje czaty",
+  "export.sign_in_first": "Zaloguj się przez KIFF, aby wyeksportować czaty."
+}

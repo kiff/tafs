@@ -313,7 +313,7 @@ class IOSLiterals(unittest.TestCase):
 
     def test_every_ios_line_reads_through_words(self):
         left = ios_literals.scan()
-        self.assertEqual(left, [], "English still in code; give it a key in en.json, or keep it in ios_kept.json with why:\n"
+        self.assertEqual(left, [], "English still in code; give it a key in app/strings/en/, or keep it in ios_kept.json with why:\n"
                          + "\n".join(f"  {f}:{n}: {b}" for f, n, b in left))
 
     def test_the_scan_judges_each_literal_on_its_own(self):
@@ -362,7 +362,7 @@ class AndroidLiterals(unittest.TestCase):
 
     def test_every_android_line_reads_through_words(self):
         left = android_literals.scan()
-        self.assertEqual(left, [], "English still in code; give it a key in en.json, or keep it in android_kept.json with why:\n"
+        self.assertEqual(left, [], "English still in code; give it a key in app/strings/en/, or keep it in android_kept.json with why:\n"
                          + "\n".join(f"  {f}:{n}: {b}" for f, n, b in left))
 
     def test_the_scan_judges_each_literal_on_its_own(self):

@@ -1,0 +1,17 @@
+{
+  "report.already": "Je hebt dit antwoord al gemeld.",
+  "report.cant_from_here": "Dit antwoord kan niet vanaf hier worden gemeld.",
+  "report.menu": "Dit antwoord melden",
+  "report.not_sent": "Je melding is niet verzonden. {why}",
+  "report.not_sent_why": "Niet verzonden: {failed}",
+  "report.note_hint": "Een notitie toevoegen (optioneel)",
+  "report.note_most_characters": "Een notitie is maximaal 1.000 tekens.",
+  "report.person_kiff_reads_your_report": "Een medewerker van KIFF leest je melding, met het antwoord zoals het geschreven is.",
+  "report.reason.harmful": "Schadelijk",
+  "report.reason.offensive": "Beledigend",
+  "report.reason.other": "Anders",
+  "report.reason.wrong": "Onjuist",
+  "report.runs_not_loaded": "De runs konden niet worden geladen. {why}",
+  "report.thanks": "Bedankt. Iemand bij KIFF leest je melding.",
+  "report.what_wrong": "Wat is er mis mee?"
+}

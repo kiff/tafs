@@ -7,11 +7,18 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
 
 ## The files
 
-- **`en.json`** is the source and the list of keys.
-- **`de.json`, `fr.json`, `es.json`, `it.json`, `pt.json`, `nl.json`, `pl.json`** hold the
-  same keys in each language.
+- **One folder per language, one file per feature:** `en/drive.json`, `fr/drive.json`, and so
+  on. A key's first part is its feature and names its file: `drive.paused` is in
+  `<lang>/drive.json`. So two PRs on different features never touch the same file.
+- **`en/`** is the source and the list of keys.
+- **`de/`, `fr/`, `es/`, `it/`, `pt/`, `nl/`, `pl/`** hold the same keys in each language.
+- **A new feature** is a new file in each language's folder, named as its keys begin.
+- **A key in another feature's file, or in two files,** is refused: the generator and its
+  checks fail.
 - **`languages.json`** lists the languages (`all`) and the ones the apps ship (`shipped`). A
   shipped language must have every key. Only shipped languages are generated.
+- **`generate.save(lang, lines)`** writes a language's lines back, one sorted file per feature,
+  for a script that changes many lines at once.
 
 ## A line
 
@@ -62,7 +69,8 @@ fails when one differs from what the generator writes, and CI runs it.
 `python3 -m unittest discover -s app/strings` checks, over these files:
 
 - every key is well formed, and no two keys collide once written for an app;
-- a shipped language has every key, and no language has a key `en.json` lacks;
+- a shipped language has every key, and no language has a key English (`en/`) lacks;
+- each feature's lines are in their own file, sorted by key, and no key is in two files;
 - a line has the same placeholders in every language;
 - a count has the plural forms its language needs, and `other`;
 - a shipped language's line isn't left in English, unless `same_as_english.json` keeps it, on purpose (a name, a

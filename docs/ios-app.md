@@ -493,8 +493,8 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
 
 ## Words and languages
 
-The app's own lines are in the shared `app/strings/en.json`, by key (`needs_you.approve_once`), the same file
-Android reads; the servers' own lines stay theirs ([languages.md](languages.md)). `app/strings/generate.py`
+The app's own lines are in the shared `app/strings/en/`, one file per feature, by key (`needs_you.approve_once` is in
+`en/needs_you.json`), the same files Android reads; the servers' own lines stay theirs ([languages.md](languages.md)). `app/strings/generate.py`
 writes `Localizable.xcstrings` and `Design/Words.swift`, a typed accessor per key (`Words.NeedsYou.approveOnce`,
 `Words.Connect.Disconnect.title(vendor:)`), so a missing key or a wrong value doesn't compile. Nobody edits those
 two files by hand: change the JSON and run the generator, and `--check` fails CI when they differ. A count picks

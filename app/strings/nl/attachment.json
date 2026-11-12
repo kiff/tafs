@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} kan niet worden bijgevoegd.",
+  "attachment.kilobytes": "{size} kB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs kan dit bestand niet bijvoegen: het soort of de grootte wordt niet ondersteund. Kies een ander bestand.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "Die foto kon niet worden gelezen.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "{name} is {size}; het maximum is {limit}.",
+  "attachment.wrong_kind": "{name} kan niet worden bijgevoegd. Foto's, pdf's, tekst, CSV, Markdown, Word- en Excel-bestanden wel."
+}

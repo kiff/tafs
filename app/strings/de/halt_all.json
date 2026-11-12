@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Hält jeden taf sofort an. Nichts Neues wird gesendet, bis du sie in tafs fortsetzt.",
+  "halt_all.failed": "tafs konnte deine tafs nicht anhalten. {why} Öffne tafs, um sie anzuhalten.",
+  "halt_all.halted": {
+    "one": "{count} taf angehalten. Nichts Neues wird gesendet, bis du fortsetzt.",
+    "other": "{count} tafs angehalten. Nichts Neues wird gesendet, bis du fortsetzt."
+  },
+  "halt_all.halted_all": "Deine tafs sind angehalten. Nichts Neues wird gesendet, bis du fortsetzt.",
+  "halt_all.halting": {
+    "one": "{count} taf wird angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.",
+    "other": "{count} tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist."
+  },
+  "halt_all.halting_all": "Deine tafs werden angehalten: Kein Lauf startet. KIFF hat noch nicht jeden Teil bestätigt; tafs zeigt, wann es so weit ist.",
+  "halt_all.running": "tafs konnte deine tafs nicht anhalten. Öffne tafs, um sie anzuhalten.",
+  "halt_all.signed_out": "Du bist bei tafs abgemeldet. Melde dich an, um deine tafs anzuhalten.",
+  "halt_all.title": "Alle tafs anhalten"
+}

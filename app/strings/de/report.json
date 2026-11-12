@@ -1,0 +1,17 @@
+{
+  "report.already": "Du hast diese Antwort bereits gemeldet.",
+  "report.cant_from_here": "Diese Antwort kann von hier aus nicht gemeldet werden.",
+  "report.menu": "Diese Antwort melden",
+  "report.not_sent": "Deine Meldung wurde nicht gesendet. {why}",
+  "report.not_sent_why": "Nicht gesendet: {failed}",
+  "report.note_hint": "Notiz hinzufügen (optional)",
+  "report.note_most_characters": "Eine Notiz hat höchstens 1.000 Zeichen.",
+  "report.person_kiff_reads_your_report": "Eine Person bei KIFF liest deine Meldung, zusammen mit der Antwort, wie sie geschrieben wurde.",
+  "report.reason.harmful": "Schädlich",
+  "report.reason.offensive": "Beleidigend",
+  "report.reason.other": "Sonstiges",
+  "report.reason.wrong": "Falsch",
+  "report.runs_not_loaded": "Seine Läufe konnten nicht geladen werden. {why}",
+  "report.thanks": "Danke. Jemand bei KIFF wird deine Meldung lesen.",
+  "report.what_wrong": "Was stimmt damit nicht?"
+}

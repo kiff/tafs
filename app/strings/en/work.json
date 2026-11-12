@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Answer within",
+  "work.answer_within_days": {
+    "one": "{count} day",
+    "other": "{count} days"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} hour",
+    "other": "{count} hours"
+  },
+  "work.answer_within_line": "You're told when a case waits longer.",
+  "work.answer_within_none": "Not set",
+  "work.answer_within_not_set": "It couldn't be set. {why}",
+  "work.asking_kiff_run": "Asking KIFF to run {tool}…",
+  "work.did_not_stop": "It didn't stop: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Its runs",
+  "work.not_read": "Its work couldn't be read. {why}",
+  "work.not_sent_again": "It wasn't sent again. {why}",
+  "work.request.try_reply_now": "Try the reply now",
+  "work.requests_need_you": {
+    "one": "{count} request needs you",
+    "other": "{count} requests need you"
+  },
+  "work.send_again": "Send again",
+  "work.sending_again": "Sending again…",
+  "work.stop_run": "Stop the run",
+  "work.stopped_part_way_before_finished": "{taf} stopped part-way, before it finished."
+}

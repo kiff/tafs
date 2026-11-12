@@ -1,0 +1,8 @@
+{
+  "push.channel.holds_description": "Ein Aufruf wird für deine Antwort zurückgehalten. Nichts wird gesendet, bevor du ihn genehmigst.",
+  "push.channel.other": "Andere Benachrichtigungen",
+  "push.channel.other_description": "Anfragen nach Aufgaben und ihre Antworten, ohne Ton.",
+  "push.open_needs_you": "Öffne „Braucht dich“, um zu antworten.",
+  "push.open_taf": "Öffne den taf, um es zu sehen.",
+  "push.open_usage": "Öffne „Tarif & Nutzung“, um es zu sehen."
+}

@@ -1,0 +1,17 @@
+{
+  "report.already": "Já reportou esta resposta.",
+  "report.cant_from_here": "Não é possível reportar esta resposta a partir daqui.",
+  "report.menu": "Reportar esta resposta",
+  "report.not_sent": "O seu relatório não foi enviado. {why}",
+  "report.not_sent_why": "Não enviado: {failed}",
+  "report.note_hint": "Adicionar uma nota (opcional)",
+  "report.note_most_characters": "Uma nota tem no máximo 1000 caracteres.",
+  "report.person_kiff_reads_your_report": "Uma pessoa no KIFF lê o seu relatório, com a resposta tal como foi escrita.",
+  "report.reason.harmful": "Prejudicial",
+  "report.reason.offensive": "Ofensiva",
+  "report.reason.other": "Outro motivo",
+  "report.reason.wrong": "Errada",
+  "report.runs_not_loaded": "Não foi possível carregar as suas execuções. {why}",
+  "report.thanks": "Obrigado. Alguém no KIFF vai ler o seu relatório.",
+  "report.what_wrong": "O que tem de errado?"
+}

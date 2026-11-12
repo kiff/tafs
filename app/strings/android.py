@@ -1,4 +1,4 @@
-"""Android's half of the shared app strings (app/strings/*.json).
+"""Android's half of the shared app strings (app/strings/<lang>/<area>.json).
 
 Writes, from the languages' JSON files:
 - android/app/src/main/res/values{,-xx}/strings.xml, with <plurals> for counts;

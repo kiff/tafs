@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Répondre sous",
+  "work.answer_within_days": {
+    "one": "{count} jour",
+    "other": "{count} jours"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} heure",
+    "other": "{count} heures"
+  },
+  "work.answer_within_line": "Vous êtes prévenu quand un cas attend plus longtemps.",
+  "work.answer_within_none": "Non défini",
+  "work.answer_within_not_set": "Impossible de le définir. {why}",
+  "work.asking_kiff_run": "Demande à KIFF d'exécuter {tool}…",
+  "work.did_not_stop": "Il ne s'est pas arrêté : {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Ses exécutions",
+  "work.not_read": "Son travail n'a pas pu être lu. {why}",
+  "work.not_sent_again": "Il n'a pas été renvoyé. {why}",
+  "work.request.try_reply_now": "Tenter la réponse maintenant",
+  "work.requests_need_you": {
+    "one": "{count} demande vous attend",
+    "other": "{count} demandes vous attendent"
+  },
+  "work.send_again": "Renvoyer",
+  "work.sending_again": "Renvoi…",
+  "work.stop_run": "Arrêter l'exécution",
+  "work.stopped_part_way_before_finished": "{taf} s'est arrêté en cours de route, avant la fin."
+}

@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Stops every taf at once. Nothing new is sent until you resume them in tafs.",
+  "halt_all.failed": "tafs couldn't halt your tafs. {why} Open tafs to halt them.",
+  "halt_all.halted": {
+    "one": "Halted {count} taf. Nothing new is sent until you resume.",
+    "other": "Halted {count} tafs. Nothing new is sent until you resume."
+  },
+  "halt_all.halted_all": "Halted your tafs. Nothing new is sent until you resume.",
+  "halt_all.halting": {
+    "one": "Halting {count} taf: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.",
+    "other": "Halting {count} tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has."
+  },
+  "halt_all.halting_all": "Halting your tafs: no run starts. KIFF hasn't confirmed every part yet; tafs shows when it has.",
+  "halt_all.running": "tafs couldn't halt your tafs. Open tafs to halt them.",
+  "halt_all.signed_out": "You're signed out of tafs. Sign in to halt your tafs.",
+  "halt_all.title": "Halt all tafs"
+}
