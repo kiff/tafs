@@ -2356,15 +2356,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       }
     }
     // A job run's count from its record (kiff/agents' tally), on its report, the run's last words: tafs cloud's words,
-    // never the model's numbers. One read a run; a run that can't be read gets no line.
+    // never the model's numbers. The runs are read together, one round trip; a run that can't be read gets no line.
     if (r.session.kind === "run") {
-      for (const [id] of runs) {
+      await Promise.all([...runs.keys()].map(async (id) => {
         const report = messages.filter((m) => m.from === "taf" && m.session === r.session.id && m.id.startsWith(`${id}.`)).at(-1);
-        if (!report) continue;
+        if (!report) return;
         const run = await deps.agents.getRun(me.tenantID, taf.id, id).catch(() => undefined);
         const line = run ? countedLine(run, lang) : undefined;
         if (line) report.counted = line;
-      }
+      }));
     }
   }
   // The week-one note (weekOneOnRead), in the taf's thread at the time it was posted: tafs cloud's words, never the model's.
