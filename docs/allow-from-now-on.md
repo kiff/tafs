@@ -100,7 +100,8 @@ or `{ "none": "never" | "unit" | "no_change" | "not_yours", "words": "…" }`.
 - The app confirms the draft itself, with `hold` when "Send this refund too" is on and without
   it when it's off, as it confirms any draft. tafs cloud has no confirm route.
 - tafs cloud checks its own draft before submitting it: it differs from the Cards in force only
-  in the mandates `changes` names, and only as the table below allows. A draft that doesn't is
+  in the mandates `changes` names, and only as the table below allows, with no Card retired and
+  none added. A draft that doesn't is
   never sent, and the answer is `none` (`no_change`).
 
 **The narrowest change, by breach** (one change per breach, all of the hold's breaches in one
@@ -142,7 +143,10 @@ have gone out on its own").
     summary;
   - it checks that the draft differs from the Cards in force only in the mandates the offer's
     `changes` names. Any other difference, or a limit that isn't what the summary says: no sign
-    button, and "This change isn't what was offered";
+    button, and "This change isn't what was offered". So is a draft that retires a Card, and a
+    Card in the draft that revises none in force: this offer never makes either. The draft as
+    KIFF returns it says which Card each of its Cards revises, that Card's terms in force, and
+    whether it's unchanged, so the phone can compare from the draft alone;
   - it signs the `version` it read.
 - One signature: the draft's confirm with the approval key KIFF names, with
   `hold: {id, accounting_version}` when the switch is on.
@@ -165,8 +169,9 @@ have gone out on its own").
 - **The held call goes out only with the switch on,** under the confirm's signature; with it
   off, the Card changes and the call still waits for its own answer.
 - **The phone refuses a draft that isn't what was offered:** one that differs from the Cards in
-  force beyond the named mandates, or whose changed limit isn't the summary's figure, gets no
-  sign button (both apps).
+  force beyond the named mandates, whose changed limit isn't the summary's figure, that retires a
+  Card, or that adds one revising nothing, gets no sign button (both apps, and qa-kiff's
+  negatives).
 - **Showing the button makes no request,** and the exact figure is the default; rounding is
   only on `{"round": true}`.
 - **The revision names the change and its source call** (`from_hold`).
