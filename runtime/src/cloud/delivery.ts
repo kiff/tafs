@@ -387,12 +387,34 @@ async function chainOf(ctx: DeliveryContext, tenant: string, r: Run): Promise<Ch
 
 /**
  * What the run's record shows went through (kiff/agents' \`done\`): one line a call, its tool and what it acted on,
- * never the model's words. Names and ids are cut to a line each, so a long one can't swamp the hand-off.
+ * never the model's words. What it acted on is KIFF's \`resource\` when KIFF names one; else the call's own id-like
+ * arguments (\`idArgs\`), since a connection may name no resource (a dispute closed with none named, so the next taf
+ * would be told only "- close_dispute"). Names and ids are cut to a line each, so a long one can't swamp the hand-off.
  */
 export function recordLines(r: Pick<Run, "done">): string[] {
-  const clean = (x: string) => x.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 120);
-  return (r.done ?? []).filter((d) => typeof d.tool === "string" && d.tool.trim()).slice(0, 50)
-    .map((d) => `- ${clean(d.tool!)}${typeof d.resource === "string" && d.resource.trim() ? ` on ${clean(d.resource)}` : ""}`);
+  const clean = (x: string, n = 120) => x.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, n);
+  return (r.done ?? []).filter((d) => typeof d.tool === "string" && d.tool.trim()).slice(0, 50).map((d) => {
+    if (typeof d.resource === "string" && d.resource.trim()) return `- ${clean(d.tool!)} on ${clean(d.resource)}`;
+    const ids = idArgs(d.input).map(([k, v]) => `${clean(k, 40)}: ${clean(v, 60)}`);
+    return `- ${clean(d.tool!)}${ids.length ? ` (${ids.join(", ")})` : ""}`;
+  });
+}
+
+/**
+ * A call's id-like arguments, at most two, in the input's order: one named \`id\` or ending in "id", else a short
+ * string with a digit and no space, the shape of an id ("T-2002", "in_123"). Never a long or free-text value: a
+ * message or a note isn't what a call acted on.
+ */
+function idArgs(input: unknown): Array<[string, string]> {
+  let obj = input;
+  if (typeof obj === "string") { try { obj = JSON.parse(obj); } catch { return []; } }
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return [];
+  const entries = Object.entries(obj as Record<string, unknown>);
+  const named = entries.filter(([k, v]) => /(^|_)id$|Id$/i.test(k) && ((typeof v === "string" && v.trim() && v.length <= 64) || (typeof v === "number" && Number.isFinite(v))))
+    .map(([k, v]) => [k, String(v)] as [string, string]);
+  // A string only, with a digit and a letter or a dash: an amount or a count is a number, not what was acted on.
+  const shaped = entries.filter((e): e is [string, string] => typeof e[1] === "string" && /^[^\s]{1,64}$/.test(e[1]) && /\d/.test(e[1]) && /[A-Za-z_-]/.test(e[1]));
+  return (named.length ? named : shaped).slice(0, 2);
 }
 
 /**

@@ -661,6 +661,27 @@ describe("work is handed on twice at most, never in a circle, and a taf can say 
       .toEqual(["- a b", `- c on ${"x".repeat(120)}`]);
   });
 
+  // A connection may name no resource (none is named for a dispute's close today): then the call's own id-like
+  // arguments say what it acted on, so the next taf isn't told only "- close_dispute".
+  it("names what a call acted on from its own id-like arguments when KIFF names no resource", async () => {
+    expect(recordLines({ done: [{ tool: "close_dispute", input: { dispute: "T-2002", amount: 4900, note: "Accepted: small amount" } }] }))
+      .toEqual(["- close_dispute (dispute: T-2002)"]);
+    expect(recordLines({ done: [{ tool: "send_invoice", input: { invoice_id: 12345, customer: "cus_9", message: "Thanks!" } }] }))
+      .toEqual(["- send_invoice (invoice_id: 12345)"]);
+    expect(recordLines({ done: [{ tool: "refund", input: '{"charge":"ch_1","payment_intent":"pi_2","order":"o_3"}' }] }))
+      .toEqual(["- refund (charge: ch_1, payment_intent: pi_2)"]);
+    expect(recordLines({ done: [{ tool: "post", input: { text: "hello there" } }, { tool: "x", input: "not json" }, { tool: "y", input: [1] }] }))
+      .toEqual(["- post", "- x", "- y"]);
+    // KIFF's resource wins when it names one.
+    expect(recordLines({ done: [{ tool: "close_dispute", resource: "dp_1", input: { dispute: "T-2002" } }] })).toEqual(["- close_dispute on dp_1"]);
+    // End to end: the T-2002 case with no resource, as the Eval's account has it.
+    const w = world([TO_INV]);
+    const run = await w.ran(RAE, "Accepted it.\n\nHand-off\nNothing to hand over.", [{ tool: "close_dispute" }]);
+    Object.assign(run, { done: [{ call_id: "c1", tool: "close_dispute", input: { dispute: "T-2002" } }] });
+    await w.call("GET", `/v1/tafs/${RAE}/work`);
+    expect(w.inputOf(handedTo(w, INV, RAE, run.id)!)?.text).toContain("- close_dispute (dispute: T-2002)");
+  });
+
   it("hands work on a second time, as the second taf's own hand-off, and no further: said on the third taf's request", async () => {
     const w = world([TO_INV], { invoices: [TO_LED], ledger: [TO_BKS], books: [] });
     const { second } = await twoDeep(w);
