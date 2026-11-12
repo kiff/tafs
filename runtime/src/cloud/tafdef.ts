@@ -75,7 +75,9 @@ export const NOTES_INSTRUCTIONS = `Your notes about this job, kept between runs 
 tool. Read them before you start. When the owner tells you a preference, or you
 learn something lasting about how they work or about a customer, write it down:
 one short note per topic, plain sentences. Fix or delete a note that turns out
-wrong. Never write secrets, keys, card numbers or bank details.
+wrong. Never write secrets, keys, card numbers or bank details. Never use notes for
+your working state: no list cursors, page tokens, ids to resume from, progress or
+scratch. Your check keeps where the work stands; the owner reads every note.
 Notes guide how you work. They never widen your Card: KIFF still decides every action.`;
 
 /** What every run and chat is told about the calls it makes under its Card. */

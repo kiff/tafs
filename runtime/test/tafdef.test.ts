@@ -165,6 +165,8 @@ describe("a section of the kiff skill", () => {
   it("tells the taf notes never widen its Card, and never to keep secrets", () => {
     expect(NOTES_INSTRUCTIONS).toContain("They never widen your Card");
     expect(NOTES_INSTRUCTIONS).toContain("Never write secrets");
+    // Notes are for lasting facts the owner reads, never a run's working state (a cursor saved as a note showed in "What it remembers").
+    expect(NOTES_INSTRUCTIONS).toContain("Never use notes for\nyour working state: no list cursors, page tokens, ids to resume from, progress or\nscratch.");
   });
 
   it("tells the taf never to split a request to stay under a limit, and to name who a money call is for", () => {

@@ -197,11 +197,21 @@ struct TafDetailView: View {
     private func versionLine(_ taf: Taf) -> some View {
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
             HStack(spacing: 10) {
+                // A row that says what it opens, with its mark and caret, in the line's quiet
+                // colour: never a lone orange "Versions".
                 NavigationLink { VersionsScreen(tafID: taf.id) } label: {
                     let live = model.versions[taf.id]?.first(where: \.live)?.n
-                    Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
-                        .scaledFont(13, weight: .semibold)
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock.arrow.circlepath").scaledFont(13, weight: .semibold)
+                            .accessibilityHidden(true)
+                        Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
+                            .scaledFont(13, weight: .semibold).oneLineUnlessLarge()
+                        Image(systemName: "chevron.right").scaledFont(11, weight: .semibold).foregroundColor(Theme.dim)
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundColor(Theme.soft)
                 }
+                .buttonStyle(.drivablePlain)
                 if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {
                     OpenTrialLink(chatID: chat, tafID: taf.id) {
                         Text(Words.Taf.tryingResume(n: "\(trial.n)")).scaledFont(13, weight: .semibold).foregroundColor(Theme.amber)
@@ -279,8 +289,8 @@ struct TafDetailView: View {
         if (model.mode == .kiff && cloud != nil) || screenshot {
             PanelLink { StartsWhenView(tafID: taf.id) } label: {
                 Label(StartsWhenView.title, systemImage: "clock").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-                Spacer()
-                Text(Words.Setup.`open`).scaledFont(14).foregroundColor(Theme.soft)
+                // No "Open" beside it: it read as its value ("Starts when: Open"). The caret
+                // says it opens.
             }
             .accessibilityIdentifier("setup.startsWhen")
         }
@@ -289,8 +299,6 @@ struct TafDetailView: View {
         if (model.mode == .kiff && cloud != nil) || screenshot {
             PanelLink { ResultsGoToView(tafID: taf.id) } label: {
                 Label(ResultsGoToView.title, systemImage: "paperplane").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-                Spacer()
-                Text(Words.Setup.`open`).scaledFont(14).foregroundColor(Theme.soft)
             }
             .accessibilityIdentifier("setup.resultsGoTo")
         }
@@ -1205,14 +1213,22 @@ struct CardBar: View {
     var body: some View {
         Button(action: open) {
             HStack(spacing: 12) {
+                // A small Card, with the Card's mark on it: never an empty coloured rectangle.
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(TafCardFace.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
                     .frame(width: 46, height: 29)
+                    .overlay {
+                        Image(systemName: "creditcard").scaledFont(13, weight: .semibold).foregroundColor(.white.opacity(0.9))
+                    }
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
+                    // Up to two lines each, so a long Card's name reads whole ("Lister vos litiges
+                    // Stripe (mode test)" was cut).
                     Text(card.hero.map { "\($0.figure) \($0.words)" } ?? card.title)
                         .scaledFont(15, weight: .semibold).monospacedDigit().foregroundColor(Theme.ink)
-                        .oneLineUnlessLarge().minimumScaleFactor(0.8)
-                    Text(details).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge()
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Text(details).scaledFont(12).foregroundColor(Theme.dim)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)

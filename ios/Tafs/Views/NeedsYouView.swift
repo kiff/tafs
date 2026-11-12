@@ -107,17 +107,21 @@ struct DidThisHappenCard: View {
                     Text(why).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
                 if model.mayAnswerHolds {
-                    HStack(spacing: 10) {
-                        ApprovalGate {
-                            Button(Words.Record.DidThisHappen.no) { answer(false) }.buttonStyle(OutlineButtonStyle())
-                        }
-                        ApprovalGate {
-                            Button(Words.Record.DidThisHappen.yes) { answer(true) }.buttonStyle(PrimaryButtonStyle())
+                    // One gate for both answers: when the device can't approve, its words and
+                    // buttons show once, at full width, not once per answer. The line about No
+                    // goes with the buttons: without them it names a button that isn't there.
+                    ApprovalGate {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 10) {
+                                Button(Words.Record.DidThisHappen.no) { answer(false) }.buttonStyle(OutlineButtonStyle())
+                                Button(Words.Record.DidThisHappen.yes) { answer(true) }.buttonStyle(PrimaryButtonStyle())
+                            }
+                            .disabled(sending)
+                            Text(Words.NeedsYou.noGivesCardRoomBack(biometry: "\(Biometry.name)"))
+                                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    .disabled(sending)
-                    Text(Words.NeedsYou.noGivesCardRoomBack(biometry: "\(Biometry.name)"))
-                        .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 }
             }
         }
@@ -162,7 +166,7 @@ struct HeldCallCard: View {
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(sending)
                 }
-            } else if model.approvalKeyLost, call.kiffID != nil {
+            } else if model.showsApprovalKeyLost, call.kiffID != nil {
                 // Approving or extra room would fail: the way out instead. Refuse stays below.
                 ApprovalKeyLostLine()
             } else if call.approvableOnce {

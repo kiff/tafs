@@ -78,7 +78,7 @@
     <string name="approval_kept">Zostaje w sekcji Czeka na Ciebie.</string>
     <string name="approval_key_could_not_sign">Klucz nie mógł podpisać</string>
     <string name="approval_key_gone_approve_again">Twoje odciski palców się zmieniły albo żaden nie został rozpoznany, więc ten telefon nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce.</string>
-    <string name="approval_key_gone_face_id">Twoje Face ID lub odciski palców się zmieniły albo nie zostały rozpoznane, więc ten telefon nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce.</string>
+    <string name="approval_key_gone_biometry">Twoje %1$s się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce.</string>
     <string name="approval_key_gone_sign_in">Twoje odciski palców się zmieniły albo żaden nie został rozpoznany, więc ten telefon nie może zatwierdzać, dopóki nie zalogujesz się ponownie.</string>
     <string name="approval_key_lost">Zaloguj się ponownie przez KIFF, aby zatwierdzać z tego telefonu.</string>
     <string name="approval_locked_after_too_many_tries">%1$s jest zablokowane po zbyt wielu próbach. Zablokuj ten %2$s, odblokuj go kodem, a potem sprawdź ponownie.</string>
@@ -88,7 +88,7 @@
     <string name="approval_no_key">Brak klucza do podpisu</string>
     <string name="approval_not_confirmed">Nie potwierdzono</string>
     <string name="approval_not_recognized">Spróbuj ponownie albo zaloguj się ponownie, jeśli Twoje odciski palców się zmieniły.</string>
-    <string name="approval_not_recognized_face_id">Spróbuj ponownie albo zaloguj się ponownie, jeśli Twoje Face ID lub odciski palców się zmieniły.</string>
+    <string name="approval_not_recognized_biometry">Spróbuj ponownie albo zaloguj się ponownie, jeśli Twoje %1$s się zmieniło.</string>
     <string name="approval_nothing_approved_request_kept_approve">Nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>
     <string name="approval_open_settings">Otwórz ustawienia</string>
     <string name="approval_prompt_approve_on_kiff">Zatwierdź w KIFF</string>

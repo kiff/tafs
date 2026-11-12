@@ -76,7 +76,7 @@
     <string name="approval_kept">Het blijft in Wacht op jou.</string>
     <string name="approval_key_could_not_sign">De sleutel kon niet ondertekenen</string>
     <string name="approval_key_gone_approve_again">Je vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je hem opnieuw goedkeurt in je browser.</string>
-    <string name="approval_key_gone_face_id">Je Face ID of vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je hem opnieuw goedkeurt in je browser.</string>
+    <string name="approval_key_gone_biometry">Je %1$s is gewijzigd of niet herkend, dus dit apparaat kan niet goedkeuren tot je het opnieuw goedkeurt in je browser.</string>
     <string name="approval_key_gone_sign_in">Je vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je opnieuw inlogt.</string>
     <string name="approval_key_lost">Log opnieuw in met KIFF om vanaf deze telefoon goed te keuren.</string>
     <string name="approval_locked_after_too_many_tries">%1$s is vergrendeld na te veel pogingen. Vergrendel deze %2$s, ontgrendel hem met de toegangscode en controleer het opnieuw.</string>
@@ -86,7 +86,7 @@
     <string name="approval_no_key">Geen sleutel om mee te ondertekenen</string>
     <string name="approval_not_confirmed">Niet bevestigd</string>
     <string name="approval_not_recognized">Probeer het opnieuw, of log opnieuw in als je vingerafdrukken zijn gewijzigd.</string>
-    <string name="approval_not_recognized_face_id">Probeer het opnieuw, of log opnieuw in als je Face ID of vingerafdrukken zijn gewijzigd.</string>
+    <string name="approval_not_recognized_biometry">Probeer het opnieuw, of log opnieuw in als je %1$s is gewijzigd.</string>
     <string name="approval_nothing_approved_request_kept_approve">Er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent.</string>
     <string name="approval_open_settings">Instellingen openen</string>
     <string name="approval_prompt_approve_on_kiff">Goedkeuren op KIFF</string>

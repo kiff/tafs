@@ -20,22 +20,28 @@ struct NotificationSettingsView: View {
             }
             // Alerts come from tafs cloud, which a signed-in account has.
             if model.mode == .kiff {
+                let alertsOn = model.phoneAlerts?.enabled ?? (model.alertsReady == true)
                 Section {
                     Toggle(Words.Alert.onThisDevice(device: "\(ThisDevice.kind)"), isOn: Binding(
-                        get: { model.phoneAlerts?.enabled ?? (model.alertsReady == true) },
+                        get: { alertsOn },
                         set: { enabled in Task { if enabled { await model.turnOnAlerts() } else { await model.turnOffAlerts() } } }))
                         .disabled(model.phoneAlertsBusy || model.turningOnAlerts)
-                    Toggle(isOn: Binding(get: { model.alertSound }, set: { model.alertSound = $0 })) {
+                    // No alerts, no sound: off and greyed while alerts are off on this device,
+                    // its choice kept for when they're back.
+                    Toggle(isOn: Binding(get: { alertsOn && model.alertSound }, set: { model.alertSound = $0 })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Words.Alert.sound)
                             Text(Words.Alert.soundWords).scaledFont(13).foregroundColor(Theme.dim)
                         }
                     }
+                    .disabled(!alertsOn)
                 } footer: {
                     Text(model.canAnswerHolds == false
                          ? Words.Alert.Foot.cantAnswerHolds
                          : Words.Alert.Foot.tellsYouDevice(device: "\(ThisDevice.kind)"))
                 }
+                // Drawn only with something in it: an empty heading read as broken.
+                if !(model.phoneAlerts?.kinds ?? []).isEmpty || model.phoneAlerts?.answering != nil || model.phoneAlertsError != nil {
                 Section(Words.Alert.whatAlerts) {
                     ForEach(model.phoneAlerts?.kinds ?? []) { choice in
                         Toggle(isOn: Binding(get: { choice.enabled }, set: { enabled in Task { await model.setAlertKind(choice.id, enabled: enabled) } })) {
@@ -46,6 +52,7 @@ struct NotificationSettingsView: View {
                         NavigationLink { AlertingTafsView() } label: { Text(answering.title) }
                     }
                     if let error = model.phoneAlertsError { Text(error).foregroundColor(Theme.no) }
+                }
                 }
             }
             Section {

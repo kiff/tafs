@@ -7674,6 +7674,11 @@ extension AppModel {
     /// This device can't approve now, so an approval's button is disabled. Sample mode signs
     /// nothing for real, so nothing is blocked there.
     var approvalBlocked: Bool { mode == .kiff && !approvalReadiness.isReady }
+
+    /// Whether to say this device's approval key is gone. One state at a time: while the
+    /// device itself can't approve (Face ID off for tafs, none enrolled), its words come
+    /// first, since approving again needs it working; the lost key shows once it is.
+    var showsApprovalKeyLost: Bool { approvalKeyLost && !approvalBlocked }
 }
 
 /// A search of the Record: what was asked, the pages read so far, and whether one is on its way

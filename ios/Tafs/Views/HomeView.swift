@@ -31,7 +31,8 @@ struct HomeView: View {
                 headline
                 // KIFF can't be reached just now: said quietly, under the account's name.
                 if let words = model.unreachable { UnreachableLine(words: words, retrying: model.retryingRefresh) }
-                if model.approvalKeyLost { ApprovalKeyLostLine() }
+                // The key gone and the device not ready show as one state: the device's first.
+                if model.showsApprovalKeyLost { ApprovalKeyLostLine() } else if model.approvalKeyLost { ApprovalNotice() }
                 // The plan, only when it needs the owner: a trial ended or ending, tasks nearly gone.
                 PlanLine()
 

@@ -159,8 +159,8 @@ enum Words {
         static var keyCouldNotSign: String { Words.line("approval.key_could_not_sign") }
         /// Your fingerprints changed, or none was recognized, so this phone can't approve until you approve it again in your browser.
         static var keyGoneApproveAgain: String { Words.line("approval.key_gone_approve_again") }
-        /// Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you approve it again in your browser.
-        static var keyGoneFaceId: String { Words.line("approval.key_gone_face_id") }
+        /// Your {biometry} changed or wasn't recognized, so this device can't approve until you approve it again in your browser.
+        static func keyGoneBiometry(biometry: String) -> String { Words.line("approval.key_gone_biometry", biometry) }
         /// Your fingerprints changed, or none was recognized, so this phone can't approve until you sign in again.
         static var keyGoneSignIn: String { Words.line("approval.key_gone_sign_in") }
         /// Sign in with KIFF again to approve from this phone.
@@ -179,8 +179,8 @@ enum Words {
         static var notConfirmed: String { Words.line("approval.not_confirmed") }
         /// Try again, or sign in again if your fingerprints changed.
         static var notRecognized: String { Words.line("approval.not_recognized") }
-        /// Try again, or sign in again if your Face ID or fingerprints changed.
-        static var notRecognizedFaceId: String { Words.line("approval.not_recognized_face_id") }
+        /// Try again, or sign in again if your {biometry} changed.
+        static func notRecognizedBiometry(biometry: String) -> String { Words.line("approval.not_recognized_biometry", biometry) }
         /// Nothing was approved. The request is kept: approve again when you're ready.
         static var nothingApprovedRequestKeptApprove: String { Words.line("approval.nothing_approved_request_kept_approve") }
         /// Open settings

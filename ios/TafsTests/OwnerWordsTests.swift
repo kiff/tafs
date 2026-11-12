@@ -8,6 +8,17 @@ final class OwnerWordsTests: XCTestCase {
         try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(json.utf8))
     }
 
+    /// Never "€ 2.000 a day" in an English app, the phone's region writing it.
+    /// Amounts follow the app's language, each in its own currency and symbol.
+    func testMoneyIsWrittenInTheAppsLanguageNotTheRegion() {
+        let english = Words.locale.language.languageCode?.identifier == "en"
+        guard english else { return }
+        XCTAssertEqual(Money(minor: 200000, currency: "EUR", scale: 2).figure, "€2,000")
+        XCTAssertEqual(Money(minor: 9050, currency: "EUR", scale: 2).figure, "€90.50")
+        XCTAssertEqual(Money(minor: 80000, currency: "USD", scale: 2).figure, "$800")
+        XCTAssertEqual(Money(minor: 12000, currency: nil, scale: 0).figure, "12,000")
+    }
+
     /// The owner's iPad test: "create_refund: at most 10000 sum(amount) each" while the chat
     /// said €100. With the units KIFF now gives, the lines say €100.00, and
     /// each action reads by its title, never its name (kiff/tafs#138, items 52, 53).
