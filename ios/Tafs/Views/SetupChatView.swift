@@ -1401,7 +1401,8 @@ struct SetupApproval: View {
             } else if (state == .done || state == .declined) && !open {
                 Button { withMotion(.easeOut(duration: 0.2)) { open = true } } label: {
                     OutcomeLine(text: outcome(state, grant), tone: state == .done ? Theme.ok : Theme.dim,
-                                mark: state == .done ? "checkmark.circle.fill" : "minus.circle.fill", more: true)
+                                mark: state == .done ? "checkmark.circle.fill" : "minus.circle.fill", more: true,
+                                detail: state == .done ? signedCardLines : [])
                 }
                 .buttonStyle(.drivablePlain)
                 .accessibilityHint(Words.Coach.showsApproval)
@@ -1429,13 +1430,23 @@ struct SetupApproval: View {
         return grant.takesKey && !grant.connected
     }
 
+    /// The Card an approved card signed, as KIFF's own lines for the draft this phone read: what
+    /// the folded line says was approved, never the connection's words for its key. None for a
+    /// card with no Card, or one whose draft isn't read.
+    private var signedCardLines: [String] {
+        guard let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true else { return [] }
+        return draft.lines
+    }
+
     /// An answered approval, in one line: the answer, then what it was. Coach's title for the
     /// card comes first, so several in a row each say what was approved.
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
         // Signed earlier, not by this tap: said as that.
         if state == .done, model.setupThread.answer(to: component.id)?.text.hasPrefix("already approved") == true {
             let title = component.title?.trimmingCharacters(in: .whitespaces)
-            return "\(AppModel.alreadyApproved) · \(title.flatMap { $0.isEmpty ? nil : $0 } ?? (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? Words.Coach.theVendor)"
+            // With a Card, it's the Card that was approved (kiff/tafs#94), as below.
+            let card = component.draft.flatMap { model.setupDrafts[$0] }.flatMap { $0.noTools == true ? nil : $0.cardTitle }
+            return "\(AppModel.alreadyApproved) · \(title.flatMap { $0.isEmpty ? nil : $0 } ?? card ?? (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? Words.Coach.theVendor)"
         }
         if let title = component.title?.trimmingCharacters(in: .whitespaces), !title.isEmpty {
             return state == .declined ? Words.Coach.Answer.declinedTitle(title: "\(title)") : Words.Coach.Answer.approvedTitle(title: "\(title)")
@@ -1605,11 +1616,19 @@ struct OutcomeLine: View {
     var mark = "checkmark.circle.fill"
     /// Whether a tap opens the card again.
     var more = false
+    /// What was approved, under the line: the signed Card's lines. None draws the line alone.
+    var detail: [String] = []
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: mark).foregroundColor(tone)
-            Text(text).foregroundColor(Theme.soft).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(text).foregroundColor(Theme.soft).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                ForEach(Array(detail.enumerated()), id: \.offset) { _, line in
+                    Text(line).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                }
+            }
             Spacer(minLength: 0)
             if more { Image(systemName: "chevron.down").scaledFont(11, weight: .bold).foregroundColor(Theme.dim) }
         }

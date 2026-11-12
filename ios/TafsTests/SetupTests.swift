@@ -1721,6 +1721,27 @@ final class SetupTests: XCTestCase {
         XCTAssertFalse(SetupApproval.takesKeyHere(connected))
     }
 
+    /// An approved card folds to a line that says what was signed: with a Card, the Card's own
+    /// lines from the draft this phone read, and its name also when it was approved earlier.
+    /// Never the connection's words for its key. A declined card draws no Card under it.
+    func testAFoldedApprovalShowsTheCardThatWasSigned() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains("detail: state == .done ? signedCardLines : [])"), "only an approved card, never a declined one")
+        let from = try XCTUnwrap(file.range(of: "private var signedCardLines: [String] {"))
+        let to = try XCTUnwrap(file.range(of: "private func outcome("))
+        let lines = file[from.lowerBound..<to.lowerBound]
+        XCTAssertTrue(lines.contains("model.setupDrafts[$0]"), "the draft this phone read")
+        XCTAssertTrue(lines.contains("draft.noTools != true"), "a card with no Card draws none")
+        XCTAssertTrue(lines.contains("return draft.lines"), "KIFF's own lines for it")
+        XCTAssertFalse(lines.contains("grant"), "never the connection's words")
+        XCTAssertTrue(file.contains("?? card ?? (grant?.vendor ?? component.service)"), "approved earlier: still the Card, before the vendor")
+
+        let line = OutcomeLine(text: "Approved", detail: ["Read invoices: up to 1,000 a day"])
+        XCTAssertEqual(line.detail, ["Read invoices: up to 1,000 a day"])
+        XCTAssertTrue(OutcomeLine(text: "Declined").detail.isEmpty, "the line alone, as before")
+    }
+
     static func component(_ json: String) throws -> SetupComponent {
         try JSONDecoder().decode(SetupComponent.self, from: Data(json.utf8))
     }
