@@ -524,6 +524,21 @@ describe("a touch pauses the drive (docs/drive.md, When the person touches the a
     await expect(resumeDrive(r.store, T, ANA, "another", r.now())).rejects.toMatchObject({ status: 404 });
   });
 
+  it("a call already waiting when the pause lands is told the person has the app, not that the phone didn't answer", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    let polls = 0;
+    const wait = async (ms: number) => {
+      await r.wait(ms);
+      if (++polls === 2) await pauseDrive(r.store, T, ANA, d.id, r.now());
+    };
+    const started = r.now().getTime();
+    const a = await askApp(r.store, T, ANA, "app_look", {}, r.now, wait);
+    expect(a).toMatchObject({ calls: 1 });
+    expect("paused" in a).toBe(true);
+    expect(r.now().getTime() - started).toBeLessThan(DRIVE.holdMs);
+  });
+
   it("a pause counts as nothing done: 15 minutes paused ends the drive as idle", async () => {
     const r = rig();
     const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());

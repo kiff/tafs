@@ -428,12 +428,13 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
   if (d.ended) return { ended: d.ended };
   // The person has the app: nothing is sent, and nothing counts as done (docs/drive.md).
   // Each call is counted, so the caller can end Coach's turn on the second (docs/drive.md).
-  const paused = await drivePaused(store, tenant, d.id);
-  if (paused) {
+  const pausedAnswer = async (since: string): Promise<Answer> => {
     const calls = (num(await store.get(driveKeys.pausedCalls(tenant, d.id))) ?? 0) + 1;
     await store.put(driveKeys.pausedCalls(tenant, d.id), calls, kept(now()));
-    return { paused, calls };
-  }
+    return { paused: since, calls };
+  };
+  const paused = await drivePaused(store, tenant, d.id);
+  if (paused) return pausedAnswer(paused);
   // After Continue, a look comes first: the screen may have changed while the person had it.
   const mustLook = !!(await store.get(driveKeys.look(tenant, d.id)));
   if (mustLook && tool === "app_act") return { lookFirst: true };
@@ -455,6 +456,10 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
     const now2 = (await store.get(driveKeys.drive(tenant, person))) as Drive | undefined;
     if (!now2 || now2.id !== d.id) return { ended: { why: "replaced", at: now().toISOString() } };
     if (now2.ended) return { ended: now2.ended };
+    // The person touched the app while this call waited: its request was dropped, so say so now,
+    // rather than as a phone that didn't answer (agentgabo on #749).
+    const since = await drivePaused(store, tenant, d.id);
+    if (since) return pausedAnswer(since);
   }
   return { timedOut: true };
 }
