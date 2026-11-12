@@ -37,11 +37,11 @@ There's no offer when there's nothing narrow to change (below), and the button i
 
 | Lane | What it builds |
 |---|---|
-| **KIFF** | One new read-only route, the replay. Everything else exists. |
-| **tafs cloud** | The offer and the draft: derive the narrow change from the hold's breaches, build the draft, write the words in 8 languages. |
+| **KIFF** | Two new routes: the draft with the narrow change (`allow-draft`), and the read-only replay. Everything else exists. |
+| **tafs cloud** | The offer: ask KIFF for the draft and the replay, check KIFF's change against the hold's breaches, write the words in 8 languages. |
 | **Apps** | The third answer on the held-call card, the sheet, one signature. They draw tafs cloud's words. |
 
-### KIFF: what exists, and the one new route
+### KIFF: what exists, and the two new routes
 
 **Exists, unchanged:**
 - **The held call's read**, `GET /v1/me/card-exceptions/{id}`: its `breaches`, one per Card
@@ -55,20 +55,37 @@ There's no offer when there's nothing narrow to change (below), and the button i
   how the held call goes out with the same signature.
 - **The revision record:** every confirmed draft is a Card revision with who signed it.
 
+**New, the draft with the narrow change:** `POST /v1/me/card-exceptions/{id}/allow-draft` with
+`{}` for the exact figure or `{"round": true}`.
+- **What it does:** it makes the narrowest change to the Cards in force that lets the held call go
+  on its own, by the table below (a permanent variant of KIFF's own smallest-change rule), and
+  submits it as a draft on the hold's agent with `from_hold` set. Card semantics stay on KIFF's
+  own model: tafs cloud never writes a Card.
+- **What it answers:** `{"draft", "version", "confirm_key", "changes": [{"mandate_id", "kind",
+  "before", "after", "unit", "window", "parameter", "value", "rounded"}], "round": {"after"}}`,
+  with `round` absent when rounding changes nothing, or `{"none": "never" | "unit" |
+  "no_change"}` and no draft.
+- **What it refuses:** a "never" (not a hold) and a unit mismatch get no draft. The draft never
+  retires a Card or adds one, and no change goes past the held call.
+- **Who may ask:** whoever manages the account's Cards (`cards.manage`).
+
 **New, the replay:** `POST /v1/me/agent-drafts/{id}/replay` with `{"days": 30}`, read-only.
 - **What it does:** it decides again the calls of the last `days` of every agent the draft's
   changed Cards govern (today one taf per Card), against the draft's Cards instead of the Cards
   in force, from KIFF's own record of those calls. Nothing is sent, held or recorded.
-- **What it answers:** the calls that were held or refused then and that the draft lets go on
-  their own: `{"would_allow": {"calls": 4, "by_quantity": [{"quantity": "amount", "unit":
+- **What it answers:** the calls that were held then and that the draft lets go on their own
+  (a held call keeps its full request, so it can be decided again exactly; KIFF keeps no call's
+  parameters otherwise). Totals are decided as they stood at each call, counting the replay's own
+  earlier calls and never a held call's draw twice: `{"would_allow": {"calls": 4, "by_quantity": [{"quantity": "amount", "unit":
   "EUR", "total": 118000}]}, "days": 30, "from": "…", "to": "…"}`, amounts in minor units.
-- **Never counted:** a call refused outright by a "never" (no draft from this offer changes
-  one), and a call the draft would still hold.
+- **Never counted:** a call refused outright, by a "never" or otherwise (no draft from this
+  offer changes one), and a call the draft would still hold.
 - **Who may read it:** whoever may read the draft (`cards.manage` on the account).
 
-**One field on the draft**, so the revision says where it came from:
-`"from_hold": "<exception id>"` on `POST /v1/me/agent-drafts`. KIFF keeps it on the revision, so
-the receipt reads "changed from a held call", with that call.
+**One field on the draft**, so the revision says where it came from: `from_hold`, the exception
+id, set by `allow-draft`. It must name a hold on the draft's own agent. KIFF keeps it on the
+draft and on each Card revision the confirm writes, so the receipt reads "changed from a held
+call", with that call.
 
 ### tafs cloud: the offer and the draft
 
@@ -77,8 +94,8 @@ KIFF, with no request: there's one when the person manages Cards (`cards.manage`
 exception's `kind` is a hold (not `card_unit`), and every breach is `per_action_exceeded`,
 `limit_reached` or `resource_not_on_card`. A "never" is refused, not held, so it never shows.
 
-**`POST /v1/tafs/{id}/holds/{exception}/allow`**, on the tap, makes the draft and asks for the
-replay. Its body is `{}` for the exact figure, or `{"round": true}` for the rounded one. It
+**`POST /v1/tafs/{id}/holds/{exception}/allow`**, on the tap, asks KIFF for the draft
+(`allow-draft`) and the replay. Its body is `{}` for the exact figure, or `{"round": true}` for the rounded one. It
 returns the offer, or why there's none:
 
 ```json
@@ -93,17 +110,26 @@ returns the offer, or why there's none:
 
 or `{ "none": "never" | "unit" | "no_change" | "not_yours", "words": "…" }`.
 
-- It reads the hold from KIFF with the person's session, derives the change (below) from its
-  `breaches` alone, never from the taf's words, builds the draft from the agent's Cards in force
-  with only that change, submits it with `from_hold`, and asks KIFF for the replay.
+**A change's `kind`** is one of four, and the phone fails closed on any other:
+- `per_action`: a grant's per-call limit, `before` and `after` in the Card's unit (minor units
+  for an amount);
+- `total`: a total's limit in an amount, over its window (`window`, as KIFF names it);
+- `count`: a total's limit as a count of calls, over its window, never rounded;
+- `resource`: a value added to a scope, with `parameter` and `value` instead of `before` and
+  `after`, never rounded.
+
+- With the person's session, it reads the hold from KIFF, asks `allow-draft` for the draft, and
+  asks the replay for what it would have done. It never builds a Card itself.
 - The draft is only a draft: nothing changes until the owner confirms it, and an unconfirmed
   one lapses as any draft does.
 - The app confirms the draft itself, with `hold` when "Send this refund too" is on and without
   it when it's off, as it confirms any draft. tafs cloud has no confirm route.
-- tafs cloud checks its own draft before submitting it: it differs from the Cards in force only
-  in the mandates `changes` names, and only as the table below allows, with no Card retired and
-  none added. A draft that doesn't is
-  never sent, and the answer is `none` (`no_change`).
+- **tafs cloud checks KIFF's change on its own,** against the hold's `breaches` and the table
+  below: one change per breach, on that breach's mandate, of the kind it allows, with the figure
+  the call's own (or one rounding step above it with `round`). A change that doesn't match isn't
+  offered: the answer is `none` (`no_change`), and the draft is left to lapse. Two checks, KIFF's
+  and tafs cloud's, so the change never widens past the held call. The phone's check against the
+  draft itself is the third.
 
 **The narrowest change, by breach** (one change per breach, all of the hold's breaches in one
 draft, since a call outside two limits needs both to go on its own):
@@ -172,8 +198,8 @@ have gone out on its own").
 - **The change never widens past the held call:** the new figure is the call's (or, rounded, at
   most one step above it); a resource adds this value only; no other limit, action or
   scope in the draft differs from the Cards in force.
-- **"Would have done" counts only calls inside the new Card** that were held or refused before,
-  and never a "never".
+- **"Would have done" counts only calls held before** that the new Card lets go on their own,
+  and never one refused outright.
 - **The held call goes out only with the switch on,** under the confirm's signature; with it
   off, the Card changes and the call still waits for its own answer.
 - **The phone refuses a draft that isn't what was offered:** one that differs from the Cards in
@@ -183,5 +209,6 @@ have gone out on its own").
 - **Showing the button makes no request,** and the exact figure is the default; rounding is
   only on `{"round": true}`.
 - **The revision names the change and its source call** (`from_hold`).
-- **qa-kiff's negatives:** a change that would widen past the held call is refused by tafs
-  cloud's own check before any draft is sent; an offer asked for a "never" answers `none`.
+- **qa-kiff's negatives, on both KIFF's route and tafs cloud's:** a change that would widen past
+  the held call is refused (by KIFF, and by tafs cloud's own check); a "never" gets no draft and
+  answers `none`; a draft that retires or adds a Card is refused.
