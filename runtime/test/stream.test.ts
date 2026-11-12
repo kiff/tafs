@@ -209,36 +209,36 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(heldLine("a".repeat(MAX_NOTE + 1))).toBe(false);
   });
 
-  it("leaves a run's lines before its tool calls out of the thread: a one-line message its calls follow, then more text", () => {
+  it("leaves a run's notes before its tool calls out of the thread, however long, when anything follows its calls", () => {
     const ev = (run: string, seq: number, kind: string, text?: string) => ({ run, seq, kind, ...(text === undefined ? {} : { body: { text } }) });
     const got = preToolLines([
       ev("r1", 1, "owner_message", "¿Cómo va?"),
       ev("r1", 2, "agent_message", "Miro las ejecuciones…"), ev("r1", 3, "usage"), ev("r1", 4, "tool_call"),
       ev("r1", 5, "agent_message", "Primero:\nreviso los pagos."), ev("r1", 6, "tool_call"),
       ev("r2", 7, "agent_message", "Otro run."), ev("r1", 8, "agent_message", "Todo en orden."), ev("r2", 9, "tool_call"),
-      // A component between them made it the answer on the stream: it stays in the thread too (agentgabo on #549).
+      // A card shown with no call between: the text was the run's words before it, not a note.
       ev("r3", 10, "agent_message", "Aquí tienes la tarjeta."), ev("r3", 11, "component"), ev("r3", 12, "tool_call"),
     ]);
-    // r2's text: its call came, and the run wrote nothing after it, so it was the run's message.
-    expect([...got].sort()).toEqual(["r1.2"]);
+    // r2's text: its call came, and the run wrote nothing after it, so it was the run's last words.
+    expect([...got].sort()).toEqual(["r1.2", "r1.5"]);
   });
 
-  // The confirming Eval (6 Nov): "Falta que lo apruebes para seguir." before the call that asks for the approval,
-  // then the run waits. Dropped from the thread, the owner saw the approval card with no message.
-  it("keeps a message the run waits on in the thread: a card, a pause or its end before the run writes again", () => {
+  // Coach's self-talk reached the person before an approval card ("Wait — the owner wrote in English…", "…so I'm
+  // asking again with each one marked read only"): a note before a card is a note, as the stream showed it.
+  it("leaves a note out before a card, a pause, or the owner's answer: only the run's final words reach the chat", () => {
     const ev = (seq: number, kind: string, body?: unknown) => ({ run: "r1", seq, kind, ...(body === undefined ? {} : { body }) });
     const say = (seq: number, text: string) => ev(seq, "agent_message", { text });
+    // The run ends with nothing after its call: its last note is its message.
     expect([...preToolLines([say(1, "Falta que lo apruebes para seguir."), ev(2, "tool_call")])]).toEqual([]);
-    expect([...preToolLines([say(1, "Te preparo el plan…"), ev(2, "tool_call"), ev(3, "component"), say(4, "Listo.")])]).toEqual([]);
+    expect([...preToolLines([say(1, "Wait — the owner wrote in English, so I'm asking again."), ev(2, "tool_call"), ev(3, "component")])]).toEqual(["r1.1"]);
+    expect([...preToolLines([say(1, "Te preparo el plan…"), ev(2, "tool_call"), ev(3, "component"), say(4, "Listo.")])]).toEqual(["r1.1"]);
     const resumed = ev(3, "usage", { timing: { ms: 900, resumed: true } });
-    expect([...preToolLines([say(1, "Falta que lo apruebes para seguir."), ev(2, "tool_call"), resumed, say(4, "Conectado.")])]).toEqual([]);
+    expect([...preToolLines([say(1, "Falta que lo apruebes para seguir."), ev(2, "tool_call"), resumed, say(4, "Conectado.")])]).toEqual(["r1.1"]);
     expect([...preToolLines([say(1, "Miro la cuenta…"), ev(2, "tool_call"), ev(3, "usage", { timing: { ms: 900 } }), say(4, "Conectado.")])]).toEqual(["r1.1"]);
-    // The owner's answer to a card (the connection's approval) before the run writes again, with no turn marked
-    // resumed between: it waited on them, so a short waiting line stays in the thread (Eval 42177781403's
-    // "Falta que apruebes la conexión…", kiff/agents#347).
-    const waited = "Falta que apruebes la conexión con tu proveedor de pagos.";
     const answered = ev(4, "answered", { id: "conectar", type: "approval" });
-    expect([...preToolLines([say(1, waited), ev(2, "tool_call"), ev(3, "tool_result"), answered, ev(5, "usage", { timing: { ms: 700 } }), say(6, "Falta que elijas el modo.")])]).toEqual([]);
+    expect([...preToolLines([say(1, "Falta que apruebes la conexión."), ev(2, "tool_call"), ev(3, "tool_result"), answered, say(6, "Falta que elijas el modo.")])]).toEqual(["r1.1"]);
+    // Two turns' notes and then the end: only the last is the run's message.
+    expect([...preToolLines([say(1, "Primero miro."), ev(2, "tool_call"), say(3, "…so I'm asking again."), ev(4, "tool_call")])]).toEqual(["r1.1"]);
   });
 
   it("sends a one-line text its call follows as the answer when the run ends with nothing after it", async () => {
@@ -256,7 +256,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.raw.slice(0, at)).toMatch(/event: state\ndata: \{"state":"thinking"\}\n\n$/);
   });
 
-  it("sends a one-line text its call follows before the card the run then shows", async () => {
+  it("never sends a text its call follows before the card the run then shows: the card speaks for itself", async () => {
     const w = world();
     w.agents.streamed.push(
       { event: "delta", data: { kind: "text", text: "Te preparo el plan de Reembolsos." } },
@@ -264,8 +264,8 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { event: "delta", data: { kind: "component", component: { type: "steps", id: "s1" } } },
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Hazlo" } });
-    // The text comes before the card it introduces, as the stored thread has it.
-    expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "text", "component", "end"]);
+    // The note stayed on the live line; the card goes alone, as the stored thread has it.
+    expect(r.events.map((e) => e.event)).toEqual(["session", "activity", "component", "end"]);
   });
 
   it("shows a note as one short line: its closing mark gone, cut at a word, and nothing for an empty one", () => {
