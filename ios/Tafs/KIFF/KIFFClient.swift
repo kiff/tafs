@@ -1105,6 +1105,11 @@ final class KIFFClient {
         var agents: [String] = []
 
         var managers: [GroupMember] { members.filter(\.isManager) }
+
+        /// The name as the person reads it: KIFF's default group (`everyone`) in the person's
+        /// language ("Tout le monde"), since KIFF keeps it as "Everyone"; any other group as it
+        /// was named. As Android's `Group.shownName`.
+        var shownName: String { everyone == true ? Words.People.everyoneGroup : name }
     }
 
     struct GroupMember: Codable, Equatable, Hashable {

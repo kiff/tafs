@@ -236,7 +236,8 @@ Doors tab (on Android, none of Setup's changes), or line saying who it's shared 
 **Share** button with the system's share mark, beside who uses the taf. KIFF's default group, which KIFF
 keeps as "Everyone", is named in the person's language wherever a group shows (`people.everyone_group`),
 with its own sentences where a language inflects it ("Shared with everyone", `people.shared_with_everyone`;
-"Everyone uses {taf}", `people.everyone_uses`); on Android, `Group.shownName`. On its Cards, "Issued by" names who
+"Everyone uses {taf}", `people.everyone_uses`); `Group.shownName` in both apps. It has everyone on the
+account in it, so People offers no Add to it and no Remove from it. On its Cards, "Issued by" names who
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer` on iOS, `AppState.issuer` on Android).
 
