@@ -11,10 +11,11 @@ import { type Lang, wordsIn } from "./words/index.js";
  * never confirm, the app decides; what Coach's calls may do, KIFF decides on Coach's
  * Cards.
  *
- * One drive per person. It ends, and never resumes, when the person touches the app
- * themselves, the app leaves the foreground, they stop it, the screen locks, they sign
- * out, the account is halted, Coach says the task is done, or nothing happens for
- * DRIVE.idleMs. A tool call after the end is answered with why, at once.
+ * One drive per person. The person's own touch pauses it, and Continue resumes it, with a
+ * look first (docs/drive.md, "When the person touches the app"). It ends, and never resumes,
+ * when the person takes over, the app leaves the foreground, they stop it, the screen locks,
+ * they sign out, the account is halted, Coach says the task is done, or nothing happens for
+ * DRIVE.idleMs, a pause included. A tool call after the end is answered with why, at once.
  */
 
 export const DRIVE = {
@@ -159,6 +160,12 @@ export const driveKeys = {
   request: (tenant: string, drive: string, request: string) => `${tenant}#drive-rq#${drive}#${request}`,
   result: (tenant: string, drive: string, request: string) => `${tenant}#drive-r#${drive}#${request}`,
   steps: (tenant: string, drive: string) => `${tenant}#drive-steps#${drive}`,
+  /** Since when the person has had the app (their touch paused the drive): kept apart, so only a start or an end writes the drive. */
+  paused: (tenant: string, drive: string) => `${tenant}#drive-paused#${drive}`,
+  /** Coach's drive calls within this pause: the second ends Coach's turn from tafs cloud's side. */
+  pausedCalls: (tenant: string, drive: string) => `${tenant}#drive-paused-calls#${drive}`,
+  /** Set at Continue: Coach looks before it acts again, since the screen may have changed. */
+  look: (tenant: string, drive: string) => `${tenant}#drive-look#${drive}`,
   /** A drive's end as Coach's chat shows it (DriveRecap), written once, when it ends. */
   recap: (tenant: string, drive: string) => `${tenant}#drive-recap#${drive}`,
   /** The drives a Coach chat had, by id, in the order they ended: where its thread finds their recaps. */
@@ -244,6 +251,49 @@ export async function driveRecaps(store: CoachStore, tenant: string, session: st
   const picked = [...new Set(ids.filter((x): x is string => typeof x === "string"))].slice(-DRIVE.recapsKept);
   const read = await Promise.all(picked.map((id) => store.get(driveKeys.recap(tenant, id)) as Promise<DriveRecap | undefined>));
   return read.filter((r): r is DriveRecap => !!r && r.session === session);
+}
+
+/** Since when the person's touch has paused this drive; undefined while it isn't paused. */
+export async function drivePaused(store: CoachStore, tenant: string, drive: string): Promise<string | undefined> {
+  const at = await store.get(driveKeys.paused(tenant, drive));
+  return typeof at === "string" ? at : undefined;
+}
+
+/** The person's own drive, by its id, still on: anyone else's, or one that isn't, is 404 (docs/drive.md). */
+async function ownDrive(store: CoachStore, tenant: string, person: string, drive: string, now: Date): Promise<Drive> {
+  const d = await currentDrive(store, tenant, person, now);
+  if (!d || d.id !== drive) throw new DriveError(404, "that isn't your drive");
+  return d;
+}
+
+/**
+ * The person touched the app: their drive pauses. No request is sent until Continue, and the
+ * requests already waiting are dropped, since the app refuses them anyway (its own pause comes
+ * first). Pausing one already paused, or one that ended, changes nothing.
+ */
+export async function pauseDrive(store: CoachStore, tenant: string, person: string, drive: string, now: Date): Promise<Drive> {
+  const d = await ownDrive(store, tenant, person, drive, now);
+  if (d.ended || (await drivePaused(store, tenant, d.id))) return d;
+  await store.put(driveKeys.paused(tenant, d.id), now.toISOString(), kept(now));
+  await store.remove(driveKeys.pausedCalls(tenant, d.id)).catch(() => undefined);
+  await store.take(driveKeys.queue(tenant, d.id));
+  // The pause is the last thing done: paused for DRIVE.idleMs, the drive ends as idle.
+  await touch(store, tenant, d.id, now);
+  return d;
+}
+
+/**
+ * The person tapped Continue: the drive goes on, and Coach's next step must be a look.
+ * Resuming one that isn't paused, or one that ended, changes nothing.
+ */
+export async function resumeDrive(store: CoachStore, tenant: string, person: string, drive: string, now: Date): Promise<Drive> {
+  const d = await ownDrive(store, tenant, person, drive, now);
+  if (d.ended || !(await drivePaused(store, tenant, d.id))) return d;
+  await store.put(driveKeys.look(tenant, d.id), now.toISOString(), kept(now));
+  await store.remove(driveKeys.paused(tenant, d.id));
+  await store.remove(driveKeys.pausedCalls(tenant, d.id)).catch(() => undefined);
+  await touch(store, tenant, d.id, now);
+  return d;
 }
 
 /** Why, from the phone's words: one of END_WHY. */
@@ -362,7 +412,8 @@ export type Sleep = (ms: number) => Promise<void>;
 export const sleep: Sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Coach's tool call, answered: the phone's result, or why there is none. */
-export type Answer = { result: DriveResult; drive: Drive } | { ended: Drive["ended"] & object } | { off: string } | { timedOut: true };
+export type Answer = { result: DriveResult; drive: Drive } | { ended: Drive["ended"] & object } | { off: string } | { timedOut: true }
+  | { paused: string; calls: number } | { lookFirst: true };
 
 /**
  * Sends one request to the person's phone and holds for its answer, at most
@@ -375,6 +426,17 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
   const d = await currentDrive(store, tenant, person, now());
   if (!d) return { off: "no drive is on: ask the person, or suggest driving with a drive card, and wait for their approval" };
   if (d.ended) return { ended: d.ended };
+  // The person has the app: nothing is sent, and nothing counts as done (docs/drive.md).
+  // Each call is counted, so the caller can end Coach's turn on the second (docs/drive.md).
+  const paused = await drivePaused(store, tenant, d.id);
+  if (paused) {
+    const calls = (num(await store.get(driveKeys.pausedCalls(tenant, d.id))) ?? 0) + 1;
+    await store.put(driveKeys.pausedCalls(tenant, d.id), calls, kept(now()));
+    return { paused, calls };
+  }
+  // After Continue, a look comes first: the screen may have changed while the person had it.
+  const mustLook = !!(await store.get(driveKeys.look(tenant, d.id)));
+  if (mustLook && tool === "app_act") return { lookFirst: true };
   const at = now();
   await touch(store, tenant, d.id, at);
   const req: DriveRequest = { id: randomBytes(9).toString("base64url"), tool, args, at: at.toISOString() };
@@ -386,6 +448,8 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
     const r = (await store.get(driveKeys.result(tenant, d.id, req.id))) as DriveResult | undefined;
     if (r) {
       await store.remove(driveKeys.result(tenant, d.id, req.id)).catch(() => undefined);
+      // The look after Continue came back: Coach may act again.
+      if (mustLook && tool === "app_look" && r.outcome === "done") await store.remove(driveKeys.look(tenant, d.id)).catch(() => undefined);
       return { result: r, drive: d };
     }
     const now2 = (await store.get(driveKeys.drive(tenant, person))) as Drive | undefined;
@@ -457,11 +521,17 @@ function sse(name: string, data: unknown): string {
  * (`request`), then `ended` with why once the drive ends, or `reopen` when the stream
  * has lived DRIVE.streamMs. A comment line every DRIVE.pingMs keeps it open.
  */
-export async function* driveStream(store: CoachStore, tenant: string, person: string, drive: string, now: () => Date, wait: Sleep = sleep, lang: Lang = "en"): AsyncGenerator<string> {
+export async function* driveStream(store: CoachStore, tenant: string, person: string, drive: string, now: () => Date, wait: Sleep = sleep, lang: Lang = "en",
+  halted: () => Promise<boolean> = async () => false): AsyncGenerator<string> {
   const opened = now().getTime();
   let pinged = opened;
   yield sse("drive", { drive });
   for (;;) {
+    // A halt ends the drive at once, paused or not, without waiting for Coach's next call:
+    // a paused drive makes none (docs/drive.md). Read with each ping, not each poll.
+    if (now().getTime() - pinged >= DRIVE.pingMs && (await halted().catch(() => false))) {
+      await endDrive(store, tenant, person, "halted", now(), drive);
+    }
     const d = await currentDrive(store, tenant, person, now());
     if (!d || d.id !== drive) { yield sse("ended", { why: "replaced", words: END_SAID.replaced }); return; }
     if (d.ended) { yield sse("ended", { why: d.ended.why, words: endSaid(d.ended.why, lang) }); return; }
@@ -477,11 +547,23 @@ export async function* driveStream(store: CoachStore, tenant: string, person: st
   }
 }
 
+/** What Coach is told at its first call while the person has the app: end the turn, and wait to be told. */
+export const PAUSED_SAID = "The person is using the app: their touch paused the drive. End your turn now with one short line, such as \"I'll wait while you use the app.\" You'll be told when they tap Continue; then look before your next step.";
+
+/** The note that starts Coach's next turn when the person taps Continue. */
+export const CONTINUE_SAID = "[drive continue] The person tapped Continue: the drive goes on. The screen may have changed while they had it, so look (app_look) before your next step.";
+
 /** What Coach reads for an answer: the app's line, and the screen as an image when it came. */
 export function answerContent(a: Answer): { content: Array<Record<string, unknown>>; isError: boolean } {
   if ("off" in a) return { content: [{ type: "text", text: a.off }], isError: true };
   if ("ended" in a) return { content: [{ type: "text", text: `The drive is over: ${END_WORDS[a.ended.why]}. Nothing more was sent. Tell the owner where you got to; they ask again to go on.` }], isError: true };
   if ("timedOut" in a) return { content: [{ type: "text", text: "The app didn't answer in 20 seconds. Look again before your next step." }], isError: true };
+  if ("paused" in a) {
+    return { content: [{ type: "text", text: a.calls > 1
+      ? "The person is still using the app, so tafs ended this turn. Nothing was sent. You'll be told when they tap Continue."
+      : `${PAUSED_SAID} Nothing was sent.` }], isError: true };
+  }
+  if ("lookFirst" in a) return { content: [{ type: "text", text: "The person tapped Continue, and the screen may have changed while they had it. Look (app_look) before you act. Nothing was sent." }], isError: true };
   const r = a.result;
   const parts: string[] = [r.outcome === "done" ? r.line : `Refused by the app: ${r.line}. Nothing was done.`];
   if (r.waited) parts.push(r.waited.came ? `${r.waited.event} came.` : `${r.waited.event} didn't come in time.`);
