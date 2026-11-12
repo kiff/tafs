@@ -20119,55 +20119,214 @@
         }
       }
     },
+    "catalog.connects_to": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindet sich mit %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connects to %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conecta a %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecte à %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si collega a %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maakt verbinding met %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łączy się z %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liga-se a %1$@"
+          }
+        }
+      }
+    },
+    "catalog.description_at": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beschreibung %1$@, festgehalten mit SHA-256 %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description %1$@, pinned at SHA-256 %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descripción %1$@, fijada con SHA-256 %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description %1$@, figée par SHA-256 %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrizione %1$@, fissata con SHA-256 %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beschrijving %1$@, vastgelegd met SHA-256 %2$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opis %1$@, przypięty przez SHA-256 %2$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrição %1$@, fixada com SHA-256 %2$@"
+          }
+        }
+      }
+    },
+    "catalog.does_not_agree": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Eintrag und das, was der Server liest, stimmen nicht überein, daher gibt es nichts zu signieren."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The entry and the server's reading don't agree, so there's nothing to sign."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La entrada y lo que lee el servidor no coinciden, así que no hay nada que firmar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'entrée et ce que lit le serveur ne concordent pas : il n'y a rien à signer."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La voce e ciò che legge il server non coincidono, quindi non c'è niente da firmare."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De vermelding en wat de server leest komen niet overeen, dus er valt niets te ondertekenen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpis i odczyt serwera się nie zgadzają, więc nie ma czego podpisać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A entrada e o que o servidor lê não coincidem, por isso não há nada para assinar."
+          }
+        }
+      }
+    },
     "catalog.enrol_text": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieses Telefon erzeugt einen Schlüssel, der nur Katalog-Revisionen signiert, und nur mit deinem Fingerabdruck. Schick den Schlüssel und deine Betreuer-ID an die Person, die Betreuer einträgt."
+            "value": "Dieses %1$@ erzeugt einen Schlüssel, der nur Katalog-Revisionen signiert, und nur mit %2$@. Schick den Schlüssel und deine Betreuer-ID an die Person, die Betreuer einträgt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This phone makes a key that signs only catalog revisions, and only behind your fingerprint. Send the key and your operator id to whoever enrols operators."
+            "value": "This %1$@ makes a key that signs only catalog revisions, and only with %2$@. Send the key and your operator id to whoever enrols operators."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este teléfono crea una clave que solo firma revisiones del catálogo, y solo con tu huella. Envía la clave y tu id de operador a quien da de alta a los operadores."
+            "value": "Este %1$@ crea una clave que solo firma revisiones del catálogo, y solo con %2$@. Envía la clave y tu id de operador a quien da de alta a los operadores."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce téléphone crée une clé qui ne signe que des révisions du catalogue, et seulement avec votre empreinte. Envoyez la clé et votre identifiant d'opérateur à la personne qui inscrit les opérateurs."
+            "value": "Cet %1$@ crée une clé qui ne signe que des révisions du catalogue, et seulement avec %2$@. Envoyez la clé et votre identifiant d'opérateur à la personne qui inscrit les opérateurs."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questo telefono crea una chiave che firma solo revisioni del catalogo, e solo con la tua impronta. Invia la chiave e il tuo id operatore a chi registra gli operatori."
+            "value": "Questo %1$@ crea una chiave che firma solo revisioni del catalogo, e solo con %2$@. Invia la chiave e il tuo id operatore a chi registra gli operatori."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze telefoon maakt een sleutel die alleen catalogusrevisies ondertekent, en alleen met je vingerafdruk. Stuur de sleutel en je beheerders-id naar wie beheerders inschrijft."
+            "value": "Deze %1$@ maakt een sleutel die alleen catalogusrevisies ondertekent, en alleen met %2$@. Stuur de sleutel en je beheerders-id naar wie beheerders inschrijft."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ten telefon tworzy klucz, który podpisuje tylko wersje katalogu i tylko po potwierdzeniu odciskiem palca. Wyślij klucz i swój identyfikator operatora osobie, która rejestruje operatorów."
+            "value": "To urządzenie (%1$@) tworzy klucz, który podpisuje tylko wersje katalogu i tylko przez %2$@. Wyślij klucz i swój identyfikator operatora osobie, która rejestruje operatorów."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este telefone cria uma chave que só assina revisões do catálogo, e só com a sua impressão digital. Envie a chave e o seu id de operador a quem regista os operadores."
+            "value": "Este %1$@ cria uma chave que só assina revisões do catálogo, e só com %2$@. Envie a chave e o seu id de operador a quem regista os operadores."
           }
         }
       }
@@ -20178,49 +20337,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Katalog-Revisionen auf diesem Telefon signieren"
+            "value": "Katalog-Revisionen auf diesem %1$@ signieren"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign catalog revisions on this phone"
+            "value": "Sign catalog revisions on this %1$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Firmar revisiones del catálogo en este teléfono"
+            "value": "Firmar revisiones del catálogo en este %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signer les révisions du catalogue sur ce téléphone"
+            "value": "Signer des révisions du catalogue sur cet %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Firma le revisioni del catalogo su questo telefono"
+            "value": "Firma revisioni del catalogo su questo %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Catalogusrevisies ondertekenen op deze telefoon"
+            "value": "Catalogusrevisies ondertekenen op deze %1$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podpisuj wersje katalogu na tym telefonie"
+            "value": "Podpisuj wersje katalogu na tym urządzeniu (%1$@)"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Assinar revisões do catálogo neste telefone"
+            "value": "Assinar revisões do catálogo neste %1$@"
           }
         }
       }
@@ -20278,6 +20437,271 @@
         }
       }
     },
+    "catalog.key_in_header": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Header %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the %1$@ header"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la cabecera %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans l'en-tête %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nell'intestazione %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In de header %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W nagłówku %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cabeçalho %1$@"
+          }
+        }
+      }
+    },
+    "catalog.key_in_query": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Abfrageparameter %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the %1$@ query parameter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el parámetro de consulta %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans le paramètre de requête %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nel parametro di query %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In de queryparameter %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W parametrze zapytania %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No parâmetro de consulta %1$@"
+          }
+        }
+      }
+    },
+    "catalog.key_sent_to": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Schlüssel geht an %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key is sent to %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clave se envía a %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé est envoyée à %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave viene inviata a %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De sleutel gaat naar %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz jest wysyłany do %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave é enviada para %1$@"
+          }
+        }
+      }
+    },
+    "catalog.label_differs": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laut Eintrag liest %1$@ nur, aber laut Beschreibung schreibt es"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The entry says %1$@ only reads, but its description reads a write"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La entrada dice que %1$@ solo lee, pero su descripción indica una escritura"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'entrée dit que %1$@ ne fait que lire, mais sa description y lit une écriture"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La voce dice che %1$@ legge soltanto, ma la sua descrizione indica una scrittura"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgens de vermelding leest %1$@ alleen, maar volgens de beschrijving schrijft het"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpis mówi, że %1$@ tylko odczytuje, ale opis wskazuje zapis"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A entrada diz que %1$@ só lê, mas a sua descrição indica uma escrita"
+          }
+        }
+      }
+    },
+    "catalog.left_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ist offen: Leg es auf %2$@ fest, sonst kann das nicht veröffentlicht werden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is left open: pin it to %2$@, or this can't be published"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ queda abierto: fíjalo en %2$@ o esto no se puede publicar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est laissé ouvert : fixez-le à %2$@, sinon cette révision ne peut pas être publiée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ è lasciato aperto: fissalo a %2$@, altrimenti non si può pubblicare"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ staat open: zet het vast op %2$@, anders kan dit niet worden gepubliceerd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ jest otwarty: ustal go na %2$@, inaczej nie da się tego opublikować"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ fica em aberto: fixe-o em %2$@, ou isto não pode ser publicado"
+          }
+        }
+      }
+    },
     "catalog.make_key": {
       "extractionState": "manual",
       "localizations": {
@@ -20327,6 +20751,112 @@
           "stringUnit": {
             "state": "translated",
             "value": "Criar a chave"
+          }
+        }
+      }
+    },
+    "catalog.not_described": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ steht im Eintrag, aber nicht in dem, was der Server liest"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is in the entry but not in what the server reads"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ está en la entrada pero no en lo que lee el servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est dans l'entrée mais pas dans ce que lit le serveur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ è nella voce ma non in ciò che legge il server"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ staat in de vermelding maar niet in wat de server leest"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ jest we wpisie, ale nie w tym, co odczytuje serwer"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ está na entrada mas não no que o servidor lê"
+          }
+        }
+      }
+    },
+    "catalog.not_in_entry": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ steht in der Beschreibung, aber nicht im Eintrag"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is read from the description but isn't in the entry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ se lee en la descripción pero no está en la entrada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est lu dans la description mais n'est pas dans l'entrée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ è letto dalla descrizione ma non è nella voce"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ staat in de beschrijving maar niet in de vermelding"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ jest w opisie, ale nie ma go we wpisie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ é lido da descrição mas não está na entrada"
           }
         }
       }
@@ -20655,49 +21185,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Katalogschlüssel dieses Telefons"
+            "value": "Der Katalogschlüssel auf diesem %1$@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This phone's catalog key"
+            "value": "The catalog key on this %1$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clave de catálogo de este teléfono"
+            "value": "La clave del catálogo en este %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clé de catalogue de ce téléphone"
+            "value": "La clé du catalogue sur cet %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chiave del catalogo di questo telefono"
+            "value": "La chiave del catalogo su questo %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Catalogussleutel van deze telefoon"
+            "value": "De catalogussleutel op deze %1$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klucz katalogu tego telefonu"
+            "value": "Klucz katalogu na tym urządzeniu (%1$@)"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chave de catálogo deste telefone"
+            "value": "A chave do catálogo neste %1$@"
           }
         }
       }

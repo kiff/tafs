@@ -751,14 +751,34 @@ enum Words {
         static var withinCard: String { Words.line("card.within_card") }
     }
     enum Catalog {
-        /// This phone makes a key that signs only catalog revisions, and only behind your fingerprint. Send the key and your operator id to whoever enrols operators.
-        static var enrolText: String { Words.line("catalog.enrol_text") }
-        /// Sign catalog revisions on this phone
-        static var enrolTitle: String { Words.line("catalog.enrol_title") }
+        /// Connects to {server}
+        static func connectsTo(server: String) -> String { Words.line("catalog.connects_to", server) }
+        /// Description {url}, pinned at SHA-256 {sha}
+        static func descriptionAt(url: String, sha: String) -> String { Words.line("catalog.description_at", url, sha) }
+        /// The entry and the server's reading don't agree, so there's nothing to sign.
+        static var doesNotAgree: String { Words.line("catalog.does_not_agree") }
+        /// This {device} makes a key that signs only catalog revisions, and only with {biometry}. Send the key and your operator id to whoever enrols operators.
+        static func enrolText(device: String, biometry: String) -> String { Words.line("catalog.enrol_text", device, biometry) }
+        /// Sign catalog revisions on this {device}
+        static func enrolTitle(device: String) -> String { Words.line("catalog.enrol_title", device) }
         /// {argument} is fixed to {value}
         static func fixedTo(argument: String, value: String) -> String { Words.line("catalog.fixed_to", argument, value) }
+        /// In the {name} header
+        static func keyInHeader(name: String) -> String { Words.line("catalog.key_in_header", name) }
+        /// In the {name} query parameter
+        static func keyInQuery(name: String) -> String { Words.line("catalog.key_in_query", name) }
+        /// The key is sent to {base}
+        static func keySentTo(base: String) -> String { Words.line("catalog.key_sent_to", base) }
+        /// The entry says {tool} only reads, but its description reads a write
+        static func labelDiffers(tool: String) -> String { Words.line("catalog.label_differs", tool) }
+        /// {argument} is left open: pin it to {value}, or this can't be published
+        static func leftOpen(argument: String, value: String) -> String { Words.line("catalog.left_open", argument, value) }
         /// Make the key
         static var makeKey: String { Words.line("catalog.make_key") }
+        /// {tool} is in the entry but not in what the server reads
+        static func notDescribed(tool: String) -> String { Words.line("catalog.not_described", tool) }
+        /// {tool} is read from the description but isn't in the entry
+        static func notInEntry(tool: String) -> String { Words.line("catalog.not_in_entry", tool) }
         /// This revision isn't what the connection server signs, so nothing can be signed here. Open it again.
         static var notWhatIsSigned: String { Words.line("catalog.not_what_is_signed") }
         /// Only a reviewed revision is published, and only a published one retired.
@@ -771,8 +791,8 @@ enum Words {
         static var operatorId: String { Words.line("catalog.operator_id") }
         /// Catalog operator
         static var operatorRow: String { Words.line("catalog.operator_row") }
-        /// This phone's catalog key
-        static var publicKey: String { Words.line("catalog.public_key") }
+        /// The catalog key on this {device}
+        static func publicKey(device: String) -> String { Words.line("catalog.public_key", device) }
         /// Publish
         static var publish: String { Words.line("catalog.publish") }
         /// Publish {id}
