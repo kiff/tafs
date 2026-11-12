@@ -95,6 +95,14 @@ class SharedWords(unittest.TestCase):
             with self.assertRaises(ValueError):
                 generate.load("en", folder)
 
+    def test_an_old_language_file_beside_its_folder_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            generate.save("en", {"home.title": "Tafs"}, folder)
+            with open(os.path.join(folder, "en.json"), "w", encoding="utf-8") as f:
+                json.dump({"home.title": "Old"}, f)
+            with self.assertRaises(ValueError):
+                generate.load("en", folder)
+
     def test_saving_writes_one_sorted_file_per_feature(self):
         with tempfile.TemporaryDirectory() as folder:
             generate.save("en", {"home.title": "Tafs", "chat.waiting": "Waiting", "chat.title": "Chat"}, folder)

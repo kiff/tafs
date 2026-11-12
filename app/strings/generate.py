@@ -44,6 +44,9 @@ def files_of(lang, folder=HERE):
     """A language's files, each with its lines as written: one per feature (`<lang>/<area>.json`), or, before
     the split, the language's one file (`<lang>.json`)."""
     split = os.path.join(folder, lang)
+    old = os.path.join(folder, f"{lang}.json")
+    if os.path.isdir(split) and os.path.exists(old):
+        raise ValueError(f"{os.path.relpath(old, REPO)} is beside {lang}/: its words are in {lang}/ now, so remove it")
     if os.path.isdir(split):
         names = sorted(n for n in os.listdir(split) if n.endswith(".json"))
         paths = [os.path.join(split, n) for n in names]

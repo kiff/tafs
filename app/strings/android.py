@@ -206,13 +206,22 @@ def main(argv):
     langs_file = here / "languages.json"
     langs = json.loads(langs_file.read_text(encoding="utf-8")) if langs_file.exists() else {"all": ["en"], "shipped": ["en"]}
     def read(lang):
-        # One file per feature (<lang>/<area>.json), or the language's one file before the split.
+        # One file per feature (<lang>/<area>.json), or the language's one file before the split. As generate.load: a key in
+        # another feature's file or in two files, or an old <lang>.json left beside <lang>/, is refused.
         split = here / lang
+        if split.is_dir() and (here / f"{lang}.json").exists():
+            raise SystemExit(f"app/strings/{lang}.json is beside {lang}/: remove it")
         files = sorted(split.glob("*.json")) if split.is_dir() else [here / f"{lang}.json"]
         out = {}
         for f in files:
-            if f.exists():
-                out.update(json.loads(f.read_text(encoding="utf-8")))
+            if not f.exists():
+                continue
+            for key, value in json.loads(f.read_text(encoding="utf-8")).items():
+                if split.is_dir() and key.split(".", 1)[0] != f.stem:
+                    raise SystemExit(f"{f.relative_to(here)}: {key} belongs in {key.split('.', 1)[0]}.json")
+                if key in out:
+                    raise SystemExit(f"{f.relative_to(here)}: {key} is in two files")
+                out[key] = value
         return dict(sorted(out.items()))
     lines = {lang: read(lang) for lang in langs["all"] if (here / lang).is_dir() or (here / f"{lang}.json").exists()}
     stale = []
