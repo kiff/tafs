@@ -150,6 +150,12 @@ says connected (a key grant has no `listed`) and KIFF says the Card is issued; a
 connected; …`, so Coach's next card asks for the Card alone. The flag stays off until both services take
 `kiff.requests.v1`, and the two steps work as before.
 
+**The phone signs only what it read itself.** The ask's `planque.body.digest` and `kiff.version` are hints for
+building the two requests: the phone puts in them the digest of the grant it read from the connection server, as
+the connect step requires, and the version of the draft it read from KIFF (the rule above). If either differs from
+the ask, it signs nothing and says the card is out of date. So a wrong digest or version from tafs cloud is never
+signed without being shown. One test in each app pins it.
+
 **Coach** drafts the Card before the key sheet opens, from the grant's tools, which a key
 grant lists before the key is given. That's a skill change, and it takes an Eval.
 
