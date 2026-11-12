@@ -228,12 +228,18 @@ export interface Run {
    * The calls that acted and went through, as kiff/agents keeps them from the calls' results, never the
    * model's words: only a write KIFF allowed and the vendor didn't fail. Absent when there are none.
    */
-  done?: Array<{ call_id?: string; tool?: string }>;
+  done?: Array<{ call_id?: string; tool?: string; resource?: string; input?: unknown }>;
   /**
    * How many writes the run sent, a write whose outcome isn't known included. Absent on a kiff/agents
    * that doesn't count them: then an empty `done` doesn't prove that nothing was done.
    */
   sent?: number;
+  /**
+   * The run's count of its calls, by tool, from their record (kiff/agents#421): those that act and those KIFF refused,
+   * reads included, each count left out at 0. What the owner reads as the count beside the taf's words, never the
+   * model's numbers. Absent when the run counted nothing, or on a kiff/agents from before it.
+   */
+  tally?: Record<string, { sent?: number; held?: number; refused?: number; failed?: number; unknown?: number }>;
   requirements?: Requirement[];
   cancel_requested?: boolean;
   /** What the owner wrote to the run while it went (kiff/agents#102), each marked once the run took it. */

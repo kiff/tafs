@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DELIVERY, DELIVERY_WORDS, deliveredLine, deliveryViews, handoffOf, nothingToHand, whyIn, wroteIn } from "../src/cloud/delivery.js";
+import { DELIVERY, DELIVERY_WORDS, deliveredLine, deliveryViews, handoffOf, nothingToHand, recordLines, whyIn, wroteIn } from "../src/cloud/delivery.js";
 import { type Deps, handle, type HTTPEvent, sweepDeliveries, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -288,6 +288,18 @@ describe("a taf's results reach their destination, checked by tafs cloud (result
     expect(report.delivered).toBe(`Sent to ${SHEET.name}.`);
     expect(thread.body.messages.filter((m: { delivered?: string }) => m.delivered)).toHaveLength(1);
     expect(run.id).toBeDefined();
+  });
+
+  // Beside the line on where the result went, the run's count from its record (kiff/agents' tally): the numbers the
+  // owner reads are the record's, never the model's.
+  it("puts the run's count from the record on its report in the thread, and nothing on a run that counted nothing", async () => {
+    const w = world();
+    const run = await w.ran(RAE, "Refunded the orders.", [{ tool: "sheets_append_k3" }]);
+    Object.assign(run, { tally: { stripe_refund: { sent: 3, held: 1 }, shop_get_order: { refused: 2 } } });
+    const read = async () => (await w.call("GET", `/v1/tafs/${RAE}/conversation`)).body.messages.find((m: { from: string; text: string }) => m.from === "taf" && m.text === "Refunded the orders.");
+    expect((await read()).counted).toBe("From the Record — done: 3 · waiting for you: 1 · refused: 2");
+    Object.assign(run, { tally: undefined });
+    expect(await read()).not.toHaveProperty("counted");
   });
 });
 
@@ -631,6 +643,43 @@ describe("work is handed on twice at most, never in a circle, and a taf can say 
     // A result with no section at all is still a taf not following its instructions: said, with Coach.
     const bare = await w.ran(RAE, "Checked 2 deals.", []);
     expect((await deliveriesOfRun(w, RAE, bare.id))[0]).toMatchObject({ state: "not_sent", open_coach: true });
+  });
+
+  // The record decides, as with a run's count: a taf once wrote "Nothing to hand over" right after accepting a dispute
+  // (Eval 43249509530). Its calls that went through are handed, in the record's own lines, and the request says so.
+  it("doesn't believe \"nothing to hand over\" from a run whose record shows calls that went through: it hands those", async () => {
+    const w = world([TO_INV]);
+    const run = await w.ran(RAE, "Accepted the small dispute.\n\nHand-off\nNothing to hand over.", [{ tool: "stripe_close_dispute" }]);
+    Object.assign(run, { done: [{ call_id: "c1", tool: "stripe_close_dispute", resource: "T-2002" }] });
+    const ds = await deliveriesOfRun(w, RAE, run.id);
+    expect(ds).toEqual([{ place: "taf", key: `taf:${INV}`, name: "Invoices", state: "handed",
+      line: "Handed to Invoices at 12:00 · handed from its record: it said there was nothing to hand over, but its record shows it acted" }]);
+    const handed = handedTo(w, INV, RAE, run.id)!;
+    expect(w.inputOf(handed)?.text).toContain(`${DELIVERY_WORDS.fromRecord(["- stripe_close_dispute on T-2002"])}`);
+    expect(w.inputOf(handed)?.text).not.toContain("Nothing to hand over");
+    expect(recordLines({ done: [{ tool: "a\nb", resource: " " }, { tool: "" }, { tool: "c", resource: "x".repeat(200) }] }))
+      .toEqual(["- a b", `- c on ${"x".repeat(120)}`]);
+  });
+
+  // A connection may name no resource (none is named for a dispute's close today): then the call's own id-like
+  // arguments say what it acted on, so the next taf isn't told only "- close_dispute".
+  it("names what a call acted on from its own id-like arguments when KIFF names no resource", async () => {
+    expect(recordLines({ done: [{ tool: "close_dispute", input: { dispute: "T-2002", amount: 4900, note: "Accepted: small amount" } }] }))
+      .toEqual(["- close_dispute (dispute: T-2002)"]);
+    expect(recordLines({ done: [{ tool: "send_invoice", input: { invoice_id: 12345, customer: "cus_9", message: "Thanks!" } }] }))
+      .toEqual(["- send_invoice (invoice_id: 12345)"]);
+    expect(recordLines({ done: [{ tool: "refund", input: '{"charge":"ch_1","payment_intent":"pi_2","order":"o_3"}' }] }))
+      .toEqual(["- refund (charge: ch_1, payment_intent: pi_2)"]);
+    expect(recordLines({ done: [{ tool: "post", input: { text: "hello there" } }, { tool: "x", input: "not json" }, { tool: "y", input: [1] }] }))
+      .toEqual(["- post", "- x", "- y"]);
+    // KIFF's resource wins when it names one.
+    expect(recordLines({ done: [{ tool: "close_dispute", resource: "dp_1", input: { dispute: "T-2002" } }] })).toEqual(["- close_dispute on dp_1"]);
+    // End to end: the T-2002 case with no resource, as the Eval's account has it.
+    const w = world([TO_INV]);
+    const run = await w.ran(RAE, "Accepted it.\n\nHand-off\nNothing to hand over.", [{ tool: "close_dispute" }]);
+    Object.assign(run, { done: [{ call_id: "c1", tool: "close_dispute", input: { dispute: "T-2002" } }] });
+    await w.call("GET", `/v1/tafs/${RAE}/work`);
+    expect(w.inputOf(handedTo(w, INV, RAE, run.id)!)?.text).toContain("- close_dispute (dispute: T-2002)");
   });
 
   it("hands work on a second time, as the second taf's own hand-off, and no further: said on the third taf's request", async () => {

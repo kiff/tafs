@@ -319,6 +319,7 @@ export const fr: Words = {
   handoff_maybe_acted: "il a peut-être déjà agi : vérifiez sa page avant tout renvoi",
   handoff_nothing_note: (taf, name, n) => `${name} n'a rien fait des ${n} dernières transmissions de ${taf}. Ouvrez la page de ${taf} pour voir pourquoi.`,
   handoff_none: (name, why) => `Rien à transmettre à ${name}${why ? ` : ${why}` : ""}`,
+  handed_from_record: "transmis d'après le registre : la réponse disait n'avoir rien à transmettre, mais le registre montre une action",
   handoff_circle: (name) => `Non retransmis à ${name} : ce travail y est déjà passé`,
   delivery_retrying: (name, t) => `Pas encore livré à ${name} : nouvel essai ${t ? at(t) : "maintenant"}`,
   delivery_not_sent: (name, why) => `Non livré à ${name}${why ? ` : ${why}` : ""}`,
@@ -337,6 +338,7 @@ export const fr: Words = {
     if (not.length) parts.push(`Non envoyé à ${list(not.map((d) => `${d.name}${d.retrying ? " (nouvel essai en cours)" : ""}`))}`);
     return parts.join(". ") + ".";
   },
+  counted_line: (n) => "D'après le registre — " + ([[n.sent, "fait"], [n.held, "vous attend"], [n.refused, "refusé"], [n.failed, "échoué"], [n.unknown, "envoyé, résultat inconnu"]] as const).filter(([k]) => k > 0).map(([k, w]) => `${w} : ${k}`).join(" · "),
   step_received: "Reçu",
   step_worked: "A travaillé dessus",
   step_not_made: (t) => `Non effectué · ${t}`,

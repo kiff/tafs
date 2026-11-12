@@ -1,6 +1,9 @@
 /** A time as a line says it: hours and minutes, and the weekday when it isn't today ("Fri"), in the language. */
 export interface When { hm: string; day?: string }
 
+/** A run's count of its calls, from its record (kiff/agents' `tally`, summed over its tools). */
+export interface Counted { sent: number; held: number; refused: number; failed: number; unknown: number }
+
 const bare = (t: When) => (t.day ? `${t.day} ${t.hm}` : t.hm);
 
 /** English: the source of every line (docs/languages.md). Another language has these keys, each in its own words. */
@@ -341,6 +344,8 @@ export const en = {
   handoff_nothing_note: (taf: string, name: string, n: number) => `${name} did nothing with the last ${n} hand-offs from ${taf}. Open ${taf}'s page to see why.`,
   // A hand-off the taf had nothing for, in its own words, and one stopped where the work would have gone back to a taf that had it.
   handoff_none: (name: string, why?: string) => `Nothing to hand to ${name}${why ? `: ${why}` : ""}`,
+  // Added to a hand-off's line when it was made from the run's record, its words having said nothing was left.
+  handed_from_record: "handed from its record: it said there was nothing to hand over, but its record shows it acted",
   handoff_circle: (name: string) => `Not handed back to ${name}: it already had this work`,
   delivery_retrying: (name: string, t?: When) => `Not delivered to ${name} yet: trying again${t ? ` at ${bare(t)}` : " now"}`,
   delivery_not_sent: (name: string, why?: string) => `Not delivered to ${name}${why ? `: ${why}` : ""}`,
@@ -361,6 +366,8 @@ export const en = {
     if (not.length) parts.push(`Not sent to ${not.map((d) => (d.retrying ? `${d.name} yet: trying again` : d.name)).join(" and ")}`);
     return parts.join(". ") + ".";
   },
+  // A run's count from its record (kiff/agents' tally), under its report: each part at 0 left out.
+  counted_line: (n: Counted) => "From the Record — " + ([[n.sent, "done"], [n.held, "waiting for you"], [n.refused, "refused"], [n.failed, "failed"], [n.unknown, "sent, outcome unknown"]] as const).filter(([k]) => k > 0).map(([k, w]) => `${w}: ${k}`).join(" · "),
   // A request's steps (request.ts requestDetail): each step's label, and its line where it has one. A bare time is
   // written as timeIn writes it ("14:20", "Fri 14:20"); a "next try" says it as the language says "at" a time.
   step_received: "Received",

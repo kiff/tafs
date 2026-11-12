@@ -319,6 +319,7 @@ export const pt: Words = {
   handoff_maybe_acted: "pode já ter agido: verifique a sua página antes de enviar novamente",
   handoff_nothing_note: (taf, name, n) => `${name} não fez nada com as últimas ${n} passagens de ${taf}. Abra a página de ${taf} para ver porquê.`,
   handoff_none: (name, why) => `Nada a passar a ${name}${why ? `: ${why}` : ""}`,
+  handed_from_record: "passado a partir do registo: a resposta dizia que não havia nada a passar, mas o registo mostra que agiu",
   handoff_circle: (name) => `Não devolvido a ${name}: já teve este trabalho`,
   delivery_retrying: (name, t) => `Ainda não entregue a ${name}: nova tentativa ${t ? at(t) : "agora"}`,
   delivery_not_sent: (name, why) => `Não entregue a ${name}${why ? `: ${why}` : ""}`,
@@ -337,6 +338,7 @@ export const pt: Words = {
     if (not.length) parts.push(`Não enviado para ${list(not.map((d) => `${d.name}${d.retrying ? " (nova tentativa em curso)" : ""}`))}`);
     return parts.join(". ") + ".";
   },
+  counted_line: (n) => "Segundo o registo — " + ([[n.sent, "feito"], [n.held, "à sua espera"], [n.refused, "recusado"], [n.failed, "falhou"], [n.unknown, "enviado, resultado desconhecido"]] as const).filter(([k]) => k > 0).map(([k, w]) => `${w}: ${k}`).join(" · "),
   step_received: "Recebido",
   step_worked: "Trabalhou nisso",
   step_not_made: (t) => `Não efetuada · ${t}`,

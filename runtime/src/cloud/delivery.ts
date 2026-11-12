@@ -56,6 +56,11 @@ export interface Delivery {
   retry_run?: string;
   /** The receiving taf's run, for a hand-off. */
   handed_run?: string;
+  /**
+   * A hand-off made from the run's record, not its words: the taf said there was nothing to hand over, but its record
+   * shows calls that went through, so those were handed. How many.
+   */
+  from_record?: number;
   /** What became of that run, once known. Absent while it works. */
   outcome?: HandoffOutcome;
   /** The receiving run as it ended, for a dead one's words; none for one that never started. */
@@ -154,6 +159,12 @@ export const DELIVERY_WORDS = {
   tafGone: "that taf is no longer on the account",
   tooFar: "this work was already handed on twice",
   circle: "that taf already had this work",
+  /**
+   * The hand-off made from the run's record when its words said there was nothing to hand over: what went through, each
+   * call's tool and what it acted on, as kiff/agents keeps them (\`done\`), never the model's words.
+   */
+  fromRecord: (lines: string[]) =>
+    `The taf said there was nothing to hand over, but its record shows these calls went through:\n${lines.join("\n")}`,
   retryFailed: "the retry didn't finish",
   retryStopped: "the retry was stopped",
   delivered: (name: string, when: string) => `Delivered to ${name} at ${when}`,
@@ -375,6 +386,38 @@ async function chainOf(ctx: DeliveryContext, tenant: string, r: Run): Promise<Ch
 }
 
 /**
+ * What the run's record shows went through (kiff/agents' \`done\`): one line a call, its tool and what it acted on,
+ * never the model's words. What it acted on is KIFF's \`resource\` when KIFF names one; else the call's own id-like
+ * arguments (\`idArgs\`), since a connection may name no resource (a dispute closed with none named, so the next taf
+ * would be told only "- close_dispute"). Names and ids are cut to a line each, so a long one can't swamp the hand-off.
+ */
+export function recordLines(r: Pick<Run, "done">): string[] {
+  const clean = (x: string, n = 120) => x.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, n);
+  return (r.done ?? []).filter((d) => typeof d.tool === "string" && d.tool.trim()).slice(0, 50).map((d) => {
+    if (typeof d.resource === "string" && d.resource.trim()) return `- ${clean(d.tool!)} on ${clean(d.resource)}`;
+    const ids = idArgs(d.input).map(([k, v]) => `${clean(k, 40)}: ${clean(v, 60)}`);
+    return `- ${clean(d.tool!)}${ids.length ? ` (${ids.join(", ")})` : ""}`;
+  });
+}
+
+/**
+ * A call's id-like arguments, at most two, in the input's order: one named \`id\` or ending in "id", else a short
+ * string with a digit and no space, the shape of an id ("T-2002", "in_123"). Never a long or free-text value: a
+ * message or a note isn't what a call acted on.
+ */
+function idArgs(input: unknown): Array<[string, string]> {
+  let obj = input;
+  if (typeof obj === "string") { try { obj = JSON.parse(obj); } catch { return []; } }
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return [];
+  const entries = Object.entries(obj as Record<string, unknown>);
+  const named = entries.filter(([k, v]) => /(^|_)id$|Id$/i.test(k) && ((typeof v === "string" && v.trim() && v.length <= 64) || (typeof v === "number" && Number.isFinite(v))))
+    .map(([k, v]) => [k, String(v)] as [string, string]);
+  // A string only, with a digit and a letter or a dash: an amount or a count is a number, not what was acted on.
+  const shaped = entries.filter((e): e is [string, string] => typeof e[1] === "string" && /^[^\s]{1,64}$/.test(e[1]) && /\d/.test(e[1]) && /[A-Za-z_-]/.test(e[1]));
+  return (named.length ? named : shaped).slice(0, 2);
+}
+
+/**
  * Hands the run's result to another taf as its work, once; the receiver is checked again now.
  * `again` is how many times it was sent again by hand: each has a dedup key of its own, so two taps
  * at once start one receiving run, and a later Send again starts a new one. `chain` is where the
@@ -383,11 +426,16 @@ async function chainOf(ctx: DeliveryContext, tenant: string, r: Run): Promise<Ch
  */
 async function handOff(ctx: DeliveryContext, tenant: string, taf: Taf, r: Run, p: VendorPlace & { place: "taf" }, key: string, at: string, again = 0, chain?: Chain): Promise<Delivery> {
   const base = { place: "taf" as const, key, name: p.name, at, tries: 0 };
-  const text = handoffOf(r.output);
+  let text = handoffOf(r.output);
   if (!text) return { ...base, state: "not_sent", why: DELIVERY_WORDS.noHandoff };
-  // The taf's own word that there is nothing for the other taf: calm, and nothing is handed.
+  // The taf's own word that there is nothing for the other taf: calm, and nothing is handed, unless its record shows
+  // calls that went through. Then that word isn't believed, and the record's own lines are handed (the record decides,
+  // as with a run's count: Eval 43249509530, "nothing to hand over" right after accepting a dispute).
   const nothing = nothingToHand(text);
-  if (nothing !== undefined) return { ...base, state: "none", ...(nothing ? { why: nothing } : {}) };
+  const did = recordLines(r);
+  if (nothing !== undefined && !did.length) return { ...base, state: "none", ...(nothing ? { why: nothing } : {}) };
+  const fromRecord = nothing !== undefined ? did.length : 0;
+  if (fromRecord) text = DELIVERY_WORDS.fromRecord(did);
   // Back to a taf that already had this work: where it stops, by design, so it is calm too. The taf itself
   // has it now: the dial refuses a taf as its own place (places.ts), and a record that names it anyway starts nothing.
   if (p.taf === taf.id || chain?.tafs.includes(p.taf)) return { ...base, state: "none", why: DELIVERY_WORDS.circle };
@@ -396,7 +444,7 @@ async function handOff(ctx: DeliveryContext, tenant: string, taf: Taf, r: Run, p
   if (!to || to.removing || to.job === "setup") return { ...base, state: "not_sent", why: DELIVERY_WORDS.tafGone };
   try {
     const run = await ctx.agents.startRun(tenant, to.id, DELIVERY_WORDS.handoffTask(taf.name, text, handoffFence()), { source: `handoff:${taf.id}:${r.id}`, dedupKey: `handoff:${r.id}:${key}${again ? `:again:${again}` : ""}` });
-    return { ...base, name: to.name, state: "handed", handed_run: run.id };
+    return { ...base, name: to.name, state: "handed", handed_run: run.id, ...(fromRecord ? { from_record: fromRecord } : {}) };
   } catch (err) {
     return { ...base, state: "not_sent", why: err instanceof Error && err.message ? err.message : HANDOFF_FAILED };
   }
@@ -731,6 +779,11 @@ export function deliveryViews(rd: RunDeliveries | undefined, taf: string, zone: 
   if (!rd) return [];
   const w: Words = wordsIn(lang);
   return rd.places.map((d) => {
+    const v = viewOf(d);
+    // A hand-off made from the record says so, whatever came of it after: the taf's words said nothing was left.
+    return d.from_record && v.line ? { ...v, line: `${v.line} · ${w.handed_from_record}` } : v;
+  });
+  function viewOf(d: Delivery): DeliveryView {
     const when = whenIn(d.at, zone, now, lang);
     switch (d.state) {
       case "sent": return { place: d.place, key: d.key, name: d.name, state: d.state, line: w.delivered(d.name, when) };
@@ -768,5 +821,5 @@ export function deliveryViews(rd: RunDeliveries | undefined, taf: string, zone: 
           coach_words: DELIVERY_WORDS.coach(taf, d.name, d.why) };
       }
     }
-  });
+  }
 }

@@ -375,10 +375,11 @@ describe("Setup's definition on kiff/agents", () => {
     // the taf couldn't read it and KIFF couldn't check its currency (kiff/tafs#174).
     expect(flat).toContain("names aren't the thing's (a read of one item can take it as id): never guess or rename them");
     // In roles, not one vendor's nouns (kiff/agents#293); a REST vendor is connected by its key,
-    // which the owner gives on the phone, never in the chat.
+    // which the owner gives on a secure sheet on the phone, never in the chat.
     expect(flat).not.toMatch(/stripe|\bcharges?\b|\bdisputes?\b/i); // the job ids (chargebacks) are tafs' own
     expect(flat).toContain("A vendor with a REST API and no MCP server is connected by its key instead: planque request with api {url: its published OpenAPI description");
-    expect(flat).toContain("The owner gives the key on their phone as they approve, straight to planque: never ask for it in the chat");
+    expect(flat).toContain("Prefer a vendor's sign-in to its key, even when search finds both.");
+    expect(flat).toContain("The owner gives the key on a secure sheet on their phone, outside this chat, straight to planque: it never reaches you. Never ask for it in the chat");
     expect(flat).toContain("A step that waits on one call names it (call: the tool's name): it can't be shown done until that call went through");
     // Setup's own reads go in the first planque request: the connection's one approval and sign-in cover
     // them, with no question and no second approval (kiff/tafs#476, gap 2: four consents before a draft).

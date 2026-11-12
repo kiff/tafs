@@ -536,7 +536,9 @@ kiff/tafs#476, `connect-an-app@4`; planque reuses a managed app's sign-in too). 
 the reuse does Coach ask for the same kind anew; another kind comes only when the owner picks it. An app
 found by search is connected with the tools the taf will use: `request {entry, uses}`, their slugs as
 search names them, so planque asks the app's sign-in for only what they need, or says plainly when it
-can't (gap 5 of kiff/tafs#476, `connect-an-app@5`). A mode
+can't (gap 5 of kiff/tafs#476, `connect-an-app@5`). A vendor's sign-in comes before its key, even when
+search finds both; a key is given on a secure sheet on the phone, outside the chat, straight to planque,
+and never reaches Coach (`connect-an-app@7`). A mode
 is said only as the connection gives it: a vendor's own sign-in has none planque knows. Once a connection
 connects, Coach checks it with one read through it before saying it's ready: a 401 or 403 there is the
 key or sign-in refused, caught at connect rather than at the taf's first run (gap 10).

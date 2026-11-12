@@ -319,6 +319,7 @@ export const de: Words = {
   handoff_maybe_acted: "es hat möglicherweise bereits gehandelt: prüfe seine Seite, bevor etwas erneut gesendet wird",
   handoff_nothing_note: (taf, name, n) => `${name} hat mit den letzten ${n} Übergaben von ${taf} nichts getan. Öffne die Seite von ${taf}, um zu sehen, warum.`,
   handoff_none: (name, why) => `Nichts an ${name} zu übergeben${why ? `: ${why}` : ""}`,
+  handed_from_record: "aus dem Protokoll übergeben: laut Antwort gab es nichts zu übergeben, laut Protokoll wurde aber etwas erledigt",
   handoff_circle: (name) => `Nicht an ${name} zurückgegeben: diese Arbeit war dort schon`,
   delivery_retrying: (name, t) => `Noch nicht an ${name} zugestellt: neuer Versuch ${t ? at(t) : "jetzt"}`,
   delivery_not_sent: (name, why) => `Nicht an ${name} zugestellt${why ? `: ${why}` : ""}`,
@@ -337,6 +338,7 @@ export const de: Words = {
     if (not.length) parts.push(`Nicht gesendet an ${list(not.map((d) => `${d.name}${d.retrying ? " (wird erneut versucht)" : ""}`))}`);
     return parts.join(". ") + ".";
   },
+  counted_line: (n) => "Laut Protokoll — " + ([[n.sent, "erledigt"], [n.held, "wartet auf dich"], [n.refused, "abgelehnt"], [n.failed, "fehlgeschlagen"], [n.unknown, "gesendet, Ergebnis unbekannt"]] as const).filter(([k]) => k > 0).map(([k, w]) => `${w}: ${k}`).join(" · "),
   step_received: "Empfangen",
   step_worked: "Daran gearbeitet",
   step_not_made: (t) => `Nicht ausgeführt · ${t}`,

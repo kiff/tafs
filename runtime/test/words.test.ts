@@ -39,6 +39,7 @@ const ARGS: Record<string, unknown[][]> = {
     [[{ name: "Sheets", handed: false }, { name: "Invoices", handed: true }], [{ name: "Slack", retrying: true }]],
     [[], [{ name: "Slack", retrying: false }, { name: "Email", retrying: false }]],
   ],
+  counted_line: [[{ sent: 5, held: 1, refused: 2, failed: 1, unknown: 1 }], [{ sent: 0, held: 0, refused: 2, failed: 0, unknown: 0 }]],
 };
 
 /** Each word filled in: a string, or a function's answer for sample values. */

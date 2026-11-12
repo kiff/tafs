@@ -375,7 +375,12 @@ the latest run stopped without finishing (`stopped: {run, stop}`, where `stop` i
 continue; the app closes the thread with a line for it). `capped` carries the two caps alone, for apps
 that read only those. A job run's report may carry `delivered`, tafs
 cloud's one line on where its result went; Android draws it above the taf's words, as written
-(`ChatMessage.delivered`), and nothing where none comes.
+(`ChatMessage.delivered`), and nothing where none comes. It may carry `counted` too: the run's count
+from its record (kiff/agents' `tally`, summed over its tools), in tafs cloud's words, "From the Record —
+done: 5 · waiting for you: 1 · refused: 2", each part at 0 left out (`countedLine`). The taf gives no
+totals of its own (kiff/agents#421), so this is where the owner reads them, never the model's
+numbers. None for a run that counted nothing. `GET /v1/tafs/{id}/runs/{session}` gives the same line
+on its `report`.
 
 - A job run's first message is the job's instruction, shown as a small note. When its schedule's check handed it
   items, the note says how many after the instruction ("Its check found 2 new items.", `checkStart`), never the
