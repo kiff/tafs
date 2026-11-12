@@ -1,0 +1,1 @@
+- **tafs cloud: a failed run's reason in the person's language.** kiff/agents' reasons for a failed run ("the run failed", "the run reached its time limit"…) are said in each of the eight languages on the taf's work and runs, never as English inside another language's screen ([api.md](../docs/api.md)).
