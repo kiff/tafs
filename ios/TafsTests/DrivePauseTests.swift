@@ -37,6 +37,15 @@ final class DrivePauseTests: XCTestCase {
         try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
     }
 
+    /// Waits until `condition` holds, for at most `seconds`: for what a request's answer brings
+    /// about, which takes as long as the runner takes. A fixed wait there fails on a slow one.
+    private func until(_ seconds: Double = 5, _ condition: () -> Bool) async {
+        let end = Date().addingTimeInterval(seconds)
+        while !condition(), Date() < end {
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+    }
+
     private func show(_ probe: DriveTests.Probe) async throws {
         targets.reset()
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
@@ -207,7 +216,8 @@ final class DrivePauseTests: XCTestCase {
         await settle(0.5)
         XCTAssertTrue(drive.isOn)
         drive.resume()
-        await settle(0.6)
+        // The end comes with the Continue's answer: waited for, not timed.
+        await until { !self.drive.isOn }
         XCTAssertFalse(drive.isOn)
         XCTAssertEqual(drive.caption, "The account is halted, so Coach stopped")
         XCTAssertEqual(sent("/v1/coach/drive/stop").count, 0, "tafs cloud ended it: nothing to stop")
