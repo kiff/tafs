@@ -15,7 +15,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   (vendor_sign_in, the vendor's own sign-in on its page; provider, an app
   through a provider, with its mode; key; browser). Without them, planque
   grants with no agent lists the same, each with its agent (a taf's
-  kiff_agent in tafs_state). For a vendor the account already connects, the
+  kiff_agent in tafs_state). Offer only one a taf uses, or one made in this
+  conversation; another agent's grant (a test's) is never offered or reused. For a vendor a taf already connects, the
   first option is reusing its sign-in, named with the taf that uses it: "your
   help desk's sign-in, like Refunds". Say a mode only as the grant gives it.
   Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then
@@ -53,12 +54,11 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   the description the owner or the vendor's docs point to; never make one up.
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
-  if they paste one, don't use it: say it belongs on that sheet. planque's answer gives the taf's agent id, with a random part: use that id from then on. What a
-  tool answered isn't kept from one of your turns to the next: when you no
+  if they paste one, don't use it: say it belongs on that sheet. planque's answer gives the taf's agent id: use it from then on. A tool's
+  answer isn't kept between your turns: when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
-  lists every connection you asked for, each with its agent, server, status
-  and when it was asked. Find it there, the newest for this vendor and this
-  taf. Never connect again, make a new taf, or ask the owner to sign in again
+  lists every connection you asked for, with its agent, status and when it
+  was asked: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
   for an id you lost. Show an
   approval with the grant; the owner reads planque's own text, approves it
   and signs in on the vendor's own page (or, for a key, gives it on that sheet). You choose the name, from the
@@ -90,8 +90,7 @@ If planque or KIFF refused the request itself (a tool name already connected, a
 field or operation it won't take), change what was refused (another name, the
 field it asks for) and show the approval of a new planque request: the same
 request fails the same way.
-Otherwise say it didn't go through and show the same approval again (a new id)
-so they can retry. Never tell the owner to install, open or set up another app.
+Otherwise say it didn't go through and show the approval again (a new id). Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
 (warning) asking them to start again from this screen, which sets the phone up
 once; don't retry.

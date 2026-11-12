@@ -49,7 +49,11 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   sign-in stays with the connection service"), never a service's name.
 - Only when planque says connected, give the taf its Card: submit its draft
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
-  new approval with the grant and the draft. Every tool the taf gets goes on
+  new approval with the grant and the draft. The draft is the agreed rules,
+  line for line, never merged ("1,000 reads a day each" stays a line per
+  tool, not 4,000 for all). A limit it can't hold as agreed is a changed rule:
+  show it in a new rules notice and get it agreed first. Never change a number
+  silently. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers, so a read
   tool left off can't be used at all. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
