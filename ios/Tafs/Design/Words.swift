@@ -2401,6 +2401,18 @@ enum Words {
     enum NeedsYou {
         /// A taf
         static var aTaf: String { Words.line("needs_you.a_taf") }
+        /// Allow this from now on
+        static var allowFromNowOn: String { Words.line("needs_you.allow_from_now_on") }
+        /// This change isn't what was offered.
+        static var allowNotOffered: String { Words.line("needs_you.allow_not_offered") }
+        /// Round up to {amount}
+        static func allowRoundUp(amount: String) -> String { Words.line("needs_you.allow_round_up", amount) }
+        /// Let this one go out too
+        static var allowSendThisToo: String { Words.line("needs_you.allow_send_this_too") }
+        /// With this off, the Card changes and this one still waits for your answer.
+        static var allowSwitchOff: String { Words.line("needs_you.allow_switch_off") }
+        /// Change the Card so requests like this go on their own
+        static var allowTitle: String { Words.line("needs_you.allow_title") }
         /// Answer
         static var answer: String { Words.line("needs_you.answer") }
         /// answer by {time}

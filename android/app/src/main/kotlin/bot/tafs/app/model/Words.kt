@@ -1298,6 +1298,12 @@ object Words {
   }
   object NeedsYou {
     val aTaf: String get() = Res.s(R.string.needs_you_a_taf)
+    val allowFromNowOn: String get() = Res.s(R.string.needs_you_allow_from_now_on)
+    val allowNotOffered: String get() = Res.s(R.string.needs_you_allow_not_offered)
+    fun allowRoundUp(amount: String): String = Res.s(R.string.needs_you_allow_round_up, amount)
+    val allowSendThisToo: String get() = Res.s(R.string.needs_you_allow_send_this_too)
+    val allowSwitchOff: String get() = Res.s(R.string.needs_you_allow_switch_off)
+    val allowTitle: String get() = Res.s(R.string.needs_you_allow_title)
     val answer: String get() = Res.s(R.string.needs_you_answer)
     fun answerBy(time: String): String = Res.s(R.string.needs_you_answer_by, time)
     val answerGone: String get() = Res.s(R.string.needs_you_answer_gone)

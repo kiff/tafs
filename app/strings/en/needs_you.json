@@ -1,5 +1,11 @@
 {
   "needs_you.a_taf": "A taf",
+  "needs_you.allow_from_now_on": "Allow this from now on",
+  "needs_you.allow_not_offered": "This change isn't what was offered.",
+  "needs_you.allow_round_up": "Round up to {amount}",
+  "needs_you.allow_send_this_too": "Let this one go out too",
+  "needs_you.allow_switch_off": "With this off, the Card changes and this one still waits for your answer.",
+  "needs_you.allow_title": "Change the Card so requests like this go on their own",
   "needs_you.answer": "Answer",
   "needs_you.answer_by": "answer by {time}",
   "needs_you.answer_gone": "This answer isn't on tafs cloud any more.",
