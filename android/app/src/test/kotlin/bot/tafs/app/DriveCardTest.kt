@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
@@ -71,6 +72,33 @@ class DriveCardTest {
   }
 
   private val shown get() = KiffClient.json.decodeFromString(SetupComponent.serializer(), card)
+
+  @Test
+  fun aParkedRunThatGoesOnAfterContinueIsFollowedToItsEndWithoutReopeningTheChat() = runTest {
+    reads()
+    transport.answer("POST /v1/coach/drive", 200, """{"drive":{"id":"dv_1","session":"s1","task":"Run Chargebacks","started":"2026-11-06T00:30:01Z"}}""")
+    transport.hold("GET /v1/coach/drive/dv_1/stream")
+    transport.answer("POST /v1/coach/drive/pause", 200, "{}")
+    // Continue: tafs cloud names the parked run that goes on.
+    transport.answer("POST /v1/coach/drive/resume", 200, """{"resumed":true,"coach":{"run":"r1","session":"s1"}}""")
+    transport.answer("GET /v1/tafs/setup_1/runs/r1/stream", 200, "event: end\ndata: {\"status\":\"COMPLETED\",\"stop\":\"answered\"}\n")
+    val m = model()
+    m.startDrive(shown)
+    m.drive.pause()
+    runCurrent()
+    // The run's end is in the thread once it has ended.
+    transport.answer(
+      "GET /v1/tafs/setup_1/conversation", 200,
+      """{"messages":[{"at":"2026-11-06T00:32:00Z","from":"taf","text":"Chargebacks has run.","session":"s1"}],"components":[]}""",
+    )
+    m.resumeDrive()
+    runCurrent()
+    advanceTimeBy(1_000)
+    runCurrent()
+    assertEquals("the parked run is followed again", 1, transport.requestsTo("GET /v1/tafs/setup_1/runs/r1/stream").size)
+    assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().any { it.text == "Chargebacks has run." })
+    assertFalse("its end shows, and the chat isn't left thinking", m.state.value.thinking(COACH_CHAT))
+  }
 
   @Test
   fun approveSignsTheStartWithTheApprovalKeyAndTheDriveIsOn() = runTest {

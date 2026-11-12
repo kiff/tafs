@@ -4325,6 +4325,7 @@ class AppModel(
   val drive: bot.tafs.app.drive.DriveController by lazy { bot.tafs.app.drive.DriveController(cloud, driveHost, scope).also { watchDrive(it) } }
 
   private fun watchDrive(d: bot.tafs.app.drive.DriveController) {
+    d.onResumed = { turn -> scope.launch { coachGoesOn(turn) } }
     scope.launch {
       d.state.collect { s ->
         when (s) {
@@ -4335,6 +4336,8 @@ class AppModel(
             // writes it from its record of the steps, not Coach's memory of them, once the end has reached it.
             d.settled()
             runCatching { readThread(COACH_CHAT) }
+            // Coach may still be at work after the drive's last step: the chat follows it to its end, as after Continue.
+            followChat(COACH_CHAT)
           }
           bot.tafs.app.drive.DriveState.Off -> bot.tafs.app.drive.DriveInput.turn(false)
         }
@@ -4388,6 +4391,20 @@ class AppModel(
   /** The person tapped Continue on a paused drive: the keyboard goes away, and Coach goes on with a look. */
   fun resumeDrive() {
     drive.resume()
+  }
+
+  /**
+   * Continue went through, and Coach's turn goes on: the run that was parked, or the turn Continue started, as tafs cloud names
+   * it. While a run is parked the chat may have stopped following it, so it's followed again here, to its end, which reads the
+   * thread, as an answered card's run is. Without a name, the thread is read, and a run at work in it is picked up.
+   */
+  private suspend fun coachGoesOn(turn: bot.tafs.app.drive.DriveCoachTurn?) {
+    val cloudId = _state.value.taf(COACH_CHAT)?.cloudId ?: return
+    if (turn == null) { readThread(COACH_CHAT); return }
+    // Another Coach conversation is on screen now: that one's run isn't followed into it.
+    val shown = _state.value.coachChat
+    if (turn.session != null && shown != null && turn.session != shown) return
+    resumeChat(COACH_CHAT, cloudId, turn.run, again = true)
   }
 
   /** A drive still on after the app restarted outlived it: it ends now, and never resumes (docs/drive.md). */

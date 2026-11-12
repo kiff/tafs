@@ -174,6 +174,9 @@ class DriveController(
   /** The person's taps on a control since the drive paused, the pausing one included; a third ends it. */
   private var taps = 0
 
+  /** Continue went through: Coach's turn that goes on, as tafs cloud names it, for the chat to follow. */
+  var onResumed: (DriveCoachTurn?) -> Unit = {}
+
   /** The pause on its way to tafs cloud, posted again until it lands, Continue comes, or the drive ends. */
   private var pausing: Job? = null
 
@@ -255,6 +258,7 @@ class DriveController(
         null
       }
       answer?.ended?.takeIf { !answer.resumed }?.let { end(on.drive, it.why, it.words) }
+      if (answer?.resumed == true) onResumed(answer.coach)
     }
   }
 
