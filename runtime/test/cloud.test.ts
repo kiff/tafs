@@ -478,6 +478,33 @@ describe("tafs cloud", () => {
     expect(r.body.requests).toHaveLength(1);
   });
 
+  it("reads each run's credits alongside the taf's runs, not after, and puts the line on its row", async () => {
+    const w = world();
+    await w.agents.api.startRun("t_acme", RAE, "go");
+    const id = w.agents.runs[0]!.id;
+    const deps = depsOf(w);
+    let creditsAsked!: () => void;
+    const asked = new Promise<void>((resolve) => { creditsAsked = resolve; });
+    // The runs read finishes only once the credits read has started: read one after the other, it waits out the timeout.
+    let overlapped = false;
+    const runs = deps.agents.runs.bind(deps.agents);
+    const agents = { ...deps.agents, runs: async (...a: Parameters<typeof runs>) => {
+      overlapped = await Promise.race([asked.then(() => true), new Promise<boolean>((r) => setTimeout(() => r(false), 200))]);
+      return runs(...a);
+    } };
+    const fetch = (async (url: string, init?: RequestInit) => {
+      if (new URL(url).pathname === "/v1/me/usage/credits/runs") {
+        creditsAsked();
+        return new Response(JSON.stringify({ items: [{ run: id, trigger: "schedule", ended: "2026-10-29T09:59:00Z", counted: true, credits: 34, refused: 0, declined: 0 }] }), { status: 200 });
+      }
+      return deps.fetch!(url, init);
+    }) as Deps["fetch"];
+    const r = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, { ...deps, agents, fetch });
+    expect(r.statusCode).toBe(200);
+    expect(overlapped).toBe(true);
+    expect(JSON.parse(r.body).requests[0].credits).toEqual({ credits: 34, counted: true, words: "34 credits" });
+  });
+
   it("lists the follow-ups a taf set itself on its dial, and removes one, only of that taf", async () => {
     const w = world();
     const fu = { id: "fu-1", agent: RAE, cron: "", input: "Check it again", enabled: true, kind: "once" as const, at: "2099-01-01T09:00:00Z", follow_up: true };
@@ -4934,6 +4961,59 @@ describe("the Record across the person's tafs", () => {
 });
 
 // "Your step": a step a taf handed its owner, read from the paused run (yourstep.ts).
+
+describe("the secure connection sheet's route (docs/secure-connection.md)", () => {
+  const SHA = "b".repeat(64);
+  const qonto = (tools: Array<{ tool: string; read_only?: boolean }>) => ({
+    id: "g_q", status: "pending", digest: "d", vendor: "Qonto",
+    request: { kind: "api_key", agent: "rae", catalog_entry: "qonto-key@1", tools,
+      api: { url: "https://example.com/qonto/openapi.json", digest: SHA, base: "https://thirdparty.qonto.com/v2", auth: { in: "header", name: "Authorization" } } },
+  });
+  function withPlanque(w: World, grants: unknown[], asked: string[], catalog: number | object = { entries: [{ entry: "qonto-key@1", vendor: "qonto", title: "Qonto", how: "key", state: "available" }] }) {
+    return { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
+      const h = init?.headers as Record<string, string>;
+      asked.push(`${url.replace("https://planque.test", "")} ${h["Planque-Device-Signature"] ?? h.authorization ?? ""}`);
+      if (url.includes("/grants")) return new Response(JSON.stringify({ grants }), { status: 200 });
+      return typeof catalog === "number" ? new Response("{}", { status: catalog }) : new Response(JSON.stringify(catalog), { status: 200 });
+    }) as Deps["fetch"] };
+  }
+  const get = (deps: Deps, path: string, token = "ana", lang?: string) =>
+    handle({ rawPath: path, requestContext: { http: { method: "GET" } }, headers: { Authorization: `Bearer ${token}`, "planque-device-signature": "proof-1", ...(lang ? { "accept-language": lang } : {}) } }, deps);
+
+  it("answers the sheet's words for a key grant, read with the phone's own proof, in the person's language", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const r = await get(withPlanque(w, [qonto([{ tool: "list_invoices", read_only: true }])], asked), "/v1/connect/grants/g_q/sheet", "ana", "de");
+    expect(r.statusCode).toBe(200);
+    const body = JSON.parse(r.body);
+    expect(body.title).toBe("Sichere Verbindung zu Qonto");
+    expect(body.vendor).toMatchObject({ name: "Qonto", host: "thirdparty.qonto.com" });
+    expect(body.lines[0].kind).toBe("reads_only");
+    expect(body.legal.terms.url).toBe("https://kiff.dev/de/terms");
+    expect(asked[0]).toBe("/v1/accounts/t_acme/grants proof-1");
+  });
+
+  it("never says read only for a grant with a write, and still answers when the catalog can't be read", async () => {
+    const w = world();
+    const r = await get(withPlanque(w, [qonto([{ tool: "list_invoices", read_only: true }, { tool: "create_invoice" }])], [], 500), "/v1/connect/grants/g_q/sheet");
+    expect(r.statusCode).toBe(200);
+    const body = JSON.parse(r.body);
+    expect(body.lines[0].kind).toBe("may_change");
+    expect(body.vendor.logo).toBeUndefined();
+  });
+
+  it("is for whoever manages Cards, 404 for a grant the phone isn't shown, 409 for one that takes no key", async () => {
+    const w = world();
+    const asked: string[] = [];
+    expect((await get(withPlanque(w, [qonto([])], asked), "/v1/connect/grants/g_q/sheet", "viewer")).statusCode).toBe(403);
+    expect(asked).toEqual([]);
+    expect((await get(withPlanque(w, [qonto([])], []), "/v1/connect/grants/g_other/sheet")).statusCode).toBe(404);
+    const oauth = { ...qonto([]), request: { agent: "rae", server: "https://mcp.example.com/mcp", tools: [] } };
+    expect((await get(withPlanque(w, [oauth], []), "/v1/connect/grants/g_q/sheet")).statusCode).toBe(409);
+  });
+});
+
 describe("a step a taf handed its owner", () => {
   const AT = new Date("2026-11-11T17:00:00Z");
   const ago = (m: number) => new Date(AT.getTime() - m * 60_000).toISOString();

@@ -161,6 +161,18 @@ for v in FCM_PROJECT_ID FCM_SECRET_ID; do
   fi
   [ -n "${!v}" ] && FCM_ENV="$FCM_ENV,$v=${!v}"
 done
+# tafs cloud's feature flags (TAFS_KEY_AND_CARDS, TAFS_SIGNED_REMOVE, TAFS_YOUR_STEP: each "on" or unset), kept
+# from tafs-cloud on a rerun like the doors' settings, so a rerun never turns one off. runtime/test checks every
+# TAFS_ flag the code reads is named here.
+FLAGS_ENV=""
+for v in TAFS_KEY_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_STEP; do
+  if [ -z "${!v:-}" ]; then
+    kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
+    [ "$kept" = None ] && kept=""
+    printf -v "$v" '%s' "$kept"
+  fi
+  [ -n "${!v}" ] && FLAGS_ENV="$FLAGS_ENV,$v=${!v}"
+done
 # tafs cloud may read that one secret, nothing more.
 FCM_READ=""
 if [ -n "$FCM_SECRET_ID" ]; then
@@ -186,7 +198,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV}"
+ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV$FLAGS_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

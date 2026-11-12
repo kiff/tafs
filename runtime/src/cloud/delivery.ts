@@ -393,8 +393,9 @@ async function chainOf(ctx: DeliveryContext, tenant: string, r: Run): Promise<Ch
  */
 export function recordLines(r: Pick<Run, "done">): string[] {
   const clean = (x: string, n = 120) => x.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, n);
-  return (r.done ?? []).filter((d) => typeof d.tool === "string" && d.tool.trim()).slice(0, 50).map((d) => {
-    if (typeof d.resource === "string" && d.resource.trim()) return `- ${clean(d.tool!)} on ${clean(d.resource)}`;
+  // The tool's name as cleaned, before it's kept: a name of control characters alone would write "- ".
+  return (r.done ?? []).filter((d) => typeof d.tool === "string" && clean(d.tool)).slice(0, 50).map((d) => {
+    if (typeof d.resource === "string" && clean(d.resource)) return `- ${clean(d.tool!)} on ${clean(d.resource)}`;
     const ids = idArgs(d.input).map(([k, v]) => `${clean(k, 40)}: ${clean(v, 60)}`);
     return `- ${clean(d.tool!)}${ids.length ? ` (${ids.join(", ")})` : ""}`;
   });

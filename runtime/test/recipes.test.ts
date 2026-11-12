@@ -148,7 +148,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("keeps the apps' order: by category, then each recipe's place, with refunds leading Money", () => {
     expect(RECIPES.map((r) => r.id)).toEqual([
       "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "save-a-customer-who-cancels", "invoice-accepted-quotes",
-      "answer-questions-about-orders", "follow-up-new-leads",
+      "answer-questions-about-orders", "follow-up-new-leads", "acknowledge-every-ticket",
       "book-and-move-appointments", "ship-when-green",
       "file-receipts",
     ]);
@@ -192,9 +192,9 @@ Bezahle meine Rechnungen unter 100 EUR.
     const ids = (apps: Array<{ entry: string; vendor: string }>) => recipesFor(apps).recipes.map((r) => r.id);
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
     expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
-    // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk.
+    // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk; a help desk alone does for tickets.
     expect(ids([{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gorgias", vendor: "Gorgias" }]))
-      .toEqual(["refunds-within-a-limit", "chargebacks-with-evidence"]);
+      .toEqual(["refunds-within-a-limit", "chargebacks-with-evidence", "acknowledge-every-ticket"]);
     expect(ids([{ entry: "stripe@3", vendor: "Stripe" }])).toEqual([]);
     // Only the categories with a recipe, in their order, with the title the apps show.
     const github = recipesFor([{ entry: "connector:composio:github", vendor: "GitHub" }]);

@@ -1252,6 +1252,12 @@
         <item quantity="other">%2$s · %1$s stops</item>
     </plurals>
     <string name="needs_you_a_taf">A taf</string>
+    <string name="needs_you_allow_from_now_on">Allow this from now on</string>
+    <string name="needs_you_allow_not_offered">This change isn\'t what was offered.</string>
+    <string name="needs_you_allow_round_up">Round up to %1$s</string>
+    <string name="needs_you_allow_send_this_too">Let this one go out too</string>
+    <string name="needs_you_allow_switch_off">With this off, the Card changes and this one still waits for your answer.</string>
+    <string name="needs_you_allow_title">Change the Card so requests like this go on their own</string>
     <string name="needs_you_answer">Answer</string>
     <string name="needs_you_answer_by">answer by %1$s</string>
     <string name="needs_you_answer_gone">This answer isn\'t on tafs cloud any more.</string>

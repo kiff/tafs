@@ -883,6 +883,9 @@ struct UnsentBubble: View {
     /// The taf the chat is with, when it has one: a send refused for its halt says so and
     /// offers Resume, since Retry can't pass a halt (kiff/tafs#236, item 14).
     var taf: (id: UUID, name: String)? = nil
+    @EnvironmentObject private var model: AppModel
+    /// Halt, opened from a bubble refused for a halt.
+    @State private var resuming = false
 
     /// Whether the send was refused because the taf, or its account, is halted.
     static func halted(_ why: String) -> Bool {
@@ -890,11 +893,51 @@ struct UnsentBubble: View {
         return w.hasPrefix("halted") || w.contains("is halted")
     }
 
+    /// The halt a refused send names, as tafs cloud says it, and whose Halt screen resumes it:
+    /// the account's for a halted account (a Coach chat's refusal included), the taf's own for
+    /// a halted taf. Nil when the send wasn't refused for a halt, or names a taf this chat
+    /// doesn't have.
+    static func halt(_ message: AppModel.UnsentMessage, taf: UUID?) -> (account: Bool, screen: UUID?)? {
+        switch message.halted {
+        case "account": return (true, nil)
+        case "taf": return taf.map { (false, $0) }
+        default: return nil
+        }
+    }
+
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
             ChatBubble(message: TafsCloud.ChatMessage(at: message.at, from: .owner, text: words, session: "unsent"), taf: nil)
                 .opacity(0.6)
-            if let taf, Self.halted(message.why) {
+            if let halt = Self.halt(message, taf: taf?.id) {
+                // Refused for a halt, as tafs cloud says, in its words: which is halted and how
+                // to resume it. Resume opens Halt, where it's the person's act behind Face ID;
+                // nothing here resumes by itself. Retry sends it once that's done.
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Image(systemName: "hand.raised.fill").foregroundColor(Theme.no)
+                    Text("\(Self.notSent) · \(message.why)").foregroundColor(Theme.no)
+                        .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
+                }
+                .scaledFont(13, relativeTo: .footnote)
+                HStack(spacing: 14) {
+                    // Its word confirms, so a drive's touch on it is refused (docs/drive.md), though it only opens Halt.
+                    Button(Words.Taf.resume) { resuming = true }
+                        .foregroundColor(Theme.ink).semibold()
+                        .accessibilityIdentifier("unsent.resume")
+                        .confirming()
+                    Button(Self.retryWord) { Task { await retry() } }
+                        .foregroundColor(Theme.soft)
+                        .disabled(busy)
+                }
+                .scaledFont(14, relativeTo: .footnote)
+                .sheet(isPresented: $resuming) {
+                    NavigationStack {
+                        HaltScreen(tafID: halt.screen)
+                            .environmentObject(model)
+                            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Common.done) { resuming = false } } }
+                    }
+                }
+            } else if let taf, Self.halted(message.why) {
                 HStack(spacing: 6) {
                     Image(systemName: "hand.raised.fill").foregroundColor(Theme.no)
                     Text(Words.Coach.tafHalted(taf: "\(taf.name)")).foregroundColor(Theme.no)
@@ -1434,7 +1477,13 @@ struct SetupApproval: View {
                 }
             }
             if let grant {
-                if connected {
+                if let done = component.connection?.doneWords {
+                    // Already connected, as tafs cloud marks it: its one line, then Its Card. The
+                    // connection's text isn't shown again, as if it still waited.
+                    Label(done, systemImage: "checkmark.circle.fill")
+                        .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
+                        .accessibilityIdentifier("approval.connection-done")
+                } else if connected {
                     Label(Words.Coach.connectedKeysKeptSealed(vendor: "\(grant.vendor)"), systemImage: "checkmark.circle.fill")
                         .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
                 } else if listed {
@@ -1519,7 +1568,7 @@ struct SetupApproval: View {
                                 // reads the connection, now connected, and answers Coach.
                                 ConnectApprovalSheet(start: .init(grant: grant.id, needsKey: true), onGiven: {
                                     Task { await model.approve(component, shown: grant.digest, shownDraft: draft?.version) }
-                                })
+                                }, card: component)
                                 .environmentObject(model)
                             }
                         }

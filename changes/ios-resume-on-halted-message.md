@@ -1,0 +1,1 @@
+- **iOS: a message refused because of a halt offers Resume.** The message says whether your account or the taf is halted, in your language, and Resume opens Halt, in Coach's chat too.

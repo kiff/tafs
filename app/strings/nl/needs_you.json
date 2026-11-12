@@ -1,5 +1,11 @@
 {
   "needs_you.a_taf": "Een taf",
+  "needs_you.allow_from_now_on": "Voortaan toestaan",
+  "needs_you.allow_not_offered": "Deze wijziging is niet wat werd aangeboden.",
+  "needs_you.allow_round_up": "Afronden naar {amount}",
+  "needs_you.allow_send_this_too": "Dit verzoek ook laten doorgaan",
+  "needs_you.allow_switch_off": "Staat dit uit, dan verandert de Card en wacht dit verzoek nog op je antwoord.",
+  "needs_you.allow_title": "De Card aanpassen zodat zulke verzoeken vanzelf doorgaan",
   "needs_you.answer": "Antwoorden",
   "needs_you.answer_by": "antwoord vóór {time}",
   "needs_you.answer_gone": "Dit antwoord staat niet meer op tafs cloud.",

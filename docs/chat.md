@@ -335,6 +335,12 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   a card that doesn't wait goes as a message. This form goes one release after the app build
   that uses the route.
 
+**A connection already made says so.** Once tafs cloud sees a connection's grant connected (an approval
+it settled, or one it found connected), it notes it, and every approval card in the thread that names that
+grant carries `connection: {done: true, words}`: "Qonto is connected (read only)". The apps draw that line and
+the card's Card alone, never the connection's text again, so the taf's Card after its key went in doesn't read
+as if the key still waited ([secure-connection.md](secure-connection.md)).
+
 ## Coming back to a run at work
 
 When the owner leaves the chat or the app and comes back while a run works, the app
@@ -455,13 +461,14 @@ text while it is still one short line (`heldLine`: no line break, at most 90 cha
 it on the live line as it's written, the same as a note. If anything but a tool call comes in that
 turn (more than a line, a component, the end), it was the answer: the line goes to `thinking` at
 once, with no hold, then the held words go as `text`, so they never show twice, and the rest
-streams. An answer waits for at most its first line. At a tool call the held text is kept: it was
-the turn's line if the run writes again after its tools, and is dropped then; it was the run's
-message if a card, a pause for the owner or the end comes first ("Falta que apruebes la
-conexión…", then the call the run waits on), and goes out as `text` then, the same way. In the
-stored thread such a line (`preToolLines`: a one-line message its calls follow, after which the
-run writes again before a card or a pause) isn't a message either: the run's work goes on its next
-message. A longer text before a tool call stays a message, as before.
+streams. An answer waits for at most its first line. At a tool call the held text is kept as a
+note: it's dropped if the run writes again after its tools or shows a card (the card speaks for
+itself), and goes out as `text` only if the run ends first, and then only the last one. In the
+stored thread a message its run's tool calls follow (`preToolLines`) is a note too, however long:
+it isn't a message when anything follows those calls (the run writing again, a card, the owner's
+answer to one, a pause). Only a run's final words reach the chat, so a retry or a self-correction
+Coach wrote before a card never does. A run that ends with no words after its tools keeps its last
+note as its message.
 
 ## The thread in one order
 

@@ -20,6 +20,7 @@ const run = (o: Partial<Run>): Run => ({ id: "r1", agent: "a", session: "s", tri
 /** The words whose arguments aren't strings or counts, with what they're given. */
 const ARGS: Record<string, unknown[][]> = {
   approval_status: [["needs_reconnect"], ["connected"], ["pending"]],
+  allow_window: [["calendar_day"], ["rolling_1h"], ["rolling_24h"], ["rolling_7d"]], // a lifetime total has no window words
   door_name: [["email", "Email"], ["slack", "Slack"]],
   delivered: [["Invoices", { hm: "09:00" }], ["Invoices", { hm: "09:00", day: "Fri" }]],
   handed: [["Rae", { hm: "09:00" }]],
@@ -68,12 +69,12 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   const SAME_AS_ENGLISH: Record<string, string[]> = {
     // "Company" is a plan name, kept in every language (docs/languages.md); the seats around it are translated.
     // "25 min" and "5 h" are written alike in most of the eight (Dutch writes "5 u", Polish "5 godz.").
-    all: ["cr_company", "waiting_minutes", "waiting_hours", "doing_titled"], // doing_titled: the tool's own title and "…"
-    de: ["push_credits_title", "dial_app"], // "Credits" is the German term in the glossary; "App" is German too
+    all: ["cr_company", "waiting_minutes", "waiting_hours", "doing_titled", "sheet_sha"], // doing_titled: the tool's own title and "…"; sheet_sha: "SHA-256" is its name everywhere
+    de: ["push_credits_title", "dial_app", "sheet_details"], // "Credits" is the German term in the glossary; "App" and "Details" are German too
     fr: ["cr_actions", "dial_app"], // "action", "actions" and "App" are French words too
     es: ["dial_app"], // "App" is used as is
     it: ["cr_pct", "dial_place_email", "dial_app"], pt: ["cr_pct", "dial_place_email", "dial_app"], pl: ["cr_pct"], // "80%" is written alike; "Email" and "App" are used as is
-    nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app"], // "credit", "run" are the Dutch terms in the glossary; "Open" and "App" are Dutch too
+    nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app", "sheet_details"], // "credit", "run" are the Dutch terms in the glossary; "Open", "App" and "Details" are Dutch too
   };
 
   it("isn't English in another language: a line copied over untranslated would read the same", () => {

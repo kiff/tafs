@@ -72,6 +72,13 @@ class FakeTransport : Transport {
 
   fun answer(key: String, status: Int, body: String = "{}", headers: Map<String, String> = emptyMap()) = queue(key, HttpResponse(status, body.toByteArray(), headers))
 
+  /** Forgets every answer and request: a test that tries several answers in turn starts each from nothing. */
+  fun reset() = synchronized(this) {
+    queued.clear()
+    used.clear()
+    synchronized(log) { log.clear() }
+  }
+
   /** The network failing: no answer at all. */
   fun drop(key: String) = queue(key, IOException("The network dropped"))
 

@@ -35,12 +35,21 @@ object PeopleWords {
   private fun shareName(share: Share, groups: List<Group>, people: List<Person>): String =
     share.group?.let { g -> groups.firstOrNull { it.id == g }?.shownName } ?: share.subject?.let { label(it, people) } ?: ""
 
-  /** "Shared with Support and ana@acme.com", not shared yet, or reading. */
-  fun sharedWith(shares: List<Share>?, groups: List<Group>, people: List<Person>): String {
+  /**
+   * "Shared with Support and ana@acme.com", not shared yet, or reading. The person reading isn't someone it's shared with: their
+   * own share is left out (the person KIFF marks `you`, or the one whose email is the account read's, [email]), so a taf shared
+   * with no one else reads "Not shared", never their own address.
+   */
+  fun sharedWith(shares: List<Share>?, groups: List<Group>, people: List<Person>, email: String? = null): String {
     if (shares == null) return Words.People.sharing
     // Shared with KIFF's default group alone: its own sentence, so the languages that inflect it read right.
     shares.singleOrNull()?.group?.let { g -> if (groups.firstOrNull { it.id == g }?.everyone == true) return Words.People.sharedWithEveryone }
-    val names = shares.map { shareName(it, groups, people) }.filter { it.isNotEmpty() }
+    val mine = email?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
+    fun you(subject: String): Boolean {
+      val person = people.firstOrNull { it.subject == subject }
+      return person?.you == true || (mine != null && (person?.email?.lowercase() == mine || subject.lowercase() == mine))
+    }
+    val names = shares.filter { it.subject == null || !you(it.subject) }.map { shareName(it, groups, people) }.filter { it.isNotEmpty() }
     return if (names.isEmpty()) Words.People.notShared else Words.People.sharedWith(joined(names))
   }
 

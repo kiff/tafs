@@ -1211,6 +1211,179 @@ export const RECIPES = [
     }
   },
   {
+    "id": "acknowledge-every-ticket",
+    "title": "Acknowledge every ticket",
+    "category": "customers",
+    "order": 3,
+    "line": "Acknowledges each new ticket in the help desk within the hour and labels it by topic; anything that needs a decision waits for you.",
+    "headline": "No customer waits without an answer.",
+    "today": "A message sits unanswered until someone gets to it, and the customer writes again, or leaves.",
+    "say": "Every hour, find the new tickets in my help desk. Send each one a short personal acknowledgement that says we got the message and when we'll answer, once per ticket and up to 50 a day, and label it by topic. Any other reply waits for me. Never close or delete a ticket, and never promise a refund or a credit.",
+    "connections": [
+      [
+        "zendesk",
+        "freshdesk",
+        "gorgias",
+        "intercom"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "One acknowledgement per ticket, up to 50 a day",
+        "Labels on tickets"
+      ],
+      "holds": [
+        "Any other reply to a customer"
+      ],
+      "never": [
+        "Closing or deleting a ticket",
+        "Promising a refund or a credit"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Jedes Ticket bestätigen",
+        "headline": "Kein Kunde wartet ohne Antwort.",
+        "today": "Eine Nachricht bleibt liegen, bis jemand dazu kommt, und der Kunde schreibt noch einmal oder geht.",
+        "line": "Bestätigt jedes neue Ticket im Helpdesk innerhalb einer Stunde und versieht es mit einem Thema; alles, was eine Entscheidung braucht, wartet auf dich.",
+        "say": "Finde jede Stunde die neuen Tickets in meinem Helpdesk. Schicke jedem eine kurze persönliche Bestätigung, dass wir die Nachricht haben und wann wir antworten, einmal pro Ticket und bis zu 50 am Tag, und versieh es mit einem Label nach Thema. Jede andere Antwort wartet auf mich. Schließe oder lösche nie ein Ticket und versprich nie eine Erstattung oder Gutschrift.",
+        "card": {
+          "allows": [
+            "Eine Bestätigung pro Ticket, bis zu 50 am Tag",
+            "Labels an Tickets"
+          ],
+          "holds": [
+            "Jede andere Antwort an einen Kunden"
+          ],
+          "never": [
+            "Ein Ticket schließen oder löschen",
+            "Eine Erstattung oder Gutschrift versprechen"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Accuser réception de chaque ticket",
+        "headline": "Aucun client n'attend sans réponse.",
+        "today": "Un message reste sans réponse jusqu'à ce que quelqu'un s'en occupe, et le client réécrit, ou s'en va.",
+        "line": "Accuse réception de chaque nouveau ticket du support dans l'heure et l'étiquette par sujet ; tout ce qui demande une décision vous attend.",
+        "say": "Toutes les heures, trouve les nouveaux tickets dans mon support. Envoie à chacun un court accusé de réception personnel qui dit que nous avons bien reçu le message et quand nous répondrons, une fois par ticket et jusqu'à 50 par jour, et étiquette-le par sujet. Toute autre réponse m'attend. Ne ferme ni ne supprime jamais un ticket, et ne promets jamais de remboursement ni d'avoir.",
+        "card": {
+          "allows": [
+            "Un accusé de réception par ticket, jusqu'à 50 par jour",
+            "Des étiquettes sur les tickets"
+          ],
+          "holds": [
+            "Toute autre réponse à un client"
+          ],
+          "never": [
+            "Fermer ou supprimer un ticket",
+            "Promettre un remboursement ou un avoir"
+          ]
+        }
+      },
+      "es": {
+        "title": "Confirmar cada ticket",
+        "headline": "Ningún cliente espera sin respuesta.",
+        "today": "Un mensaje se queda sin respuesta hasta que alguien llega a él, y el cliente vuelve a escribir, o se va.",
+        "line": "Confirma cada ticket nuevo del servicio de ayuda en menos de una hora y lo etiqueta por tema; lo que necesite una decisión te espera.",
+        "say": "Cada hora, busca los tickets nuevos en mi servicio de ayuda. Envía a cada uno una confirmación breve y personal que diga que recibimos el mensaje y cuándo responderemos, una vez por ticket y hasta 50 al día, y etiquétalo por tema. Cualquier otra respuesta me espera. Nunca cierres ni borres un ticket, y nunca prometas un reembolso ni un crédito.",
+        "card": {
+          "allows": [
+            "Una confirmación por ticket, hasta 50 al día",
+            "Etiquetas en los tickets"
+          ],
+          "holds": [
+            "Cualquier otra respuesta a un cliente"
+          ],
+          "never": [
+            "Cerrar o borrar un ticket",
+            "Prometer un reembolso o un crédito"
+          ]
+        }
+      },
+      "it": {
+        "title": "Confermare ogni ticket",
+        "headline": "Nessun cliente aspetta senza risposta.",
+        "today": "Un messaggio resta senza risposta finché qualcuno non ci arriva, e il cliente riscrive, o se ne va.",
+        "line": "Conferma ogni nuovo ticket dell'helpdesk entro un'ora e lo etichetta per argomento; ciò che richiede una decisione ti aspetta.",
+        "say": "Ogni ora, trova i nuovi ticket nel mio helpdesk. Invia a ciascuno una breve conferma personale che dica che abbiamo ricevuto il messaggio e quando risponderemo, una volta per ticket e fino a 50 al giorno, ed etichettalo per argomento. Qualsiasi altra risposta aspetta me. Non chiudere né eliminare mai un ticket, e non promettere mai un rimborso o un credito.",
+        "card": {
+          "allows": [
+            "Una conferma per ticket, fino a 50 al giorno",
+            "Etichette sui ticket"
+          ],
+          "holds": [
+            "Qualsiasi altra risposta a un cliente"
+          ],
+          "never": [
+            "Chiudere o eliminare un ticket",
+            "Promettere un rimborso o un credito"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Confirmar cada pedido de suporte",
+        "headline": "Nenhum cliente fica à espera sem resposta.",
+        "today": "Uma mensagem fica sem resposta até alguém chegar a ela, e o cliente volta a escrever, ou vai-se embora.",
+        "line": "Confirma cada novo pedido no helpdesk em menos de uma hora e etiqueta-o por tema; o que precisar de uma decisão fica à sua espera.",
+        "say": "De hora a hora, encontra os pedidos novos no meu helpdesk. Envia a cada um uma confirmação curta e pessoal a dizer que recebemos a mensagem e quando vamos responder, uma vez por pedido e até 50 por dia, e etiqueta-o por tema. Qualquer outra resposta fica à minha espera. Nunca feches nem apagues um pedido, e nunca prometas um reembolso ou um crédito.",
+        "card": {
+          "allows": [
+            "Uma confirmação por pedido, até 50 por dia",
+            "Etiquetas nos pedidos"
+          ],
+          "holds": [
+            "Qualquer outra resposta a um cliente"
+          ],
+          "never": [
+            "Fechar ou apagar um pedido",
+            "Prometer um reembolso ou um crédito"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Elk ticket bevestigen",
+        "headline": "Geen klant wacht zonder antwoord.",
+        "today": "Een bericht blijft liggen tot iemand eraan toekomt, en de klant schrijft opnieuw, of vertrekt.",
+        "line": "Bevestigt elk nieuw ticket in de helpdesk binnen het uur en labelt het per onderwerp; alles wat een beslissing nodig heeft, wacht op jou.",
+        "say": "Zoek elk uur de nieuwe tickets in mijn helpdesk. Stuur elk ticket een korte persoonlijke bevestiging dat we het bericht hebben en wanneer we antwoorden, één keer per ticket en tot 50 per dag, en label het per onderwerp. Elk ander antwoord wacht op mij. Sluit of verwijder nooit een ticket, en beloof nooit een terugbetaling of tegoed.",
+        "card": {
+          "allows": [
+            "Eén bevestiging per ticket, tot 50 per dag",
+            "Labels op tickets"
+          ],
+          "holds": [
+            "Elk ander antwoord aan een klant"
+          ],
+          "never": [
+            "Een ticket sluiten of verwijderen",
+            "Een terugbetaling of tegoed beloven"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Potwierdzanie każdego zgłoszenia",
+        "headline": "Żaden klient nie czeka bez odpowiedzi.",
+        "today": "Wiadomość czeka bez odpowiedzi, aż ktoś się nią zajmie, a klient pisze ponownie albo odchodzi.",
+        "line": "Potwierdza każde nowe zgłoszenie w helpdesku w ciągu godziny i oznacza je tematem; wszystko, co wymaga decyzji, czeka na Ciebie.",
+        "say": "Co godzinę znajdź nowe zgłoszenia w moim helpdesku. Wyślij do każdego krótkie, osobiste potwierdzenie, że otrzymaliśmy wiadomość i kiedy odpowiemy, raz na zgłoszenie i do 50 dziennie, i oznacz je etykietą według tematu. Każda inna odpowiedź czeka na mnie. Nigdy nie zamykaj ani nie usuwaj zgłoszenia i nigdy nie obiecuj zwrotu ani uznania.",
+        "card": {
+          "allows": [
+            "Jedno potwierdzenie na zgłoszenie, do 50 dziennie",
+            "Etykiety na zgłoszeniach"
+          ],
+          "holds": [
+            "Każda inna odpowiedź do klienta"
+          ],
+          "never": [
+            "Zamykanie lub usuwanie zgłoszenia",
+            "Obiecywanie zwrotu lub uznania"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "book-and-move-appointments",
     "title": "Book and move appointments",
     "category": "operations",

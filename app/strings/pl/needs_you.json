@@ -1,5 +1,11 @@
 {
   "needs_you.a_taf": "Taf",
+  "needs_you.allow_from_now_on": "Zezwalaj od teraz",
+  "needs_you.allow_not_offered": "Ta zmiana nie jest tą, którą zaproponowano.",
+  "needs_you.allow_round_up": "Zaokrąglij do {amount}",
+  "needs_you.allow_send_this_too": "Pozwól przejść także tej",
+  "needs_you.allow_switch_off": "Gdy to wyłączone, Card się zmienia, a ta nadal czeka na Twoją odpowiedź.",
+  "needs_you.allow_title": "Zmień Card, aby takie prośby przechodziły same",
   "needs_you.answer": "Odpowiedz",
   "needs_you.answer_by": "odpowiedz do {time}",
   "needs_you.answer_gone": "Tej odpowiedzi nie ma już w tafs cloud.",

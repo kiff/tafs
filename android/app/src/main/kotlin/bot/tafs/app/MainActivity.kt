@@ -340,6 +340,7 @@ fun RootView(model: AppModel) {
           bot.tafs.app.views.CardUnitActions(discuss = model::discussCardUnit, dismiss = model::dismissCardUnit)
         },
         bot.tafs.app.views.LocalYourStepActions provides remember(model) { bot.tafs.app.views.YourStepActions(answer = model::answerYourStep) },
+        bot.tafs.app.views.LocalAllowHold provides (if (state.mode == Mode.kiff && state.canManageCards) model::openAllow else null),
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
@@ -839,6 +840,15 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onClose = model::closeListApproval,
         needsKey = state.listApprovalNeedsKey,
         onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
+        loadSecure = model::loadSecureSheet,
+        onDisconnect = model::disconnectFromReceipt,
+      )
+    }
+    // "Allow this from now on", over whatever screen the held call was on.
+    state.allow?.let { open ->
+      bot.tafs.app.views.AllowSheet(
+        open,
+        bot.tafs.app.views.AllowActions(round = model::roundAllow, sendHeld = model::setAllowSendHeld, confirm = model::startConfirmAllow, close = model::closeAllow),
       )
     }
     // A browser connection's live sign-in view, as planque serves it.

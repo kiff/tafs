@@ -435,8 +435,15 @@ data class AppState(
   val listApproval: String? = null,
   /** Whether that connection takes an API key, given on the sheet instead of a vendor's sign-in. */
   val listApprovalNeedsKey: Boolean = false,
+  /** The secure connection sheet's words, by grant, from tafs cloud (docs/secure-connection.md); and why one couldn't be read. */
+  val secureSheets: Map<String, bot.tafs.app.kiff.SecureSheet> = emptyMap(),
+  val secureSheetErrors: Map<String, String> = emptyMap(),
+  /** The key went: the receipt on the secure sheet, with the pasted key's last 4, kept only while the sheet is open. */
+  val keyReceipt: KeyReceipt? = null,
   /** The key sheet opened from Coach's card: that card, and its draft version, answered once the key went. */
   val keyForCard: KeyForCard? = null,
+  /** "Allow this from now on", open on a held call (docs/allow-from-now-on.md). */
+  val allow: AllowSheetState? = null,
   /** A connection from Connect apps that just came back signed in or connected: said at once, over the list. */
   val connectedNow: bot.tafs.app.kiff.Grant? = null,
   /**
@@ -617,6 +624,10 @@ data class AppState(
    */
   val showsAccountHalt: Boolean get() = canHalt(null) && (tafs.isNotEmpty() || !haltOf(null).running)
 
+  /** "Allow this from now on" on [call]: for someone who manages Cards, on a hold a Card change can lift, from KIFF. */
+  fun offersAllow(call: HeldCall): Boolean =
+    mode == Mode.kiff && canManageCards && allowLive && call.kiffId != null && holder(call.tafId)?.cloudId != null && bot.tafs.app.model.HoldAllow.allowable(call)
+
   /**
    * A message refused because the account or its taf is halted: while that halt holds, its Not sent row offers Resume, behind the
    * owner's confirmation, in place of a Retry that can't work. Resumed, Retry is back.
@@ -641,6 +652,12 @@ data class AppState(
 
   /** Whether this person may give a Card extra room (KIFF's cards.manage): offered only to them. */
   val canManageCards: Boolean get() = allows(kiffAccount?.capabilities, "cards.manage")
+
+  /**
+   * "Allow this from now on" is live: KIFF's `GET /v1/me` lists `holds.allow` once its draft for it (`allow-draft`) answers. Never assumed: with no
+   * list, or none, the button isn't drawn, so no one taps into a route that isn't there yet.
+   */
+  val allowLive: Boolean get() = kiffAccount?.capabilities?.contains("holds.allow") == true
 
   /**
    * Whether buying is offered here: Play Billing in this build, the balance offering Solo, packs or the First month pack to this person (`buy`), and KIFF
@@ -3598,7 +3615,147 @@ class AppModel(
 
   fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
-  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null) }
+  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null, keyReceipt = null) }
+
+  /** The secure sheet's words for [grantId], read from tafs cloud when the key sheet opens, once per grant. */
+  suspend fun loadSecureSheet(grantId: String) {
+    if (_state.value.mode != Mode.kiff || _state.value.secureSheets.containsKey(grantId)) return
+    _state.update { it.copy(secureSheetErrors = it.secureSheetErrors - grantId) }
+    val generation = accountGeneration
+    try {
+      // This phone's signed grants read: tafs cloud reads the grant from planque only as this phone.
+      planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
+      val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
+      val sheet = cloud.connectSheet(grantId, proof)
+      if (generation == accountGeneration) _state.update { it.copy(secureSheets = it.secureSheets + (grantId to sheet)) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) {
+        _state.update { it.copy(secureSheetErrors = it.secureSheetErrors + (grantId to Words.Connect.approveNotRead(why = ErrorWords.of(e)))) }
+      }
+    }
+  }
+
+  /** Disconnect from the receipt: the connection goes, as from Connect apps, and the sheet closes. */
+  fun disconnectFromReceipt(grantId: String) {
+    closeListApproval()
+    scope.launch { if (disconnect(grantId)) loadConnectApps() }
+  }
+
+  /** "Allow this from now on" tapped on a held call: the sheet opens, and tafs cloud makes the offer now, never before. */
+  fun openAllow(call: HeldCall) {
+    scope.launch { openAllowNow(call) }
+  }
+
+  /** The sheet open on [call], and tafs cloud's offer read: true when it's what was offered and can be signed. */
+  suspend fun openAllowNow(call: HeldCall): Boolean {
+    _state.update { it.copy(allow = AllowSheetState(call, busy = true)) }
+    return loadAllow(round = false)
+  }
+
+  /** Round up to the figure the offer named: tafs cloud makes the rounded draft, shown and checked the same way. */
+  fun roundAllow() {
+    if (_state.value.allow?.busy != false) return
+    _state.update { s -> s.copy(allow = s.allow?.copy(busy = true, error = null)) }
+    scope.launch { loadAllow(round = true) }
+  }
+
+  fun setAllowSendHeld(on: Boolean) = _state.update { s -> s.copy(allow = s.allow?.copy(sendHeld = on)) }
+
+  fun closeAllow() = _state.update { it.copy(allow = null) }
+
+  fun startConfirmAllow() {
+    scope.launch { confirmAllow() }
+  }
+
+  /**
+   * tafs cloud's offer for the open sheet's held call, then KIFF's draft, read by this phone: the sheet shows KIFF's own lines
+   * under tafs cloud's words, and signs only when the draft is what was offered ([bot.tafs.app.model.HoldAllow.matches]).
+   */
+  suspend fun loadAllow(round: Boolean): Boolean {
+    val open = _state.value.allow ?: return false
+    val call = open.call
+    val cloudId = _state.value.holder(call.tafId)?.cloudId
+    val exception = call.kiffId
+    if (cloudId == null || exception == null) {
+      _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = Words.NeedsYou.answerNotTaken)) }
+      return false
+    }
+    val generation = accountGeneration
+    try {
+      val answer = cloud.allowOffer(cloudId, exception, round)
+      val offer = answer.offer
+      val draft = offer?.draft?.takeIf { it.isNotEmpty() }?.let { kiff.draft(it) }
+      if (generation != accountGeneration) return false
+      val matches = offer != null && draft != null && bot.tafs.app.model.HoldAllow.matches(draft, offer, call.tafId, call.kiffId, call.proposed.action)
+      // A late answer for a call whose sheet is no longer open changes nothing. Rounding up keeps the person's switch.
+      _state.update { s ->
+        val now = s.allow
+        if (now == null || now.call.id != call.id) s
+        else s.copy(allow = now.copy(
+          answer = answer, draft = draft, matches = matches, busy = false, error = null,
+          sendHeld = if (round) now.sendHeld else offer?.sendHeld ?: true, rounded = round,
+        ))
+      }
+      return matches
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) {
+        _state.update { s ->
+          val now = s.allow
+          if (now == null || now.call.id != call.id) s
+          else s.copy(allow = now.copy(busy = false, error = Words.Version.cardNotRead(why = ErrorWords.of(e))))
+        }
+      }
+      return false
+    }
+  }
+
+  /**
+   * One signature: KIFF's draft as this phone read it, confirmed with the approval key, with the held call when the switch is on,
+   * so KIFF lets it go under the same signature. With it off, the Card changes and the call still waits for its own answer.
+   */
+  suspend fun confirmAllow(): Boolean {
+    val open = _state.value.allow ?: return false
+    val draft = open.draft ?: return false
+    if (!open.matches || open.busy || draft.confirmed) return false
+    val tenant = kiffTenant ?: return false
+    if (_state.value.approvalKeyLost) {
+      _state.update { s -> s.copy(allow = s.allow?.copy(error = KiffClient.APPROVAL_KEY_LOST)) }
+      return false
+    }
+    val hold = if (open.sendHeld) holdAnswered(open.call) else null
+    val generation = accountGeneration
+    _state.update { s -> s.copy(allow = s.allow?.copy(busy = true, error = null)) }
+    try {
+      confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", Words.NeedsYou.allowTitle)
+      if (generation != accountGeneration) return false
+      val signer = signer
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      if (hold == null) kiff.confirmDraft(draft.id, draft.version) else kiff.confirmDraft(draft.id, draft.version, hold)
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) {
+        _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = notSigned(e, Words.Common.notDoneUnconfirmed))) }
+      }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) {
+        _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = Words.Version.cardNotRead(why = ErrorWords.of(e)))) }
+      }
+      return false
+    } finally {
+      kiff.setupSigner = null
+    }
+    if (generation != accountGeneration) return false
+    closeAllow()
+    // The Card changed, and with the switch on the call went: Needs you and the taf read again.
+    refresh()
+    return true
+  }
 
   /**
    * Coach's card for an app connected with a key: its key screen, the Connect sheet's own, full screen and outside the chat, so
@@ -3628,10 +3785,15 @@ class AppModel(
    */
   suspend fun giveKeyOnSheet(grantId: String, shownDigest: String, key: String): Boolean {
     val card = _state.value.keyForCard?.takeIf { it.card.grant == grantId }
-    if (card != null) return approveCoachWithKey(card.card, shownDigest, card.draft, key).also { if (it) closeListApproval() }
-    if (!giveKey(grantId, shownDigest, key)) return false
-    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
-    loadConnectApps()
+    val given = if (card != null) approveCoachWithKey(card.card, shownDigest, card.draft, key) else giveKey(grantId, shownDigest, key)
+    if (!given) return false
+    // With tafs cloud's secure sheet open, its receipt shows there until the person closes it; else the sheet closes now.
+    if (_state.value.listApproval == grantId && _state.value.secureSheets.containsKey(grantId)) {
+      _state.update { it.copy(keyReceipt = KeyReceipt(grantId, bot.tafs.app.model.SecureSheetWords.last4(key))) }
+    } else {
+      closeListApproval()
+    }
+    if (card == null) loadConnectApps()
     return true
   }
 
@@ -3869,6 +4031,13 @@ class AppModel(
    */
   suspend fun approveCoachWithKey(c: SetupComponent, shownDigest: String, shownDraft: String?, key: String): Boolean {
     val grantId = c.grant ?: return false
+    // One fingerprint for the key and its Card (docs/secure-connection.md): asked for only by a phone with an approval key, on
+    // a card with a Card's draft. tafs cloud offers it (`key_and_cards`) or answers the two steps, and then nothing was signed.
+    if (c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost) {
+      if (approveCoach(c, shownDigest, shownDraft, together = key)) {
+        return _state.value.grants.firstOrNull { it.id == grantId }?.status == "connected"
+      }
+    }
     if (!giveKey(grantId, shownDigest, key)) return false
     val digest = _state.value.grants.firstOrNull { it.id == grantId }?.digest ?: shownDigest
     approveCoach(c, digest, shownDraft)
@@ -3902,16 +4071,16 @@ class AppModel(
    * and the vendor's sign-in, or KIFF's draft confirm), and reports what came of it, signed as a setup call. tafs cloud checks
    * the report with KIFF and the service before Coach hears "approved". The phone never builds an approval's answer.
    */
-  suspend fun approveCoach(c: SetupComponent, shownDigest: String?, shownDraft: String?) {
-    val grantId = c.grant ?: return
+  suspend fun approveCoach(c: SetupComponent, shownDigest: String?, shownDraft: String?, together: String? = null): Boolean {
+    val grantId = c.grant ?: return true
     val tenant = kiffTenant
     val cloudId = _state.value.coachCloudId
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || cloudId == null || !_state.value.planqueReady) {
       note(c.id, CoachWords.NOT_SET_UP_HERE)
-      return
+      return true
     }
-    if (_state.value.approvalKeyLost) { note(c.id, KiffClient.APPROVAL_KEY_LOST); return }
-    if (_state.value.connecting != null) { note(c.id, CoachWords.ANOTHER_APPROVAL); return }
+    if (_state.value.approvalKeyLost) { note(c.id, KiffClient.APPROVAL_KEY_LOST); return true }
+    if (_state.value.connecting != null) { note(c.id, CoachWords.ANOTHER_APPROVAL); return true }
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - c.id) }
     val generation = accountGeneration
     planque.tenant = tenant
@@ -3934,47 +4103,59 @@ class AppModel(
         shownDraft?.let { put("shown_draft", it) }
         words?.let { put("words", it.approval()) }
         session?.let { put("session", it) }
+        // This build signs the key and its Card under one fingerprint: tafs cloud offers that step only when it's asked for.
+        if (together != null) put("can", kotlinx.serialization.json.buildJsonArray { add(kotlinx.serialization.json.JsonPrimitive("key_and_cards")) })
       }
       val decision = cloud.approval(cloudId, c.id, ask, proof)
-      if (generation != accountGeneration) return
+      if (generation != accountGeneration) return true
       when (decision.outcome) {
         "answered" -> { note(c.id, decision.note); coachAnswered(cloudId, key, decision.session, decision.run) }
         "read_again" -> { note(c.id, decision.note ?: VersionWords.OUT_OF_DATE_CARD); readApprovals() }
         "sign" -> {
-          val asked = decision.ask ?: return
+          val asked = decision.ask ?: return true
+          // Asked for one signature and answered the two steps: nothing is signed here, and the key goes the two-step way.
+          if (together != null && asked.step != "key_and_cards") return false
           // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
           // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
-          if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return }
-          // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one fingerprint opens it, unless this phone
-          // holds one, and the call goes as a tap. The service decides; a KIFF without windows leaves the step as it was.
-          kiff.setupSigner = sign
-          var windowed = false
-          try {
-            windowed = asked.key == "window" && holdWindow(asked.reason)
-            // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
-            if (!windowed) {
-              if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
-            }
-          } catch (e: SignerException) {
-            note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
-            return
-          }
-          if (generation != accountGeneration) return
-          planque.signer = sign
-          if (windowed) planque.window = kiff.window?.id
-          var came = makeAskedCall(asked)
-          // planque says the window ended before anything was done: a new one, behind the fingerprint, and the call once more.
-          if (windowed && came == Came.WindowEnded) {
-            kiff.window = null
+          if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return true }
+          val came: Came
+          if (asked.step == "key_and_cards") {
+            // The key and its Card under one signature, built here from the two requests: never without the pasted key.
+            val key = together ?: run { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return true }
+            came = keyAndCards(asked, c.id, grantId, shownDigest, key, tenant) ?: return true
+          } else {
+            // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one fingerprint opens it, unless this
+            // phone holds one, and the call goes as a tap. The service decides; a KIFF without windows leaves the step as it was.
+            kiff.setupSigner = sign
+            var windowed = false
             try {
-              holdWindow(asked.reason)
+              windowed = asked.key == "window" && holdWindow(asked.reason)
+              // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
+              if (!windowed) {
+                if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
+              }
             } catch (e: SignerException) {
               note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
-              return
+              return true
             }
-            if (generation != accountGeneration) return
-            planque.window = kiff.window?.id
-            came = makeAskedCall(asked)
+            if (generation != accountGeneration) return true
+            planque.signer = sign
+            if (windowed) planque.window = kiff.window?.id
+            var made = makeAskedCall(asked)
+            // planque says the window ended before anything was done: a new one, behind the fingerprint, and the call once more.
+            if (windowed && made == Came.WindowEnded) {
+              kiff.window = null
+              try {
+                holdWindow(asked.reason)
+              } catch (e: SignerException) {
+                note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
+                return true
+              }
+              if (generation != accountGeneration) return true
+              planque.window = kiff.window?.id
+              made = makeAskedCall(asked)
+            }
+            came = made
           }
           val report = kotlinx.serialization.json.buildJsonObject {
             when (val c2 = came) {
@@ -3983,30 +4164,83 @@ class AppModel(
             }
             session?.let { put("session", it) }
           }
-          if (generation != accountGeneration) return
+          if (generation != accountGeneration) return true
           refreshConnections()
           // A fresh read proof for the report: the first was spent by the approval's read, and planque takes each signed
           // request once, within minutes (a vendor sign-in can take longer).
           val reportProof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
           val outcome = cloud.approvalReport(cloudId, c.id, asked.id, report, reportProof, tenant, sign)
-          if (generation != accountGeneration) return
+          if (generation != accountGeneration) return true
           note(c.id, outcome.note)
           coachAnswered(cloudId, key, outcome.session, outcome.run)
         }
         else -> note(c.id, Words.Coach.unknownAnswer)
       }
+      return true
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation != accountGeneration) return
+      if (generation != accountGeneration) return true
       note(c.id, Words.Coach.answerNotReached(why = ErrorWords.of(e)))
       readThread(COACH_CHAT)
+      return true
     } finally {
       planque.signer = null
       planque.window = null
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
       if (generation == accountGeneration) readWindowWords()
+    }
+  }
+
+  /**
+   * The key and its Card under one signature (`kiff.requests.v1`, docs/secure-connection.md). The phone builds both requests
+   * itself (planque's key request, as [PlanqueClient.giveKey] sends it, and KIFF's draft confirm) with one `signed_at`, hashes
+   * each message, and signs both hashes once with the approval key, behind the fingerprint. Each request goes with that one
+   * signature and the other's hash; each service rebuilds its own and checks it. Null when nothing was signed (said on the card).
+   */
+  private suspend fun keyAndCards(asked: bot.tafs.app.kiff.ApprovalAsk, noteKey: String, grantId: String, shownDigest: String?, key: String, tenant: String): Came? {
+    val k = asked.kiff ?: return Came.Of("failed", why = "tafs cloud named no draft to confirm")
+    val grant = _state.value.grants.firstOrNull { it.id == grantId } ?: return Came.Of("failed", why = "the connection isn't on this phone")
+    // What the person read: the grant as shown, and KIFF's words for its profile when it has one.
+    if (!grant.digestMatches || grant.digest != shownDigest) { note(noteKey, VersionWords.OUT_OF_DATE_CARD); return null }
+    val words = grant.request.profile?.let { _state.value.profileWordsFor(grant) ?: run { note(noteKey, Words.Connect.profileWordsUnread); return null } }
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    kiff.tenant = tenant
+    var signedAt = ""
+    var keyHash = ""
+    var confirmHash = ""
+    approvalReason = asked.reason
+    val signature = try {
+      // The time is taken once the person approved, as for any signed call: inside the prompt's success.
+      signer.signApproval(asked.reason) {
+        signedAt = kiff.nextSignedAt()
+        keyHash = KiffClient.messageHash(planque.keyMessage(grant, key, words, signedAt))
+        confirmHash = KiffClient.messageHash(kiff.confirmMessage(k.draft, k.version, signedAt))
+        KiffClient.requestsMessage(tenant, signedAt, keyHash, confirmHash)
+      }
+    } catch (e: SignerException) {
+      note(noteKey, notSigned(e, Words.Common.notDoneUnconfirmed))
+      return null
+    }
+    val given = try {
+      planque.giveKeyTogether(grant, key, words, signedAt, signature, with = confirmHash)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return Came.Of("failed", why = e.message ?: "the key didn't go in")
+    }
+    // The key first, then the Card: a Card is never confirmed for a key that didn't connect.
+    if (given.status != "connected") return Came.Of("not_connected", status = given.status)
+    return try {
+      kiff.confirmDraftTogether(k.draft, k.version, signedAt, signature, with = keyHash)
+      Came.Of("confirmed")
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // The key went in and the Card didn't: tafs cloud says so, and Coach's next card asks for the Card alone.
+      Came.Of("failed", why = e.message ?: "the Card wasn't confirmed")
     }
   }
 
@@ -6918,6 +7152,20 @@ class AppModel(
           val draft = c.draft ?: return null
           if (k.draft != draft || shownDraft == null || k.version != shownDraft) null else "tafs.cards.v1|$tenant|$draft|${k.version}"
         }
+        // The key and its Card under one signature the phone builds itself (`kiff.requests.v1`): no message from tafs cloud,
+        // and the card's grant at the digest shown, and its draft at the version shown, as for each step alone.
+        "key_and_cards" -> {
+          val p = asked.planque ?: return null
+          val k = asked.kiff ?: return null
+          val digest = runCatching { p.body.jsonObject["digest"]?.jsonPrimitive?.content }.getOrNull() ?: return null
+          val draft = c.draft ?: return null
+          when {
+            asked.scheme != "kiff.requests.v1" -> null
+            p.grant != c.grant || shownDigest == null || digest != shownDigest -> null
+            k.draft != draft || shownDraft == null || k.version != shownDraft -> null
+            else -> ""
+          }
+        }
         else -> null
       }
     }
@@ -7016,5 +7264,21 @@ sealed interface ReceiptsResult {
   data class NotExported(val why: String) : ReceiptsResult
 }
 
+/** The receipt on the secure sheet: which grant got its key, and the pasted key's last 4 characters, never kept after it closes. */
+data class KeyReceipt(val grant: String, val last4: String)
+
 /** The key sheet opened from Coach's approval card: the card, answered once the key went, and the draft version it showed. */
 data class KeyForCard(val card: SetupComponent, val draft: String?)
+
+/** "Allow this from now on", open on [call]: tafs cloud's answer, KIFF's draft as this phone read it, and whether it's what was offered. */
+data class AllowSheetState(
+  val call: HeldCall,
+  val answer: bot.tafs.app.kiff.AllowAnswer? = null,
+  val draft: AgentDraft? = null,
+  val matches: Boolean = false,
+  val busy: Boolean = false,
+  val error: String? = null,
+  val sendHeld: Boolean = true,
+  /** The rounded figure was asked for: the offer no longer offers to round. */
+  val rounded: Boolean = false,
+)

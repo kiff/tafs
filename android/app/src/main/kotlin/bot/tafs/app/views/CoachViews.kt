@@ -314,21 +314,27 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
       !state.planqueReady -> Text(CoachWords.NOT_CONNECTABLE, style = scaled(14, color = Theme.soft))
       grant == null -> Text(Words.Connect.readingAsks, style = scaled(14, color = Theme.soft))
       else -> {
+        // Already connected, as tafs cloud marks it: its one line, then Its Card; the connection's text isn't asked again.
+        val done = c.connection?.takeIf { it.done && it.words.isNotBlank() }
+        if (done != null) Text(done.words, style = scaled(14, FontWeight.Medium, Theme.ink))
         // planque's own words for what it will do, never Coach's.
-        Text(grant.text, style = scaled(14, color = Theme.ink))
-        Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
+        if (done == null) {
+          Text(grant.text, style = scaled(14, color = Theme.ink))
+          Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
+        }
         // KIFF's words for the connection's profile, verbatim and in order (KIFF's profile contract, `kiff.words.v1`): what the owner's approval signs.
         val profiled = grant.request.profile != null
         val words = state.profileWordsFor(grant)
         if (profiled) {
           LaunchedEffect(grant.id, state.profileDigest(grant)) { actions.loadProfileWords(grant.id) }
           when {
+            done != null -> Unit
             words != null -> ProfileWordsLines(words)
             state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))
             else -> Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
           }
         }
-        grant.terms?.takeIf { it.isNotEmpty() }?.let { terms ->
+        grant.terms?.takeIf { it.isNotEmpty() && done == null }?.let { terms ->
           Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
           if (details) terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) }
         }

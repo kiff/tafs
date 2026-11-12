@@ -1252,6 +1252,12 @@
         <item quantity="other">%2$s · %1$s tappe</item>
     </plurals>
     <string name="needs_you_a_taf">Un taf</string>
+    <string name="needs_you_allow_from_now_on">Consenti d\'ora in poi</string>
+    <string name="needs_you_allow_not_offered">Questa modifica non è quella proposta.</string>
+    <string name="needs_you_allow_round_up">Arrotonda a %1$s</string>
+    <string name="needs_you_allow_send_this_too">Lascia passare anche questa</string>
+    <string name="needs_you_allow_switch_off">Se è disattivato, la Card cambia e questa aspetta ancora la tua risposta.</string>
+    <string name="needs_you_allow_title">Modifica la Card perché richieste così passino da sole</string>
     <string name="needs_you_answer">Rispondi</string>
     <string name="needs_you_answer_by">rispondi entro le %1$s</string>
     <string name="needs_you_answer_gone">Questa risposta non è più su tafs cloud.</string>

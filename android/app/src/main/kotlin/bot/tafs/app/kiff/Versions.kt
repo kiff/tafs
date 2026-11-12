@@ -108,7 +108,17 @@ data class DraftGrant(
   val action: String,
   val title: String? = null,
   @SerialName("per_action_max") val perActionMax: List<DraftCap>? = null,
+  /** The states of the thing acted on that the grant is limited to; none, any. */
+  @SerialName("entity_states") val entityStates: List<String>? = null,
+  /** The named resources the grant is limited to ("order_id": ["ord_123"]); none, any. */
+  val resources: DraftResources? = null,
+  /** The answers besides approve and refuse the owner may give on a held call under this grant. */
+  @SerialName("next_steps") val nextSteps: List<String>? = null,
 )
+
+/** A grant's scope: one parameter, and the values it may act on. */
+@Serializable
+data class DraftResources(val parameter: String = "", val values: List<String> = emptyList())
 
 /** A per-call cap: `unit` and `scale` when the tool declares them. */
 @Serializable
@@ -116,7 +126,17 @@ data class DraftCap(val quantity: String, val max: Long = 0, val unit: String? =
 
 /** A total over a window. */
 @Serializable
-data class DraftAggregate(val quantity: String, val limit: Long = 0, val window: String = "day", val unit: String? = null, val scale: Int? = null)
+data class DraftAggregate(
+  val quantity: String,
+  val limit: Long = 0,
+  val window: String = "day",
+  val unit: String? = null,
+  val scale: Int? = null,
+  /** What the total counts: `attempts` or `effects`; none is KIFF's default for the quantity. */
+  val measure: String? = null,
+  /** A string parameter: the limit holds for each of its values apart ("1 a week per invoice"); none, one limit for every call. */
+  val per: String? = null,
+)
 
 /** A Card's terms alone: what `current` holds. */
 @Serializable
@@ -125,6 +145,18 @@ data class DraftTerms(
   val aggregates: List<DraftAggregate>? = null,
   @SerialName("on_exceed") val onExceed: String? = null,
   @SerialName("lines") val kiffLines: List<String>? = null,
+  /** Every holder of the Card, the first its subject. */
+  val subjects: List<String>? = null,
+  @SerialName("valid_from") val validFrom: String? = null,
+  @SerialName("valid_until") val validUntil: String? = null,
+  val subject: String? = null,
+  val domain: String? = null,
+  val environment: String? = null,
+  /** The time zone its daily totals reset in. */
+  val location: String? = null,
+  /** How long a held call waits for its answer, in seconds; 0 or none, KIFF's default. */
+  @SerialName("hold_expiry_seconds") val holdExpirySeconds: Long? = null,
+  @SerialName("revoked_at") val revokedAt: String? = null,
 ) {
   val lines: List<String> get() = DraftCard(grants, aggregates, onExceed = onExceed, kiffLines = kiffLines).lines
 }
@@ -143,6 +175,18 @@ data class DraftCard(
   @SerialName("on_exceed") val onExceed: String? = null,
   /** KIFF's own words for the Card: shown as they are when sent. The app words it only for a KIFF that doesn't send them. */
   @SerialName("lines") val kiffLines: List<String>? = null,
+  /** Every holder the Card would have; none on a revision keeps the Card's, unless [subject] names another first holder. */
+  val subjects: List<String>? = null,
+  @SerialName("valid_from") val validFrom: String? = null,
+  @SerialName("valid_until") val validUntil: String? = null,
+  val subject: String? = null,
+  val domain: String? = null,
+  val environment: String? = null,
+  /** The time zone its daily totals reset in; none on a revision keeps the Card's. */
+  val location: String? = null,
+  /** How long a held call waits ("10m", "24h"); none or "keep" on a revision keeps the Card's. */
+  @SerialName("hold_expiry") val holdExpiry: String? = null,
+  @SerialName("revoked_at") val revokedAt: String? = null,
 ) {
   /** Past a limit, the call asks the owner first: the lines say so, as KIFF's own words do. */
   val asksPastLimits: Boolean get() = onExceed == "owner"
@@ -224,6 +268,8 @@ data class AgentDraft(
   @SerialName("claim_secret") val claimSecret: String? = null,
   /** What became of the held call a confirm named (KiffClient.confirmDraft with a hold): "approved", or why not. */
   val hold: DraftHold? = null,
+  /** The held call a draft was made from (KIFF's allow-draft), when KIFF says. */
+  @SerialName("from_hold") val fromHold: String? = null,
 ) {
   val confirmed: Boolean get() = status == "confirmed"
 

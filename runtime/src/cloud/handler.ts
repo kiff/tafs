@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
-import { type BalanceView, balanceView, type CreditRun, CreditsError, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
+import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
@@ -22,7 +22,9 @@ import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from ".
 import { handedByOf, requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { type DeadHandoff, deadHandoffs, deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
+import { allowOffer } from "./allow.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
+import { sheetOf, takesKey } from "./sheet.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
@@ -47,7 +49,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { ApprovalError, askOf, checkSigned, decide as decideApproval, reportOf, settle as settleApproval } from "./approval.js";
+import { ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 
@@ -99,6 +101,7 @@ import { RECIPES } from "../recipes.js";
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
+ *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -113,6 +116,7 @@ import { RECIPES } from "../recipes.js";
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
+ *   POST /v1/tafs/{id}/holds/{exception}/allow  {round?}: "Allow this from now on" on a held call: KIFF's draft with the narrowest Card change, checked and worded, with what it would have done (docs/allow-from-now-on.md)
  *   POST /v1/tafs/{id}/components/{component}/answer  {answer, session?}: the person's answer to a card that waits for it, as data
  *   POST /v1/tafs/{id}/components/{component}/approval  {grant, shown_digest?, draft?, shown_draft?, words?, session?}: Approve tapped on an approval card; tafs cloud decides what needs signing, if anything, and answers Coach itself when nothing does (kiff/tafs#413)
  *   POST /v1/tafs/{id}/components/{component}/approval/{ask}  {result, status?, why?}: what came of the signed call, signed as a setup call (KIFF-Device-Signature); tafs cloud checks it and answers Coach approved or failed
@@ -661,6 +665,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 5 && parts[3] === "tafs") {
     return tafCredits(event, await person(event, deps), parts[4] ?? "", deps);
   }
+  if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "sheet" && method === "GET") {
+    return grantSheet(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
+  }
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
   if (method === "GET" && parts.length === 3 && parts[1] === "recipes" && parts[2] === "gallery") return gallery(event, await person(event, deps), deps);
@@ -777,12 +784,15 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "work") {
     // Where its work stands, for its page (docs/reliability.md): every line and time written here.
     const now = deps.now?.() ?? new Date();
-    const [runs, v, sent, fired] = await Promise.all([
+    const [runs, v, sent, fired, credits] = await Promise.all([
       agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
       view(taf, me, deps),
       deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
       // A taf with no schedule has no firings. A read that fails leaves the skipped firings and the health out.
       taf.unscheduled ? Promise.resolve([] as Fired[]) : deps.agents.scheduleFirings(me.tenantID, taf.id, HEALTH_FIRINGS).catch(() => undefined),
+      // Each run's credits, from KIFF's usage record with the person's session: a line the apps draw as is.
+      // Read alongside the rest, so the page waits on no extra round trip; it never throws (an empty map).
+      runCreditsOf(bearer(event), taf.id, langOf(event), deps.fetch, deps.kiffBase),
     ]);
     const health = fired ? healthOf(runs, fired, now) : undefined;
     const zone = me.timeZone ?? "UTC";
@@ -790,7 +800,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event), credits), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
       ...waitingOf(runs, fired, taf, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
@@ -960,6 +970,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
     if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     return goOn(me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "allow") {
+    need(me, "cards.manage");
+    return allowRoute(event, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 6 && method === "POST" && action === "components" && parts[5] === "answer") {
     return answerRoute(event, me, taf, parts[4] ?? "", deps);
@@ -2380,7 +2394,9 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     ? (await Promise.all(picked.filter((x) => x.kind === "chat").map((x) => driveRecaps(deps.coach!, me.tenantID, x.id).catch(() => [])))).flat().map((r) => ({ ...r, words: endSaid(r.why, lang) }))
     : [];
   drives.sort((a, b) => a.at.localeCompare(b.at));
-  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
+  const shown = components.slice(-CHAT.maxThread);
+  await markConnected(me.tenantID, shown, deps, lang);
+  return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -2543,6 +2559,26 @@ function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang
   if (b.answer === "declined") return w.approval_answer_declined;
   if (b.answer.startsWith("failed: ")) return w.approval_answer_failed(b.answer.slice("failed: ".length));
   return undefined;
+}
+
+/**
+ * An approval card whose connection tafs cloud saw connected says only that (`connection: {done, words}`), so a
+ * later card, such as the taf's Card after its key went in, never repeats the connection's text as if it still
+ * waited (docs/secure-connection.md). The apps draw that line and the card's Card alone. A note that can't be
+ * read leaves the card as it was.
+ */
+async function markConnected(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
+  if (!deps.coach) return;
+  const w = wordsIn(lang);
+  const notes = new Map<string, Promise<unknown>>();
+  for (const c of components) {
+    const card = c.component as { type?: unknown; grant?: unknown } | undefined;
+    if (card?.type !== "approval" || typeof card.grant !== "string" || !card.grant) continue;
+    if (!notes.has(card.grant)) notes.set(card.grant, deps.coach.get(connectedKey(tenant, card.grant)).catch(() => undefined));
+    const note = (await notes.get(card.grant)) as Connected | undefined;
+    if (!note || typeof note.vendor !== "string") continue;
+    c.component = { ...card, connection: { done: true, words: w.sheet_done(note.vendor, note.read_only === true) } };
+  }
 }
 
 /** An `answered` event's body as the app shows it. */
@@ -2974,6 +3010,8 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     tenant: me.tenantID, taf: taf.id, component, token: bearer(event), proof: event.headers?.["planque-device-signature"] ?? "",
     store: deps.coach, planqueBase: deps.planqueBase, kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, now: deps.now?.() ?? new Date(),
     newID: () => `ask_${randomBytes(9).toString("hex")}`, lang: langOf(event),
+    // The key and its Card under one fingerprint, once KIFF and the connection server take kiff.requests.v1.
+    keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on",
     // The prompt names the taf being set up, by its name: the card is Coach's, so not `taf`'s.
     tafName: async (agent) => (agent ? (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === agent)?.name : undefined),
   };
@@ -4449,6 +4487,22 @@ async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: s
  * sooner. `waiting` when KIFF still holds a call of the run, or the run
  * already went on.
  */
+/**
+ * POST /v1/tafs/{id}/holds/{exception}/allow, {} or {round: true}: "Allow this from now on" tapped on a held call
+ * (docs/allow-from-now-on.md). KIFF builds the draft with the narrowest change; tafs cloud checks that change
+ * against the hold's breaches on its own and words it, with what it would have done over the last 30 days. Only a
+ * draft: the phone reads it from KIFF, checks it, and confirms it with its own signature.
+ */
+async function allowRoute(event: HTTPEvent, taf: Taf, exception: string, deps: Deps): Promise<unknown> {
+  if (!exception) throw new HTTPError(404, "not found");
+  const body = parseBody(event);
+  if (body.round !== undefined && typeof body.round !== "boolean") throw new HTTPError(400, "round is true or false");
+  return allowOffer(exception, body.round === true, {
+    token: bearer(event), agent: taf.kiffAgent, lang: langOf(event), fetch: deps.fetch, base: deps.kiffBase,
+    log: (line) => console.warn(line),
+  });
+}
+
 async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): Promise<unknown> {
   if (!exception) throw new HTTPError(404, "not found");
   try {
@@ -5104,12 +5158,13 @@ export function heldLine(text: string): boolean {
 }
 
 /**
- * The taf's messages that were lines before tool calls, by `<run>.<seq>`: a message one short line long
- * (heldLine) that its run's tool calls follow, and after which the run writes again before it shows a card,
- * waits on the owner (the next turn is marked resumed, or the owner's answer to a card comes first), ends or reads
- * the owner. A message the run waits on ("Falta que apruebes la conexión…", then the call that asks for the
- * approval) stays.
- * The live stream does the same (relay). kiff/agents records a turn's text before its calls.
+ * The taf's messages that were notes before its tool calls, by `<run>.<seq>`: a message its run's tool calls
+ * follow. Coach writes with progress notes (`thinking: "updates"`), so the stream showed it only on the live line,
+ * and kiff/agents records it as the turn's text. Only a run's final words reach the chat: a note is never a
+ * message, whatever follows its calls (the run writing again, a card, the owner's answer to one, a pause), so a
+ * retry or a self-correction before a card never reaches the person. One exception: a run that ends with no
+ * words after its tools keeps its last note as its message, and never an earlier one.
+ * The live stream does the same (relay).
  */
 export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; kind: string; body?: unknown }>): Set<string> {
   const out = new Set<string>();
@@ -5122,20 +5177,15 @@ export function preToolLines(events: ReadonlyArray<{ run: string; seq: number; k
       pending.delete(e.run);
       continue;
     }
-    // The first turn after a pause: the run waited on the owner after them, so they were its messages.
-    if (e.kind === "usage") {
-      if (turnTiming(e.body)?.resumed) called.delete(e.run);
-      continue;
-    }
     if (e.kind !== "agent_message" && e.kind !== "report" && e.kind !== "owner_message" && e.kind !== "component" && e.kind !== "answered") continue;
-    // The run wrote again: what its calls followed were lines. A card, the owner's words or their answer to a card
-    // (a connection's approval) first: they were messages, as kiff/agents' grader reads them (kiff/agents#347).
-    if (e.kind === "agent_message" || e.kind === "report") for (const id of called.get(e.run) ?? []) out.add(id);
+    // Something shown or said after the run's calls: what they followed were notes.
+    for (const id of called.get(e.run) ?? []) out.add(id);
     called.delete(e.run);
     pending.delete(e.run);
     const text = (e.body as { text?: unknown } | undefined)?.text;
-    if (e.kind === "agent_message" && typeof text === "string" && text.trim() && heldLine(text)) pending.set(e.run, `${e.run}.${e.seq}`);
+    if (e.kind === "agent_message" && typeof text === "string" && text.trim()) pending.set(e.run, `${e.run}.${e.seq}`);
   }
+  // Nothing after the calls: the last note is the run's message (an earlier one was followed by that note, so it's out).
   return out;
 }
 
@@ -5334,16 +5384,17 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     return pace.flush();
   };
   // A turn's text is held while it is still one short line (heldLine), and shown on the live line. At its tool
-  // call it is kept (`stash`): it was the turn's line if the run writes again after its tools, and is dropped
-  // then; it was the run's message if a card or the end comes first ("Falta que apruebes la conexión…", then the
-  // card the run waits on), and goes out as text then. Anything else in the turn makes the held text the answer.
-  // Whatever goes out as text sets the line to thinking first, at once, so the words never show twice. A started
-  // run's only: a resumed one sends no text. The stored thread does the same (preToolLines).
+  // call it is kept (`stash`) as a note: dropped if the run writes again after its tools or shows a card (the card
+  // speaks for itself), and sent as text only if the run ends first, and then only the last one. Anything else in
+  // the turn makes the held text the answer. Whatever goes out as text sets the line to thinking first, at once, so
+  // the words never show twice. A started run's only: a resumed one sends no text. The stored thread does the same
+  // (preToolLines).
   let held = "";
   let holding = true;
   let stash: string[] = [];
   const release = (): string => {
-    const words = [...stash, held].filter((t) => t.trim()).join("\n\n");
+    // The run's last words only: the turn's own text, else the last note its calls followed, never an earlier one.
+    const words = held.trim() ? held : (stash.at(-1) ?? "");
     stash = [];
     held = "";
     if (!words) return "";
@@ -5376,6 +5427,8 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
       return as();
     }
     if (d.kind === "thinking" || d.kind === "update") return as();
+    // A card speaks for itself: what the run wrote before its calls was a note, never the message before it.
+    if (d.kind === "component") stash = [];
     return release() + as();
   };
   try {
@@ -7573,6 +7626,44 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
     throw err;
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * GET /v1/connect/grants/{grant}/sheet: the secure connection sheet's words for a grant that takes a key
+ * (docs/secure-connection.md), read with the phone's own read of its connected apps (`Planque-Device-Signature`,
+ * forwarded unchanged), in the request's language. The logo is the catalog entry's, served by tafs cloud, and
+ * left out when the catalog can't be read: the sheet never waits on it.
+ */
+async function grantSheet(event: HTTPEvent, id: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  need(me, "cards.manage");
+  if (!deps.planqueBase) throw new HTTPError(503, "Connect apps isn't set up here");
+  if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(id)) throw new HTTPError(404, "no such connection");
+  const fetchFn = deps.fetch ?? fetch;
+  let grants: Awaited<ReturnType<typeof readGrants>>;
+  try {
+    grants = await readGrants(deps.planqueBase, me.tenantID, event.headers?.["planque-device-signature"] ?? "", fetchFn);
+  } catch (err) {
+    if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message);
+    throw err;
+  }
+  const grant = grants.find((g) => g.id === id);
+  if (!grant) throw new HTTPError(404, "no such connection");
+  if (!takesKey(grant)) throw new HTTPError(409, "this connection takes no key");
+  const entry = (grant.request as { catalog_entry?: unknown }).catalog_entry;
+  let app: { name?: string; logo?: string } = {};
+  if (typeof entry === "string" && entry) {
+    try {
+      const page = await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), grant.vendor ?? "");
+      const found = page.apps.find((a) => a.entry === entry);
+      if (found) {
+        const logos = found.icon ? await nameLogos(deps.coach, [found.icon], new Date()) : new Map<string, string>();
+        app = { name: found.title || found.vendor, ...(found.icon && logos.has(found.icon) ? { logo: logos.get(found.icon)! } : {}) };
+      }
+    } catch (err) {
+      console.warn(`sheet: the catalog couldn't be read for ${id} (${err instanceof Error ? err.message : String(err)}); no logo`);
+    }
+  }
+  return sheetOf(grant, langOf(event), app);
 }
 
 /** A removed taf's live connection, and the live tafs whose Cards still use it, so Clear keeps it. */

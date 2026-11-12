@@ -1,0 +1,1 @@
+- **Android 1.13.1:** "Allow this from now on" shows only once the service says it's ready, so no one taps a button that can't work yet.

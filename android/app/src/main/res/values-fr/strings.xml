@@ -1252,6 +1252,12 @@
         <item quantity="other">%2$s · %1$s crans</item>
     </plurals>
     <string name="needs_you_a_taf">Un taf</string>
+    <string name="needs_you_allow_from_now_on">Autoriser désormais</string>
+    <string name="needs_you_allow_not_offered">Ce changement n\'est pas celui qui était proposé.</string>
+    <string name="needs_you_allow_round_up">Arrondir à %1$s</string>
+    <string name="needs_you_allow_send_this_too">Laisser passer celle-ci aussi</string>
+    <string name="needs_you_allow_switch_off">Désactivé, la Card change et celle-ci attend toujours votre réponse.</string>
+    <string name="needs_you_allow_title">Modifier la Card pour que ce type de demande passe tout seul</string>
     <string name="needs_you_answer">Répondre</string>
     <string name="needs_you_answer_by">répondez avant %1$s</string>
     <string name="needs_you_answer_gone">Cette réponse n\'est plus sur tafs cloud.</string>

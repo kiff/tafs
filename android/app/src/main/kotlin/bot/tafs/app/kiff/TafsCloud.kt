@@ -778,6 +778,23 @@ class TafsCloud(
 
   private fun escaped(s: String): String = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 
+  /**
+   * `POST /v1/tafs/{id}/holds/{exception}/allow` (docs/allow-from-now-on.md), on the owner's tap: tafs cloud makes the draft and asks
+   * KIFF for the replay, then answers the offer, or why there's none. [round] asks for the rounded figure the offer named.
+   */
+  suspend fun allowOffer(id: String, exception: String, round: Boolean = false): AllowAnswer =
+    KiffClient.json.decodeFromString(
+      String(send("POST", "/v1/tafs/${escaped(id)}/holds/${escaped(exception)}/allow", (if (round) "{\"round\":true}" else "{}").toByteArray())),
+    )
+
+  /**
+   * The secure connection sheet's words for key grant [grant] (docs/secure-connection.md), read with this phone's signed grants
+   * read ([proof]): 403 without it, 404 for a grant this person can't see, 409 for one that takes no key.
+   */
+  suspend fun connectSheet(grant: String, proof: String?): SecureSheet = KiffClient.json.decodeFromString(
+    String(send("GET", "/v1/connect/grants/${escaped(grant)}/sheet", extra = proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())),
+  )
+
   private suspend inline fun <reified T> get(path: String): T {
     val bytes = send("GET", path)
     return KiffClient.json.decodeFromString(String(bytes))

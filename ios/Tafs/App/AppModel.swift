@@ -1153,6 +1153,8 @@ final class AppModel: ObservableObject {
         let answer: String?
     }
     @Published var requestedHold: HoldRequest?
+    /// "Allow this from now on", open on a held call (docs/allow-from-now-on.md).
+    @Published var allow: AllowSheet?
 
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
@@ -2039,6 +2041,16 @@ final class AppModel: ObservableObject {
 
     /// Gives an API-key grant its key, as shown, behind Face ID. A grant with a profile needs
     /// KIFF's words for it shown, as approving does.
+    /// tafs cloud's words for a key's sheet (docs/secure-connection.md), read with this phone's
+    /// signed grants read, as Connect apps is. Nil when they can't be read: the sheet then
+    /// draws the app's own lines.
+    func connectionSheet(grant: String) async -> TafsCloud.ConnectionSheet? {
+        let signer = self.signer
+        planque.tenant = kiffTenant
+        let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+        return try? await cloud.connectionSheet(grant: grant, proof: proof)
+    }
+
     func giveKey(grantID: String, shown: String?, key: String) async -> Bool {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")
@@ -2397,6 +2409,138 @@ final class AppModel: ObservableObject {
             scriptPosition[taf.id] = position + 1
             propose(script[position], by: taf.id)
         }
+    }
+
+    // MARK: Allow this from now on
+
+    /// "Allow this from now on", open on `call`: tafs cloud's answer, KIFF's draft as this
+    /// phone read it, and whether it's what was offered.
+    struct AllowSheet: Identifiable, Equatable {
+        let call: HeldCall
+        var answer: TafsCloud.AllowAnswer?
+        var draft: KIFFClient.AgentDraft?
+        var matches = false
+        var busy = false
+        var error: String?
+        /// "Let this one go out too": the held call goes with the same signature.
+        var sendHeld = true
+        /// The rounded figure was asked for: the sheet no longer offers to round.
+        var rounded = false
+        var id: UUID { call.id }
+    }
+
+    /// "Allow this from now on" on `call`: for someone who manages Cards, on a hold a Card
+    /// change can lift, from KIFF, once the service says the feature is live. Decided from
+    /// the held call and the account's capabilities, with no request.
+    func offersAllow(_ call: HeldCall) -> Bool {
+        mode == .kiff && Self.allowIsLive(kiffAccount?.capabilities) && canManageCards && cloudTaf(for: call.tafID) != nil && HoldAllow.allowable(call)
+    }
+
+    /// Whether "Allow this from now on" is live: the account's capabilities name `holds.allow`.
+    /// The service says when, and the app never guesses: a list without it, or no list at all,
+    /// shows no button, so nobody taps into a route that isn't there yet.
+    nonisolated static func allowIsLive(_ capabilities: [String]?) -> Bool {
+        capabilities?.contains("holds.allow") ?? false
+    }
+
+    /// "Allow this from now on" tapped: the sheet opens, and tafs cloud makes the offer now.
+    func openAllow(_ call: HeldCall) {
+        allow = AllowSheet(call: call, busy: true)
+        Task { await loadAllow(round: false) }
+    }
+
+    /// Round up to the figure the offer named: tafs cloud makes the rounded draft, which is
+    /// shown and checked the same way. The app never rounds.
+    func roundAllow() {
+        guard let open = allow, !open.busy else { return }
+        allow?.busy = true
+        allow?.error = nil
+        Task { await loadAllow(round: true) }
+    }
+
+    /// tafs cloud's offer for the open sheet's held call, then KIFF's draft, read by this
+    /// phone. A late answer for a call whose sheet is no longer open changes nothing, and
+    /// rounding up keeps the person's switch.
+    @discardableResult
+    func loadAllow(round: Bool) async -> Bool {
+        guard let open = allow else { return false }
+        let call = open.call
+        guard let taf = cloudTaf(for: call.tafID)?.id, call.kiffID != nil else {
+            allow?.busy = false
+            allow?.error = Words.NeedsYou.answerNotTaken
+            return false
+        }
+        let gen = accountGeneration
+        do {
+            let read = try await HoldAllow.read(cloud: cloud, kiff: kiff, taf: taf, call: call, round: round)
+            guard gen == accountGeneration, var now = allow, now.call.id == call.id else { return false }
+            now.answer = read.answer
+            now.draft = read.draft
+            now.matches = read.matches
+            now.busy = false
+            now.error = nil
+            if !round { now.sendHeld = read.answer.offer?.sendHeld ?? true }
+            now.rounded = round
+            allow = now
+            return read.matches
+        } catch {
+            guard gen == accountGeneration, allow?.call.id == call.id else { return false }
+            allow?.busy = false
+            allow?.error = Words.Version.cardNotRead(why: "\(error.localizedDescription)")
+            return false
+        }
+    }
+
+    /// One signature: KIFF's draft as this phone read it, confirmed with the approval key,
+    /// with the held call when the switch is on, so KIFF lets it go under the same signature.
+    /// With it off, the Card changes and the call still waits for its own answer.
+    @discardableResult
+    func confirmAllow() async -> Bool {
+        guard let open = allow, let draft = open.draft, open.matches, !open.busy, !draft.confirmed, let tenant = kiffTenant else { return false }
+        var hold: (id: String, version: Int)?
+        if open.sendHeld {
+            // The call goes only as the person saw it: without its version, nothing is signed.
+            guard let id = open.call.kiffID, let version = open.call.accountingVersion else {
+                allow?.error = Words.NeedsYou.answerNotTaken
+                return false
+            }
+            hold = (id, version)
+        }
+        let gen = accountGeneration
+        allow?.busy = true
+        allow?.error = nil
+        let signer = self.signer
+        do {
+            _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8), reason: Words.NeedsYou.allowTitle, grants: true)
+        } catch {
+            if gen == accountGeneration, allow?.call.id == open.call.id {
+                allow?.busy = false
+                quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            if let hold {
+                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version, hold: hold.id, accountingVersion: hold.version)
+            } else {
+                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
+            }
+        } catch {
+            if gen == accountGeneration, allow?.call.id == open.call.id {
+                allow?.busy = false
+                allow?.error = Words.Version.cardNotRead(why: "\(error.localizedDescription)")
+            }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        allow = nil
+        // The Card changed, and with the switch on the call went: Needs you and the taf read again.
+        await refresh()
+        return true
     }
 
     // MARK: The owner answers
@@ -4039,7 +4183,7 @@ final class AppModel: ObservableObject {
                 chatErrors[tafID] = error.localizedDescription
                 return .notTried
             }
-            keepUnsent(text, tafID, why: error.localizedDescription)
+            keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error))
             return .kept
         }
     }
@@ -4234,8 +4378,8 @@ final class AppModel: ObservableObject {
         return working != nil || s.awaiting != nil || s.live != nil
     }
 
-    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil) {
-        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle))
+    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil, halted: String? = nil) {
+        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle, halted: halted))
     }
 
     /// Why a message wasn't sent when the owner wrote too many too fast: the runtime's limit
@@ -4437,7 +4581,7 @@ final class AppModel: ObservableObject {
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry. The app
                 // never resends it on its own.
-                keepUnsent(text, tafID, why: error.localizedDescription)
+                keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error))
                 return true
             }
         }
@@ -6026,7 +6170,13 @@ final class AppModel: ObservableObject {
         /// over didn't read): kept across launches only once Retry, Edit or Delete takes the
         /// row, so a restart before that shows it again.
         var settle: String? = nil
+        /// Refused because of a halt, as tafs cloud says: the whole `account`, or the `taf` on
+        /// its own. The bubble then offers Resume, which Retry can't stand in for.
+        var halted: String? = nil
     }
+
+    /// What a send's failure says of a halt: tafs cloud's `halted`, or nil for any other failure.
+    nonisolated static func haltOf(_ error: Error) -> String? { (error as? TafsCloud.CloudError)?.halted }
     @Published private(set) var setupUnsent: [UnsentMessage] = []
     /// What the owner is typing to Coach, not sent yet (kiff/tafs#245, item 3): kept here, not in the
     /// chat's view, so closing Coach mode, opening it again or switching tabs keeps it, as a
@@ -6726,7 +6876,7 @@ final class AppModel: ObservableObject {
                 fileNotices[Self.setupFiles] = error.localizedDescription
                 return .notTried
             }
-            setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
+            setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error)))
             return .kept
         }
     }
@@ -6788,7 +6938,7 @@ final class AppModel: ObservableObject {
                 return false
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.
-                setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
+                setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error)))
                 return true
             }
         }
@@ -7377,6 +7527,137 @@ final class AppModel: ObservableObject {
             cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
             await loadSetupThread()
         }
+    }
+
+    /// How giving a key and its Card under one Face ID went (`approveKeyAndCard`).
+    enum KeyAndCard: Equatable {
+        /// The key went in and the Card is confirmed, under one signature.
+        case done
+        /// tafs cloud didn't ask for the one signature (it isn't on there, or this card has no
+        /// Card drafted): nothing was signed, and the key is given by itself, as before.
+        case notOffered
+        /// It was asked and didn't finish. The card's note says why.
+        case failed
+    }
+
+    /// A key and its taf's Card under one Face ID (docs/secure-connection.md), from the key's
+    /// sheet opened on Coach's card. The phone tells tafs cloud it can sign the step; when tafs
+    /// cloud asks for it, the phone checks the ask names this card's grant, the digest it showed,
+    /// this card's draft and the version it showed, builds both requests itself with one
+    /// `signed_at`, signs their two hashes once with the approval key, and sends the key to the
+    /// connection server, then the confirm to KIFF. It reports what came of them, and tafs cloud
+    /// checks both before Coach hears "approved". The key never goes to tafs cloud.
+    func approveKeyAndCard(_ component: SetupComponent, shown: String?, shownDraft: String?, key: String) async -> KeyAndCard {
+        guard let grantID = component.grant, let draftID = component.draft, let shown, let shownDraft, let s = setupTaf,
+              planqueReady, sessionHasKey, let tenant = kiffTenant, connecting == nil else { return .notOffered }
+        cardNotes[component.id] = nil
+        lastError = nil
+        connecting = grantID
+        defer { connecting = nil; connectStep = nil }
+        let gen = accountGeneration
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        kiff.tenant = tenant
+        defer { planque.signer = nil; kiff.setupSigner = nil }
+        let ref = cardRef(component.id)
+        let session = setupThread.components.last { $0.ref == ref }?.session
+        do {
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let grant = grants.first { $0.id == grantID }
+            let words = grant.flatMap { shownWords(for: $0) }
+            let decision = try await cloud.approval(s.id, component: component.id, body: .init(
+                grant: grantID, shownDigest: shown, draft: draftID, shownDraft: shownDraft,
+                words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session,
+                can: [RequestsTogether.keyAndCards]), proof: proof)
+            guard gen == accountGeneration else { return .failed }
+            switch decision.outcome {
+            case "answered":
+                cardNotes[component.id] = decision.note
+                await setupAnswered(s.id, ref: ref, decision: decision, gen: gen)
+                return .failed
+            case "read_again":
+                cardNotes[component.id] = decision.note ?? Words.Version.outOfDateCard
+                await refreshConnections()
+                if let draft = try? await kiff.draft(id: draftID), gen == accountGeneration { setupDrafts[draftID] = draft }
+                return .failed
+            case "sign":
+                break
+            default:
+                cardNotes[component.id] = Words.Coach.unknownAnswer
+                return .failed
+            }
+            // Another step (the two signatures, as before): nothing is signed here, and the key goes by itself.
+            guard let ask = decision.ask, ask.step == RequestsTogether.keyAndCards else { return .notOffered }
+            // The phone is the last check: the ask must be this card's, for what the person was shown.
+            guard let grant, grant.digestMatches, grant.digest == shown,
+                  Self.keyAndCardIsThisCards(ask, grant: grantID, shownDigest: shown, draft: draftID, shownDraft: shownDraft),
+                  grant.profile == nil || words != nil else {
+                // An ask for another grant or draft isn't this card's. One for this card at a digest or a
+                // version the phone didn't read is out of date: the card is read again, and nothing is signed.
+                let sameCard = ask.planque?.grant == grantID && ask.kiff?.draft == draftID
+                cardNotes[component.id] = sameCard ? Words.Version.outOfDateCard : Self.askNotThisCards
+                if sameCard {
+                    await refreshConnections()
+                    if let draft = try? await kiff.draft(id: draftID), gen == accountGeneration { setupDrafts[draftID] = draft }
+                }
+                return .failed
+            }
+            let signedAt = SigningTime.next()
+            let keyRequest = try planque.prepareKey(grant, key: key, words: words, signedAt: signedAt)
+            let confirm = try kiff.prepareConfirmDraft(id: draftID, version: shownDraft, signedAt: signedAt)
+            let keyHash = RequestsTogether.hash(keyRequest.message), confirmHash = RequestsTogether.hash(confirm.message)
+            let signature: String
+            do {
+                signature = try await signer.signApproval(RequestsTogether.message(tenant: tenant, signedAt: signedAt, keyHash, confirmHash), reason: ask.reason)
+            } catch {
+                cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                return .failed
+            }
+            guard gen == accountGeneration else { return .failed }
+            // The key first, then the Card: a Card is never confirmed for a key that didn't go in.
+            let came: Came
+            do {
+                let given = try await planque.giveKey(keyRequest, signature: signature, with: confirmHash)
+                if given.connected {
+                    do {
+                        _ = try await kiff.confirmDraft(confirm, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: keyHash))
+                        await keepKIFFAlerts(tenant: tenant, gen: gen)
+                        came = Came(result: "confirmed")
+                    } catch {
+                        came = Came(result: "failed", why: error.localizedDescription)
+                    }
+                } else {
+                    came = Came(result: "not_connected", status: given.status)
+                }
+            } catch {
+                came = Came(result: "failed", why: Words.Connect.keyNotGiven(why: "\(error.localizedDescription)"))
+            }
+            guard gen == accountGeneration else { return .failed }
+            await refreshConnections()
+            guard gen == accountGeneration else { return .failed }
+            let reportProof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let outcome = try await cloud.approvalReport(s.id, component: component.id, ask: ask.id,
+                                                         body: .init(result: came.result, status: came.status, why: came.why, session: session),
+                                                         proof: reportProof, tenant: tenant, signedBy: { try signer.signConfirmed($0) })
+            guard gen == accountGeneration else { return .failed }
+            cardNotes[component.id] = outcome.note
+            await setupAnswered(s.id, ref: ref, decision: outcome, gen: gen)
+            return came.result == "confirmed" ? .done : .failed
+        } catch {
+            guard gen == accountGeneration else { return .failed }
+            cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
+            await loadSetupThread()
+            return .failed
+        }
+    }
+
+    /// Whether a `key_and_cards` ask is this card's, for what the person was shown: its grant
+    /// and the digest shown, its draft and the version shown. Anything else is refused, and
+    /// nothing is signed.
+    nonisolated static func keyAndCardIsThisCards(_ ask: TafsCloud.ApprovalDecision.Ask, grant: String, shownDigest: String, draft: String, shownDraft: String) -> Bool {
+        guard ask.step == RequestsTogether.keyAndCards, let p = ask.planque, let k = ask.kiff else { return false }
+        return p.grant == grant && p.body.digest == shownDigest && k.draft == draft && k.version == shownDraft
     }
 
     /// Approve on Coach's drive card (docs/drive.md): the start is signed with the approval key, behind

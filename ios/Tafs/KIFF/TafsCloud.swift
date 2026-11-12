@@ -16,6 +16,10 @@ final class TafsCloud {
         var words: String? = nil
         /// tafs cloud's code for the refusal, when it gives one ("held_full").
         var code: String? = nil
+        /// For a refusal because of a halt: whether the whole `account` is halted or the `taf`
+        /// on its own, as tafs cloud says. Nil for any other refusal, and for a value this app
+        /// doesn't know.
+        var halted: String? = nil
         /// tafs cloud's words first, on every path that shows the error (kiff/tafs#397); the
         /// app's own line for the status only without them.
         var errorDescription: String? { words ?? message }
@@ -23,10 +27,10 @@ final class TafsCloud {
 
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
-        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String? }
+        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String?; let halted: String? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
         return CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
-                          code: body?.code)
+                          code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil })
     }
 
     /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
@@ -1220,7 +1224,10 @@ final class TafsCloud {
         var shownDraft: String? = nil
         var words: Words? = nil
         var session: String? = nil
-        enum CodingKeys: String, CodingKey { case grant, shownDigest = "shown_digest", draft, shownDraft = "shown_draft", words, session }
+        /// The steps this phone can sign beyond connect and cards (`key_and_cards`): tafs cloud
+        /// never answers an app a step it didn't say it can act on.
+        var can: [String]? = nil
+        enum CodingKeys: String, CodingKey { case grant, shownDigest = "shown_digest", draft, shownDraft = "shown_draft", words, session, can }
     }
 
     /// What came of the call made with the signature tafs cloud asked for: never an answer, only
