@@ -158,12 +158,92 @@ final class AllowFromNowOnTests: XCTestCase {
         XCTAssertFalse(try signs(Self.card(monthMoved, both), daily), "the month's total moved, the day's was offered")
     }
 
-    func testAResourceChangeAllowsNoReadableDifference() throws {
-        let g = Self.g
+    /// A `resource` change is exactly the values in force plus the offered one, on the held
+    /// action's scope for the offered parameter.
+    func testAResourceChangeAddsExactlyTheOfferedValue() throws {
+        let cap = Self.cap
+        func scoped(_ values: String, parameter: String = "account", action: String = "create_refund") -> String {
+            #""grants":[{"action":"\#(action)","per_action_max":[\#(cap)],"resources":{"parameter":"\#(parameter)","values":[\#(values)]}}]"#
+        }
         let resource = #"{"offer":{"changes":[{"mandate_id":"c1","kind":"resource","parameter":"account","value":"acct_2","words_before":"On acct_1","words_after":"On acct_1 and acct_2"}],"draft":"dr_9"}}"#
-        XCTAssertTrue(try signs(Self.card("\(g)[\(Self.refund(Self.cap))]", "\(g)[\(Self.refund(Self.cap))]"), resource))
-        XCTAssertFalse(try signs(Self.card("\(g)[\(Self.refund(Self.raised))]", "\(g)[\(Self.refund(Self.cap))]"), resource), "a cap moved with it")
-        XCTAssertFalse(try signs(Self.card("\(g)[\(Self.refund(Self.cap)),{\"action\":\"list_charges\"}]", "\(g)[\(Self.refund(Self.cap))]"), resource), "an action added with it")
+        let now = scoped(#""acct_1""#)
+        XCTAssertTrue(try signs(Self.card(scoped(#""acct_1","acct_2""#), now), resource))
+        XCTAssertTrue(try signs(Self.card(scoped(#""acct_2","acct_1""#), now), resource), "the order of the values doesn't matter")
+        XCTAssertFalse(try signs(Self.card(now, now), resource), "nothing added")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_1","acct_2","acct_3""#), now), resource), "a second value added")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_1","acct_3""#), now), resource), "another value added")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_2""#), now), resource), "a value in force dropped")
+        XCTAssertFalse(try signs(Self.card(#""grants":[\#(Self.refund(cap))]"#, now), resource), "the scope dropped: any value")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_1","acct_2""#, parameter: "customer"), scoped(#""acct_1""#, parameter: "customer")), resource), "another parameter's scope")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_1","acct_2""#, action: "create_payout"), scoped(#""acct_1""#, action: "create_payout")), resource), "another action's scope")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_1","acct_2""#).replacingOccurrences(of: "15000", with: "32000"), now), resource), "a cap moved with it")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_1","acct_2""#), now), resource.replacingOccurrences(of: #""value":"acct_2","#, with: "")), "an offer that names no value")
+        XCTAssertFalse(try signs(Self.card(scoped(#""acct_1","acct_1""#), scoped(#""acct_1""#)), resource.replacingOccurrences(of: "acct_2", with: "acct_1")), "a value already in force")
+    }
+
+    /// Each term that decides what a taf may do, one at a time: a draft that differs from the
+    /// Card in force in that term, beside the offered cap, is never signed.
+    func testEveryOtherTermMustBeTheCardInForces() throws {
+        let g = Self.g, cap = Self.cap, raised = Self.raised
+        func grant(_ caps: String, _ more: String = "") -> String { #"{"action":"create_refund","per_action_max":[\#(caps)]\#(more)}"# }
+        func differs(_ after: String, _ now: String, _ what: String, file: StaticString = #filePath, line: UInt = #line) throws {
+            XCTAssertFalse(try signs(Self.card(after, now)), what, file: file, line: line)
+        }
+        let scope = #","resources":{"parameter":"account","values":["acct_1"]}"#
+        // The same terms on both sides, with only the cap moved: signed. Each test below starts from here.
+        let whole = #","resources":{"parameter":"account","values":["acct_1"]},"entity_states":["paid"],"next_steps":["return_first"]"#
+        let totals = #","aggregates":[{"quantity":"count","limit":20,"window":"day","measure":"attempts","per":"invoice_id"}],"on_exceed":"owner","subject":"refunds-1","valid_until":"2027-01-01T00:00:00Z","domain":"Shop","environment":"live""#
+        XCTAssertTrue(try signs(Self.card("\(g)[\(grant(raised, whole))]\(totals)", "\(g)[\(grant(cap, whole))]\(totals),\"subjects\":[\"refunds-1\"]")), "every term the same, the cap moved")
+
+        // A grant's scope.
+        try differs("\(g)[\(grant(raised))]", "\(g)[\(grant(cap, scope))]", "the scope dropped")
+        try differs("\(g)[\(grant(raised, scope.replacingOccurrences(of: #"["acct_1"]"#, with: #"["acct_1","acct_2"]"#)))]", "\(g)[\(grant(cap, scope))]", "a value added to the scope")
+        try differs("\(g)[\(grant(raised, scope.replacingOccurrences(of: "account", with: "customer")))]", "\(g)[\(grant(cap, scope))]", "the scope's parameter changed")
+        try differs("\(g)[\(grant(raised, scope))]", "\(g)[\(grant(cap))]", "a scope added")
+        // The states it applies in.
+        try differs("\(g)[\(grant(raised))]", "\(g)[\(grant(cap, #","entity_states":["paid"]"#))]", "a state restriction dropped")
+        try differs("\(g)[\(grant(raised, #","entity_states":["paid","refunded"]"#))]", "\(g)[\(grant(cap, #","entity_states":["paid"]"#))]", "a state added")
+        XCTAssertTrue(try signs(Self.card("\(g)[\(grant(raised))]", "\(g)[\(grant(cap, #","entity_states":[]"#))]")), "no states, written as none or as an empty list")
+        XCTAssertTrue(try signs(Self.card("\(g)[\(grant(raised))]", "\(g)[\(grant(cap, #","entity_states":null"#))]")), "no states, written as null")
+        // The owner's other answers.
+        try differs("\(g)[\(grant(raised))]", "\(g)[\(grant(cap, #","next_steps":["return_first"]"#))]", "a next step dropped")
+        try differs("\(g)[\(grant(raised, #","next_steps":["return_first","proof_first"]"#))]", "\(g)[\(grant(cap, #","next_steps":["return_first"]"#))]", "a next step added")
+        // A total: per item or one total, and what it counts.
+        let perItem = #"{"quantity":"count","limit":1,"window":"week","measure":"attempts","per":"invoice_id"}"#
+        try differs("\(g)[\(grant(raised))],\"aggregates\":[\(perItem.replacingOccurrences(of: #","per":"invoice_id""#, with: ""))]", "\(g)[\(grant(cap))],\"aggregates\":[\(perItem)]", "a per-item total turned into one total")
+        try differs("\(g)[\(grant(raised))],\"aggregates\":[\(perItem.replacingOccurrences(of: "invoice_id", with: "customer_id"))]", "\(g)[\(grant(cap))],\"aggregates\":[\(perItem)]", "a total kept per another parameter")
+        try differs("\(g)[\(grant(raised))],\"aggregates\":[\(perItem.replacingOccurrences(of: "attempts", with: "effects"))]", "\(g)[\(grant(cap))],\"aggregates\":[\(perItem)]", "what a total counts changed")
+        // A measure a draft leaves out is KIFF's default: attempts for a count, effects for a sum.
+        let sum = #"{"quantity":"sum(amount)","limit":50000,"window":"day"}"#
+        XCTAssertTrue(try signs(Self.card("\(g)[\(grant(raised))],\"aggregates\":[\(sum)]", "\(g)[\(grant(cap))],\"aggregates\":[\(sum.replacingOccurrences(of: "}", with: #","measure":"effects"}"#))]")), "a sum's measure left out reads as effects")
+        try differs("\(g)[\(grant(raised))],\"aggregates\":[\(sum)]", "\(g)[\(grant(cap))],\"aggregates\":[\(sum.replacingOccurrences(of: "}", with: #","measure":"attempts"}"#))]", "a sum counting attempts in force, left out in the draft")
+        let count = #"{"quantity":"count","limit":20,"window":"day"}"#
+        XCTAssertTrue(try signs(Self.card("\(g)[\(grant(raised))],\"aggregates\":[\(count)]", "\(g)[\(grant(cap))],\"aggregates\":[\(count.replacingOccurrences(of: "}", with: #","measure":"attempts"}"#))]")), "a count's measure left out reads as attempts")
+        try differs("\(g)[\(grant(raised))],\"aggregates\":[\(count)]", "\(g)[\(grant(cap))],\"aggregates\":[\(count.replacingOccurrences(of: "}", with: #","measure":"effects"}"#))]", "a count counting effects in force, left out in the draft")
+        // When it starts and ends.
+        try differs("\(g)[\(grant(raised))],\"valid_until\":\"2028-01-01T00:00:00Z\"", "\(g)[\(grant(cap))],\"valid_until\":\"2027-01-01T00:00:00Z\"", "its end moved later")
+        try differs("\(g)[\(grant(raised))]", "\(g)[\(grant(cap))],\"valid_until\":\"2027-01-01T00:00:00Z\"", "its end dropped")
+        try differs("\(g)[\(grant(raised))],\"valid_from\":\"2026-01-01T00:00:00Z\"", "\(g)[\(grant(cap))],\"valid_from\":\"2026-06-01T00:00:00Z\"", "its start moved earlier")
+        // Who holds it.
+        try differs("\(g)[\(grant(raised))],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\",\"payouts-1\"]", "\(g)[\(grant(cap))],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\"]", "a holder added")
+        try differs("\(g)[\(grant(raised))],\"subject\":\"payouts-1\"", "\(g)[\(grant(cap))],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\"]", "another first holder")
+        XCTAssertTrue(try signs(Self.card("\(g)[\(grant(raised))],\"subject\":\"refunds-1\"", "\(g)[\(grant(cap))],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\",\"support-1\"]")),
+                      "a draft that names only the same first holder keeps the Card's holders")
+        // Where it applies.
+        try differs("\(g)[\(grant(raised))],\"domain\":\"other\"", "\(g)[\(grant(cap))],\"domain\":\"shop\"", "another domain")
+        try differs("\(g)[\(grant(raised))],\"environment\":\"live\"", "\(g)[\(grant(cap))],\"environment\":\"test\"", "another environment")
+        try differs("\(g)[\(grant(raised))],\"location\":\"Europe/Paris\"", "\(g)[\(grant(cap))],\"location\":\"America/New_York\"", "another time zone for its daily totals")
+        // What only a draft carries.
+        try differs("\(g)[\(grant(raised))],\"hold_expiry\":\"24h\"", "\(g)[\(grant(cap))]", "how long a hold waits, set by the draft")
+        try differs("\(g)[\(grant(raised))],\"revoked_at\":\"2026-11-12T00:00:00Z\"", "\(g)[\(grant(cap))]", "a draft that revokes")
+    }
+
+    /// A Card marked unchanged is compared on the same terms, not trusted.
+    func testACardMarkedUnchangedIsComparedOnEveryTerm() throws {
+        let lying = #",{"revises":"c2","unchanged":true,"current":{"grants":[{"action":"list_charges","resources":{"parameter":"account","values":["acct_1"]}}],"valid_until":"2027-01-01T00:00:00Z"},"grants":[{"action":"list_charges"}],"valid_until":"2027-01-01T00:00:00Z"}"#
+        XCTAssertFalse(try signs(Self.draft(extra: lying)), "marked unchanged, with its scope dropped")
+        let later = #",{"revises":"c2","unchanged":true,"current":{"grants":[{"action":"list_charges"}],"valid_until":"2027-01-01T00:00:00Z"},"grants":[{"action":"list_charges"}],"valid_until":"2030-01-01T00:00:00Z"}"#
+        XCTAssertFalse(try signs(Self.draft(extra: later)), "marked unchanged, with its end moved later")
     }
 
     func testACardMarkedUnchangedMustReadAsInForce() throws {

@@ -23,11 +23,14 @@ extension TafsCloud {
             var after: Int64?
             var unit: String?
             var window: String?
+            /// For a `resource` change: the parameter whose scope grows, and the one value added.
+            var parameter: String?
+            var value: String?
             var wordsBefore: String?
             var wordsAfter: String?
             var rounded: Bool?
             enum CodingKeys: String, CodingKey {
-                case mandateID = "mandate_id", kind, before, after, unit, window, rounded
+                case mandateID = "mandate_id", kind, before, after, unit, window, parameter, value, rounded
                 case wordsBefore = "words_before", wordsAfter = "words_after"
             }
         }

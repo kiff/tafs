@@ -323,8 +323,11 @@ the app in sample mode.
     would have let go when tafs cloud says, and the switch "Let this one go out too".
   - **The phone reads KIFF's draft itself and signs only an exact match** (`HoldAllow.matches`): the draft is for
     the held call's agent (and made from this call, when KIFF says); it retires no Card and adds none; each changed
-    Card is one the offer names and reads exactly as the Card in force with the one offered limit moved, in the
-    offer's unit (and window, when it names one). Anything else shows "This change isn't what was offered", with no
+    Card is one the offer names and reads exactly as the Card in force with the one offered change made: a limit
+    moved, in the offer's unit (and window, when it names one), or, for a `resource` change, exactly the scope's values
+    in force plus the offered one. Every other term is compared (`HoldAllow.Terms`): each action's caps, scope, states
+    and next steps; each total's window, measure and per-item parameter; what happens past a limit; who holds the Card;
+    where it applies; when it starts and ends. A draft that sets how long a hold waits, or revokes, is refused. Anything else shows "This change isn't what was offered", with no
     sign button. A draft that couldn't be read shows the error alone.
   - **One Face ID** signs the version the phone read (`tafs.cards.v1`). With the switch on, the confirm names the
     held call and the version of it the person saw, so KIFF lets it go under the same signature. With it off, the
