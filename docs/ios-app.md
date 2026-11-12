@@ -286,10 +286,26 @@ the app in sample mode.
   **Coach's approval card holds no field for a key** (`SetupApproval`): a secret typed in the chat reads as handing it
   to Coach. When planque says the connection is approved with its key and it isn't connected yet, the card's one button,
   "Give the key on a secure sheet", opens this same sheet full screen, outside the chat (`ConnectApprovalSheet`,
-  `needsKey`). The sheet shows the vendor, the connection service's text for what is read or written, and that the key
-  goes from this phone to the connection server, which sends it only to the vendor's host, and never to Coach. Face ID
-  confirms there. A paste into the field empties the clipboard at once. Once the key is given, the card is approved as
-  any other: tafs cloud reads the grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
+  `needsKey`). Once the key is given and its receipt closed, the card is approved as any other: tafs cloud reads the
+  grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
+  **The key's sheet looks and acts protected** (`docs/secure-connection.md`). Its words are tafs cloud's, read by the
+  grant (`GET /v1/connect/grants/{grant}/sheet`, `TafsCloud.ConnectionSheet`):
+  - **The title:** the vendor's logo (tafs cloud's own, or none), a lock, the host, and tafs cloud's title.
+  - **Three plain lines:** what it may do, that the key is sealed, and that it can be disconnected. The phone draws
+    the words and never works out "read only" itself; a line's `kind` only picks its icon.
+  - **The key is pasted, never typed.** The sheet has no text field. Apple's own paste button reads the clipboard only
+    on that tap, so iOS asks nothing more. Only the key's last 4 characters are drawn (`SecureKey.last4`; none for a
+    key shorter than 12), and the clipboard is emptied.
+  - **Details**, collapsed: tafs cloud's technical lines, and the connection server's own text, which its digest covers.
+    KIFF's words for a profile, and a digest that doesn't match, stay in sight above it.
+  - **One legal line**, with its two links as tafs cloud sends them. A link that isn't https is words alone.
+  - **Connect**, behind Face ID. The key goes to the connection server as before.
+  - **The receipt**, on the sheet: tafs cloud's line with the last 4, **Done**, and **Disconnect** (asked first, then
+    Face ID). The key is forgotten as soon as it's given, and the last 4 when the sheet closes. Disconnecting there
+    leaves Coach's card unapproved.
+  When tafs cloud's words can't be read, the sheet draws the app's own lines as before, with the same paste button
+  and no text field.
+  Not built yet: the Card on the same sheet under one signature, which waits for the connection server and KIFF.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so

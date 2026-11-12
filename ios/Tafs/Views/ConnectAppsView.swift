@@ -407,19 +407,30 @@ struct AppConnectionsView: View {
 }
 
 /// A connection's approval over the list: what it may do, KIFF's words for it, then Face ID.
-/// Approving opens the vendor's sign-in; an API-key vendor takes its key here instead, given
-/// with the same Face ID.
+/// Approving opens the vendor's sign-in. An API-key vendor takes its key here instead, on a
+/// sheet that looks and acts protected (docs/secure-connection.md): tafs cloud's words for it,
+/// the key pasted with one button and never typed, only its last 4 characters shown, the
+/// technical lines under Details, and a receipt once it's connected.
 struct ConnectApprovalSheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     let start: TafsCloud.ConnectStart
-    /// Called once the key was given, before the sheet closes: Coach's card, which opened this
+    /// Called once the key was given and its receipt read: Coach's card, which opened this
     /// sheet for the key, is then approved as any other.
     var onGiven: (() -> Void)? = nil
+    /// The pasted key. It's never drawn: only its last 4 characters are.
     @State private var key = ""
-    /// The key as it was before its last change: a change of more than one character is a paste.
-    @State private var keyBefore = ""
+    /// Its last 4 characters, kept for the receipt after the key itself is forgotten.
+    @State private var last4 = ""
     @State private var busy = false
+    /// tafs cloud's words for the key's sheet, once read.
+    @State private var sheet: TafsCloud.ConnectionSheet?
+    /// tafs cloud's words were asked for, and came or didn't.
+    @State private var sheetAsked = false
+    /// The key went in: the sheet shows its receipt.
+    @State private var given = false
+    @State private var detailsOpen = false
+    @State private var disconnecting = false
 
     private var grant: PlanqueClient.Grant? { model.grants.first { $0.id == start.grant } }
 
@@ -428,40 +439,14 @@ struct ConnectApprovalSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     if let grant {
-                        Text(grant.text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                        if grant.profile != nil {
-                            ProfileWordsView(words: model.shownWords(for: grant), error: model.profileWordsError[grant.id])
-                                .task(id: grant.digest) { await model.loadProfileWords(for: grant) }
-                        }
-                        if !grant.digestMatches {
-                            Text(Words.Connect.requestDoesNotMatchWhat)
-                                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
-                        }
-                        if start.needsKey {
-                            // Where the key goes, before it's typed: from this phone to the connection
-                            // server, which sends it only to the vendor's host, and never to Coach.
-                            Text(Words.Connect.keyGoesTo(host: "\(Self.host(of: grant))"))
-                                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                            DriveField(Words.Connect.key, text: $key, kind: .secure, secret: true)
-                                .textContentType(.password).autocorrectionDisabled().textInputAutocapitalization(.never)
-                                .padding(12).background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                .accessibilityIdentifier("connect.key")
-                                .onChange(of: key) { now in
-                                    // Pasted: the copy is taken off the clipboard, where other apps could read it.
-                                    if Self.pasted(from: keyBefore, to: now) { Self.clearClipboard() }
-                                    keyBefore = now
-                                }
-                            Text(Words.Connect.keyClipboard).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                        }
-                        if let error = model.lastError {
-                            Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
-                        }
-                        ApprovalGate {
-                            Button(busy ? Words.Approval.approving : start.needsKey ? Words.Connect.giveKeyWith(biometry: "\(Biometry.name)") : Words.Approval.approveWith(biometry: "\(Biometry.name)")) {
-                                approve(grant)
-                            }
-                            .buttonStyle(PrimaryButtonStyle())
-                            .disabled(busy || !ready(grant))
+                        if !start.needsKey {
+                            signIn(grant)
+                        } else if !sheetAsked {
+                            ProgressView().frame(maxWidth: .infinity)
+                        } else if let sheet {
+                            if given { receipt(grant, sheet) } else { keySheet(grant, sheet) }
+                        } else {
+                            plainKeySheet(grant)
                         }
                     } else {
                         Text(Words.Connect.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
@@ -469,17 +454,244 @@ struct ConnectApprovalSheet: View {
                 }
                 .padding(20)
             }
-            .navigationTitle(grant.map { Words.Coach.connectService(service: "\($0.vendor)") } ?? Words.Connect.Apps.connect)
+            .navigationTitle(start.needsKey && sheet != nil ? "" : grant.map { Words.Coach.connectService(service: "\($0.vendor)") } ?? Words.Connect.Apps.connect)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    if !given { Button(Words.Common.cancel) { dismiss() } }
+                }
+            }
+            .interactiveDismissDisabled(given)
+            .task(id: start.grant) {
+                guard start.needsKey else { return }
+                // tafs cloud's words for this grant. One that doesn't serve them yet leaves the plain sheet.
+                sheet = try? await model.cloud.connectionSheet(grant: start.grant)
+                sheetAsked = true
+            }
+        }
+    }
+
+    // MARK: A sign-in at the vendor: approved here, signed in after
+
+    @ViewBuilder private func signIn(_ grant: PlanqueClient.Grant) -> some View {
+        connectionWords(grant)
+        mismatch(grant)
+        errorLine
+        ApprovalGate {
+            Button(busy ? Words.Approval.approving : Words.Approval.approveWith(biometry: "\(Biometry.name)")) { approve(grant) }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(busy || !ready(grant))
+        }
+    }
+
+    // MARK: A key, on the protected sheet, in tafs cloud's words
+
+    @ViewBuilder private func keySheet(_ grant: PlanqueClient.Grant, _ sheet: TafsCloud.ConnectionSheet) -> some View {
+        heading(sheet)
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(Array(sheet.lines.enumerated()), id: \.offset) { _, line in
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: SecureKey.icon(line.kind)).foregroundColor(Theme.soft).frame(width: 22).accessibilityHidden(true)
+                    Text(line.text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .accessibilityIdentifier("connect.sheet.lines")
+        profileWords(grant)
+        mismatch(grant)
+        paste(what: sheet.paste.what,
+              pasted: SecureKey.filled(sheet.paste.pasted, last4: last4, vendor: sheet.vendor.name),
+              cleared: sheet.paste.cleared)
+        DisclosureGroup(isExpanded: $detailsOpen) {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array((sheet.details?.lines ?? []).enumerated()), id: \.offset) { _, line in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(line.label).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        Text(line.value).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                    }
+                }
+                // The connection's own words, as the connection server keeps them: what its digest covers.
+                Text(grant.text).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
+        } label: {
+            Text(sheet.details?.title ?? "").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+        }
+        .accessibilityIdentifier("connect.sheet.details")
+        if let legal = sheet.legal {
+            Text(SecureKey.legal(legal)).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                .tint(Theme.amberText).fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("connect.sheet.legal")
+        }
+        errorLine
+        ApprovalGate {
+            Button(busy ? Words.Approval.approving : sheet.button) { approve(grant) }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(busy || !ready(grant))
+                .accessibilityIdentifier("connect.sheet.connect")
+        }
+    }
+
+    /// The vendor's logo and name with a lock, and tafs cloud's title.
+    private func heading(_ sheet: TafsCloud.ConnectionSheet) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                if let url = model.cloud.sheetLogoURL(sheet.vendor.logo) {
+                    AsyncImage(url: url) { phase in
+                        if case .success(let image) = phase {
+                            image.resizable().interpolation(.high).scaledToFit().frame(width: 36, height: 36)
+                        }
+                    }
+                    .accessibilityHidden(true)
+                }
+                Image(systemName: "lock.fill").foregroundColor(Theme.ok).accessibilityHidden(true)
+                if let host = sheet.vendor.host, !host.isEmpty {
+                    Text(host).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                }
+            }
+            Text(sheet.title).scaledFont(22, weight: .bold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("connect.sheet.title")
+        }
+    }
+
+    /// Paste the key: Apple's own paste button, so the clipboard is read only on that tap and
+    /// iOS asks nothing more. Never a typing field. Once pasted, only the key's last 4
+    /// characters show, and the copy is taken off the clipboard, where other apps could read it.
+    @ViewBuilder private func paste(what: String, pasted: String, cleared: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(what).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            if !key.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(pasted).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                        .accessibilityIdentifier("connect.key.pasted")
+                    Text(cleared).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                }
+                .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            PasteButton(payloadType: String.self) { strings in
+                Task { @MainActor in take(strings) }
+            }
+            .disabled(busy)
+            .accessibilityIdentifier("connect.key.paste")
+        }
+    }
+
+    /// The key from a paste, kept for this sheet only, and the clipboard emptied.
+    @MainActor private func take(_ pasted: [String]) {
+        guard let taken = SecureKey.taken(from: pasted) else { return }
+        key = taken
+        last4 = SecureKey.last4(of: taken)
+        Self.clearClipboard()
+    }
+
+    // MARK: The receipt, on the sheet
+
+    @ViewBuilder private func receipt(_ grant: PlanqueClient.Grant, _ sheet: TafsCloud.ConnectionSheet) -> some View {
+        heading(sheet)
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.ok).accessibilityHidden(true)
+            Text(SecureKey.filled(sheet.receipt?.text ?? Words.Connect.Status.connected, last4: last4, vendor: sheet.vendor.name))
+                .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("connect.sheet.receipt")
+        }
+        errorLine
+        Button(Words.Common.done) { finish() }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(busy)
+            .accessibilityIdentifier("connect.sheet.done")
+        if let words = sheet.receipt?.disconnect, model.canManageCards {
+            Button(busy ? Words.Connect.disconnecting : words, role: .destructive) { disconnecting = true }
+                .buttonStyle(.borderless)
+                .disabled(busy)
+                .accessibilityIdentifier("connect.sheet.disconnect")
+                // Asked first, naming the one taf it ends; only then Face ID, in the same words.
+                .confirmationDialog(DisconnectWords.title(grant.vendor, taf: model.tafOf(grant), alsoStops: model.alsoStops(grant)),
+                                    isPresented: $disconnecting, titleVisibility: .visible) {
+                    Button(Words.Connect.disconnectButton, role: .destructive) { disconnect(grant) }
+                    Button(Words.Common.cancel, role: .cancel) { }
+                } message: {
+                    Text(DisconnectWords.message(grant.vendor, taf: model.tafOf(grant), alsoStops: model.alsoStops(grant)))
+                }
+        }
+    }
+
+    /// The receipt was read: the key is forgotten, and Coach's card goes on.
+    private func finish() {
+        last4 = ""
+        onGiven?()
+        dismiss()
+    }
+
+    /// Disconnect from the receipt: the connection ends, so Coach's card isn't approved with it.
+    private func disconnect(_ grant: PlanqueClient.Grant) {
+        busy = true
+        Task {
+            defer { busy = false }
+            if await model.disconnect(grantID: grant.id) {
+                last4 = ""
+                await model.loadConnectApps()
+                dismiss()
+            }
+        }
+    }
+
+    // MARK: A key, when tafs cloud's words can't be read: the app's own lines, still pasted
+
+    @ViewBuilder private func plainKeySheet(_ grant: PlanqueClient.Grant) -> some View {
+        connectionWords(grant)
+        mismatch(grant)
+        // Where the key goes, before it's pasted: from this phone to the connection server,
+        // which sends it only to the vendor's host, and never to Coach.
+        paste(what: Words.Connect.keyGoesTo(host: "\(Self.host(of: grant))"),
+              pasted: last4.isEmpty ? "…" : "…" + last4,
+              cleared: Words.Connect.keyClipboard)
+        errorLine
+        ApprovalGate {
+            Button(busy ? Words.Approval.approving : Words.Connect.giveKeyWith(biometry: "\(Biometry.name)")) { approve(grant) }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(busy || !ready(grant))
+        }
+    }
+
+    // MARK: Shared
+
+    /// The connection's own words from the connection server, and KIFF's for its profile.
+    @ViewBuilder private func connectionWords(_ grant: PlanqueClient.Grant) -> some View {
+        Text(grant.text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+        profileWords(grant)
+    }
+
+    /// KIFF's words for the connection's profile, never folded away: what KIFF can't check
+    /// stays in sight, and Connect waits until they're read.
+    @ViewBuilder private func profileWords(_ grant: PlanqueClient.Grant) -> some View {
+        if grant.profile != nil {
+            ProfileWordsView(words: model.shownWords(for: grant), error: model.profileWordsError[grant.id])
+                .task(id: grant.digest) { await model.loadProfileWords(for: grant) }
+        }
+    }
+
+    @ViewBuilder private func mismatch(_ grant: PlanqueClient.Grant) -> some View {
+        if !grant.digestMatches {
+            Text(Words.Connect.requestDoesNotMatchWhat)
+                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+        }
+    }
+
+    @ViewBuilder private var errorLine: some View {
+        if let error = model.lastError {
+            Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     /// Approve only what's shown: its digest checked, KIFF's words read when it has a profile,
-    /// and for a key vendor, a key typed.
+    /// and for a key vendor, a key pasted.
     private func ready(_ grant: PlanqueClient.Grant) -> Bool {
         grant.digestMatches && (grant.profile == nil || model.shownWords(for: grant) != nil)
-            && (!start.needsKey || !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            && (!start.needsKey || !key.isEmpty)
     }
 
     private func approve(_ grant: PlanqueClient.Grant) {
@@ -488,10 +700,13 @@ struct ConnectApprovalSheet: View {
             defer { busy = false }
             if start.needsKey {
                 if await model.giveKey(grantID: grant.id, shown: grant.digest, key: key) {
+                    // The key is forgotten now. The receipt keeps its last 4 until the sheet closes.
                     key = ""
-                    keyBefore = ""
-                    onGiven?()
-                    dismiss()
+                    if sheet?.receipt != nil {
+                        given = true
+                    } else {
+                        finish()
+                    }
                 }
             } else if let done = await model.connect(grantID: grant.id, shown: grant.digest), done.connected || done.listed {
                 dismiss()
@@ -503,12 +718,6 @@ struct ConnectApprovalSheet: View {
     /// The host a key is used with: the vendor's server, without its scheme or path.
     static func host(of grant: PlanqueClient.Grant) -> String {
         URL(string: grant.request.server)?.host ?? grant.request.server
-    }
-
-    /// Whether a change of the key field was a paste: more than one character arrived at once.
-    /// Typing adds one at a time.
-    static func pasted(from before: String, to now: String) -> Bool {
-        now.count - before.count > 1
     }
 
     /// Empties the clipboard after a key was pasted. A test puts its own in.

@@ -1707,17 +1707,7 @@ final class SetupTests: XCTestCase {
         XCTAssertTrue(chat.contains("ConnectApprovalSheet(start: .init(grant: grant.id, needsKey: true)"), "the card opens the key sheet")
         XCTAssertTrue(chat.contains(".fullScreenCover(isPresented: $givingKey)"), "full screen, outside the chat")
         let sheet = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
-        XCTAssertTrue(sheet.contains("DriveField(Words.Connect.key, text: $key, kind: .secure, secret: true)"))
         XCTAssertTrue(sheet.contains("Words.Connect.keyGoesTo(host:"), "the sheet says where the key goes, and the host it is sent to")
-    }
-
-    /// A paste into the key's field is told from typing, so the clipboard is cleared after it.
-    func testAPasteIntoTheKeyFieldIsToldFromTyping() {
-        XCTAssertTrue(ConnectApprovalSheet.pasted(from: "", to: "desk_live_secret_123"))
-        XCTAssertTrue(ConnectApprovalSheet.pasted(from: "desk_", to: "desk_live_secret_123"))
-        XCTAssertFalse(ConnectApprovalSheet.pasted(from: "desk", to: "desk_"), "one character: typed")
-        XCTAssertFalse(ConnectApprovalSheet.pasted(from: "desk_live", to: "desk"), "deleted")
-        XCTAssertFalse(ConnectApprovalSheet.pasted(from: "", to: ""))
     }
 
     /// Only a connection that takes a key, and isn't connected yet, opens the key sheet from Coach's card.
