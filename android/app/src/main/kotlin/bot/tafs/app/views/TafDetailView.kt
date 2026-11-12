@@ -403,7 +403,9 @@ internal fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions, quiet: 
     if (taf.worksFromChat) {
       Text(Words.Taf.worksFromChat, style = scaled(15, color = Theme.ink))
     } else {
-      Text(if (taf.paused) Words.Taf.State.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule, style = scaled(15, color = Theme.ink))
+      // tafs cloud's words for the next run, with its day ("Next run Mon 08:00"); the app's own format only where an older tafs cloud
+      // sends none.
+      Text(if (taf.paused) Words.Taf.State.paused else taf.nextRunWords ?: taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule, style = scaled(15, color = Theme.ink))
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         val busy = inFlight || tapped
         OutlineButton(if (busy) Words.Taf.startingRun else Words.Taf.runNow, {
