@@ -2049,7 +2049,7 @@ final class AppModel: ObservableObject {
         guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: Words.Connect.Prompt.giveKey(vendor: "\(Self.promptApp(grant))", agent: "\(promptTaf(grant.request.agent, grant: grant))"), grants: true)
+                                      reason: giveKeyPrompt(grant), grants: true)
         } catch {
             quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return false
@@ -5689,7 +5689,7 @@ final class AppModel: ObservableObject {
 
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: Words.Connect.Prompt.connect(vendor: "\(Self.promptApp(grant))", agent: "\(promptTaf(grant.request.agent, grant: grant))"), grants: true)
+                                      reason: connectPrompt(grant), grants: true)
         } catch {
             quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return nil
@@ -6240,12 +6240,32 @@ final class AppModel: ObservableObject {
         KIFFMapping.vendorWords(grant.vendor)
     }
 
+    /// The prompt read last before connecting: "Connect Stripe to Disputes", or "Connect Stripe"
+    /// when no taf is named yet, never "to a taf" (as Android's `connectPrompt`).
+    func connectPrompt(_ grant: PlanqueClient.Grant) -> String {
+        let app = Self.promptApp(grant)
+        guard let taf = namedTaf(grant.request.agent, grant: grant) else { return Words.Connect.Prompt.connectApp(vendor: "\(app)") }
+        return Words.Connect.Prompt.connect(vendor: "\(app)", agent: "\(taf)")
+    }
+
+    /// The same, for a connection by key: "Give Stripe its key for Disputes", or "Give Stripe its key".
+    func giveKeyPrompt(_ grant: PlanqueClient.Grant) -> String {
+        let app = Self.promptApp(grant)
+        guard let taf = namedTaf(grant.request.agent, grant: grant) else { return Words.Connect.Prompt.giveKeyApp(vendor: "\(app)") }
+        return Words.Connect.Prompt.giveKey(vendor: "\(app)", agent: "\(taf)")
+    }
+
+    /// The taf a request is for, by its name: planque's, the label given, or the app's taf for
+    /// that agent; nil when none is named.
+    func namedTaf(_ agent: String?, grant: PlanqueClient.Grant? = nil, label: String? = nil) -> String? {
+        [grant?.agentName, label, agent.flatMap { holderIDs[$0] }.flatMap { taf($0)?.name }]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.first { !$0.isEmpty }
+    }
+
     /// The taf as its owner knows it, for a Face ID or Touch ID prompt, the last thing read before
     /// signing: its name, as planque or the draft keeps it or as Home lists it, never its agent id.
     func promptTaf(_ agent: String?, grant: PlanqueClient.Grant? = nil, label: String? = nil) -> String {
-        let named = [grant?.agentName, label, agent.flatMap { holderIDs[$0] }.flatMap { taf($0)?.name }]
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.first { !$0.isEmpty }
-        return named ?? Words.NeedsYou.aTaf
+        namedTaf(agent, grant: grant, label: label) ?? Words.NeedsYou.aTaf
     }
 
     func dismissCardUnit(_ exception: TafsCloud.CardUnitException) async {

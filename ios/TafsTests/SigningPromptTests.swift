@@ -27,6 +27,19 @@ final class SigningPromptTests: XCTestCase {
         XCTAssertFalse(Words.Connect.Prompt.connect(vendor: "Stripe", agent: model.promptTaf("refunds-x1")).contains("refunds-x1"))
     }
 
+    /// No taf named yet: "Connect Stripe" and "Give Stripe its key", never "to a taf" (as Android 1.8.1).
+    /// With a name, the sentence names it.
+    func testAConnectPromptWithNoTafNamesOnlyTheApp() throws {
+        let model = AppModel(signer: StubSigner())
+        let nameless = try grant(vendor: "stripe-mcp", agent: "refunds-x1")
+        XCTAssertEqual(model.connectPrompt(nameless), Words.Connect.Prompt.connectApp(vendor: "Stripe"))
+        XCTAssertEqual(model.connectPrompt(nameless), "Connect Stripe")
+        XCTAssertEqual(model.giveKeyPrompt(nameless), "Give Stripe its key")
+        let named = try grant(vendor: "Stripe", agent: "refunds-x1", agentName: "Disputes")
+        XCTAssertEqual(model.connectPrompt(named), "Connect Stripe to Disputes")
+        XCTAssertEqual(model.giveKeyPrompt(named), "Give Stripe its key for Disputes")
+    }
+
     /// The Theme picker reads in the app's language, not "Light / Dark / System" in every one.
     func testThemeTitlesAreTheAppsWords() {
         XCTAssertEqual(ThemePreference.light.title, Words.Settings.Theme.light)
