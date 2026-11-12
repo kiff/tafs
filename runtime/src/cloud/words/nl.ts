@@ -646,7 +646,7 @@ export const nl: Words = {
   allow_asks_first: (action) => `${action}: elke aanroep vraagt het je eerst`,
   allow_value_out: (action, value) => `${action}: niet voor ${value}`,
   allow_value_in: (action, value) => `${action}: ook voor ${value}`,
-  allow_window: { calendar_day: "per dag", rolling_1h: "per uur", rolling_24h: "in 24 uur", rolling_7d: "in 7 dagen", lifetime: "" },
+  allow_window: (window) => (({ calendar_day: "per dag", rolling_1h: "per uur", rolling_24h: "in 24 uur", rolling_7d: "in 7 dagen", lifetime: "" }) as Record<string, string>)[window] ?? "",
   allow_rounded_from: (amount) => `naar boven afgerond van ${amount}`,
   allow_would: (n, form, totals) => `Met deze Card ${form === "one" ? "was" : "waren"} er ${n} ${form === "one" ? "aanroep" : "aanroepen"} meer doorgegaan zonder het je te vragen${totals ? ` (${totals})` : ""}`,
   allow_would_none: "In de afgelopen 30 dagen was er verder niets doorgegaan zonder het je te vragen",

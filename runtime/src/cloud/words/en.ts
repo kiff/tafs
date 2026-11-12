@@ -704,7 +704,8 @@ export const en = {
   allow_asks_first: (action: string) => `${action}: each call asks you first`,
   allow_value_out: (action: string, value: string) => `${action}: not for ${value}`,
   allow_value_in: (action: string, value: string) => `${action}: also for ${value}`,
-  allow_window: { calendar_day: "a day", rolling_1h: "an hour", rolling_24h: "in any 24 hours", rolling_7d: "in any 7 days", lifetime: "" } as Record<string, string>,
+  // A window as KIFF names it, in words; a lifetime total has none ("€600 in total"), nor has a window KIFF adds later.
+  allow_window: (window: string) => (({ calendar_day: "a day", rolling_1h: "an hour", rolling_24h: "in any 24 hours", rolling_7d: "in any 7 days", lifetime: "" }) as Record<string, string>)[window] ?? "",
   allow_rounded_from: (amount: string) => `rounded up from ${amount}`,
   allow_would: (n: number, form: Intl.LDMLPluralRule, totals: string) => `With this Card, ${n} more ${form === "one" ? "call" : "calls"} would have gone out on ${form === "one" ? "its" : "their"} own${totals ? ` (${totals})` : ""}`,
   allow_would_none: "Nothing else in the last 30 days would have gone out on its own",

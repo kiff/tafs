@@ -646,7 +646,7 @@ export const pl: Words = {
   allow_asks_first: (action) => `${action}: każde wywołanie najpierw pyta Ciebie`,
   allow_value_out: (action, value) => `${action}: nie dla ${value}`,
   allow_value_in: (action, value) => `${action}: także dla ${value}`,
-  allow_window: { calendar_day: "dziennie", rolling_1h: "na godzinę", rolling_24h: "w ciągu 24 godzin", rolling_7d: "w ciągu 7 dni", lifetime: "" },
+  allow_window: (window) => (({ calendar_day: "dziennie", rolling_1h: "na godzinę", rolling_24h: "w ciągu 24 godzin", rolling_7d: "w ciągu 7 dni", lifetime: "" }) as Record<string, string>)[window] ?? "",
   allow_rounded_from: (amount) => `zaokrąglone w górę z ${amount}`,
   allow_would: (n, form, totals) => `Z tą Card ${form === "one" ? "jeszcze 1 wywołanie przeszłoby" : `jeszcze ${n} ${form === "few" ? "wywołania przeszłyby" : "wywołań przeszłoby"}`} bez pytania Cię${totals ? ` (${totals})` : ""}`,
   allow_would_none: "W ciągu ostatnich 30 dni nic więcej nie przeszłoby bez pytania Cię",

@@ -646,7 +646,7 @@ export const es: Words = {
   allow_asks_first: (action) => `${action}: cada llamada te pregunta antes`,
   allow_value_out: (action, value) => `${action}: no para ${value}`,
   allow_value_in: (action, value) => `${action}: también para ${value}`,
-  allow_window: { calendar_day: "al día", rolling_1h: "por hora", rolling_24h: "en 24 horas", rolling_7d: "en 7 días", lifetime: "" },
+  allow_window: (window) => (({ calendar_day: "al día", rolling_1h: "por hora", rolling_24h: "en 24 horas", rolling_7d: "en 7 días", lifetime: "" }) as Record<string, string>)[window] ?? "",
   allow_rounded_from: (amount) => `redondeado desde ${amount}`,
   allow_would: (n, form, totals) => `Con esta Card, ${n} ${form === "one" ? "llamada más habría salido" : "llamadas más habrían salido"} sin preguntarte${totals ? ` (${totals})` : ""}`,
   allow_would_none: "Nada más habría salido sin preguntarte en los últimos 30 días",

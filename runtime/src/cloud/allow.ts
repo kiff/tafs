@@ -195,7 +195,7 @@ export function money(minor: number, unit: string | undefined, lang: Lang): stri
 /** A change's limit, before and after, in tafs cloud's words: "Refunds: up to €150 each" → "…up to €320 each". */
 export function changeWords(c: Change, breach: Breach, action: string, lang: Lang): { words_before: string; words_after: string } {
   const w = wordsIn(lang);
-  const window = w.allow_window[c.window ?? ""] ?? c.window ?? "";
+  const window = w.allow_window(c.window ?? "");
   const rounded = (line: string) => c.rounded === true ? `${line} (${w.allow_rounded_from(money(figure(breach, c.kind ?? "", false) ?? 0, c.unit, lang))})` : line;
   switch (c.kind) {
     case "per_action":

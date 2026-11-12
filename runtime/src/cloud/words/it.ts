@@ -646,7 +646,7 @@ export const it: Words = {
   allow_asks_first: (action) => `${action}: ogni chiamata ti chiede prima`,
   allow_value_out: (action, value) => `${action}: non per ${value}`,
   allow_value_in: (action, value) => `${action}: anche per ${value}`,
-  allow_window: { calendar_day: "al giorno", rolling_1h: "all'ora", rolling_24h: "in 24 ore", rolling_7d: "in 7 giorni", lifetime: "" },
+  allow_window: (window) => (({ calendar_day: "al giorno", rolling_1h: "all'ora", rolling_24h: "in 24 ore", rolling_7d: "in 7 giorni", lifetime: "" }) as Record<string, string>)[window] ?? "",
   allow_rounded_from: (amount) => `arrotondato da ${amount}`,
   allow_would: (n, form, totals) => `Con questa Card, ${n} ${form === "one" ? "chiamata in più sarebbe partita" : "chiamate in più sarebbero partite"} senza chiederti${totals ? ` (${totals})` : ""}`,
   allow_would_none: "Negli ultimi 30 giorni nient'altro sarebbe partito senza chiederti",

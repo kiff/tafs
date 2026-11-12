@@ -97,7 +97,8 @@ describe("Allow this from now on: the narrowest change (docs/allow-from-now-on.m
   it("has every line in the 8 languages", () => {
     for (const lang of LANGUAGES) {
       const w = wordsIn(lang);
-      expect(Object.keys(w.allow_window).sort()).toEqual(["calendar_day", "lifetime", "rolling_1h", "rolling_24h", "rolling_7d"]);
+      for (const window of ["calendar_day", "rolling_1h", "rolling_24h", "rolling_7d"]) expect(w.allow_window(window), `${lang} ${window}`).not.toBe("");
+      expect(w.allow_window("lifetime") + w.allow_window("rolling_90d")).toBe("");
       for (const n of [0, 1, 2, 5, 22]) expect(wouldWords({ would_allow: { calls: n } }, lang).words).not.toMatch(/undefined|NaN/);
       expect(changeWords(count, COUNT, "x", lang).words_after).toContain("1");
     }
