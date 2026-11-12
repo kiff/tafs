@@ -220,11 +220,12 @@ class DriveController(
       var wait = PAUSE_RETRY_FIRST_MS
       while (stillPaused(on.drive)) {
         val failed = runCatching { api.pauseDrive(on.drive.id) }.exceptionOrNull() ?: break
-        // Posted again only on a network error or tafs cloud's 5xx. A 404 means the drive isn't this person's current one any
-        // more, so it ends here; any other refusal won't change by asking again, and the pause here stands.
+        // Posted again on a network error, tafs cloud's 5xx, a 429, or a sign-in that couldn't refresh (401): the drive is still
+        // there. A 404 means it isn't this person's current one any more, so it ends here; any other refusal won't change by
+        // asking again, and the pause here stands.
         if (failed is CancellationException) throw failed
         if (failed is CloudError && failed.status == 404) { goneAtTafsCloud(on.drive); break }
-        if (failed is CloudError && failed.status < 500) break
+        if (failed is CloudError && failed.status < 500 && failed.status !in RETRIED_REFUSALS) break
         delay(wait)
         wait = minOf(wait * 2, PAUSE_RETRY_MAX_MS)
       }
@@ -480,3 +481,6 @@ const val TAKEOVER_TAPS = 3
 /** A pause tafs cloud didn't take is posted again after this, doubling each time up to [PAUSE_RETRY_MAX_MS]. */
 const val PAUSE_RETRY_FIRST_MS = 500L
 const val PAUSE_RETRY_MAX_MS = 8_000L
+
+/** Refusals of a drive tafs cloud still has, so a pause is posted again: too many requests, and a sign-in that couldn't refresh. */
+val RETRIED_REFUSALS = setOf(401, 429)

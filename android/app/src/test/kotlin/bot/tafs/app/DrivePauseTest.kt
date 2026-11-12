@@ -242,14 +242,17 @@ class DrivePauseTest {
     assertEquals("other", (c.state.value as DriveState.Over).why)
   }
 
-  @Test fun onlyTheNetworkOrA5xxIsAskedAgain() = runTest {
-    // A 503 is asked again, and the third post lands.
-    val busy = FakeApi().apply { pauseFails = 2; failure = { CloudError(503, "unavailable") } }
-    val c = DriveController(busy, FakeHost(), driveScope()) { testScheduler.currentTime }
-    c.begin(drive)
-    c.pause()
-    advanceUntilIdle()
-    assertEquals(3, busy.pauses.size)
+  @Test fun onlyTheNetworkA5xxA429OrA401IsAskedAgain() = runTest {
+    // A drive tafs cloud still has: asked again, and the third post lands.
+    for (status in listOf(503, 429, 401)) {
+      val busy = FakeApi().apply { pauseFails = 2; failure = { CloudError(status, "try again") } }
+      val c = DriveController(busy, FakeHost(), driveScope()) { testScheduler.currentTime }
+      c.begin(drive)
+      c.pause()
+      advanceUntilIdle()
+      assertEquals("$status", 3, busy.pauses.size)
+      assertTrue("$status", c.paused)
+    }
     // Another refusal won't change by asking again: posted once, and the pause here stands.
     val refused = FakeApi().apply { pauseFails = Int.MAX_VALUE; failure = { CloudError(400, "bad request") } }
     val d = DriveController(refused, FakeHost(), driveScope()) { testScheduler.currentTime }
