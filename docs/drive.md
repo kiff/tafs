@@ -259,8 +259,13 @@ drive; only a clear takeover ends it.
     request of the drive with `outcome: refused`, `line: "Paused"` until Continue, whatever
     tafs cloud says. That covers a request already on the stream, or one sent before tafs cloud
     has the pause.
-  - The app posts `POST /v1/coach/drive/pause {drive}`. If that fails, the app keeps its own
-    pause and posts it again; only Continue (`resume`) lifts it.
+  - The app posts `POST /v1/coach/drive/pause {drive}`. If that fails on the network or with a
+    5xx, the app keeps its own pause and posts it again; only Continue (`resume`) lifts it.
+  - **A `pause` or `resume` answered 404 isn't posted again:** this person's current drive isn't
+    this one. The app ends the drive locally at once, and says why from `GET /v1/coach/drive`:
+    "Another drive started" when a different drive is current, the drive's own end when it has
+    one, else the app's own "Coach stopped". Never `owner_took_over`: that stays for the person's
+    own clear takeover, so the record never says they took over when they didn't.
   - The step under way stops before its next event. A step that dispatched nothing yet answers
     `outcome: refused`, `line: "Paused"`; one that already acted answers as it would have.
   - Coach's events are never mixed into the person's: the event being dispatched when they
@@ -357,7 +362,7 @@ the same either way. Coach, and the account's events, have their own words for i
   - **A tap on a control** is counted when the registry has an element with a tap action under the touch, and the finger lifts within 12 points of where it went down (`DriveSession.isControl`). A field isn't one: a tap on it only takes the focus.
   - The caption's Stop ends the drive as `stopped`, and so does the Coach button, by its own action once the touch reaches it. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back: the app sees it as a navigation stack that is shallower once the touch has settled (`DriveHands.wentBack`). A sheet that closes took its stack with it, so closing one only pauses.
   - **A request refused as "Paused" carries no screen:** the person is using the app, and Coach looks again after Continue.
-  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. **One answered 404** means the drive isn't there for this person any more: the app posts nothing more, ends the drive with the end `GET /v1/coach/drive` gives for it, else its own "Coach stopped", and never as `owner_took_over`. A network error or a 5xx is posted again, at 1, 2, 4, then every 8 seconds, while the app keeps its own pause.
+  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. One answered 404, or any other 4xx, ends it as [above](#when-the-person-touches-the-app). A network error or a 5xx is posted again at 1, 2, 4, then every 8 seconds.
   - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
 
 ### Typing
