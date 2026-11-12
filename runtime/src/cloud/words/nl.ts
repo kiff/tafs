@@ -91,6 +91,7 @@ export const nl: Words = {
   run_failed_error: "Hij stopte door een fout. Daarna is er niets meer gedaan.",
   run_failed_time: "Hij bereikte zijn tijdslimiet en stopte.",
   run_failed_start: "Hij kon niet starten, dus er is niets gedaan.",
+  run_failed_tools: "Hij is niet gestart: de tools van het taf konden niet worden gebruikt. Er is niets gedaan.",
   run_failed_switching: "Hij is niet gestart: het taf wisselde van versie.",
   run_failed_access: "Hij stopte: wie erom vroeg, mag dit taf misschien niet meer gebruiken.",
   run_failed_halted: "Hij ging niet verder: het taf is stilgezet.",

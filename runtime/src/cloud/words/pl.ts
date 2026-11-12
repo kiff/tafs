@@ -91,6 +91,7 @@ export const pl: Words = {
   run_failed_error: "Zatrzymało się na błędzie. Potem nic nie zostało zrobione.",
   run_failed_time: "Osiągnęło limit czasu i się zatrzymało.",
   run_failed_start: "Nie mogło się rozpocząć, więc nic nie zostało zrobione.",
+  run_failed_tools: "Nie rozpoczęło się: nie dało się użyć narzędzi tafa. Nic nie zostało zrobione.",
   run_failed_switching: "Nie rozpoczęło się: taf zmieniał wersję.",
   run_failed_access: "Zatrzymało się: osoba, która o nie poprosiła, może już nie mieć dostępu do tego tafa.",
   run_failed_halted: "Nie kontynuowało: taf jest zablokowany.",

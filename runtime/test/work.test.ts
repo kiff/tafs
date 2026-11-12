@@ -181,6 +181,11 @@ describe("a failed run's code", () => {
     expect(failed("the run reached its time limit", "fr")).toBe("Elle a atteint sa limite de temps et s'est arrêtée.");
     expect(failed("no invocation claimed it in time", "pl")).toBe("Nie mogło się rozpocząć, więc nic nie zostało zrobione.");
     expect(failed("the agent is halted, so the run didn't go on", "fr")).toBe("Elle n'a pas continué : le taf est bloqué.");
+    // A run that never started reads apart from one that stopped partway (kiff/agents' FailedFirstTurn, FailedTools).
+    expect(failed("the run failed before its first step, so nothing was done")).toBe("It couldn't start, so nothing was done.");
+    expect(failed("the run failed before its first step, so nothing was done", "fr")).toBe("Elle n'a pas pu démarrer, donc rien n'a été fait.");
+    expect(failed("the AI provider refused the agent's tools, so the run didn't start")).toBe("It didn't start: its tools couldn't be used. Nothing was done.");
+    expect(failed("the AI provider refused the agent's tools, so the run didn't start", "de")).toBe("Er ist nicht gestartet: Die Werkzeuge des tafs konnten nicht verwendet werden. Es wurde nichts getan.");
     // Text tafs doesn't know: kept for an English reader, a plain "failed" in any other language.
     expect(failed("Stripe said no.", "fr")).toBe("Échec");
     expect(failedLine("Stripe said no.")).toBe("It failed: Stripe said no.");
