@@ -1,0 +1,1 @@
+- **iPhone and iPad: touching the app pauses Coach instead of ending the drive.** Your touch does what it always does, the caption reads "Paused" with **Continue** and **Stop**, and Coach does nothing until you tap Continue. Going back, typing in a field, or a third tap on a control tells Coach you've taken over, and it lets you carry on (docs/drive.md).

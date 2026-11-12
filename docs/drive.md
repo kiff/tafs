@@ -367,8 +367,10 @@ the same either way. Coach, and the account's events, have their own words for i
 - **iOS:**
   - Coach's steps never come through the touch stream: they're the app's registered actions and `insertText`. So any `UITouch`, key press or gesture is the person's.
   - **The overlay takes no touch** but its caption's Continue and Stop: it draws above the app's other windows and passes every other touch through (its `hitTest` returns nil). The app's windows each carry a passive recognizer that sees every touch as it begins, without delaying or taking it (`cancelsTouchesInView` off, recognizing alongside every other recognizer), so the person's first touch pauses the drive and still reaches the control under it, edge swipes included. A window that opens mid-drive, such as a menu's, gets one too.
-  - **A tap on a control** is counted when the registry has an element with an action under the touch's end.
-  - The caption's Stop ends the drive as `stopped`. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back.
+  - **A tap on a control** is counted when the registry has an element with a tap action under the touch, and the finger lifts within 12 points of where it went down (`DriveSession.isControl`). A field isn't one: a tap on it only takes the focus.
+  - The caption's Stop ends the drive as `stopped`, and so does the Coach button, by its own action once the touch reaches it. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back: the app sees it as a navigation stack that is shallower once the touch has settled (`DriveHands.wentBack`). A sheet that closes took its stack with it, so closing one only pauses.
+  - **A request refused as "Paused" carries no screen:** the person is using the app, and Coach looks again after Continue.
+  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. One answered 404 ends it as [above](#when-the-person-touches-the-app), with the drive's own end when `GET /v1/coach/drive` has one. Anything else (a network error, a 5xx, a 429) is for a drive tafs cloud still has: it's posted again at 1, 2, 4, then every 8 seconds, and the app's own pause stands meanwhile.
   - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
 
 ### Typing
