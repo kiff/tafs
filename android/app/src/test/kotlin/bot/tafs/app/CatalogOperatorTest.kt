@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.catalog.CatalogDisagreement
 import bot.tafs.app.catalog.CatalogOperator
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
@@ -46,7 +47,10 @@ class CatalogOperatorTest {
   private val t0 = Instant.parse("2026-11-12T22:00:00Z")
   private val operator = CatalogOperator(transport, base, keys, auth, secrets, SigningTime { t0 })
 
-  private val entry = """{"id":"qonto-key@2","name":"qonto-key","kind":"api_key","tools":[{"tool":"list_quotes"},{"tool":"create_client_invoice","fixed_arguments":{"status":"draft"}}]}"""
+  private val entry = """{"id":"qonto-key@2","vendor":"Qonto","title":"Qonto invoicing","kind":"api_key",
+    "api":{"url":"https://specs.example.test/qonto.json","base":"https://thirdparty.example.test/v2","auth":{"in":"header","name":"Authorization"}},
+    "description_sha256":"ab","tools":[{"tool":"list_quotes","name":"qonto_list_quotes","title":"List the quotes","read_only":true},
+    {"tool":"create_client_invoice","name":"qonto_create_invoice","title":"Draft a client invoice","fixed_arguments":{"status":"draft","currency":"EUR"}}]}"""
   private val entryDigest = CatalogOperator.digestOf(KiffClient.json.parseToJsonElement(entry))
 
   private fun revision(state: String = "reviewed", digest: String = entryDigest, body: String = entry) =
@@ -154,7 +158,96 @@ class CatalogOperatorTest {
 
   @Test fun theSheetDrawsReadOrWriteFromTheServersReadingNeverTheEntrysLabels() {
     val view = java.io.File("src/main/kotlin/bot/tafs/app/views/CatalogViews.kt").readText()
-    assertTrue(view.contains("t.readOnly"))
-    assertFalse("never the entry's own labels", view.contains("revision.entry"))
+    assertTrue(view.contains("d.readOnly"))
+    assertFalse("never the entry's own label", view.contains("t.readOnly"))
+  }
+
+  /** A revision whose entry is [body], read as the server would answer, with its own digest so only the agreement is tested. */
+  private fun agreeing(body: String, described: String) =
+    """{"id":"qonto-key@2","entry":$body,"digest":"${CatalogOperator.digestOf(KiffClient.json.parseToJsonElement(body))}","state":"reviewed","described":$described}"""
+
+  private val readsWell = """{"from":"description","tools":[{"tool":"list_quotes","method":"GET","path":"/v2/quotes","read_only":true},
+    {"tool":"create_client_invoice","method":"POST","path":"/v2/client_invoices","read_only":false,"final_arguments":[{"argument":"status","undo":"draft"}]}]}"""
+
+  @Test fun whatIsDrawnOfTheEntryIsTheSignedEntrysOwnWords() = runTest {
+    enrolled()
+    transport.answer(read, 200, revision())
+    assertTrue(operator.open("qonto-key@2"))
+    val e = operator.state.value.sheet!!.entry!!
+    assertEquals("Qonto", e.vendor)
+    assertEquals("Qonto invoicing", e.title)
+    assertEquals("where the key is sent", "https://thirdparty.example.test/v2", e.base)
+    assertEquals("header", e.authIn)
+    assertEquals("Authorization", e.authName)
+    assertEquals("https://specs.example.test/qonto.json", e.descriptionUrl)
+    assertEquals(listOf("List the quotes", "Draft a client invoice"), e.tools.map { it.title })
+    assertEquals(listOf("qonto_list_quotes", "qonto_create_invoice"), e.tools.map { it.name })
+    assertTrue(operator.state.value.sheet!!.disagreements.isEmpty())
+  }
+
+  @Test fun anArgumentThatCanMakeAWriteFinalAndIsLeftOpenLeavesNothingToSign() = runTest {
+    enrolled()
+    val open = entry.replace(""""fixed_arguments":{"status":"draft","currency":"EUR"}""", """"fixed_arguments":{"currency":"EUR"}""")
+    transport.answer(read, 200, agreeing(open, readsWell))
+    assertFalse(operator.open("qonto-key@2"))
+    assertTrue("the digest holds", operator.state.value.sheet!!.matches)
+    assertEquals(listOf(CatalogDisagreement.LeftOpen("create_client_invoice", "status", "\"draft\"")), operator.state.value.sheet!!.disagreements)
+    assertFalse(operator.act(CatalogOperator.PUBLISH))
+    assertTrue(auth.fingerprints.isEmpty())
+    assertTrue(transport.requestsTo(publish).isEmpty())
+    // Pinned to another value is no better than left open.
+    transport.reset()
+    transport.answer(read, 200, agreeing(entry.replace(""""status":"draft"""", """"status":"sent""""), readsWell))
+    assertFalse(operator.open("qonto-key@2"))
+    assertEquals(1, operator.state.value.sheet!!.disagreements.size)
+  }
+
+  @Test fun toolListsThatDifferOrAReadOnlyLabelOnAWriteLeaveNothingToSign() = runTest {
+    enrolled()
+    val extra = """{"from":"description","tools":[{"tool":"list_quotes","read_only":true},
+      {"tool":"create_client_invoice","read_only":false,"final_arguments":[{"argument":"status","undo":"draft"}]},
+      {"tool":"delete_client","read_only":false}]}"""
+    transport.answer(read, 200, agreeing(entry, extra))
+    assertFalse(operator.open("qonto-key@2"))
+    assertEquals(listOf(CatalogDisagreement.NotInEntry("delete_client")), operator.state.value.sheet!!.disagreements)
+
+    transport.reset()
+    val missing = """{"from":"description","tools":[{"tool":"list_quotes","read_only":true}]}"""
+    transport.answer(read, 200, agreeing(entry, missing))
+    assertFalse(operator.open("qonto-key@2"))
+    assertEquals(listOf(CatalogDisagreement.NotDescribed("create_client_invoice")), operator.state.value.sheet!!.disagreements)
+
+    transport.reset()
+    val writes = readsWell.replace(""""path":"/v2/quotes","read_only":true""", """"path":"/v2/quotes","read_only":false""")
+    transport.answer(read, 200, agreeing(entry, writes))
+    assertFalse(operator.open("qonto-key@2"))
+    assertEquals(listOf(CatalogDisagreement.LabelDiffers("list_quotes")), operator.state.value.sheet!!.disagreements)
+
+    transport.reset()
+    transport.answer(read, 200, agreeing(entry, """{"from":"description","why":"the description couldn't be read"}"""))
+    assertFalse(operator.open("qonto-key@2"))
+    assertEquals(listOf(CatalogDisagreement.Unread), operator.state.value.sheet!!.disagreements)
+    assertFalse(operator.act(CatalogOperator.PUBLISH))
+    assertTrue(auth.fingerprints.isEmpty())
+  }
+
+  @Test fun anMcpEntrysToolsAreListedByItsServerSoThereIsNothingToCompare() = runTest {
+    enrolled()
+    val mcp = """{"id":"linear@1","vendor":"Linear","title":"Linear","kind":"mcp","server":"https://mcp.example.test/sse","tools":[]}"""
+    transport.answer("GET /v1/catalog/entries/linear@1", 200,
+      """{"id":"linear@1","entry":$mcp,"digest":"${CatalogOperator.digestOf(KiffClient.json.parseToJsonElement(mcp))}","state":"reviewed","described":{"from":"server","why":"listed by its server once connected"}}""")
+    assertTrue(operator.open("linear@1"))
+    assertEquals("https://mcp.example.test/sse", operator.state.value.sheet!!.entry!!.server)
+  }
+
+  @Test fun theEntrysOwnIdMustBeTheOneAskedForToo() = runTest {
+    enrolled()
+    // The answer says qonto-key@2, but the entry it carries, digest and all, is qonto-key@1's.
+    val other = entry.replace(""""id":"qonto-key@2"""", """"id":"qonto-key@1"""")
+    transport.answer(read, 200, agreeing(other, readsWell))
+    assertFalse(operator.open("qonto-key@2"))
+    assertFalse(operator.state.value.sheet!!.matches)
+    assertFalse(operator.act(CatalogOperator.PUBLISH))
+    assertTrue(auth.fingerprints.isEmpty())
   }
 }

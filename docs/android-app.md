@@ -263,16 +263,28 @@ credential; the phone holds no credential and only signs.
   strong biometric and turned off by a new fingerprint, apart from every account's keys.
   The sheet then shows the operator id and the key's public half (base64 SPKI DER) with
   Copy, to send to whoever keeps the server's operators list. Once both are on the phone,
-  Settings shows a Catalog operator row.
+  Settings shows a Catalog operator row. Anyone can tap such a link: it only makes a key and
+  shows its public half, which grants nothing until the key is on the server's list.
 - **One revision.** The row opens a field for a revision id (`name@version`). The phone
-  reads `GET /v1/catalog/entries/{id}` and draws its state and each tool as the server
-  reads its description: Reads only or Can change things, with the method and path, each
-  argument that's fixed and its value, or why the server couldn't read it (amber). Read
-  or write comes from the server's reading only, never from the entry's own labels.
+  reads `GET /v1/catalog/entries/{id}`. What the revision is comes from the entry itself,
+  which is what the digest covers: the app and title, **where the key is sent**
+  (`api.base`) and in which header or query parameter, an MCP entry's server, the
+  description it pins and that description's SHA-256, and each tool's title and name, the
+  words an owner reads when approving. How each tool acts comes from the server's reading
+  of the description (`described`, outside the digest): Reads only or Can change things,
+  with the method and path, or why it couldn't be read (amber). Read or write is never
+  taken from the entry's own label.
+- **The entry and the reading must agree** (key entries; an MCP entry's tools are listed
+  by its server once connected). Each argument that can make a write final says "fixed to"
+  only when the entry pins it to the undoable value, and is amber, "left open", otherwise:
+  the server won't publish it. A tool in one list and not the other, a read-only label on a
+  tool the description reads as a write, or a description the server couldn't read is
+  amber too. Any of them leaves nothing to sign.
 - **Signing.** The phone computes the JCS SHA-256 of the entry itself. Only when that is
-  the server's digest, and the id is the one asked for, does the sheet offer the one
-  action the state allows: Publish for a reviewed revision, Retire for a published one;
-  otherwise it says the entry isn't what would be signed, or that there's nothing to sign.
+  the server's digest, the answer's id and the entry's own id are both the one asked for,
+  and the two agree, does the sheet offer the one action the state allows: Publish for a
+  reviewed revision, Retire for a published one; otherwise it says the entry isn't what
+  would be signed, that the two don't agree, or that there's nothing to sign.
   The key signs, after one fingerprint, `planque.catalog.v1`, the server's base, the
   action, the id, the digest, a nonce of its own (32 URL-safe characters) and the time,
   one per line, and the phone posts `{operator, digest, nonce, signed_at, signature}` to

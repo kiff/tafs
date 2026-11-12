@@ -18,7 +18,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
@@ -56,13 +58,70 @@ data class CatalogTool(
 @Serializable
 data class CatalogFinal(val argument: String, val undo: JsonElement? = null)
 
+/**
+ * The signed entry's own words, read from [CatalogRevision.entry]: what the digest covers, so what the operator reads is what
+ * the key signs. Read or write is never taken from here: that's [CatalogDescribed].
+ */
+data class CatalogEntryView(
+  val id: String?,
+  val vendor: String,
+  val title: String,
+  val kind: String,
+  /** Where a key entry's key is sent (`api.base`), and how (`api.auth`: `header` or `query`, and its name). */
+  val base: String?,
+  val authIn: String?,
+  val authName: String?,
+  /** An MCP entry's server. */
+  val server: String?,
+  /** The description a key entry pins (`api.url`), and its SHA-256. */
+  val descriptionUrl: String?,
+  val descriptionSha256: String?,
+  val tools: List<CatalogEntryTool>,
+) {
+  val isKey: Boolean get() = kind == "api_key"
+}
+
+/** One of the entry's tools: its name and title, the words an owner reads, its own label, and what it pins. */
+data class CatalogEntryTool(
+  val tool: String,
+  val name: String?,
+  val title: String?,
+  val readOnly: Boolean,
+  val fixed: Map<String, JsonElement>,
+)
+
+/** Where the signed entry and the connection server's reading of it don't agree. Any one of them leaves nothing to sign. */
+sealed interface CatalogDisagreement {
+  /** The server reads a tool the entry doesn't have. */
+  data class NotInEntry(val tool: String) : CatalogDisagreement
+
+  /** The entry has a tool the server doesn't read. */
+  data class NotDescribed(val tool: String) : CatalogDisagreement
+
+  /** The entry labels a tool read-only, and its description reads a write. */
+  data class LabelDiffers(val tool: String) : CatalogDisagreement
+
+  /** An argument that can make a write final, left unpinned or pinned to another value. [value] is what it must be. */
+  data class LeftOpen(val tool: String, val argument: String, val value: String) : CatalogDisagreement
+
+  /** The server couldn't read a key entry's description, or one of its tools: its own why is drawn. */
+  data object Unread : CatalogDisagreement
+}
+
 /** The operator sheet: enrolling the catalog key, or one revision opened by its id, and what came of an action on it. */
 data class CatalogSheet(
   val enrolling: Boolean = false,
   val id: String = "",
   val revision: CatalogRevision? = null,
-  /** The phone's own JCS SHA-256 of the entry equals the connection server's digest: only then is anything signed. */
+  /** The entry as signed, or none when it can't be read. */
+  val entry: CatalogEntryView? = null,
+  /**
+   * The phone's own JCS SHA-256 of the entry equals the connection server's digest, and both the answer's id and the entry's
+   * are the id asked for: only then is anything signed.
+   */
   val matches: Boolean = false,
+  /** Where the entry and the server's reading don't agree: nothing is signed while there's one. */
+  val disagreements: List<CatalogDisagreement> = emptyList(),
   val busy: Boolean = false,
   val error: String? = null,
   val done: String? = null,
@@ -140,9 +199,13 @@ class CatalogOperator(
         return false
       }
       val revision = KiffClient.json.decodeFromString(CatalogRevision.serializer(), String(response.body))
-      val matches = revision.id == name && digestOf(revision.entry) == revision.digest
-      _state.update { s -> s.copy(sheet = s.sheet?.takeIf { it.id == name }?.copy(revision = revision, matches = matches, busy = false)) }
-      matches
+      val entry = entryOf(revision.entry)
+      val matches = entry != null && revision.id == name && entry.id == name && digestOf(revision.entry) == revision.digest
+      val disagreements = entry?.let { disagreements(it, revision.described) }.orEmpty()
+      _state.update { s ->
+        s.copy(sheet = s.sheet?.takeIf { it.id == name }?.copy(revision = revision, entry = entry, matches = matches, disagreements = disagreements, busy = false))
+      }
+      matches && disagreements.isEmpty()
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -160,7 +223,7 @@ class CatalogOperator(
     val open = _state.value.sheet ?: return false
     val revision = open.revision ?: return false
     val operator = _state.value.operator ?: return false
-    if (!open.matches || open.busy) return false
+    if (!open.matches || open.disagreements.isNotEmpty() || open.busy) return false
     if (action != expectedAction(revision.state)) return false
     _state.update { s -> s.copy(sheet = s.sheet?.copy(busy = true, error = null, done = null)) }
     val nonce = nonce()
@@ -234,6 +297,68 @@ class CatalogOperator(
       "published" -> RETIRE
       else -> null
     }
+
+    /** The entry's own fields, as signed; none when it isn't an object. */
+    fun entryOf(entry: JsonElement): CatalogEntryView? {
+      val o = entry as? JsonObject ?: return null
+      fun JsonObject.text(key: String): String? = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+      val api = o["api"] as? JsonObject
+      val auth = api?.get("auth") as? JsonObject
+      val tools = (o["tools"] as? JsonArray).orEmpty().mapNotNull { t ->
+        val tool = t as? JsonObject ?: return@mapNotNull null
+        CatalogEntryTool(
+          tool = tool.text("tool") ?: return@mapNotNull null,
+          name = tool.text("name"),
+          title = tool.text("title"),
+          readOnly = (tool["read_only"] as? JsonPrimitive)?.content == "true",
+          fixed = (tool["fixed_arguments"] as? JsonObject).orEmpty(),
+        )
+      }
+      return CatalogEntryView(
+        id = o.text("id"),
+        vendor = o.text("vendor").orEmpty(),
+        title = o.text("title").orEmpty(),
+        kind = o.text("kind").orEmpty(),
+        base = api?.text("base"),
+        authIn = auth?.text("in"),
+        authName = auth?.text("name"),
+        server = o.text("server"),
+        descriptionUrl = api?.text("url"),
+        descriptionSha256 = o.text("description_sha256"),
+        tools = tools,
+      )
+    }
+
+    /**
+     * Where a key entry and the server's reading of its pinned description don't agree: the two tool lists, a read-only label
+     * on a write, and each argument that can make a write final, which the entry must pin to the undoable value (the server
+     * refuses to publish otherwise). An MCP entry's tools are listed by its server once connected: nothing to compare.
+     */
+    fun disagreements(entry: CatalogEntryView, described: CatalogDescribed?): List<CatalogDisagreement> {
+      if (!entry.isKey) return emptyList()
+      if (described == null || (described.why != null && described.tools.isEmpty())) return listOf(CatalogDisagreement.Unread)
+      val out = mutableListOf<CatalogDisagreement>()
+      val read = described.tools.associateBy { it.tool }
+      for (t in entry.tools) {
+        val d = read[t.tool]
+        if (d == null) {
+          out += CatalogDisagreement.NotDescribed(t.tool)
+          continue
+        }
+        if (d.why != null) out += CatalogDisagreement.Unread
+        if (t.readOnly && !d.readOnly) out += CatalogDisagreement.LabelDiffers(t.tool)
+        for (f in d.finalArguments) {
+          if (!pinned(t, f.argument, f.undo)) out += CatalogDisagreement.LeftOpen(t.tool, f.argument, Jcs.canonical(f.undo ?: JsonNull))
+        }
+      }
+      val inEntry = entry.tools.map { it.tool }.toSet()
+      described.tools.filter { it.tool !in inEntry }.forEach { out += CatalogDisagreement.NotInEntry(it.tool) }
+      return out.distinct()
+    }
+
+    /** Whether the entry pins [argument] of [tool] to the value that keeps it undoable, compared as JCS. */
+    fun pinned(tool: CatalogEntryTool, argument: String, undo: JsonElement?): Boolean =
+      tool.fixed[argument]?.let { Jcs.canonical(it) } == Jcs.canonical(undo ?: JsonNull)
 
     /** The JCS SHA-256 of [entry], lowercase hex, as the connection server computes its digest. */
     fun digestOf(entry: JsonElement): String =

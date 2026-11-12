@@ -26,9 +26,12 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import bot.tafs.app.catalog.CatalogDisagreement
 import bot.tafs.app.catalog.CatalogOperator
 import bot.tafs.app.catalog.CatalogRevision
+import bot.tafs.app.catalog.CatalogSheet
 import bot.tafs.app.catalog.CatalogState
+import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.PrimaryButton
 import bot.tafs.app.design.Theme
@@ -36,8 +39,11 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.kiff.Jcs
+import bot.tafs.app.model.ThisDevice
 import bot.tafs.app.model.Words
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonNull
 
 /** What the operator sheet can do: enrol, open a revision by its id, publish or retire it, close. */
 class CatalogActions(
@@ -49,9 +55,10 @@ class CatalogActions(
 
 /**
  * The catalog operator's sheet (docs/android-app.md, "Catalog operator"). Enrolling: the operator id, typed once, then this
- * phone's catalog key to send. Then one revision by its id: its state, each tool as the connection server reads it (read or
- * write, and each argument that's fixed, with its value), and Publish or Retire, only when the phone's own digest of the entry
- * is the server's. Every refusal is said in the server's words.
+ * phone's catalog key to send. Then one revision by its id: what the signed entry says (its app, where its key goes, each
+ * tool's name and title), each tool as the connection server reads it (read or write, and what must be pinned), and Publish
+ * or Retire, only when the phone's own digest of the entry is the server's and the two agree. Every refusal is said in the
+ * server's words.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +88,7 @@ fun CatalogOperatorSheet(state: CatalogState, actions: CatalogActions) {
           enabled = !sheet.busy,
         )
         OutlineButton(Words.Catalog.open, { scope.launch { actions.open(id) } }, Modifier.fillMaxWidth(), enabled = !sheet.busy && id.isNotBlank())
-        sheet.revision?.let { Revision(it, sheet.matches, sheet.busy) { action -> scope.launch { actions.act(action) } } }
+        sheet.revision?.let { Revision(it, sheet) { action -> scope.launch { actions.act(action) } } }
         sheet.done?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ok)) }
       }
       sheet.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -99,8 +106,8 @@ fun CatalogOperatorSheet(state: CatalogState, actions: CatalogActions) {
 private fun Enrol(state: CatalogState, actions: CatalogActions) {
   val scope = rememberCoroutineScope()
   val clipboard = LocalClipboard.current
-  Text(Words.Catalog.enrolTitle, style = scaled(22, FontWeight.Bold, Theme.ink, display = true))
-  Text(Words.Catalog.enrolText, style = scaled(15, color = Theme.soft))
+  Text(Words.Catalog.enrolTitle(ThisDevice.word), style = scaled(22, FontWeight.Bold, Theme.ink, display = true))
+  Text(Words.Catalog.enrolText(ThisDevice.word, LocalBiometry.current), style = scaled(15, color = Theme.soft))
   val key = state.publicKey
   if (key == null || state.operator.isNullOrBlank()) {
     var operator by remember { mutableStateOf(state.operator.orEmpty()) }
@@ -109,7 +116,7 @@ private fun Enrol(state: CatalogState, actions: CatalogActions) {
   } else {
     Text(Words.Catalog.operatorId, style = scaled(12, color = Theme.dim))
     Text(state.operator.orEmpty(), style = scaled(15, FontWeight.SemiBold, Theme.ink, mono = true))
-    Text(Words.Catalog.publicKey, style = scaled(12, color = Theme.dim))
+    Text(Words.Catalog.publicKey(ThisDevice.word), style = scaled(12, color = Theme.dim))
     Text(key, style = scaled(12, color = Theme.soft, mono = true))
     var copied by remember { mutableStateOf(false) }
     OutlineButton(
@@ -120,41 +127,85 @@ private fun Enrol(state: CatalogState, actions: CatalogActions) {
   }
 }
 
-/** One revision: its state, its tools as the server reads them, and the one action its state allows, when the digest holds. */
+/**
+ * One revision. What it is, where its key goes and each tool's name and title come from the signed entry, so they're what the
+ * digest covers; read or write, the method and path, and what must be pinned come from the server's reading of the entry's
+ * description. Where the two don't agree, it's said in amber, and there's nothing to sign.
+ */
 @Composable
-private fun Revision(revision: CatalogRevision, matches: Boolean, busy: Boolean, act: (String) -> Unit) {
-  Text(revision.id, style = scaled(17, FontWeight.SemiBold, Theme.ink, mono = true))
+private fun Revision(revision: CatalogRevision, sheet: CatalogSheet, act: (String) -> Unit) {
+  val entry = sheet.entry
+  val described = revision.described
+  entry?.let { e ->
+    if (e.vendor.isNotBlank()) Text(e.vendor, style = scaled(17, FontWeight.SemiBold, Theme.ink))
+    if (e.title.isNotBlank()) Text(e.title, style = scaled(15, color = Theme.soft))
+  }
+  Text(revision.id, style = scaled(14, FontWeight.SemiBold, Theme.ink, mono = true))
   Text(stateWords(revision.state), style = scaled(14, color = Theme.soft))
-  revision.described?.let { d ->
-    d.why?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.amberText)) }
-    d.tools.forEach { t ->
-      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(t.tool, style = scaled(14, FontWeight.SemiBold, Theme.ink, mono = true))
-        val how = listOfNotNull(t.method, t.path).joinToString(" ")
-        if (t.why != null) {
-          Text(t.why, style = scaled(13, color = Theme.amberText))
+  entry?.let { e ->
+    e.base?.let { Text(Words.Catalog.keySentTo(base = it), style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
+    e.authName?.let { name ->
+      Text(
+        when (e.authIn) {
+          "header" -> Words.Catalog.keyInHeader(name = name)
+          "query" -> Words.Catalog.keyInQuery(name = name)
+          else -> "${e.authIn.orEmpty()} $name".trim()
+        },
+        style = scaled(13, color = Theme.soft, mono = true),
+      )
+    }
+    e.server?.let { Text(Words.Catalog.connectsTo(server = it), style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
+    e.descriptionUrl?.let { Text(Words.Catalog.descriptionAt(url = it, sha = e.descriptionSha256.orEmpty()), style = scaled(11, color = Theme.dim, mono = true)) }
+  }
+  described?.why?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.amberText)) }
+  val read = described?.tools.orEmpty().associateBy { it.tool }
+  entry?.tools?.forEach { t ->
+    val d = read[t.tool]
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      Text(t.title ?: t.name ?: t.tool, style = scaled(14, FontWeight.SemiBold, Theme.ink))
+      Text(listOfNotNull(t.name, t.tool).distinct().joinToString(" · "), style = scaled(12, color = Theme.dim, mono = true))
+      if (d != null) {
+        val how = listOfNotNull(d.method, d.path).joinToString(" ")
+        if (d.why != null) {
+          Text(d.why, style = scaled(13, color = Theme.amberText))
         } else {
-          Text((if (t.readOnly) Words.Catalog.reads else Words.Catalog.writes) + if (how.isEmpty()) "" else " · $how", style = scaled(13, color = if (t.readOnly) Theme.soft else Theme.amberText))
+          Text((if (d.readOnly) Words.Catalog.reads else Words.Catalog.writes) + if (how.isEmpty()) "" else " · $how", style = scaled(13, color = if (d.readOnly) Theme.soft else Theme.amberText))
         }
-        t.finalArguments.forEach { f ->
-          Text(Words.Catalog.fixedTo(argument = f.argument, value = f.undo?.toString() ?: "null"), style = scaled(12, color = Theme.dim, mono = true))
+        d.finalArguments.forEach { f ->
+          if (CatalogOperator.pinned(t, f.argument, f.undo)) {
+            Text(Words.Catalog.fixedTo(argument = f.argument, value = Jcs.canonical(f.undo ?: JsonNull)), style = scaled(12, color = Theme.dim, mono = true))
+          } else {
+            Text(Words.Catalog.leftOpen(argument = f.argument, value = Jcs.canonical(f.undo ?: JsonNull)), style = scaled(12, color = Theme.amberText, mono = true))
+          }
         }
+      }
+      // What else the entry pins, beyond what keeps a write undoable: drawn as the entry says it.
+      val finals = d?.finalArguments.orEmpty().map { it.argument }.toSet()
+      t.fixed.filterKeys { it !in finals }.forEach { (argument, value) ->
+        Text(Words.Catalog.fixedTo(argument = argument, value = Jcs.canonical(value)), style = scaled(12, color = Theme.dim, mono = true))
       }
     }
   }
+  sheet.disagreements.forEach { x ->
+    when (x) {
+      is CatalogDisagreement.NotInEntry -> Words.Catalog.notInEntry(tool = x.tool)
+      is CatalogDisagreement.NotDescribed -> Words.Catalog.notDescribed(tool = x.tool)
+      is CatalogDisagreement.LabelDiffers -> Words.Catalog.labelDiffers(tool = x.tool)
+      else -> null
+    }?.let { Text(it, style = scaled(13, color = Theme.amberText)) }
+  }
   Text(revision.digest, style = scaled(11, color = Theme.dim, mono = true))
+  val action = CatalogOperator.expectedAction(revision.state)
   when {
-    !matches -> Text(Words.Catalog.notWhatIsSigned, style = scaled(14, color = Theme.no))
-    CatalogOperator.expectedAction(revision.state) == null -> Text(Words.Catalog.nothingToSign, style = scaled(13, color = Theme.soft))
-    else -> {
-      val action = CatalogOperator.expectedAction(revision.state)!!
-      PrimaryButton(
-        if (busy) Words.Approval.approving else if (action == CatalogOperator.PUBLISH) Words.Catalog.publish else Words.Catalog.retire,
-        { act(action) },
-        Modifier.fillMaxWidth().confirms(),
-        enabled = !busy,
-      )
-    }
+    !sheet.matches -> Text(Words.Catalog.notWhatIsSigned, style = scaled(14, color = Theme.no))
+    sheet.disagreements.isNotEmpty() -> Text(Words.Catalog.doesNotAgree, style = scaled(14, color = Theme.no))
+    action == null -> Text(Words.Catalog.nothingToSign, style = scaled(13, color = Theme.soft))
+    else -> PrimaryButton(
+      if (sheet.busy) Words.Approval.approving else if (action == CatalogOperator.PUBLISH) Words.Catalog.publish else Words.Catalog.retire,
+      { act(action) },
+      Modifier.fillMaxWidth().confirms(),
+      enabled = !sheet.busy,
+    )
   }
 }
 
