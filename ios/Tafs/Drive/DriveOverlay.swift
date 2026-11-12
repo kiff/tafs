@@ -174,7 +174,7 @@ struct DriveOverlayView: View {
     private func pill(_ words: String, filled: Bool) -> some View {
         Text(words).scaledFont(14, weight: .semibold).foregroundColor(filled ? Theme.amberInk : Theme.ink)
             .padding(.horizontal, 12).padding(.vertical, 6)
-            .background(Capsule().fill(filled ? Theme.brand : Theme.ink.opacity(0.08)))
+            .background(Capsule().fill(filled ? AnyShapeStyle(Theme.brand) : AnyShapeStyle(Theme.ink.opacity(0.08))))
             .contentShape(Capsule())
     }
 

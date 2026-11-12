@@ -301,9 +301,10 @@ final class DriveSession: ObservableObject {
                     wait = 1
                 } catch {
                     if Task.isCancelled { return }
-                    // Only a network error or tafs cloud's own failure is worth posting again. A 404 says
-                    // the drive isn't there for this person any more: it ends here, in tafs cloud's words.
-                    if let e = error as? TafsCloud.CloudError, (400..<500).contains(e.status) {
+                    // A 404 says the drive isn't this person's any more: it ends here, in tafs cloud's
+                    // words. Anything else (the network, a 5xx, a 429, a sign-in to refresh) leaves a drive
+                    // tafs cloud still has, so it's posted again, and the app's own pause stands meanwhile.
+                    if let e = error as? TafsCloud.CloudError, e.status == 404 {
                         await self.endAsTafsCloudSays(id)
                         return
                     }

@@ -370,7 +370,7 @@ the same either way. Coach, and the account's events, have their own words for i
   - **A tap on a control** is counted when the registry has an element with a tap action under the touch, and the finger lifts within 12 points of where it went down (`DriveSession.isControl`). A field isn't one: a tap on it only takes the focus.
   - The caption's Stop ends the drive as `stopped`, and so does the Coach button, by its own action once the touch reaches it. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back: the app sees it as a navigation stack that is shallower once the touch has settled (`DriveHands.wentBack`). A sheet that closes took its stack with it, so closing one only pauses.
   - **A request refused as "Paused" carries no screen:** the person is using the app, and Coach looks again after Continue.
-  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. One answered 404, or any other 4xx, ends it as [above](#when-the-person-touches-the-app), with the drive's own end when `GET /v1/coach/drive` has one. A network error or a 5xx is posted again at 1, 2, 4, then every 8 seconds.
+  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. One answered 404 ends it as [above](#when-the-person-touches-the-app), with the drive's own end when `GET /v1/coach/drive` has one. Anything else (a network error, a 5xx, a 429) is for a drive tafs cloud still has: it's posted again at 1, 2, 4, then every 8 seconds, and the app's own pause stands meanwhile.
   - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
 
 ### Typing

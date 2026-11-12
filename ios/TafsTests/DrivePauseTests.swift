@@ -154,6 +154,20 @@ final class DrivePauseTests: XCTestCase {
         XCTAssertTrue(drive.isOn)
     }
 
+    /// Only a 404 says the drive is gone. A pause tafs cloud refused another way (too many requests)
+    /// is for a drive it still has: ending it here would leave Coach waiting on a drive nobody stopped.
+    func testAPauseRefusedAnotherWayIsPostedAgainAndTheDriveStaysOn() async throws {
+        try await show(DriveTests.Probe())
+        StubProtocol.responses["POST /v1/coach/drive/pause"] = (429, #"{"error":"too many requests"}"#)
+        StubProtocol.thenRespond["POST /v1/coach/drive/pause"] = ["POST /v1/coach/drive/pause": (200, "{}")]
+        begin()
+        personTaps(CGPoint(x: 4, y: 300))
+        await settle(1.8)
+        XCTAssertEqual(sent("/v1/coach/drive/pause").count, 2)
+        XCTAssertTrue(drive.paused)
+        XCTAssertTrue(drive.isOn, "a 429 isn't the drive's end")
+    }
+
     /// A `pause` answered 404: the drive isn't there for this person any more, so posting again can't
     /// help. It ends in the app with the end tafs cloud gives for it, nothing is posted, and it's never
     /// called a takeover.
