@@ -70,6 +70,7 @@
   "connect.disconnect_button": "Desligar",
   "connect.disconnecting": "A desligar…",
   "connect.from_removed": "De tafs removidos",
+  "connect.give_key_on_sheet": "Dar a chave num ecrã seguro",
   "connect.give_key_with": "Dar a chave com {biometry}",
   "connect.kept.another_taf": "outro taf",
   "connect.kept.for_card": {
@@ -85,6 +86,8 @@
     "other": "A sua ligação a {vendor} foi mantida: {names} usam-na."
   },
   "connect.key": "A chave",
+  "connect.key_clipboard": "A área de transferência é limpa depois de colar.",
+  "connect.key_goes_to": "A chave vai deste telemóvel para o servidor de ligações, que só a envia para {host}. Nunca vai para o Coach.",
   "connect.key_not_given": "A chave não foi dada. {why}",
   "connect.kiff_words_connection_could_not": "Não foi possível ler as palavras do KIFF para esta ligação. Nada foi aprovado.",
   "connect.last_failed": "Última falha: {title} · {detail}",

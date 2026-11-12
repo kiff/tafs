@@ -70,6 +70,7 @@
   "connect.disconnect_button": "Ontkoppelen",
   "connect.disconnecting": "Ontkoppelen…",
   "connect.from_removed": "Van verwijderde tafs",
+  "connect.give_key_on_sheet": "De sleutel geven op een beveiligd scherm",
   "connect.give_key_with": "De sleutel geven met {biometry}",
   "connect.kept.another_taf": "een ander taf",
   "connect.kept.for_card": {
@@ -85,6 +86,8 @@
     "other": "Je {vendor}-koppeling is behouden: {names} gebruiken hem."
   },
   "connect.key": "De sleutel",
+  "connect.key_clipboard": "Het klembord wordt gewist nadat je plakt.",
+  "connect.key_goes_to": "De sleutel gaat van deze telefoon naar de koppelingsserver, die hem alleen naar {host} stuurt. Hij gaat nooit naar Coach.",
   "connect.key_not_given": "De sleutel is niet gegeven. {why}",
   "connect.kiff_words_connection_could_not": "De woorden van KIFF voor deze koppeling konden niet worden gelezen. Er is niets goedgekeurd.",
   "connect.last_failed": "Laatst mislukt: {title} · {detail}",

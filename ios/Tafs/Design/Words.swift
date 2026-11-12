@@ -1571,6 +1571,8 @@ enum Words {
         static var disconnecting: String { Words.line("connect.disconnecting") }
         /// From removed tafs
         static var fromRemoved: String { Words.line("connect.from_removed") }
+        /// Give the key on a secure sheet
+        static var giveKeyOnSheet: String { Words.line("connect.give_key_on_sheet") }
         /// Give the key with {biometry}
         static func giveKeyWith(biometry: String) -> String { Words.line("connect.give_key_with", biometry) }
         enum Kept {
@@ -1585,6 +1587,10 @@ enum Words {
         static func keptConnection(count: Int, vendor: String, names: String) -> String { Words.count("connect.kept_connection", count, vendor, names) }
         /// The key
         static var key: String { Words.line("connect.key") }
+        /// The clipboard is cleared after you paste.
+        static var keyClipboard: String { Words.line("connect.key_clipboard") }
+        /// The key goes from this phone to the connection server, which sends it only to {host}. It never goes to Coach.
+        static func keyGoesTo(host: String) -> String { Words.line("connect.key_goes_to", host) }
         /// The key wasn't given. {why}
         static func keyNotGiven(why: String) -> String { Words.line("connect.key_not_given", why) }
         /// KIFF's words for this connection couldn't be read. Nothing was approved.

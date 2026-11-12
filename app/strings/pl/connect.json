@@ -78,6 +78,7 @@
   "connect.disconnect_button": "Rozłącz",
   "connect.disconnecting": "Rozłączanie…",
   "connect.from_removed": "Z usuniętych tafs",
+  "connect.give_key_on_sheet": "Przekaż klucz na bezpiecznym ekranie",
   "connect.give_key_with": "Przekaż klucz przez {biometry}",
   "connect.kept.another_taf": "inny taf",
   "connect.kept.for_card": {
@@ -99,6 +100,8 @@
     "other": "Zachowano Twoje połączenie {vendor}: używają go {names}."
   },
   "connect.key": "Klucz",
+  "connect.key_clipboard": "Schowek jest czyszczony po wklejeniu.",
+  "connect.key_goes_to": "Klucz trafia z tego telefonu na serwer połączeń, który wysyła go tylko do {host}. Nigdy nie trafia do Coacha.",
   "connect.key_not_given": "Klucz nie został przekazany. {why}",
   "connect.kiff_words_connection_could_not": "Nie udało się odczytać opisu KIFF dla tego połączenia. Nic nie zostało zatwierdzone.",
   "connect.last_failed": "Ostatnio nie powiodło się: {title} · {detail}",

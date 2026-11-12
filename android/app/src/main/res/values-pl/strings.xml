@@ -894,6 +894,7 @@
     <string name="connect_disconnect_button">Rozłącz</string>
     <string name="connect_disconnecting">Rozłączanie…</string>
     <string name="connect_from_removed">Z usuniętych tafs</string>
+    <string name="connect_give_key_on_sheet">Przekaż klucz na bezpiecznym ekranie</string>
     <string name="connect_give_key_with">Przekaż klucz przez %1$s</string>
     <string name="connect_kept_another_taf">inny taf</string>
     <plurals name="connect_kept_for_card">
@@ -915,6 +916,8 @@
         <item quantity="other">Zachowano Twoje połączenie %2$s: używają go %3$s.</item>
     </plurals>
     <string name="connect_key">Klucz</string>
+    <string name="connect_key_clipboard">Schowek jest czyszczony po wklejeniu.</string>
+    <string name="connect_key_goes_to">Klucz trafia z tego telefonu na serwer połączeń, który wysyła go tylko do %1$s. Nigdy nie trafia do Coacha.</string>
     <string name="connect_key_not_given">Klucz nie został przekazany. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Nie udało się odczytać opisu KIFF dla tego połączenia. Nic nie zostało zatwierdzone.</string>
     <string name="connect_last_failed">Ostatnio nie powiodło się: %1$s · %2$s</string>
