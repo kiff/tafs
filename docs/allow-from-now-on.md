@@ -86,6 +86,7 @@ returns the offer, or why there's none:
     "changes": [{ "mandate_id": "…", "kind": "per_action", "before": 15000, "after": 32000,
                   "unit": "EUR", "words_before": "Refunds up to €150 each", "words_after": "Refunds up to €320 each",
                   "rounded": false }],
+    "round": { "after": 35000, "words": "€350" },
     "would": { "calls": 4, "words": "With this Card, 4 more refunds would have gone out on their own (€1,180)" },
     "draft": "drf_…", "confirm_key": "critical", "send_held": true } }
 ```
@@ -116,6 +117,11 @@ draft, since a call outside two limits needs both to go on its own):
 | a unit mismatch (`kind: card_unit`) | No offer (`unit`): the Card counts another currency, and that's Coach's to fix |
 
 **The figure** is the call's own by default: that's the narrowest change, and the offer says so.
+The offer also carries what rounding would give, `round: {after, words}` (the new figure in
+minor units, and in the app's money words, "€350"), so the **Round up to {amount}** button can
+name it before any tap; `round` is absent when rounding changes nothing (a count, a resource, or
+a figure already round). With several changes, `round.words` names the per-call figure when
+there is one, else the total.
 **Rounded** (`{"round": true}`), it goes up to the next 50 below 1,000, the next 100 below
 10,000, then the next 1,000 (in major units, €320 → €350, €1,240 → €1,300), and the words say
 "rounded up from €320". Never below the call's own figure, and never more than one step above
@@ -150,7 +156,9 @@ have gone out on its own").
   - it signs the `version` it read.
 - One signature: the draft's confirm with the approval key KIFF names, with
   `hold: {id, accounting_version}` when the switch is on.
-- **Round up** posts `{"round": true}` and shows the new draft the same way.
+- **Round up to {amount}** shows only when the offer has `round`, with `round.words` as its
+  amount; it posts `{"round": true}` and shows the new draft the same way. The apps never compute
+  a rounded figure.
 - **The app's own labels**, in `app/strings` in 8 languages (dev-android adds them, both apps
   read them): the button, the sheet's title, the switch ("Send this one too"), "Round up to
   {amount}", and "This change isn't what was offered". Every other line is tafs cloud's or
