@@ -560,7 +560,7 @@ like this one go on their own.
   agent's (and, when KIFF names `from_hold`, made from this held call), retires no Card and adds
   none. Each Card it changes is one the offer names and reads exactly as that Card in force with the
   offered limit moved from `before` to `after` in the offer's unit: a per-call cap on the held
-  call's action (`per_action`), or a total or count in its own window (`total`, `count`). Every other
+  call's action (`per_action`), or a total or count in its own window, the offer's `window` when it names one (`total`, `count`). Every other
   action, cap, total, window and `on_exceed` is the same; KIFF's lines and a grant's title are words,
   not terms. A `resource` change, and a Card marked unchanged, read as in force. Anything else, or a
   kind the contract doesn't name: "This change isn't what was offered", and no sign button. A draft

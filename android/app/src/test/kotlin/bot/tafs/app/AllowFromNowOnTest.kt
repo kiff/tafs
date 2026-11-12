@@ -174,6 +174,11 @@ class AllowFromNowOnTest {
     assertFalse("the window moved with it", signs(card("$g[${refund(cap)}],\"aggregates\":[${day.replace("50000", "60000").replace("day\"", "week\"")}]", "$g[${refund(cap)}],\"aggregates\":[$day]"), totalOffer()))
     assertFalse("the cap moved too", signs(card("$g[${refund(raised)}],\"aggregates\":[${day.replace("50000", "60000")}]", "$g[${refund(cap)}],\"aggregates\":[$day]"), totalOffer()))
     assertFalse("another unit", signs(card("$g[${refund(cap)}],\"aggregates\":[${day.replace("50000", "60000")}]", "$g[${refund(cap)}],\"aggregates\":[$day]"), totalOffer(unit = "USD")))
+    // Two totals at the same figure, a day's and a week's: the offer's window says which one moves.
+    val weekSame = day.replace("day\"", "week\"")
+    val inDay = totalOffer().let { t -> t.copy(changes = t.changes.map { it.copy(window = "day") }) }
+    assertTrue(signs(card("$g[${refund(cap)}],\"aggregates\":[${day.replace("50000", "60000")},$weekSame]", "$g[${refund(cap)}],\"aggregates\":[$day,$weekSame]"), inDay))
+    assertFalse("the week's moved instead", signs(card("$g[${refund(cap)}],\"aggregates\":[$day,${weekSame.replace("50000", "60000")}]", "$g[${refund(cap)}],\"aggregates\":[$day,$weekSame]"), inDay))
   }
 
   @Test fun aResourceChangeAllowsNoReadableDifference() {

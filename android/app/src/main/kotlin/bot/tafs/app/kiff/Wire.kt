@@ -360,6 +360,8 @@ data class AllowChange(
   val before: Long? = null,
   val after: Long? = null,
   val unit: String? = null,
+  /** A total's or a count's window, as KIFF's draft writes it: the change moves the total in that window only. */
+  val window: String? = null,
   @SerialName("words_before") val wordsBefore: String = "",
   @SerialName("words_after") val wordsAfter: String = "",
   val rounded: Boolean = false,
