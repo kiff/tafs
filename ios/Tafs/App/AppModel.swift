@@ -1153,6 +1153,8 @@ final class AppModel: ObservableObject {
         let answer: String?
     }
     @Published var requestedHold: HoldRequest?
+    /// "Allow this from now on", open on a held call (docs/allow-from-now-on.md).
+    @Published var allow: AllowSheet?
 
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
@@ -2397,6 +2399,130 @@ final class AppModel: ObservableObject {
             scriptPosition[taf.id] = position + 1
             propose(script[position], by: taf.id)
         }
+    }
+
+    // MARK: Allow this from now on
+
+    /// "Allow this from now on", open on `call`: tafs cloud's answer, KIFF's draft as this
+    /// phone read it, and whether it's what was offered.
+    struct AllowSheet: Identifiable, Equatable {
+        let call: HeldCall
+        var answer: TafsCloud.AllowAnswer?
+        var draft: KIFFClient.AgentDraft?
+        var matches = false
+        var busy = false
+        var error: String?
+        /// "Let this one go out too": the held call goes with the same signature.
+        var sendHeld = true
+        /// The rounded figure was asked for: the sheet no longer offers to round.
+        var rounded = false
+        var id: UUID { call.id }
+    }
+
+    /// "Allow this from now on" on `call`: for someone who manages Cards, on a hold a Card
+    /// change can lift, from KIFF. Decided from the held call itself, with no request.
+    func offersAllow(_ call: HeldCall) -> Bool {
+        mode == .kiff && canManageCards && cloudTaf(for: call.tafID) != nil && HoldAllow.allowable(call)
+    }
+
+    /// "Allow this from now on" tapped: the sheet opens, and tafs cloud makes the offer now.
+    func openAllow(_ call: HeldCall) {
+        allow = AllowSheet(call: call, busy: true)
+        Task { await loadAllow(round: false) }
+    }
+
+    /// Round up to the figure the offer named: tafs cloud makes the rounded draft, which is
+    /// shown and checked the same way. The app never rounds.
+    func roundAllow() {
+        guard let open = allow, !open.busy else { return }
+        allow?.busy = true
+        allow?.error = nil
+        Task { await loadAllow(round: true) }
+    }
+
+    /// tafs cloud's offer for the open sheet's held call, then KIFF's draft, read by this
+    /// phone. A late answer for a call whose sheet is no longer open changes nothing, and
+    /// rounding up keeps the person's switch.
+    @discardableResult
+    func loadAllow(round: Bool) async -> Bool {
+        guard let open = allow else { return false }
+        let call = open.call
+        guard let taf = cloudTaf(for: call.tafID)?.id, call.kiffID != nil else {
+            allow?.busy = false
+            allow?.error = Words.NeedsYou.answerNotTaken
+            return false
+        }
+        let gen = accountGeneration
+        do {
+            let read = try await HoldAllow.read(cloud: cloud, kiff: kiff, taf: taf, call: call, round: round)
+            guard gen == accountGeneration, var now = allow, now.call.id == call.id else { return false }
+            now.answer = read.answer
+            now.draft = read.draft
+            now.matches = read.matches
+            now.busy = false
+            now.error = nil
+            if !round { now.sendHeld = read.answer.offer?.sendHeld ?? true }
+            now.rounded = round
+            allow = now
+            return read.matches
+        } catch {
+            guard gen == accountGeneration, allow?.call.id == call.id else { return false }
+            allow?.busy = false
+            allow?.error = Words.Version.cardNotRead(why: "\(error.localizedDescription)")
+            return false
+        }
+    }
+
+    /// One signature: KIFF's draft as this phone read it, confirmed with the approval key,
+    /// with the held call when the switch is on, so KIFF lets it go under the same signature.
+    /// With it off, the Card changes and the call still waits for its own answer.
+    @discardableResult
+    func confirmAllow() async -> Bool {
+        guard let open = allow, let draft = open.draft, open.matches, !open.busy, !draft.confirmed, let tenant = kiffTenant else { return false }
+        var hold: (id: String, version: Int)?
+        if open.sendHeld {
+            // The call goes only as the person saw it: without its version, nothing is signed.
+            guard let id = open.call.kiffID, let version = open.call.accountingVersion else {
+                allow?.error = Words.NeedsYou.answerNotTaken
+                return false
+            }
+            hold = (id, version)
+        }
+        let gen = accountGeneration
+        allow?.busy = true
+        allow?.error = nil
+        let signer = self.signer
+        do {
+            _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8), reason: Words.NeedsYou.allowTitle, grants: true)
+        } catch {
+            if gen == accountGeneration, allow?.call.id == open.call.id {
+                allow?.busy = false
+                quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            if let hold {
+                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version, hold: hold.id, accountingVersion: hold.version)
+            } else {
+                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
+            }
+        } catch {
+            if gen == accountGeneration, allow?.call.id == open.call.id {
+                allow?.busy = false
+                allow?.error = Words.Version.cardNotRead(why: "\(error.localizedDescription)")
+            }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        allow = nil
+        // The Card changed, and with the switch on the call went: Needs you and the taf read again.
+        await refresh()
+        return true
     }
 
     // MARK: The owner answers

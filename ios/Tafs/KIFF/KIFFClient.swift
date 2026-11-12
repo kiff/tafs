@@ -869,9 +869,11 @@ final class KIFFClient {
         /// them (kiff/tafs#107), so its tools and limits go back together. Each with its terms
         /// now, for the owner to read before confirming; the draft's version names them.
         var retires: [Retired]?
+        /// The held call a draft was made from (KIFF's allow-draft), when KIFF says.
+        var fromHold: String?
         enum CodingKeys: String, CodingKey {
             case id, status, version, reason, cards, label, retires
-            case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids", noTools = "no_tools"
+            case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids", noTools = "no_tools", fromHold = "from_hold"
         }
         struct Retired: Decodable, Equatable {
             let id: String
@@ -1017,6 +1019,23 @@ final class KIFFClient {
     /// KIFF issues its Cards. A signed setup call.
     func confirmDraft(id: String, version: String) async throws -> AgentDraft {
         try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version])
+    }
+
+    /// As `confirmDraft`, naming the held call the draft answers: KIFF lets that call go once
+    /// under the same signature, so one Face ID covers the Card and the call
+    /// (docs/allow-from-now-on.md).
+    func confirmDraft(id: String, version: String, hold: String, accountingVersion: Int) async throws -> AgentDraft {
+        struct Body: Encodable {
+            struct Hold: Encodable {
+                let id: String
+                let accountingVersion: Int
+                enum CodingKeys: String, CodingKey { case id, accountingVersion = "accounting_version" }
+            }
+            let version: String
+            let hold: Hold
+        }
+        return try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm",
+                              body: Body(version: version, hold: .init(id: hold, accountingVersion: accountingVersion)))
     }
 
     /// Confirms a version's draft as a **trial** (kiff/tafs#173): KIFF issues its Cards as
