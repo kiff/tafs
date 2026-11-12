@@ -56,7 +56,7 @@ struct HomeView: View {
                 // A few jobs the account doesn't run yet, where tafs cloud shows them: it picks
                 // and orders them; Home draws them.
                 if model.mode == .kiff, !model.tafs.isEmpty, let gallery = model.gallery {
-                    RecipeStrip(gallery: gallery, logo: { model.cloud.logoURL($0) }) { openRecipe = $0 }
+                    RecipeStrip(gallery: gallery, logo: { model.cloud.logoURL($0) }, open: { openRecipe = $0 }, seeAll: { showingGallery = true })
                 }
 
                 if !model.otherAgents.isEmpty {

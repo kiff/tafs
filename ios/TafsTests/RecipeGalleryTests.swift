@@ -48,6 +48,32 @@ final class RecipeGalleryTests: XCTestCase {
         XCTAssertEqual(g.labels?.hand, "Hand it to Coach")
     }
 
+    /// Under the strip, one row opens every job, in tafs cloud's own words for them: only when
+    /// there are more jobs than the strip shows, and tafs cloud sent the words.
+    func testTheRowUnderTheStripOpensEveryJobInTafsCloudsWords() throws {
+        let g = try read()
+        XCTAssertGreaterThan(g.recipes.count, g.stripRecipes.count)
+        XCTAssertEqual(g.seeAll, "All jobs")
+        var wordless = g
+        wordless.words.all = "  "
+        XCTAssertNil(wordless.seeAll, "no words from tafs cloud: no row, and none of the app's own")
+        var whole = g
+        whole.strip.ids = g.recipes.map(\.id)
+        XCTAssertEqual(whole.stripRecipes.count, whole.recipes.count)
+        XCTAssertNil(whole.seeAll, "the strip already shows every job")
+        var hidden = g
+        hidden.strip.shown = false
+        XCTAssertTrue(hidden.stripRecipes.isEmpty, "no strip, so no row under it either")
+        // Both layouts draw the row and open the gallery from it.
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let phone = try String(contentsOf: views.appendingPathComponent("HomeView.swift"), encoding: .utf8)
+        XCTAssertTrue(phone.contains("seeAll: { showingGallery = true }"))
+        let pad = try String(contentsOf: views.appendingPathComponent("HomeSplitView.swift"), encoding: .utf8)
+        XCTAssertTrue(pad.contains("if let words = gallery.seeAll {"))
+        let strip = try String(contentsOf: views.appendingPathComponent("RecipeGallery.swift"), encoding: .utf8)
+        XCTAssertTrue(strip.contains("if let seeAll, let words = gallery.seeAll {"))
+    }
+
     /// The strip draws tafs cloud's ids in its order; one the gallery doesn't list is skipped,
     /// and a strip tafs cloud doesn't show draws nothing.
     func testTheStripDrawsTafsCloudsIdsInOrder() throws {

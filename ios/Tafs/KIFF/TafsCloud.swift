@@ -1876,6 +1876,12 @@ final class TafsCloud {
         func asRecipes(labels fallback: Recipes.Labels? = nil) -> Recipes {
             Recipes(categories: categories, recipes: recipes, labels: labels ?? fallback)
         }
+        /// The words of the row under the strip that opens every job: tafs cloud's heading for
+        /// them ("All jobs"). Nil when it sends none, or the strip already shows every job.
+        var seeAll: String? {
+            let words = words.all.trimmingCharacters(in: .whitespacesAndNewlines)
+            return words.isEmpty || recipes.count <= stripRecipes.count ? nil : words
+        }
         /// The strip's jobs, in tafs cloud's order: an id the gallery doesn't list is skipped.
         /// None when tafs cloud doesn't show it.
         var stripRecipes: [Recipes.Recipe] {

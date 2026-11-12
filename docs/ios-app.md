@@ -433,6 +433,8 @@ it, in tafs cloud's words.
 - **The strip** (`RecipeStrip`): under the tafs list, `strip.title` and the jobs in `strip.ids`,
   in that order, only while `strip.shown`. tafs cloud leaves out jobs the account runs and puts
   first those whose apps are connected; the app picks nothing. On iPad it's a sidebar section.
+  Under the jobs, one row opens every job (+ New's gallery), in tafs cloud's own heading for them (`words.all`,
+  `Gallery.seeAll`): only when there are more jobs than the strip shows, on iPhone and iPad.
 - **App logos** (`AppMarks`): each job's apps by name, after the app's logo, and the same in
   Connect apps. A logo loads only from tafs cloud, by the path it sent: `/v1/logos/` and a key of
   32 lowercase hex, as on Android (`TafsCloud.logoURL`). An absolute URL or any other path loads
