@@ -155,6 +155,22 @@ final class DrivePauseTests: XCTestCase {
         XCTAssertEqual(stop.url?.path, "/v1/coach/drive/stop")
     }
 
+    /// A drive tafs cloud had already ended (the account halted while it was paused) ends here with
+    /// tafs cloud's words, on the pause's or the Continue's answer.
+    func testAnEndTafsCloudAnswersWithEndsTheDrive() async throws {
+        try await show(DriveTests.Probe())
+        StubProtocol.responses["POST /v1/coach/drive/resume"] = (200, #"{"resumed":false,"ended":{"why":"halted","words":"The account is halted, so Coach stopped"}}"#)
+        begin()
+        personTaps(CGPoint(x: 4, y: 300))
+        await settle(0.5)
+        XCTAssertTrue(drive.isOn)
+        drive.resume()
+        await settle(0.6)
+        XCTAssertFalse(drive.isOn)
+        XCTAssertEqual(drive.caption, "The account is halted, so Coach stopped")
+        XCTAssertEqual(sent("/v1/coach/drive/stop").count, 0, "tafs cloud ended it: nothing to stop")
+    }
+
     // MARK: A clear takeover
 
     func testTheThirdTapOnAControlIsATakeover() async throws {

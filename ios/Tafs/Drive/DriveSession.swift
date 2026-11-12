@@ -289,8 +289,15 @@ final class DriveSession: ObservableObject {
             while let self, self.isOn, self.live?.id == id, self.cloudPaused != self.paused, !Task.isCancelled {
                 let want = self.paused
                 do {
-                    if want { try await cloud.pauseDrive(id) } else { try await cloud.resumeDrive(id) }
-                    guard self.live?.id == id else { return }
+                    let ended: TafsCloud.DriveEnded?
+                    if want { ended = try await cloud.pauseDrive(id) } else { ended = try await cloud.resumeDrive(id) }
+                    guard self.live?.id == id, !Task.isCancelled else { return }
+                    // tafs cloud had already ended it (halted, idle): its words go in the caption.
+                    if let ended {
+                        self.telling = nil
+                        self.finish(why: ended.why, words: ended.words ?? "")
+                        return
+                    }
                     self.cloudPaused = want
                     wait = 1
                 } catch {
