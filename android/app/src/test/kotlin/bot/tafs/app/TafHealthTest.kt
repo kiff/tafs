@@ -56,11 +56,14 @@ class TafHealthTest {
       """{"summary":{"status":"idle","line":"Idle"},"requests":[
         {"id":"r1","at":"2026-11-12T19:43:00Z","state":"done","line":"Done at 20:43","credits":{"credits":34,"counted":true,"words":"34 credits"}},
         {"id":"r2","at":"2026-11-12T18:48:00Z","state":"failed","line":"It couldn't start","credits":{"credits":0,"counted":false,"words":"No credits: it failed"}},
-        {"id":"r3","at":"2026-11-12T18:00:00Z","state":"done","line":"Done at 19:00"}],"skipped":[]}""",
+        {"id":"r3","at":"2026-11-12T18:00:00Z","state":"done","line":"Done at 19:00"},
+        {"id":"r4","at":"2026-11-12T17:00:00Z","state":"done","line":"Done at 18:00","credits":"soon"}],"skipped":[]}""",
     )
     assertEquals("34 credits", work.requests[0].credits!!.words)
     assertEquals("why it used none, in tafs cloud's words", "No credits: it failed", work.requests[1].credits!!.words)
     assertNull("not counted yet: no line, and nothing counted here", work.requests[2].credits)
+    assertEquals("credits the phone can't read leave the run, and the page, as they are", "Done at 18:00", work.requests[3].line)
+    assertNull(work.requests[3].credits)
   }
 
   @Test fun anOlderTafsCloudWithoutHealthOrFixesStillReads() {
