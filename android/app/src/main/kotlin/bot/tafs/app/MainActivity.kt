@@ -175,6 +175,9 @@ class MainActivity : FragmentActivity() {
         // Read again each time the app comes back: a fingerprint enrolled in Settings meanwhile is named at once.
         var biometry by remember { mutableStateOf(Biometry.of(this@MainActivity)) }
         androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { biometry = Biometry.of(this@MainActivity) }
+        // The store's screenshots, from a debug build opened with `--ez screenshots true`: the sample shows the Coach button.
+        val shooting = remember { (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0 && intent?.getBooleanExtra("screenshots", false) == true }
+        LaunchedEffect(model, shooting) { if (shooting) model.showForScreenshots() }
         // Firebase gave the phone a new token: the model tells tafs cloud.
         DisposableEffect(model) {
           app.tokenListener = model::tokenArrived

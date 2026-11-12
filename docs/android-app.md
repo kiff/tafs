@@ -441,7 +441,10 @@ so it can say what went wrong and ask again.
 Five places under every screen: **Account** · **Tafs** · **Needs you** · **Record** · **Coach**.
 Account opens Settings and Coach opens Coach; the three between are tabs, and Needs you keeps
 its count. Coach is a filled button (ink, with the ground's colour as its label), shown only to
-someone KIFF lets use Coach, so the bar has four places otherwise. In landscape and on tablets
+someone KIFF lets use Coach, so the bar has four places otherwise. The one exception is the store's
+screenshots: a debug build opened with `adb shell am start -n dev.kiff.tafs/bot.tafs.app.MainActivity --ez screenshots true`
+shows Coach in the sample, and it opens on what Coach is, as a new account first sees it (`AppState.screenshots`). A real
+sample session never offers it. In landscape and on tablets
 the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
 `MainActivity`). Home's header keeps the account's name; Settings and Coach are no longer there.
 A new taf starts in Coach, signed in. The sample has no form for one: under its list it says

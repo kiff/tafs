@@ -198,6 +198,11 @@ data class RecordSearch(
 
 data class AppState(
   val mode: Mode = Mode.signedOut,
+  /**
+   * The store's screenshots are being taken (a debug build opened with the `screenshots` extra): the sample shows the Coach button,
+   * as a signed-in account has it. A real sample session never offers a Coach it can't run.
+   */
+  val screenshots: Boolean = false,
   /** Where the owner left off has been looked up: until then no screen draws, so none flashes up wrongly. */
   val ready: Boolean = false,
   /** The KIFF account this sign-in is in; null outside KIFF, and until KIFF has said. */
@@ -663,7 +668,8 @@ data class AppState(
    * (the one who manages members).
    */
   val mayUseCoach: Boolean
-    get() = mode == Mode.kiff && (access[COACH_AGENT]?.use ?: (kiffAccount?.capabilities?.contains("members.manage") ?: false))
+    get() = (mode == Mode.kiff && (access[COACH_AGENT]?.use ?: (kiffAccount?.capabilities?.contains("members.manage") ?: false))) ||
+      (mode == Mode.sample && screenshots)
 
   /** Whether this person sees every taf's Record (oversees or manages each), which the receipts export needs; tafs cloud still decides. */
   val seesEveryTaf: Boolean
@@ -4298,6 +4304,11 @@ class AppModel(
     } catch (e: Exception) {
       ExportResult.NotExported(ErrorWords.of(e))
     }
+  }
+
+  /** The store's screenshots are being taken: the sample shows the Coach button ([AppState.screenshots]). Debug builds only. */
+  fun showForScreenshots() {
+    _state.update { it.copy(screenshots = true) }
   }
 
   /** The owner's answer to one of Coach's cards. */
