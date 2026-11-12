@@ -305,6 +305,7 @@ export const it: Words = {
   handoff_note: (taf, name) => `${name} non ha finito ciò che ${taf} gli ha passato. Invialo di nuovo dalla pagina di ${taf}.`,
   handed_maybe: (name) => `Passato a ${name} · potrebbe essere stato fatto: controlla la pagina di ${name}`,
   handoff_already_acted: "aveva già agito: controlla la sua pagina prima di inviare di nuovo",
+  handoff_maybe_acted: "potrebbe aver già agito: controlla la sua pagina prima di inviare di nuovo",
   handoff_nothing_note: (taf, name, n) => `${name} non ha fatto nulla con gli ultimi ${n} passaggi di ${taf}. Apri la pagina di ${taf} per vedere perché.`,
   delivery_retrying: (name, t) => `Non ancora consegnato a ${name}: nuovo tentativo ${t ? at(t) : "ora"}`,
   delivery_not_sent: (name, why) => `Non consegnato a ${name}${why ? `: ${why}` : ""}`,

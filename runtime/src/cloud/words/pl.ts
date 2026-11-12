@@ -305,6 +305,7 @@ export const pl: Words = {
   handoff_note: (taf, name) => `${name}: nie dokończono pracy przekazanej przez: ${taf}. Wyślij ponownie ze strony: ${taf}.`,
   handed_maybe: (name) => `Przekazano do: ${name} · możliwe, że zrobiono: sprawdź stronę: ${name}`,
   handoff_already_acted: "wykonano już działanie: sprawdź stronę, zanim cokolwiek zostanie wysłane ponownie",
+  handoff_maybe_acted: "możliwe, że działanie już wykonano: sprawdź stronę, zanim cokolwiek zostanie wysłane ponownie",
   handoff_nothing_note: (taf, name, n) => `${name}: nic nie zrobiono z ostatnimi ${n} przekazaniami od: ${taf}. Otwórz stronę: ${taf}, aby zobaczyć dlaczego.`,
   delivery_retrying: (name, t) => `Jeszcze nie dostarczono do: ${name}; ponowna próba ${t ? at(t) : "teraz"}`,
   delivery_not_sent: (name, why) => `Nie dostarczono do: ${name}${why ? ` (${why})` : ""}`,

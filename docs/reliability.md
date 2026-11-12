@@ -184,7 +184,8 @@ writes that went through) and `sent` (the writes it sent, one whose outcome isn'
 | The receiving run | The sending request's delivery says | Who is told |
 |---|---|---|
 | still works | "Handed to Invoices at 12:00" | nobody |
-| waits on the owner (a held call) | "Handed to Invoices · waiting for you" | Needs you already has the held call |
+| is held for the owner (a call KIFF holds) | "Handed to Invoices · waiting for you" | Needs you already has the held call |
+| is paused on a connected app's event, or on a card in its chat | "Handed to Invoices at 12:00": it is still at work | nobody |
 | ended, and a write of its went through | "Handed to Invoices · done" | nobody |
 | ended with `sent: 0` | "Handed to Invoices · nothing was done", with its own first line | nobody; one quiet note at the third in a row for that place |
 | ended with more sent than went through | "Handed to Invoices · it may have been done: check Invoices's page" | nobody |
@@ -197,9 +198,14 @@ writes that went through) and `sent` (the writes it sent, one whose outcome isn'
 - **Send again** (`POST …/deliveries/{key}/send`, the hand-off's `key`) hands the same section once
   more, through the hand-off's own start with a dedup key for that sending. Two taps at once start
   one receiving run. Once it's handed again the delivery is no longer dead, so a later tap is 400.
-- **One that died after it had already acted isn't sent again:** its `done` isn't empty, so the
-  delivery has no `send_again`, and says "it had already acted: check its page before anything is
+- **One that died after it had acted, or may have, isn't sent again:** its `done` isn't empty, or
+  its `sent` counts a write whose answer was lost. The delivery then has no `send_again`, and says
+  "it had already acted" or "it may have already acted", with "check its page before anything is
   sent again". Sending it again could do the same thing twice.
+- **Send again for one that never started stops the old run first,** so a run that was only slow
+  to start can't work beside the new one.
+- **Any read settles the outcome, a viewer's too:** it's an observation, and starts no run. A dead
+  hand-off's one note to the managers may come from it.
 - **A run that only can't be read** (kiff/agents unreachable) is read again later, never called dead.
 - **The receiving request says where its work came from:** `from` is "Handed by Rae", or "Handed by
   another taf" once the sending taf is gone.

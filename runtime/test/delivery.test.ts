@@ -335,7 +335,14 @@ describe("a hand-off's outcome comes back to the sending taf (docs/reliability.m
   it("waits with the owner while the receiving run is held, then says how it ended", async () => {
     const w = world([TO_INV]);
     const { run, got } = await handed(w);
-    Object.assign(got, { status: "PAUSED" });
+    const hold = { call_id: "c1", tool: "mark_paid", input: {}, operation: "op", expires: "2026-10-17T12:00:00Z" };
+    // Paused on a connected app's event, or on a card in its chat: nothing for the owner to answer, so it's still at work.
+    Object.assign(got, { status: "PAUSED", requirements: [{ ...hold, kind: "event", wait: { event: "paid", key: "k" } }] });
+    expect((await delivery(w, run.id)).line).toBe("Handed to Invoices at 12:00");
+    Object.assign(got, { status: "PAUSED", requirements: [{ ...hold, kind: "card" }] });
+    expect((await delivery(w, run.id)).line).toBe("Handed to Invoices at 12:00");
+    // A call KIFF holds for the owner: theirs.
+    Object.assign(got, { status: "PAUSED", requirements: [{ ...hold, exception: "exc_1" }] });
     expect((await delivery(w, run.id)).line).toBe("Handed to Invoices · waiting for you");
     expect(w.pushed).toHaveLength(0);
     Object.assign(got, { status: "COMPLETED", stop: "answered", output: "Marked.", done: [{ call_id: "c1" }] });
@@ -442,6 +449,44 @@ describe("a hand-off's outcome comes back to the sending taf (docs/reliability.m
     expect(d.line.endsWith("it had already acted: check its page before anything is sent again")).toBe(true);
     expect((await send(w, run.id)).status).toBe(400);
     expect(w.agents.runs.filter((r) => r.agent === INV)).toHaveLength(1);
+    // It sent a write and lost the answer, then failed: nothing is known to have gone through, and it may have.
+    const v = world([TO_INV]);
+    const lost = await handed(v);
+    Object.assign(lost.got, { status: "ERROR", error: "boom", sent: 1 });
+    const m = await delivery(v, lost.run.id);
+    expect(m).toMatchObject({ state: "not_sent", needs_you: true });
+    expect(m.send_again).toBeUndefined();
+    expect(m.line.endsWith("it may have already acted: check its page before anything is sent again")).toBe(true);
+    expect((await send(v, lost.run.id)).status).toBe(400);
+    expect(v.agents.runs.filter((r) => r.agent === INV)).toHaveLength(1);
+    // One that failed having sent nothing is sent again.
+    const u = world([TO_INV]);
+    const clean = await handed(u);
+    Object.assign(clean.got, { status: "ERROR", error: "boom", sent: 0 });
+    expect((await delivery(u, clean.run.id)).send_again).toBe(true);
+  });
+
+  it("Send again for one that never started stops the old run first, so the new run is the only one", async () => {
+    const w = world([TO_INV]);
+    const { run, got } = await handed(w);
+    Object.assign(got, { status: "PENDING" });
+    w.at(new Date(NOW.getTime() + 16 * 60_000));
+    expect((await delivery(w, run.id)).send_again).toBe(true);
+    w.agents.calls.length = 0;
+    expect((await send(w, run.id)).status).toBe(200);
+    expect(w.agents.calls).toContain(`cancelRun ${INV} ${got.id}`);
+    expect(got.status).toBe("CANCELLED");
+    const live = w.agents.runs.filter((r) => r.agent === INV && r.status !== "CANCELLED");
+    expect(live).toHaveLength(1);
+    expect(live[0]!.id).not.toBe(got.id);
+    // One that failed is over: there's nothing to stop.
+    const v = world([TO_INV]);
+    const failed = await handed(v);
+    Object.assign(failed.got, { status: "ERROR", error: "boom" });
+    await delivery(v, failed.run.id);
+    v.agents.calls.length = 0;
+    expect((await send(v, failed.run.id)).status).toBe(200);
+    expect(v.agents.calls.some((c) => c.startsWith("cancelRun"))).toBe(false);
   });
 
   it("nothing was done is calm, and the third in a row sends one quiet note", async () => {

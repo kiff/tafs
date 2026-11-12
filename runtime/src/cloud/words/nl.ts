@@ -305,6 +305,7 @@ export const nl: Words = {
   handoff_note: (taf, name) => `${name} heeft niet afgemaakt wat ${taf} doorgaf. Verzend het opnieuw vanaf de pagina van ${taf}.`,
   handed_maybe: (name) => `Doorgegeven aan ${name} · mogelijk gedaan: controleer de pagina van ${name}`,
   handoff_already_acted: "het had al gehandeld: controleer de pagina voordat er iets opnieuw wordt verzonden",
+  handoff_maybe_acted: "het heeft mogelijk al gehandeld: controleer de pagina voordat er iets opnieuw wordt verzonden",
   handoff_nothing_note: (taf, name, n) => `${name} heeft niets gedaan met de laatste ${n} overdrachten van ${taf}. Open de pagina van ${taf} om te zien waarom.`,
   delivery_retrying: (name, t) => `Nog niet afgeleverd bij ${name}: nieuwe poging ${t ? at(t) : "nu"}`,
   delivery_not_sent: (name, why) => `Niet afgeleverd bij ${name}${why ? `: ${why}` : ""}`,

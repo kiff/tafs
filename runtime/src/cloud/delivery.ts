@@ -62,6 +62,8 @@ export interface Delivery {
   outcome_said?: string;
   /** How many of the receiving run's calls acted and went through, for one that died after acting. */
   outcome_did?: number;
+  /** The receiving run died having sent a write whose outcome isn't known: it may have acted. */
+  outcome_maybe?: true;
   /** How many times it was handed again by hand: each has a dedup key of its own. */
   again?: number;
 }
@@ -209,7 +211,7 @@ export function handoffOf(output: string | undefined): string | undefined {
 export interface DeliveryContext {
   store: CoachStore;
   tafs: Tafs;
-  agents: Pick<Agents, "getRun" | "startRun" | "session" | "runs">;
+  agents: Pick<Agents, "getRun" | "startRun" | "session" | "runs" | "cancelRun">;
   push: PushStore;
   apns: Sender;
   now: Date;
@@ -359,17 +361,19 @@ export function wroteIn(r: Pick<Run, "done" | "sent">): "done" | "nothing" | "ma
  * What became of a receiving run, from kiff/agents' record of it, never from either taf's report.
  * Undefined while it still works. `late`: it has had its time to start.
  */
-function outcomeOf(r: Run | undefined, late: boolean): Pick<Delivery, "outcome" | "outcome_run" | "outcome_said" | "outcome_did"> | undefined {
+function outcomeOf(r: Run | undefined, late: boolean): Pick<Delivery, "outcome" | "outcome_run" | "outcome_said" | "outcome_did" | "outcome_maybe"> | undefined {
   if (!r) return late ? { outcome: "dead" } : undefined;
   const ended: EndedRun = { id: r.id, status: r.status, stop: r.stop, error: r.error, code: r.code, state: r.state, reason: r.reason, created: r.created, updated: r.updated };
-  // A run that died after a write went through still lists it: sending it again could do that twice.
-  const did = r.done?.length ? { outcome_did: r.done.length } : {};
+  // A run that died after a write went through still lists it, and one that sent a write whose answer
+  // was lost counts it in `sent`: sending either again could do the same thing twice.
+  const did = { ...(r.done?.length ? { outcome_did: r.done.length } : {}), ...((r.sent ?? 0) > (r.done?.length ?? 0) ? { outcome_maybe: true as const } : {}) };
   if (r.state === "needs_you") return { outcome: "dead", outcome_run: ended, ...did };
   if (r.state === "retrying") return undefined;
   switch (r.status) {
     case "PENDING": return late ? { outcome: "dead" } : undefined;
     case "RUNNING": return undefined;
-    case "PAUSED": return { outcome: "waiting" };
+    // Held for the owner: theirs to answer. Paused on an app's event, or on a card in its chat, it is still at work.
+    case "PAUSED": return r.requirements?.some((q) => q.exception && !q.answered) ? { outcome: "waiting" } : undefined;
     case "ERROR":
     case "CANCELLED": return { outcome: "dead", outcome_run: ended, ...did };
     default: {
@@ -406,6 +410,7 @@ async function settleHandoffs(ctx: DeliveryContext, tenant: string, taf: Taf, rd
     if (next.outcome_run) d.outcome_run = next.outcome_run; else delete d.outcome_run;
     if (next.outcome_said) d.outcome_said = next.outcome_said; else delete d.outcome_said;
     if (next.outcome_did) d.outcome_did = next.outcome_did; else delete d.outcome_did;
+    if (next.outcome_maybe) d.outcome_maybe = true; else delete d.outcome_maybe;
     changed = true;
     if (d.outcome === "waiting") continue;
     await countNothing(ctx, tenant, taf, d);
@@ -551,10 +556,13 @@ export async function sendDeliveryAgain(ctx: DeliveryContext, tenant: string, ta
  * no longer dead, so a later tap starts nothing.
  */
 async function handAgain(ctx: DeliveryContext, tenant: string, taf: Taf, run: string, rd: RunDeliveries, d: Delivery): Promise<{ state: "handed" } | undefined> {
-  // One that died after it had already acted isn't sent again blind: that could do the same thing twice.
-  if (d.state !== "handed" || d.outcome !== "dead" || d.outcome_did) return undefined;
+  // One that died after it had acted, or may have, isn't sent again blind: that could do the same thing twice.
+  if (d.state !== "handed" || d.outcome !== "dead" || d.outcome_did || d.outcome_maybe) return undefined;
   const original = await ctx.agents.getRun(tenant, taf.id, run);
   const again = (d.again ?? 0) + 1;
+  // One that never started may still be waiting to: it is stopped first, so the new run is the only one.
+  // One that is gone, or already over, has nothing to stop.
+  if (!d.outcome_run && d.handed_run) await ctx.agents.cancelRun(tenant, d.key.slice("taf:".length), d.handed_run).catch(() => undefined);
   const next = await handOff(ctx, tenant, taf, original, { place: "taf", taf: d.key.slice("taf:".length), name: d.name }, d.key, ctx.now.toISOString(), again);
   // The receiver is gone, or the start failed: it stays dead, with Send again.
   if (next.state !== "handed") return undefined;
@@ -563,6 +571,7 @@ async function handAgain(ctx: DeliveryContext, tenant: string, taf: Taf, run: st
   delete d.outcome_run;
   delete d.outcome_said;
   delete d.outcome_did;
+  delete d.outcome_maybe;
   await ctx.store.put(deliveryKeys.run(tenant, taf.id, run), rd, kept(ctx));
   await forgetDead(ctx, tenant, taf.id, run, d.key);
   await ctx.store.remove(deliveryKeys.note(tenant, taf.id, d.key)).catch(() => undefined);
@@ -643,9 +652,10 @@ export function deliveryViews(rd: RunDeliveries | undefined, taf: string, zone: 
             const how = d.outcome_run
               ? requestOf({ agent: "", session: "", trigger: "", cost_micro_usd: 0, turns: 0, ...d.outcome_run } as Run, zone, now, [], undefined, [], lang).line
               : w.handoff_never_started;
-            // One that had already acted isn't offered Send again: that could do the same thing twice.
-            return { ...base, state: "not_sent", line: `${w.handoff_dead(d.name, taf)} · ${how}${d.outcome_did ? ` · ${w.handoff_already_acted}` : ""}`,
-              ...(d.outcome_did ? {} : { send_again: true as const }), needs_you: true as const,
+            // One that had already acted, or may have, isn't offered Send again: that could do the same thing twice.
+            const acted = d.outcome_did ? w.handoff_already_acted : d.outcome_maybe ? w.handoff_maybe_acted : undefined;
+            return { ...base, state: "not_sent", line: `${w.handoff_dead(d.name, taf)} · ${how}${acted ? ` · ${acted}` : ""}`,
+              ...(acted ? {} : { send_again: true as const }), needs_you: true as const,
               open_coach: true as const, coach_words: DELIVERY_WORDS.deadCoach(taf, d.name) };
           }
           default: return { ...base, line: w.handed(d.name, when) };

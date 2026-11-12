@@ -325,6 +325,7 @@ export const en = {
   handoff_note: (taf: string, name: string) => `${name} didn't finish what ${taf} handed it. Send it again from ${taf}'s page.`,
   handed_maybe: (name: string) => `Handed to ${name} · it may have been done: check ${name}'s page`,
   handoff_already_acted: "it had already acted: check its page before anything is sent again",
+  handoff_maybe_acted: "it may have already acted: check its page before anything is sent again",
   handoff_nothing_note: (taf: string, name: string, n: number) => `${name} did nothing with the last ${n} hand-offs from ${taf}. Open ${taf}'s page to see why.`,
   delivery_retrying: (name: string, t?: When) => `Not delivered to ${name} yet: trying again${t ? ` at ${bare(t)}` : " now"}`,
   delivery_not_sent: (name: string, why?: string) => `Not delivered to ${name}${why ? `: ${why}` : ""}`,

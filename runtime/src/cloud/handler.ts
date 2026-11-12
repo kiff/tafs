@@ -7075,7 +7075,11 @@ function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): Delivery
   return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };
 }
 
-/** The taf's own deliveries for these runs, settled first (delivery.ts; `act`: a manager's read starts a hand-off or a retry, a viewer's doesn't), as the apps draw them. */
+/**
+ * The taf's own deliveries for these runs, settled first (delivery.ts; `act`: a manager's read starts a hand-off or a retry, a
+ * viewer's starts no run), as the apps draw them. Any read, a viewer's too, writes down what became of a hand-off's receiving
+ * run: it's an observation, and a dead one's single note to the managers may come from it.
+ */
 async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string, act: boolean, lang: Lang = "en"): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
   if (!deps.coach) return new Map();
   const ctx = deliveryContext(deps, now);
