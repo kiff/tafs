@@ -134,6 +134,8 @@ class TafActions(
   val loadActivity: suspend (String, String, Boolean, String) -> Unit = { _, _, _, _ -> },
   val loadRuns: suspend (String, Boolean, Boolean) -> Unit = { _, _, _ -> },
   val loadAllMemory: (String) -> Unit = {},
+  /** Answers a card in the taf's own chat, the loop card's Read on or Stop here (taf, type, card, answer). */
+  val answerCard: (String, String, String, String) -> Unit = { _, _, _, _ -> },
 )
 
 @Composable

@@ -382,6 +382,10 @@ cloud's one line on where its result went; Android draws it above the taf's word
   page after page of one list, comes in tafs cloud's words in the person's language: "Still reading", the read by
   its KIFF title (else "the same list", never its tool name), and **Read on** / **Stop here**, whose values stay
   `tafs_loop_continue` and `tafs_loop_summarise` (`loopCardWords`).
+  The run waits on it in the taf's own chat. Android draws it there as Coach's confirm card, with tafs cloud's
+  words as sent (`isTafCard`: a `confirm` that carries `loop`; any other card but `ask_coach` stays Coach's), and the
+  answer goes to the taf's route, `POST /v1/tafs/{id}/components/{component}/answer` with the card's own chat
+  (`AppModel.answerTafCard`). The run that goes on is followed as after any card. iOS follows in its batch after 1.0.
 - A message that came through a door shows with its door and sender ([doors.md](doors.md)).
 - `GET /v1/tafs/{id}/chats` lists the person's chats, newest first, each named by the
   start of what they asked. One tap reopens a chat.

@@ -1,0 +1,1 @@
+- **Android 1.9: the loop card in a taf's chat.** When a run has read page after page of one list, its chat shows "Still reading" in tafs cloud's words, with **Read on** and **Stop here**. The answer goes back to that run (docs/chat.md).

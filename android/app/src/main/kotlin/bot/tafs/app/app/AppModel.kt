@@ -134,6 +134,12 @@ const val COACH_CHAT = "#coach"
 /** A taf's card that hands a setting to Coach: its words, and a button that opens Coach on the taf with them written in. */
 const val ASK_COACH = "ask_coach"
 
+/**
+ * A card a taf's own chat draws: an `ask_coach` card, or the loop card (a `confirm` that carries `loop`), which a run that read one
+ * list page after page waits on. Any other card belongs to Coach's chat.
+ */
+fun isTafCard(c: bot.tafs.app.kiff.SetupComponent): Boolean = c.type == ASK_COACH || (c.type == "confirm" && c.loop != null)
+
 /** The KIFF agent Coach acts as. */
 const val COACH_AGENT = "setup"
 
@@ -362,7 +368,10 @@ data class AppState(
   val coachComponents: List<ShownComponent> = emptyList(),
   /** Each drive's end in Coach's chat, at its time, as tafs cloud keeps it (kiff/tafs#568). */
   val coachDrives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
-  /** A taf's own cards in its chat, by taf: its `ask_coach` cards alone, the settings it hands to Coach (kiff/tafs#476, gap 15). */
+  /**
+   * A taf's own cards in its chat, by taf: its `ask_coach` cards, the settings it hands to Coach (kiff/tafs#476, gap 15), and the loop
+   * card a run that kept reading one list waits on ([isTafCard]).
+   */
   val tafCards: Map<String, List<ShownComponent>> = emptyMap(),
   /** The Coach conversation shown (kiff/tafs#73): one the owner reopened or started here, or null for the latest ones together. */
   val coachChat: String? = null,
@@ -2253,9 +2262,9 @@ class AppModel(
         },
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         coachDrives = if (tafId == COACH_CHAT) thread.drives else s.coachDrives,
-        tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { it.component.type == ASK_COACH }),
+        tafCards = if (tafId == COACH_CHAT) s.tafCards else s.tafCards + (tafId to thread.components.filter { isTafCard(it.component) }),
         // A taken card is the thread's once it holds its answer.
-        cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { it.ref }.toSet() else s.cardsTaken,
+        cardsTaken = s.cardsTaken - thread.components.filter { it.answer != null }.map { it.ref }.toSet(),
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
       )
     }
@@ -4379,12 +4388,14 @@ class AppModel(
    * run that goes on is followed like any run at work, so Coach's next words show without leaving it. A questions card's
    * answer is its JSON. A card that no longer waits (409) is read again as it is. Only signed in: the sample has no Coach.
    */
-  suspend fun answerCard(type: String, id: String, answer: String): Boolean {
+  suspend fun answerCard(type: String, id: String, answer: String, chat: String = COACH_CHAT): Boolean {
     if (_state.value.mode != Mode.kiff) return false
-    val cloudId = _state.value.coachCloudId ?: return false
+    val coach = chat == COACH_CHAT
+    val cloudId = (if (coach) _state.value.coachCloudId else _state.value.taf(chat)?.cloudId) ?: return false
     // The card answered: the one waiting under that id, since Coach can use an id again.
-    val shown = _state.value.coachComponents.lastOrNull { it.id == id && it.answer == null } ?: _state.value.coachComponents.lastOrNull { it.id == id }
-    val session = shown?.session?.ifEmpty { null } ?: _state.value.coachChat
+    val cards = if (coach) _state.value.coachComponents else _state.value.tafCards[chat].orEmpty()
+    val shown = cards.lastOrNull { it.id == id && it.answer == null } ?: cards.lastOrNull { it.id == id }
+    val session = shown?.session?.ifEmpty { null } ?: if (coach) _state.value.coachChat else null
     val key = shown?.ref ?: CoachWords.cardKey(session, id)
     if (key in _state.value.cardsAnswering) return false
     val value: kotlinx.serialization.json.JsonElement =
@@ -4401,7 +4412,7 @@ class AppModel(
       val gone = e is CloudError && e.status == 409
       if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (key to Words.Coach.cardAnswerNotSent(why = ErrorWords.of(e)))) }
       _state.update { it.copy(cardsAnswering = it.cardsAnswering - key) }
-      readThread(COACH_CHAT)
+      readThread(chat)
       return false
     } finally {
       // Whatever comes after (the thread read, following the run), the answer is no longer on its way once tafs cloud has
@@ -4411,13 +4422,18 @@ class AppModel(
     if (generation != accountGeneration) return false
     // Taken: the card shows it's answered at once, until the thread's words for it come.
     _state.update { it.copy(cardsTaken = it.cardsTaken + key) }
-    answered.session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
-    // Coach is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
-    _state.update { it.copy(chatAwaiting = it.chatAwaiting + (COACH_CHAT to clock()), chatEnded = it.chatEnded - COACH_CHAT) }
-    readThread(COACH_CHAT)
+    if (coach) answered.session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
+    // Coach or the taf is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
+    _state.update { it.copy(chatAwaiting = it.chatAwaiting + (chat to clock()), chatEnded = it.chatEnded - chat) }
+    readThread(chat)
     // The run paused on the card and goes on now: its stream is followed to its end, which reads the thread again.
-    answered.run?.let { resumeChat(COACH_CHAT, cloudId, it, again = true) } ?: followChat(COACH_CHAT)
+    answered.run?.let { resumeChat(chat, cloudId, it, again = true) } ?: followChat(chat)
     return true
+  }
+
+  /** The owner's answer to a card in a taf's own chat (the loop card's Read on or Stop here), answered as Coach's are. */
+  fun answerTafCard(tafId: String, type: String, id: String, answer: String) {
+    viewModelScope.launch { answerCard(type, id, answer, chat = tafId) }
   }
 
   /**

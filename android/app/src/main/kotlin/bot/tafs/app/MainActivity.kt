@@ -561,6 +561,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadActivity = model::loadActivityPage,
       loadRuns = model::loadRunPage,
       loadAllMemory = model::loadAllMemory,
+      answerCard = model::answerTafCard,
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::startApproval,
