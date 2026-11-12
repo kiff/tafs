@@ -586,7 +586,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::startApproval,
-        giveKey = model::startCoachKey,
+        openKeySheet = model::openCardKeySheet,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,

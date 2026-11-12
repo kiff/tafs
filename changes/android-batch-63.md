@@ -1,0 +1,1 @@
+- **Android 1.10.3: a key is never typed in Coach's chat.** When Coach asks you to approve an app that connects with a key, its card now opens a secure sheet, outside the chat. The sheet says where the key goes (to the connection server, then only to the app's own host, never to Coach), and the clipboard is cleared once you paste.

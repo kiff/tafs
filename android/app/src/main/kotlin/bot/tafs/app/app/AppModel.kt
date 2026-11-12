@@ -435,6 +435,8 @@ data class AppState(
   val listApproval: String? = null,
   /** Whether that connection takes an API key, given on the sheet instead of a vendor's sign-in. */
   val listApprovalNeedsKey: Boolean = false,
+  /** The key sheet opened from Coach's card: that card, and its draft version, answered once the key went. */
+  val keyForCard: KeyForCard? = null,
   /** A connection from Connect apps that just came back signed in or connected: said at once, over the list. */
   val connectedNow: bot.tafs.app.kiff.Grant? = null,
   /**
@@ -3596,7 +3598,16 @@ class AppModel(
 
   fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
-  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
+  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null) }
+
+  /**
+   * Coach's card for an app connected with a key: its key screen, the Connect sheet's own, full screen and outside the chat, so
+   * a secret is never typed into Coach's conversation. Given there, the card is answered ([startGiveKey]).
+   */
+  fun openCardKeySheet(c: SetupComponent, shownDraft: String?) {
+    val grant = c.grant ?: return
+    _state.update { it.copy(listApproval = grant, listApprovalNeedsKey = true, keyForCard = KeyForCard(c, shownDraft)) }
+  }
 
   /**
    * Replace a key-based connection's key (gap 13): the key sheet over Connect apps, for this grant. planque checks the signed
@@ -3608,12 +3619,20 @@ class AppModel(
 
   /** Give the key on the sheet over Connect apps, run by the model as an approval is; then the list again. */
   fun startGiveKey(grantId: String, shownDigest: String, key: String) {
-    scope.launch {
-      if (giveKey(grantId, shownDigest, key)) {
-        _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
-        loadConnectApps()
-      }
-    }
+    scope.launch { giveKeyOnSheet(grantId, shownDigest, key) }
+  }
+
+  /**
+   * The key given on the key sheet. Opened from Coach's card ([openCardKeySheet]): the key, then that card's answer, as an
+   * approval. Else the key alone, then Connect apps' list again. The sheet closes once it went.
+   */
+  suspend fun giveKeyOnSheet(grantId: String, shownDigest: String, key: String): Boolean {
+    val card = _state.value.keyForCard?.takeIf { it.card.grant == grantId }
+    if (card != null) return approveCoachWithKey(card.card, shownDigest, card.draft, key).also { if (it) closeListApproval() }
+    if (!giveKey(grantId, shownDigest, key)) return false
+    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
+    loadConnectApps()
+    return true
   }
 
   /**
@@ -3842,14 +3861,9 @@ class AppModel(
     scope.launch { approveCoach(c, shownDigest, shownDraft) }
   }
 
-  /** Coach's card for an app connected with a key: run by the model for the same reason as [startApproval]. */
-  fun startCoachKey(c: SetupComponent, shownDigest: String, shownDraft: String?, key: String) {
-    scope.launch { approveCoachWithKey(c, shownDigest, shownDraft, key) }
-  }
-
   /**
-   * Coach's approval card for an app connected with a key (planque's `api_key`), not connected yet: planque approves such a
-   * grant only with its key. So the key goes first, as on the Connect sheet ([giveKey]: the shown digest checked, confirmed with
+   * Coach's approval card for an app connected with a key (planque's `api_key`), not connected yet, given on the key sheet the card
+   * opened ([openCardKeySheet]): planque approves such a grant only with its key. So the key goes first, as on the Connect sheet ([giveKey]: the shown digest checked, confirmed with
    * the approval key, sent signed by this device, kept nowhere here). Then the card is answered as any approval is: tafs cloud
    * finds it connected and Coach goes on, or asks for its Cards. A key that didn't go answers nothing, and says why on the card.
    */
@@ -7001,3 +7015,6 @@ sealed interface ReceiptsResult {
   data class Ready(val export: bot.tafs.app.kiff.ReceiptsExport) : ReceiptsResult
   data class NotExported(val why: String) : ReceiptsResult
 }
+
+/** The key sheet opened from Coach's approval card: the card, answered once the key went, and the draft version it showed. */
+data class KeyForCard(val card: SetupComponent, val draft: String?)

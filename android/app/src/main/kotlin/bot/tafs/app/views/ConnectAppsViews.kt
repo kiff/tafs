@@ -465,8 +465,17 @@ fun ConnectApprovalSheet(
         } else {
           val busy = state.connecting == grant.id
           if (needsKey) {
+            // Where the key goes, in the app's words: this phone to planque, then only the vendor's host; never Coach.
+            Text(Words.Connect.keyGoesTo(host = grant.vendor), style = scaled(13, color = Theme.soft))
+            val clipboard = androidx.compose.ui.platform.LocalContext.current.getSystemService(android.content.ClipboardManager::class.java)
             OutlinedTextField(
-              key, driveTyped({ key = it }), Modifier.fillMaxWidth().secret(),
+              key,
+              driveTyped({ typed ->
+                // More than one character at once is a paste: the clipboard, which other apps can read, is cleared at once.
+                if (typed.length - key.length > 1) runCatching { clipboard?.clearPrimaryClip() }
+                key = typed
+              }),
+              Modifier.fillMaxWidth().secret(),
               placeholder = { Text(bot.tafs.app.model.ConnectWords.KEY) },
               singleLine = true,
               enabled = !busy,
@@ -475,6 +484,7 @@ fun ConnectApprovalSheet(
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false,
               ),
             )
+            Text(Words.Connect.keyClipboard, style = scaled(12, color = Theme.dim))
           }
           ApprovalGate {
             val biometry = bot.tafs.app.design.LocalBiometry.current

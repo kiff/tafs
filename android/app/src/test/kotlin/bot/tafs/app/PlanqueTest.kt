@@ -999,6 +999,38 @@ class PlanqueTest {
     assertFalse("kept nowhere in the app's state", m.state.value.toString().contains("test-key-1"))
   }
 
+  @Test fun coachsCardOpensTheKeySheetAndTheKeyGivenThereAnswersTheCard() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    transport.answer(key, 200, keyGrant("connected"))
+    transport.answer(askRoute, 200, """{"outcome":"answered","answer":"already approved: the bank is connected","session":"s1","run":"r1"}""")
+    val m = model(scope = backgroundScope)
+    coachWithCard(m)
+    // The card opens the Connect sheet's key screen, outside the chat; nothing is given or answered yet.
+    m.openCardKeySheet(approvalComponent(), null)
+    assertEquals("g1", m.state.value.listApproval)
+    assertTrue(m.state.value.listApprovalNeedsKey)
+    assertTrue(transport.requestsTo(key).isEmpty())
+    // Given on that sheet: the key to planque, then the card's answer, and the sheet closes.
+    assertTrue(m.giveKeyOnSheet("g1", digestOf(keyRequest), "test-key-1"))
+    assertEquals(1, transport.requestsTo(key).size)
+    assertEquals(1, transport.requestsTo(askRoute).size)
+    assertNull(m.state.value.listApproval)
+    assertNull(m.state.value.keyForCard)
+  }
+
+  /** The chat never takes a secret: Coach's approval card has no text field at all, so no key can be typed into it. */
+  @Test fun coachsApprovalCardHasNoFieldForAKey() {
+    val views = java.io.File("src/main/kotlin/bot/tafs/app/views/CoachViews.kt").readText()
+    val start = views.indexOf("private fun ApprovalCard(")
+    val end = views.indexOf("\nprivate fun ", start + 1).takeIf { it > 0 } ?: views.length
+    val card = views.substring(start, end)
+    assertTrue(start >= 0)
+    assertFalse("no text field on Coach's card", card.contains("TextField("))
+    assertFalse("nothing marked secret on Coach's card", card.contains(".secret()"))
+    assertTrue("it opens the key sheet instead", card.contains("actions.openKeySheet("))
+  }
+
   @Test fun aKeyNotConfirmedOnCoachsCardGivesNothingAndAnswersNothing() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
