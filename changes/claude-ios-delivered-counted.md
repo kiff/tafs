@@ -1,0 +1,1 @@
+- **iPhone and iPad: a run's result and its count show in the chat.** Above a taf's report, the app shows where its result went ("Sent to Google Sheets · Refunds 2026"), and under its last message, what the run did, counted from the record ("5 done · 1 waiting for you · 2 refused"), as soon as the service sends each. Before, neither showed on iPhone or iPad (docs/ios-app.md).
