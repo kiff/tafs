@@ -316,10 +316,39 @@ describe("a message streamed (kiff/tafs#60)", () => {
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Set up refunds" } });
     const steps = r.events.filter((e) => e.event === "step").map((e) => e.data);
-    // The retried draft never reads as failed; the status read Coach gave up on is said, with its why, before the end.
-    expect(steps).toEqual([{ call_id: "c2", status: "done" }, { call_id: "c3", status: "error", failed: true, why: "The connection service is down." }]);
+    // The retried draft never reads as failed; the status read Coach gave up on is said before the end, in
+    // tafs cloud's words: a connection call's refusal is about Coach's request, never shown as the server said it.
+    expect(steps).toEqual([{ call_id: "c2", status: "done" }, { call_id: "c3", status: "error", failed: true, why: "Coach couldn't connect the app yet" }]);
     expect(r.events.map((e) => e.event).slice(-2)).toEqual(["step", "end"]);
     expect(r.raw).not.toContain("names a tool twice");
+    expect(r.raw).not.toContain("The connection service is down");
+  });
+
+  it("never shows a connection request Coach corrected as failed, nor the connection server's refusal (owner's phone, 12 Nov)", async () => {
+    const w = world();
+    const refused = { text: "planque answered 400: the body must be a JSON object with the documented fields", is_error: true };
+    const api = { url: "https://thirdparty.qonto.com/openapi.json", base: "https://thirdparty.qonto.com/v2" };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", api, name: "overdue", extra: 1 } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", api, name: "overdue", other: 2 } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c3", tool: "planque", input: { action: "request", api, name: "overdue" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c3", result: { text: "grant grt_Qonto12345 pending; agent overdue-k3f9" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Every Monday, tell me overdue invoices" } });
+    // Coach's own request, corrected twice: one step, done; neither refusal is shown, nor its words.
+    expect(r.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([{ call_id: "c3", status: "done" }]);
+    expect(r.raw).not.toContain("documented fields");
+    // A request it gave up on says so in tafs cloud's words, naming the app by its host when that's all it has.
+    const w2 = world();
+    w2.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", api, name: "overdue" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+    );
+    const r2 = await stream(w2, PATH, { token: "ana", body: { text: "Every Monday, tell me overdue invoices" } });
+    expect(r2.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([{ call_id: "c1", status: "error", failed: true, why: "Coach couldn't connect Qonto yet" }]);
+    expect(r2.raw).not.toContain("documented fields");
   });
 
   it("keeps a failed step when the same tool is called again with other input: that is a new call, not a retry", async () => {

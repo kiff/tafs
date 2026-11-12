@@ -37,7 +37,7 @@ import { accountConnections, connectionLines, withConnections } from "./connecti
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, CONNECTION_TOOL, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
@@ -5252,6 +5252,11 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
   };
 }
 
+/** A connection call's action, from its input as sent ("request", "status"…), to tell Coach's retry of it from other work. */
+function actionOf(sent: string | undefined): string {
+  try { const a = (JSON.parse(sent ?? "null") as { action?: unknown } | null)?.action; return typeof a === "string" ? a : ""; } catch { return ""; }
+}
+
 async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now, keep?: WhyKeeper, resumed = "", lang: Lang = "en"): AsyncGenerator<string> {
   const steps = new Steps(titles, lang);
   const pace = new Pace(now);
@@ -5271,7 +5276,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     const sent = JSON.stringify(input ?? null);
     if (id) inputOf.set(id, sent);
     for (const [heldID] of heldFailures) {
-      if (toolOf.get(heldID) === tool && inputOf.get(heldID) === sent) heldFailures.delete(heldID);
+      if (toolOf.get(heldID) === tool && (inputOf.get(heldID) === sent || (tool === CONNECTION_TOOL && actionOf(inputOf.get(heldID)) === actionOf(sent)))) heldFailures.delete(heldID);
     }
     const step = steps.call(tool, input, id);
     return sse("activity", { tool, ...(step === undefined ? {} : { step }), ...(id ? { call_id: id } : {}) });
@@ -5297,7 +5302,9 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     const status = notMade ? "not_made" : r.is_error === true ? "error" : "done";
     const id = typeof callID === "string" ? callID : "";
     if (status !== "error") return sse("step", { call_id: id, status });
-    const failed = failedStep(r.text);
+    // A connection call's refusal is about Coach's request: its reason is tafs cloud's words, never the server's.
+    const plain = steps.connectionWhy(callID);
+    const failed = plain ? { failed: true as const, why: plain } : failedStep(r.text);
     keepWhy(id, failed.why);
     const event = sse("step", { call_id: id, status, ...failed });
     if (!id) return event;
