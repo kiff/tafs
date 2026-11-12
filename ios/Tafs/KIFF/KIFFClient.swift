@@ -176,10 +176,15 @@ final class KIFFClient {
         return start.inAppLanguage()
     }
 
-    /// What the person reads when this phone can't approve until they sign in again.
-    nonisolated static let approvalKeyLost = Words.Approval.keyGoneFaceId
+    /// What the person reads when this device can't approve until they approve it again, named
+    /// by what it asks for ("Your Face ID changed…"), never "Face ID or fingerprints".
+    nonisolated static var approvalKeyLost: String {
+        Words.Approval.keyGoneBiometry(biometry: Biometry.kind ?? Words.Approval.faceIdTouchId)
+    }
     /// What they read when an approval's prompt closed unrecognized while the key is still good.
-    nonisolated static let notRecognized = Words.Approval.notRecognizedFaceId
+    nonisolated static var notRecognized: String {
+        Words.Approval.notRecognizedBiometry(biometry: Biometry.kind ?? Words.Approval.faceIdTouchId)
+    }
 
     /// A key's fingerprint as KIFF shows it: the first 8 bytes of the SHA-256 of its SPKI
     /// DER, in hex, in groups of four ("ab12 cd34 ef56 7890").

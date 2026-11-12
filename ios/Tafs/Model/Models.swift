@@ -43,11 +43,13 @@ struct Money: Hashable, Comparable, Codable {
     var formatted: String { hasUnit ? figure : Words.Card.noCurrency(amount: "\(figure)") }
 
     /// The amount without the "no currency" note: for a figure whose words say it once.
+    /// Written the way the app's language writes it, never the phone's region: "€2,000" in an
+    /// English app on a German phone, not "€ 2.000". The currency
+    /// keeps its own symbol and is never converted.
     var figure: String {
-        guard let currency else {
-            return NumberFormatter.localizedString(from: NSNumber(value: minor), number: .decimal)
-        }
+        guard let currency else { return Words.number(Int(minor)) }
         let f = NumberFormatter()
+        f.locale = Words.locale
         let whole = minor % Self.power(scale) == 0
         if NSLocale.commonISOCurrencyCodes.contains(currency.uppercased()) {
             f.numberStyle = .currency

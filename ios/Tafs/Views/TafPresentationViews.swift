@@ -26,7 +26,7 @@ struct ConnectedToolsRing: View {
     @EnvironmentObject private var model: AppModel
     let taf: Taf
     let activity: (String) -> Void
-    @State private var app: TafsCloud.ConnectedApp?
+    @State private var app: Node?
     @State private var job = false
     @State private var workflow = false
     @State private var connect = false
@@ -60,7 +60,7 @@ struct ConnectedToolsRing: View {
             }
         }
         .sheet(item: $app) { chosen in
-            ConnectedAppSheet(tafID: taf.id, app: chosen, activity: { app = nil; activity($0) }).environmentObject(model)
+            ConnectedAppSheet(tafID: taf.id, app: chosen.app, others: chosen.others, activity: { app = nil; activity($0) }).environmentObject(model)
                 .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $connect) { NavStack { ConnectAppsView().environmentObject(model) } }
@@ -68,13 +68,41 @@ struct ConnectedToolsRing: View {
     }
 
     private func coach() { model.improveTaf(taf.id); model.coachOpen = true }
-    private func ring(_ apps: [TafsCloud.ConnectedApp]) -> some View {
-        GeometryReader { g in
+
+    /// One node per app: the connection that does the work, with any other sign-in to the same
+    /// app inside its sheet. Two "Stripe" nodes, one "Choose actions" and one "2 actions", read
+    /// as two Stripes.
+    struct Node: Identifiable {
+        let app: TafsCloud.ConnectedApp
+        let others: [TafsCloud.ConnectedApp]
+        var id: String { app.id }
+    }
+
+    /// The nodes, in tafs cloud's order of each app's first connection. The one shown is the
+    /// first with actions, else one to sign in again, else the first.
+    static func nodes(_ apps: [TafsCloud.ConnectedApp]) -> [Node] {
+        var order: [String] = []
+        var byName: [String: [TafsCloud.ConnectedApp]] = [:]
+        for app in apps {
+            if byName[app.name] == nil { order.append(app.name) }
+            byName[app.name, default: []].append(app)
+        }
+        return order.map { name in
+            let all = byName[name] ?? []
+            let main = all.first { $0.action_count > 0 } ?? all.first { $0.reconnect } ?? all[0]
+            return Node(app: main, others: all.filter { $0.id != main.id })
+        }
+    }
+
+    private func ring(_ connections: [TafsCloud.ConnectedApp]) -> some View {
+        let apps = Self.nodes(connections)
+        return GeometryReader { g in
             let count = apps.count + (model.manages(taf.id) ? 1 : 0)
             let center = CGPoint(x: g.size.width / 2, y: g.size.height / 2)
             let radius = min(g.size.width, g.size.height) / 2 - 36
             ZStack {
-                ForEach(Array(apps.enumerated()), id: \.element.id) { index, item in
+                ForEach(Array(apps.enumerated()), id: \.element.id) { index, node in
+                    let item = node.app
                     let angle = -Double.pi / 2 + Double(index) * 2 * .pi / Double(max(count, 1))
                     let point = CGPoint(x: center.x + CGFloat(cos(angle)) * radius, y: center.y + CGFloat(sin(angle)) * radius)
                     Path { p in p.move(to: center); p.addLine(to: point) }.stroke(Theme.line, style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
@@ -82,7 +110,7 @@ struct ConnectedToolsRing: View {
                         Circle().trim(from: 0, to: 0.1).stroke(Theme.ok, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                             .rotationEffect(.radians(angle)).frame(width: radius * 2, height: radius * 2).position(center)
                     }
-                    Button { app = item } label: {
+                    Button { app = node } label: {
                         VStack(spacing: 4) {
                             Text(item.name).scaledFont(13, weight: .semibold).lineLimit(2)
                             Text(item.action_words).scaledFont(11).foregroundColor(item.running ? Theme.ok : Theme.soft).lineLimit(2)
@@ -110,8 +138,11 @@ private struct ConnectedAppSheet: View {
     @Environment(\.dismiss) private var dismiss
     let tafID: UUID
     let app: TafsCloud.ConnectedApp
+    /// Other sign-ins to the same app on this taf, each with its own Disconnect.
+    var others: [TafsCloud.ConnectedApp] = []
     let activity: (String) -> Void
     @State private var disconnect = false
+    @State private var disconnectOther: TafsCloud.ConnectedApp?
     @State private var busy = false
     @State private var replacing: PlanqueClient.Grant?
     var body: some View {
@@ -159,6 +190,20 @@ private struct ConnectedAppSheet: View {
                 Section {
                     Button(app.stats.words) { activity(app.stats.activity_query) }.disabled(app.actions.isEmpty)
                 }
+                if !others.isEmpty {
+                    Section(Words.Connect.otherConnections) {
+                        ForEach(others) { other in
+                            HStack {
+                                Text(other.status_words).foregroundColor(other.reconnect ? Theme.amberText : Theme.soft)
+                                Spacer(minLength: 8)
+                                if model.manages(tafID) {
+                                    Button(Words.Connect.disconnectButton, role: .destructive) { disconnectOther = other }
+                                        .confirming().disabled(busy)
+                                }
+                            }
+                        }
+                    }
+                }
                 if model.manages(tafID) {
                     Section {
                         Button(Words.Taf.App.addActions) { dismiss(); model.improveTaf(tafID); model.coachOpen = true }
@@ -177,6 +222,18 @@ private struct ConnectedAppSheet: View {
                     Task {
                         defer { busy = false }
                         if await model.disconnect(grantID: app.id) { await model.loadTafSetup(tafID); dismiss() }
+                    }
+                }
+            } message: { Text(Words.Connect.disconnectBody) }
+            .confirmationDialog(Words.Connect.disconnectAppQuestion(app: "\(app.name)"),
+                                isPresented: Binding(get: { disconnectOther != nil }, set: { if !$0 { disconnectOther = nil } }),
+                                titleVisibility: .visible) {
+                Button(Words.Connect.disconnectButton, role: .destructive) {
+                    guard let other = disconnectOther else { return }
+                    busy = true
+                    Task {
+                        defer { busy = false }
+                        if await model.disconnect(grantID: other.id) { await model.loadTafSetup(tafID); dismiss() }
                     }
                 }
             } message: { Text(Words.Connect.disconnectBody) }
@@ -385,10 +442,14 @@ struct RetainedRuns: View {
         ForEach(Array(cache.pages.enumerated()), id: \.offset) { _, page in
             ForEach(page.requests) { request in
                 NavigationLink { KnobRequestDetail(tafID: tafID, run: request.id) } label: {
+                    // Leading, every line: a link centres a wrapped line by default, which put a
+                    // stop line's second line in the middle.
                     VStack(alignment: .leading, spacing: 4) {
                         Text(request.line).scaledFont(14)
                         ForEach(Array(request.deliveries.enumerated()), id: \.offset) { _, delivery in Text(delivery.line).scaledFont(12).foregroundColor(Theme.dim) }
                     }
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }

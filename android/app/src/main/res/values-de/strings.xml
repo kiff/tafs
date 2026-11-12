@@ -76,7 +76,7 @@
     <string name="approval_kept">Sie bleibt unter „Braucht dich“.</string>
     <string name="approval_key_could_not_sign">Der Schlüssel konnte nicht signieren</string>
     <string name="approval_key_gone_approve_again">Deine Fingerabdrücke haben sich geändert oder keiner wurde erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
-    <string name="approval_key_gone_face_id">Deine Face ID oder Fingerabdrücke haben sich geändert oder wurden nicht erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
+    <string name="approval_key_gone_biometry">Deine %1$s hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
     <string name="approval_key_gone_sign_in">Deine Fingerabdrücke haben sich geändert oder keiner wurde erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du dich erneut anmeldest.</string>
     <string name="approval_key_lost">Melde dich erneut mit KIFF an, um auf diesem Telefon zu genehmigen.</string>
     <string name="approval_locked_after_too_many_tries">%1$s ist nach zu vielen Versuchen gesperrt. Sperre dieses %2$s, entsperre es mit seinem Code und prüfe dann erneut.</string>
@@ -86,7 +86,7 @@
     <string name="approval_no_key">Kein Schlüssel zum Signieren</string>
     <string name="approval_not_confirmed">Nicht bestätigt</string>
     <string name="approval_not_recognized">Versuch es erneut oder melde dich erneut an, falls sich deine Fingerabdrücke geändert haben.</string>
-    <string name="approval_not_recognized_face_id">Versuch es erneut oder melde dich erneut an, falls sich deine Face ID oder Fingerabdrücke geändert haben.</string>
+    <string name="approval_not_recognized_biometry">Versuch es erneut oder melde dich erneut an, falls sich deine %1$s geändert hat.</string>
     <string name="approval_nothing_approved_request_kept_approve">Es wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_open_settings">Einstellungen öffnen</string>
     <string name="approval_prompt_approve_on_kiff">Bei KIFF genehmigen</string>

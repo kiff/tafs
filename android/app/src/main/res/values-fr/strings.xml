@@ -76,7 +76,7 @@
     <string name="approval_kept">Elle reste dans Vous attend.</string>
     <string name="approval_key_could_not_sign">La clé n\'a pas pu signer</string>
     <string name="approval_key_gone_approve_again">Vos empreintes ont changé ou n\'ont pas été reconnues : ce téléphone ne peut plus approuver tant que vous ne l\'approuvez pas à nouveau dans votre navigateur.</string>
-    <string name="approval_key_gone_face_id">Votre Face ID ou vos empreintes ont changé ou n\'ont pas été reconnus : ce téléphone ne peut plus approuver tant que vous ne l\'approuvez pas à nouveau dans votre navigateur.</string>
+    <string name="approval_key_gone_biometry">Votre %1$s a changé ou n\'a pas été reconnu : cet appareil ne peut plus approuver tant que vous ne l\'approuvez pas à nouveau dans votre navigateur.</string>
     <string name="approval_key_gone_sign_in">Vos empreintes ont changé ou n\'ont pas été reconnues : ce téléphone ne peut plus approuver tant que vous ne vous reconnectez pas.</string>
     <string name="approval_key_lost">Reconnectez-vous avec KIFF pour approuver depuis ce téléphone.</string>
     <string name="approval_locked_after_too_many_tries">%1$s est verrouillé après trop de tentatives. Verrouillez cet %2$s, déverrouillez-le avec son code, puis vérifiez à nouveau.</string>
@@ -86,7 +86,7 @@
     <string name="approval_no_key">Aucune clé pour signer</string>
     <string name="approval_not_confirmed">Non confirmé</string>
     <string name="approval_not_recognized">Réessayez, ou reconnectez-vous si vos empreintes ont changé.</string>
-    <string name="approval_not_recognized_face_id">Réessayez, ou reconnectez-vous si votre Face ID ou vos empreintes ont changé.</string>
+    <string name="approval_not_recognized_biometry">Réessayez, ou reconnectez-vous si votre %1$s a changé.</string>
     <string name="approval_nothing_approved_request_kept_approve">Rien n\'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.</string>
     <string name="approval_open_settings">Ouvrir les paramètres</string>
     <string name="approval_prompt_approve_on_kiff">Approuver sur KIFF</string>

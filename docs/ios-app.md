@@ -221,8 +221,13 @@ the app in sample mode.
   disabled, even while an app's place is on. Replies given up on show **Send again**, and a failed read of its work or Send again is said
   there (`workErrors`).
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
-  device (Turn on alerts while off), Sound, and What alerts you, read-only; "A taf answered
+  device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
+  kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+- **Setup › Connected tools** (`ConnectedToolsRing`): one node per app (`ConnectedToolsRing.nodes`),
+  the connection with actions in front; another sign-in to the same app is under Other
+  connections in its sheet, with its own Disconnect. Starts when and Results go to are rows
+  with a caret, no "Open" beside them (it read as their value).
 - **Dark:** each `Theme` colour has a light and a dark value (`Color(light:dark:)`), the values
   the owner reviewed, the same as Android: background 141311, panel 1F1E1B, raised 2A2824, ink
   F2EFE9, soft A8A49C, dim 96918A, line F2EFE9 at 12%, amber FF8A1F, amberText F0A45A, ok 4CC38A,
@@ -361,7 +366,8 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
 The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
 icon at the top right of the Overview (the iPad's sidebar) and, on the iPhone,
 beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
-Week first, with Today, previous and next, and a date to pick. tafs cloud computes
+Week first, with Today, previous and next, and a date to pick. On a phone the range
+("9 – 15 Nov") has a line of its own above the buttons, so it's never cut. tafs cloud computes
 every occurrence (`GET /v1/calendar`, docs/api.md): live schedules' firings in the
 account's zone, follow-ups and runs' next tries, only for the tafs the person may
 see, none for a paused taf. Each comes with its `day`, `time` and `minute` in that

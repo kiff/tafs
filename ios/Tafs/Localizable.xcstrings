@@ -4053,55 +4053,55 @@
         }
       }
     },
-    "approval.key_gone_face_id": {
+    "approval.key_gone_biometry": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Face ID oder Fingerabdrücke haben sich geändert oder wurden nicht erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst."
+            "value": "Deine %1$@ hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you approve it again in your browser."
+            "value": "Your %1$@ changed or wasn't recognized, so this device can't approve until you approve it again in your browser."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu Face ID o tus huellas cambiaron, o no se reconocieron, así que este teléfono no puede aprobar hasta que lo vuelvas a aprobar en tu navegador."
+            "value": "Tu %1$@ cambió o no se reconoció, así que este dispositivo no puede aprobar hasta que lo vuelvas a aprobar en tu navegador."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre Face ID ou vos empreintes ont changé ou n'ont pas été reconnus : ce téléphone ne peut plus approuver tant que vous ne l'approuvez pas à nouveau dans votre navigateur."
+            "value": "Votre %1$@ a changé ou n'a pas été reconnu : cet appareil ne peut plus approuver tant que vous ne l'approuvez pas à nouveau dans votre navigateur."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo Face ID o le tue impronte sono cambiati, o non sono stati riconosciuti, quindi questo telefono non può approvare finché non lo approvi di nuovo nel browser."
+            "value": "Il tuo %1$@ è cambiato o non è stato riconosciuto, quindi questo dispositivo non può approvare finché non lo approvi di nuovo nel browser."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je Face ID of vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je hem opnieuw goedkeurt in je browser."
+            "value": "Je %1$@ is gewijzigd of niet herkend, dus dit apparaat kan niet goedkeuren tot je het opnieuw goedkeurt in je browser."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twoje Face ID lub odciski palców się zmieniły albo nie zostały rozpoznane, więc ten telefon nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce."
+            "value": "Twoje %1$@ się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu Face ID ou as suas impressões digitais mudaram, ou não foram reconhecidos, por isso este telefone não pode aprovar até o aprovar novamente no seu navegador."
+            "value": "O seu %1$@ mudou ou não foi reconhecido, por isso este dispositivo não pode aprovar até o aprovar novamente no seu navegador."
           }
         }
       }
@@ -4583,55 +4583,55 @@
         }
       }
     },
-    "approval.not_recognized_face_id": {
+    "approval.not_recognized_biometry": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versuch es erneut oder melde dich erneut an, falls sich deine Face ID oder Fingerabdrücke geändert haben."
+            "value": "Versuch es erneut oder melde dich erneut an, falls sich deine %1$@ geändert hat."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Try again, or sign in again if your Face ID or fingerprints changed."
+            "value": "Try again, or sign in again if your %1$@ changed."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vuelve a intentarlo, o vuelve a iniciar sesión si tu Face ID o tus huellas cambiaron."
+            "value": "Vuelve a intentarlo, o vuelve a iniciar sesión si tu %1$@ cambió."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Réessayez, ou reconnectez-vous si votre Face ID ou vos empreintes ont changé."
+            "value": "Réessayez, ou reconnectez-vous si votre %1$@ a changé."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Riprova, o accedi di nuovo se il tuo Face ID o le tue impronte sono cambiati."
+            "value": "Riprova, o accedi di nuovo se il tuo %1$@ è cambiato."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probeer het opnieuw, of log opnieuw in als je Face ID of vingerafdrukken zijn gewijzigd."
+            "value": "Probeer het opnieuw, of log opnieuw in als je %1$@ is gewijzigd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spróbuj ponownie albo zaloguj się ponownie, jeśli Twoje Face ID lub odciski palców się zmieniły."
+            "value": "Spróbuj ponownie albo zaloguj się ponownie, jeśli Twoje %1$@ się zmieniło."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tente novamente, ou inicie sessão novamente se o seu Face ID ou as suas impressões digitais mudaram."
+            "value": "Tente novamente, ou inicie sessão novamente se o seu %1$@ mudou."
           }
         }
       }
