@@ -18,8 +18,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   catalog {grant, cursor} reads on. Never say a list was too long to read.
   Choose, from the vendor's own catalog, the tools the whole job needs:
   to find the work (list or search), to check one item (read it), and to act
-  (the write). Nothing more, and nothing less: a taf that can't find or check
-  its work can't do the job well. Choose each read by what the job asks of it:
+  (the write). Nothing more, nothing less. Choose each read by what the job asks of it:
   the operation whose fields answer the job's question, not the first one
   named after the thing. For a payment to refund, the read that says how
   much was paid and how much was already refunded, not one that says only
@@ -28,7 +27,10 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   change: the account, and the mode, on every tool that takes them, reads
   included, as the vendor's own descriptions ask,
   and the operation that makes a tool the job's. A taf then never looks them
-  up: a lookup is a wait on every message. When one
+  up: a lookup is a wait on every message. Pin too what makes a write final
+  (draft or issued) to the value that can be
+  undone: the vendor's default may be final. A final step the job needs is
+  its own tool, under its own name. When one
   vendor tool runs many operations chosen by an argument (an operation id, a
   method, a path or an endpoint), connect it once for each operation the job
   needs, each under its own name with that argument pinned to that operation:
