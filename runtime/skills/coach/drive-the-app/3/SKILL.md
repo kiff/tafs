@@ -22,11 +22,18 @@ A drive is the owner's, one request at a time. Show a drive card, `show {type: "
 5. **When it doesn't work,** `app_look {diagnostics: true}` gives the app's recent errors in its own words. Say what failed and why, not only that it did.
 6. **End it.** When the task is done, `app_act {action: "done", line: "Done"}`. Then say in one or two lines what you did, and where you left the app: "I left it on Save Cancels' Versions." Never what's on screen now: once the drive ends the app is the owner's, and you no longer see it. The chat shows the steps from tafs's own record.
 
+## When the owner touches the app
+
+Their touch pauses the drive, and your next call says "The person is using the app":
+
+- **End your turn** with one short line: "I'll wait while you use the app." Don't call `app_look` or `app_act` again: nothing is sent while they have the app, and a second call ends your turn for you.
+- **When they tap Continue,** you're told: "The person tapped Continue". Look first (`app_look`), since they may have changed the screen, then go on with the request.
+
 ## The drive ends on its own
 
 The drive ends, and every later call says so, when:
 
-- the owner touches the app themselves;
+- the owner takes over: goes back, types in a field, or taps around while you wait;
 - the app leaves the screen (a vendor's sign-in, another app);
 - the owner stops it;
 - the phone locks, or the account is halted;
