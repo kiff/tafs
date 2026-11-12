@@ -41031,6 +41031,59 @@
         }
       }
     },
+    "connect.give_key_on_sheet": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüssel in einer sicheren Ansicht geben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give the key on a secure sheet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar la clave en una pantalla segura"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donner la clé sur un écran sécurisé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dai la chiave in una schermata sicura"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De sleutel geven op een beveiligd scherm"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekaż klucz na bezpiecznym ekranie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar a chave num ecrã seguro"
+          }
+        }
+      }
+    },
     "connect.give_key_with": {
       "extractionState": "manual",
       "localizations": {
@@ -41570,6 +41623,112 @@
           "stringUnit": {
             "state": "translated",
             "value": "A chave"
+          }
+        }
+      }
+    },
+    "connect.key_clipboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Zwischenablage wird nach dem Einfügen geleert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The clipboard is cleared after you paste."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El portapapeles se vacía después de pegar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le presse-papiers est vidé après le collage."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli appunti vengono svuotati dopo che incolli."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het klembord wordt gewist nadat je plakt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schowek jest czyszczony po wklejeniu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A área de transferência é limpa depois de colar."
+          }
+        }
+      }
+    },
+    "connect.key_goes_to": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Schlüssel geht von diesem Telefon an den Verbindungsserver, der ihn nur an %1$@ sendet. An Coach geht er nie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key goes from this phone to the connection server, which sends it only to %1$@. It never goes to Coach."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clave va de este teléfono al servidor de conexiones, que solo la envía a %1$@. Nunca va a Coach."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé va de ce téléphone au serveur de connexion, qui ne l'envoie qu'à %1$@. Elle ne va jamais à Coach."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave va da questo telefono al server dei collegamenti, che la invia solo a %1$@. Non va mai a Coach."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De sleutel gaat van deze telefoon naar de koppelingsserver, die hem alleen naar %1$@ stuurt. Hij gaat nooit naar Coach."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz trafia z tego telefonu na serwer połączeń, który wysyła go tylko do %1$@. Nigdy nie trafia do Coacha."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave vai deste telefone para o servidor de ligações, que só a envia para %1$@. Nunca vai para o Coach."
           }
         }
       }
