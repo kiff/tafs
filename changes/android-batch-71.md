@@ -1,0 +1,1 @@
+- **Android 1.16: publish or retire a catalog revision from the phone.** An operator enrolled with `tafs://catalog/enrol` opens a revision by its id from Settings, sees each tool as the connection server reads it, and publishes or retires it with one fingerprint, only when the phone's own digest of the entry is the server's.

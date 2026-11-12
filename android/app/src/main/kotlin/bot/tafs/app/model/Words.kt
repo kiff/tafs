@@ -410,6 +410,34 @@ object Words {
     }
     val withinCard: String get() = Res.s(R.string.card_within_card)
   }
+  object Catalog {
+    val enrolText: String get() = Res.s(R.string.catalog_enrol_text)
+    val enrolTitle: String get() = Res.s(R.string.catalog_enrol_title)
+    fun fixedTo(argument: String, value: String): String = Res.s(R.string.catalog_fixed_to, argument, value)
+    val makeKey: String get() = Res.s(R.string.catalog_make_key)
+    val notWhatIsSigned: String get() = Res.s(R.string.catalog_not_what_is_signed)
+    val nothingToSign: String get() = Res.s(R.string.catalog_nothing_to_sign)
+    val open: String get() = Res.s(R.string.catalog_open)
+    val openTitle: String get() = Res.s(R.string.catalog_open_title)
+    val operatorId: String get() = Res.s(R.string.catalog_operator_id)
+    val operatorRow: String get() = Res.s(R.string.catalog_operator_row)
+    val publicKey: String get() = Res.s(R.string.catalog_public_key)
+    val publish: String get() = Res.s(R.string.catalog_publish)
+    fun publishReason(id: String): String = Res.s(R.string.catalog_publish_reason, id)
+    fun publishedNow(id: String): String = Res.s(R.string.catalog_published_now, id)
+    val reads: String get() = Res.s(R.string.catalog_reads)
+    val retire: String get() = Res.s(R.string.catalog_retire)
+    fun retireReason(id: String): String = Res.s(R.string.catalog_retire_reason, id)
+    fun retiredNow(id: String): String = Res.s(R.string.catalog_retired_now, id)
+    val revisionId: String get() = Res.s(R.string.catalog_revision_id)
+    object State {
+      val draft: String get() = Res.s(R.string.catalog_state_draft)
+      val published: String get() = Res.s(R.string.catalog_state_published)
+      val retired: String get() = Res.s(R.string.catalog_state_retired)
+      val reviewed: String get() = Res.s(R.string.catalog_state_reviewed)
+    }
+    val writes: String get() = Res.s(R.string.catalog_writes)
+  }
   object Chat {
     object Answer {
       val copyLabel: String get() = Res.s(R.string.chat_answer_copy_label)

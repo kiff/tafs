@@ -80,6 +80,8 @@ fun SettingsSheet(
   onPeople: () -> Unit,
   onUseDeviceZone: () -> Unit,
   onDeleteAccount: () -> Unit,
+  /** The catalog operator's sheet, on a phone enrolled as one; none, and no row. */
+  onCatalog: (() -> Unit)? = null,
   /** The person's own chats, for their own copy: offered as two files through the share sheet. */
   onExport: suspend () -> bot.tafs.app.model.ExportResult = { bot.tafs.app.model.ExportResult.NotExported("") },
   onClose: () -> Unit,
@@ -195,6 +197,7 @@ fun SettingsSheet(
             Action(Words.Settings.terms, Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.terms()) }
             Action(Words.Settings.privacyPolicy, Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.privacy()) }
           }
+          onCatalog?.let { open -> Section(Words.Catalog.operatorRow) { Action(Words.Catalog.openTitle, Theme.amberText, open) } }
           Section(Words.Settings.about) { Value(Words.Settings.version, version); Text(Words.Home.tagline, style = scaled(15, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           if (state.canDeleteAccount) Section(Words.Settings.DeleteAccount.title) { Action(Words.Settings.DeleteAccount.row, Theme.no, onDeleteAccount) }
           Section(Words.Settings.accountActions) {

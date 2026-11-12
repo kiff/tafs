@@ -264,10 +264,14 @@ class MainActivity : FragmentActivity() {
     deliverSignIn(intent)
   }
 
-  /** A vendor's sign-in came back (`tafs://planque/signed-in?...`): the step waiting on it goes on. */
+  /**
+   * A vendor's sign-in came back (`tafs://planque/signed-in?...`): the step waiting on it goes on. `tafs://catalog/enrol` opens the
+   * catalog operator's enrolment, which makes this phone's catalog key.
+   */
   private fun deliverSignIn(intent: Intent?) {
     val link = intent?.data ?: return
     if (link.scheme == "tafs" && link.host == "planque") app.vendorSignIn.deliver(link.toString())
+    if (link.scheme == "tafs" && link.host == "catalog" && link.path == "/enrol") app.catalog.openEnrol()
   }
 
   override fun onDestroy() {
@@ -405,6 +409,9 @@ internal fun accountShown(state: bot.tafs.app.app.AppState): String = "${state.m
 @Composable
 private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val state by model.state.collectAsState()
+  // The catalog operator, kept apart from the account: its key, its sheet, and its Settings row once enrolled.
+  val catalog = (androidx.compose.ui.platform.LocalContext.current.applicationContext as? TafsApplication)?.catalog
+  val catalogState = catalog?.state?.collectAsState()?.value
   val scope = rememberCoroutineScope()
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
   // The taf open on the Tafs tab: the screens inside a tab keep its bar, as a navigation stack does.
@@ -799,6 +806,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onPeople = { showingSettings = false; showingPeople = true },
         onUseDeviceZone = { scope.launch { model.useThisDevicesTimeZone() } },
         onDeleteAccount = { showingSettings = false; deletingAccount = true },
+        // The catalog operator's row: only on a phone enrolled as one.
+        onCatalog = catalog?.takeIf { catalogState?.enrolled == true }?.let { c -> { showingSettings = false; c.openSheet() } },
         onExport = model::exportChats,
         onClose = { showingSettings = false },
       )
@@ -842,6 +851,13 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
         loadSecure = model::loadSecureSheet,
         onDisconnect = model::disconnectFromReceipt,
+      )
+    }
+    // The catalog operator's sheet: enrolling, or one revision opened by its id.
+    if (catalog != null && catalogState != null) {
+      bot.tafs.app.views.CatalogOperatorSheet(
+        catalogState,
+        bot.tafs.app.views.CatalogActions(enrol = catalog::enrol, open = catalog::open, act = catalog::act, close = catalog::close),
       )
     }
     // "Allow this from now on", over whatever screen the held call was on.

@@ -1,0 +1,1 @@
+- **Android 1.15: each run says what it used.** Under a run on a taf's Activity tab, its credits, as counted from the usage record ("34 credits"), or why it used none. A run not counted yet shows nothing.

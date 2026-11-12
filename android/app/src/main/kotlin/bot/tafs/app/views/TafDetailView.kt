@@ -467,6 +467,8 @@ internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
             "failed" -> Theme.no
             else -> Theme.soft
           }))
+          // What it used, tafs cloud's line from KIFF's usage record; none until KIFF has counted it.
+          r.credits?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           r.deliveries.forEach { d ->
             Text(d.line, style = scaled(12, color = if (d.sendAgain) Theme.amberText else Theme.dim))
             if (d.sendAgain && state.manages(taf.id)) {
