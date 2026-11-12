@@ -51782,7 +51782,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coach tippt und schreibt in dieser App, während du zusiehst, nur für diese Anfrage. Er bestätigt nie etwas. Berühre die App, um ihn anzuhalten, oder tippe auf „Stoppen“, um ihn zu beenden."
+            "value": "Coach tippt und schreibt in dieser App, während du zusiehst, nur für diese Anfrage. Er bestätigt nie etwas. Berühre die App, um ihn zu pausieren, oder tippe auf „Stoppen“, um ihn zu beenden."
           }
         },
         "en": {
@@ -51824,7 +51824,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach toca e escreve nesta app enquanto você observa, apenas para este pedido. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
+            "value": "O Coach toca e escreve nesta app enquanto observa, apenas para este pedido. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
           }
         }
       }
@@ -51888,7 +51888,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coach tippt, schreibt und scrollt in dieser App, während du zusiehst. Er bestätigt nie etwas. Berühre die App, um ihn anzuhalten, oder tippe auf „Stoppen“, um ihn zu beenden."
+            "value": "Coach tippt, schreibt und scrollt in dieser App, während du zusiehst. Er bestätigt nie etwas. Berühre die App, um ihn zu pausieren, oder tippe auf „Stoppen“, um ihn zu beenden."
           }
         },
         "en": {
@@ -51930,7 +51930,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach toca, escreve e desliza nesta app enquanto você observa. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
+            "value": "O Coach toca, escreve e desliza nesta app enquanto observa. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
           }
         }
       }

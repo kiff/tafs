@@ -1043,9 +1043,9 @@
     <string name="drive_cant_scroll">Kann dort nicht scrollen (%1$s)</string>
     <string name="drive_caption">Coach steuert: %1$s</string>
     <string name="drive_card_note">Coach tippt und schreibt in dieser App, während du zusiehst, nur für diese Anfrage. Er bestätigt nie etwas. Berühre die App oder tippe auf „Stoppen“, um zu übernehmen.</string>
-    <string name="drive_card_note_pauses">Coach tippt und schreibt in dieser App, während du zusiehst, nur für diese Anfrage. Er bestätigt nie etwas. Berühre die App, um ihn anzuhalten, oder tippe auf „Stoppen“, um ihn zu beenden.</string>
+    <string name="drive_card_note_pauses">Coach tippt und schreibt in dieser App, während du zusiehst, nur für diese Anfrage. Er bestätigt nie etwas. Berühre die App, um ihn zu pausieren, oder tippe auf „Stoppen“, um ihn zu beenden.</string>
     <string name="drive_card_note_scrolls">Coach tippt, schreibt und scrollt in dieser App, während du zusiehst. Er bestätigt nie etwas. Berühre die App oder tippe auf „Stoppen“, um sie zurückzunehmen.</string>
-    <string name="drive_card_note_scrolls_pauses">Coach tippt, schreibt und scrollt in dieser App, während du zusiehst. Er bestätigt nie etwas. Berühre die App, um ihn anzuhalten, oder tippe auf „Stoppen“, um ihn zu beenden.</string>
+    <string name="drive_card_note_scrolls_pauses">Coach tippt, schreibt und scrollt in dieser App, während du zusiehst. Er bestätigt nie etwas. Berühre die App, um ihn zu pausieren, oder tippe auf „Stoppen“, um ihn zu beenden.</string>
     <string name="drive_card_title">Coach bittet darum, die App zu steuern</string>
     <string name="drive_coach_drove_app">Coach hat die App gesteuert · %1$s</string>
     <string name="drive_declined_line">Nicht jetzt: Coach hat die App nicht gesteuert</string>
