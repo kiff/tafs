@@ -37,6 +37,15 @@ final class DrivePauseTests: XCTestCase {
         try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
     }
 
+    /// Waits until `condition` holds, for at most `seconds`: for what a request's answer brings
+    /// about, which takes as long as the runner takes. A fixed wait there fails on a slow one.
+    private func until(_ seconds: Double = 5, _ condition: () -> Bool) async {
+        let end = Date().addingTimeInterval(seconds)
+        while !condition(), Date() < end {
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+    }
+
     private func show(_ probe: DriveTests.Probe) async throws {
         targets.reset()
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
@@ -98,6 +107,7 @@ final class DrivePauseTests: XCTestCase {
         XCTAssertEqual(look.line, "Paused")
 
         await settle(0.5)
+        await until { self.sent("/v1/coach/drive/pause").count >= 1 }
         XCTAssertEqual(sent("/v1/coach/drive/pause").count, 1)
         XCTAssertEqual(sent("/v1/coach/drive/resume").count, 0)
 
@@ -107,6 +117,7 @@ final class DrivePauseTests: XCTestCase {
         XCTAssertEqual(done.line, "Tapped Run now")
         XCTAssertEqual(probe.taps, 1)
         await settle(0.5)
+        await until { self.sent("/v1/coach/drive/resume").count >= 1 }
         XCTAssertEqual(sent("/v1/coach/drive/resume").count, 1)
         XCTAssertEqual(sent("/v1/coach/drive/stop").count, 0)
     }
@@ -136,6 +147,7 @@ final class DrivePauseTests: XCTestCase {
         let refused = await drive.answer(tap("t.run"))
         XCTAssertEqual(refused.line, "Paused")
         await settle(1.8)
+        await until { self.sent("/v1/coach/drive/pause").count >= 2 }
         XCTAssertEqual(sent("/v1/coach/drive/pause").count, 2)
         XCTAssertTrue(drive.paused)
         XCTAssertTrue(drive.isOn)
@@ -149,6 +161,7 @@ final class DrivePauseTests: XCTestCase {
         begin()
         personTaps(CGPoint(x: 4, y: 300))
         await settle(1.8)
+        await until { self.sent("/v1/coach/drive/pause").count >= 2 }
         XCTAssertEqual(sent("/v1/coach/drive/pause").count, 2)
         XCTAssertTrue(drive.paused)
         XCTAssertTrue(drive.isOn)
@@ -163,6 +176,7 @@ final class DrivePauseTests: XCTestCase {
         begin()
         personTaps(CGPoint(x: 4, y: 300))
         await settle(1.8)
+        await until { self.sent("/v1/coach/drive/pause").count >= 2 }
         XCTAssertEqual(sent("/v1/coach/drive/pause").count, 2)
         XCTAssertTrue(drive.paused)
         XCTAssertTrue(drive.isOn, "a 429 isn't the drive's end")
@@ -178,6 +192,7 @@ final class DrivePauseTests: XCTestCase {
         StubProtocol.responses["GET /v1/coach/drive"] = (200, #"{"drive":{"id":"\#(id)","session":"s1","task":"Run Refunds","ended":{"why":"idle","words":"Nothing was done for 15 minutes, so Coach stopped"}},"steps":[]}"#)
         personTaps(CGPoint(x: 4, y: 300))
         await settle(0.8)
+        await until { !self.drive.isOn }
         XCTAssertFalse(drive.isOn)
         XCTAssertEqual(drive.caption, "Nothing was done for 15 minutes, so Coach stopped")
         XCTAssertEqual(sent("/v1/coach/drive/pause").count, 1, "a 404 isn't posted again")
@@ -192,6 +207,7 @@ final class DrivePauseTests: XCTestCase {
         begin()
         personTaps(CGPoint(x: 4, y: 300))
         await settle(0.8)
+        await until { !self.drive.isOn }
         XCTAssertFalse(drive.isOn)
         XCTAssertEqual(drive.caption, "Coach stopped")
         XCTAssertEqual(sent("/v1/coach/drive/stop").count, 0)
@@ -207,7 +223,8 @@ final class DrivePauseTests: XCTestCase {
         await settle(0.5)
         XCTAssertTrue(drive.isOn)
         drive.resume()
-        await settle(0.6)
+        // The end comes with the Continue's answer: waited for, not timed.
+        await until { !self.drive.isOn }
         XCTAssertFalse(drive.isOn)
         XCTAssertEqual(drive.caption, "The account is halted, so Coach stopped")
         XCTAssertEqual(sent("/v1/coach/drive/stop").count, 0, "tafs cloud ended it: nothing to stop")
@@ -230,6 +247,7 @@ final class DrivePauseTests: XCTestCase {
         XCTAssertEqual(drive.caption, "You took over, so Coach let you carry on")
         XCTAssertEqual(DriveLines.ended["owner_took_over"], "You took over, so Coach let you carry on")
         await settle(0.5)
+        await until { self.sent("/v1/coach/drive/stop").count >= 1 }
         XCTAssertEqual(sent("/v1/coach/drive/stop").count, 1)
     }
 
@@ -286,6 +304,7 @@ final class DrivePauseTests: XCTestCase {
         probe.path = []
         drive.personEnded(at: CGPoint(x: 20, y: 60))
         await settle(1.4)
+        await until { !self.drive.isOn }
         XCTAssertFalse(drive.isOn)
         XCTAssertEqual(drive.caption, "You took over, so Coach let you carry on")
     }
