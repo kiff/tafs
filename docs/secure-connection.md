@@ -22,7 +22,10 @@ sheet**) or from Connect apps:
    SHA-256, the host the key is sent to, the header that carries it, and the connection's own
    words from the connection server, verbatim. These are the words its digest covers.
 5. **Its Card**, when the setup has one drafted: KIFF's own lines for the draft, as the
-   approval card shows them today ("the 4 reads, 1,000 calls a day, then it asks you").
+   approval card shows them today ("the 4 reads, 1,000 calls a day, then it asks you"). The
+   phone reads the draft from KIFF itself (`GET /v1/me/agent-drafts/{draft}`) and draws KIFF's
+   lines, and the `version` it signs is the one it read: never a draft or lines tafs cloud
+   passed along, so one fingerprint never signs a Card the sheet didn't show.
 6. **One legal line:** "By connecting, you agree to the Terms and the Privacy Policy", each
    a link.
 7. **One button**, **Connect**, behind one fingerprint (or Face ID). It gives the key and
@@ -47,7 +50,7 @@ entry it came from, and answers in the request's `Accept-Language`:
     { "kind": "reads_only", "text": "Read only: it can't pay, send or change anything in Qonto" },
     { "kind": "sealed", "text": "Your key is sealed: it's never shown again, and the taf never sees it" },
     { "kind": "disconnect", "text": "You can disconnect it any time, in Connect apps" } ],
-  "paste": { "button": "Paste the key", "what": "Paste the API key you created in Qonto",
+  "paste": { "button": "Paste the key", "what": "Copy it in Qonto, then paste it here",
              "pasted": "Key …{last4}", "cleared": "Clipboard cleared" },
   "details": { "title": "Details", "lines": [
     { "label": "Specification", "value": "https://…/openapi.json" },
@@ -65,14 +68,22 @@ entry it came from, and answers in the request's `Accept-Language`:
 - **The first line's `kind`** is `reads_only` only when the grant lists at least one tool
   and every one says `read_only: true`. Otherwise it's `may_change`, including a grant whose
   tools carry no flag. The phone draws `text`, and may use `kind` for an icon.
+- **The phone checks the first line** against the grant it reads from the connection server
+  to sign its digest: `reads_only` only with at least one tool, every one `read_only`. On a
+  mismatch it shows no sheet to sign, and says the connection can't be checked. The line
+  people trust most is never tafs cloud's word alone.
 - **The placeholders** are `{last4}` (in `paste.pasted` and `receipt.text`) and `{terms}` and
   `{privacy}` (in `legal.text`, each drawn as its link's `words`). tafs cloud fills the
   vendor's name everywhere. The phone fills `{last4}` from the pasted key, and the key never
   leaves the phone except to the connection server, as today.
 - **The legal links** are per language (`https://kiff.dev/de/terms`), as the apps' own legal
   links are.
-- **The logo** is the catalog entry's, as Connect apps draws it. With none, `logo` is absent
-  and the phone draws the name alone.
+- **The logo** is the catalog entry's, served by tafs cloud as Connect apps' logos are (a
+  path on tafs cloud, never the vendor's host), so the sheet's requests stay on our own hosts.
+  With none, `logo` is absent and the phone draws the name alone.
+- **`paste.what`** says where the key comes from in a few words: "Copy it in Qonto, then paste
+  it here". A key made on a computer reaches the phone through a shared clipboard or a
+  password manager.
 - 404 for a grant the connection server doesn't show this person, and 409 for one that takes
   no key.
 
@@ -106,7 +117,9 @@ tafs.setup.v1|{tenant}|{grant}|{digest}|{key_sha256}|{draft}|{version}
   without reading them.
 - **KIFF** checks the same signature over the message it rebuilds from the tenant, the draft
   and its version, with the device's approval key. It takes `grant`, `digest` and
-  `key_sha256` as they're written. **This is the combined confirm KIFF needs:** today's
+  `key_sha256` as they're written, and keeps `key_sha256` only in its single-use record,
+  never logged. The connection server, which holds the key, is the only place a hash of it
+  lives beyond that. **This is the combined confirm KIFF needs:** today's
   confirm takes only `tafs.cards.v1`.
 - **Each service takes one signature once,** for that draft version and that grant digest.
 - **If the confirm fails after the key went in,** the app is connected and the Card still
@@ -138,7 +151,10 @@ that line and Its Card.
 ## Tests
 
 - **The first line says read only only when every tool is a read**, and `may_change` for a
-  grant with a write tool, or with no flags.
+  grant with a write tool, or with no flags. The phone refuses a sheet whose `reads_only`
+  doesn't match the grant it read.
+- **Its Card on the sheet is the draft the phone read from KIFF**, and the signed version is
+  that draft's.
 - **No placeholder but `{last4}`, `{terms}` and `{privacy}`**, and every line is in the 8
   languages.
 - **One fingerprint per key setup with a Card:** the phone signs one `tafs.setup.v1`
