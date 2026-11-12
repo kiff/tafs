@@ -494,6 +494,33 @@ describe("a touch pauses the drive (docs/drive.md, When the person touches the a
     expect(seen).toEqual([]);
   });
 
+  it("a request the phone refused for the person's touch is the pause's once the pause lands, so the run waits", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    let answered = false;
+    r.answers(() => { answered = true; return { outcome: "refused", line: "En pause" }; });
+    // The app's pause reaches tafs cloud a moment after its refusal did.
+    const wait = async (ms: number) => {
+      await r.wait(ms);
+      if (answered && !(await drivePaused(r.store, T, d.id))) await pauseDrive(r.store, T, ANA, d.id, r.now());
+    };
+    expect(await askApp(r.store, T, ANA, "app_act", { action: "tap", line: "Tapping Run now", at: { x: 1, y: 2 } }, r.now, wait))
+      .toMatchObject({ paused: expect.any(String), calls: 1, drive: d.id });
+  });
+
+  it("a refusal with a screen is the step's own, and one with none stays a refusal when no pause comes", async () => {
+    const r = rig();
+    await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    r.answers(() => ({ outcome: "refused", line: "That's yours to confirm", image: { media_type: "image/png", data: PNG } }));
+    const start = r.now().getTime();
+    expect(await askApp(r.store, T, ANA, "app_act", { action: "tap", line: "Tapping Pay", at: { x: 1, y: 2 } }, r.now, r.wait))
+      .toMatchObject({ result: { outcome: "refused", line: "That's yours to confirm" } });
+    // A refusal with a screen didn't wait for a pause.
+    expect(r.now().getTime() - start).toBeLessThan(DRIVE.pauseGraceMs);
+    r.answers(() => ({ outcome: "refused", line: "Paused" }));
+    expect(await askApp(r.store, T, ANA, "app_look", {}, r.now, r.wait)).toMatchObject({ result: { outcome: "refused", line: "Paused" } });
+  });
+
   it("after Continue, refuses an act until Coach has looked, then lets it act", async () => {
     const r = rig();
     const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());

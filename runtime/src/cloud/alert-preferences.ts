@@ -1,10 +1,7 @@
-/** Per-phone choices, applied before an alert leaves tafs cloud. */
-export const ALERT_KINDS = [
-  { id: "needs_you", title: "A taf needs you", words: "For a call waiting for your answer" },
-  { id: "halted", title: "Every taf halted", words: "When a taf or the account is halted" },
-  { id: "answered", title: "A taf answered someone", words: "Silent, for the tafs whose results include this phone" },
-  { id: "not_sent", title: "A reply wasn't sent", words: "Silent, when a reply needs another try" },
-] as const;
+import { type Lang, wordsIn } from "./words/index.js";
+
+/** Per-phone choices, applied before an alert leaves tafs cloud. Their words are in the phone's language (words/). */
+export const ALERT_KINDS = [{ id: "needs_you" }, { id: "halted" }, { id: "answered" }, { id: "not_sent" }] as const;
 
 export type AlertKind = typeof ALERT_KINDS[number]["id"];
 export type AlertKinds = Record<AlertKind, boolean>;
@@ -22,6 +19,8 @@ export function parseKinds(value: unknown): AlertKinds | undefined {
   return kinds;
 }
 
-export function alertChoices(kinds: Partial<AlertKinds> | undefined) {
-  return ALERT_KINDS.map((kind) => ({ ...kind, enabled: kinds?.[kind.id] !== false }));
+/** Each kind with its title and line in `lang`, and whether this phone has it on. */
+export function alertChoices(kinds: Partial<AlertKinds> | undefined, lang: Lang = "en") {
+  const w = wordsIn(lang);
+  return ALERT_KINDS.map((kind) => ({ id: kind.id, title: w[`alert_${kind.id}_title`], words: w[`alert_${kind.id}_words`], enabled: kinds?.[kind.id] !== false }));
 }
