@@ -147,10 +147,16 @@ data class Unsent(
   val files: List<PendingFile> = emptyList(),
   /** For one of tafs cloud's `not_sent` (docs/chat.md): its key, remembered once Retry or Edit takes it, so it never comes back. */
   val notSentKey: String? = null,
+  /** Refused because the account (`account`) or its taf (`taf`) is halted: tafs cloud's `halted`, so the row can offer Resume. */
+  val halted: String? = null,
 ) {
   companion object {
     /** The session an unsent message carries, so the thread shows it as one. */
     const val SESSION = "unsent"
+
+    /** tafs cloud's `halted` on a halt refusal: the whole account, or this chat's taf. */
+    const val HALTED_ACCOUNT = "account"
+    const val HALTED_TAF = "taf"
   }
 }
 

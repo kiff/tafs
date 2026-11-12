@@ -974,6 +974,43 @@ class PlanqueTest {
 
   private fun approvalComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard)
 
+  // MARK: Coach's card for an app connected with a key: the key goes in on the card, then the card is answered
+
+  private val keyRequest = """{"kind":"api_key","server":"api.example-bank.test","agent":"invoicing-1","tools":[{"tool":"list_invoices","read_only":true}]}"""
+  private fun keyGrant(status: String = "pending") =
+    """{"id":"g1","status":"$status","text":"Connect the bank: list invoices.","digest":"${digestOf(keyRequest)}","request":$keyRequest}"""
+
+  @Test fun coachsCardForAKeyAppGivesTheKeyThenAnswersTheCard() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    transport.answer(key, 200, keyGrant("connected"))
+    transport.answer(askRoute, 200, """{"outcome":"answered","answer":"already approved: the bank is connected","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    assertTrue("planque's api_key: the card takes the key", m.state.value.grants.single().takesKey)
+    assertTrue(m.approveCoachWithKey(approvalComponent(), digestOf(keyRequest), null, "  test-key-1  "))
+    // The key went to planque, signed and confirmed, in its header alone: never planque's plain approve, which it refuses.
+    assertEquals("test-key-1", transport.requestsTo(key).single().headers[PlanqueClient.VENDOR_KEY])
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    // Then the card is answered as any approval: tafs cloud finds it connected, and Coach goes on.
+    val ask = transport.requestsTo(askRoute).single()
+    assertEquals("g1", bodyOf(ask).getValue("grant").jsonPrimitive.content)
+    assertFalse("the key is in no request to tafs cloud", String(ask.body!!).contains("test-key-1"))
+    assertFalse("kept nowhere in the app's state", m.state.value.toString().contains("test-key-1"))
+  }
+
+  @Test fun aKeyNotConfirmedOnCoachsCardGivesNothingAndAnswersNothing() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    val m = model()
+    coachWithCard(m)
+    auth.confirms = false
+    assertFalse(m.approveCoachWithKey(approvalComponent(), digestOf(keyRequest), null, "test-key-1"))
+    assertTrue(transport.requestsTo(key).isEmpty())
+    assertTrue("the card isn't answered", transport.requestsTo(askRoute).isEmpty())
+    assertEquals("Not done: it wasn't confirmed.", m.state.value.coachNotes[bot.tafs.app.model.ConnectWords.cardKey("g1")])
+  }
+
   @Test fun disconnectingConfirmsThenDeletesThenReadsAgain() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")

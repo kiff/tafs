@@ -563,6 +563,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       retryUnsent = model::retryUnsent,
       editUnsent = model::editUnsent,
       deleteUnsent = model::deleteUnsent,
+      resumeHalt = model::resumeHalt,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
       loadReport = model::loadReport,
@@ -585,6 +586,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::startApproval,
+        giveKey = model::startCoachKey,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,

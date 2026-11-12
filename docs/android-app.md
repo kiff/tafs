@@ -223,6 +223,11 @@ before it, so Halted shows as soon as tafs cloud says so.
 Home's row for halting every taf shows with tafs to halt, or whenever the account isn't running
 (`showsAccountHalt`). With no taf, the home list carries no account halt, so each refresh reads
 `GET /v1/halt` on its own: an account halted with no taf left can still be resumed from Home.
+**A message refused for a halt** (`code: "halted"`, with tafs cloud's `halted`: `account` or
+`taf`) keeps that on its Not sent row (`Unsent.halted`), and the halt is read at once. While it
+holds, the row offers **Resume** behind the fingerprint, the halt row's own resume, in place of a
+Retry that can't work. A resume that didn't go says why under it. Resumed, Retry is back
+(`AppState.unsentWaitsOnHalt`).
 
 **Run now that finds nothing new is no failure** (`runNowQuiet`): a taf that checks first answers
 `session: null` with `outcome: "quiet"` and tafs cloud's `words`, shown as they are under Run now until
@@ -616,6 +621,12 @@ and iPad: a password field, and **Give the key with your fingerprint**, which si
 confirmation as an approval and sends the key to planque once (`AppModel.giveKey`,
 `PlanqueClient.giveKey`, the key in `Planque-Vendor-Key`, its SHA-256 in the signed body). The
 key lives only in the open sheet's field, and nothing on the phone keeps it.
+**Coach's approval card takes the key too** (`AppModel.approveCoachWithKey`): while the grant
+takes a key (planque's `api_key`) and isn't connected, the card shows the same password field, and
+its button gives the key the same way (`giveKey`). Then it answers the card as any approval: tafs
+cloud finds the app connected, and Coach goes on or asks for its Cards. So a first taf can connect
+an app that takes a key, before any taf exists. A key that didn't go answers nothing, and says why
+on the card.
 
 A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed

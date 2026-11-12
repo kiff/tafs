@@ -103,6 +103,8 @@ class TafActions(
   val editUnsent: (String, ChatMessage) -> String? = { _, _ -> null },
   /** Deletes a message that wasn't sent, for good. */
   val deleteUnsent: (String, ChatMessage) -> Unit = { _, _ -> },
+  /** Resumes a halt (the account's with null), behind the owner's confirmation: a message refused for it offers this. */
+  val resumeHalt: suspend (String?) -> Boolean = { false },
   /** Photos and files on a message (docs/attachments.md). */
   val files: FileActions = FileActions(),
   /** Runs it now, outside its schedule (tafs cloud). */

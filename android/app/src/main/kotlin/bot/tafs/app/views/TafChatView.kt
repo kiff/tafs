@@ -74,6 +74,7 @@ import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.app.Mode
 import bot.tafs.app.app.isTrialChat
+import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.design.MarkdownText
 import bot.tafs.app.design.Mascot
 import bot.tafs.app.design.TafAvatar
@@ -234,12 +235,16 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                   )
                   // Not sent: why, and Retry or Edit, under the words as written (kiff/tafs#476).
                   state.chatUnsent[tafId]?.firstOrNull { it.message == item.message }?.let { unsent ->
+                    // Refused for a halt that still holds: Resume, behind the owner's confirmation, in Retry's place.
+                    val halted = state.unsentWaitsOnHalt(tafId, unsent)
                     NotSentLine(
                       unsent.why,
                       canRetry = !state.holdsRetry(tafId, unsent),
                       onRetry = { following = true; actions.retryUnsent(tafId, unsent.message) },
                       onEdit = { actions.editUnsent(tafId, unsent.message)?.let(setDraft) },
                       onDelete = { actions.deleteUnsent(tafId, unsent.message) },
+                      resume = if (halted) ({ actions.resumeHalt(if (unsent.halted == bot.tafs.app.model.Unsent.HALTED_TAF) tafId else null) }) else null,
+                      resumeError = if (halted) state.haltError else null,
                     )
                   }
                 }
@@ -651,15 +656,34 @@ private fun NeedsYouPill(text: String, onClick: () -> Unit) {
  * while it can't go yet ([AppState.holdsRetry]).
  */
 @Composable
-private fun NotSentLine(why: String, canRetry: Boolean, onRetry: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun NotSentLine(
+  why: String,
+  canRetry: Boolean,
+  onRetry: () -> Unit,
+  onEdit: () -> Unit,
+  onDelete: () -> Unit,
+  /** Refused for a halt that holds: Resume takes Retry's place, and Retry comes back once it's resumed. */
+  resume: (suspend () -> Unit)? = null,
+  resumeError: String? = null,
+) {
+  val scope = rememberCoroutineScope()
+  var resuming by remember { mutableStateOf(false) }
   Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
     Text(listOf(ChatWords.NOT_SENT, why).filter { it.isNotBlank() }.joinToString(" · "), style = scaled(13, color = Theme.no), textAlign = TextAlign.End)
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
       // Delete takes the owner's words away for good: Coach never taps it (docs/drive.md).
       TextButton(onClick = onDelete, modifier = Modifier.confirms()) { Text(ChatWords.DELETE, style = scaled(14, color = Theme.soft)) }
       TextButton(onClick = onEdit) { Text(ChatWords.EDIT, style = scaled(14, color = Theme.soft)) }
-      TextButton(onClick = onRetry, enabled = canRetry) { Text(ChatWords.RETRY, style = scaled(14, color = if (canRetry) Theme.ink else Theme.soft)) }
+      if (resume != null) ApprovalGate {
+        // Resuming confirms behind the fingerprint, as the halt row does: Coach never taps it.
+        TextButton(onClick = { scope.launch { resuming = true; resume(); resuming = false } }, enabled = !resuming, modifier = Modifier.confirms()) {
+          Text(if (resuming) Words.Taf.Halt.resuming else Words.Taf.Halt.resumeWith(LocalBiometry.current), style = scaled(14, color = Theme.ink))
+        }
+      } else {
+        TextButton(onClick = onRetry, enabled = canRetry) { Text(ChatWords.RETRY, style = scaled(14, color = if (canRetry) Theme.ink else Theme.soft)) }
+      }
     }
+    resumeError?.let { Text(it, style = scaled(13, color = Theme.no), textAlign = TextAlign.End) }
   }
 }
 

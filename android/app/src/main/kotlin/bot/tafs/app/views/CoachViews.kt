@@ -2,6 +2,7 @@ package bot.tafs.app.views
 
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.drive.secret
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.confirms
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -248,6 +250,8 @@ class CoachActions(
   val confirmKnob: suspend (String) -> Boolean = { false },
   /** Approves a drive card: the approval key, behind the fingerprint, signs the drive's Start (docs/drive.md). */
   val approveDrive: (SetupComponent) -> Unit = {},
+  /** Approves a card for an app connected with a key: the key to planque, signed behind the fingerprint, then the card's answer. */
+  val giveKey: (SetupComponent, String, String?, String) -> Unit = { _, _, _, _ -> },
   /** Closes the "What I did" card. */
 )
 
@@ -283,6 +287,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   val draft = c.draft?.let { state.setupDrafts[it] }
   val busy = state.connecting != null
   var details by remember { mutableStateOf(false) }
+  // An app connected with a key, not connected yet: the key goes in on the card, as on the Connect sheet (docs/coach.md).
+  var key by remember(c.id) { mutableStateOf("") }
   // Answered, it keeps one line saying what it was: several in a row each say what was approved. One line, whatever the words'
   // length: with no title, planque's text can run to paragraphs. With a Card, a tap opens it again to read the Card that was
   // approved, KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown
@@ -338,13 +344,33 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           // Approving signs with the approval key: while this phone can't, its state in the button's place. Decline still works.
           val readiness = LocalApprovalReadiness.current
           if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready && !grant.needsReconnect) ApprovalsUnavailable(readiness)
+          val needsKey = grant.takesKey && !grant.connected && !grant.needsReconnect
+          if (needsKey && readiness == bot.tafs.app.model.ApprovalReadiness.Ready) {
+            OutlinedTextField(
+              key, driveTyped({ key = it }), Modifier.fillMaxWidth().secret(),
+              placeholder = { Text(bot.tafs.app.model.ConnectWords.KEY) },
+              singleLine = true,
+              enabled = !busy,
+              visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+              keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false,
+              ),
+            )
+          }
+          state.coachNotes[bot.tafs.app.model.ConnectWords.cardKey(grant.id)]?.takeIf { needsKey }?.let { Text(it, style = scaled(13, color = Theme.no)) }
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
-              if (state.connecting == grant.id) state.connectStep ?: Words.Approval.approving else if (grant.needsReconnect) Words.Connect.signInAgain else if (state.windowWords != null) Words.Approval.approve else Words.Approval.approveWith(biometry),
-              { actions.approve(c, grant.digest, draft?.version) },
+              when {
+                state.connecting == grant.id -> state.connectStep ?: Words.Approval.approving
+                grant.needsReconnect -> Words.Connect.signInAgain
+                needsKey -> bot.tafs.app.model.ConnectWords.giveKeyWith(biometry)
+                state.windowWords != null -> Words.Approval.approve
+                else -> Words.Approval.approveWith(biometry)
+              },
+              { if (needsKey) actions.giveKey(c, grant.digest, draft?.version, key) else actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f).confirms(),
-              // With a profile, nothing is approved before KIFF's words for it are read and shown.
-              enabled = !busy && (!profiled || words != null),
+              // With a profile, nothing is approved before KIFF's words for it are read and shown; a key app, before its key is in.
+              enabled = !busy && (!profiled || words != null) && (!needsKey || key.isNotBlank()),
             )
             OutlineButton(Words.Coach.Approval.decline, { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }

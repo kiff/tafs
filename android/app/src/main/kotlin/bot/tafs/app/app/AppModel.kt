@@ -615,6 +615,16 @@ data class AppState(
    */
   val showsAccountHalt: Boolean get() = canHalt(null) && (tafs.isNotEmpty() || !haltOf(null).running)
 
+  /**
+   * A message refused because the account or its taf is halted: while that halt holds, its Not sent row offers Resume, behind the
+   * owner's confirmation, in place of a Retry that can't work. Resumed, Retry is back.
+   */
+  fun unsentWaitsOnHalt(tafId: String, unsent: Unsent): Boolean = when (unsent.halted) {
+    Unsent.HALTED_ACCOUNT -> canHalt(null) && !haltOf(null).running
+    Unsent.HALTED_TAF -> canHalt(tafId) && !haltOf(tafId).running
+    else -> false
+  }
+
   /** A taf by the KIFF agent it acts as; the agent's id when the app doesn't know it. */
   fun tafName(agent: String): String = taf(agent)?.name ?: agent
 
@@ -3832,6 +3842,25 @@ class AppModel(
     scope.launch { approveCoach(c, shownDigest, shownDraft) }
   }
 
+  /** Coach's card for an app connected with a key: run by the model for the same reason as [startApproval]. */
+  fun startCoachKey(c: SetupComponent, shownDigest: String, shownDraft: String?, key: String) {
+    scope.launch { approveCoachWithKey(c, shownDigest, shownDraft, key) }
+  }
+
+  /**
+   * Coach's approval card for an app connected with a key (planque's `api_key`), not connected yet: planque approves such a
+   * grant only with its key. So the key goes first, as on the Connect sheet ([giveKey]: the shown digest checked, confirmed with
+   * the approval key, sent signed by this device, kept nowhere here). Then the card is answered as any approval is: tafs cloud
+   * finds it connected and Coach goes on, or asks for its Cards. A key that didn't go answers nothing, and says why on the card.
+   */
+  suspend fun approveCoachWithKey(c: SetupComponent, shownDigest: String, shownDraft: String?, key: String): Boolean {
+    val grantId = c.grant ?: return false
+    if (!giveKey(grantId, shownDigest, key)) return false
+    val digest = _state.value.grants.firstOrNull { it.id == grantId }?.digest ?: shownDigest
+    approveCoach(c, digest, shownDraft)
+    return true
+  }
+
   /** The sign-in card's Sign in again, run by the model for the same reason as [startApproval]. */
   fun startSignInAgain(c: SetupComponent) {
     scope.launch { signInAgain(c) }
@@ -4695,7 +4724,7 @@ class AppModel(
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
-          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files)
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files, halted = (e as? CloudError)?.takeIf { it.code == "halted" }?.halted)
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
@@ -4705,6 +4734,11 @@ class AppModel(
         }
         // Its files didn't go. With its words kept as not sent, they stay with it for Retry; files alone go back in the tray.
         if (words.isBlank()) putBackFiles(files, tafId)
+        // Refused for a halt: where it stands is read, so the row offers Resume while it holds.
+        when ((e as? CloudError)?.takeIf { it.code == "halted" }?.halted) {
+          Unsent.HALTED_ACCOUNT -> refreshHalt(null)
+          Unsent.HALTED_TAF -> refreshHalt(tafId)
+        }
       }
       return false
     } finally {
