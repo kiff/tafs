@@ -35,6 +35,31 @@ final class WorkTests: XCTestCase {
         XCTAssertEqual(state, "sent")
     }
 
+    /// A place of the taf's own (an action at a connected app, or another taf) is sent again by its own key,
+    /// never as the door's reply (docs/api.md).
+    func testAPlaceOfTheTafsOwnIsSentAgainByItsKey() async throws {
+        let json = #"""
+        {"summary":{"status":"needs_you","line":"","needs_you":1},"requests":[{"id":"run_2","at":"2026-10-30T10:00:00.000Z","state":"needs_you","line":"",
+          "deliveries":[{"place":"door_reply","state":"not_sent","line":"The reply wasn't sent","send_again":true},
+                        {"place":"taf","key":"taf:taf-2","name":"Invoices","state":"not_sent","line":"Invoices didn't finish what Rae handed it","send_again":true},
+                        {"place":"action","key":"grt_g:sheets_append","name":"Sheets","state":"not_sent","line":"Not delivered to Sheets","send_again":true},
+                        {"place":"taf","name":"Old","state":"handed","line":"Handed to Old"}]}]}
+        """#
+        let deliveries = try XCTUnwrap(KIFFClient.decoder.decode(TafsCloud.TafWork.self, from: Data(json.utf8)).requests.first?.deliveries)
+        XCTAssertEqual(deliveries.map(\.sendPlace), ["door_reply", "taf:taf-2", "grt_g:sheets_append", "door_reply"])
+
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["POST /v1/tafs/taf-1/requests/run_2/deliveries/taf:taf-2/send"] = (200, #"{"state":"handed"}"#)
+        let state = try await cloud.sendAgain("taf-1", run: "run_2", place: deliveries[1].sendPlace)
+        XCTAssertEqual(state, "handed")
+        let sent = try XCTUnwrap(StubProtocol.sent.last?.url)
+        XCTAssertEqual(sent.path, "/v1/tafs/taf-1/requests/run_2/deliveries/taf:taf-2/send")
+    }
+
     func testRequestDetailKeepsTheServicesStepOrderAndReadsOnly() async throws {
         StubProtocol.responses = [:]; StubProtocol.sent = []
         let config = URLSessionConfiguration.ephemeral

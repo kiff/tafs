@@ -1,0 +1,1 @@
+- **iPhone and iPad: Send again reaches the place it's shown on.** A result that didn't reach a connected app, or a taf it was handed to, showed Send again, but the tap asked for the door's reply to be sent again and failed. Each Send again now names its own place, as on Android (docs/ios-app.md).

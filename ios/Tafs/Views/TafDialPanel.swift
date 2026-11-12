@@ -197,7 +197,7 @@ struct KnobRequestDetail: View {
                             sending = true
                             Task {
                                 defer { sending = false }
-                                await model.sendAgain(tafID, run: run)
+                                await model.sendAgain(tafID, run: run, place: delivery.sendPlace)
                                 await load()
                             }
                         }.disabled(sending)

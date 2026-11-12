@@ -614,7 +614,7 @@ struct WorkPanel: View {
                     .fixedSize(horizontal: false, vertical: true)
                 if d.sendAgain, model.manages(tafID) {
                     let sending = model.sendingAgain.contains(r.id)
-                    Button(sending ? Words.Work.sendingAgain : Words.Work.sendAgain) { Task { await model.sendAgain(tafID, run: r.id) } }
+                    Button(sending ? Words.Work.sendingAgain : Words.Work.sendAgain) { Task { await model.sendAgain(tafID, run: r.id, place: d.sendPlace) } }
                         .buttonStyle(OutlineButtonStyle())
                         .disabled(sending)
                 }

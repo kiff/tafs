@@ -454,7 +454,7 @@ struct ResultsGoToView: View {
                         Text(r.line).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                         if manages {
                             let sending = model.sendingAgain.contains(r.id)
-                            Button(sending ? Words.Work.sendingAgain : Words.Setup.sendAgain) { Task { await model.sendAgain(tafID, run: r.id) } }
+                            Button(sending ? Words.Work.sendingAgain : Words.Setup.sendAgain) { Task { await model.sendAgain(tafID, run: r.id, place: r.deliveries.first(where: \.sendAgain)?.sendPlace ?? "door_reply") } }
                                 .buttonStyle(OutlineButtonStyle())
                                 .disabled(sending)
                         }
