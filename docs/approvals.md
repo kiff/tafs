@@ -439,6 +439,10 @@ app's taps on that device (`Haptics.enabled`).
 - "Halt all tafs" works from Siri and Shortcuts too (`HaltAllTafsIntent`), with the
   device unlocked. It says what happened, and when it can't finish it opens tafs on Halt
   all. Resume stays in the app.
+- **Home's "Halt all" row** shows to someone who manages Cards while a taf runs, and
+  whenever the account is halted or halting, with or without a taf: a halt outlives the
+  tafs it was made over, and that row is where it is resumed from. On iPhone and iPad the
+  account's halt is read with each refresh that finds no taf (`showsAccountHalt`).
 - Halts and resumes show in Activity (`GET /v1/events`).
 
 ## Live updates

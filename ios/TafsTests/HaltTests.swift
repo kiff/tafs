@@ -134,6 +134,62 @@ final class HaltTests: XCTestCase {
         XCTAssertEqual(model.haltState(nil).state, .running)
     }
 
+    /// A model signed in to an account whose home list is `home`, with the account's halt as `halt`.
+    private func signedIn(home: String, halt: String) async -> AppModel {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: FaceIDSigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, home)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/halt"] = (200, halt)
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        return model
+    }
+
+    /// A halt outlives the tafs it was made over. With no taf left, the account's halt is still
+    /// read and Home still offers its row: the only place to resume from.
+    func testAHaltedAccountWithNoTafStillOffersItsHalt() async throws {
+        let model = await signedIn(home: HomeJSON.empty, halt: Self.halted)
+        XCTAssertTrue(model.cloudTafs.isEmpty)
+        XCTAssertEqual(model.haltState(nil).state, .halted, "read with the refresh, with no row to read it")
+        XCTAssertTrue(model.showsAccountHalt)
+        XCTAssertEqual(sent("GET", "/v1/halt").count, 1)
+
+        // Resumed from there: with no taf and nothing halted, the row goes.
+        StubProtocol.responses["POST /v1/resume"] = (200, #"{"state":"running"}"#)
+        StubProtocol.responses["DELETE /v1/halt"] = (200, Self.running)
+        let resumed = await model.resumeHalt(nil)
+        XCTAssertTrue(resumed, model.lastError ?? "")
+        XCTAssertFalse(model.showsAccountHalt)
+    }
+
+    /// Halting counts too: the account isn't running, so its row stays while it settles.
+    func testAnAccountStillHaltingWithNoTafOffersItsHalt() async throws {
+        let model = await signedIn(home: HomeJSON.empty, halt: Self.halting)
+        XCTAssertTrue(model.showsAccountHalt)
+    }
+
+    /// An account that runs, with no taf, has nothing to halt: no row, as before.
+    func testARunningAccountWithNoTafOffersNoHalt() async throws {
+        let model = await signedIn(home: HomeJSON.empty, halt: Self.running)
+        XCTAssertEqual(model.haltState(nil).state, .running)
+        XCTAssertFalse(model.showsAccountHalt)
+    }
+
+    /// With a taf, the row is there as before, and reads the halt for itself: the refresh doesn't.
+    func testWithATafTheRowIsOfferedAndTheRefreshReadsNoHalt() async throws {
+        let model = await signedIn(home: HomeJSON.list([HomeJSON.rae]), halt: Self.running)
+        XCTAssertFalse(model.cloudTafs.isEmpty)
+        XCTAssertTrue(model.showsAccountHalt)
+        XCTAssertEqual(sent("GET", "/v1/halt").count, 0)
+    }
+
     func testKIFFTakesAResumeOnlySigned() {
         XCTAssertTrue(KIFFClient.signsSetup("/v1/agents/rae-k3f9/resume"))
         XCTAssertTrue(KIFFClient.signsSetup("/v1/resume"))

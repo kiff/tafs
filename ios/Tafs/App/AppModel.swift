@@ -1597,6 +1597,13 @@ final class AppModel: ObservableObject {
                 await loadRecipes()
                 guard gen == accountGeneration else { return }
             }
+            // The account's halt, read here when no taf runs: its row reads it for itself, and
+            // without a taf there was no row. A halt outlives the tafs it was made over, and its
+            // row is the only place to resume from (docs/approvals.md, Halting).
+            if cloudTafs.isEmpty, canManageCards {
+                await refreshHalt(nil)
+                guard gen == accountGeneration else { return }
+            }
             // The gallery, with each refresh: + New opens it, and the strip under the list
             // leaves out what the account runs now.
             await loadGallery()
@@ -2776,6 +2783,13 @@ final class AppModel: ObservableObject {
     private func recordHaltError(_ key: String, _ words: String) {
         haltErrors[key] = words
         lastError = words
+    }
+
+    /// Whether Home offers the account's halt: to someone who manages Cards, while a taf runs,
+    /// and whenever the account is halted or halting, tafs or not, since that row is where it
+    /// is resumed from.
+    var showsAccountHalt: Bool {
+        mode == .kiff && canManageCards && (!cloudTafs.isEmpty || haltState(nil).state != .running)
     }
 
     /// The halt of a taf, or with none of the whole account, as last read: running until read.
