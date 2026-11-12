@@ -258,13 +258,15 @@ export const STRIP_MAX = 3;
 
 /** The gallery's own words: its title, its "all jobs" heading, and the way to say a job in one's own words. */
 export interface GalleryWords {
+  /** The gallery's title, and + New's words ("New taf"). */
   title: string;
+  /** The heading inside the gallery, above the full list of jobs ("All jobs"). Not the row under the strip: that's `see_all`. */
   all: string;
   own_words: string;
   own_words_line: string;
   /** Browse mode (looking without creating anything): the Tafs tab's entry that opens the gallery to browse. */
   explore: string;
-  /** The row under the strip that opens the same gallery to browse. */
+  /** The row under the strip that opens the same gallery to browse ("See all jobs"): the only word for that row. */
   see_all: string;
   /** A job sheet's only action while browsing: Coach opened with the job's words. Nothing is set up until it's tapped. */
   try: string;

@@ -108,7 +108,10 @@ Bezahle meine Rechnungen unter 100 EUR.
 
   it("reads what a recipe's proof run passed on, and what it reported, in every language or none", () => {
     const PROVEN = FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nsample:\n  - Paid 2 bills.\n  - One waits for you.\n");
-    expect(parseRecipe(PROVEN, "pay-a-bill.md")).toMatchObject({ proved: "help_desk", sample: "Paid 2 bills.\nOne waits for you." });
+    expect(parseRecipe(PROVEN, "pay-a-bill.md")).toMatchObject({ proved: "help_desk", sample: "Paid 2 bills.\n\nOne waits for you." });
+    // A list in a row stays one list; a paragraph after it starts after a blank line.
+    expect(parseRecipe(FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nsample:\n  - Done.\n  - - T-1: paid.\n  - - T-2: held.\n  - Nothing else.\n"), "pay-a-bill.md").sample)
+      .toBe("Done.\n\n- T-1: paid.\n- T-2: held.\n\nNothing else.");
     expect(parseRecipe(FILE, "pay-a-bill.md")).not.toHaveProperty("proved");
     const bad = (text: string, why: string) => expect(() => parseRecipe(text, "pay-a-bill.md")).toThrow(`pay-a-bill.md: ${why}`);
     bad(FILE.replace("  - wise\n", "  - wise\nproved: a laptop\n"), "proved is what its proof run passed on: one of help_desk");

@@ -91,8 +91,11 @@ export function parseRecipe(text, file, of) {
   const known = of ? [...words, "card", "sample"] : ["id", "title", "category", "order", "line", "headline", "today", "connections", "card", "proved", "sample"];
   // A translation names no connections: they're English's alone (an empty list reads as none given).
   if (of && !out.connections.length) delete out.connections;
-  // The sample report: its lines, joined as one text. Given in every language or in none.
-  const sample = out.sample.length ? out.sample.join("\n") : undefined;
+  // The sample report, as one text: each item a paragraph, a blank line between them, except that list
+  // items ("- …") in a row stay one list. Given in every language or in none.
+  const sample = out.sample.length
+    ? out.sample.map((l, i) => (i === 0 ? "" : l.startsWith("- ") && out.sample[i - 1].startsWith("- ") ? "\n" : "\n\n") + l).join("")
+    : undefined;
   for (const key of Object.keys(out)) if (!known.includes(key)) fail(`${key} isn't a${of ? " translated" : ""} recipe's field (${known.join(", ")})`);
   for (const key of words) if (!out[key]) fail(`${key} is missing`);
   for (const key of LISTS) if (!out.card[key]) fail(`card.${key} is missing (an empty list is fine)`);
