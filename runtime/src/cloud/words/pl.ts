@@ -582,7 +582,7 @@ export const pl: Words = {
   cts_app_act: "Używaj tafs podczas sterowania",
   cts_app_act_does: "Gdy sterowanie jest włączone, stukaj, pisz i przewijaj w tafs na swoim telefonie, z podpisem przy każdym kroku. Nie może niczego zatwierdzić: zatwierdzasz tylko Ty, na swoim telefonie.",
   cts_app_act_why: "Działa w aplikacji w Twoim imieniu.",
-  drive_end_owner_took_over: "Aplikacja została dotknięta, więc jest teraz Twoja",
+  drive_end_owner_took_over: "Przejęto sterowanie, więc Coach pozwala kontynuować",
   drive_end_left_app: "Aplikacja zniknęła z ekranu, więc Coach przestał",
   drive_end_stopped: "Coach został zatrzymany",
   drive_end_locked: "Telefon został zablokowany, więc Coach przestał",

@@ -582,7 +582,7 @@ export const nl: Words = {
   cts_app_act: "tafs gebruiken terwijl hij bedient",
   cts_app_act_does: "Terwijl het bedienen aan staat, tikken, typen en scrollen in tafs op je telefoon, met een bijschrift bij elke stap. Hij kan niets goedkeuren: alleen jij keurt goed, op je telefoon.",
   cts_app_act_why: "Hij handelt in de app namens jou.",
-  drive_end_owner_took_over: "Je raakte de app aan, dus hij is nu van jou",
+  drive_end_owner_took_over: "Je nam het over, dus Coach laat je verdergaan",
   drive_end_left_app: "De app verliet het scherm, dus Coach is gestopt",
   drive_end_stopped: "Je hebt Coach gestopt",
   drive_end_locked: "De telefoon werd vergrendeld, dus Coach is gestopt",

@@ -50,7 +50,7 @@ export type EndWhy = typeof END_WHY[number];
 
 /** What Coach is told, and the record shows, for each end. The person is shown END_SAID. */
 export const END_WORDS: Record<EndWhy, string> = {
-  owner_took_over: "the owner touched the app, so they have it now",
+  owner_took_over: "the owner took over, so Coach is letting them carry on",
   left_app: "the app left the screen, so the drive is over",
   stopped: "the owner stopped it",
   locked: "the phone locked",
@@ -67,7 +67,7 @@ export const END_WORDS: Record<EndWhy, string> = {
  * come (docs/drive.md), so the caption reads the same either way.
  */
 export const END_SAID: Record<EndWhy, string> = {
-  owner_took_over: "You touched the app, so it's yours now",
+  owner_took_over: "You took over, so Coach let you carry on",
   left_app: "The app left the screen, so Coach stopped",
   stopped: "You stopped Coach",
   locked: "The phone locked, so Coach stopped",

@@ -582,7 +582,7 @@ export const de: Words = {
   cts_app_act: "tafs benutzen, während er bedient",
   cts_app_act_does: "Während das Bedienen an ist, in tafs auf deinem Telefon tippen, schreiben und scrollen, mit einer Beschriftung für jeden Schritt. Er kann nichts genehmigen: nur du genehmigst, auf deinem Telefon.",
   cts_app_act_why: "Er handelt in der App wie du.",
-  drive_end_owner_took_over: "Du hast die App berührt, also gehört sie jetzt dir",
+  drive_end_owner_took_over: "Du hast übernommen, also lässt Coach dich weitermachen",
   drive_end_left_app: "Die App hat den Bildschirm verlassen, also hat Coach aufgehört",
   drive_end_stopped: "Du hast Coach gestoppt",
   drive_end_locked: "Das Telefon wurde gesperrt, also hat Coach aufgehört",
