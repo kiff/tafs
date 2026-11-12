@@ -189,15 +189,71 @@ class AllowFromNowOnTest {
     assertFalse("the week's moved instead", signs(card("$g[${refund(cap)}],\"aggregates\":[$day,${weekSame.replace("50000", "60000")}]", "$g[${refund(cap)}],\"aggregates\":[$day,$weekSame]"), inDay))
   }
 
-  @Test fun aResourceChangeAllowsNoReadableDifference() {
+  @Test fun aResourceChangeIsExactlyTheScopeInForcePlusTheOfferedValue() {
     val g = "\"grants\":"
     val resource = parsedOffer(
       """{"offer":{"changes":[{"mandate_id":"c1","kind":"resource","parameter":"customer","value":"cus_42","words_before":"","words_after":""}],
          "draft":"dr_9","confirm_key":"critical","send_held":true}}""",
     )
-    assertTrue(signs(card("$g[${refund(cap)}]", "$g[${refund(cap)}]"), resource))
-    assertFalse("a cap moved with it", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}]"), resource))
-    assertFalse("an action added with it", signs(card("$g[${refund(cap)},{\"action\":\"list_charges\"}]", "$g[${refund(cap)}]"), resource))
+    fun scoped(vararg values: String) = refund(cap).dropLast(1) + ""","resources":{"parameter":"customer","values":[${values.joinToString(",") { "\"$it\"" }}]}}"""
+    assertTrue(signs(card("$g[${scoped("cus_1", "cus_42")}]", "$g[${scoped("cus_1")}]"), resource))
+    assertTrue("in any order", signs(card("$g[${scoped("cus_42", "cus_1")}]", "$g[${scoped("cus_1")}]"), resource))
+    assertFalse("the scope as it was: not what was offered", signs(card("$g[${scoped("cus_1")}]", "$g[${scoped("cus_1")}]"), resource))
+    assertFalse("another value with it", signs(card("$g[${scoped("cus_1", "cus_42", "cus_7")}]", "$g[${scoped("cus_1")}]"), resource))
+    assertFalse("another value instead", signs(card("$g[${scoped("cus_1", "cus_7")}]", "$g[${scoped("cus_1")}]"), resource))
+    assertFalse("the scope dropped: any customer", signs(card("$g[${refund(cap)}]", "$g[${scoped("cus_1")}]"), resource))
+    assertFalse("a cap moved with it", signs(card("$g[${scoped("cus_1", "cus_42").replace("15000", "32000")}]", "$g[${scoped("cus_1")}]"), resource))
+    val other = resource.copy(changes = resource.changes.map { it.copy(parameter = "invoice") })
+    assertFalse("another parameter's scope", signs(card("$g[${scoped("cus_1", "cus_42")}]", "$g[${scoped("cus_1")}]"), other))
+  }
+
+  @Test fun everyOtherTermOfTheCardMustReadAsInForce() {
+    // A draft that differs from the Card in force only in one more term, beside the offered cap: never signed.
+    val g = "\"grants\":"
+    fun withGrant(extra: String) = refund(raised).dropLast(1) + ",$extra}"
+    fun inForceGrant(extra: String) = refund(cap).dropLast(1) + ",$extra}"
+    val all = "\"entity_states\":[\"paid\"],\"next_steps\":[\"return_first\"],\"resources\":{\"parameter\":\"customer\",\"values\":[\"cus_1\"]}"
+    assertTrue("the same states, steps and scope", signs(card("$g[${withGrant(all)}]", "$g[${inForceGrant(all)}]")))
+    assertFalse("a state restriction dropped", signs(card("$g[${refund(raised)}]", "$g[${inForceGrant("\"entity_states\":[\"paid\"]")}]")))
+    assertFalse("a state added", signs(card("$g[${withGrant("\"entity_states\":[\"paid\",\"open\"]")}]", "$g[${inForceGrant("\"entity_states\":[\"paid\"]")}]")))
+    assertFalse("a next step added", signs(card("$g[${withGrant("\"next_steps\":[\"proof_first\"]")}]", "$g[${refund(cap)}]")))
+    assertFalse("a scope widened", signs(card("$g[${withGrant("\"resources\":{\"parameter\":\"customer\",\"values\":[\"cus_1\",\"cus_2\"]}")}]", "$g[${inForceGrant("\"resources\":{\"parameter\":\"customer\",\"values\":[\"cus_1\"]}")}]")))
+    assertFalse("a scope dropped", signs(card("$g[${refund(raised)}]", "$g[${inForceGrant("\"resources\":{\"parameter\":\"customer\",\"values\":[\"cus_1\"]}")}]")))
+    val perItem = day.dropLast(1) + ",\"per\":\"invoice\"}"
+    assertFalse("a per-item total made one total", signs(card("$g[${refund(raised)}],\"aggregates\":[$day]", "$g[${refund(cap)}],\"aggregates\":[$perItem]")))
+    assertFalse("what a total counts", signs(card("$g[${refund(raised)}],\"aggregates\":[${day.dropLast(1)},\"measure\":\"attempts\"}]", "$g[${refund(cap)}],\"aggregates\":[$day]")))
+    assertTrue("a sum counts what was done unless it says", signs(card("$g[${refund(raised)}],\"aggregates\":[${day.dropLast(1)},\"measure\":\"effects\"}]", "$g[${refund(cap)}],\"aggregates\":[$day]")))
+    assertTrue("a window a draft doesn't name is the calendar day", signs(card("$g[${refund(raised)}],\"aggregates\":[${day.replace(",\"window\":\"day\"", "")}]", "$g[${refund(cap)}],\"aggregates\":[${day.replace("\"day\"", "\"calendar_day\"")}]")))
+    assertFalse("valid for longer", signs(card("$g[${refund(raised)}],\"valid_until\":\"2027-12-31T00:00:00Z\"", "$g[${refund(cap)}],\"valid_until\":\"2026-12-31T00:00:00Z\"")))
+    assertFalse("valid forever", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}],\"valid_until\":\"2026-12-31T00:00:00Z\"")))
+    assertTrue("the same end, written another way", signs(card("$g[${refund(raised)}],\"valid_until\":\"2026-12-31T01:00:00+01:00\"", "$g[${refund(cap)}],\"valid_until\":\"2026-12-31T00:00:00Z\"")))
+    assertFalse("valid from earlier", signs(card("$g[${refund(raised)}],\"valid_from\":\"2026-01-01T00:00:00Z\"", "$g[${refund(cap)}],\"valid_from\":\"2026-11-01T00:00:00Z\"")))
+    assertFalse("another holder", signs(card("$g[${refund(raised)}],\"subjects\":[\"refunds-1\",\"payouts-1\"]", "$g[${refund(cap)}],\"subjects\":[\"refunds-1\"]")))
+    assertTrue("holders not named keep the Card's", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}],\"subjects\":[\"refunds-1\"]")))
+    val unchanged = """,{"revises":"c2","unchanged":true,"current":{"grants":[{"action":"list_charges"}],"valid_until":"2026-12-31T00:00:00Z"},"grants":[{"action":"list_charges"}]}"""
+    assertFalse("a Card marked unchanged that drops its end", signs(draft(extra = unchanged)))
+  }
+
+  @Test fun theCardsHoldersDomainTimeZoneAndHoldTimeMustReadAsInForce() {
+    // The rest of what KIFF compares between two Cards: a draft that differs from the Card in force only there is never signed.
+    val g = "\"grants\":"
+    val inForce = "$g[${refund(cap)}],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\"],\"domain\":\"Payments\",\"environment\":\"live\"," +
+      "\"location\":\"Europe/Paris\",\"hold_expiry_seconds\":600"
+    fun after(extra: String = "") = "$g[${refund(raised)}]$extra"
+    assertTrue("domain and environment as written, without case; the rest kept", signs(card(after(",\"domain\":\"payments\",\"environment\":\"LIVE\""), inForce)))
+    assertFalse("another first holder, its list left out", signs(card(after(",\"subject\":\"payouts-1\",\"domain\":\"payments\",\"environment\":\"live\""), inForce)))
+    assertTrue("the same first holder, its list left out", signs(card(after(",\"subject\":\"refunds-1\",\"domain\":\"payments\",\"environment\":\"live\""), inForce)))
+    assertFalse("moved from live to test", signs(card(after(",\"domain\":\"payments\",\"environment\":\"test\""), inForce)))
+    assertFalse("another domain", signs(card(after(",\"domain\":\"shipping\",\"environment\":\"live\""), inForce)))
+    assertFalse("a domain left out: not the Card's", signs(card(after(",\"environment\":\"live\""), inForce)))
+    assertFalse("another time zone", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"location\":\"America/New_York\""), inForce)))
+    assertTrue("the same time zone, written", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"location\":\"Europe/Paris\""), inForce)))
+    assertFalse("a hold that waits longer", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"24h\""), inForce)))
+    assertTrue("the same hold time, written another way", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"10m\""), inForce)))
+    assertTrue("keep keeps it", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"keep\""), inForce)))
+    assertFalse("a hold time that can't be read", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"soon\""), inForce)))
+    assertFalse("a revoked Card", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"revoked_at\":\"2026-11-12T00:00:00Z\""), inForce)))
+    assertFalse("over a revoked Card", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\""), "$inForce,\"revoked_at\":\"2026-11-12T00:00:00Z\"")))
   }
 
   @Test fun aCardMarkedUnchangedMustReadAsInForce() {

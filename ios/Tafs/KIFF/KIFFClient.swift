@@ -869,9 +869,11 @@ final class KIFFClient {
         /// them (kiff/tafs#107), so its tools and limits go back together. Each with its terms
         /// now, for the owner to read before confirming; the draft's version names them.
         var retires: [Retired]?
+        /// The held call a draft was made from (KIFF's allow-draft), when KIFF says.
+        var fromHold: String?
         enum CodingKeys: String, CodingKey {
             case id, status, version, reason, cards, label, retires
-            case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids", noTools = "no_tools"
+            case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids", noTools = "no_tools", fromHold = "from_hold"
         }
         struct Retired: Decodable, Equatable {
             let id: String
@@ -903,12 +905,27 @@ final class KIFFClient {
         struct Grant: Decodable, Equatable {
             /// `unit` and `scale` when the tool declares them.
             struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64; var unit: String?; var scale: Int? }
+            /// What a grant may act on: only these values of one parameter.
+            struct Resources: Decodable, Equatable { let parameter: String; var values: [String]? }
             let action: String
             var title: String?
             let perActionMax: [PerAction]?
-            enum CodingKeys: String, CodingKey { case action, title, perActionMax = "per_action_max" }
+            /// The grant's other terms, read so a draft can be compared with the Card in force
+            /// (`HoldAllow`): its scope, the states it applies in, and the owner's other answers.
+            var resources: Resources?
+            var entityStates: [String]?
+            var nextSteps: [String]?
+            enum CodingKeys: String, CodingKey {
+                case action, title, perActionMax = "per_action_max", resources, entityStates = "entity_states", nextSteps = "next_steps"
+            }
         }
-        struct Aggregate: Decodable, Equatable { let quantity: String; let limit: Int64; let window: String; var unit: String?; var scale: Int? }
+        struct Aggregate: Decodable, Equatable {
+            let quantity: String; let limit: Int64; let window: String; var unit: String?; var scale: Int?
+            /// What the total counts (attempts or effects; KIFF's default when a draft leaves it
+            /// out), and the parameter it's kept for each value of, when it's per item.
+            var measure: String?
+            var per: String?
+        }
         let grants: [Grant]?
         let aggregates: [Aggregate]?
         /// A revision draft's Card for one the agent holds: that Card's id,
@@ -927,8 +944,23 @@ final class KIFFClient {
         /// KIFF's own words for the Card, shown as they come: the app words it only for a KIFF
         /// that doesn't send them, so the two apps and KIFF never word a Card apart.
         var kiffLines: [String]?
+        /// The Card's other terms, as a draft's body carries them, read so the draft can be
+        /// compared with the Card in force (`HoldAllow`): who holds it, where it applies, and
+        /// when it starts and ends, as KIFF writes them. `holdExpiry` and `revokedAt` are a
+        /// draft's alone: left out, the Card in force keeps its own.
+        var subject: String?
+        var subjects: [String]?
+        var domain: String?
+        var environment: String?
+        var location: String?
+        var validFrom: String?
+        var validUntil: String?
+        var holdExpiry: String?
+        var revokedAt: String?
         enum CodingKeys: String, CodingKey {
             case grants, aggregates, revises, current, unchanged, onExceed = "on_exceed", kiffLines = "lines"
+            case subject, subjects, domain, environment, location, validFrom = "valid_from", validUntil = "valid_until"
+            case holdExpiry = "hold_expiry", revokedAt = "revoked_at"
         }
 
         /// A Card's terms alone: what `current` holds.
@@ -937,7 +969,18 @@ final class KIFFClient {
             let aggregates: [Aggregate]?
             var onExceed: String?
             var kiffLines: [String]?
-            enum CodingKeys: String, CodingKey { case grants, aggregates, onExceed = "on_exceed", kiffLines = "lines" }
+            /// The Card in force's other terms (see `DraftCard`).
+            var subject: String?
+            var subjects: [String]?
+            var domain: String?
+            var environment: String?
+            var location: String?
+            var validFrom: String?
+            var validUntil: String?
+            enum CodingKeys: String, CodingKey {
+                case grants, aggregates, onExceed = "on_exceed", kiffLines = "lines"
+                case subject, subjects, domain, environment, location, validFrom = "valid_from", validUntil = "valid_until"
+            }
             var lines: [String] { DraftCard(grants: grants, aggregates: aggregates, onExceed: onExceed, kiffLines: kiffLines).lines }
         }
 
@@ -1044,6 +1087,23 @@ final class KIFFClient {
     /// Sends a prepared confirm with the signature header made for it: the bytes that were signed, unchanged.
     func confirmDraft(_ prepared: Prepared, signatureHeader: String) async throws -> AgentDraft {
         try await send(prepared.method, prepared.path, body: RawJSON(data: prepared.body), presigned: signatureHeader)
+    }
+
+    /// As `confirmDraft`, naming the held call the draft answers: KIFF lets that call go once
+    /// under the same signature, so one Face ID covers the Card and the call
+    /// (docs/allow-from-now-on.md).
+    func confirmDraft(id: String, version: String, hold: String, accountingVersion: Int) async throws -> AgentDraft {
+        struct Body: Encodable {
+            struct Hold: Encodable {
+                let id: String
+                let accountingVersion: Int
+                enum CodingKeys: String, CodingKey { case id, accountingVersion = "accounting_version" }
+            }
+            let version: String
+            let hold: Hold
+        }
+        return try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm",
+                              body: Body(version: version, hold: .init(id: hold, accountingVersion: accountingVersion)))
     }
 
     /// Confirms a version's draft as a **trial** (kiff/tafs#173): KIFF issues its Cards as

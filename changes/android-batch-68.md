@@ -1,0 +1,1 @@
+- **Android 1.14: one fingerprint gives an app its key and its Card,** where the service offers it; until then, the two steps as before. "Allow this from now on" checks every term of the Card it signs, not only its limits. Disconnect from a key's receipt asks first.

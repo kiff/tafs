@@ -215,6 +215,21 @@ struct HeldCallCard: View {
                 }
             }
 
+            // A third answer, for someone who manages Cards: change the Card so calls like this
+            // go on their own (docs/allow-from-now-on.md). Shown from the held call itself.
+            if !refuseOnly, !model.showsApprovalKeyLost, model.offersAllow(call) {
+                Button { model.openAllow(call) } label: {
+                    Text(Words.NeedsYou.allowFromNowOn)
+                }
+                .buttonStyle(OutlineButtonStyle())
+                .disabled(sending)
+                .accessibilityIdentifier("held.allow")
+                .sheet(item: Binding(get: { model.allow?.call.id == call.id ? model.allow : nil },
+                                     set: { if $0 == nil, model.allow?.call.id == call.id { model.allow = nil } })) { open in
+                    AllowSheetView(open: open).environmentObject(model)
+                }
+            }
+
             HStack(spacing: 8) {
                 ForEach(call.nextSteps, id: \.self) { step in
                     Button(step) { send(.nextStep(step)) }
