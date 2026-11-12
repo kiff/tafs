@@ -76,7 +76,7 @@
     <string name="approval_kept">Resta in Ti aspetta.</string>
     <string name="approval_key_could_not_sign">La chiave non è riuscita a firmare</string>
     <string name="approval_key_gone_approve_again">Le tue impronte sono cambiate, o nessuna è stata riconosciuta, quindi questo telefono non può approvare finché non lo approvi di nuovo nel browser.</string>
-    <string name="approval_key_gone_face_id">Il tuo Face ID o le tue impronte sono cambiati, o non sono stati riconosciuti, quindi questo telefono non può approvare finché non lo approvi di nuovo nel browser.</string>
+    <string name="approval_key_gone_biometry">Il tuo %1$s è cambiato o non è stato riconosciuto, quindi questo dispositivo non può approvare finché non lo approvi di nuovo nel browser.</string>
     <string name="approval_key_gone_sign_in">Le tue impronte sono cambiate, o nessuna è stata riconosciuta, quindi questo telefono non può approvare finché non accedi di nuovo.</string>
     <string name="approval_key_lost">Accedi di nuovo con KIFF per approvare da questo telefono.</string>
     <string name="approval_locked_after_too_many_tries">%1$s è bloccato dopo troppi tentativi. Blocca questo %2$s, sbloccalo con il codice, poi controlla di nuovo.</string>
@@ -86,7 +86,7 @@
     <string name="approval_no_key">Nessuna chiave con cui firmare</string>
     <string name="approval_not_confirmed">Non confermato</string>
     <string name="approval_not_recognized">Riprova, o accedi di nuovo se le tue impronte sono cambiate.</string>
-    <string name="approval_not_recognized_face_id">Riprova, o accedi di nuovo se il tuo Face ID o le tue impronte sono cambiati.</string>
+    <string name="approval_not_recognized_biometry">Riprova, o accedi di nuovo se il tuo %1$s è cambiato.</string>
     <string name="approval_nothing_approved_request_kept_approve">Non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
     <string name="approval_open_settings">Apri impostazioni</string>
     <string name="approval_prompt_approve_on_kiff">Approva su KIFF</string>
@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">Non è stato possibile leggere le parole di KIFF per questo collegamento. %1$s</string>
     <string name="connect_profile_words_unread">Le parole di KIFF per questo collegamento non sono ancora state lette. Non è stato approvato nulla.</string>
     <string name="connect_prompt_connect">Collega %1$s a %2$s</string>
+    <string name="connect_prompt_connect_app">Collega %1$s</string>
     <string name="connect_prompt_give_card">Dai a %1$s la sua Card</string>
     <string name="connect_prompt_give_key">Dai a %1$s la sua chiave per %2$s</string>
+    <string name="connect_prompt_give_key_app">Dai a %1$s la sua chiave</string>
     <string name="connect_prompt_keep_sealed">Tieni sigillati gli accessi alle tue app</string>
     <string name="connect_reading_asks">Lettura di ciò che chiede…</string>
     <string name="connect_reading_request">Lettura della richiesta…</string>
@@ -1129,6 +1131,21 @@
     <string name="halt_now">Blocca ora</string>
     <string name="halt_row_running">Fermalo finché non riprendi</string>
     <string name="halt_your_tafs_lower">i tuoi tafs</string>
+    <string name="halt_all_description">Blocca tutti i tafs in una volta. Non viene inviato nulla di nuovo finché non li riprendi in tafs.</string>
+    <string name="halt_all_failed">tafs non è riuscita a bloccare i tuoi tafs. %1$s Apri tafs per bloccarli.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">%1$s taf bloccato. Non viene inviato nulla di nuovo finché non riprendi.</item>
+        <item quantity="other">%1$s tafs bloccati. Non viene inviato nulla di nuovo finché non riprendi.</item>
+    </plurals>
+    <string name="halt_all_halted_all">I tuoi tafs sono bloccati. Non viene inviato nulla di nuovo finché non riprendi.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">Blocco di %1$s taf in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l\'ha fatto.</item>
+        <item quantity="other">Blocco di %1$s tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l\'ha fatto.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Blocco dei tuoi tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l\'ha fatto.</string>
+    <string name="halt_all_running">tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli.</string>
+    <string name="halt_all_signed_out">Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs.</string>
+    <string name="halt_all_title">Blocca tutti i tafs</string>
     <string name="home_calendar_not_read">Non è stato possibile leggere il calendario. %1$s</string>
     <string name="home_cant_reach_kiff">Impossibile raggiungere KIFF</string>
     <string name="home_choose_taf">Scegli un taf.</string>
@@ -1301,6 +1318,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach non è riuscito ad aprirsi su questo. %1$s</string>
     <string name="needs_you_waiting_for_browser">In attesa del browser…</string>
     <string name="needs_you_when_taf_asks_something_outside">Quando un taf chiede qualcosa fuori dalla sua Card, aspetta la tua risposta. Un avviso te lo dice subito, su questo %1$s e sulla sua schermata di blocco, anche con tafs chiusa.</string>
+    <string name="needs_you_your_step_ended">Questo passo ha già una risposta o è terminato.</string>
+    <string name="needs_you_your_step_not_answered">La tua risposta non è andata a buon fine. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Nessuna risposta: non è stato confermato.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Ancora niente</string>
     <string name="people_account_people">LE PERSONE DELL\'ACCOUNT</string>
@@ -1323,7 +1343,9 @@
     <string name="people_delete_group_button">Elimina %1$s</string>
     <string name="people_delete_group_title">Eliminare %1$s?</string>
     <string name="people_delete_this_group_title">Eliminare questo gruppo?</string>
-    <string name="people_everyone_in">Tutti nell\'account sono in %1$s. Invita persone dalla dashboard di KIFF.</string>
+    <string name="people_everyone_group">Tutti</string>
+    <string name="people_everyone_in">Tutti nell\'account sono qui. Invita persone dalla dashboard di KIFF.</string>
+    <string name="people_everyone_uses">Tutti usano %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Tutti nell\'account · non usa nessun taf</string>
     <string name="people_group_actions">Azioni di %1$s</string>
     <string name="people_group_name_hint">Assistenza, Finanza…</string>
@@ -1373,6 +1395,7 @@
     <string name="people_share_who_gets">Chi riceve %1$s</string>
     <string name="people_share_who_uses">Chi usa %1$s?</string>
     <string name="people_shared_with">Condiviso con %1$s</string>
+    <string name="people_shared_with_everyone">Condiviso con tutti</string>
     <string name="people_shared_with_prefix">"Condiviso con "</string>
     <string name="people_sharing">Condivisione…</string>
     <string name="people_stops_using">%1$s smette di usare %2$s. Le sue chat restano sue.</string>
@@ -1710,6 +1733,7 @@
     <string name="settings_alerts_off_text">Si sono disattivati quando questo telefono è uscito dall\'account. Attivali per ricevere un avviso quando un taf ti aspetta.</string>
     <string name="settings_alerts_off_title_device">Gli avvisi sono disattivati su questo %1$s</string>
     <string name="settings_alerts_off_turn_on">Attiva</string>
+    <string name="settings_change_language">Cambia lingua</string>
     <string name="settings_chargebacks_needs_you">Chargebacks ti aspetta</string>
     <string name="settings_choose_time_zone">Scegli il fuso orario…</string>
     <string name="settings_clear_sample">Cancella l\'esempio</string>
@@ -1748,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Ognuno indica a chi è stato risposto e tramite quale porta, mai le sue parole. Disattivalo in Configurazione › I risultati vanno a, nel taf.</string>
     <string name="settings_find_time_zone">Cerca un fuso orario</string>
     <string name="settings_kiff_account">Account KIFF</string>
+    <string name="settings_language_title">Lingua</string>
     <string name="settings_legal">Note legali</string>
     <string name="settings_light_taps_when_you_send">Un leggero tocco quando invii o rispondi.</string>
     <string name="settings_mode">Modalità</string>
@@ -1839,7 +1864,7 @@
     <string name="setup_schedule">La sua pianificazione</string>
     <string name="setup_section_description">%1$s. %2$s. Apri</string>
     <string name="setup_send_again">Invia di nuovo</string>
-    <string name="setup_skip_it">Saltalo</string>
+    <string name="setup_skip_it">Salta</string>
     <string name="setup_starts_when">Parte quando</string>
     <string name="setup_stop">Ferma</string>
     <string name="setup_title">Configurazione</string>
@@ -1854,7 +1879,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un\'app. Le tue risposte vengono firmate su questo %1$s.</string>
     <string name="sign_in_how_works">Come funziona</string>
     <string name="sign_in_ios_did_not_open_sign">iOS non ha aperto la pagina di accesso (errore %1$s; %2$s). Riprova con tafs aperta.</string>
-    <string name="sign_in_lead">I tuoi tafs agiscono con le Card di KIFF. Approva questo telefono in KIFF, e le Card che hai emesso compaiono qui.</string>
+    <string name="sign_in_lead">I tuoi tafs agiscono con le Card di KIFF. Approva questo %1$s in KIFF, e le Card che hai emesso compaiono qui.</string>
     <string name="sign_in_not_signed_out">Non ancora disconnesso da KIFF. Riprova, o disconnetti questo telefono da Dispositivi su un altro dispositivo.</string>
     <string name="sign_in_not_signed_out_device">Non ancora disconnesso da KIFF: %1$s. Riprova, o disconnetti questo %2$s da Dispositivi su un altro dispositivo.</string>
     <string name="sign_in_open_kiff">Apri KIFF per approvare</string>
@@ -1881,21 +1906,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Accedi con KIFF</string>
     <string name="sign_in_your_code">Il tuo codice</string>
-    <string name="siri_halt_all_description">Blocca tutti i tafs in una volta. Non viene inviato nulla di nuovo finché non li riprendi in tafs.</string>
-    <string name="siri_halt_all_failed">tafs non è riuscita a bloccare i tuoi tafs. %1$s Apri tafs per bloccarli.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">%1$s taf bloccato. Non viene inviato nulla di nuovo finché non riprendi.</item>
-        <item quantity="other">%1$s tafs bloccati. Non viene inviato nulla di nuovo finché non riprendi.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">I tuoi tafs sono bloccati. Non viene inviato nulla di nuovo finché non riprendi.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">Blocco di %1$s taf in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l\'ha fatto.</item>
-        <item quantity="other">Blocco di %1$s tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l\'ha fatto.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Blocco dei tuoi tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l\'ha fatto.</string>
-    <string name="siri_halt_all_running">tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli.</string>
-    <string name="siri_halt_all_signed_out">Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs.</string>
-    <string name="siri_halt_all_title">Blocca tutti i tafs</string>
     <string name="taf_activity_all_apps">Tutte le app</string>
     <string name="taf_activity_checking_waits">Controllo di cosa ti aspetta…</string>
     <string name="taf_activity_reading_notes">Lettura delle sue note…</string>
@@ -2027,6 +2037,11 @@
         <item quantity="one">Lavora con %1$s Card di KIFF.</item>
         <item quantity="other">Lavora con %1$s Card di KIFF.</item>
     </plurals>
+    <string name="update_available">È disponibile una nuova versione di tafs.</string>
+    <string name="update_downloading">Download dell\'aggiornamento…</string>
+    <string name="update_ready">L\'aggiornamento è pronto.</string>
+    <string name="update_restart">Riavvia</string>
+    <string name="update_update">Aggiorna</string>
     <string name="usage_admin_answers">%1$s Risponde un amministratore.</string>
     <string name="usage_balance">Saldo</string>
     <string name="usage_balance_not_read">Non è stato possibile leggere il saldo. %1$s</string>
@@ -2228,6 +2243,10 @@
     <string name="voice_voice_becomes_text_device_not">La tua voce diventa testo su questo dispositivo. Non viene inviata finché non la invii tu.</string>
     <string name="voice_what_you_said_stays_message">Ciò che hai detto resta nella casella del messaggio, non inviato.</string>
     <string name="work_answer_within">Rispondi entro</string>
+    <plurals name="work_answer_within_days">
+        <item quantity="one">%1$s giorno</item>
+        <item quantity="other">%1$s giorni</item>
+    </plurals>
     <plurals name="work_answer_within_hours">
         <item quantity="one">%1$s ora</item>
         <item quantity="other">%1$s ore</item>

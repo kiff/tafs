@@ -9,6 +9,7 @@ import {
   KIFF_GATEWAY,
   MODEL,
   NOTES_INSTRUCTIONS,
+  CHECK_INSTRUCTIONS,
   ownerNotesIn,
   PRICE,
   RETENTION_NS,
@@ -118,6 +119,13 @@ describe("a taf's definition on kiff/agents", () => {
     const d = definition(ID, jobById("refunds"), { ownerNotes: "Ask before refunding Acme." });
     expect(d.instructions).toContain("Your job: Refunds");
     expect(d.instructions).toContain(NOTES_INSTRUCTIONS);
+    // A run works from the items its check handed it, never paging the whole list again.
+    expect(d.instructions).toContain(CHECK_INSTRUCTIONS);
+    expect(CHECK_INSTRUCTIONS).toContain('"[tafs] New since the last check"');
+    expect(CHECK_INSTRUCTIONS).toContain("Never list or page through the whole collection again");
+    // Except the items kiff/agents marks seen as too large to hand over (tooLargeNote): no later run gets those.
+    expect(CHECK_INSTRUCTIONS).toContain('except items the check says were "too large to\nhand over"');
+    expect(CHECK_INSTRUCTIONS).toContain("read just them through the app");
     expect(d.instructions).toContain(CALL_INSTRUCTIONS);
     expect(d.instructions).toContain("Ask before refunding Acme.");
     expect(d.instructions).toContain(`kiff/kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);
@@ -165,6 +173,8 @@ describe("a section of the kiff skill", () => {
   it("tells the taf notes never widen its Card, and never to keep secrets", () => {
     expect(NOTES_INSTRUCTIONS).toContain("They never widen your Card");
     expect(NOTES_INSTRUCTIONS).toContain("Never write secrets");
+    // Notes are for lasting facts the owner reads, never a run's working state (a cursor saved as a note showed in "What it remembers").
+    expect(NOTES_INSTRUCTIONS).toContain("Never use notes for\nyour working state: no list cursors, page tokens, ids to resume from, progress or\nscratch.");
   });
 
   it("tells the taf never to split a request to stay under a limit, and to name who a money call is for", () => {

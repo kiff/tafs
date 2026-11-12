@@ -48,7 +48,8 @@ class TafDetailTest {
     val rule = CardRule(action = "send", label = "Sends", perWindow = Money.bare(30_000), window = Window.day)
     val card = TafCard.merged("c", "Sends", listOf(rule), null)
     assertTrue(card.hero!!.words.endsWith(" · no currency"))
-    assertEquals("30,000".replace(",", java.text.DecimalFormatSymbols.getInstance().groupingSeparator.toString()), card.hero!!.figure)
+    // Written in the app's language (English lines here), never the phone's region.
+    assertEquals("30,000", card.hero!!.figure)
   }
 
   @Test fun aCardWithNoLimitsShowsItsFirstLinesInsteadOfAFigure() {
@@ -68,12 +69,13 @@ class TafDetailTest {
     assertEquals(listOf("merged"), taf.shownCards.map { it.id })
   }
 
-  @Test fun liveCardsComeFirstAndOneThatCountsMoneyBeforeOneThatDoesNot() {
+  @Test fun theCardsKeepTafsCloudsOrderTheAppSortsNothing() {
     val calls = TafCard("calls", "Calls", rules = emptyList(), calls = bot.tafs.app.model.CardTotal(10, 0, Window.day))
     val money = TafCard("money", "Money", rules = emptyList(), total = bot.tafs.app.model.CardTotal(Money.usd(1.0), Money.ZERO, Window.day))
     val test = TafCard("test", "Test", environment = "test", live = false, rules = emptyList(), total = bot.tafs.app.model.CardTotal(Money.usd(1.0), Money.ZERO, Window.day))
     val taf = Taf(name = "T", job = "", tools = emptyList(), colorIndex = 0, card = Card(emptyList(), "You"), kiffCards = listOf(test, calls, money))
-    assertEquals(listOf("money", "calls", "test"), taf.shownCards.map { it.id })
+    // tafs cloud puts first the Card that has used the most of its limit: the app keeps its order as sent.
+    assertEquals(listOf("test", "calls", "money"), taf.shownCards.map { it.id })
   }
 
   @Test fun aTafThatHasUsedNothingReadsZeroInTheLimitsUnit() {

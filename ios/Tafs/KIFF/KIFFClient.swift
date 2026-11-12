@@ -176,10 +176,15 @@ final class KIFFClient {
         return start.inAppLanguage()
     }
 
-    /// What the person reads when this phone can't approve until they sign in again.
-    nonisolated static let approvalKeyLost = Words.Approval.keyGoneFaceId
+    /// What the person reads when this device can't approve until they approve it again, named
+    /// by what it asks for ("Your Face ID changed…"), never "Face ID or fingerprints".
+    nonisolated static var approvalKeyLost: String {
+        Words.Approval.keyGoneBiometry(biometry: Biometry.kind ?? Words.Approval.faceIdTouchId)
+    }
     /// What they read when an approval's prompt closed unrecognized while the key is still good.
-    nonisolated static let notRecognized = Words.Approval.notRecognizedFaceId
+    nonisolated static var notRecognized: String {
+        Words.Approval.notRecognizedBiometry(biometry: Biometry.kind ?? Words.Approval.faceIdTouchId)
+    }
 
     /// A key's fingerprint as KIFF shows it: the first 8 bytes of the SHA-256 of its SPKI
     /// DER, in hex, in groups of four ("ab12 cd34 ef56 7890").
@@ -536,30 +541,24 @@ final class KIFFClient {
         /// KIFF's plan: "solo", "team" (Company), "company" (an agreement), "internal", or none.
         var plan: String? = nil
         var billing: Billing? = nil
-        /// Whether this person manages the account's billing: someone who doesn't asks an admin.
-        var canAddTasks: Bool? = nil
         var store: Store? = nil
         /// Members' requests for a raise or a pack: every open one for someone who manages
         /// billing, this person's own otherwise.
         var requests: [PackRequest]? = nil
 
-        enum CodingKeys: String, CodingKey { case plan, billing, canAddTasks = "can_add_tasks", store, requests }
+        enum CodingKeys: String, CodingKey { case plan, billing, store, requests }
 
-        init(plan: String? = nil, billing: Billing? = nil, canAddTasks: Bool? = nil, store: Store? = nil, requests: [PackRequest]? = nil) {
-            self.plan = plan; self.billing = billing; self.canAddTasks = canAddTasks; self.store = store; self.requests = requests
+        init(plan: String? = nil, billing: Billing? = nil, store: Store? = nil, requests: [PackRequest]? = nil) {
+            self.plan = plan; self.billing = billing; self.store = store; self.requests = requests
         }
 
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             plan = (try? c.decodeIfPresent(String.self, forKey: .plan)) ?? nil
             billing = (try? c.decodeIfPresent(Billing.self, forKey: .billing)) ?? nil
-            canAddTasks = (try? c.decodeIfPresent(Bool.self, forKey: .canAddTasks)) ?? nil
             store = (try? c.decodeIfPresent(Store.self, forKey: .store)) ?? nil
             requests = ((try? c.decodeIfPresent([LenientItem<PackRequest>].self, forKey: .requests)) ?? nil)?.compactMap(\.value)
         }
-
-        /// This person manages billing: they buy and raise, and answer members' requests.
-        var managesBilling: Bool { canAddTasks == true }
     }
 
     /// A member's request to the account's admins: a raise of the spend limit (`kind: "raise"`)
@@ -769,6 +768,45 @@ final class KIFFClient {
         let lines = ["kiff.answer.v1", tenant, exceptionID, answer, nextStep ?? "", noteHash,
                      String(accountingVersion), signedAt]
         return Data(lines.joined(separator: "\n").utf8)
+    }
+
+    /// What the phone signs to answer a step a taf handed its owner (docs/api.md › Your step):
+    /// KIFF's `kiff.handoff.v1`, one field per line. `answer` is "done" or "skipped"; `version` is
+    /// the hand-off's shape, 1 until it changes. Pinned by KIFF's vector (YourStepTests).
+    static func handoffMessage(tenant: String, handoffID: String, answer: String, version: Int = 1, signedAt: String) -> Data {
+        Data(["kiff.handoff.v1", tenant, handoffID, answer, String(version), signedAt].joined(separator: "\n").utf8)
+    }
+
+    /// A step a taf handed its owner, as KIFF keeps it: its `version` is what the phone signs, and a
+    /// `status` other than "waiting" means it was answered or has ended.
+    struct Handoff: Decodable, Equatable {
+        let id: String
+        var version = 1
+        var status = ""
+        enum CodingKeys: String, CodingKey { case id, version, status }
+        init(id: String, version: Int = 1, status: String = "") { self.id = id; self.version = version; self.status = status }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            version = (try? c.decodeIfPresent(Int.self, forKey: .version)) ?? 1
+            status = (try? c.decodeIfPresent(String.self, forKey: .status)) ?? ""
+        }
+    }
+
+    func handoff(_ id: String) async throws -> Handoff {
+        try await send("GET", "/v1/me/handoffs/\(escaped(id))")
+    }
+
+    private struct HandoffAnswerBody: Encodable {
+        let answer: String
+        let signature: AnswerSignature
+    }
+
+    /// Answers a step handed to the owner, "done" or "skipped", signed with the device key.
+    /// It grants nothing, so the approval key isn't asked for; KIFF answers it once.
+    func answerHandoff(_ id: String, answer: String, signature: AnswerSignature) async throws {
+        let _: Empty = try await send("POST", "/v1/me/handoffs/\(escaped(id))/answer",
+                                      body: HandoffAnswerBody(answer: answer, signature: signature))
     }
 
     /// What the phone signs for a setup call: KIFF's signed request message,
@@ -1067,6 +1105,11 @@ final class KIFFClient {
         var agents: [String] = []
 
         var managers: [GroupMember] { members.filter(\.isManager) }
+
+        /// The name as the person reads it: KIFF's default group (`everyone`) in the person's
+        /// language ("Tout le monde"), since KIFF keeps it as "Everyone"; any other group as it
+        /// was named. As Android's `Group.shownName`.
+        var shownName: String { everyone == true ? Words.People.everyoneGroup : name }
     }
 
     struct GroupMember: Codable, Equatable, Hashable {

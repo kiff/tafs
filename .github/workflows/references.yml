@@ -17,7 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: No private references
         run: |
           pattern='kiff-cloud''#|kiff/kiff''-cloud|[Tt]he ''PM\b'
@@ -32,3 +34,22 @@ jobs:
           fi
         env:
           BASE: ${{ github.base_ref }}
+
+  # The changelog entry is one file per pull request (changes/README.md), so
+  # pull requests never conflict on CHANGELOG.md's first line.
+  changelog:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: The fold and the check's own tests
+        run: python3 -W error -m unittest discover -s scripts -p 'test_changelog.py'
+      - name: One fragment, CHANGELOG.md untouched
+        env:
+          BASE: ${{ github.base_ref }}
+          BRANCH: ${{ github.head_ref }}
+        run: python3 scripts/changelog.py check --base "origin/$BASE" --branch "$BRANCH"

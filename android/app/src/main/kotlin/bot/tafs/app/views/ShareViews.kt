@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.shownName
+import androidx.compose.ui.text.style.TextOverflow
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.BorderStroke
@@ -58,7 +60,14 @@ fun ShareLine(tafId: String, state: AppState, actions: PeopleActions) {
       style = scaled(15, FontWeight.SemiBold, Theme.ink),
       modifier = Modifier.clip(shape).border(BorderStroke(1.dp, Theme.line), shape).clickable { sharing = true }.padding(horizontal = 10.dp, vertical = 6.dp),
     )
-    Text(PeopleWords.sharedWith(shares, state.groups, state.people), style = scaled(14, color = Theme.soft), maxLines = 1)
+    // The rest of the row, on up to two lines, so a longer language's words ("Compartido con") still leave room for the names.
+    Text(
+      PeopleWords.sharedWith(shares, state.groups, state.people),
+      Modifier.weight(1f),
+      style = scaled(14, color = Theme.soft),
+      maxLines = 2,
+      overflow = TextOverflow.Ellipsis,
+    )
   }
   if (sharing) ShareTafSheet(tafId, taf.name, state, actions, onClose = { sharing = false })
 }
@@ -115,7 +124,7 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
               state.groups.forEach { group ->
                 Pick(Share(group = group.id), chosen, { chosen = it }) {
                   Column {
-                    Text(group.name, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                    Text(group.shownName, style = scaled(15, FontWeight.SemiBold, Theme.ink))
                     Text(PeopleWords.peopleOf(group, state.people), style = scaled(12, color = Theme.dim), maxLines = 1)
                   }
                 }

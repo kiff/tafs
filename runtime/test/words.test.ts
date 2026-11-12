@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, wordsIn } from "../src/cloud/words/index.js";
+import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, withZone, wordsIn } from "../src/cloud/words/index.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { jobById, systemPrompt } from "../src/jobs.js";
 import { doorView, offered } from "../src/cloud/doors/doors.js";
@@ -19,6 +19,7 @@ const run = (o: Partial<Run>): Run => ({ id: "r1", agent: "a", session: "s", tri
 
 /** The words whose arguments aren't strings or counts, with what they're given. */
 const ARGS: Record<string, unknown[][]> = {
+  approval_status: [["needs_reconnect"], ["connected"], ["pending"]],
   door_name: [["email", "Email"], ["slack", "Slack"]],
   delivered: [["Invoices", { hm: "09:00" }], ["Invoices", { hm: "09:00", day: "Fri" }]],
   handed: [["Rae", { hm: "09:00" }]],
@@ -27,7 +28,7 @@ const ARGS: Record<string, unknown[][]> = {
   dial_day_short: [[1], [5]],
   dial_times_a_day: [[["09:00", "17:00"]]],
   dial_weekly_at: [[["mon", "fri"], "09:00"]],
-  dial_every_on: [[15, { from: "09:00", to: "17:00" }, ["mon"]], [30, undefined, []]],
+  dial_every_on: [["Every 15 minutes", { from: "09:00", to: "17:00" }, ["mon"]], ["Every 4 hours", undefined, []]],
   dial_once_on: [["2026-11-05T09:00"], ["2026-11-05"]],
   dial_turn_stop: [["Replies to whoever wrote"]],
   dial_turn_on: [["Replies to whoever wrote"]],
@@ -66,7 +67,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   const SAME_AS_ENGLISH: Record<string, string[]> = {
     // "Company" is a plan name, kept in every language (docs/languages.md); the seats around it are translated.
     // "25 min" and "5 h" are written alike in most of the eight (Dutch writes "5 u", Polish "5 godz.").
-    all: ["cr_company", "waiting_minutes", "waiting_hours"],
+    all: ["cr_company", "waiting_minutes", "waiting_hours", "doing_titled"], // doing_titled: the tool's own title and "…"
     de: ["push_credits_title", "dial_app"], // "Credits" is the German term in the glossary; "App" is German too
     fr: ["cr_actions", "dial_app"], // "action", "actions" and "App" are French words too
     es: ["dial_app"], // "App" is used as is
@@ -141,6 +142,22 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(ownerWords(knock)).toBe("sí, ayúdale");
   });
 
+  // Coach once drafted "0 8 * * 1" for "Mondays at 9" in Paris: its only clock was kiff/agents'
+  // line in UTC; now each message says the account's zone and the time there, and that times stay in it.
+  it("tells Coach the account's time zone and its time there, so a cron keeps the hour the owner chose", () => {
+    const at = new Date("2026-11-11T21:29:00Z");
+    expect(withZone("hello", undefined, at)).toBe("hello");
+    expect(withZone("hello", "UTC", at)).toBe("hello");
+    expect(withZone("hello", "Not/AZone", at)).toBe("hello");
+    const paris = withZone("Mondays at 9 please", "Europe/Paris", at);
+    expect(paris).toBe("[tafs time zone] The account's time zone is Europe/Paris: it's Wednesday 22:29 there now. Every time you write or say (a cron, an at, a time in a message) is in it, as the owner says it: never convert it to UTC.\nThe owner says: Mondays at 9 please");
+    expect(ownerWords(paris)).toBe("Mondays at 9 please");
+    // With the language line too, both come before the owner's words, after tafs' own opening.
+    const both = withZone(withLanguage("[tafs connections]\nnone\nThe owner says: lundi à 9 h", "fr"), "Europe/Paris", at);
+    expect(both.split("\n").map((l) => l.slice(0, 18))).toEqual(["[tafs connections]", "none", "[tafs language] Th", "[tafs time zone] T", "The owner says: lu"]);
+    expect(ownerWords(both)).toBe("lundi à 9 h");
+  });
+
   it("says a taf's owner's language in its instructions when it isn't English, and reads it back", () => {
     const job = jobById("refunds");
     expect(systemPrompt(job)).not.toContain("Your owner reads");
@@ -188,7 +205,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   });
 
   it("says why Coach stopped driving in the language, English as END_SAID", () => {
-    expect(endSaid("owner_took_over", "nl")).toBe("Je raakte de app aan, dus hij is nu van jou");
+    expect(endSaid("owner_took_over", "nl")).toBe("Je nam het over, dus Coach laat je verdergaan");
     expect(endSaid("idle", "pt")).toBe("Nada foi feito durante 15 minutos, por isso o Coach parou");
     for (const why of Object.keys(END_SAID) as Array<keyof typeof END_SAID>) expect(endSaid(why)).toBe(END_SAID[why]);
   });
@@ -239,12 +256,13 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
       "powiązani nadawcy": ["powiązanych nadawców"],
       uruchomienie: ["uruchomienia", "uruchomieniu"], // "nie rozpoczęto uruchomienia", "przy następnym uruchomieniu"
       "próba": ["próbę"], // "uruchom wersję jako próbę"
+      "połączenie": ["połączenia"], // "tekst KIFF dla tego połączenia", "stan połączenia"
     },
   };
 
   /** Lines where the English word isn't the glossary's term (a verb where the term is a noun), by catalog key. */
   const NOT_THE_TERM: Record<string, string[]> = {
-    run: ["dial_run_tap", "dial_tap_latest", "failing_follow_up", "waited_follow_up", "cts_g_run", "cts_version_try_does", "est_never_past_solo"], // "to run" (and "run out"): the verb, not a run
+    run: ["dial_run_tap", "dial_tap_latest", "failing_follow_up", "waited_follow_up", "cts_g_run", "cts_version_try_does", "est_never_past_solo", "approval_on_demand"], // "to run" (and "run out"): the verb, not a run
   };
 
   it("uses the glossary's word for each glossary term, in every line of every language", () => {

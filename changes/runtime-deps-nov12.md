@@ -1,0 +1,1 @@
+- **When the person takes over a drive, tafs cloud says so in the contract's words (tafs cloud).** The end `owner_took_over` now reads "You took over, so Coach let you carry on" in all 8 languages, as docs/drive.md says since the touch-pauses contract, and Coach is told the owner took over and it's letting them carry on. The apps show tafs cloud's words as they come.

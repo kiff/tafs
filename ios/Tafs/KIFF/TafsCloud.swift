@@ -55,10 +55,13 @@ final class TafsCloud {
         var timeZoneWords: String? = nil
         var scheduleTimeZone: String? = nil
         var scheduleTimeZoneWords: String? = nil
+        /// The next run in the person's language, with its weekday when it isn't today ("Next run
+        /// Mon 08:00"): drawn as is, never a bare time that reads as tomorrow.
+        var nextRunWords: String? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, unscheduled, results
-            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
+            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", nextRunWords = "next_run_words"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
             case scheduleTimeZoneWords = "schedule_time_zone_words"
         }
@@ -288,9 +291,12 @@ final class TafsCloud {
         /// Where its work stands, as the list sends it (`work: {status, line}`): an idle taf that
         /// isn't healthy says its first reason here, where it would say its next run.
         var work: TafWork.Summary? = nil
+        /// tafs cloud's words for its next run, with the day when it isn't today ("Next run Mon 08:00").
+        var nextRunWords: String? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work
+            case nextRunWords = "next_run_words"
             case avatarRim = "avatar_rim"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
             case scheduleTimeZoneWords = "schedule_time_zone_words"
@@ -302,7 +308,8 @@ final class TafsCloud {
             // With unscheduled, or the taf page offers Run now and Pause a taf that works from
             // its chat can't take (kiff/tafs#206 section 2).
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
-                              unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords) }
+                              unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords,
+                              nextRunWords: nextRunWords) }
         }
     }
 
@@ -315,6 +322,8 @@ final class TafsCloud {
         /// The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors.
         var doorsOffered: [String]? = nil
         var cardUnitExceptions: [CardUnitException]? = nil
+        /// The steps tafs handed the person, oldest first (docs/api.md › Your step); absent when none.
+        var yourSteps: [YourStep]? = nil
         /// Everything that waits for the person, counted by tafs cloud with its words; absent
         /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
         var needsYou: NeedsYou? = nil
@@ -322,6 +331,7 @@ final class TafsCloud {
         enum CodingKeys: String, CodingKey {
             case tafs, others, removing, doorsOffered = "doors_offered"
             case cardUnitExceptions = "card_unit_exceptions"
+            case yourSteps = "your_steps"
             case needsYou = "needs_you"
         }
     }
@@ -647,9 +657,12 @@ final class TafsCloud {
 
     /// Removes the taf for good: stops it, deletes its runs, chats and memory and its key,
     /// and frees its name. Its Cards are KIFF's: the phone revokes them first.
-    func remove(_ id: String) async throws -> Removal {
-        try await send("DELETE", "/v1/tafs/\(escaped(id))")
+    func remove(_ id: String, signature: String? = nil) async throws -> Removal {
+        try await send("DELETE", tafPath(id), headers: signature.map { ["KIFF-Device-Signature": $0] } ?? [:])
     }
+
+    /// A taf's path, as a request to it is sent and as the approval key signs it.
+    func tafPath(_ id: String) -> String { "/v1/tafs/\(escaped(id))" }
 
     /// What Run now did: the run's session, or none when the taf's check started no run, with
     /// tafs cloud's words for why (nothing new since the last run), in the person's language.

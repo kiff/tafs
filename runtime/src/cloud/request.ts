@@ -8,7 +8,7 @@ import type { Run, SessionEvent } from "./agents.js";
 import type { DeliveryView } from "./delivery.js";
 import type { Sent } from "./doors/model.js";
 import { foldRetried, stepWords, type ToolTitles } from "./steps.js";
-import { requestOf, type RequestView, timeIn, whenIn } from "./work.js";
+import { failedLine, requestOf, type RequestView, timeIn, whenIn } from "./work.js";
 
 /** One step of a request: what happened, and a line under it with its time, written in the account's zone. */
 export interface RequestStep {
@@ -62,7 +62,7 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
     if (e.kind === "usage") {
       for (const c of callsOf(e.body)) {
         // A tool nothing names says it worked, with no tool name.
-        const words = stepWords(c.tool, titles) ?? w.step_worked;
+        const words = stepWords(c.tool, titles, lang) ?? w.step_worked;
         const step: RequestStep = { label: words, line: c.notMade ? w.step_not_made(at(e.time)) : c.error ? w.step_call_failed(at(e.time)) : at(e.time),
           state: c.notMade ? "not_made" : c.error ? "failed" : "done" };
         calls.push({ tool: c.tool, ...(c.error && !c.notMade ? { error: true as const } : {}), ...(c.inputHash ? { inputHash: c.inputHash } : {}), step });
@@ -93,7 +93,7 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
     case "working": steps.push({ label: w.work_working, state: "next" }); break;
     case "done": steps.push({ label: w.step_done, line: at(r.updated), state: "done" }); break;
     case "stopped": steps.push({ label: w.work_stopped, line: r.status === "COMPLETED" ? view.line : at(r.updated), state: "failed" }); break;
-    case "failed": steps.push({ label: w.work_failed, line: view.code ? view.line : r.error ?? at(r.updated), state: "failed" }); break;
+    case "failed": steps.push({ label: w.work_failed, line: view.code ? view.line : r.error ? failedLine(r.error, lang) : at(r.updated), state: "failed" }); break;
   }
   return { ...view, from, steps };
 }

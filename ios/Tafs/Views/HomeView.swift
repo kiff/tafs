@@ -31,7 +31,8 @@ struct HomeView: View {
                 headline
                 // KIFF can't be reached just now: said quietly, under the account's name.
                 if let words = model.unreachable { UnreachableLine(words: words, retrying: model.retryingRefresh) }
-                if model.approvalKeyLost { ApprovalKeyLostLine() }
+                // The key gone and the device not ready show as one state: the device's first.
+                if model.showsApprovalKeyLost { ApprovalKeyLostLine() } else if model.approvalKeyLost { ApprovalNotice() }
                 // The plan, only when it needs the owner: a trial ended or ending, tasks nearly gone.
                 PlanLine()
 
@@ -338,7 +339,8 @@ struct TafRow: View {
                         .buttonStyle(.borderless)
                         .accessibilityLabel(Words.Home.haltedOpenHalt)
                         .accessibilityIdentifier("taf.halted.\(taf.name)")
-                } else {
+                } else if !(taf.attention && taf.state == .working) {
+                    // What went wrong is said in its line, in place of "Working" (docs/reliability.md).
                     StateChip(state: taf.state)
                 }
             }

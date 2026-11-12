@@ -595,6 +595,8 @@ final class PlanqueTests: XCTestCase {
         let model = await model(signer: signer, vendor: StubVendor())
         model.planqueSetUp(for: "t_01")
         model.sessionHasKey = true
+        // The approval key signs the removal's DELETE for this account.
+        model.kiffTenant = "t_01"
         let chargebacks = #"{"id":"depl_2","name":"Chargebacks","job":"disputes","kiff_agent":"chargebacks","status":"active","next_run":null,"last_run":null,"color":1,"state":"working","waiting":0,"card":{"ids":["chargebacks-card"],"active":true,"expires":null,"tools":[],"rules":[{"action":"refund_payment","label":"Refund a payment","outside":"hold","window":"day"}],"used":{},"usage_unknown":[]}}"#
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.entry(agent: "refunds", name: "Refunds", cards: ["refunds-card"])] + (withChargebacks ? [chargebacks] : [])))
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Refunds","job":"refunds","kiff_agent":"refunds","status":"active"}]}"#)

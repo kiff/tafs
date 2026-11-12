@@ -76,7 +76,7 @@
     <string name="approval_kept">Het blijft in Wacht op jou.</string>
     <string name="approval_key_could_not_sign">De sleutel kon niet ondertekenen</string>
     <string name="approval_key_gone_approve_again">Je vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je hem opnieuw goedkeurt in je browser.</string>
-    <string name="approval_key_gone_face_id">Je Face ID of vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je hem opnieuw goedkeurt in je browser.</string>
+    <string name="approval_key_gone_biometry">Je %1$s is gewijzigd of niet herkend, dus dit apparaat kan niet goedkeuren tot je het opnieuw goedkeurt in je browser.</string>
     <string name="approval_key_gone_sign_in">Je vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je opnieuw inlogt.</string>
     <string name="approval_key_lost">Log opnieuw in met KIFF om vanaf deze telefoon goed te keuren.</string>
     <string name="approval_locked_after_too_many_tries">%1$s is vergrendeld na te veel pogingen. Vergrendel deze %2$s, ontgrendel hem met de toegangscode en controleer het opnieuw.</string>
@@ -86,7 +86,7 @@
     <string name="approval_no_key">Geen sleutel om mee te ondertekenen</string>
     <string name="approval_not_confirmed">Niet bevestigd</string>
     <string name="approval_not_recognized">Probeer het opnieuw, of log opnieuw in als je vingerafdrukken zijn gewijzigd.</string>
-    <string name="approval_not_recognized_face_id">Probeer het opnieuw, of log opnieuw in als je Face ID of vingerafdrukken zijn gewijzigd.</string>
+    <string name="approval_not_recognized_biometry">Probeer het opnieuw, of log opnieuw in als je %1$s is gewijzigd.</string>
     <string name="approval_nothing_approved_request_kept_approve">Er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent.</string>
     <string name="approval_open_settings">Instellingen openen</string>
     <string name="approval_prompt_approve_on_kiff">Goedkeuren op KIFF</string>
@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">De woorden van KIFF voor deze koppeling konden niet worden gelezen. %1$s</string>
     <string name="connect_profile_words_unread">De woorden van KIFF voor deze koppeling zijn nog niet gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_prompt_connect">%1$s koppelen aan %2$s</string>
+    <string name="connect_prompt_connect_app">%1$s koppelen</string>
     <string name="connect_prompt_give_card">%1$s zijn Card geven</string>
     <string name="connect_prompt_give_key">%1$s zijn sleutel voor %2$s geven</string>
+    <string name="connect_prompt_give_key_app">%1$s zijn sleutel geven</string>
     <string name="connect_prompt_keep_sealed">De logins van je apps verzegeld houden</string>
     <string name="connect_reading_asks">Lezen waar het om vraagt…</string>
     <string name="connect_reading_request">Het verzoek lezen…</string>
@@ -1129,6 +1131,21 @@
     <string name="halt_now">Nu stilzetten</string>
     <string name="halt_row_running">Zet het stil tot je hervat</string>
     <string name="halt_your_tafs_lower">je tafs</string>
+    <string name="halt_all_description">Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat.</string>
+    <string name="halt_all_failed">tafs kon je tafs niet stilzetten. %1$s Open tafs om ze stil te zetten.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">%1$s taf stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
+        <item quantity="other">%1$s tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
+    </plurals>
+    <string name="halt_all_halted_all">Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">%1$s taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
+        <item quantity="other">%1$s tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</string>
+    <string name="halt_all_running">tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.</string>
+    <string name="halt_all_signed_out">Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.</string>
+    <string name="halt_all_title">Alle tafs stilzetten</string>
     <string name="home_calendar_not_read">De agenda kon niet worden gelezen. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF is niet bereikbaar</string>
     <string name="home_choose_taf">Kies een taf.</string>
@@ -1301,6 +1318,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach kon er niet op openen. %1$s</string>
     <string name="needs_you_waiting_for_browser">Wachten op je browser…</string>
     <string name="needs_you_when_taf_asks_something_outside">Als een taf om iets buiten zijn Card vraagt, wacht het op je antwoord. Een melding laat het je meteen weten, op deze %1$s en het toegangsscherm, ook als tafs gesloten is.</string>
+    <string name="needs_you_your_step_ended">Deze stap is al beantwoord of is afgelopen.</string>
+    <string name="needs_you_your_step_not_answered">Je antwoord is niet doorgekomen. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Niet beantwoord: het is niet bevestigd.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nog niets</string>
     <string name="people_account_people">DE MENSEN VAN HET ACCOUNT</string>
@@ -1323,7 +1343,9 @@
     <string name="people_delete_group_button">%1$s verwijderen</string>
     <string name="people_delete_group_title">%1$s verwijderen?</string>
     <string name="people_delete_this_group_title">Deze groep verwijderen?</string>
-    <string name="people_everyone_in">Iedereen in het account zit in %1$s. Nodig mensen uit via het KIFF-dashboard.</string>
+    <string name="people_everyone_group">Iedereen</string>
+    <string name="people_everyone_in">Iedereen in het account staat hier. Nodig mensen uit via het KIFF-dashboard.</string>
+    <string name="people_everyone_uses">Iedereen gebruikt %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Iedereen in het account · gebruikt geen taf</string>
     <string name="people_group_actions">Acties voor %1$s</string>
     <string name="people_group_name_hint">Support, Financiën…</string>
@@ -1373,6 +1395,7 @@
     <string name="people_share_who_gets">Wie %1$s krijgt</string>
     <string name="people_share_who_uses">Wie gebruikt %1$s?</string>
     <string name="people_shared_with">Gedeeld met %1$s</string>
+    <string name="people_shared_with_everyone">Gedeeld met iedereen</string>
     <string name="people_shared_with_prefix">"Gedeeld met "</string>
     <string name="people_sharing">Delen…</string>
     <string name="people_stops_using">%1$s gebruikt %2$s niet meer. Hun chats blijven van hen.</string>
@@ -1710,6 +1733,7 @@
     <string name="settings_alerts_off_text">Ze gingen uit toen deze telefoon werd uitgelogd. Zet ze aan om een melding te krijgen als een taf op jou wacht.</string>
     <string name="settings_alerts_off_title_device">Meldingen staan uit op deze %1$s</string>
     <string name="settings_alerts_off_turn_on">Aanzetten</string>
+    <string name="settings_change_language">Taal wijzigen</string>
     <string name="settings_chargebacks_needs_you">Chargebacks wacht op jou</string>
     <string name="settings_choose_time_zone">Tijdzone kiezen…</string>
     <string name="settings_clear_sample">Het voorbeeld wissen</string>
@@ -1748,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Elke melding vermeldt wie er is beantwoord en via welke deur, nooit de woorden. Zet het uit in Configuratie › Resultaten gaan naar van het taf.</string>
     <string name="settings_find_time_zone">Een tijdzone zoeken</string>
     <string name="settings_kiff_account">KIFF-account</string>
+    <string name="settings_language_title">Taal</string>
     <string name="settings_legal">Juridisch</string>
     <string name="settings_light_taps_when_you_send">Een lichte tik als je verzendt of antwoordt.</string>
     <string name="settings_mode">Modus</string>
@@ -1854,7 +1879,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je antwoorden worden ondertekend op deze %1$s.</string>
     <string name="sign_in_how_works">Hoe het werkt</string>
     <string name="sign_in_ios_did_not_open_sign">iOS heeft de inlogpagina niet geopend (fout %1$s; %2$s). Probeer het opnieuw met tafs geopend.</string>
-    <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze telefoon goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
+    <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze %1$s goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
     <string name="sign_in_not_signed_out">Nog niet uitgelogd bij KIFF. Probeer het opnieuw, of log deze telefoon uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_not_signed_out_device">Nog niet uitgelogd bij KIFF: %1$s. Probeer het opnieuw, of log deze %2$s uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_open_kiff">KIFF openen om goed te keuren</string>
@@ -1881,21 +1906,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Inloggen met KIFF</string>
     <string name="sign_in_your_code">Je code</string>
-    <string name="siri_halt_all_description">Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat.</string>
-    <string name="siri_halt_all_failed">tafs kon je tafs niet stilzetten. %1$s Open tafs om ze stil te zetten.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">%1$s taf stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
-        <item quantity="other">%1$s tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">%1$s taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
-        <item quantity="other">%1$s tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.</string>
-    <string name="siri_halt_all_running">tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.</string>
-    <string name="siri_halt_all_signed_out">Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.</string>
-    <string name="siri_halt_all_title">Alle tafs stilzetten</string>
     <string name="taf_activity_all_apps">Alle apps</string>
     <string name="taf_activity_checking_waits">Controleren wat op je wacht…</string>
     <string name="taf_activity_reading_notes">Notities lezen…</string>
@@ -2027,6 +2037,11 @@
         <item quantity="one">Werkt onder %1$s KIFF-Card.</item>
         <item quantity="other">Werkt onder %1$s KIFF-Cards.</item>
     </plurals>
+    <string name="update_available">Er is een nieuwe versie van tafs.</string>
+    <string name="update_downloading">Update downloaden…</string>
+    <string name="update_ready">De update is klaar.</string>
+    <string name="update_restart">Opnieuw starten</string>
+    <string name="update_update">Bijwerken</string>
     <string name="usage_admin_answers">%1$s Een beheerder antwoordt.</string>
     <string name="usage_balance">Saldo</string>
     <string name="usage_balance_not_read">Het saldo kon niet worden gelezen. %1$s</string>
@@ -2228,6 +2243,10 @@
     <string name="voice_voice_becomes_text_device_not">Je stem wordt op dit apparaat tekst. Er wordt niets verzonden tot je het verzendt.</string>
     <string name="voice_what_you_said_stays_message">Wat je zei, blijft onverzonden in het berichtvak.</string>
     <string name="work_answer_within">Antwoord binnen</string>
+    <plurals name="work_answer_within_days">
+        <item quantity="one">%1$s dag</item>
+        <item quantity="other">%1$s dagen</item>
+    </plurals>
     <plurals name="work_answer_within_hours">
         <item quantity="one">%1$s uur</item>
         <item quantity="other">%1$s uur</item>

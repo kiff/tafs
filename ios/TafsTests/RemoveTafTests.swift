@@ -26,7 +26,7 @@ final class RemoveTafTests: XCTestCase {
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.entry(agent: "rae-k3f9", name: "Rae", cards: cards)]))
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
-        await model.useSession("kiff_dev_x")
+        await model.useSession("kiff_dev_x", tenant: "t_01")
         let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" }?.id)
         return (model, rae)
     }
@@ -62,6 +62,41 @@ final class RemoveTafTests: XCTestCase {
         XCTAssertTrue(message.contains("KIFF didn't revoke 1 of its Cards: revoke them in KIFF."), message)
         XCTAssertTrue(message.contains("its key couldn't be removed. tafs tries again each time it refreshes."), message)
         XCTAssertNotNil(model.cloudTaf(for: rae), "still there to finish")
+    }
+
+    /// The approval key signs the DELETE itself, behind Face ID each time: `kiff.request.v1`
+    /// over the method, the path and the empty body, sent as `KIFF-Device-Signature`. The
+    /// current key signs nothing for it, and no other string is signed.
+    func testTheDeleteCarriesTheApprovalKeysSignature() async throws {
+        let signer = TwoKeySigner()
+        let (model, rae) = try await signedIn(signer: signer)
+        StubProtocol.responses["POST /v1/me/mandates/rae-k3f9-stripe_refund/revoke"] = (200, "{}")
+        StubProtocol.responses["DELETE /v1/tafs/depl_1"] = (200, #"{"done":true,"removed":["schedule","memory","key","name"],"failed":[]}"#)
+        signer.approvalPrompted = []
+        signer.currentPrompted = []
+
+        let removed = await model.removeTaf(rae)
+        XCTAssertNotNil(removed)
+        XCTAssertEqual(signer.approvalPrompted.count, 1, "one Face ID, for the approval key")
+        let lines = try XCTUnwrap(signer.approvalPrompted.first).components(separatedBy: "\n")
+        XCTAssertEqual(Array(lines.prefix(5)), ["kiff.request.v1", "t_01", "DELETE", "/v1/tafs/depl_1",
+                                                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"])
+        XCTAssertFalse(signer.currentPrompted.contains { $0.hasPrefix("tafs.remove") }, "no unsent string is signed any more")
+        let header = try XCTUnwrap(sent("DELETE", "/v1/tafs/depl_1").first?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertEqual(header, "t=\(try XCTUnwrap(lines.last)),v1=approval")
+    }
+
+    /// No face or finger recognized for the approval key: nothing is revoked, disconnected or
+    /// sent to tafs cloud.
+    func testNoDeleteWithoutTheApprovalKeysFaceID() async throws {
+        let signer = TwoKeySigner()
+        let (model, rae) = try await signedIn(signer: signer)
+        signer.approvalUnrecognized = true
+        StubProtocol.sent = []
+        let message = await model.removeTaf(rae)
+        XCTAssertNil(message)
+        XCTAssertTrue(sent("DELETE", "/v1/tafs/depl_1").isEmpty)
+        XCTAssertTrue(StubProtocol.sent.filter { $0.url?.path.hasSuffix("/revoke") == true }.isEmpty)
     }
 
     func testNothingHappensWithoutFaceID() async throws {

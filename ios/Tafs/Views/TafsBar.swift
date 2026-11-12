@@ -42,7 +42,7 @@ struct TafsBar: View {
         } else {
             HStack(spacing: 0) {
                 ForEach(Self.items, id: \.tab) { item in itemButton(item).frame(maxWidth: .infinity) }
-                if coachAvailable { coachButton.padding(.leading, 4) }
+                if coachAvailable { coachButton.padding(.leading, 4).layoutPriority(1) }
             }
             .padding(.horizontal, 8).padding(.top, 6).padding(.bottom, 4)
             .background(Theme.panel.ignoresSafeArea(edges: .bottom))
@@ -96,10 +96,14 @@ struct TafsBar: View {
                     VStack(spacing: 3) {
                         Image(systemName: drive.isOn ? "sparkles" : "sparkle").scaledFont(18, weight: .semibold)
                         Text(drive.isOn ? Words.Coach.driving : Words.Coach.title).scaledFont(12, weight: .semibold)
+                            .lineLimit(1).minimumScaleFactor(0.7)
                     }
                     .frame(maxWidth: .infinity, minHeight: 56)
                 } else {
+                    // One line, its own width: the tabs give room first (they shrink their
+                    // words), never "C/oa/ch" down three lines.
                     Label(drive.isOn ? Words.Coach.driving : Words.Coach.title, systemImage: drive.isOn ? "sparkles" : "sparkle").scaledFont(15, weight: .semibold)
+                        .lineLimit(1).fixedSize()
                         .padding(.horizontal, 14).frame(minHeight: 44)
                 }
             }

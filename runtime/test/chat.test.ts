@@ -1137,6 +1137,35 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(connects.find((c) => c.run === next.id)?.answer).toBeUndefined();
   });
 
+  it("words an approval card's answer in the reader's language, the reason after it as tafs cloud gave it", async () => {
+    // kiff/agents records "Approve · it didn't go through: …" in English (agentgabo on #716).
+    const w = world();
+    const answers: Array<[string, string]> = [
+      ["approved", "Zatwierdzone"],
+      ["declined", "Odrzucone"],
+      ["failed: Nic nie zostało połączone.", "Zatwierdź · nie powiodło się: Nic nie zostało połączone."],
+      ["already approved: Stripe is connected", "Approve · already approved"],
+    ];
+    const runs: string[] = [];
+    // Only the three answers tafs cloud words are rewritten: any other keeps kiff/agents' words as recorded.
+    for (const [answer] of answers) {
+      const recorded = answer.startsWith("already") ? "Approve · already approved" : "as kiff/agents recorded it";
+      const run = await w.agents.api.startRun("t_acme", RAE, "Connect Stripe", ANA);
+      w.agents.show(run, { type: "approval", id: `connect${runs.length}` });
+      const list = w.agents.events.get(run.session)!;
+      list.push({ session: run.session, run: run.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: `connect${runs.length}`, type: "approval", answer, words: recorded } });
+      runs.push(run.id);
+    }
+    const read = async (lang?: string) => {
+      const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", ...(lang ? { headers: { "Accept-Language": lang } } : {}) });
+      const cards = (r.body.items as Array<{ type: string; card?: { run: string; answer?: { words: string } } }>).filter((i) => i.type === "card").map((i) => i.card!);
+      return runs.map((id) => cards.find((c) => c.run === id)?.answer?.words);
+    };
+    expect(await read("pl-PL")).toEqual(answers.map(([, want]) => want));
+    // English reads as kiff/agents' words always read: tafs cloud's English is the same.
+    expect(await read()).toEqual(["Approved", "Declined", "Approve · it didn't go through: Nic nie zostało połączone.", "Approve · already approved"]);
+  });
+
   it("shows each card's answer in the conversation: chosen, written instead, or none", async () => {
     const w = world();
     const run = await waiting(w);

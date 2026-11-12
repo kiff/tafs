@@ -73,6 +73,8 @@ describe("Activity pages from the source", () => {
     expect(entry.call).toBe(original); expect(original.tool_outcome.status).toBe("refused_by_tool"); expect(original.held).toBe(true);
     const detail = "Not sent: the connection refused it. It still counts toward today's limits.";
     expect(activityEntry({ ...original, detail }, "UTC", now).detail).toBe(detail);
+    // A bare code from KIFF is never the line: a raw lowercase "cancelled" read as broken.
+    expect(activityEntry({ ...original, detail: "cancelled" }, "UTC", now).detail).toBe(entry.detail);
     // An app's words are its own, quoted: never read as the connection's, nor as nothing done (gap 10).
     const vendor = { ...original, tool_outcome: { status: "refused_by_tool", code: "halt_unknown", message: "Refused by planque: nothing was sent" } };
     expect(activityEntry(vendor, "UTC", now).detail).toBe(`The app refused it: "Refused by planque: nothing was sent"`);
@@ -282,6 +284,29 @@ describe("Activity in the person's language", () => {
 });
 
 describe("recent work pages", () => {
+  // A Run now whose check couldn't read starts no run: Its runs says so.
+  it("says, on the first page of its runs, a firing that started no run, a Run now's included", async () => {
+    const id = "taf-01234567890123456789";
+    const deps = { now: () => now,
+      tafs: { get: async () => ({ id, name: "Example", job: "refunds", kiffAgent: "agent-example" }) },
+      agents: {
+        runs: async () => [],
+        scheduleFirings: async () => [{ due: new Date(now.getTime() - 60_000).toISOString(), outcome: "failed_check" }, { due: new Date(now.getTime() - 120_000).toISOString(), outcome: "run" }],
+      },
+      fetch: (async (url: string | URL | Request) => {
+        const path = new URL(String(url)).pathname;
+        if (path === "/v1/me") return new Response(JSON.stringify({ tenant_id: "account-example", subject: "person-example", api_key: false, capabilities: ["read"] }));
+        if (path === "/v1/me/access") return new Response(JSON.stringify({ agents: { "agent-example": { use: true } } }));
+        throw new Error("unexpected request");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const event: HTTPEvent = { rawPath: `/v1/tafs/${id}/work/runs`, headers: { authorization: "Bearer synthetic-session" }, requestContext: { http: { method: "GET" } } };
+    const page = JSON.parse((await handle(event, deps)).body);
+    expect(page.skipped).toHaveLength(1);
+    expect(page.skipped[0]).toMatchObject({ why: "check_failed" });
+    expect(page.skipped[0].words).toMatch(/check/i);
+  });
+
   it("pages the retained runs without repeats when a newer run arrives and excludes another member's work", async () => {
     const id = "taf-01234567890123456789";
     const runs = Array.from({ length: 60 }, (_, i) => ({ id: `run-${i}`, session: `session-${i}`, status: "COMPLETED", created: new Date(now.getTime() - i * 1000).toISOString(), updated: now.toISOString(), requester: { kind: "member", id: "person-example" } }));
@@ -298,6 +323,10 @@ describe("recent work pages", () => {
     } as unknown as Deps;
     const event: HTTPEvent = { rawPath: `/v1/tafs/${id}/work/runs`, headers: { authorization: "Bearer synthetic-session" }, requestContext: { http: { method: "GET" } } };
     const first = await handle(event, deps); expect(first.statusCode).toBe(200);
+    // Titled as its runs, never as the work panel above it ("Its work"): the two read apart on both apps.
+    expect(JSON.parse(first.body)).toMatchObject({ title: "Its runs", more_title: "Show all runs" });
+    const fr = await handle({ ...event, headers: { ...event.headers, "accept-language": "fr-FR" } }, deps);
+    expect(JSON.parse(fr.body)).toMatchObject({ title: "Ses exécutions", more_title: "Voir toutes les exécutions" });
     const one = JSON.parse(first.body); expect(one.requests).toHaveLength(20); expect(one.requests[0].id).toBe("run-0");
     runs.unshift({ ...runs[0]!, id: "new-run", created: new Date(now.getTime() + 1000).toISOString(), requester: { kind: "member", id: "person-example" } });
     const two = JSON.parse((await handle({ ...event, rawQueryString: `cursor=${encodeURIComponent(one.next_cursor)}` }, deps)).body);

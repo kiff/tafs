@@ -54,7 +54,8 @@ tafs cloud stores one agent definition per taf in kiff/agents
   model's short progress notes stream to the owner on the live line while it works
   (`thinking: "updates"`, docs/chat.md); its reasoning never does.
 - **Instructions:** the shared tafs instructions, the job's, the owner's notes, how its
-  notes work, how it makes a call under its Card (one request is one call, never split
+  notes work, that a run works from the items its check handed it (never paging the whole list
+  again), how it makes a call under its Card (one request is one call, never split
   to stay under a limit; a money call that doesn't name its customer carries who it's
   for in a field the customer doesn't see, such as metadata, so the hold says it), and two sections of KIFF's `kiff` skill ("Rules that always apply" and
   "Handle a KIFF result"). The skill is vendored at one commit; moving it is in the
@@ -102,6 +103,11 @@ the account's other agents with Cards (made through KIFF's API, not run by tafs)
 apart. tafs cloud builds it from its records and KIFF's Cards and held calls, read with
 the owner's session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists
 only what KIFF says the person may use or oversee.
+
+A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
+the most of its limit first (its money total or its calls, whichever is further along), then
+KIFF's order: the Card in front is the one at work, never an unused one at 200 of 200 while
+another is half used. The apps keep this order.
 
 Each taf's `job_summary` is what Coach said it does, one line in the owner's language, kept
 from Coach's result (`summary`); a taf from before, or one Coach didn't make, shows its job's
@@ -206,14 +212,32 @@ On Android the page is `views/TafDetailView.kt`, with the same tabs and parts
 (`RunsPanel`, `RunReportPanel`, `MemoryPanel`), and no second column yet. Revoke asks KIFF
 to revoke each of the taf's Cards (`POST /v1/me/mandates/{id}/revoke`, unsigned, since it
 takes authority away) and shows the taf stopped only once KIFF has. Remove for good takes
-one confirmation, revokes its Cards, then asks tafs cloud to remove the rest
-(`DELETE /v1/tafs/{id}`). A removal left half way is finished on the next refresh, from
-the home list's `removing`.
+one confirmation and a fingerprint, every time, before anything is undone. The dialog removes
+the taf it named when it opened, by its id. It closes, removing nothing, if a refresh changes
+Home's list under it, and its button takes a tap only once it has been up half a second
+(`REMOVE_CONFIRM_DELAY_MS`). The approval key signs the DELETE itself (`kiff.request.v1` over
+`DELETE /v1/tafs/{id}` and its empty body, sent as `KIFF-Device-Signature`); a phone with no
+fingerprint set up can't remove a taf, even a debug build with no screen lock (`signCritical`).
+Then the app revokes its Cards and asks tafs cloud to remove the rest. tafs cloud asks KIFF
+whether this phone's approval key signed it. A removal left half way is finished on the next
+refresh, from the home list's `removing`, unsigned: tafs cloud takes that only for a taf it lists
+as removing. On a tablet with no taf picked, the pane beside the list stays on the taf being
+removed, rather than following the list's first.
+
+On iPhone and iPad, Remove for good signs the same DELETE with the approval key, behind Face ID
+or Touch ID each time, as a drive's start is (`AppModel.removeTaf`): `kiff.request.v1` over
+`DELETE /v1/tafs/{id}` and its empty body, in `KIFF-Device-Signature`, signed before its Cards
+are revoked and its connections ended. Without that face or finger, nothing is revoked or sent.
+A removal left half way is finished on the next refresh, unsigned, as on Android.
 
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
 Doors tab (on Android, none of Setup's changes), or line saying who it's shared with. For whoever manages it, that line has a
-**Share** button with the system's share mark, beside who uses the taf. On its Cards, "Issued by" names who
+**Share** button with the system's share mark, beside who uses the taf. KIFF's default group, which KIFF
+keeps as "Everyone", is named in the person's language wherever a group shows (`people.everyone_group`),
+with its own sentences where a language inflects it ("Shared with everyone", `people.shared_with_everyone`;
+"Everyone uses {taf}", `people.everyone_uses`); `Group.shownName` in both apps. It has everyone on the
+account in it, so People offers no Add to it and no Remove from it. On its Cards, "Issued by" names who
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer` on iOS, `AppState.issuer` on Android).
 
@@ -234,7 +258,10 @@ row.
 
 A taf keeps notes in kiff/agents through its memory tool, shared by its runs and chats.
 It reads them before it starts and writes down what it learns about the owner and their
-customers. Notes shape how it works; they never change what its Card allows.
+customers. Notes shape how it works; they never change what its Card allows. They hold
+lasting facts only, never a run's working state: no list cursors, page tokens, ids to
+resume from, progress or scratch. Its check keeps where the work stands, and the owner
+reads every note in What it remembers.
 
 - `GET /v1/tafs/{id}/memory` shows the shared notes and the person's own, never another
   person's.

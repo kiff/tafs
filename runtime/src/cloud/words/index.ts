@@ -49,6 +49,20 @@ export function plural(lang: Lang, n: number): Intl.LDMLPluralRule {
   return new Intl.PluralRules(lang).select(n);
 }
 
+/**
+ * How often, in the person's language: a whole number of hours as hours ("Every 4 hours", "Every hour"), anything
+ * else in minutes ("Every 15 minutes"). Never "Every 240 minutes".
+ */
+export function everyWords(lang: Lang, minutes: number): string {
+  const w = wordsIn(lang);
+  return minutes >= 60 && minutes % 60 === 0 ? w.dial_every_hours(minutes / 60, plural(lang, minutes / 60)) : w.dial_every_minutes(minutes);
+}
+
+/** A phrase that opens a line, as it reads inside one ("Every 4 hours" → "every 4 hours"). */
+export function midLine(phrase: string): string {
+  return phrase.charAt(0).toLocaleLowerCase() + phrase.slice(1);
+}
+
 /** Each language's name in English, for the lines Coach and the tafs read (they're written in English, as their instructions). */
 export const LANGUAGE_NAMES: Record<Lang, string> = {
   en: "English", de: "German", fr: "French", es: "Spanish", it: "Italian", pt: "European Portuguese", nl: "Dutch", pl: "Polish",
@@ -64,7 +78,30 @@ export const LANGUAGE_LINE = "[tafs language]";
  */
 export function withLanguage(text: string, lang: Lang): string {
   if (lang === "en") return text;
-  const line = `${LANGUAGE_LINE} The person writing reads ${LANGUAGE_NAMES[lang]} (${lang}), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`;
+  return withLine(text, `${LANGUAGE_LINE} The person writing reads ${LANGUAGE_NAMES[lang]} (${lang}), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`);
+}
+
+/** The line tafs cloud opens a Coach message with for an account outside UTC. */
+export const ZONE_LINE = "[tafs time zone]";
+
+/**
+ * A Coach message with the account's time zone said, when it isn't UTC: kiff/agents' date line is in UTC, and
+ * a taf's cron and times are in the account's zone, so Coach writes the hour the owner said, never one
+ * converted to UTC (a 09:00 drafted as "0 8 * * 1"). Placed as the language line is.
+ */
+export function withZone(text: string, zone: string | undefined, now: Date): string {
+  if (!zone || zone === "UTC") return text;
+  let local: string;
+  try {
+    local = new Intl.DateTimeFormat("en-GB", { timeZone: zone, weekday: "long", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(now);
+  } catch {
+    return text;
+  }
+  return withLine(text, `${ZONE_LINE} The account's time zone is ${zone}: it's ${local} there now. Every time you write or say (a cron, an at, a time in a message) is in it, as the owner says it: never convert it to UTC.`);
+}
+
+/** A line of tafs' own before the owner's words, after any opening lines, so what reads a message's opening reads it as before. */
+function withLine(text: string, line: string): string {
   // A door's knock quotes the message after the owner's words: the line goes last, out of the quote.
   if (text.startsWith("[door knock ")) return `${text}\n\n${line}`;
   const at = text.lastIndexOf("\nThe owner says: ");

@@ -152,7 +152,10 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.");
     expect(flat).toContain("never turn an AI cost into credits or euros");
     expect(flat).toContain("a run that failed on our side, aren't counted. A run whose call KIFF refused still used its AI, so it counts");
-    expect(flat).toContain("Today they're bought in the tafs app on Android; on iPhone and iPad, not yet");
+    // Both stores sell packs once Solo runs; the First month pack is on Google Play only.
+    expect(flat).toContain("They're bought in the tafs app, through Google Play or the App Store, once Solo runs");
+    expect(flat).toContain("The First month pack is bought once per account, on Google Play only");
+    expect(flat).not.toContain("on iPhone and iPad, not yet");
     expect(flat).toContain("Never buy, request or approve a plan, a pack or a raise");
     // Nothing from before credits: no tasks, no free week.
     expect(flat).not.toMatch(/free week|a task is an action/);

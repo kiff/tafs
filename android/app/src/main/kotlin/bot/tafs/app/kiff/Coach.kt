@@ -66,6 +66,11 @@ data class SetupComponent(
   val id: String,
   /** Who the run waits on with this card, as kiff/agents marks it (kiff/tafs#568): `owner` or `service`; none when it goes on past it. */
   val waits: String? = null,
+  /**
+   * A run that read page after page of one list (kiff/agents' `confirm` with id `tafs-loop-N`): `{tool, pages}`. Its words are tafs
+   * cloud's ("Still reading", Read on / Stop here); the app only knows it's the card a taf's chat draws.
+   */
+  val loop: kotlinx.serialization.json.JsonElement? = null,
   val title: String? = null,
   val text: String? = null,
   /** info, success, warning or error. */
@@ -351,7 +356,13 @@ data class TafHealth(
 data class HealthFix(val line: Int, val kind: String, val words: String = "", val say: String? = null)
 
 @Serializable
-data class WorkSummary(val status: String = "idle", val line: String = "", @SerialName("needs_you") val needsYou: Int = 0)
+data class WorkSummary(
+  val status: String = "idle",
+  val line: String = "",
+  @SerialName("needs_you") val needsYou: Int = 0,
+  /** Something went wrong first (a failed check, an unhealthy taf, a run stopped or failed): [line] says what, in place of "Working". */
+  val attention: Boolean = false,
+)
 
 /** One request: done, working, retrying, needs_you, waiting, stopped or failed, in tafs cloud's words, with where it went. */
 @Serializable

@@ -62,7 +62,9 @@ one of the owner's languages, a switch before the mic shows the one in use ("FR"
 goes to the next, and while dictating, listening starts again in it after what was heard.
 The owner's languages are their keyboards', then the phone's, among those its recognizer has
 on the phone (`SpeechLanguage.owners`, Android 13 and later), and the one chosen is kept for
-next time.
+next time. On iPhone and iPad, until the owner switches, dictation starts in the app's
+language when the device has it (`Dictation.starting`), so a French iPad whose first keyboard
+is English starts in French.
 
 The recognizer's models are per variant, so a phone set to English in France (`en-FR`)
 dictates in a variant of its language (`SpeechLanguage.choose`, from Android 13
@@ -103,8 +105,13 @@ never reach the phone.
 What a step says comes from tafs cloud, never the tool's name (`steps.ts`): for a tool
 through KIFF, KIFF's title for it on the taf's Cards (`grants[].title`, read as the person
 and kept a minute); for Coach's and the agents' own tools, what they do ("Drafting the
-Card…", "Showing you a card…"). A tool nothing names has no words, and the app shows the
-step without them.
+Card…", "Showing you a card…"), in the person's language (`Accept-Language`), so a Polish chat
+reads "Przygotowuję Card…". KIFF's title stays the vendor's own words. A tool nothing names has
+no words, and the app shows the step without them.
+
+A sign-in card's buttons are the app's chrome: tafs cloud writes `yes` and `no` in the app's
+language ("Se connecter", "Pas maintenant"), whatever language Coach wrote the card in. Its
+`title`, `text` and `note` are Coach's message, as written.
 
 ### The work block
 
@@ -368,7 +375,17 @@ that read only those. A job run's report may carry `delivered`, tafs
 cloud's one line on where its result went; Android draws it above the taf's words, as written
 (`ChatMessage.delivered`), and nothing where none comes.
 
-- A job run's first message is the job's instruction, shown as a small note.
+- A job run's first message is the job's instruction, shown as a small note. When its schedule's check handed it
+  items, the note says how many after the instruction ("Its check found 2 new items.", `checkStart`), never the
+  items themselves: they're the app's data, kept whole in the run's input for the taf, not the owner's words.
+- **The loop card**, kiff/agents' `confirm` with id `tafs-loop-N` and `loop: {tool, pages}`, shown when a run read
+  page after page of one list, comes in tafs cloud's words in the person's language: "Still reading", the read by
+  its KIFF title (else "the same list", never its tool name), and **Read on** / **Stop here**, whose values stay
+  `tafs_loop_continue` and `tafs_loop_summarise` (`loopCardWords`).
+  The run waits on it in the taf's own chat. Android draws it there as Coach's confirm card, with tafs cloud's
+  words as sent (`isTafCard`: a `confirm` that carries `loop`; any other card but `ask_coach` stays Coach's), and the
+  answer goes to the taf's route, `POST /v1/tafs/{id}/components/{component}/answer` with the card's own chat
+  (`AppModel.answerTafCard`). The run that goes on is followed as after any card. iOS follows in its batch after 1.0.
 - A message that came through a door shows with its door and sender ([doors.md](doors.md)).
 - `GET /v1/tafs/{id}/chats` lists the person's chats, newest first, each named by the
   start of what they asked. One tap reopens a chat.

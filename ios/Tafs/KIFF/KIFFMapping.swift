@@ -119,7 +119,10 @@ enum KIFFMapping {
         // A taf with no schedule isn't at work until it's told something in its chat
         // (kiff/tafs#138, item 55): it reads as ready, not running.
         case "working" where h.unscheduled == true: taf.state = .idle; taf.now = Words.Taf.Now.worksFromChat
-        case "working": taf.state = .working; taf.now = h.nextRun.map { Words.Taf.Now.nextRun(time: "\($0.shortTime)") } ?? Words.Taf.Now.running
+        // tafs cloud's words when it sent them ("Next run Mon 08:00", with the day): a bare time read
+        // as tomorrow. The app's own only from a tafs cloud that sends none.
+        case "working": taf.state = .working
+            taf.now = h.nextRunWords ?? h.nextRun.map { Words.Taf.Now.nextRun(time: "\($0.shortTime)") } ?? Words.Taf.Now.running
         case "idle": taf.state = .idle; taf.now = Words.Taf.Now.actingUnderKiff
         default: taf.state = .revoked; taf.now = Words.Taf.Now.cardNotActive
         }
@@ -139,9 +142,12 @@ enum KIFFMapping {
         taf.doors = h.doors
         taf.avatarRim = h.avatarRim
         taf.health = h.health
-        if let work = h.work, work.status == "idle", h.health?.needsAttention == true,
+        // What went wrong last, before its next run: tafs cloud flags it (`attention`), and an idle
+        // taf that isn't healthy says it too.
+        if let work = h.work, work.attention || (work.status == "idle" && h.health?.needsAttention == true),
            !work.line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             taf.healthNow = work.line
+            taf.attention = work.attention
         }
         taf.used = h.card.used.compactMapValues { amount($0) }
         taf.usageUnknown = Set(h.card.usageUnknown)

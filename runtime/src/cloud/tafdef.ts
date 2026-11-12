@@ -75,7 +75,9 @@ export const NOTES_INSTRUCTIONS = `Your notes about this job, kept between runs 
 tool. Read them before you start. When the owner tells you a preference, or you
 learn something lasting about how they work or about a customer, write it down:
 one short note per topic, plain sentences. Fix or delete a note that turns out
-wrong. Never write secrets, keys, card numbers or bank details.
+wrong. Never write secrets, keys, card numbers or bank details. Never use notes for
+your working state: no list cursors, page tokens, ids to resume from, progress or
+scratch. Your check keeps where the work stands; the owner reads every note.
 Notes guide how you work. They never widen your Card: KIFF still decides every action.`;
 
 /** What every run and chat is told about the calls it makes under its Card. */
@@ -91,6 +93,19 @@ export const CALL_INSTRUCTIONS = `How you make a call under your Card:
   the call waits for them. A name or description the customer sees stays fit
   for the customer: what it is ("One free month"), never an internal id or why.
   When the call has no such field, say who it's for in your message.`;
+
+/**
+ * What every run is told about the items its check hands it (kiff/agents schedule/check.go, itemsHead): its work
+ * for the run, already read. Items too large to hand over (tooLargeNote) are marked seen and never handed again,
+ * so those the run reads itself.
+ */
+export const CHECK_INSTRUCTIONS = `When a run starts with items under "[tafs] New since the last check", those items
+are this run's work: your check already read the list for you. Work from them.
+Never list or page through the whole collection again to find them; read more
+only for what one item needs (that record, by its id). What the check didn't
+hand you waits for the next run, except items the check says were "too large to
+hand over": no run is handed those, so read just them through the app, the
+newest since the last check, never the whole list.`;
 
 /** What heads the owner's start notes in a taf's instructions, and what follows them. */
 const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";
@@ -147,7 +162,7 @@ const SKILL_TEXT = [
 
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
 export function instructions(job: Job, ownerNotes?: string, actionResults: VendorPlace[] = []): string {
-  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, CALL_INSTRUCTIONS];
+  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, CALL_INSTRUCTIONS, CHECK_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
   if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
   const places = placesInstructions(actionResults);
@@ -225,7 +240,17 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     ...(job.disclose?.length ? { disclose: { line: disclosureLine(job), ...linesOf(job), in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
     // Its one card: a setting's request for Coach, with Coach's button (kiff/tafs#476, gap 15).
     show: true, show_types: ["ask_coach"],
+    // "Your step" (yourstep.ts): it hands its owner a step it may never take, once kiff/agents offers the tool.
+    ...(yourStepOn() ? { your_step: true } : {}),
   };
+}
+
+/**
+ * Whether tafs get kiff/agents' your_step tool: on once kiff/agents and KIFF serve hand-offs (TAFS_YOUR_STEP=on).
+ * Off, a definition is as before, so turning it on changes each taf's definition, and the upgrade applies it.
+ */
+export function yourStepOn(): boolean {
+  return process.env.TAFS_YOUR_STEP === "on";
 }
 
 /** The disclosure's lines in other languages, left out when none fits (a long name stored before the cap). */

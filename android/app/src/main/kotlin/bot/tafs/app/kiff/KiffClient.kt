@@ -405,6 +405,23 @@ class KiffClient(
     }
   }
 
+  /** A step a taf handed its owner, as KIFF keeps it: its version is what the phone signs. */
+  suspend fun handoff(id: String): Handoff = call("GET", "/v1/me/handoffs/${escaped(id)}")
+
+  /**
+   * Answers a step a taf handed its owner: "done" or "skipped", signed over `kiff.handoff.v1`. KIFF counts it only once it verifies
+   * [signature] against this phone's key, then tells the taf's run.
+   */
+  suspend fun answerHandoff(id: String, answer: String, signature: AnswerSignature) {
+    sendJson("POST", "/v1/me/handoffs/${escaped(id)}/answer", buildJsonObject {
+      put("answer", answer)
+      put("signature", buildJsonObject {
+        put("signed_at", signature.signedAt)
+        put("value", signature.value)
+      })
+    })
+  }
+
   /** Approves a held call once. KIFF counts it only once it verifies [signature] against this phone's key. */
   suspend fun approveOnce(id: String, signature: AnswerSignature? = null) {
     sendJson("POST", "/v1/me/card-exceptions/${escaped(id)}/approve-once", answerBody(null, signature))
@@ -836,6 +853,13 @@ class KiffClient(
      */
     fun relinkMessage(tenant: String, deviceKey: ByteArray, approvalKey: ByteArray, signedAt: String): ByteArray =
       listOf("kiff.approval-key-relink.v1", tenant, sha256Hex(deviceKey), sha256Hex(approvalKey), signedAt).joinToString("\n").toByteArray()
+
+    /**
+     * What the phone signs to answer a step a taf handed its owner: KIFF's `kiff.handoff.v1`, one field per line. Its first line
+     * differs from a hold's, so one answer never stands for the other.
+     */
+    fun handoffMessage(tenant: String, handoff: String, answer: String, version: Int, signedAt: String): ByteArray =
+      listOf("kiff.handoff.v1", tenant, handoff, answer, version.toString(), signedAt).joinToString("\n").toByteArray()
 
     /** What the phone signs to answer a held call: KIFF's signed answer message, `kiff.answer.v1`, one field per line. */
     fun answerMessage(

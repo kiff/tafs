@@ -68,9 +68,12 @@ extension TafsCloud {
             var status = "idle"
             var line = ""
             var needsYou = 0
-            enum CodingKeys: String, CodingKey { case status, line, needsYou = "needs_you" }
-            init(status: String = "idle", line: String = "", needsYou: Int = 0) {
-                self.status = status; self.line = line; self.needsYou = needsYou
+            /// What went wrong last (a check that couldn't read, its health, a run stopped at a
+            /// cap or failed), said before its next run: drawn in place of "Working" (docs/reliability.md).
+            var attention = false
+            enum CodingKeys: String, CodingKey { case status, line, needsYou = "needs_you", attention }
+            init(status: String = "idle", line: String = "", needsYou: Int = 0, attention: Bool = false) {
+                self.status = status; self.line = line; self.needsYou = needsYou; self.attention = attention
             }
             /// Never fails the read it's on: one that isn't an object reads as nothing to say.
             init(from decoder: Decoder) throws {
@@ -78,6 +81,7 @@ extension TafsCloud {
                 status = (try? c.decode(String.self, forKey: .status)) ?? "idle"
                 line = (try? c.decode(String.self, forKey: .line)) ?? ""
                 needsYou = (try? c.decode(Int.self, forKey: .needsYou)) ?? 0
+                attention = (try? c.decode(Bool.self, forKey: .attention)) ?? false
             }
         }
 
@@ -89,9 +93,11 @@ extension TafsCloud {
             var state = ""
             var line = ""
             var deliveries: [Delivery] = []
-            enum CodingKeys: String, CodingKey { case id, at, state, line, deliveries }
-            init(id: String, at: Date, state: String = "", line: String = "", deliveries: [Delivery] = []) {
-                self.id = id; self.at = at; self.state = state; self.line = line; self.deliveries = deliveries
+            /// A step the taf handed its owner, which this request waits on: its line is the step's.
+            var yourStep: YourStep? = nil
+            enum CodingKeys: String, CodingKey { case id, at, state, line, deliveries, yourStep = "your_step" }
+            init(id: String, at: Date, state: String = "", line: String = "", deliveries: [Delivery] = [], yourStep: YourStep? = nil) {
+                self.id = id; self.at = at; self.state = state; self.line = line; self.deliveries = deliveries; self.yourStep = yourStep
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -100,6 +106,7 @@ extension TafsCloud {
                 state = (try? c.decode(String.self, forKey: .state)) ?? ""
                 line = (try? c.decode(String.self, forKey: .line)) ?? ""
                 deliveries = (try? c.decode([Delivery].self, forKey: .deliveries)) ?? []
+                yourStep = try? c.decodeIfPresent(YourStep.self, forKey: .yourStep)
             }
         }
 

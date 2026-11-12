@@ -49,6 +49,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
    * an outcome (`skipped_halted`…), or `failed_check` with the read's reason (a 409).
    */
   const outcomes = new Map<string, { outcome: string; reason?: string }>();
+  /** A kiff/agents from before a result's `check`: it refuses the field, as its strict decoder does. */
+  const old = { rejectCheck: false };
   /** Accounts whose tafs wait for credits: every run they start is refused with this code, as kiff/agents does on KIFF's word. */
   const credits = new Map<string, string>();
   /** What a streamed run's agent does, in order: kiff/agents' stream events, or an Error that breaks it. */
@@ -270,6 +272,12 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!agents.has(k(tenant, agent))) throw gone();
       const ended = (st: string) => st === "COMPLETED" || st === "ERROR" || st === "CANCELLED";
       return runs.filter((r) => r.tenant === tenant && r.agent === agent && !(active && ended(r.status))).slice(0, limit).map((r) => ({ ...r }));
+    },
+    async pausedRuns(tenant, tool, limit = 100) {
+      calls.push(`pausedRuns ${tenant}${tool ? ` ${tool}` : ""}`);
+      failing("pausedRuns");
+      return runs.filter((r) => r.tenant === tenant && r.status === "PAUSED" && (!tool || (r.requirements ?? []).some((q) => q.tool === tool)))
+        .slice(0, limit).map((r) => ({ ...r }));
     },
     async trial(tenant, id, run) {
       const r = runs.find((x) => x.tenant === tenant && x.agent === id && x.id === run && x.trigger === "trial");
@@ -572,12 +580,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     async answerResult(tenant, agent, id, card, outcome) {
       calls.push(`answerResult ${agent} ${id} ${card} ${JSON.stringify(outcome)}`);
       failing("answerResult");
+      if (old.rejectCheck && "taf_id" in outcome && "check" in outcome) throw new AgentsError(400, "a result's answer is {\"taf_id\": \"…\"}, {\"version\": n} or {\"failed\": \"<why>\"}");
       const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
       const q = r?.status === "PAUSED" ? (r.requirements ?? []).find((x) => x.kind === "card" && !x.answered && (x.input as { id?: string; type?: string })?.id === card && (x.input as { type?: string }).type === "result") : undefined;
       if (!r || !q) throw new AgentsError(409, "no card of this run waits for an answer by that id", undefined, "card_not_waiting");
       q.answered = now().toISOString();
       q.result = { answer: outcome, answered_by: "tafs cloud" };
-      const words = "taf_id" in outcome ? "Refunds is set up" : "version" in outcome ? `Version ${outcome.version} is ready to try` : `It didn't go through: ${outcome.failed}`;
+      const words = "taf_id" in outcome ? (outcome.check ? `Refunds is set up, but its first check couldn't read its work: ${outcome.check}` : "Refunds is set up") : "version" in outcome ? `Version ${outcome.version} is ready to try` : `It didn't go through: ${outcome.failed}`;
       const list = events.get(r.session) ?? [];
       list.push({ session: r.session, run: r.id, seq: list.length + 1, time: now().toISOString(), kind: "answered", body: { id: card, type: "result", answer: outcome, words, answered_by: "tafs cloud" } });
       events.set(r.session, list);
@@ -646,7 +655,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

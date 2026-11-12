@@ -7,9 +7,11 @@ import Foundation
 /// unlocked. It never fails silently: it says what happened, and when it can't finish it
 /// says why and opens tafs on Halt all (iOS 17 and later; before, Siri says to open it).
 struct HaltAllTafsIntent: AppIntent {
-    // The words are the catalog's (app/strings `siri.halt_all.*`), in the phone's language.
-    static let title = LocalizedStringResource("siri.halt_all.title")
-    static let description = IntentDescription(LocalizedStringResource("siri.halt_all.description"))
+    // The words are the catalog's (app/strings `halt_all.*`), in the phone's language. Apple reads an
+    // intent's keys as its words when it processes a build, and refuses a build whose title or
+    // description contains "siri" (90626), so no key here does (`test_strings`).
+    static let title = LocalizedStringResource("halt_all.title")
+    static let description = IntentDescription(LocalizedStringResource("halt_all.description"))
     static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
     static let openAppWhenRun = false
 
@@ -73,11 +75,11 @@ enum HaltAll {
     }
 
     static func run(cloud: TafsCloud?, wait: () async -> Void = { try? await Task.sleep(nanoseconds: 1_000_000_000) }) async -> Outcome {
-        guard let cloud else { return .needsApp(Words.Siri.HaltAll.signedOut) }
+        guard let cloud else { return .needsApp(Words.HaltAll.signedOut) }
         let count = try? await cloud.tafs().count
         var h: TafsCloud.Halt
         do { h = try await cloud.halt(nil) } catch {
-            return .needsApp(Words.Siri.HaltAll.failed(why: error.localizedDescription))
+            return .needsApp(Words.HaltAll.failed(why: error.localizedDescription))
         }
         // KIFF's gateway and planque confirm in a moment: it says halted once they have.
         var tries = 0
@@ -91,9 +93,9 @@ enum HaltAll {
 
     static func said(_ h: TafsCloud.Halt, count: Int?) -> Outcome {
         switch h.state {
-        case .halted: return .done(count.map { Words.Siri.HaltAll.halted(count: $0) } ?? Words.Siri.HaltAll.haltedAll)
-        case .halting: return .done(count.map { Words.Siri.HaltAll.halting(count: $0) } ?? Words.Siri.HaltAll.haltingAll)
-        case .running: return .needsApp(Words.Siri.HaltAll.running)
+        case .halted: return .done(count.map { Words.HaltAll.halted(count: $0) } ?? Words.HaltAll.haltedAll)
+        case .halting: return .done(count.map { Words.HaltAll.halting(count: $0) } ?? Words.HaltAll.haltingAll)
+        case .running: return .needsApp(Words.HaltAll.running)
         }
     }
 }

@@ -76,7 +76,7 @@
     <string name="approval_kept">It\'s kept in Needs you.</string>
     <string name="approval_key_could_not_sign">The key could not sign</string>
     <string name="approval_key_gone_approve_again">Your fingerprints changed, or none was recognized, so this phone can\'t approve until you approve it again in your browser.</string>
-    <string name="approval_key_gone_face_id">Your Face ID or fingerprints changed, or weren\'t recognized, so this phone can\'t approve until you approve it again in your browser.</string>
+    <string name="approval_key_gone_biometry">Your %1$s changed or wasn\'t recognized, so this device can\'t approve until you approve it again in your browser.</string>
     <string name="approval_key_gone_sign_in">Your fingerprints changed, or none was recognized, so this phone can\'t approve until you sign in again.</string>
     <string name="approval_key_lost">Sign in with KIFF again to approve from this phone.</string>
     <string name="approval_locked_after_too_many_tries">%1$s is locked after too many tries. Lock this %2$s, unlock it with its passcode, then check again.</string>
@@ -86,7 +86,7 @@
     <string name="approval_no_key">No key to sign with</string>
     <string name="approval_not_confirmed">Not confirmed</string>
     <string name="approval_not_recognized">Try again, or sign in again if your fingerprints changed.</string>
-    <string name="approval_not_recognized_face_id">Try again, or sign in again if your Face ID or fingerprints changed.</string>
+    <string name="approval_not_recognized_biometry">Try again, or sign in again if your %1$s changed.</string>
     <string name="approval_nothing_approved_request_kept_approve">Nothing was approved. The request is kept: approve again when you\'re ready.</string>
     <string name="approval_open_settings">Open settings</string>
     <string name="approval_prompt_approve_on_kiff">Approve on KIFF</string>
@@ -863,8 +863,10 @@
     <string name="connect_profile_words_not_read">KIFF\'s words for this connection couldn\'t be read. %1$s</string>
     <string name="connect_profile_words_unread">KIFF\'s words for this connection aren\'t read yet. Nothing was approved.</string>
     <string name="connect_prompt_connect">Connect %1$s to %2$s</string>
+    <string name="connect_prompt_connect_app">Connect %1$s</string>
     <string name="connect_prompt_give_card">Give %1$s its Card</string>
     <string name="connect_prompt_give_key">Give %1$s its key for %2$s</string>
+    <string name="connect_prompt_give_key_app">Give %1$s its key</string>
     <string name="connect_prompt_keep_sealed">Keep your apps\' sign-ins sealed</string>
     <string name="connect_reading_asks">Reading what it asks for…</string>
     <string name="connect_reading_request">Reading the request…</string>
@@ -1129,6 +1131,21 @@
     <string name="halt_now">Halt now</string>
     <string name="halt_row_running">Stop it until you resume</string>
     <string name="halt_your_tafs_lower">your tafs</string>
+    <string name="halt_all_description">Stops every taf at once. Nothing new is sent until you resume them in tafs.</string>
+    <string name="halt_all_failed">tafs couldn\'t halt your tafs. %1$s Open tafs to halt them.</string>
+    <plurals name="halt_all_halted">
+        <item quantity="one">Halted %1$s taf. Nothing new is sent until you resume.</item>
+        <item quantity="other">Halted %1$s tafs. Nothing new is sent until you resume.</item>
+    </plurals>
+    <string name="halt_all_halted_all">Halted your tafs. Nothing new is sent until you resume.</string>
+    <plurals name="halt_all_halting">
+        <item quantity="one">Halting %1$s taf: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
+        <item quantity="other">Halting %1$s tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
+    </plurals>
+    <string name="halt_all_halting_all">Halting your tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</string>
+    <string name="halt_all_running">tafs couldn\'t halt your tafs. Open tafs to halt them.</string>
+    <string name="halt_all_signed_out">You\'re signed out of tafs. Sign in to halt your tafs.</string>
+    <string name="halt_all_title">Halt all tafs</string>
     <string name="home_calendar_not_read">The calendar couldn\'t be read. %1$s</string>
     <string name="home_cant_reach_kiff">Can\'t reach KIFF</string>
     <string name="home_choose_taf">Choose a taf.</string>
@@ -1301,6 +1318,9 @@
     <string name="needs_you_unsure_coach_not_opened">Coach couldn\'t open on it. %1$s</string>
     <string name="needs_you_waiting_for_browser">Waiting for your browser…</string>
     <string name="needs_you_when_taf_asks_something_outside">When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this %1$s and its lock screen, even with tafs closed.</string>
+    <string name="needs_you_your_step_ended">This step was already answered or has ended.</string>
+    <string name="needs_you_your_step_not_answered">Your answer didn\'t go through. %1$s</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Not answered: it wasn\'t confirmed.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nothing yet</string>
     <string name="people_account_people">THE ACCOUNT\'S PEOPLE</string>
@@ -1323,7 +1343,9 @@
     <string name="people_delete_group_button">Delete %1$s</string>
     <string name="people_delete_group_title">Delete %1$s?</string>
     <string name="people_delete_this_group_title">Delete this group?</string>
-    <string name="people_everyone_in">Everyone on the account is in %1$s. Invite people from the KIFF dashboard.</string>
+    <string name="people_everyone_group">Everyone</string>
+    <string name="people_everyone_in">Everyone on the account is here. Invite people from the KIFF dashboard.</string>
+    <string name="people_everyone_uses">Everyone uses %1$s: %2$s.</string>
     <string name="people_everyone_uses_none">Everyone on the account · uses no taf</string>
     <string name="people_group_actions">%1$s actions</string>
     <string name="people_group_name_hint">Support, Finance…</string>
@@ -1373,6 +1395,7 @@
     <string name="people_share_who_gets">Who gets %1$s</string>
     <string name="people_share_who_uses">Who uses %1$s?</string>
     <string name="people_shared_with">Shared with %1$s</string>
+    <string name="people_shared_with_everyone">Shared with everyone</string>
     <string name="people_shared_with_prefix">"Shared with "</string>
     <string name="people_sharing">Sharing…</string>
     <string name="people_stops_using">%1$s stops using %2$s. Their chats stay theirs.</string>
@@ -1710,6 +1733,7 @@
     <string name="settings_alerts_off_text">They went off when this phone signed out. Turn them on to get an alert when a taf needs you.</string>
     <string name="settings_alerts_off_title_device">Alerts are off on this %1$s</string>
     <string name="settings_alerts_off_turn_on">Turn on</string>
+    <string name="settings_change_language">Change language</string>
     <string name="settings_chargebacks_needs_you">Chargebacks needs you</string>
     <string name="settings_choose_time_zone">Choose time zone…</string>
     <string name="settings_clear_sample">Clear the sample</string>
@@ -1748,6 +1772,7 @@
     <string name="settings_each_sends_who_answered_through">Each sends who was answered and through which door, never its words. Turn it off in the taf\'s Setup › Results go to.</string>
     <string name="settings_find_time_zone">Find a time zone</string>
     <string name="settings_kiff_account">KIFF account</string>
+    <string name="settings_language_title">Language</string>
     <string name="settings_legal">Legal</string>
     <string name="settings_light_taps_when_you_send">The light taps when you send or answer.</string>
     <string name="settings_mode">Mode</string>
@@ -1854,7 +1879,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this %1$s.</string>
     <string name="sign_in_how_works">How it works</string>
     <string name="sign_in_ios_did_not_open_sign">iOS didn\'t open the sign-in page (error %1$s; %2$s). Try again with tafs open.</string>
-    <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here.</string>
+    <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this %1$s in KIFF, and the Cards you issued show up here.</string>
     <string name="sign_in_not_signed_out">Not signed out at KIFF yet. Try again, or sign this phone out from another device\'s Devices.</string>
     <string name="sign_in_not_signed_out_device">Not signed out at KIFF yet: %1$s. Try again, or sign this %2$s out from another device\'s Devices.</string>
     <string name="sign_in_open_kiff">Open KIFF to approve</string>
@@ -1881,21 +1906,6 @@
     <string name="sign_in_welcome_title">They taf.\nYou kiff.</string>
     <string name="sign_in_with_kiff">Sign in with KIFF</string>
     <string name="sign_in_your_code">Your code</string>
-    <string name="siri_halt_all_description">Stops every taf at once. Nothing new is sent until you resume them in tafs.</string>
-    <string name="siri_halt_all_failed">tafs couldn\'t halt your tafs. %1$s Open tafs to halt them.</string>
-    <plurals name="siri_halt_all_halted">
-        <item quantity="one">Halted %1$s taf. Nothing new is sent until you resume.</item>
-        <item quantity="other">Halted %1$s tafs. Nothing new is sent until you resume.</item>
-    </plurals>
-    <string name="siri_halt_all_halted_all">Halted your tafs. Nothing new is sent until you resume.</string>
-    <plurals name="siri_halt_all_halting">
-        <item quantity="one">Halting %1$s taf: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
-        <item quantity="other">Halting %1$s tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</item>
-    </plurals>
-    <string name="siri_halt_all_halting_all">Halting your tafs: no run starts. KIFF hasn\'t confirmed every part yet; tafs shows when it has.</string>
-    <string name="siri_halt_all_running">tafs couldn\'t halt your tafs. Open tafs to halt them.</string>
-    <string name="siri_halt_all_signed_out">You\'re signed out of tafs. Sign in to halt your tafs.</string>
-    <string name="siri_halt_all_title">Halt all tafs</string>
     <string name="taf_activity_all_apps">All apps</string>
     <string name="taf_activity_checking_waits">Checking what waits for you…</string>
     <string name="taf_activity_reading_notes">Reading its notes…</string>
@@ -2027,6 +2037,11 @@
         <item quantity="one">Works under %1$s KIFF Card.</item>
         <item quantity="other">Works under %1$s KIFF Cards.</item>
     </plurals>
+    <string name="update_available">A new version of tafs is out.</string>
+    <string name="update_downloading">Downloading the update…</string>
+    <string name="update_ready">The update is ready.</string>
+    <string name="update_restart">Restart</string>
+    <string name="update_update">Update</string>
     <string name="usage_admin_answers">%1$s An admin answers.</string>
     <string name="usage_balance">Balance</string>
     <string name="usage_balance_not_read">The balance couldn\'t be read. %1$s</string>
@@ -2228,6 +2243,10 @@
     <string name="voice_voice_becomes_text_device_not">Your voice becomes text on this device. It isn\'t sent until you send it.</string>
     <string name="voice_what_you_said_stays_message">What you said stays in the message box, unsent.</string>
     <string name="work_answer_within">Answer within</string>
+    <plurals name="work_answer_within_days">
+        <item quantity="one">%1$s day</item>
+        <item quantity="other">%1$s days</item>
+    </plurals>
     <plurals name="work_answer_within_hours">
         <item quantity="one">%1$s hour</item>
         <item quantity="other">%1$s hours</item>

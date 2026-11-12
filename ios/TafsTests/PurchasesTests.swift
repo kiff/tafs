@@ -125,9 +125,8 @@ final class PurchasesTests: XCTestCase {
 
     // MARK: Plan & usage's lines
 
-    static func usage(source: String, canAdd: Bool = true) -> KIFFClient.Usage {
+    static func usage(source: String) -> KIFFClient.Usage {
         KIFFClient.Usage(billing: .init(source: source, manageURL: source == "apple" ? URL(string: "https://apps.apple.com/account/subscriptions") : nil),
-                         canAddTasks: canAdd,
                          store: .init(appAccountToken: UUID(), soloProduct: "bot.tafs.solo.monthly",
                                       packs: [.init(id: "rayo", name: "Rayo", line: "Rayo · a pack of credits", appleProduct: "bot.tafs.pack.rayo")]))
     }
@@ -248,7 +247,6 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(u.store?.products, ["bot.tafs.solo.monthly", "bot.tafs.pack.rayo"])
         XCTAssertEqual(u.requests?.map(\.kind), ["pack", "raise"])
         XCTAssertNil(u.requests?.last?.pack, "a raise names no pack")
-        XCTAssertTrue(u.managesBilling)
         XCTAssertEqual(u.billing?.source, "stripe")
     }
 
@@ -258,7 +256,8 @@ final class PurchasesTests: XCTestCase {
         let log = StoreLog()
         let (model, store, _) = await signedIn(log)
         let u = try XCTUnwrap(model.usage)
-        XCTAssertEqual(UsageView.openRequests(u).map(\.id), ["pr_1", "pr_2"])
+        XCTAssertTrue(model.managesBilling, "a KIFF that lists no capabilities: the person manages billing")
+        XCTAssertEqual(UsageView.openRequests(u, managesBilling: model.managesBilling).map(\.id), ["pr_1", "pr_2"])
         XCTAssertEqual(UsageView.requestLine(u.requests![0], in: u), "Someone asks for Rayo · a pack of credits.")
         XCTAssertEqual(UsageView.requestLine(u.requests![1], in: u), "Someone asks to raise the spend limit.")
         StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (200, #"{"recorded":true,"action":"pack"}"#)
@@ -360,7 +359,7 @@ final class PurchasesTests: XCTestCase {
     /// What someone who doesn't manage billing asks for, as on Android: a raise on Company
     /// (KIFF's `team`), a pack on Solo while packs are on sale; nothing on other plans.
     func testAMemberAsksForARaiseOnCompanyAndAPackOnSolo() throws {
-        var u = Self.usage(source: "stripe", canAdd: false)
+        var u = Self.usage(source: "stripe")
         u.plan = "team"
         XCTAssertEqual(UsageView.asks(u), true)
         u.plan = "solo"
@@ -500,24 +499,50 @@ final class PurchasesTests: XCTestCase {
     /// A member sees their request waiting, and what an admin answered, in the lines both apps share.
     func testAMemberSeesTheirRequest() throws {
         var u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
-        u.canAddTasks = false
-        XCTAssertEqual(UsageView.waiting(u)?.id, "pr_1")
-        XCTAssertEqual(UsageView.askedLine(try XCTUnwrap(UsageView.waiting(u)), in: u), "You asked an admin for a pack.")
-        XCTAssertTrue(UsageView.openRequests(u).isEmpty, "a member answers nothing")
+        XCTAssertEqual(UsageView.waiting(u, managesBilling: false)?.id, "pr_1")
+        XCTAssertEqual(UsageView.askedLine(try XCTUnwrap(UsageView.waiting(u, managesBilling: false)), in: u), "You asked an admin for a pack.")
+        XCTAssertTrue(UsageView.openRequests(u, managesBilling: false).isEmpty, "a member answers nothing")
         u.requests = [.init(id: "pr_1", askedBy: "bob", pack: "rayo", status: "declined", createdAt: Date(), expiresAt: Date(), note: "Next month")]
-        XCTAssertNil(UsageView.waiting(u))
-        XCTAssertEqual(UsageView.lastAnswer(u), "An admin declined: Next month")
+        XCTAssertNil(UsageView.waiting(u, managesBilling: false))
+        XCTAssertEqual(UsageView.lastAnswer(u, managesBilling: false), "An admin declined: Next month")
         u.requests = [.init(id: "pr_2", askedBy: "bob", kind: "raise", status: "open", createdAt: Date(), expiresAt: Date())]
-        XCTAssertEqual(UsageView.askedLine(try XCTUnwrap(UsageView.waiting(u)), in: u), "You asked an admin to raise the spend limit.")
+        XCTAssertEqual(UsageView.askedLine(try XCTUnwrap(UsageView.waiting(u, managesBilling: false)), in: u), "You asked an admin to raise the spend limit.")
         u.requests = [.init(id: "pr_2", askedBy: "bob", kind: "raise", status: "approved", createdAt: Date(), expiresAt: Date())]
-        XCTAssertEqual(UsageView.lastAnswer(u), "An admin raised the spend limit.")
+        XCTAssertEqual(UsageView.lastAnswer(u, managesBilling: false), "An admin raised the spend limit.")
         u.requests = [.init(id: "pr_1", askedBy: "bob", pack: "rayo", status: "approved", createdAt: Date(), expiresAt: Date())]
-        XCTAssertEqual(UsageView.lastAnswer(u), "An admin added a pack.")
+        XCTAssertEqual(UsageView.lastAnswer(u, managesBilling: false), "An admin added a pack.")
         u.requests = [.init(id: "pr_1", askedBy: "bob", pack: "rayo", status: "expired", createdAt: Date(), expiresAt: Date())]
-        XCTAssertEqual(UsageView.lastAnswer(u), "Your request ended with the period.")
+        XCTAssertEqual(UsageView.lastAnswer(u, managesBilling: false), "Your request ended with the period.")
         XCTAssertTrue(KIFFClient.signsSetup("/v1/me/pack-requests/pr_1/decline"))
         XCTAssertFalse(KIFFClient.signsSetup("/v1/me/pack-requests/pr_1/withdraw"))
         XCTAssertFalse(KIFFClient.signsSetup("/v1/me/pack-requests"))
+    }
+
+    /// Who manages billing is KIFF's billing.manage, as on Android: an admin has it, a member
+    /// doesn't, and a KIFF from before roles lists no capabilities, so the person does. KIFF's
+    /// usage `can_add_tasks`, false for everyone since credits, no longer decides it.
+    func testWhoManagesBillingIsBillingManage() throws {
+        XCTAssertTrue(AppModel.managesBilling(["billing.manage", "holds.answer"]))
+        XCTAssertFalse(AppModel.managesBilling(["holds.answer"]))
+        XCTAssertTrue(AppModel.managesBilling(nil))
+        let inert = Self.read.replacingOccurrences(of: #""can_add_tasks":true"#, with: #""can_add_tasks":false"#)
+        XCTAssertNotEqual(inert, Self.read, "the read carries can_add_tasks")
+        let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(inert.utf8))
+        XCTAssertEqual(UsageView.openRequests(u, managesBilling: true).map(\.id), ["pr_1", "pr_2"],
+                       "an admin answers members' requests whatever can_add_tasks says")
+    }
+
+    /// The account's own admin is never asked to ask an admin: no request of theirs waits, no
+    /// answer to one shows, and members' open requests do. A member sees the opposite.
+    func testAnAdminIsNeverAskedToAskAnAdmin() throws {
+        var u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
+        XCTAssertNil(UsageView.waiting(u, managesBilling: true))
+        XCTAssertEqual(UsageView.openRequests(u, managesBilling: true).count, 2)
+        XCTAssertNotNil(UsageView.waiting(u, managesBilling: false))
+        XCTAssertTrue(UsageView.openRequests(u, managesBilling: false).isEmpty)
+        u.requests = [.init(id: "pr_1", askedBy: "bob", pack: "rayo", status: "declined", createdAt: Date(), expiresAt: Date())]
+        XCTAssertNil(UsageView.lastAnswer(u, managesBilling: true))
+        XCTAssertNotNil(UsageView.lastAnswer(u, managesBilling: false))
     }
 
     /// Restore purchases on an account that bought nothing: "Nothing to restore.", never

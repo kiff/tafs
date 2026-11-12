@@ -143,17 +143,23 @@ struct ApprovalNotReady: View {
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            HStack(spacing: 10) {
-                if readiness.opensSettings {
-                    Button(Words.Voice.openSettings) { openTafsSettings() }
-                        .buttonStyle(PrimaryButtonStyle())
-                }
-                if readiness != .unsupported {
-                    Button(Words.Approval.checkAgain, action: checkAgain)
-                        .buttonStyle(OutlineButtonStyle())
-                }
+            // Side by side while both fit whole, else one above the other: never "Ope…".
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) { buttons }
+                VStack(spacing: 8) { buttons }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder private var buttons: some View {
+        if readiness.opensSettings {
+            Button(Words.Voice.openSettings) { openTafsSettings() }
+                .buttonStyle(PrimaryButtonStyle())
+        }
+        if readiness != .unsupported {
+            Button(Words.Approval.checkAgain, action: checkAgain)
+                .buttonStyle(OutlineButtonStyle())
+        }
     }
 }

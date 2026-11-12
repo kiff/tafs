@@ -51,7 +51,8 @@ export function refused(err: unknown, ...codes: string[]): err is AgentsError {
 export const ANSWERED_BY = "tafs cloud";
 
 /** What came of handing the owner over to a taf: exactly one is set. */
-export type ResultOutcome = { taf_id: string } | { version: number } | { failed: string };
+/** A result's answer: the new taf (with `check`, why its first check couldn't read), its new version, or why neither. */
+export type ResultOutcome = { taf_id: string; check?: string } | { version: number } | { failed: string };
 
 /** A run that keeps a switch from beginning, as kiff/agents names it in the 409 (kiff/tafs#206). */
 export interface BlockingRun {
@@ -130,6 +131,8 @@ export interface AgentDefinition {
   show?: boolean;
   /** The cards the agent shows instead of Coach's: a taf's own, ask_coach (kiff/agents' show_types, kiff/tafs#476 gap 15). */
   show_types?: string[];
+  /** kiff/agents' your_step tool: the agent hands its owner a step it may never take ("Your step"). Off unless set. */
+  your_step?: boolean;
   /** The planque the agent asks for vendor access through (kiff/agents#91). Off unless set. */
   planque?: string;
   /** The draft tool: Setup submits a taf's KIFF draft, its claim secret kept from the model (kiff/agents#94). */
@@ -683,6 +686,15 @@ export class Agents {
    */
   async runs(tenant: string, agent: string, active = false, limit = 20): Promise<Run[]> {
     const out = await this.call<{ runs: Run[] }>("GET", tenant, ["agents", agent, "runs"], undefined, { limit: String(limit), ...(active ? { active: "true" } : {}), ...AS_SERVICE });
+    return out.runs;
+  }
+
+  /**
+   * The account's PAUSED runs across its agents, newest first, from kiff/agents' per-tenant paused list (GET
+   * /runs/paused): one read for a whole account. `tool` keeps the runs waiting on a call of that tool.
+   */
+  async pausedRuns(tenant: string, tool?: string, limit = 100): Promise<Run[]> {
+    const out = await this.call<{ runs: Run[] }>("GET", tenant, ["runs", "paused"], undefined, { limit: String(limit), ...(tool ? { tool } : {}), ...AS_SERVICE });
     return out.runs;
   }
 

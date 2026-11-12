@@ -92,6 +92,14 @@ class CoachTest {
     assertFalse(AppState(mode = Mode.signedOut).mayUseCoach)
   }
 
+  /** The store's screenshots show the Coach button in the sample; a real sample session, or a signed-out one, never offers it. */
+  @Test fun onlyTheStoresScreenshotsShowCoachInTheSample() = runTest {
+    val m = testModel(transport = transport)
+    m.showForScreenshots()
+    assertTrue(m.state.value.mayUseCoach)
+    assertFalse(AppState(mode = Mode.signedOut, screenshots = true).mayUseCoach)
+  }
+
   @Test fun anAccountThatSaysNothingAndHasNoCapabilityGetsNoCoach() {
     val s = AppState(mode = Mode.kiff, kiffAccount = Account("t", "acme", capabilities = listOf("holds.answer")))
     assertFalse(s.mayUseCoach)

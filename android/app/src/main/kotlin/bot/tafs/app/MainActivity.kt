@@ -131,6 +131,9 @@ class MainActivity : FragmentActivity() {
   /** Where a tapped alert asked to go, until the model has it. */
   private var openFromAlert by mutableStateOf<String?>(null)
 
+  /** Play's flexible in-app update; null where Play isn't there to ask. */
+  private val updates: bot.tafs.app.push.PlayUpdates? by lazy { runCatching { bot.tafs.app.push.PlayUpdates(this) }.getOrNull() }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // The words in this screen's language, which follows the app's own when the person picked one: a language changed while
@@ -172,6 +175,9 @@ class MainActivity : FragmentActivity() {
         // Read again each time the app comes back: a fingerprint enrolled in Settings meanwhile is named at once.
         var biometry by remember { mutableStateOf(Biometry.of(this@MainActivity)) }
         androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { biometry = Biometry.of(this@MainActivity) }
+        // The store's screenshots, from a debug build opened with `--ez screenshots true`: the sample shows the Coach button.
+        val shooting = remember { (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0 && intent?.getBooleanExtra("screenshots", false) == true }
+        LaunchedEffect(model, shooting) { if (shooting) model.showForScreenshots() }
         // Firebase gave the phone a new token: the model tells tafs cloud.
         DisposableEffect(model) {
           app.tokenListener = model::tokenArrived
@@ -214,7 +220,9 @@ class MainActivity : FragmentActivity() {
           openFromAlert = null
         }
         val logos = remember(model) { bot.tafs.app.design.LogoStore(java.io.File(cacheDir, "logos"), model::logo) }
-        CompositionLocalProvider(LocalBiometry provides biometry, bot.tafs.app.design.LocalLogos provides logos) { RootView(model) }
+        val stage = updates?.stage?.collectAsState()?.value ?: bot.tafs.app.push.UpdateStage.None
+        val updateRow = bot.tafs.app.push.AppUpdateRow(stage, update = { updates?.start(this@MainActivity) }, restart = { updates?.restart() })
+        CompositionLocalProvider(LocalBiometry provides biometry, bot.tafs.app.design.LocalLogos provides logos, bot.tafs.app.push.LocalAppUpdate provides updateRow) { RootView(model) }
       }
     }
   }
@@ -228,6 +236,8 @@ class MainActivity : FragmentActivity() {
   override fun onResume() {
     super.onResume()
     app.vendorSignIn.resumed(lifecycleScope)
+    // A newer tafs on the track is offered on Home; Play answers "none" for a build it didn't install.
+    runCatching { updates?.check() }
   }
 
   /** An alert was tapped while the app was up. */
@@ -248,6 +258,7 @@ class MainActivity : FragmentActivity() {
     bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
     app.push.askPermission = null
+    runCatching { updates?.close() }
     super.onDestroy()
   }
 }
@@ -311,6 +322,7 @@ fun RootView(model: AppModel) {
         bot.tafs.app.views.LocalCardUnitActions provides remember(model) {
           bot.tafs.app.views.CardUnitActions(discuss = model::discussCardUnit, dismiss = model::dismissCardUnit)
         },
+        bot.tafs.app.views.LocalYourStepActions provides remember(model) { bot.tafs.app.views.YourStepActions(answer = model::answerYourStep) },
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
@@ -379,6 +391,12 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
   // The taf open on the Tafs tab: the screens inside a tab keep its bar, as a navigation stack does.
   var openTaf by rememberSaveable { mutableStateOf<String?>(null) }
+  // On a tablet with nothing picked, the taf being removed: the pane beside the list stays on it, rather than following the list's
+  // first taf, which changes under the person's finger once it's gone.
+  var removingBeside by rememberSaveable { mutableStateOf<String?>(null) }
+  LaunchedEffect(openTaf) { if (openTaf != null) removingBeside = null }
+  // The taf a door's knock alert opened, to show on Activity once, where its knocks are answered.
+  var openOnActivity by rememberSaveable { mutableStateOf<String?>(null) }
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
@@ -546,6 +564,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadActivity = model::loadActivityPage,
       loadRuns = model::loadRunPage,
       loadAllMemory = model::loadAllMemory,
+      answerCard = model::answerTafCard,
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::startApproval,
@@ -573,6 +592,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         val taf = state.tafs.firstOrNull { it.cloudId == cloudId }
         if (taf == null && state.tafs.isEmpty()) return@LaunchedEffect
         tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = taf?.id
+        if (AlertPayload.opensActivity(open)) openOnActivity = taf?.id
       }
     }
     model.openRequestTaken()
@@ -657,6 +677,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               people = people,
               onConnectApps = { showingConnectApps = true },
               showBack = !wide,
+              openActivity = openOnActivity == id,
+              onActivityOpened = { if (openOnActivity == id) openOnActivity = null },
+              onRemoving = { if (openTaf == null) removingBeside = it },
             ) }
           }
           val calendar: @Composable (Boolean) -> Unit = { phone ->
@@ -712,7 +735,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                   open != null -> open()
                   calendarOpen -> calendar(false)
                   overviewOpen -> OverviewView(state, loadReport = model::loadReport, onOpenCalendar = { calendarOpen = true }) { overviewOpen = false; openTaf = it }
-                  state.tafs.isNotEmpty() -> detail(state.tafs.first().id)
+                  removingBeside != null || state.tafs.isNotEmpty() -> detail(removingBeside ?: state.tafs.first().id)
                   else -> Unit
                 }
               }

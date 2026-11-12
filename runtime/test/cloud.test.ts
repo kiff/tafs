@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -549,6 +549,25 @@ describe("tafs cloud", () => {
     expect(es.body.skipped[2].words).toBe("La revisión prevista a las 09:15 no pudo leer la app");
   });
 
+  // A taf must not read "Working" while its check fails and its runs stop at their cap.
+  it("says its latest check that couldn't read, or its last run stopped at a cap, before its next run", async () => {
+    const w = world();
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: "2026-10-29T09:45:00.000Z", at: "2026-10-29T09:45:00.000Z", outcome: "failed_check" }]);
+    const failed = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(failed.body.summary).toEqual({ status: "idle", line: "The 09:45 check couldn't read the app", needs_you: 0, attention: true });
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.body.tafs.find((t: { id: string }) => t.id === RAE).work).toEqual(failed.body.summary);
+    // Its check reads again: the last run, stopped at its cost cap, says so; then, once one finishes, the next run.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ due: "2026-10-29T10:00:00.000Z", at: "2026-10-29T10:00:00.000Z", outcome: "run", run: "r2" }]);
+    w.agents.runs.unshift({ tenant: "t_acme", id: "r2", agent: RAE, session: "s2", trigger: "schedule", status: "COMPLETED", stop: "cost_cap", cost_micro_usd: 0, turns: 9, created: "2026-10-29T10:00:00Z", updated: "2026-10-29T10:05:00Z" } as never);
+    const capped = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(capped.body.summary.attention).toBe(true);
+    expect(capped.body.summary.line).not.toMatch(/^Next run/);
+    w.agents.runs.unshift({ tenant: "t_acme", id: "r3", agent: RAE, session: "s3", trigger: "schedule", status: "COMPLETED", stop: "answered", cost_micro_usd: 0, turns: 2, created: "2026-10-29T10:10:00Z", updated: "2026-10-29T10:12:00Z" } as never);
+    const fine = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(fine.body.summary).toEqual({ status: "idle", line: "Next run Fri 12:30", needs_you: 0 });
+  });
+
   it("says a taf's health where an idle taf says its next run, on its page and on the list", async () => {
     const w = world();
     const at = (iso: string) => ({ due: iso, at: iso });
@@ -559,7 +578,8 @@ describe("tafs cloud", () => {
     ]);
     const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
     expect(page.body.health).toEqual({ level: "failing", lines: ["Its last 2 scheduled runs couldn't start. Open one to see why."] });
-    expect(page.body.summary).toEqual({ status: "idle", line: "Its last 2 scheduled runs couldn't start", needs_you: 0 });
+    // Flagged, so an app draws the line, never "Working" or the next run.
+    expect(page.body.summary).toEqual({ status: "idle", line: "Its last 2 scheduled runs couldn't start", needs_you: 0, attention: true });
     const home = await call(w, "GET", "/v1/home", { token: "ana" });
     const rae = home.body.tafs.find((t: { id: string }) => t.id === RAE);
     expect(rae.health).toEqual(page.body.health);
@@ -646,7 +666,7 @@ describe("tafs cloud", () => {
 
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
-    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"], time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC" }]);
+    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", next_run_words: "Next run Fri 12:30", last_run: null, results: ["door_reply"], time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC" }]);
     expect(r.body.removing).toEqual([]);
   });
 
@@ -1045,7 +1065,7 @@ describe("the home list", () => {
     // The owner is around (kiff/tafs#210): what isn't urgent is told quietly, not kept for later.
     expect(await w.slots.held(`present#t_acme`)).toBe(true);
     expect(r.body.tafs).toEqual([{
-      id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"],
+      id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", next_run_words: "Next run Fri 12:30", last_run: null, results: ["door_reply"],
       time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "UTC",
       // A custom name with no saved job never borrows the starter template's description.
       job_summary: "Ask Coach to describe this taf's job",
@@ -1403,6 +1423,60 @@ describe("removing a taf", () => {
     expect(w.archived.held.size).toBe(0); // its archived chats are forgotten too
   });
 
+  // A removal is the phone's act: signed by the phone, checked by KIFF. Until both apps sign it, unsigned still removes.
+  it("takes the phone's signature on a removal, and refuses an unsigned one once signing is required", async () => {
+    const asked: Array<{ method: string; uri: string; signature: string }> = [];
+    const withKIFF = (w: World, signed: boolean, key = "critical") => {
+      const base = depsOf(w);
+      return { ...base, fetch: (async (url: string, init?: RequestInit) => {
+        if (String(url).endsWith("/v1/me/device-signature")) {
+          asked.push(JSON.parse(String(init?.body)));
+          return new Response(JSON.stringify({ signed, key }), { status: signed ? 200 : 403 });
+        }
+        return (base.fetch as typeof fetch)(url, init);
+      }) as typeof fetch };
+    };
+    const del = (w: World, signed: boolean, headers: Record<string, string> = {}, key = "critical") =>
+      handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana", ...headers } }, withKIFF(w, signed, key));
+    const sig = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+    // Signed by this phone: removed, and KIFF was asked about exactly this DELETE.
+    const w1 = world();
+    expect((await del(w1, true, sig)).statusCode).toBe(200);
+    expect(asked.at(-1)).toMatchObject({ method: "DELETE", uri: `/v1/tafs/${RAE}`, signature: sig["kiff-device-signature"] });
+    expect(w1.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+    // Signed with the device key, not the approval key behind the screen lock: refused, in the person's words.
+    const wd = world();
+    const device = await del(wd, true, sig, "device");
+    expect(device.statusCode).toBe(403);
+    expect(JSON.parse(device.body)).toMatchObject({ code: "critical_key_required", error: "Remove it from your device: removing a taf asks for your screen lock each time. Nothing was removed." });
+    expect(wd.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    // A signature that isn't this phone's: refused, nothing removed.
+    const w2 = world();
+    expect((await del(w2, false, sig)).statusCode).toBe(403);
+    expect(w2.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    // Unsigned, while signing isn't required yet: still removed.
+    const w3 = world();
+    expect((await del(w3, true)).statusCode).toBe(200);
+    // Once it is: an unsigned removal is refused with its code, but one a signed DELETE began finishes unsigned.
+    const was = process.env.TAFS_SIGNED_REMOVE;
+    process.env.TAFS_SIGNED_REMOVE = "on";
+    try {
+      const w4 = world();
+      const refused = await del(w4, true);
+      expect(refused.statusCode).toBe(403);
+      expect(JSON.parse(refused.body)).toMatchObject({ code: "signature_required" });
+      expect(w4.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+      w4.agents.fail.set("deleteAgent", new Error("timeout"));
+      expect(JSON.parse((await del(w4, true, sig)).body)).toMatchObject({ done: false });
+      w4.agents.fail.delete("deleteAgent");
+      const asks = asked.length;
+      expect(JSON.parse((await del(w4, true)).body)).toMatchObject({ done: true });
+      expect(asked.length).toBe(asks);
+    } finally {
+      if (was === undefined) delete process.env.TAFS_SIGNED_REMOVE; else process.env.TAFS_SIGNED_REMOVE = was;
+    }
+  });
+
   it("takes the right to manage Cards, and another account's taf answers like a missing one", async () => {
     const w = world();
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "viewer" })).status).toBe(403);
@@ -1493,7 +1567,7 @@ describe("Setup (kiff/agents#91)", () => {
     // The step the app shows at the end of a first Start, in the person's words: four groups, each tool folded under them.
     expect(first.coach_tools_step.title).toBe("Give Coach its tools");
     // One confirmation gives them on either phone, and tafs cloud never names the biometric it is.
-    expect(first.coach_tools_step.ask).toBe("Give Coach these tools? You sign its Card on your phone.");
+    expect(first.coach_tools_step.ask).toBe("Give Coach these tools? You sign its Card on your device.");
     expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 5, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
@@ -3643,17 +3717,28 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w2.tafs.held.get(`t_acme#${NEW}`)).not.toHaveProperty("recipe");
   });
 
-  // A result's answer carries only the taf's id: a first check that couldn't read reaches Coach as a line it reads
-  // with the owner's next message, with the read's reason, so it fixes the check it drafted.
+  // A first check that couldn't read is said in the result's answer itself (check), so Coach's closing message
+  // never calls the taf working (A4), and as a line it reads with the owner's next message, with the read's reason.
   it("tells Coach when the taf's first check couldn't read, with the reason, and still answers the taf as set up", async () => {
     const { w, note, answer, deps } = await paused();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: 'schedule: the check\'s items have no "created" field' });
     await note();
-    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(answer()).toEqual({ answer: { taf_id: NEW, check: 'schedule: the check\'s items have no "created" field' }, answered_by: "tafs cloud" });
     const lines = (await deps.coach.get(coachKeys.notes("t_acme", "u_ana"))) as Array<{ text: string; taf: string; said: string }>;
     expect(lines.map((l) => l.text)).toEqual(['[taf Refunds first check] The taf is set up, but its first check couldn\'t read: schedule: the check\'s items have no "created" field; fix the check with taf_dial.']);
     expect(lines[0]!.said).toBe("Its check couldn't read the work list: no run started.");
+  });
+
+  it("answers a kiff/agents from before check with the taf alone: the taf is made, and the line still tells Coach", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: "the read answered with an error" });
+    w.agents.old.rejectCheck = true;
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    const lines = (await deps.coach.get(coachKeys.notes("t_acme", "u_ana"))) as Array<{ text: string }>;
+    expect(lines.map((l) => l.text)).toEqual(["[taf Refunds first check] The taf is set up, but its first check couldn't read: the read answered with an error; fix the check with taf_dial."]);
   });
 
   it("makes a taf with the job Coach drafted, outside the five, and runs it (kiff/tafs#476)", async () => {
@@ -4065,7 +4150,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@6,draft-the-card@6,name-the-tools@5,set-up-a-taf@5,usage-and-plans@2`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@6,draft-the-card@6,name-the-tools@5,set-up-a-taf@6,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -4073,18 +4158,18 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@6,draft-the-card@6,name-the-tools@5,set-up-a-taf@5,usage-and-plans@2`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@6,draft-the-card@6,name-the-tools@5,set-up-a-taf@6,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@6,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@5,usage-and-plans@2`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@6,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@6,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@6,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@5,usage-and-plans@2`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@6,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@6,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
@@ -4107,7 +4192,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@6,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@2,usage-and-plans@2`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@6,draft-the-card@6,halting@1,name-the-tools@5,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -4120,7 +4205,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // Once the Upgrade names the lock's versions, a new chat asks for those.
     await w.agents.api.putAgent("t_acme", COACH, live);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Another one", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@5");
+    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@6");
   });
 
   // agentgabo on #574, the owner's call (11:32): with no one named, a taf writes for the account's company,
@@ -4518,6 +4603,25 @@ describe("the account's connections a Coach conversation starts with", () => {
     expect(asked).toHaveLength(1);
   });
 
+  it("tells Coach the account's time zone each message when it isn't UTC, so a drafted cron keeps the owner's hour", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const deps = { ...planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 })), coach: memoryCoach(() => w.now) };
+    const send = async (token: string, body: unknown) => {
+      const r = await handle({ rawPath: `/v1/tafs/${COACH}/messages`, requestContext: { http: { method: "POST" } }, headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(body) }, deps);
+      expect(r.statusCode).toBe(200);
+      return JSON.parse(r.body) as { session: string };
+    };
+    const first = await send("ana_paris", { text: "Mondays at 9" });
+    const text = (await firstMessage(w, first.session))!;
+    expect(text).toMatch(/\n\[tafs time zone\] The account's time zone is Europe\/Paris: it's [A-Z][a-z]+day \d\d:\d\d there now\. .*never convert it to UTC\.\nThe owner says: Mondays at 9$/);
+    expect(ownerWords(text)).toBe("Mondays at 9");
+    // An account in UTC adds nothing.
+    const utc = await send("ana", { text: "Tuesdays then", session: first.session });
+    const said = (await w.agents.api.session("t_acme", utc.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
+    expect(said.at(-1)).toBe("Tuesdays then");
+  });
+
   it("tells Coach the person's language each message, before their words, and keeps it for the tafs built after", async () => {
     const w = setUp();
     await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
@@ -4774,5 +4878,101 @@ describe("the Record across the person's tafs", () => {
     expect(r.body.receipts).toEqual([{ trace_id: "tr-refund", signature: "sig" }]);
     expect(r.body.csv.split("\r\n").filter(Boolean)).toHaveLength(3);
     expect((await call(w, "GET", "/v1/record/receipts", { token: "ana_paris", query: "from=2026-01-01&to=2026-11-05" })).status).toBe(400);
+  });
+});
+
+// "Your step": a step a taf handed its owner, read from the paused run (yourstep.ts).
+describe("a step a taf handed its owner", () => {
+  const AT = new Date("2026-11-11T17:00:00Z");
+  const ago = (m: number) => new Date(AT.getTime() - m * 60_000).toISOString();
+  const setUp = (pausedAgo = 30) => {
+    const w = world();
+    w.now = AT;
+    w.phones.push({ token: "a".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "" },
+      { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_step", agent: RAE, session: "sess_step", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
+      created: ago(pausedAgo), updated: ago(pausedAgo - 1),
+      requirements: [{ call_id: "c1", tool: "your_step", operation: "op-1", exception: "ho_1", expires: new Date(AT.getTime() - pausedAgo * 60_000 + 7 * 24 * 3600_000).toISOString(),
+        input: { what: "Approve 3 supplier payments", why: "Your bank asks you to approve transfers yourself", link: "https://app.example.com/r/1" } }] });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    return { w, deps };
+  };
+  const before = process.env.TAFS_YOUR_STEP;
+  afterEach(() => { if (before === undefined) delete process.env.TAFS_YOUR_STEP; else process.env.TAFS_YOUR_STEP = before; });
+
+  it("lists it on Home for Needs you, counted once, with tafs cloud's words and the link's host apart", async () => {
+    const { w } = setUp();
+    // The taf's connections, from planque: its link is to one of them.
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
+      return new Response(JSON.stringify({ connections: [{ agent: rae.kiffAgent, vendor: "Example", kind: "key", api: { url: "https://app.example.com" }, status: "approved" }] }), { status: 200 });
+    }) as Deps["fetch"] };
+    const r = await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    const home = { status: r.statusCode, body: JSON.parse(r.body) };
+    expect(home.status).toBe(200);
+    expect(home.body.your_steps).toEqual([expect.objectContaining({
+      handoff: "ho_1", run: "run_step", taf: { id: RAE, name: "Rae" }, what: "Approve 3 supplier payments", link: "https://app.example.com/r/1", link_host: "app.example.com",
+      words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in Example", line: "Your step: Approve 3 supplier payments" } })]);
+    const listed = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(listed.work).toMatchObject({ status: "needs_you", line: "Your step: Approve 3 supplier payments" });
+    // Without planque's list, the step still shows, with no link.
+    const bare = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(bare.body.your_steps[0].link).toBeUndefined();
+    expect(bare.body.your_steps[0].words.open).toBeUndefined();
+    if (home.body.needs_you) expect(home.body.needs_you.count).toBeGreaterThanOrEqual(1);
+  });
+
+  it("is said to the phones that answer once when it starts waiting, and once more after a day; never before the tool is on", async () => {
+    delete process.env.TAFS_YOUR_STEP;
+    const { w, deps } = setUp();
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    process.env.TAFS_YOUR_STEP = "on";
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: false }]);
+    expect(w.pushed).toHaveLength(1);
+    expect(w.pushed[0]).toMatchObject({ token: "a".repeat(64), n: { kind: "alert", payload: {
+      aps: { alert: { title: "Rae", body: "Your step: Approve 3 supplier payments" } }, open: "taf", taf_id: RAE, handoff: "ho_1" } } });
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    w.now = new Date(AT.getTime() + 24 * 3600_000);
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: true }]);
+    expect(w.pushed.at(-1)).toMatchObject({ n: { payload: { aps: { alert: { body: "Your step is still waiting: Approve 3 supplier payments" } } } } });
+    w.now = new Date(AT.getTime() + 72 * 3600_000);
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(2);
+  });
+
+  it("reads each account once a pass, its paused runs waiting on a step, never each taf's runs", async () => {
+    process.env.TAFS_YOUR_STEP = "on";
+    const { w, deps } = setUp();
+    // A run paused on a call KIFF held, not a step: not read as one.
+    w.agents.runs.unshift({ ...w.agents.runs.find((r) => r.id === "run_step")!, id: "run_held",
+      requirements: [{ call_id: "c2", tool: "stripe_refund", operation: "op-2", exception: "ex_2", expires: ago(-60), input: {} }] });
+    w.agents.calls.length = 0;
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: false }]);
+    const reads = w.agents.calls.filter((c) => c.startsWith("pausedRuns") || c.startsWith("runs"));
+    expect(new Set(reads)).toEqual(new Set((await depsOf(w).tafs.tenants()).map((t) => `pausedRuns ${t} your_step`)));
+    // A taf being removed says nothing, even with its step still paused.
+    const { w: w2, deps: d2 } = setUp();
+    w2.tafs.held.get(`t_acme#${RAE}`)!.removing = true;
+    expect(await sweepYourSteps(d2)).toEqual([]);
+  });
+
+  it("logs an account whose paused runs can't be read, and goes on with the others", async () => {
+    process.env.TAFS_YOUR_STEP = "on";
+    const { w, deps } = setUp();
+    w.agents.fail.set("pausedRuns", new Error("down"));
+    expect(await sweepYourSteps(deps)).toEqual([]);
+    w.agents.fail.delete("pausedRuns");
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: false }]);
+  });
+
+  it("says only the reminder for a step first seen past a day, and nothing for a halted taf", async () => {
+    process.env.TAFS_YOUR_STEP = "on";
+    const { w, deps } = setUp(25 * 60);
+    expect(await sweepYourSteps(deps)).toEqual([{ tenant: "t_acme", taf: RAE, handoff: "ho_1", reminder: true }]);
+    expect(w.pushed).toHaveLength(1);
+    const { w: w2, deps: d2 } = setUp();
+    w2.agents.halts.set(`t_acme|${RAE}`, { on: true, at: ago(10) });
+    expect(await sweepYourSteps(d2)).toEqual([]);
   });
 });

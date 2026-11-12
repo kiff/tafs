@@ -7,6 +7,15 @@ struct TafDetailView: View {
     /// the main thing.
     @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2
         : ["setup", "starts", "results"].contains(Screenshots.screen ?? "") ? 3 : 0
+
+    /// The Activity tab, where a taf's door requests are answered.
+    static let activitySection = 1
+
+    /// `opensOn` is the tab to open on, such as Activity for the taf's door requests; else Chat.
+    init(tafID: UUID, opensOn: Int? = nil) {
+        self.tafID = tafID
+        if let opensOn { _section = State(initialValue: opensOn) }
+    }
     /// Activity's filter of its record.
     @State private var activityFilter: ActivityFilter = .all
     @State private var activitySelection = ""
@@ -159,7 +168,8 @@ struct TafDetailView: View {
                 .lineLimit(1)
                 .accessibilityIdentifier("taf-page-name")
             Spacer(minLength: 8)
-            StateChip(state: taf.state)
+            // What went wrong is said on its Activity, in place of "Working" (docs/reliability.md).
+            if !(taf.attention && taf.state == .working) { StateChip(state: taf.state) }
         }
     }
 
@@ -187,11 +197,21 @@ struct TafDetailView: View {
     private func versionLine(_ taf: Taf) -> some View {
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
             HStack(spacing: 10) {
+                // A row that says what it opens, with its mark and caret, in the line's quiet
+                // colour: never a lone orange "Versions".
                 NavigationLink { VersionsScreen(tafID: taf.id) } label: {
                     let live = model.versions[taf.id]?.first(where: \.live)?.n
-                    Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
-                        .scaledFont(13, weight: .semibold)
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock.arrow.circlepath").scaledFont(13, weight: .semibold)
+                            .accessibilityHidden(true)
+                        Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
+                            .scaledFont(13, weight: .semibold).oneLineUnlessLarge()
+                        Image(systemName: "chevron.right").scaledFont(11, weight: .semibold).foregroundColor(Theme.dim)
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundColor(Theme.soft)
                 }
+                .buttonStyle(.drivablePlain)
                 if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {
                     OpenTrialLink(chatID: chat, tafID: taf.id) {
                         Text(Words.Taf.tryingResume(n: "\(trial.n)")).scaledFont(13, weight: .semibold).foregroundColor(Theme.amber)
@@ -269,8 +289,8 @@ struct TafDetailView: View {
         if (model.mode == .kiff && cloud != nil) || screenshot {
             PanelLink { StartsWhenView(tafID: taf.id) } label: {
                 Label(StartsWhenView.title, systemImage: "clock").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-                Spacer()
-                Text(Words.Setup.`open`).scaledFont(14).foregroundColor(Theme.soft)
+                // No "Open" beside it: it read as its value ("Starts when: Open"). The caret
+                // says it opens.
             }
             .accessibilityIdentifier("setup.startsWhen")
         }
@@ -279,8 +299,6 @@ struct TafDetailView: View {
         if (model.mode == .kiff && cloud != nil) || screenshot {
             PanelLink { ResultsGoToView(tafID: taf.id) } label: {
                 Label(ResultsGoToView.title, systemImage: "paperplane").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-                Spacer()
-                Text(Words.Setup.`open`).scaledFont(14).foregroundColor(Theme.soft)
             }
             .accessibilityIdentifier("setup.resultsGoTo")
         }
@@ -457,7 +475,8 @@ struct RunsPanel: View {
                     Text(Words.Taf.worksFromChat)
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
+                    // tafs cloud's words, with the day when it isn't today; the app's own only when it sends none.
+                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRunWords ?? cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
                         .scaledFont(15).foregroundColor(Theme.ink)
                     Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
                         guard !runTapped else { return }
@@ -487,9 +506,15 @@ struct PromiseRow: View {
     let hours: Int?
     let pick: (Int?) -> Void
 
-    /// What the row says the promise is: its hours, or Not set.
+    /// What the row says the promise is: its time, or Not set.
     static func value(_ hours: Int?) -> String {
-        hours.map { Words.Work.answerWithinHours(count: $0) } ?? Words.Work.answerWithinNone
+        hours.map(label) ?? Words.Work.answerWithinNone
+    }
+
+    /// A promise in words: whole days as days (24 h is "1 day", 168 h "7 days"), anything else in
+    /// hours. tafs cloud gets hours all the same.
+    static func label(_ hours: Int) -> String {
+        hours >= 24 && hours % 24 == 0 ? Words.Work.answerWithinDays(count: hours / 24) : Words.Work.answerWithinHours(count: hours)
     }
 
     var body: some View {
@@ -497,7 +522,7 @@ struct PromiseRow: View {
             Menu {
                 Button(Words.Work.answerWithinNone) { if hours != nil { pick(nil) } }
                 ForEach(TafsCloud.TafWork.promiseChoices, id: \.self) { h in
-                    Button(Words.Work.answerWithinHours(count: h)) { if h != hours { pick(h) } }
+                    Button(PromiseRow.label(h)) { if h != hours { pick(h) } }
                 }
             } label: {
                 HStack(spacing: 8) {
@@ -575,9 +600,15 @@ struct WorkPanel: View {
 
     private func request(_ r: TafsCloud.TafWork.Request) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(r.line).scaledFont(14)
-                .foregroundColor(r.state == "needs_you" ? Theme.amberText : r.state == "failed" ? Theme.no : Theme.soft)
-                .fixedSize(horizontal: false, vertical: true)
+            // A step the taf handed its owner, answered here too, in place of its line: Home's, which
+            // carries the vendor's link when tafs cloud vouched for it, else the request's own (never a link).
+            if let step = r.yourStep, model.canAnswer(step: step.handoff) {
+                YourStepCard(step: model.yourStep(step.handoff) ?? step, onTaf: tafID)
+            } else {
+                Text(r.line).scaledFont(14)
+                    .foregroundColor(r.state == "needs_you" ? Theme.amberText : r.state == "failed" ? Theme.no : Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             ForEach(Array(r.deliveries.enumerated()), id: \.offset) { _, d in
                 Text(d.line).scaledFont(12, relativeTo: .caption).foregroundColor(d.sendAgain ? Theme.amberText : Theme.dim)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1182,14 +1213,22 @@ struct CardBar: View {
     var body: some View {
         Button(action: open) {
             HStack(spacing: 12) {
+                // A small Card, with the Card's mark on it: never an empty coloured rectangle.
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(TafCardFace.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
                     .frame(width: 46, height: 29)
+                    .overlay {
+                        Image(systemName: "creditcard").scaledFont(13, weight: .semibold).foregroundColor(.white.opacity(0.9))
+                    }
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
+                    // Up to two lines each, so a long Card's name reads whole ("Lister vos litiges
+                    // Stripe (mode test)" was cut).
                     Text(card.hero.map { "\($0.figure) \($0.words)" } ?? card.title)
                         .scaledFont(15, weight: .semibold).monospacedDigit().foregroundColor(Theme.ink)
-                        .oneLineUnlessLarge().minimumScaleFactor(0.8)
-                    Text(details).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge()
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Text(details).scaledFont(12).foregroundColor(Theme.dim)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)

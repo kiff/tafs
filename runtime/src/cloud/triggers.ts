@@ -4,7 +4,7 @@
  * exactly is refused with the nearest one in words, for Coach and the apps to offer before the owner
  * confirms. Nothing here reaches the scheduler: only a version made live does.
  */
-import { type Lang, wordsIn } from "./words/index.js";
+import { everyWords, type Lang, midLine, wordsIn } from "./words/index.js";
 
 /**
  * The read a taf's schedule makes first (kiff/agents' `check`): one call of a connected app's read tool,
@@ -243,7 +243,7 @@ export function triggerWords(t: Trigger, lang: Lang = "en"): string {
   switch (t.kind) {
     case "door": return w.dial_wakes_door;
     case "vendor_event": return w.dial_wakes_vendor;
-    case "app_check": return w.dial_checks(t.operation ?? "", t.every_minutes ?? 0);
+    case "app_check": return w.dial_checks(t.operation ?? "", midLine(everyWords(lang, t.every_minutes ?? 0)));
     case "before_event": return w.dial_wakes_before;
     case "app_event": return w.dial_wakes_on((t.name ?? t.event ?? w.dial_an_app_event).replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 100));
   }
@@ -254,7 +254,7 @@ export function triggerWords(t: Trigger, lang: Lang = "en"): string {
     case "monthly": return w.dial_monthly_at(t.date ?? "", t.at ?? "");
     case "monthly_last_day": return w.dial_last_day_at(t.at ?? "");
     case "times_a_day": return w.dial_times_a_day(t.times ?? []);
-    case "every": return w.dial_every_on(t.every_minutes ?? 0, t.between, t.days ?? []);
+    case "every": return w.dial_every_on(everyWords(lang, t.every_minutes ?? 0), t.between, t.days ?? []);
     case "once": return w.dial_once_on(t.date ?? "");
   }
   return w.dial_on_schedule;

@@ -11,12 +11,14 @@ struct NeedsYouView: View {
                 if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
                     AlertsCard()
                 }
+                // A step a taf handed its owner comes first, oldest first (docs/api.md › Your step), as on Android.
+                ForEach(model.yourSteps) { step in YourStepCard(step: step).id(step.id) }
                 // A knock at a taf's door waits for the owner too (kiff/tafs#236, item 17).
                 let knocked = model.tafs.filter { knocks($0) > 0 }
                 // A money call whose outcome KIFF can't prove: the owner says whether it happened.
                 ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
                 ForEach(model.cardUnitExceptions) { ask in CardUnitExceptionPanel(ask: ask).id(ask.id) }
-                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty {
+                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty && model.yourSteps.isEmpty {
                     Panel {
                         Text(Words.NeedsYou.nothingWaiting).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text(Words.NeedsYou.emptyHint)
@@ -25,7 +27,8 @@ struct NeedsYouView: View {
                 } else {
                     ForEach(model.held) { call in HeldCallCard(call: call).id(call.id) }
                     ForEach(knocked) { taf in
-                        NavigationLink { TafDetailView(tafID: taf.id) } label: {
+                        // Its door requests are answered on Activity, so it opens there, not on Chat.
+                        NavigationLink { TafDetailView(tafID: taf.id, opensOn: TafDetailView.activitySection) } label: {
                             Panel(stroke: Theme.amber.opacity(0.4)) {
                                 HStack(spacing: 10) {
                                     TafAvatar(taf: taf, size: 32)
@@ -53,7 +56,10 @@ struct NeedsYouView: View {
         .onChange(of: model.requestedHold) { request in scroll(to: request, reader) }
         .onChange(of: model.held) { _ in scroll(to: model.requestedHold, reader) }
         .onChange(of: model.cardUnitExceptions) { _ in scroll(to: model.requestedHold, reader) }
-        .onAppear { scroll(to: model.requestedHold, reader) }
+        // A step opened from its notification too, once Home has listed it.
+        .onChange(of: model.requestedStep) { _ in scroll(toStep: reader) }
+        .onChange(of: model.yourSteps) { _ in scroll(toStep: reader) }
+        .onAppear { scroll(to: model.requestedHold, reader); scroll(toStep: reader) }
         }
         .refreshable {
             await model.refresh()
@@ -61,6 +67,12 @@ struct NeedsYouView: View {
         }
         .task { await model.loadUnproven() }
         .screenBackground()
+    }
+
+    private func scroll(toStep reader: ScrollViewProxy) {
+        guard let handoff = model.requestedStep, model.yourSteps.contains(where: { $0.handoff == handoff }) else { return }
+        withMotion { reader.scrollTo(handoff, anchor: .top) }
+        model.requestedStep = nil
     }
 
     private func knocks(_ taf: Taf) -> Int { (taf.doors ?? []).reduce(0) { $0 + $1.knocks } }
@@ -95,17 +107,21 @@ struct DidThisHappenCard: View {
                     Text(why).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
                 if model.mayAnswerHolds {
-                    HStack(spacing: 10) {
-                        ApprovalGate {
-                            Button(Words.Record.DidThisHappen.no) { answer(false) }.buttonStyle(OutlineButtonStyle())
-                        }
-                        ApprovalGate {
-                            Button(Words.Record.DidThisHappen.yes) { answer(true) }.buttonStyle(PrimaryButtonStyle())
+                    // One gate for both answers: when the device can't approve, its words and
+                    // buttons show once, at full width, not once per answer. The line about No
+                    // goes with the buttons: without them it names a button that isn't there.
+                    ApprovalGate {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 10) {
+                                Button(Words.Record.DidThisHappen.no) { answer(false) }.buttonStyle(OutlineButtonStyle())
+                                Button(Words.Record.DidThisHappen.yes) { answer(true) }.buttonStyle(PrimaryButtonStyle())
+                            }
+                            .disabled(sending)
+                            Text(Words.NeedsYou.noGivesCardRoomBack(biometry: "\(Biometry.name)"))
+                                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    .disabled(sending)
-                    Text(Words.NeedsYou.noGivesCardRoomBack(biometry: "\(Biometry.name)"))
-                        .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 }
             }
         }
@@ -150,7 +166,7 @@ struct HeldCallCard: View {
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(sending)
                 }
-            } else if model.approvalKeyLost, call.kiffID != nil {
+            } else if model.showsApprovalKeyLost, call.kiffID != nil {
                 // Approving or extra room would fail: the way out instead. Refuse stays below.
                 ApprovalKeyLostLine()
             } else if call.approvableOnce {

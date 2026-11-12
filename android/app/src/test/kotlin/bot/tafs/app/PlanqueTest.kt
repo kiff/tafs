@@ -280,7 +280,8 @@ class PlanqueTest {
     m.refreshConnections()
     val result = m.connect("a1", "g1", digest)
     assertTrue(result.toString(), result is AppModel.Connected.Done)
-    assertEquals(listOf("Connect mcp.stripe.com to refunds-1"), auth.asked)
+    // The prompt never names the agent by its id: with no taf of that name here, it names the app alone.
+    assertEquals(listOf("Connect mcp.stripe.com"), auth.asked)
     assertEquals("https://mcp.stripe.com/oauth?x=1", vendor.opened)
     assertEquals("c0de", KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject.getValue("confirm").jsonPrimitive.content)
     val order = transport.requests.map { it.method + " " + java.net.URI(it.url).path }
@@ -508,7 +509,7 @@ class PlanqueTest {
     val m = model()
     m.refreshConnections()
     assertTrue(m.giveKey("g1", digest, "  sk_test_4eC39H  "))
-    assertEquals("confirmed with the approval key", listOf("Give mcp.stripe.com its key for refunds-1"), auth.asked)
+    assertEquals("confirmed with the approval key, never naming the agent id", listOf("Give mcp.stripe.com its key"), auth.asked)
     val sent = transport.requestsTo(key).single()
     assertEquals("the key, trimmed, in its header alone", "sk_test_4eC39H", sent.headers[PlanqueClient.VENDOR_KEY])
     val body = String(sent.body!!)
@@ -1569,5 +1570,77 @@ class PlanqueTest {
     m.screenLocked()
     testScheduler.runCurrent()
     assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
+  }
+
+  @Test fun aVendorThatRefusesPlanquesClientIsSaidInPlanquesWords() = runTest {
+    val words = "mcp.vendor.example doesn't allow tafs to sign in yet, so nothing was connected. It isn't something you can change from here."
+    transport.answer("GET /v1/accounts/t_01/grants", 502, """{"error":"$words","code":"vendor_refused_client"}""")
+    try {
+      planque().grants(); fail("refused")
+    } catch (e: PlanqueError.Server) {
+      assertEquals("vendor_refused_client", e.code)
+      // planque's words, which say whose it is, not "it isn't working on our side".
+      assertEquals(words, bot.tafs.app.model.ErrorWords.of(e))
+    }
+    // Any other 502 is still the app's line for a service that's down.
+    transport.answer("GET /v1/accounts/t_01/grants", 502, """{"error":"upstream timeout"}""")
+    try {
+      planque().grants(); fail("refused")
+    } catch (e: PlanqueError.Server) {
+      assertEquals(null, e.code)
+      assertEquals(bot.tafs.app.model.ErrorWords.DOWN, bot.tafs.app.model.ErrorWords.of(e))
+    }
+  }
+
+  // The signed text in the person's language (docs/android-app.md › Connect apps): with digest_v 2 the digest covers
+  // {"lang", "request", "text"}. The digests below were computed apart (SHA-256 of the JCS bytes), not by this app.
+  private val v2Request =
+    """{"agent":"books","asked_by":"setup-agent","created_at":"2026-11-11T16:00:00Z","grant":"g_02","server":"https://mcp.vendor.example/mcp","tenant":"t_01","tools":[{"read_only":true,"tool":"list_invoices"}],"v":"planque.grant.v1"}"""
+  private val v2Text = "books pourra lire vos factures sur mcp.vendor.example"
+  private val v1Digest = "8aff552abc7aa96bf12361f93dabacf39fd0f70a32d31ba3397e83b8642547b5"
+  private val v2DigestFr = "b82a762ea92a268da2c458a10b797cc58e09c2b67238c04d0fb5b06e05adca64"
+
+  private fun v2Grant(digest: String, lang: String? = "fr", version: String? = "2", text: String = v2Text) =
+    """{"id":"g_02","status":"pending","text":"$text",""" + (lang?.let { "\"lang\":\"$it\"," } ?: "") +
+      (version?.let { "\"digest_v\":$it," } ?: "") + """"digest":"$digest","request":$v2Request,"audience":"https://planque.kiff.dev/mcp/t_01/g_02","events":[]}"""
+
+  private suspend fun readGrant(json: String): bot.tafs.app.kiff.Grant {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[$json]}""")
+    return planque().grants().single()
+  }
+
+  @Test fun aV2GrantsDigestCoversItsWordsAndTheirLanguage() = runTest {
+    assertTrue(readGrant(v2Grant(v2DigestFr)).digestMatches)
+    // One word changed, or the language relabelled: it no longer matches, so nothing is signed.
+    assertFalse(readGrant(v2Grant(v2DigestFr, text = "books pourra payer vos factures sur mcp.vendor.example")).digestMatches)
+    assertFalse(readGrant(v2Grant(v2DigestFr, lang = "en")).digestMatches)
+    // The v2 digest of the same request alone isn't accepted as v2, nor v1's as v2.
+    assertFalse(readGrant(v2Grant(v1Digest)).digestMatches)
+  }
+
+  @Test fun withoutDigestVTheRequestAloneAsBefore() = runTest {
+    assertTrue(readGrant(v2Grant(v1Digest, lang = null, version = null)).digestMatches)
+    // A grant with its words in a language but no digest_v is still v1: the words aren't what it covers.
+    assertTrue(readGrant(v2Grant(v1Digest, lang = "fr", version = null)).digestMatches)
+  }
+
+  @Test fun anUnknownVersionOrAV2GrantWithoutItsLanguageMatchesNothing() = runTest {
+    assertFalse(readGrant(v2Grant(v2DigestFr, version = "3")).digestMatches)
+    assertFalse(readGrant(v2Grant(v1Digest, version = "3")).digestMatches)
+    assertFalse(readGrant(v2Grant(v2DigestFr, lang = null)).digestMatches)
+  }
+
+  @Test fun everyRequestToPlanqueSaysThePersonsLanguage() = runTest {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    planque().grants()
+    assertEquals(bot.tafs.app.kiff.KiffClient.screenLanguage(), transport.requests.single().headers["Accept-Language"])
+  }
+
+  @Test fun theSharedVectorIsTheSameOnEveryApp() = runTest {
+    // The vector planque and iOS pin (kiff/planque#132, kiff/tafs#709), byte for byte: the three agree on what's signed.
+    val request = """{"agent":"books","asked_by":"setup-agent","created_at":"2026-11-11T16:00:00Z","grant":"g_02","server":"https://mcp.qonto.com/mcp","tenant":"t_01","tools":[{"read_only":true,"tool":"list_invoices"}],"v":"planque.grant.v1"}"""
+    val grant = """{"id":"g_02","status":"pending","text":"books pourra lire vos factures sur mcp.qonto.com","lang":"fr","digest_v":2,""" +
+      """"digest":"f1ca3ab371ecf97a82d134204e4931ef39ea474b7cd6a3e233b36f97499fbb32","request":$request,"audience":"https://planque.kiff.dev/mcp/t_01/g_02","events":[]}"""
+    assertTrue(readGrant(grant).digestMatches)
   }
 }

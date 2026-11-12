@@ -104,7 +104,7 @@ class DriveContractTest {
       "views/HaltViews.kt" to "Words.Halt.allNow else Words.Halt.now",
       "views/HaltViews.kt" to "Words.Halt.again",
       "views/TafDetailView.kt" to "actions.revoke(taf.id)",
-      "views/TafDetailView.kt" to "actions.remove(taf.id)",
+      "views/TafDetailView.kt" to "actions.remove(asked)",
       "views/TafDetailView.kt" to "actions.setPaused(taf.id, !taf.paused)",
       "views/SetupViews.kt" to "actions.togglePause(taf.id)",
       "views/SetupViews.kt" to "Words.Setup.removeForGood",

@@ -89,6 +89,8 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | follow-up (one a taf set for itself) | Nachfassen | relance | seguimiento | promemoria | acompanhamento | opvolging | przypomnienie |
 | Working on it | Wird bearbeitet | En cours | Trabajando en ello | In corso | Em curso | Bezig | W toku |
 | Done | Erledigt | Terminé | Hecho | Fatto | Concluído | Klaar | Gotowe |
+| Your step (a step a taf handed its owner) | Dein Schritt | Votre étape | Tu paso | Il tuo passaggio | O seu passo | Jouw stap | Twój krok |
+| Skip it | Überspringen | Passer | Omitir | Salta | Saltar | Overslaan | Pomiń |
 | Failed | Fehlgeschlagen | Échec | Falló | Non riuscito | Falhou | Mislukt | Nie powiodło się |
 | Stopped | Gestoppt | Arrêté | Detenido | Fermato | Parado | Gestopt | Zatrzymane |
 | ran out of room (a reply cut off at its length limit) | hatte keinen Platz mehr | a manqué de place | se quedó sin espacio | ha esaurito lo spazio | ficou sem espaço | had geen ruimte meer | zabrakło miejsca |
@@ -148,7 +150,10 @@ that tell a message's language, in tafs and kiff/agents together.
   language and each phone gets its own.
 - **Coach** is told the person's language with each message from an app in another language than
   English: a `[tafs language]` line before the owner's words, after tafs' own opening lines, so the
-  thread still shows only the owner's words. Coach answers in it.
+  thread still shows only the owner's words. Coach answers in it. For an account outside UTC, a
+  `[tafs time zone]` line beside it says the account's zone and the time there now, and that every
+  time Coach writes (a cron, an at, a time in a message) is in it, as the owner says it: kiff/agents'
+  own date line is in UTC, and a cron converted to it ran an hour early.
 - **A taf** follows the person writing in its chat. Its reports and alerts to its owner go in the
   account's language, as tafs cloud keeps it from the person's Coach chats: its instructions say so
   from its build, or its next Upgrade once the language changes. A message to a customer keeps the

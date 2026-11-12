@@ -197,4 +197,13 @@ class CoachScreenTest {
     rule.onNodeWithText("The owner wants refunds capped, I should").assertDoesNotExist()
     hold()
   }
+
+  /** The store's screenshots open Coach from the sample: what Coach is, as a new account first sees it, never a spinner. */
+  @Test fun theSampleForTheStoresScreenshotsShowsCoachsIntro() {
+    val sample = bot.tafs.app.app.AppState(mode = bot.tafs.app.app.Mode.sample, ready = true, screenshots = true)
+    rule.setShown {
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(sample, actions, loadCoach = {}, onBack = {}) } }
+    }
+    rule.onNodeWithText("Name an app a taf should work with", substring = true).assertIsDisplayed()
+  }
 }

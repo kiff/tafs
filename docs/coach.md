@@ -178,12 +178,16 @@ then shows its plan. Then, each step behind the owner's yes:
    `cron`, when it runs, with `check`, the read that lists its open work, or `unscheduled`.
    Every schedule checks first: each firing makes that read without the model, and the
    AI runs only when it lists something new, so a quiet schedule costs nothing. `first:
-   "all"` makes the first check hand the queue already there. A result with `cron` and no
-   `check` is answered failed, in words Coach acts on. tafs cloud starts it as the
+   "all"` makes the first check hand the queue already there. Before the result, Coach
+   sizes the job (`set-up-a-taf@6`): it makes the check's read once itself, with its
+   arguments, `limit 1` and the total where the vendor gives one, and never hands over a
+   check it hasn't seen read; with more than 50 items waiting, or no total, it bounds the
+   kickoff and instructions (the 20 most recent, and the total) and tells the owner how many
+   wait. A result with `cron` and no `check` is answered failed, in words Coach acts on. tafs cloud starts it as the
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
-   (`answer.by`, `answer.outcome`: `{taf_id}` or `{failed}`), and the card shows it:
+   (`answer.by`, `answer.outcome`: `{taf_id}`, with `check` when its first check couldn't read, or `{failed}`), and the card shows it:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". The app starts nothing itself
    (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf

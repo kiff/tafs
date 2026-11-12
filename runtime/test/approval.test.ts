@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
+import { approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -28,7 +28,7 @@ function grant(over: Record<string, unknown> = {}, request: Record<string, unkno
 
 interface Services {
   grants: unknown[];
-  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[]; confirm_key?: string }>;
+  drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[]; confirm_key?: string; label?: string }>;
   /** What KIFF answers the device-signature check: signed, or a status. */
   signed: true | number;
   /** Which key KIFF says signed, and the window it named (kiff/tafs#494); none, as a KIFF from before. */
@@ -81,6 +81,8 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
   const tafs = memoryTafs();
   const taf: Taf = { id: COACH, name: "Coach", job: "setup", kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
   tafs.held.set(`t_acme#${COACH}`, taf);
+  // The taf being set up, whose agent the grant is for: the phone's prompt names it.
+  tafs.held.set("t_acme#taf-rrrr0000000000000000", { id: "taf-rrrr0000000000000000", name: "Refunds", job: "refunds", kiffAgent: "refunds-x", nameClaim: "r", created: "2026-10-15T09:00:00Z" });
   await agents.api.putAgent("t_acme", COACH, {} as never);
   agents.access.set("u_ana", { cards_manage: true });
   const run = await agents.api.startRun("t_acme", COACH, "Set up refunds", ANA);
@@ -126,7 +128,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({
       outcome: "sign",
-      ask: { step: "connect", message: `tafs.connect.v1|t_acme|g_1|${sha256(grant().request)}`, reason: "Connect Stripe to refunds-x", planque: { grant: "g_1", body: { digest: sha256(grant().request) } } },
+      ask: { step: "connect", message: `tafs.connect.v1|t_acme|g_1|${sha256(grant().request)}`, reason: "Connect Stripe to Refunds", planque: { grant: "g_1", body: { digest: sha256(grant().request) } } },
     });
     expect((r.body.ask as { planque: { body: object } }).planque.body).not.toHaveProperty("kiff_profile");
     expect(w.told()).toBeUndefined();
@@ -239,6 +241,38 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(w.told()).toMatchObject({ answer: "already approved: Stripe is connected and its Card is confirmed" });
   });
 
+  it("the phone's signing prompt names the app and the taf in the person's language, never a server slug or agent id", async () => {
+    // As the French iPad showed it: planque's vendor was the server's slug and the agent its id.
+    const s = services();
+    s.grants = [grant({ vendor: "stripe-mcp" })];
+    const w = await world(s);
+    const fr = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) }, { "accept-language": "fr-FR" });
+    expect((fr.body.ask as { reason: string }).reason).toBe("Connecter Stripe à Refunds");
+    // A taf tafs cloud doesn't hold by that agent: the app alone, never the agent id.
+    s.grants = [grant({}, { agent: "taf-x9" })];
+    const unnamed = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant({}, { agent: "taf-x9" }).request) }, { "accept-language": "fr-FR" });
+    expect((unnamed.body.ask as { reason: string }).reason).toBe("Connecter Stripe");
+    expect(JSON.stringify(unnamed.body)).not.toContain("taf-x9\"");
+  });
+
+  it("a connect while Coach sets the taf up, before it's listed: the prompt names it as planque keeps it, and a Card by the draft's label", async () => {
+    const s = services();
+    const setup = { agent: "remb-x2" };
+    s.grants = [grant({ vendor: "stripe-mcp", agent_name: "Remboursements du lundi" }, setup)];
+    const w = await world(s);
+    const fr = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant({}, setup).request) }, { "accept-language": "fr-FR" });
+    expect((fr.body.ask as { reason: string }).reason).toBe("Connecter Stripe à Remboursements du lundi");
+    // Its Cards, the vendor connected: the draft's label names it, and with none, planque's agent_name does.
+    s.grants = [grant({ status: "connected", agent_name: "Remboursements du lundi" }, setup)];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "remb-x2", label: "Remboursements" };
+    const card = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect((card.body.ask as { reason: string }).reason).toBe("Give Remboursements its Card");
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "remb-x2" };
+    const unlabelled = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect((unlabelled.body.ask as { reason: string }).reason).toBe("Give Remboursements du lundi its Card");
+    expect(JSON.stringify([fr.body, card.body, unlabelled.body])).not.toContain("remb-x2\"");
+  });
+
   it("the Cards over a connected vendor: KIFF's draft at the version shown, one message to sign", async () => {
     const s = services();
     s.grants = [grant({ status: "connected" })];
@@ -247,7 +281,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const old = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v2" });
     expect(old.body).toEqual({ outcome: "read_again", note: WORDS.outOfDate });
     const r = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
-    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "cards", message: "tafs.cards.v1|t_acme|drf_1|v3", reason: "Give refunds-x its Card", kiff: { draft: "drf_1", version: "v3" } } });
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "cards", message: "tafs.cards.v1|t_acme|drf_1|v3", reason: "Give Refunds its Card", kiff: { draft: "drf_1", version: "v3" } } });
     expect(r.body.ask).not.toHaveProperty("planque");
     expect(w.told()).toBeUndefined();
   });
@@ -420,6 +454,42 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     const r = await w.report({ result: "connected" });
     expect(r.body).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}`, note: WORDS.notConnected("Stripe", "signed_in") });
     expect(w.told()).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}` });
+  });
+
+  it("words each note in the approving request's language, the reason Coach hears with it, and keeps the protocol's words", async () => {
+    // agentgabo on #716: "Your approval window has ended…" read English in a Polish chat.
+    const PL = approvalWords("pl");
+    const SIG = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig", "accept-language": "pl-PL,pl;q=0.9" };
+    const cases: Array<[Record<string, unknown>, string]> = [
+      [{ result: "sign_in_closed" }, PL.signInClosed],
+      [{ result: "no_code" }, PL.noCode("Stripe")],
+      [{ result: "not_connected", status: "needs_reconnect" }, PL.cameBack("needs_reconnect")],
+      [{ result: "failed" }, PL.failed()],
+    ];
+    for (const [body, why] of cases) {
+      const s = services();
+      const w = await asked(s);
+      s.grants = [grant({ status: "approved" })];
+      const r = await w.report(body, SIG);
+      expect(r.body).toMatchObject({ outcome: "answered", answer: `failed: ${why}`, note: why });
+      expect(w.told()).toMatchObject({ answer: `failed: ${why}` });
+    }
+    expect(PL.cameBack("needs_reconnect")).toBe("Połączenie wróciło bez linku do logowania (stan: czeka na ponowne zalogowanie). Nic nie zostało połączone.");
+    expect(PL.failed()).toBe("Nie połączono: nie powiodło się");
+    // A note on a tap, and a refusal's words, the same.
+    const w = await world(services());
+    const none = await w.call("POST", ASK, { grant: "g_9" }, { "accept-language": "pl" });
+    expect(none.body).toMatchObject({ outcome: "answered", answer: `failed: ${PL.noGrant}`, note: PL.noGrant });
+    const s = services();
+    const w2 = await world(s);
+    const r = await w2.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    const id = (r.body.ask as { id: string }).id;
+    s.signedKey = "device";
+    s.signedWindow = { id: "win_abcdefghijklmnopqrstuvwxyz", open: false };
+    const ended = await w2.call("POST", `${ASK}/${id}`, { result: "connected" }, { ...SIG, "kiff-device-signature": "t=2026-10-16T12:00:30Z,v2=sig,w=win_abcdefghijklmnopqrstuvwxyz" });
+    expect(ended.body).toEqual({ error: "Czas na zatwierdzenie minął. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.", code: "window_required" });
+    // English is as it was: no Accept-Language, or an English one.
+    expect(WORDS.notConnected("Stripe", "needs_reconnect")).toBe("The sign-in at Stripe didn't connect: the connection is needs reconnect. Nothing was connected. Try signing in again.");
   });
 
   it("each failure the phone can report has tafs cloud's words, for Coach and for the card", async () => {

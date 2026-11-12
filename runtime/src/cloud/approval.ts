@@ -24,6 +24,8 @@ import { createHash } from "node:crypto";
 import type { CoachStore } from "./coach.js";
 import { sha256 } from "./jcs.js";
 import { actionsInForce, draftInfo, type Fetch, issued, KIFF_API, KIFFError } from "./kiff.js";
+import { vendorName } from "./steps.js";
+import { type Lang, wordsIn } from "./words/index.js";
 
 /** A grant as planque sends it, in what the decision reads. */
 export interface ApprovalGrant {
@@ -31,6 +33,8 @@ export interface ApprovalGrant {
   status: string;
   digest: string;
   vendor?: string;
+  /** The name of the taf it was made for, as planque keeps it: named before the taf exists, during its setup. */
+  agent_name?: string;
   reason?: string;
   /** The app's sign-in was set up on the owner's pick, not by an operator (kiff/planque#87). */
   on_demand?: boolean;
@@ -139,27 +143,37 @@ interface Pending {
 /** An ask waits this long for the phone's report. */
 export const ASK_KEPT_MS = 20 * 60_000;
 
-/** The words the apps show, all from here. */
-export const WORDS = {
-  outOfDate: "What you're asked to approve changed since it was shown. Read it again, then approve.",
-  wordsUnread: "KIFF's words for this connection aren't read yet. Read it again, then approve.",
-  alreadyApproved: "Already approved",
-  nothingToApprove: (vendor: string) => `${vendor} is already connected. There's nothing new to approve, so nothing was approved.`,
-  digestMismatch: "This request doesn't match what it asks for. Nothing was approved.",
-  noGrant: "There's no connection with that id.",
-  cardsNotIssued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
-  cardsUnread: "The Card couldn't be checked yet. Read it again, then approve.",
-  uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
-  onDemandLetsRun: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
-  criticalKey: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
-  driveKey: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
-  windowClosed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
-  signInClosed: "The sign-in was closed. Nothing was connected.",
-  noCode: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
-  cameBack: (status: string) => `The connection came back ${status.replace(/_/g, " ")} with no sign-in link. Nothing was connected.`,
-  notConnected: (vendor: string, status: string) => `The sign-in at ${vendor} didn't connect: the connection is ${status.replace(/_/g, " ")}. Nothing was connected. Try signing in again.`,
-  failed: (why: string) => `Not connected: ${why}`,
-};
+/** The words the apps show, all from here: tafs cloud's catalog, in the approving request's language (words/*.ts). */
+export function approvalWords(lang: Lang = "en") {
+  const w = wordsIn(lang);
+  return {
+    outOfDate: w.approval_out_of_date,
+    wordsUnread: w.approval_words_unread,
+    alreadyApproved: w.approval_already,
+    nothingToApprove: w.approval_nothing_new,
+    digestMismatch: w.approval_digest_mismatch,
+    noGrant: w.approval_no_grant,
+    cardsNotIssued: w.approval_cards_not_issued,
+    draftIs: (status: string) => w.approval_draft_is(w.approval_status(status)),
+    noDraft: w.approval_no_draft,
+    cardsUnread: w.approval_cards_unread,
+    uncovered: w.approval_uncovered,
+    onDemandLetsRun: w.approval_on_demand,
+    criticalKey: w.approval_critical_key,
+    driveKey: w.approval_drive_key,
+    windowClosed: w.approval_window_closed,
+    signInClosed: w.approval_sign_in_closed,
+    noCode: w.approval_no_code,
+    cameBack: (status: string) => w.approval_came_back(w.approval_status(status)),
+    notConnected: (vendor: string, status: string) => w.approval_not_connected(vendor, w.approval_status(status)),
+    failed: (why?: string) => w.approval_failed(why ?? w.approval_failed_default),
+    reasonConnect: (vendor: string, taf?: string) => (taf ? w.approval_reason_connect(vendor, taf) : w.approval_reason_connect_unnamed(vendor)),
+    reasonCard: (taf?: string) => (taf ? w.approval_reason_card(taf) : w.approval_reason_card_unnamed),
+  };
+}
+
+/** The words in English: what a test or a caller without a request reads. */
+export const WORDS = approvalWords("en");
 
 export class ApprovalError extends Error {
   /** `code`, when set, is what the app acts on beside the words: critical_key_required, window_required. */
@@ -193,6 +207,21 @@ function vendorOf(g: ApprovalGrant): string {
   return g.vendor || g.request.server || "the vendor";
 }
 
+/**
+ * The taf's name for the phone's signing prompt: tafs cloud's taf by that agent first; then, for a taf still
+ * being set up and not listed yet, the names it was given (planque's `agent_name`, a draft's label). Never the agent id.
+ */
+async function nameOf(ctx: DecideContext, agent: string | undefined, ...given: Array<string | undefined>): Promise<string | undefined> {
+  const name = await ctx.tafName?.(agent).catch(() => undefined);
+  return [name, ...given].map((n) => (typeof n === "string" ? n.trim() : "")).find((n) => n !== "") || undefined;
+}
+
+/** The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else the grant's vendor. */
+function appNameOf(g: ApprovalGrant): string {
+  const server = typeof g.request.server === "string" ? g.request.server.trim() : "";
+  return vendorName(server) || (server && !server.includes("://") ? vendorName(`https://${server}/`) : "") || g.vendor || "";
+}
+
 /** A grant that can be approved and signed in: new, or one its vendor signed out. */
 const APPROVABLE = new Set(["pending", "approved", "signed_in", "needs_reconnect"]);
 
@@ -224,6 +253,10 @@ export interface DecideContext {
   fetch: Fetch;
   now: Date;
   newID: () => string;
+  /** The approving request's language (its Accept-Language): the notes and the reasons in an answer are in it. */
+  lang?: Lang;
+  /** A taf's name by its KIFF agent, as its owner reads it: what the phone's signing prompt names, never the agent id. */
+  tafName?: (agent?: string) => Promise<string | undefined>;
 }
 
 /**
@@ -231,30 +264,31 @@ export interface DecideContext {
  * grant as the phone, and KIFF's draft with the person's session.
  */
 export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Decision> {
+  const W = approvalWords(ctx.lang);
   const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
   const grant = grants.find((g) => g.id === ask.grant);
-  if (!grant) return { outcome: "answered", answer: `failed: ${WORDS.noGrant}`, note: WORDS.noGrant };
+  if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant };
   const vendor = vendorOf(grant);
   if (grant.status === "connected") {
     // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a
     // draft. A connection already connected with no Cards left signs nothing, so it isn't approved.
     // The card showed exactly what is connected (its digest): an approval signed earlier whose
     // report was lost. Approve again answers what holds, already approved, as the report would have.
-    if (!ask.draft && ask.shown_digest && ask.shown_digest === grant.digest) return { outcome: "answered", answer: `already approved: ${vendor} is connected`, note: WORDS.alreadyApproved };
-    if (!ask.draft) return { outcome: "answered", answer: `failed: ${vendor} is already connected; nothing new to approve`, note: WORDS.nothingToApprove(vendor) };
+    if (!ask.draft && ask.shown_digest && ask.shown_digest === grant.digest) return { outcome: "answered", answer: `already approved: ${vendor} is connected`, note: W.alreadyApproved };
+    if (!ask.draft) return { outcome: "answered", answer: `failed: ${vendor} is already connected; nothing new to approve`, note: W.nothingToApprove(vendor) };
     const draft = await draftInfo(ctx.token, ask.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
     if (!draft) return { outcome: "answered", answer: `failed: KIFF has no Card draft ${ask.draft} on this account`, note: `KIFF has no Card draft for this. Ask Coach for a new one.` };
     // Its Card confirmed already: a real approval, signed earlier (another phone, or a tap before this one).
-    if (issued(draft.status)) return { outcome: "answered", answer: `already approved: ${vendor} is connected and its Card is confirmed`, note: WORDS.alreadyApproved };
+    if (issued(draft.status)) return { outcome: "answered", answer: `already approved: ${vendor} is connected and its Card is confirmed`, note: W.alreadyApproved };
     if (draft.status !== "draft") return { outcome: "answered", answer: `failed: the Card draft is ${draft.status}`, note: `The Card draft is ${draft.status}. Ask Coach for a new one.` };
-    if (!draft.version || draft.version !== ask.shown_draft) return { outcome: "read_again", note: WORDS.outOfDate };
+    if (!draft.version || draft.version !== ask.shown_draft) return { outcome: "read_again", note: W.outOfDate };
     // An app set up on demand asks for every change (kiff/planque#87): a draft that lets one of its
     // writes run outright isn't signed, and Coach hears why, so the default holds here, not only in its words.
     // The check needs the Cards as KIFF shows them: a draft read without them isn't signed on trust.
-    if (grant.on_demand === true && !draft.cards) return { outcome: "read_again", note: WORDS.cardsUnread };
+    if (grant.on_demand === true && !draft.cards) return { outcome: "read_again", note: W.cardsUnread };
     const letsRun = onDemandLetsRun(grant, draft.cards ?? []);
     if (letsRun) {
-      const why = WORDS.onDemandLetsRun(vendor, letsRun);
+      const why = W.onDemandLetsRun(vendor, letsRun);
       return { outcome: "answered", answer: `failed: ${vendor} was set up on demand, so every write and money tool of it must ask the owner each time (0 a day, held); the draft lets "${letsRun}" run without asking. Draft it again with that tool held.`, note: why };
     }
     // Every tool the taf was given goes on a Card, the reads too: a draft that leaves one uncovered,
@@ -265,11 +299,11 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
       try {
         inForce = await actionsInForce(ctx.token, draft.agent, ctx.fetch, ctx.kiffBase ?? KIFF_API);
       } catch {
-        return { outcome: "read_again", note: WORDS.cardsUnread };
+        return { outcome: "read_again", note: W.cardsUnread };
       }
       const left = uncoveredTool(grant, draft.cards, inForce);
       if (left) {
-        return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read gets a call count only, generous enough never to get in the way).`, note: WORDS.uncovered(left) };
+        return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read gets a call count only, generous enough never to get in the way).`, note: W.uncovered(left) };
       }
     }
     const id = ctx.newID();
@@ -278,12 +312,12 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     const pending: Pending = { step: "cards", grant: grant.id, vendor, draft: ask.draft, version: draft.version, made: ctx.now.toISOString(), key };
     await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
     await noteSending(grant, ctx);
-    return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: `Give ${draft.agent || "the taf"} its Card`, key, kiff: { draft: ask.draft, version: draft.version } } };
+    return { outcome: "sign", ask: { id, step: "cards", message: `tafs.cards.v1|${ctx.tenant}|${ask.draft}|${draft.version}`, reason: W.reasonCard(await nameOf(ctx, draft.agent, draft.label, grant.agent_name)), key, kiff: { draft: ask.draft, version: draft.version } } };
   }
   // Signed in already, its tools listed and waiting for their own approval: an earlier approval
   // went through even if its report didn't reach here (the phone lost it, or it was refused), so
   // Approve again answers what holds, as the report would have: approved, never failed.
-  if (grant.status === "listed" && !ask.draft) return { outcome: "answered", answer: `already approved: ${vendor} is signed in; its tools wait for approval`, note: WORDS.alreadyApproved };
+  if (grant.status === "listed" && !ask.draft) return { outcome: "answered", answer: `already approved: ${vendor} is signed in; its tools wait for approval`, note: W.alreadyApproved };
   if (!APPROVABLE.has(grant.status)) {
     const why = `This connection is ${grant.status.replace(/_/g, " ")}${grant.reason ? `: ${grant.reason}` : "."}`;
     return { outcome: "answered", answer: `failed: ${why}`, note: why };
@@ -291,12 +325,12 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   // The digest planque signs is the request's: the phone shows Approve only when it matches, and so does tafs cloud.
   let digest = "";
   try { digest = sha256(grant.request); } catch { /* an unreadable request never matches */ }
-  if (digest !== grant.digest) return { outcome: "answered", answer: `failed: ${WORDS.digestMismatch}`, note: WORDS.digestMismatch };
-  if (grant.digest !== ask.shown_digest) return { outcome: "read_again", note: WORDS.outOfDate };
+  if (digest !== grant.digest) return { outcome: "answered", answer: `failed: ${W.digestMismatch}`, note: W.digestMismatch };
+  if (grant.digest !== ask.shown_digest) return { outcome: "read_again", note: W.outOfDate };
   // A connection with a profile is approved only with KIFF's words for exactly that profile, as the owner read them.
   let kiffProfile: { profile_sha256: string; words_sha256: string } | undefined;
   if (grant.request.profile !== undefined) {
-    if (!ask.words || ask.words.profile_sha256 !== sha256(grant.request.profile)) return { outcome: "read_again", note: WORDS.wordsUnread };
+    if (!ask.words || ask.words.profile_sha256 !== sha256(grant.request.profile)) return { outcome: "read_again", note: W.wordsUnread };
     kiffProfile = { profile_sha256: ask.words.profile_sha256, words_sha256: ask.words.words_sha256 };
   }
   const id = ctx.newID();
@@ -307,7 +341,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   return {
     outcome: "sign",
     ask: {
-      id, step: "connect", message: `tafs.connect.v1|${ctx.tenant}|${grant.id}|${grant.digest}`, reason: `Connect ${vendor} to ${grant.request.agent ?? "the taf"}`, key: "window",
+      id, step: "connect", message: `tafs.connect.v1|${ctx.tenant}|${grant.id}|${grant.digest}`, reason: W.reasonConnect(appNameOf(grant) || vendor, await nameOf(ctx, grant.request.agent, grant.agent_name)), key: "window",
       planque: { grant: grant.id, body: { digest: grant.digest, ...(kiffProfile ? { kiff_profile: kiffProfile } : {}) } },
     },
   };
@@ -360,7 +394,8 @@ export interface ReportContext extends DecideContext {
  * inside a window for a critical ask, since that phone took the window path for
  * a critical call, and a window that has ended.
  */
-export async function checkSigned(ctx: ReportContext, key: "window" | "critical" | "approval" = "window"): Promise<void> {
+export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | "kiffBase" | "token" | "lang"> & Partial<ReportContext>, key: "window" | "critical" | "approval" = "window"): Promise<void> {
+  const W = approvalWords(ctx.lang);
   const { signed } = ctx;
   if (!signed.signature) throw new ApprovalError(403, "this answer isn't signed by your phone");
   let res: Response;
@@ -383,10 +418,10 @@ export async function checkSigned(ctx: ReportContext, key: "window" | "critical"
   const out = (await res.json().catch(() => ({}))) as { signed?: unknown; key?: unknown; window?: { open?: unknown } };
   if (out.signed !== true) throw new ApprovalError(403, "this phone didn't sign that answer");
   // Only the approval key, behind the fingerprint: a Coach drive's start (kiff/tafs#544).
-  if (key === "approval" && (out.key !== "critical" || out.window)) throw new ApprovalError(403, WORDS.driveKey, "critical_key_required");
+  if (key === "approval" && (out.key !== "critical" || out.window)) throw new ApprovalError(403, W.driveKey, "critical_key_required");
   if (!out.window) return; // signed outside a window: as every report before (the device key's, v1)
-  if (key === "critical") throw new ApprovalError(403, WORDS.criticalKey, "critical_key_required");
-  if (out.key === "device" && out.window.open !== true) throw new ApprovalError(403, WORDS.windowClosed, "window_required");
+  if (key === "critical") throw new ApprovalError(403, W.criticalKey, "critical_key_required");
+  if (out.key === "device" && out.window.open !== true) throw new ApprovalError(403, W.windowClosed, "window_required");
 }
 
 /** The outcome of a reported approval: Coach's answer and the card's note. */
@@ -401,6 +436,7 @@ export interface Outcome {
  * holds it; else `failed: <why>`, in tafs cloud's words.
  */
 export async function settle(askID: string, report: Report, ctx: ReportContext): Promise<Outcome> {
+  const W = approvalWords(ctx.lang);
   if (!ID.test(askID)) throw new ApprovalError(404, "no approval waits for that answer");
   const key = keyOf(ctx.tenant, ctx.taf, ctx.component, askID);
   const pending = (await ctx.store.get(key)) as Pending | undefined;
@@ -414,8 +450,8 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   if (pending.step === "cards") {
     const draft = pending.draft ? await draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now) : undefined;
     if (draft && issued(draft.status)) return { answer: "approved" };
-    const why = report.result === "failed" && report.why ? report.why : draft ? `the draft is ${draft.status}` : "KIFF has no such draft";
-    return { answer: `failed: ${WORDS.cardsNotIssued(why)}`, note: WORDS.cardsNotIssued(why) };
+    const why = report.result === "failed" && report.why ? report.why : draft ? W.draftIs(draft.status) : W.noDraft;
+    return { answer: `failed: ${W.cardsNotIssued(why)}`, note: W.cardsNotIssued(why) };
   }
   const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
   const grant = grants.find((g) => g.id === pending.grant);
@@ -423,12 +459,12 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   const vendor = pending.vendor;
   let why: string;
   switch (report.result) {
-    case "sign_in_closed": why = WORDS.signInClosed; break;
-    case "no_code": why = WORDS.noCode(vendor); break;
+    case "sign_in_closed": why = W.signInClosed; break;
+    case "no_code": why = W.noCode(vendor); break;
     // planque's approve came back with no sign-in link and not connected: its status, as it answered.
-    case "not_connected": why = WORDS.cameBack(report.status ?? grant?.status ?? "unknown"); break;
-    case "failed": why = WORDS.failed(report.why ?? "it didn't go through"); break;
-    default: why = WORDS.notConnected(vendor, grant?.status ?? "unknown");
+    case "not_connected": why = W.cameBack(report.status ?? grant?.status ?? "unknown"); break;
+    case "failed": why = W.failed(report.why); break;
+    default: why = W.notConnected(vendor, grant?.status ?? "unknown");
   }
   return { answer: `failed: ${why}`, note: why };
 }

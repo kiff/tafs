@@ -88,13 +88,20 @@ connected: "Checking the sign-in…" meanwhile (`connectStep`).
 cloud's line, then its recent requests and skipped firings, newest first, in tafs cloud's words.
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
 given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`). Then its
-runs (`RunsPanel`): when it runs next, or that it works from its chat, and **Run now**; then the
-runs it kept (`RetainedRuns`), which stand for its latest run's report. What needs the owner
+runs (`RunsPanel`): when it runs next, in tafs cloud's `next_run_words` ("Next run Mon 08:00", with
+the day when it isn't today; the app's own time only from a tafs cloud that sends none), or that it
+works from its chat, and **Run now**; then the runs it kept (`RetainedRuns`), which stand for its
+latest run's report, with the firings that started no run among them by time (the first page's
+`skipped`, a Run now whose check couldn't read among them, `RunsPage.rows`), dim. The home list says the next run the same way. A taf
+whose `work.attention` is set says what went wrong last in place of its next run, and its row and
+page drop the **Working** chip (`Taf.attention`). Its Cards keep tafs cloud's order (`Taf.shownCards`):
+the one in front is the one that has used most of its limit. The Record shows an action's whole
+title with its amount ("Save a dispute response · $800"), never the verb alone. What needs the owner
 comes first, then the work, then the runs, as on Android (`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
 (`oldest_waiting.words`, tafs cloud's line, amber once `late`) and, for whoever manages the taf,
 **Answer within** (`PromiseRow`): the promise as tafs cloud keeps it (`promise.hours`) or Not set,
-and a menu of None, 1, 2, 4, 8, 24, 48 or 168 hours that sends `PUT /v1/tafs/{id}/promise`
-(`AppModel.setPromise`). The app keeps no copy; a promise that couldn't be set says why under the
+and a menu of None, 1, 2, 4 or 8 hours, or 1, 2 or 7 days (whole days read as days, `PromiseRow.label`),
+that sends the hours in `PUT /v1/tafs/{id}/promise` (`AppModel.setPromise`). The app keeps no copy; a promise that couldn't be set says why under the
 work. The phones that answer its holds are told when a case waits longer; tafs cloud sends that
 alert, and it opens the taf.
 
@@ -159,6 +166,10 @@ the app in sample mode.
     `buy.first_month` is set and `ready`, then the packs that can be bought again
     (`Store.offered(firstMonth:)`). Not ready, it isn't listed: never alone or greyed. KIFF
     lists it with no App Store product today, so iPhone and iPad don't show it yet.
+  - **Who manages billing** is KIFF's `billing.manage` in the account's capabilities
+    (`AppModel.managesBilling`), as on Android: they see members' open requests, with Raise the
+    limit or Approve, and never **Ask an admin**; anyone else sees Ask an admin, or their own
+    request waiting. Not KIFF's usage `can_add_tasks`, which it has sent as false since credits.
   - **Restore purchases** stays on Solo's screen and Add credits, as the App Store asks. A
     restore that finds nothing says "Nothing to restore.", never "Purchases restored."
     (`PurchaseOutcome.nothingToRestore`).
@@ -221,8 +232,17 @@ the app in sample mode.
   disabled, even while an app's place is on. Replies given up on show **Send again**, and a failed read of its work or Send again is said
   there (`workErrors`).
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
-  device (Turn on alerts while off), Sound, and What alerts you, read-only; "A taf answered
+  device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
+  kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+- **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
+  `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
+  language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
+  of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
+- **Setup › Connected tools** (`ConnectedToolsRing`): one node per app (`ConnectedToolsRing.nodes`),
+  the connection with actions in front; another sign-in to the same app is under Other
+  connections in its sheet, with its own Disconnect. Starts when and Results go to are rows
+  with a caret, no "Open" beside them (it read as their value).
 - **Dark:** each `Theme` colour has a light and a dark value (`Color(light:dark:)`), the values
   the owner reviewed, the same as Android: background 141311, panel 1F1E1B, raised 2A2824, ink
   F2EFE9, soft A8A49C, dim 96918A, line F2EFE9 at 12%, amber FF8A1F, amberText F0A45A, ok 4CC38A,
@@ -367,7 +387,8 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
 The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
 icon at the top right of the Overview (the iPad's sidebar) and, on the iPhone,
 beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
-Week first, with Today, previous and next, and a date to pick. tafs cloud computes
+Week first, with Today, previous and next, and a date to pick. On a phone the range
+("9 – 15 Nov") has a line of its own above the buttons, so it's never cut. tafs cloud computes
 every occurrence (`GET /v1/calendar`, docs/api.md): live schedules' firings in the
 account's zone, follow-ups and runs' next tries, only for the tafs the person may
 see, none for a paused taf. Each comes with its `day`, `time` and `minute` in that
@@ -390,7 +411,8 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 - **Search:** the box's placeholder is tafs cloud's `hint` ("Search by order, invoice, amount
   or action"), read once when the tab opens; the app's own line stands in until it comes.
-  Search sends what's typed. The results take the list's place: tafs cloud's `groups`, each
+  What's typed is searched 400 ms after the last key (`AppModel.recordQueryTyped`), so a word
+  typed letter by letter is one search; the Search key searches at once. The results take the list's place: tafs cloud's `groups`, each
   call drawn as its taf's Activity draws it (`SourceActivityRow`, with its receipt and its own
   next step) under its taf's name, and **More** for `next_cursor`. A taf the phone doesn't
   list shows the call as tafs cloud words it, without a next step. A cursor tafs cloud refuses
@@ -410,6 +432,33 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 Tests: `TafsTests/RecordSearchTests.swift`.
 
+## Your step
+
+A step a taf may never take itself, prepared and handed to its owner ([api.md](api.md) › Your
+step; `KIFF/TafsCloud+YourStep.swift`, `Views/YourStepCard.swift`, `AppModel.answerYourStep`):
+
+- **Where:** Needs you lists Home's `your_steps` first, oldest first, as Android does, each card
+  naming its taf. A taf's page shows the step on the request that waits on it (its
+  `your_step`), with Home's copy when Home has it. The card is tafs cloud's words only: `title`,
+  what, why, and `done` and `skip`.
+- **The vendor's page:** a button only when tafs cloud sent `link`, `link_host` and `words.open`,
+  the link is https, and `link_host` is the link's own host. The host shows under the button,
+  so the person sees where it goes. The app never decides from a URL it parsed itself, and a
+  link without all of that shows no button. A taf's request carries no link.
+- **The answer** goes to KIFF, never to tafs cloud. The hand-off is read first
+  (`GET /v1/me/handoffs/{handoff}`) for the version the phone signs; one whose `status` isn't
+  `waiting` isn't sent, and the shared words say it has ended. Then
+  `POST /v1/me/handoffs/{handoff}/answer` with `done` or `skipped`, signed with the device key
+  over `kiff.handoff.v1` (`KIFFClient.handoffMessage`, pinned by KIFF's vector), under Face ID
+  or the passcode as a Refuse is, never the approval key, which signs only what grants
+  authority. The prompt is tafs cloud's words: "Done · {what}". Only a person who answers the
+  account's holds, with the session's device key, sees the buttons. A 409 means it was answered
+  meanwhile, or it ended: it leaves Needs you. Answered here, it stays out of Needs
+  you and its count while Home still lists it, until the run hears the answer.
+- **Its notification** (`handoff` in the payload) opens Needs you on that step.
+
+Tests: `TafsTests/YourStepTests.swift`.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,
@@ -418,11 +467,23 @@ Tests: `TafsTests/RecordSearchTests.swift`.
   that test found.
 - **UI tests** (`TafsUITests`): `ChatPinUITests` holds how a sent message, the work block
   and the answer sit in the chat ([chat.md](chat.md#the-sent-message-stays-on-top)).
-- **CI** (`.github/workflows/ios.yml`) builds and tests every push and pull request on a
-  simulator. When a change touches the screens, it takes screenshots and uploads them as
-  the `screenshots` artifact. A `v*` tag or a manual run also uploads to TestFlight: Team
-  at once, and the external Beta testers after Apple's review unless the run turns that
-  off.
+- **CI** (`.github/workflows/ios.yml`) builds and tests, on a simulator, every pull request
+  and push to main that changes what the app is built from (`ios/`, `app/strings/`, the
+  workflow); a tafs cloud or Android change doesn't take a macOS runner. It builds once, then
+  runs the unit tests on every such change; the iPhone's UI tests only when the screens
+  (views, design, assets, `TafsApp.swift`) or the UI tests change; and the iPad's list tests
+  only when the iPad's layout changes. When a pull request touches the screens,
+  it takes a key set of screenshots, uploaded as the `screenshots` artifact. A `v*` tag or a
+  manual run also uploads to TestFlight: Team at once, and the external Beta testers after
+  Apple's review unless the run turns that off. A manual run skips each kind of test main
+  already passed at an earlier commit with nothing changed since that it tests (the app for
+  the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
+  upload can go straight to the archive; a tag runs everything.
+- **Screenshot runs** are manual runs with `upload` off and `screenshots` set (`full`, `key`
+  or `languages`; it's `none` by default). They wait for an empty queue: one stops at once,
+  before it takes a macOS runner, while another manual or tag run is queued or running, so
+  a release build never waits behind screenshots. Dispatch it again once that run is
+  through.
 
 ```bash
 cd ios && xcodegen generate
@@ -449,7 +510,9 @@ KIFF and tafs cloud carries `Accept-Language` with the language the screens reso
 languages the app ships (`Words.languages`), at most four, then `en` (`KIFFClient.screenLanguages`). A language only
 Siri's phrases are in never counts. The calendar's titles follow the language's order (`calendar.title.*`), and its
 month view names the month on its own (`calendar.month_title.*`, the nominative in Polish). Halt all's Siri lines
-are `siri.halt_all.*`, and its phrases are in each language's `AppShortcuts.strings`. The iOS workflow's
+are `halt_all.*`, and its phrases are in each language's `AppShortcuts.strings`. Apple reads an App Intent's
+keys as its words and refuses a build whose title or description contains "siri" (90626), so no intent key or
+phrase does, which `test_strings` checks. The iOS workflow's
 `languages` screenshot set (a manual run with `"screenshots": "languages"`) takes the main screens in each language.
 
 What stays in code, never in a language: JSON keys, codes and states compared with a server's, tool names, URL

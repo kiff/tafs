@@ -40,9 +40,17 @@ struct ShareLine: View {
 
     /// "Shared with Support and ana@acme.com", or not shared yet.
     static func sharedWith(_ shares: [KIFFClient.Share]?, _ model: AppModel) -> String {
+        sharedWith(shares, groups: model.groups) { model.person($0)?.label ?? $0 }
+    }
+
+    static func sharedWith(_ shares: [KIFFClient.Share]?, groups: [KIFFClient.Group], label: (String) -> String) -> String {
         guard let shares else { return Words.People.sharing }
+        // Shared with KIFF's default group alone: its own sentence, so the languages that inflect it read right.
+        if let g = shares.first?.group, shares.count == 1, groups.first(where: { $0.id == g })?.everyone == true {
+            return Words.People.sharedWithEveryone
+        }
         let names = shares.compactMap { s in
-            s.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? s.subject.map { model.person($0)?.label ?? $0 }
+            s.group.flatMap { g in groups.first { $0.id == g }?.shownName } ?? s.subject.map(label)
         }
         return names.isEmpty ? Words.People.notShared : Words.People.sharedWithPrefix + Words.list(names)
     }
@@ -105,7 +113,7 @@ struct ShareTafSheet: View {
                 ForEach(model.groups) { group in
                     pick(.init(group: group.id)) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(group.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                            Text(group.shownName).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                             Text(Self.people(of: group, model)).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge()
                         }
                     }
@@ -183,14 +191,16 @@ struct ShareTafSheet: View {
         var lines: [String] = []
         if !chosen.isEmpty { lines.append(Words.People.ownChats) }
         for share in chosen.sorted(by: { ($0.group ?? $0.subject ?? "") < ($1.group ?? $1.subject ?? "") }) {
-            if let id = share.group, let group = model.groups.first(where: { $0.id == id }) {
-                lines.append(Words.People.groupUses(group: "\(group.name)", taf: "\(taf.name)", people: "\(people(of: group, model))"))
+            if let id = share.group, let group = model.groups.first(where: { $0.id == id }), group.everyone == true {
+                lines.append(Words.People.everyoneUses(taf: "\(taf.name)", people: "\(people(of: group, model))"))
+            } else if let id = share.group, let group = model.groups.first(where: { $0.id == id }) {
+                lines.append(Words.People.groupUses(group: "\(group.shownName)", taf: "\(taf.name)", people: "\(people(of: group, model))"))
             } else if let subject = share.subject {
                 lines.append(Words.People.personUses(person: "\(model.person(subject)?.label ?? subject)", taf: "\(taf.name)"))
             }
         }
         for share in had.subtracting(chosen) {
-            let name = share.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? share.subject.map { model.person($0)?.label ?? $0 } ?? ""
+            let name = share.group.flatMap { g in model.groups.first { $0.id == g }?.shownName } ?? share.subject.map { model.person($0)?.label ?? $0 } ?? ""
             lines.append(Words.People.stopsUsing(who: "\(name)", taf: "\(taf.name)"))
         }
         return lines
@@ -321,7 +331,7 @@ struct OverviewView: View {
         var names: [String] = []
         for s in shares {
             if let g = s.group, let group = model.groups.first(where: { $0.id == g }) {
-                names.append(group.name); group.members.forEach { people.insert($0.subject) }
+                names.append(group.shownName); group.members.forEach { people.insert($0.subject) }
             } else if let subject = s.subject {
                 names.append(model.person(subject)?.label ?? subject); people.insert(subject)
             }
