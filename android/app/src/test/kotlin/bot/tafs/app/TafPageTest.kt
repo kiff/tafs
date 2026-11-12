@@ -35,11 +35,11 @@ class TafPageTest {
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
   }
 
-  private suspend fun model(): AppModel {
+  private suspend fun model(signer: bot.tafs.app.signing.ApprovalSigning = softwareSigner(auth)): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
-    return testModel(auth = auth, transport = transport, secrets = secrets, clock = { t0 }, start = false).also { it.restore() }
+    return testModel(auth = auth, transport = transport, secrets = secrets, clock = { t0 }, signer = signer, start = false).also { it.restore() }
   }
 
   // MARK: Its work (docs/reliability.md, "The taf's view")
@@ -335,6 +335,40 @@ class TafPageTest {
     )
   }
 
+  @Test fun theDeleteCarriesTheApprovalKeysSignatureOverItselfAskedWithAFingerprint() = runTest {
+    reads()
+    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
+    transport.answer("POST /v1/me/mandates/c2/revoke", 200)
+    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
+    val keys = bot.tafs.app.signing.SoftwareKeys()
+    val m = model(bot.tafs.app.signing.DeviceSigner(keys, auth))
+    m.removeTaf("refunds-1")
+    // The fingerprint, for this removal: the approval key unlocks for this one signature.
+    assertEquals(listOf("Remove Refunds for good"), auth.fingerprints)
+    val header = transport.requestsTo("DELETE /v1/tafs/taf_1").single().headers.getValue("KIFF-Device-Signature")
+    val signedAt = header.removePrefix("t=").substringBefore(",v1=")
+    val message = bot.tafs.app.kiff.KiffClient.requestMessage("t_01", "DELETE", "/v1/tafs/taf_1", ByteArray(0), signedAt)
+    val verified = java.security.Signature.getInstance("SHA256withECDSA").run {
+      initVerify(java.security.KeyFactory.getInstance("EC").generatePublic(java.security.spec.X509EncodedKeySpec(keys.approvalPublicKeyDER)))
+      update(message)
+      verify(java.util.Base64.getDecoder().decode(header.substringAfter(",v1=")))
+    }
+    assertTrue("signed by the approval key, over the DELETE itself", verified)
+  }
+
+  @Test fun noFingerprintMeansNoRemovalEvenOnADebugPhoneWithNoScreenLock() = runTest {
+    reads()
+    // A debug build on a phone with no screen lock: the demo lets an approval through, never a removal.
+    val noLock = FakeAuthenticator(available = false)
+    val keys = object : bot.tafs.app.signing.SigningKeys by bot.tafs.app.signing.SoftwareKeys() {
+      override val approvalPublicKeyDER: ByteArray = ByteArray(0)
+    }
+    val m = model(bot.tafs.app.signing.DeviceSigner(keys, noLock, demoWithoutLock = true))
+    assertEquals(bot.tafs.app.signing.DeviceSigner.NO_FINGERPRINT, m.removeTaf("refunds-1"))
+    assertTrue(noLock.asked.isEmpty())
+    assertTrue(transport.requests.none { it.method == "DELETE" || it.url.contains("/mandates/") })
+  }
+
   @Test fun aRemovalNobodyConfirmedDoesNothing() = runTest {
     reads()
     auth.confirms = false
@@ -356,7 +390,11 @@ class TafPageTest {
     // tafs cloud lists it as a removal begun: the next refresh finishes it.
     transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[{"id":"taf_1","name":"Refunds"}]}""")
     m.refresh()
-    assertEquals(2, transport.requestsTo("DELETE /v1/tafs/taf_1").size)
+    val deletes = transport.requestsTo("DELETE /v1/tafs/taf_1")
+    assertEquals(2, deletes.size)
+    // The removal was signed when it began; finishing it, for a taf tafs cloud lists as removing, goes unsigned.
+    assertTrue(deletes[0].headers.containsKey("KIFF-Device-Signature"))
+    assertFalse(deletes[1].headers.containsKey("KIFF-Device-Signature"))
   }
 
   // MARK: The Record

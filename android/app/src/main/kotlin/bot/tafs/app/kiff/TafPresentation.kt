@@ -40,7 +40,9 @@ import java.net.URLEncoder
   /** Under the last page, in tafs cloud's words: "Nothing older in this view". */
   @SerialName("end_words") val endWords: String? = null)
 @Serializable data class TafRunsPage(val requests: List<WorkRequest> = emptyList(), @SerialName("next_cursor") val nextCursor: String? = null,
-  val title: String = Words.Taf.itsWork, @SerialName("more_title") val moreTitle: String = Words.Taf.showAllRuns, @SerialName("end_words") val endWords: String? = null)
+  val title: String = Words.Taf.itsWork, @SerialName("more_title") val moreTitle: String = Words.Taf.showAllRuns, @SerialName("end_words") val endWords: String? = null,
+  /** On the first page: recent firings that started no run (a Run now whose check couldn't read among them), in tafs cloud's words. */
+  val skipped: List<SkippedFiring> = emptyList())
 
 @Serializable data class ConnectedAction(val name: String, val title: String, val limits: List<String> = emptyList(), val steps: List<Int> = emptyList(), @SerialName("step_words") val stepWords: String = "")
 @Serializable data class ConnectedStats(val calls: Int = 0, val done: Int = 0, val held: Int = 0, val words: String = "", val complete: Boolean = false, @SerialName("activity_query") val activityQuery: String = "")

@@ -88,8 +88,15 @@ connected: "Checking the sign-in…" meanwhile (`connectStep`).
 cloud's line, then its recent requests and skipped firings, newest first, in tafs cloud's words.
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
 given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`). Then its
-runs (`RunsPanel`): when it runs next, or that it works from its chat, and **Run now**; then the
-runs it kept (`RetainedRuns`), which stand for its latest run's report. What needs the owner
+runs (`RunsPanel`): when it runs next, in tafs cloud's `next_run_words` ("Next run Mon 08:00", with
+the day when it isn't today; the app's own time only from a tafs cloud that sends none), or that it
+works from its chat, and **Run now**; then the runs it kept (`RetainedRuns`), which stand for its
+latest run's report, with the firings that started no run among them by time (the first page's
+`skipped`, a Run now whose check couldn't read among them, `RunsPage.rows`), dim. The home list says the next run the same way. A taf
+whose `work.attention` is set says what went wrong last in place of its next run, and its row and
+page drop the **Working** chip (`Taf.attention`). Its Cards keep tafs cloud's order (`Taf.shownCards`):
+the one in front is the one that has used most of its limit. The Record shows an action's whole
+title with its amount ("Save a dispute response · $800"), never the verb alone. What needs the owner
 comes first, then the work, then the runs, as on Android (`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
 (`oldest_waiting.words`, tafs cloud's line, amber once `late`) and, for whoever manages the taf,
 **Answer within** (`PromiseRow`): the promise as tafs cloud keeps it (`promise.hours`) or Not set,
@@ -225,12 +232,17 @@ the app in sample mode.
   disabled, even while an app's place is on. Replies given up on show **Send again**, and a failed read of its work or Send again is said
   there (`workErrors`).
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
-  device (Turn on alerts while off), Sound, and What alerts you, read-only; "A taf answered
+  device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
+  kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
 - **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
   language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
   of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
+- **Setup › Connected tools** (`ConnectedToolsRing`): one node per app (`ConnectedToolsRing.nodes`),
+  the connection with actions in front; another sign-in to the same app is under Other
+  connections in its sheet, with its own Disconnect. Starts when and Results go to are rows
+  with a caret, no "Open" beside them (it read as their value).
 - **Dark:** each `Theme` colour has a light and a dark value (`Color(light:dark:)`), the values
   the owner reviewed, the same as Android: background 141311, panel 1F1E1B, raised 2A2824, ink
   F2EFE9, soft A8A49C, dim 96918A, line F2EFE9 at 12%, amber FF8A1F, amberText F0A45A, ok 4CC38A,
@@ -369,7 +381,8 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
 The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
 icon at the top right of the Overview (the iPad's sidebar) and, on the iPhone,
 beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
-Week first, with Today, previous and next, and a date to pick. tafs cloud computes
+Week first, with Today, previous and next, and a date to pick. On a phone the range
+("9 – 15 Nov") has a line of its own above the buttons, so it's never cut. tafs cloud computes
 every occurrence (`GET /v1/calendar`, docs/api.md): live schedules' firings in the
 account's zone, follow-ups and runs' next tries, only for the tafs the person may
 see, none for a paused taf. Each comes with its `day`, `time` and `minute` in that

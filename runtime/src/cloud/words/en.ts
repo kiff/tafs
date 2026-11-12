@@ -59,6 +59,8 @@ export const en = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   approval_critical_key: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
   approval_drive_key: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
+  // A taf's removal unsigned, or signed without the screen lock, once signing is required (handler.ts, removalSigned).
+  remove_signed: "Remove it from your device: removing a taf asks for your screen lock each time. Nothing was removed.",
   approval_window_closed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
   approval_sign_in_closed: "The sign-in was closed. Nothing was connected.",
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
@@ -88,6 +90,16 @@ export const en = {
   work_stopped_declined: (t: When) => `Stopped at ${bare(t)}: the AI declined to continue`,
   work_failed: "It failed",
   work_failed_because: (why: string) => `It failed: ${why}`,
+  // A failed run, from kiff/agents' own words for it (work.ts, failedLine): never its raw text.
+  run_failed_error: "It stopped on an error. Nothing was done after it.",
+  run_failed_time: "It reached its time limit and stopped.",
+  run_failed_start: "It couldn't start, so nothing was done.",
+  run_failed_switching: "It didn't start: the taf was switching versions.",
+  run_failed_access: "It stopped: the person who asked may no longer use this taf.",
+  run_failed_halted: "It didn't go on: the taf is halted.",
+  run_needs_you_restarts: "It stopped 3 times while it worked, and was restarted each time from its last safe step. It needs you to look at it.",
+  run_needs_you_never_started: "It couldn't start after 3 tries. It needs you to look at it.",
+  run_failed_after_held: "It couldn't go on once its held calls were settled. Nothing was done after that.",
   work_needs_you: "It needs you to look at it.",
   work_retry_at: (t: When, of: string) => `It stopped while it worked. Trying again at ${bare(t)}${of}.`,
   work_retry_soon: (of: string) => `It stopped while it worked. Trying again soon${of}.`,
@@ -531,6 +543,16 @@ export const en = {
   // A card's steps (handler.ts withLine): where they stand.
   steps_done: (n: number) => `Done · ${n} of ${n}`,
   steps_at: (i: number, n: number, label: string) => `Step ${i} of ${n}${label ? ` · ${label}` : ""}`,
+  // The loop card (kiff/agents' confirm tafs-loop-N): tafs cloud's words, with the read by its title (withLine).
+  loop_title: "Still reading",
+  loop_line: (pages: number, of: string) => `Read ${pages} pages ${of}, and there's more. Read on, or stop here and answer with what's been read?`,
+  loop_read_on: "Read on",
+  loop_stop: "Stop here",
+  // The read with its preposition: its KIFF title quoted (loop_named), else the same list, never its tool name.
+  loop_what: "of the same list",
+  loop_named: (title: string) => `of "${title}"`,
+  // A check-fired run's start, in place of the items the check handed it (checkStart).
+  check_found: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "Its check found 1 new item." : `Its check found ${n} new items.`),
   cal_folded: (words: string, n: number, first: string, last: string) => `${words}: ${n} times from ${first} to ${last}`,
   // Coach's own tools, as the phone lists them when it connects them (coach.ts coachConnect).
   ct_tafs_state: "See your tafs, their versions and their runs",

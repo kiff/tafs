@@ -153,9 +153,14 @@ fun TafDetailView(
   /** Open on Activity, once: a door's knock alert opened the taf, and its knocks are answered there. */
   openActivity: Boolean = false,
   onActivityOpened: () -> Unit = {},
+  /** Remove for good was tapped: what's open stays on this taf, even where it's shown only as the list's first. */
+  onRemoving: (String) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val taf = state.taf(tafId)
+  // What removing it did, with the taf's name: shown once it's done, even when the taf is gone from Home by then.
+  var removal by rememberSaveable { mutableStateOf<String?>(null) }
+  var removedName by rememberSaveable { mutableStateOf("") }
   // What sits above the tabs folds away while the page scrolls down, and comes back on the way up, so the chat has the screen.
   var folded by remember { mutableStateOf(false) }
   val folding = remember {
@@ -170,6 +175,7 @@ fun TafDetailView(
     if (taf == null) {
       if (showBack) BackBar(onBack)
       Text(Words.Taf.gone, style = scaled(15, color = Theme.dim), modifier = Modifier.padding(16.dp))
+      removal?.let { RemovalAlert(removedName, it) { removal = null } }
       return@Column
     }
     val canChat = state.canChat(taf.id)
@@ -188,9 +194,8 @@ fun TafDetailView(
     if (state.mode == Mode.kiff && taf.cloudId != null) LaunchedEffect(taf.id, grantsNow) { actions.loadSetup(taf.id) }
     var frontCard by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmRevoke by rememberSaveable { mutableStateOf(false) }
-    var confirmRemove by rememberSaveable { mutableStateOf(false) }
-    // What removing it did, shown once it's done.
-    var removal by rememberSaveable { mutableStateOf<String?>(null) }
+    // The taf Remove for good was asked for, by its id when the dialog opened: the dialog removes that taf and no other.
+    var removeAsked by rememberSaveable { mutableStateOf<String?>(null) }
     val removeScope = rememberCoroutineScope()
     val cards = taf.shownCards
     // A wide screen in landscape (as iOS on an iPad): beside the chat or the activity, a second column with the call waiting for
@@ -251,7 +256,7 @@ fun TafDetailView(
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
             // name freed) is its last row.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ confirmRemove = true }) else null, onActivity = { activitySelection = it; section = Section.Activity })
+            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ onRemoving(taf.id); removeAsked = taf.id }) else null, onActivity = { activitySelection = it; section = Section.Activity })
           }
           Section.Chat -> Unit
         }
@@ -276,30 +281,36 @@ fun TafDetailView(
         containerColor = Theme.panel,
       )
     }
-    if (confirmRemove) {
+    removeAsked?.let { asked ->
+      // Home as it was when the dialog opened: if a refresh changes the list under it, it closes, and the tap meant for it removes
+      // nothing. Its button takes a tap only once the dialog has been up a moment, so a tap aimed at what was there before can't
+      // confirm.
+      val listAtOpen = remember(asked) { state.tafs.map { it.id } }
+      var ready by remember(asked) { mutableStateOf(false) }
+      LaunchedEffect(asked) {
+        kotlinx.coroutines.delay(REMOVE_CONFIRM_DELAY_MS)
+        ready = true
+      }
+      if (asked != taf.id || state.tafs.map { it.id } != listAtOpen) {
+        LaunchedEffect(asked) { removeAsked = null }
+        return@let
+      }
       DriveAlert(
-        onDismissRequest = { confirmRemove = false },
+        onDismissRequest = { removeAsked = null },
         title = { Text(Words.Taf.removeTitle(taf.name)) },
         text = { Text(Words.Taf.removeBody) },
         confirmButton = {
           TextButton({
-            confirmRemove = false
-            removeScope.launch { actions.remove(taf.id)?.let { removal = it } }
-          }, modifier = Modifier.confirms()) { Text(Words.Taf.Remove.button, color = Theme.no) }
+            removeAsked = null
+            val name = taf.name
+            removeScope.launch { actions.remove(asked)?.let { removedName = name; removal = it } }
+          }, enabled = ready, modifier = Modifier.confirms()) { Text(Words.Taf.Remove.button, color = if (ready) Theme.no else Theme.dim) }
         },
-        dismissButton = { TextButton({ confirmRemove = false }) { Text(Words.Common.cancel, color = Theme.soft) } },
+        dismissButton = { TextButton({ removeAsked = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
         containerColor = Theme.panel,
       )
     }
-    removal?.let { words ->
-      DriveAlert(
-        onDismissRequest = { removal = null },
-        title = { Text(Words.Taf.removeNamed(taf.name)) },
-        text = { Text(words) },
-        confirmButton = { TextButton({ removal = null }) { Text(Words.Common.ok, color = Theme.amberText) } },
-        containerColor = Theme.panel,
-      )
-    }
+    removal?.let { RemovalAlert(removedName.ifEmpty { taf.name }, it) { removal = null } }
   }
 }
 
@@ -625,4 +636,19 @@ internal fun PromiseRow(hours: Int?, onPick: (Int?) -> Unit) {
     }
     Text(Words.Work.answerWithinLine, style = scaled(12, color = Theme.dim))
   }
+}
+
+/** How long Remove for good's dialog is up before its button takes a tap. */
+internal const val REMOVE_CONFIRM_DELAY_MS = 500L
+
+/** What removing a taf did, under its name. */
+@Composable
+private fun RemovalAlert(name: String, words: String, onClose: () -> Unit) {
+  DriveAlert(
+    onDismissRequest = onClose,
+    title = { Text(Words.Taf.removeNamed(name)) },
+    text = { Text(words) },
+    confirmButton = { TextButton(onClose) { Text(Words.Common.ok, color = Theme.amberText) } },
+    containerColor = Theme.panel,
+  )
 }

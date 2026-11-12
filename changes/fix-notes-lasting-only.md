@@ -1,0 +1,1 @@
+- **tafs: a taf's notes hold lasting facts only.** Its instructions say never to use notes for its working state (list cursors, page tokens, ids to resume from, progress, scratch), which showed in What it remembers; it reaches each taf with its next Upgrade ([tafs.md](../docs/tafs.md#memory)).

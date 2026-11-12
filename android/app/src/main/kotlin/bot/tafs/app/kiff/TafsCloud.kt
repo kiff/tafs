@@ -608,8 +608,27 @@ class TafsCloud(
     send("DELETE", "/v1/tafs/${escaped(id)}/memory/${escaped(note)}")
   }
 
-  /** Removes the taf for good: stops it, deletes its runs, chats, memory and key, and frees its name. Its Cards are KIFF's: the phone revokes them first. */
-  suspend fun remove(id: String): Removal = KiffClient.json.decodeFromString(String(send("DELETE", "/v1/tafs/${escaped(id)}")))
+  /**
+   * The person's confirmation of a removal, made before anything is undone: `kiff.request.v1` over `DELETE /v1/tafs/{id}` and its
+   * empty body, as `KIFF-Device-Signature` carries it. [sign] asks for the fingerprint and builds the message only then, so the
+   * signed time is when the person confirmed. tafs cloud asks KIFF whether this phone's approval key signed it; KIFF takes it once.
+   */
+  suspend fun removalSignature(id: String, tenant: String, sign: suspend (() -> ByteArray) -> String): String {
+    var signedAt = ""
+    val signature = sign {
+      signedAt = signingTime.next()
+      KiffClient.requestMessage(tenant, "DELETE", "/v1/tafs/${escaped(id)}", ByteArray(0), signedAt)
+    }
+    return "t=$signedAt,v1=$signature"
+  }
+
+  /**
+   * Removes the taf for good: stops it, deletes its runs, chats, memory and key, and frees its name. Its Cards are KIFF's: the phone
+   * revokes them first. [signature] is the person's confirmation from [removalSignature]; only finishing a removal tafs cloud lists
+   * as begun goes without one.
+   */
+  suspend fun remove(id: String, signature: String?): Removal =
+    KiffClient.json.decodeFromString(String(send("DELETE", "/v1/tafs/${escaped(id)}", extra = signature?.let { mapOf("KIFF-Device-Signature" to it) } ?: emptyMap())))
 
   // MARK: Doors
 

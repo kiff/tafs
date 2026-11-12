@@ -1,0 +1,1 @@
+- **tafs cloud: the loop card and a check-fired run's start, in words.** A run's "Still reading" card comes in the person's language, naming the read by its title and answering Read on or Stop here; a run its check started shows the job's instruction and how many new items the check found, never the items' raw data ([chat.md](../docs/chat.md#the-thread-and-the-chats-list)).

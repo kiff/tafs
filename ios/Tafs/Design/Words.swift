@@ -159,8 +159,8 @@ enum Words {
         static var keyCouldNotSign: String { Words.line("approval.key_could_not_sign") }
         /// Your fingerprints changed, or none was recognized, so this phone can't approve until you approve it again in your browser.
         static var keyGoneApproveAgain: String { Words.line("approval.key_gone_approve_again") }
-        /// Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you approve it again in your browser.
-        static var keyGoneFaceId: String { Words.line("approval.key_gone_face_id") }
+        /// Your {biometry} changed or wasn't recognized, so this device can't approve until you approve it again in your browser.
+        static func keyGoneBiometry(biometry: String) -> String { Words.line("approval.key_gone_biometry", biometry) }
         /// Your fingerprints changed, or none was recognized, so this phone can't approve until you sign in again.
         static var keyGoneSignIn: String { Words.line("approval.key_gone_sign_in") }
         /// Sign in with KIFF again to approve from this phone.
@@ -179,8 +179,8 @@ enum Words {
         static var notConfirmed: String { Words.line("approval.not_confirmed") }
         /// Try again, or sign in again if your fingerprints changed.
         static var notRecognized: String { Words.line("approval.not_recognized") }
-        /// Try again, or sign in again if your Face ID or fingerprints changed.
-        static var notRecognizedFaceId: String { Words.line("approval.not_recognized_face_id") }
+        /// Try again, or sign in again if your {biometry} changed.
+        static func notRecognizedBiometry(biometry: String) -> String { Words.line("approval.not_recognized_biometry", biometry) }
         /// Nothing was approved. The request is kept: approve again when you're ready.
         static var nothingApprovedRequestKeptApprove: String { Words.line("approval.nothing_approved_request_kept_approve") }
         /// Open settings
@@ -4053,6 +4053,18 @@ enum Words {
         static var worksFromChat: String { Words.line("taf.works_from_chat") }
         /// Works under {count} KIFF Cards.
         static func worksUnderCards(count: Int) -> String { Words.count("taf.works_under_cards", count) }
+    }
+    enum Update {
+        /// A new version of tafs is out.
+        static var available: String { Words.line("update.available") }
+        /// Downloading the update…
+        static var downloading: String { Words.line("update.downloading") }
+        /// The update is ready.
+        static var ready: String { Words.line("update.ready") }
+        /// Restart
+        static var restart: String { Words.line("update.restart") }
+        /// Update
+        static var update: String { Words.line("update.update") }
     }
     enum Usage {
         /// {detail} An admin answers.

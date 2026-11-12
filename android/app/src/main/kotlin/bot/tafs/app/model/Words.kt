@@ -91,7 +91,7 @@ object Words {
     val kept: String get() = Res.s(R.string.approval_kept)
     val keyCouldNotSign: String get() = Res.s(R.string.approval_key_could_not_sign)
     val keyGoneApproveAgain: String get() = Res.s(R.string.approval_key_gone_approve_again)
-    val keyGoneFaceId: String get() = Res.s(R.string.approval_key_gone_face_id)
+    fun keyGoneBiometry(biometry: String): String = Res.s(R.string.approval_key_gone_biometry, biometry)
     val keyGoneSignIn: String get() = Res.s(R.string.approval_key_gone_sign_in)
     val keyLost: String get() = Res.s(R.string.approval_key_lost)
     fun lockedAfterTooManyTries(either: String, device: String): String = Res.s(R.string.approval_locked_after_too_many_tries, either, device)
@@ -101,7 +101,7 @@ object Words {
     val noKey: String get() = Res.s(R.string.approval_no_key)
     val notConfirmed: String get() = Res.s(R.string.approval_not_confirmed)
     val notRecognized: String get() = Res.s(R.string.approval_not_recognized)
-    val notRecognizedFaceId: String get() = Res.s(R.string.approval_not_recognized_face_id)
+    fun notRecognizedBiometry(biometry: String): String = Res.s(R.string.approval_not_recognized_biometry, biometry)
     val nothingApprovedRequestKeptApprove: String get() = Res.s(R.string.approval_nothing_approved_request_kept_approve)
     val openSettings: String get() = Res.s(R.string.approval_open_settings)
     object Prompt {
@@ -2198,6 +2198,13 @@ object Words {
     }
     val worksFromChat: String get() = Res.s(R.string.taf_works_from_chat)
     fun worksUnderCards(count: Int): String = Res.p(R.plurals.taf_works_under_cards, count, Res.number(count))
+  }
+  object Update {
+    val available: String get() = Res.s(R.string.update_available)
+    val downloading: String get() = Res.s(R.string.update_downloading)
+    val ready: String get() = Res.s(R.string.update_ready)
+    val restart: String get() = Res.s(R.string.update_restart)
+    val update: String get() = Res.s(R.string.update_update)
   }
   object Usage {
     fun adminAnswers(detail: String): String = Res.s(R.string.usage_admin_answers, detail)

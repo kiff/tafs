@@ -16,6 +16,7 @@ browser = "1.8.0"
 billing = "9.1.0"
 bouncycastle = "1.78.1"
 firebaseBom = "34.0.0"
+playAppUpdate = "2.1.0"
 googleServices = "4.4.3"
 junit = "4.13.2"
 kotlin = "2.3.20"
@@ -34,6 +35,7 @@ billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = 
 bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+play-app-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playAppUpdate" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }

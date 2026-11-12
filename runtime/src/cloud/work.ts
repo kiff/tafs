@@ -147,6 +147,50 @@ export function runFailure(r: { status?: unknown; error?: unknown; code?: unknow
 /** The run codes tafs cloud words itself, by catalog key. */
 const CODE_WORDS: Record<string, "code_ai_unavailable"> = { ai_unavailable: "code_ai_unavailable" };
 
+/**
+ * kiff/agents' words for how a run failed (runner/runner.go's Failed*, run/runs.go's lease and claim errors): a
+ * fixed set, in English, saying what failed and never why. tafs cloud says each in the person's language. Any
+ * other text is kept for an English reader ("It failed: …") and reads as a plain "It failed" in any other
+ * language: never English inside another language's screen.
+ */
+const FAILED_WORDS: Record<string, "run_failed_error" | "run_failed_time" | "run_failed_start" | "run_failed_switching" | "run_failed_access" | "run_failed_halted"
+  | "run_needs_you_restarts" | "run_needs_you_never_started" | "run_failed_after_held"> = {
+  "the run failed": "run_failed_error",
+  "its lease ran out: the invocation crashed or timed out": "run_failed_error",
+  "the run reached its time limit": "run_failed_time",
+  "the agent could not be built": "run_failed_start",
+  "the run could not be started": "run_failed_start",
+  "no invocation claimed it in time": "run_failed_start",
+  "the agent is switching versions, so the run didn't start": "run_failed_switching",
+  "the person who asked may no longer use this agent, so the run stopped": "run_failed_access",
+  "the agent is halted, so the run didn't go on": "run_failed_halted",
+  "it could not be started in the background": "run_failed_start",
+  "it could not continue once KIFF resolved its held calls": "run_failed_after_held",
+  // A run past its last try, said as its error and as the reason it needs you (run/runs.go, NeedsYou, NeverStarted).
+  "It stopped 3 times while it worked, and was restarted each time from its last safe step. It needs you to look at it.": "run_needs_you_restarts",
+  "It couldn't start: no invocation picked it up after 3 tries. It needs you to look at it.": "run_needs_you_never_started",
+};
+
+/**
+ * Why a run needs the owner, in the person's language when it's one of kiff/agents' own reasons (a run past its
+ * last try); any other reason is shown as it came, and none reads as "Needs you".
+ */
+export function needsYouLine(reason: string | null | undefined, lang: Lang = "en"): string {
+  const w = wordsIn(lang);
+  const text = (reason ?? "").trim();
+  const key = FAILED_WORDS[text];
+  return key ? w[key] : text || w.work_needs_you;
+}
+
+/** A failed run's line in the person's language, from kiff/agents' words for it. */
+export function failedLine(error: string | null | undefined, lang: Lang = "en"): string {
+  const w = wordsIn(lang);
+  const text = (error ?? "").trim();
+  const key = FAILED_WORDS[text];
+  if (key) return w[key];
+  return text && lang === "en" ? w.work_failed_because(text) : w.work_failed;
+}
+
 /** One run as a request: its state and the words for it. */
 export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], again = new Set<string>(), own: DeliveryView[] = [], lang: Lang = "en"): RequestView {
   const w = wordsIn(lang);
@@ -160,7 +204,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
   }] : [];
   deliveries.push(...own);
   const base = { id: r.id, at: r.created, deliveries };
-  if (r.state === "needs_you") return { ...base, state: "needs_you", line: r.reason ?? w.work_needs_you };
+  if (r.state === "needs_you") return { ...base, state: "needs_you", line: needsYouLine(r.reason, lang) };
   if (r.state === "retrying") {
     const of = r.try && r.of ? w.work_try_of(r.try, r.of) : "";
     return { ...base, state: "retrying", line: r.next_at ? w.work_retry_at(at(r.next_at), of) : w.work_retry_soon(of) };
@@ -199,7 +243,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
     default: {
       const coded = runFailure(r, lang);
       if (coded) return { ...base, state: "failed", line: coded.words, code: coded.code };
-      return { ...base, state: "failed", line: r.error ? w.work_failed_because(r.error) : w.work_failed };
+      return { ...base, state: "failed", line: failedLine(r.error, lang) };
     }
   }
 }

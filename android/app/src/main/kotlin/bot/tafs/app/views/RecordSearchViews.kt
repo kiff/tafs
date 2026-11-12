@@ -77,6 +77,7 @@ internal fun RecordSearchBox(hint: String?, onSearch: (String) -> Unit) {
   var query by rememberSaveable { mutableStateOf("") }
   // What was last searched, so a pause or a rotation doesn't send the same search twice.
   var sent by rememberSaveable { mutableStateOf("") }
+  val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
   val search: (String) -> Unit = { q -> sent = q; onSearch(q) }
   LaunchedEffect(query) {
     if (query.trim() == sent.trim()) return@LaunchedEffect
@@ -92,7 +93,8 @@ internal fun RecordSearchBox(hint: String?, onSearch: (String) -> Unit) {
     placeholder = { Text(hint ?: Words.Record.searchHint) },
     singleLine = true,
     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-    keyboardActions = KeyboardActions(onSearch = { search(query) }),
+    // Search sends at once and puts the keyboard away, so the results show whole.
+    keyboardActions = KeyboardActions(onSearch = { search(query); keyboard?.hide() }),
   )
 }
 

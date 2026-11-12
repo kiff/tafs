@@ -124,6 +124,8 @@ fun HomeView(
           if (state.mode == Mode.kiff && state.approvalKeyLost) ApprovalKeyLine(Modifier.padding(top = 4.dp))
           // The plan, only when it needs the person (tafs cloud's `home_line`). Home stays about the tafs.
           if (state.mode == Mode.kiff) state.balance?.let { b -> b.homeLine?.let { PlanLine(it, b.planTone, onUsage) } }
+          // A newer tafs on the track: one tap to update, then one to restart into it.
+          UpdateLine()
         }
       }
       if (sample) {
@@ -372,3 +374,20 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
     }
   }
 }
+
+/** Play's newer version, in one line with one button: Update while it's offered, Restart once it's downloaded. */
+@Composable
+private fun UpdateLine() {
+  val row = bot.tafs.app.push.LocalAppUpdate.current ?: return
+  val (words, button, action) = when (row.stage) {
+    bot.tafs.app.push.UpdateStage.None -> return
+    bot.tafs.app.push.UpdateStage.Available -> Triple(Words.Update.available, Words.Update.update, row.update)
+    bot.tafs.app.push.UpdateStage.Downloading -> Triple(Words.Update.downloading, null, null)
+    bot.tafs.app.push.UpdateStage.Ready -> Triple(Words.Update.ready, Words.Update.restart, row.restart)
+  }
+  Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Text(words, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
+    if (button != null && action != null) androidx.compose.material3.TextButton(action) { Text(button, style = scaled(14, FontWeight.SemiBold, Theme.amberText)) }
+  }
+}
+

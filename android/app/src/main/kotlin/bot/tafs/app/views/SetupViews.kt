@@ -132,7 +132,7 @@ internal fun startsSummary(taf: Taf, knob: KnobWire?): List<String> {
   val starts = knob?.wakes.orEmpty().filter { it.kind != "add_door" && it.kind != "run_now" }.map { it.words.ifBlank { it.label } }
   if (starts.isNotEmpty()) return starts
   if (taf.worksFromChat) return listOf(SetupWords.NO_START)
-  return listOfNotNull(if (taf.paused) Words.Taf.State.paused else taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule)
+  return listOfNotNull(if (taf.paused) Words.Taf.State.paused else taf.nextRunWords ?: taf.nextRun?.let { Words.Taf.nextRunAt(shortTime(it)) } ?: Words.Taf.onItsSchedule)
 }
 
 /** Where its results go now: the places on, by their titles. */
@@ -194,7 +194,9 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
         Eyebrow(SetupWords.SCHEDULE)
         schedules.forEach { s ->
           Text(s.words.ifBlank { s.label }, style = scaled(15, color = Theme.ink))
-          taf.nextRun?.takeIf { !taf.paused }?.let { Text(SetupWords.nextRun(shortTime(it), state.kiffAccount?.timeZone), style = scaled(13, color = Theme.soft)) }
+          // tafs cloud's words for the next run, with its day; the app's own format only where an older tafs cloud sends none.
+          if (!taf.paused) (taf.nextRunWords?.let { w -> w + (state.kiffAccount?.timeZone?.let { " · $it" } ?: "") }
+            ?: taf.nextRun?.let { SetupWords.nextRun(shortTime(it), state.kiffAccount?.timeZone) })?.let { Text(it, style = scaled(13, color = Theme.soft)) }
           s.size?.let { size -> SizeRow(size, enabled = manages && !busy) { setting -> work { actions.doors.changeKnobSize(taf.id, setting) } } }
         }
         knob.setting?.let { setting ->

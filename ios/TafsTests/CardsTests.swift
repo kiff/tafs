@@ -81,9 +81,11 @@ final class CardsTests: XCTestCase {
         var taf = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
         taf.kiffCards = [front, back]
         let thirty = Money.bare(30000).figure
-        // The Card that counts money leads, so the Overview reads its total, saying it has no currency.
+        // tafs cloud puts the Card in front: the app keeps its order, so here the Overview reads the money Card
+        // once it's sent first, saying it has no currency.
+        taf.kiffCards = [back, front]
         XCTAssertEqual(OverviewView.cardLine(taf), "\(thirty) left today of \(thirty) · no currency")
-        // Behind it in the stack, a Card with no currency still says so on its edge.
+        // Behind another in the stack, a Card with no currency still says so on its edge.
         taf.kiffCards = [TafCard(id: "money2", title: "Refunds", rules: [], total: CardTotal(limit: .usd(300), used: .usd(0), window: .day)), back]
         XCTAssertEqual(taf.shownCards.last?.id, "money")
         XCTAssertEqual(taf.shownCards.last?.leftLine, "\(thirty) (no currency) left")

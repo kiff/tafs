@@ -57,6 +57,10 @@ concurrency:
   group: ios-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# The token reads the repo only; a job that needs more says so itself.
+permissions:
+  contents: read
+
 jobs:
   # What a run needs, from what it changes: the tests, the iPad's list tests
   # and the screenshots each cost a macOS runner. A pull request or a push to
@@ -78,8 +82,9 @@ jobs:
       tested: ${{ steps.tested.outputs.tested }}
       ipad_tested: ${{ steps.tested.outputs.ipad_tested }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - id: diff
         env:
@@ -199,7 +204,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # The TestFlight job doesn't run on pull requests, so its Beta testers
       # step is tested here, against canned App Store Connect answers.
@@ -272,7 +279,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Generate the Xcode project
         run: |
@@ -314,7 +323,7 @@ jobs:
           fi
 
       # What the iPad's screen showed, when its list test fails.
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: ipad-list-xcresult
@@ -329,7 +338,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Generate the Xcode project
         run: |
@@ -494,7 +505,7 @@ jobs:
           xcrun simctl ui "$DEVICE_ID" appearance light
           ls -la "$RUNNER_TEMP/shots"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: screenshots
           path: ${{ runner.temp }}/shots
@@ -516,7 +527,9 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Generate the Xcode project
         run: |

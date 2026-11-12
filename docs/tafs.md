@@ -54,7 +54,8 @@ tafs cloud stores one agent definition per taf in kiff/agents
   model's short progress notes stream to the owner on the live line while it works
   (`thinking: "updates"`, docs/chat.md); its reasoning never does.
 - **Instructions:** the shared tafs instructions, the job's, the owner's notes, how its
-  notes work, how it makes a call under its Card (one request is one call, never split
+  notes work, that a run works from the items its check handed it (never paging the whole list
+  again), how it makes a call under its Card (one request is one call, never split
   to stay under a limit; a money call that doesn't name its customer carries who it's
   for in a field the customer doesn't see, such as metadata, so the hold says it), and two sections of KIFF's `kiff` skill ("Rules that always apply" and
   "Handle a KIFF result"). The skill is vendored at one commit; moving it is in the
@@ -211,9 +212,17 @@ On Android the page is `views/TafDetailView.kt`, with the same tabs and parts
 (`RunsPanel`, `RunReportPanel`, `MemoryPanel`), and no second column yet. Revoke asks KIFF
 to revoke each of the taf's Cards (`POST /v1/me/mandates/{id}/revoke`, unsigned, since it
 takes authority away) and shows the taf stopped only once KIFF has. Remove for good takes
-one confirmation, revokes its Cards, then asks tafs cloud to remove the rest
-(`DELETE /v1/tafs/{id}`). A removal left half way is finished on the next refresh, from
-the home list's `removing`.
+one confirmation and a fingerprint, every time, before anything is undone. The dialog removes
+the taf it named when it opened, by its id. It closes, removing nothing, if a refresh changes
+Home's list under it, and its button takes a tap only once it has been up half a second
+(`REMOVE_CONFIRM_DELAY_MS`). The approval key signs the DELETE itself (`kiff.request.v1` over
+`DELETE /v1/tafs/{id}` and its empty body, sent as `KIFF-Device-Signature`); a phone with no
+fingerprint set up can't remove a taf, even a debug build with no screen lock (`signCritical`).
+Then the app revokes its Cards and asks tafs cloud to remove the rest. tafs cloud asks KIFF
+whether this phone's approval key signed it. A removal left half way is finished on the next
+refresh, from the home list's `removing`, unsigned: tafs cloud takes that only for a taf it lists
+as removing. On a tablet with no taf picked, the pane beside the list stays on the taf being
+removed, rather than following the list's first.
 
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
@@ -242,7 +251,10 @@ row.
 
 A taf keeps notes in kiff/agents through its memory tool, shared by its runs and chats.
 It reads them before it starts and writes down what it learns about the owner and their
-customers. Notes shape how it works; they never change what its Card allows.
+customers. Notes shape how it works; they never change what its Card allows. They hold
+lasting facts only, never a run's working state: no list cursors, page tokens, ids to
+resume from, progress or scratch. Its check keeps where the work stands, and the owner
+reads every note in What it remembers.
 
 - `GET /v1/tafs/{id}/memory` shows the shared notes and the person's own, never another
   person's.

@@ -1,0 +1,1 @@
+- **tafs cloud: why a run needs you, in the person's language.** kiff/agents' reasons for a run past its last try (it stopped 3 times, or couldn't start after 3 tries), and two more failure reasons, are said in each of the eight languages on the taf's work and Needs you, never as English inside another language's screen ([api.md](../docs/api.md)).

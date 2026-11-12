@@ -68,9 +68,12 @@ extension TafsCloud {
             var status = "idle"
             var line = ""
             var needsYou = 0
-            enum CodingKeys: String, CodingKey { case status, line, needsYou = "needs_you" }
-            init(status: String = "idle", line: String = "", needsYou: Int = 0) {
-                self.status = status; self.line = line; self.needsYou = needsYou
+            /// What went wrong last (a check that couldn't read, its health, a run stopped at a
+            /// cap or failed), said before its next run: drawn in place of "Working" (docs/reliability.md).
+            var attention = false
+            enum CodingKeys: String, CodingKey { case status, line, needsYou = "needs_you", attention }
+            init(status: String = "idle", line: String = "", needsYou: Int = 0, attention: Bool = false) {
+                self.status = status; self.line = line; self.needsYou = needsYou; self.attention = attention
             }
             /// Never fails the read it's on: one that isn't an object reads as nothing to say.
             init(from decoder: Decoder) throws {
@@ -78,6 +81,7 @@ extension TafsCloud {
                 status = (try? c.decode(String.self, forKey: .status)) ?? "idle"
                 line = (try? c.decode(String.self, forKey: .line)) ?? ""
                 needsYou = (try? c.decode(Int.self, forKey: .needsYou)) ?? 0
+                attention = (try? c.decode(Bool.self, forKey: .attention)) ?? false
             }
         }
 

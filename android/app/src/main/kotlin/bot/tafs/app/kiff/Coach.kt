@@ -351,7 +351,13 @@ data class TafHealth(
 data class HealthFix(val line: Int, val kind: String, val words: String = "", val say: String? = null)
 
 @Serializable
-data class WorkSummary(val status: String = "idle", val line: String = "", @SerialName("needs_you") val needsYou: Int = 0)
+data class WorkSummary(
+  val status: String = "idle",
+  val line: String = "",
+  @SerialName("needs_you") val needsYou: Int = 0,
+  /** Something went wrong first (a failed check, an unhealthy taf, a run stopped or failed): [line] says what, in place of "Working". */
+  val attention: Boolean = false,
+)
 
 /** One request: done, working, retrying, needs_you, waiting, stopped or failed, in tafs cloud's words, with where it went. */
 @Serializable
