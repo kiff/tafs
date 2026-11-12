@@ -1,0 +1,1 @@
+- **tafs cloud: only Coach's final words reach the chat.** A note Coach wrote before a tool call, such as a retry or a self-correction, no longer shows as a message before a card, a pause or the owner's answer, in the stream or the stored thread. A run that ends with nothing after its tools keeps its last note ([chat.md](../docs/chat.md)).

@@ -851,6 +851,13 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         bot.tafs.app.views.AllowActions(round = model::roundAllow, sendHeld = model::setAllowSendHeld, confirm = model::startConfirmAllow, close = model::closeAllow),
       )
     }
+    // "Allow this from now on", over whatever screen the held call was on.
+    state.allow?.let { open ->
+      bot.tafs.app.views.AllowSheet(
+        open,
+        bot.tafs.app.views.AllowActions(round = model::roundAllow, sendHeld = model::setAllowSendHeld, confirm = model::startConfirmAllow, close = model::closeAllow),
+      )
+    }
     // A browser connection's live sign-in view, as planque serves it.
     state.siteSignIn?.let { view -> bot.tafs.app.views.SiteSignInScreen(view, onClose = model::closeSiteSignIn) }
     // A request from the dial's rim or Activity, step by step.
