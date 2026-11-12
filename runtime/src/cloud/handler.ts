@@ -48,7 +48,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { ApprovalError, askOf, checkSigned, decide as decideApproval, readGrants, reportOf, settle as settleApproval } from "./approval.js";
+import { ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 
@@ -2385,7 +2385,9 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     ? (await Promise.all(picked.filter((x) => x.kind === "chat").map((x) => driveRecaps(deps.coach!, me.tenantID, x.id).catch(() => [])))).flat().map((r) => ({ ...r, words: endSaid(r.why, lang) }))
     : [];
   drives.sort((a, b) => a.at.localeCompare(b.at));
-  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
+  const shown = components.slice(-CHAT.maxThread);
+  await markConnected(me.tenantID, shown, deps, lang);
+  return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
 /** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
@@ -2548,6 +2550,26 @@ function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang
   if (b.answer === "declined") return w.approval_answer_declined;
   if (b.answer.startsWith("failed: ")) return w.approval_answer_failed(b.answer.slice("failed: ".length));
   return undefined;
+}
+
+/**
+ * An approval card whose connection tafs cloud saw connected says only that (`connection: {done, words}`), so a
+ * later card, such as the taf's Card after its key went in, never repeats the connection's text as if it still
+ * waited (docs/secure-connection.md). The apps draw that line and the card's Card alone. A note that can't be
+ * read leaves the card as it was.
+ */
+async function markConnected(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
+  if (!deps.coach) return;
+  const w = wordsIn(lang);
+  const notes = new Map<string, Promise<unknown>>();
+  for (const c of components) {
+    const card = c.component as { type?: unknown; grant?: unknown } | undefined;
+    if (card?.type !== "approval" || typeof card.grant !== "string" || !card.grant) continue;
+    if (!notes.has(card.grant)) notes.set(card.grant, deps.coach.get(connectedKey(tenant, card.grant)).catch(() => undefined));
+    const note = (await notes.get(card.grant)) as Connected | undefined;
+    if (!note || typeof note.vendor !== "string") continue;
+    c.component = { ...card, connection: { done: true, words: w.sheet_done(note.vendor, note.read_only === true) } };
+  }
 }
 
 /** An `answered` event's body as the app shows it. */

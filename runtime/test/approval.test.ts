@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
+import { connectedKey, approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -229,6 +229,8 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
     expect(r.body).toMatchObject({ outcome: "answered", answer: "already approved: Stripe is connected", note: WORDS.alreadyApproved });
     expect(w.told()).toMatchObject({ answer: "already approved: Stripe is connected" });
+    // tafs cloud notes it, so a later card naming this grant says only that it's connected (docs/secure-connection.md).
+    expect(await w.coach.get(connectedKey("t_acme", "g_1"))).toEqual({ vendor: "Stripe", read_only: false });
   });
 
   it("a Card KIFF already confirmed was approved earlier, with its own signature: already approved, never failed", async () => {
