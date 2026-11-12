@@ -141,6 +141,11 @@ export interface ApprovalAsk {
   shown_draft?: string;
   /** KIFF's words for the connection's profile, as the phone read and checked them. */
   words?: { profile_sha256: string; words_sha256: string };
+  /**
+   * The steps this phone can sign beyond connect and cards (`key_and_cards`): tafs cloud never answers an app a
+   * step it didn't say it can act on, so an app from before gets the two steps, the flag on or off.
+   */
+  can?: string[];
 }
 
 /** One message to sign, and the call it goes into. */
@@ -305,6 +310,7 @@ export function askOf(body: Record<string, unknown>): ApprovalAsk {
   if (words && HEX64.test(String(words.profile_sha256)) && HEX64.test(String(words.words_sha256))) {
     ask.words = { profile_sha256: String(words.profile_sha256), words_sha256: String(words.words_sha256) };
   }
+  if (Array.isArray(body.can)) ask.can = body.can.filter((x): x is string => typeof x === "string" && x.length <= 32).slice(0, 8);
   return ask;
 }
 
@@ -382,7 +388,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   }
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint (docs/secure-connection.md),
   // once both services take kiff.requests.v1. The phone builds both requests and signs their two hashes.
-  if (ctx.keyAndCards && takesKey(grant) && ask.draft) {
+  if (ctx.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) {
     const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx);
     if ("outcome" in checked) return checked;
     const id = ctx.newID();
@@ -521,7 +527,8 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
       pending.draft ? draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now) : Promise.resolve(undefined),
     ]);
     const grant = grants.find((g) => g.id === pending.grant);
-    const connected = !!grant && (grant.status === "connected" || grant.status === "listed");
+    // A key grant has no sign-in to list its tools after: it's connected, or the key didn't go in.
+    const connected = grant?.status === "connected";
     if (connected) await noteConnected(ctx.store, ctx.tenant, grant!, ctx.now);
     if (connected && draft && issued(draft.status)) return { answer: "approved" };
     if (!connected) {
