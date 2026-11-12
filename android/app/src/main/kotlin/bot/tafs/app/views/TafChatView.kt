@@ -247,6 +247,9 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                 is ChatItem.Outcome -> OutcomeLine(Chat.outcomeText(item.entry), outcomeTone(item.entry.kind), outcomeMark(item.entry.kind))
                 is ChatItem.Card -> if (item.shown.component.type == bot.tafs.app.app.ASK_COACH && tafId != COACH_CHAT) {
                   AskCoachCard(item.shown.component.text.orEmpty(), if (state.manages(tafId) && state.mayUseCoach) ({ words -> actions.askCoachAbout(tafId, words) }) else null)
+                } else if (tafId != COACH_CHAT) {
+                  // The loop card (Read on / Stop here), in tafs cloud's words: answered for this taf's run, never Coach's.
+                  CoachCard(item.shown, state, CoachActions(answer = { type, id, answer -> actions.answerCard(tafId, type, id, answer) }, approve = { _, _, _ -> }, cancelSignIn = {}))
                 } else CoachCard(item.shown, state, actions.coach)
                 is ChatItem.Drive -> DriveRecapCard(item.recap)
               }

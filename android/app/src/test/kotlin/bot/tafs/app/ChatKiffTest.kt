@@ -112,6 +112,37 @@ class ChatKiffTest {
     assertTrue(m.state.value.coachComponents.isEmpty())
   }
 
+  /**
+   * A run that read one list page after page waits on the loop card (kiff/agents' `confirm` with `loop`): it's in the taf's own chat,
+   * in tafs cloud's words, and Read on goes back to that run as the card's answer, through the taf's route, never Coach's.
+   */
+  @Test fun theLoopCardIsInTheTafsChatAndReadOnAnswersItsRun() = runTest {
+    readsOf()
+    val loop = """{"at":"2026-10-28T08:00:06Z","session":"s1","run":"r1","component":{"type":"confirm","id":"tafs-loop-12","waits":"owner","loop":{"tool":"list_disputes","pages":10},""" +
+      """"title":"Still reading","text":"Read 10 pages of List disputes, and there's more.","options":[{"label":"Read on","value":"tafs_loop_continue"},{"label":"Stop here","value":"tafs_loop_summarise"}]}}"""
+    val plain = """{"at":"2026-10-28T08:00:07Z","session":"s1","run":"r1","component":{"type":"confirm","id":"c1","options":[{"label":"Yes","value":"yes"}]}}"""
+    transport.answer(conversation, 200, """{"messages":[${owner("open disputes?", "2026-10-28T08:00:00Z")}],"components":[$loop,$plain]}""")
+    transport.answer(conversation, 200, """{"messages":[${owner("open disputes?", "2026-10-28T08:00:00Z")}],"components":[${loop.dropLast(1)},"answer":{"state":"answered","words":"Read on"}}]}""")
+    transport.answer("POST /v1/tafs/taf_1/components/tafs-loop-12/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/r1/stream", 200, "event: end\ndata: {\"status\":\"COMPLETED\",\"stop\":\"end_turn\"}\n")
+    val m = model()
+    m.loadChat("refunds-1")
+    val cards = m.state.value.chatItems("refunds-1").filterIsInstance<ChatItem.Card>()
+    // Only the loop card: a confirm without `loop` is Coach's, not the taf's.
+    assertEquals(listOf("tafs-loop-12"), cards.map { it.shown.component.id })
+    assertEquals("Still reading", cards.single().shown.component.title)
+    assertEquals(listOf("Read on", "Stop here"), cards.single().shown.component.options.orEmpty().map { it.label })
+    assertTrue(m.answerCard("confirm", "tafs-loop-12", "tafs_loop_continue", chat = "refunds-1"))
+    repeat(20) { testScheduler.advanceTimeBy(100); testScheduler.runCurrent() }
+    assertEquals(
+      """{"answer":"tafs_loop_continue","session":"s1"}""",
+      String(transport.requestsTo("POST /v1/tafs/taf_1/components/tafs-loop-12/answer").single().body!!),
+    )
+    assertTrue("never Coach's route", transport.requests.none { it.url.contains("/setup") && it.url.contains("/components/") })
+    assertEquals("Read on", m.state.value.tafCards["refunds-1"]?.single()?.answer?.let(bot.tafs.app.model.CoachWords::answered))
+    assertTrue(m.state.value.coachComponents.isEmpty())
+  }
+
   @Test fun aRunsKickoffAndWhatATafDidAreKept() = runTest {
     readsOf()
     transport.answer(

@@ -88,6 +88,8 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
     if (started) CoachHeader(state, chats, newChat, onBack) else BackBar(onBack)
     when {
       !state.mayUseCoach -> Note(CoachWords.NOT_ALLOWED)
+      // The sample, for the store's screenshots: what Coach is, as a new account first sees it. Nothing to read from tafs cloud.
+      state.mode != bot.tafs.app.app.Mode.kiff -> CoachIntro(state)
       !state.coachChecked -> Row(Modifier.fillMaxWidth().padding(24.dp), horizontalArrangement = Arrangement.Center) {
         CircularProgressIndicator(strokeWidth = 2.dp, color = Theme.dim)
       }
