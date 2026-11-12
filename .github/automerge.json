@@ -1,10 +1,32 @@
 {
   "lanes": {
-    "ios": ["ios/", "docs/ios-app.md"],
-    "android": ["android/", "docs/android-app.md"]
+    "ios": [
+      "ios/",
+      "docs/ios-app.md"
+    ],
+    "android": [
+      "android/",
+      "docs/android-app.md"
+    ]
+  },
+  "required": {
+    "ios": [
+      "test"
+    ],
+    "android": [
+      "test",
+      "ui"
+    ]
   },
   "fragments": "changes/",
-  "authors": ["kiff-qa", "gabosarmiento"],
-  "reviewers": ["agentgabo", "gabosarmiento", "kiff-qa"],
+  "authors": [
+    "kiff-qa",
+    "gabosarmiento"
+  ],
+  "reviewers": [
+    "agentgabo",
+    "gabosarmiento",
+    "kiff-qa"
+  ],
   "hold_label": "hold-merge"
 }

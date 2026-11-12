@@ -10,7 +10,8 @@ A pull request merges by itself only when all of this holds:
   - it carries no hold label, and merging isn't on hold for the repository;
   - a listed reviewer other than its author approved its latest commit, and none of
     them has changes requested;
-  - every check on its latest commit finished and passed, and it can be merged.
+  - every check on its latest commit finished and passed, its lane's own tests among
+    them when it touches the app's code, and it can be merged.
 
 Anything else waits for a maintainer, as before. `decide` is the whole rule and reads
 nothing; `main` gathers what it needs with `gh` and merges what `decide` allows.
@@ -35,24 +36,26 @@ def fragment_name(branch, folder):
 
 
 def lane_of(files, branch, config):
-    """The one lane every file is in, or None with why not."""
+    """(lane, whether it touches the app's code, why not). The one lane every file is in."""
     if not files:
-        return None, "it changes no file"
+        return None, False, "it changes no file"
     own = fragment_name(branch, config["fragments"])
-    lanes = set()
+    lanes, code = set(), False
     for name in files:
         if name == own:
             continue
-        found = [lane for lane, paths in config["lanes"].items()
-                 if any(name == p or (p.endswith("/") and name.startswith(p)) for p in paths)]
+        found = [(lane, p) for lane, paths in config["lanes"].items() for p in paths
+                 if name == p or (p.endswith("/") and name.startswith(p))]
         if not found:
-            return None, f"{name} is outside every lane that merges by itself"
-        lanes.add(found[0])
+            return None, False, f"{name} is outside every lane that merges by itself"
+        lanes.add(found[0][0])
+        # A folder is the app's code; a single file named in the lane is its page in docs/.
+        code = code or found[0][1].endswith("/")
     if not lanes:
-        return None, "it changes only its changelog fragment"
+        return None, False, "it changes only its changelog fragment"
     if len(lanes) > 1:
-        return None, "it touches more than one lane: " + ", ".join(sorted(lanes))
-    return lanes.pop(), ""
+        return None, False, "it touches more than one lane: " + ", ".join(sorted(lanes))
+    return lanes.pop(), code, ""
 
 
 def approved(reviews, author, head, reviewers):
@@ -70,21 +73,24 @@ def approved(reviews, author, head, reviewers):
     return True, ""
 
 
-def checks_passed(checks, own=()):
-    """Every check on the latest commit finished and passed. `own` names this job's own
-    checks, which are still running while it decides."""
-    seen = [c for c in checks if c.get("name") not in own]
-    if not seen:
+def checks_passed(checks, required=()):
+    """Every check on the latest commit finished and passed, and each of `required` is
+    among them and succeeded: the lane's own tests, which start later than the quick
+    checks. A commit with only the quick ones green hasn't been tested yet."""
+    if not checks:
         return False, "no check ran on its latest commit"
-    for c in seen:
+    for c in checks:
         if c.get("status") != "completed":
             return False, f"{c.get('name')} hasn't finished"
         if c.get("conclusion") not in PASSED:
             return False, f"{c.get('name')} ended as {c.get('conclusion')}"
+    for name in required:
+        if not any(c.get("name") == name and c.get("conclusion") == "success" for c in checks):
+            return False, f"its lane's {name} hasn't run on its latest commit"
     return True, ""
 
 
-def decide(pr, files, reviews, checks, config, hold="", own_checks=()):
+def decide(pr, files, reviews, checks, config, hold=""):
     """(merge, lane, why not). The whole rule, with nothing read from outside."""
     if hold:
         return False, None, f"merging is on hold: {hold}"
@@ -100,13 +106,13 @@ def decide(pr, files, reviews, checks, config, hold="", own_checks=()):
         return False, None, f"{author} isn't a listed author"
     if any(l.get("name") == config["hold_label"] for l in pr.get("labels") or []):
         return False, None, f"it carries the {config['hold_label']} label"
-    lane, why = lane_of(files, head.get("ref", ""), config)
+    lane, code, why = lane_of(files, head.get("ref", ""), config)
     if not lane:
         return False, None, why
     ok, why = approved(reviews, author, head.get("sha"), config["reviewers"])
     if not ok:
         return False, lane, why
-    ok, why = checks_passed(checks, own_checks)
+    ok, why = checks_passed(checks, config["required"][lane] if code else ())
     if not ok:
         return False, lane, why
     if pr.get("mergeable") is not True:

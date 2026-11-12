@@ -42,8 +42,12 @@ auto-merge: every condition below must hold, and anything else waits for a maint
   `docs/android-app.md`. Its own changelog fragment may come with it. One file anywhere else
   (tafs cloud, the shared strings, a workflow, a contract in `docs/`, this rule itself) and it waits.
 - **A listed reviewer other than its author approved its latest commit,** and none of them has
-  changes requested. A push after the approval needs a new one.
-- **Every check on its latest commit finished and passed,** and GitHub says it can be merged.
+  changes requested. A push after the approval needs a new one. Authors and reviewers are listed
+  by GitHub login, so "other than its author" means another login.
+- **Every check on its latest commit finished and passed,** and GitHub says it can be merged. When
+  it touches an app's code, that app's own tests must be among them and have succeeded (`required`
+  in `.github/automerge.json`: iOS's `test`; Android's `test` and `ui`). They start later than the
+  quick checks, so a commit with only those green hasn't been tested yet, and waits.
 - **Nothing holds it:** the `hold-merge` label on the pull request, or the repository's
   `AUTOMERGE_HOLD` variable set to any words (a release being cut, an eval running). With
   `AUTOMERGE_EVAL_REPO` and `AUTOMERGE_EVAL_WORKFLOW` set, nothing merges while that workflow is
@@ -61,6 +65,8 @@ itself. The rule's tests break each condition in turn (`scripts/test_automerge.p
 ## Before a release
 
 1. Resolve release-blocking findings or document the evidence that rules them out.
+   Set the repository's `AUTOMERGE_HOLD` variable while the release is cut: every merge into
+   `ios/` starts a run on main, and the archive shouldn't wait behind one. Clear it after.
 2. Fold the pull requests' entries in (`python3 scripts/changelog.py fold
    --release "<version>"`, [changes/README.md](../changes/README.md)), then
    review the release's entries in CHANGELOG.md; include behavior,
