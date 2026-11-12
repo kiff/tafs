@@ -784,12 +784,15 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "work") {
     // Where its work stands, for its page (docs/reliability.md): every line and time written here.
     const now = deps.now?.() ?? new Date();
-    const [runs, v, sent, fired] = await Promise.all([
+    const [runs, v, sent, fired, credits] = await Promise.all([
       agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
       view(taf, me, deps),
       deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
       // A taf with no schedule has no firings. A read that fails leaves the skipped firings and the health out.
       taf.unscheduled ? Promise.resolve([] as Fired[]) : deps.agents.scheduleFirings(me.tenantID, taf.id, HEALTH_FIRINGS).catch(() => undefined),
+      // Each run's credits, from KIFF's usage record with the person's session: a line the apps draw as is.
+      // Read alongside the rest, so the page waits on no extra round trip; it never throws (an empty map).
+      runCreditsOf(bearer(event), taf.id, langOf(event), deps.fetch, deps.kiffBase),
     ]);
     const health = fired ? healthOf(runs, fired, now) : undefined;
     const zone = me.timeZone ?? "UTC";
@@ -797,8 +800,6 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    // Each run's credits, from KIFF's usage record with the person's session: a line the apps draw as is.
-    const credits = await runCreditsOf(bearer(event), taf.id, langOf(event), deps.fetch, deps.kiffBase);
     return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event), credits), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
       ...waitingOf(runs, fired, taf, now, langOf(event)) };
   }

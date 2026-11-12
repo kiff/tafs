@@ -1,0 +1,1 @@
+- tafs cloud reads each run's credits alongside a taf's other reads for its work page, so the page waits on no extra round trip to KIFF.
