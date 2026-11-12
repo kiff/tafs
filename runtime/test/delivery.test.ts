@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DELIVERY, DELIVERY_WORDS, deliveredLine, deliveryViews, handoffOf, nothingToHand, whyIn, wroteIn } from "../src/cloud/delivery.js";
 import { type Deps, handle, type HTTPEvent, sweepDeliveries, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
@@ -699,6 +699,31 @@ describe("work is handed on twice at most, never in a circle, and a taf can say 
     expect((await deliveriesOfRun(v, LED, third.id))[0]).toMatchObject({ state: "not_sent", line: `Not delivered to Books: ${DELIVERY_WORDS.tooFar}` });
     expect(v.agents.runs.filter((r) => r.agent === BKS)).toHaveLength(0);
     expect(first.id).not.toBe(second.id);
+  });
+
+  it("a receiving run whose own hand-off can't be settled leaves the first taf's request as it was, and the next read settles it", async () => {
+    const w = world([TO_INV], { invoices: [TO_LED], ledger: [], books: [] });
+    const first = await w.ran(RAE, HAND("Invoice 12 is paid."), []);
+    await w.call("GET", `/v1/tafs/${RAE}/work`);
+    const second = handedTo(w, INV, RAE, first.id)!;
+    Object.assign(second, { status: "COMPLETED", stop: "answered", output: HAND("Checked: book invoice 12."), sent: 0, updated: NOW.toISOString() });
+    // How far the work came can't be read while Invoices' run is settled from inside Rae's read: that settle fails, and says so.
+    const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const getRun = w.agents.api.getRun;
+    let broken = true;
+    w.agents.api.getRun = async (tenant, agent, id) => {
+      if (broken && agent === RAE && id === first.id) throw new Error("unavailable");
+      return getRun(tenant, agent, id);
+    };
+    // Rae's read still answers: handed, never "nothing was done", and no run of Ledger.
+    expect((await deliveriesOfRun(w, RAE, first.id))[0].line).toBe("Handed to Invoices at 12:00");
+    expect(w.agents.runs.filter((r) => r.agent === LED)).toHaveLength(0);
+    expect(errors).toHaveBeenCalledWith("deliveries not settled:", "unavailable");
+    errors.mockRestore();
+    // The failed settle gave its claim back, so the next read settles it: handed on to Ledger, once.
+    broken = false;
+    expect((await deliveriesOfRun(w, RAE, first.id))[0].line).toBe("Handed to Invoices · it handed it on to Ledger");
+    expect(w.agents.runs.filter((r) => r.agent === LED)).toHaveLength(1);
   });
 
   it("a taf that wrote nothing itself and handed its result on didn't do nothing: the first taf's request says where it went", async () => {
