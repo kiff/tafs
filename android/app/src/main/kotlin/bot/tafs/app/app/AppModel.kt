@@ -435,6 +435,11 @@ data class AppState(
   val listApproval: String? = null,
   /** Whether that connection takes an API key, given on the sheet instead of a vendor's sign-in. */
   val listApprovalNeedsKey: Boolean = false,
+  /** The secure connection sheet's words, by grant, from tafs cloud (docs/secure-connection.md); and why one couldn't be read. */
+  val secureSheets: Map<String, bot.tafs.app.kiff.SecureSheet> = emptyMap(),
+  val secureSheetErrors: Map<String, String> = emptyMap(),
+  /** The key went: the receipt on the secure sheet, with the pasted key's last 4, kept only while the sheet is open. */
+  val keyReceipt: KeyReceipt? = null,
   /** The key sheet opened from Coach's card: that card, and its draft version, answered once the key went. */
   val keyForCard: KeyForCard? = null,
   /** "Allow this from now on", open on a held call (docs/allow-from-now-on.md). */
@@ -3604,7 +3609,33 @@ class AppModel(
 
   fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
-  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null) }
+  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null, keyReceipt = null) }
+
+  /** The secure sheet's words for [grantId], read from tafs cloud when the key sheet opens, once per grant. */
+  suspend fun loadSecureSheet(grantId: String) {
+    if (_state.value.mode != Mode.kiff || _state.value.secureSheets.containsKey(grantId)) return
+    _state.update { it.copy(secureSheetErrors = it.secureSheetErrors - grantId) }
+    val generation = accountGeneration
+    try {
+      // This phone's signed grants read: tafs cloud reads the grant from planque only as this phone.
+      planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
+      val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
+      val sheet = cloud.connectSheet(grantId, proof)
+      if (generation == accountGeneration) _state.update { it.copy(secureSheets = it.secureSheets + (grantId to sheet)) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) {
+        _state.update { it.copy(secureSheetErrors = it.secureSheetErrors + (grantId to Words.Connect.approveNotRead(why = ErrorWords.of(e)))) }
+      }
+    }
+  }
+
+  /** Disconnect from the receipt: the connection goes, as from Connect apps, and the sheet closes. */
+  fun disconnectFromReceipt(grantId: String) {
+    closeListApproval()
+    scope.launch { if (disconnect(grantId)) loadConnectApps() }
+  }
 
   /** "Allow this from now on" tapped on a held call: the sheet opens, and tafs cloud makes the offer now, never before. */
   fun openAllow(call: HeldCall) {
@@ -3748,10 +3779,15 @@ class AppModel(
    */
   suspend fun giveKeyOnSheet(grantId: String, shownDigest: String, key: String): Boolean {
     val card = _state.value.keyForCard?.takeIf { it.card.grant == grantId }
-    if (card != null) return approveCoachWithKey(card.card, shownDigest, card.draft, key).also { if (it) closeListApproval() }
-    if (!giveKey(grantId, shownDigest, key)) return false
-    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
-    loadConnectApps()
+    val given = if (card != null) approveCoachWithKey(card.card, shownDigest, card.draft, key) else giveKey(grantId, shownDigest, key)
+    if (!given) return false
+    // With tafs cloud's secure sheet open, its receipt shows there until the person closes it; else the sheet closes now.
+    if (_state.value.listApproval == grantId && _state.value.secureSheets.containsKey(grantId)) {
+      _state.update { it.copy(keyReceipt = KeyReceipt(grantId, bot.tafs.app.model.SecureSheetWords.last4(key))) }
+    } else {
+      closeListApproval()
+    }
+    if (card == null) loadConnectApps()
     return true
   }
 
@@ -7135,6 +7171,9 @@ sealed interface ReceiptsResult {
   data class Ready(val export: bot.tafs.app.kiff.ReceiptsExport) : ReceiptsResult
   data class NotExported(val why: String) : ReceiptsResult
 }
+
+/** The receipt on the secure sheet: which grant got its key, and the pasted key's last 4 characters, never kept after it closes. */
+data class KeyReceipt(val grant: String, val last4: String)
 
 /** The key sheet opened from Coach's approval card: the card, answered once the key went, and the draft version it showed. */
 data class KeyForCard(val card: SetupComponent, val draft: String?)

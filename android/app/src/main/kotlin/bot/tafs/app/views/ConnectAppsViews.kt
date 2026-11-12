@@ -434,6 +434,9 @@ fun ConnectApprovalSheet(
   /** An API-key connection: the key is typed here and given with the same confirmation, instead of a vendor's sign-in. */
   needsKey: Boolean = false,
   onGiveKey: (bot.tafs.app.kiff.Grant, String) -> Unit = { _, _ -> },
+  /** The secure sheet's words for a key grant, from tafs cloud (docs/secure-connection.md); and Disconnect from its receipt. */
+  loadSecure: suspend (String) -> Unit = {},
+  onDisconnect: (String) -> Unit = {},
 ) {
   // Kept only while the sheet is open, never saved: it goes to planque once.
   var key by androidx.compose.runtime.remember(grant?.id) { mutableStateOf("") }
@@ -447,6 +450,30 @@ fun ConnectApprovalSheet(
       Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+      // A key grant: the secure sheet, every word tafs cloud's. Until they're read, or if they can't be, the sheet as before.
+      val secure = grant?.takeIf { needsKey }?.let { g ->
+        LaunchedEffect(g.id) { loadSecure(g.id) }
+        state.secureSheets[g.id]
+      }
+      if (grant != null && secure != null) {
+        val profiled = grant.request.profile != null
+        val words = state.profileWordsFor(grant)
+        if (profiled) LaunchedEffect(grant.id, state.profileDigest(grant)) { loadWords(grant.id) }
+        SecureKeyContent(
+          state, grant, secure,
+          profileWords = {
+            when {
+              words != null -> ProfileWordsLines(words)
+              state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))
+              profiled -> Text(bot.tafs.app.model.CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+            }
+          },
+          ready = !profiled || words != null,
+          receipt = state.keyReceipt,
+          actions = SecureKeyActions(give = onGiveKey, disconnect = onDisconnect, close = onClose),
+        )
+        return@Column
+      }
       Text(bot.tafs.app.model.ConnectWords.APPROVE_TITLE, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
       if (grant == null) {
         Text(Words.Connect.readingAsks, style = scaled(14, color = Theme.soft))
