@@ -335,6 +335,9 @@ the app in sample mode.
   it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
   Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the
   Card its room back; the first answer stands.
+- **Who a taf is shared with** (`ShareLine`, under the taf's name): the groups and people KIFF lists for it, never the
+  person reading it. A taf only they use reads "Not shared", and one they share names the others alone. "You" is the
+  person KIFF marks so, or the one whose email is the account read's.
 - **A held call's card** (`HeldCallCard`, in Needs you) has the decision on its face: KIFF's
   amount, the action, and the Card rule it crossed, from KIFF's record. Under them, **The taf
   says**: what the call is on and the customer's reason, in the taf's own words, as KIFF keeps
