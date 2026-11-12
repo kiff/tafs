@@ -50,6 +50,19 @@ class TafHealthTest {
     assertEquals("Skipped the 9:00 run: waiting for credits", skipped[1].words)
   }
 
+  /** A run's credits are tafs cloud's words from KIFF's usage record, drawn as sent; a run not counted yet has none. */
+  @Test fun aRunsCreditsAreTafsCloudsLineAndNoneIsNone() {
+    val work = read(
+      """{"summary":{"status":"idle","line":"Idle"},"requests":[
+        {"id":"r1","at":"2026-11-12T19:43:00Z","state":"done","line":"Done at 20:43","credits":{"credits":34,"counted":true,"words":"34 credits"}},
+        {"id":"r2","at":"2026-11-12T18:48:00Z","state":"failed","line":"It couldn't start","credits":{"credits":0,"counted":false,"words":"No credits: it failed"}},
+        {"id":"r3","at":"2026-11-12T18:00:00Z","state":"done","line":"Done at 19:00"}],"skipped":[]}""",
+    )
+    assertEquals("34 credits", work.requests[0].credits!!.words)
+    assertEquals("why it used none, in tafs cloud's words", "No credits: it failed", work.requests[1].credits!!.words)
+    assertNull("not counted yet: no line, and nothing counted here", work.requests[2].credits)
+  }
+
   @Test fun anOlderTafsCloudWithoutHealthOrFixesStillReads() {
     assertNull(read("""{"summary":{"status":"idle","line":""},"requests":[],"skipped":[]}""").health)
     val h = read("""{"health":{"level":"at_risk","lines":["One scheduled run couldn't start."]}}""").health!!
