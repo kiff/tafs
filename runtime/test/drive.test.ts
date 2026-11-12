@@ -239,16 +239,16 @@ describe("a drive, from the phone", () => {
     const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
     const id = (started.body.drive as { id: string }).id;
     const stop = await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "owner_took_over" });
-    expect(stop.body).toMatchObject({ ended: { why: "owner_took_over", words: "You touched the app, so it's yours now" } });
-    expect(w.events.at(-1)).toMatchObject({ kind: "drive_ended", detail: "the owner touched the app, so they have it now" });
+    expect(stop.body).toMatchObject({ ended: { why: "owner_took_over", words: "You took over, so Coach let you carry on" } });
+    expect(w.events.at(-1)).toMatchObject({ kind: "drive_ended", detail: "the owner took over, so Coach is letting them carry on" });
     expect((await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "stopped" })).body).toMatchObject({ ended: { why: "owner_took_over" } });
     w.working();
     const a = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
     expect(a.isError).toBe(true);
-    expect(a.content[0]).toMatchObject({ type: "text", text: expect.stringContaining("the owner touched the app") });
+    expect(a.content[0]).toMatchObject({ type: "text", text: expect.stringContaining("the owner took over") });
     expect((await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "replaced" })).status).toBe(400);
     const read = await w.call("GET", "/v1/coach/drive");
-    expect(read.body.drive).toMatchObject({ id, ended: { why: "owner_took_over", words: "You touched the app, so it's yours now" } });
+    expect(read.body.drive).toMatchObject({ id, ended: { why: "owner_took_over", words: "You took over, so Coach let you carry on" } });
     expect(read.body.drive).not.toHaveProperty("person");
   });
 });
@@ -465,7 +465,7 @@ describe("a drive's end in Coach's chat", () => {
     await w.call("POST", "/v1/coach/drive/stop", { drive: id, why: "stopped" });
     const recaps = await driveRecaps(w.coach, T, w.session);
     expect(recaps).toHaveLength(1);
-    expect(recaps[0]).toMatchObject({ id, session: w.session, task: "Run Chargebacks", why: "owner_took_over", words: "You touched the app, so it's yours now",
+    expect(recaps[0]).toMatchObject({ id, session: w.session, task: "Run Chargebacks", why: "owner_took_over", words: "You took over, so Coach let you carry on",
       steps: [{ line: "Opening Chargebacks", touched: { words: "Chargebacks" } }], at: NOW.toISOString() });
     // Another chat of the same person has none.
     expect(await driveRecaps(w.coach, T, "s_other")).toEqual([]);
@@ -475,6 +475,6 @@ describe("a drive's end in Coach's chat", () => {
     const end = items.findIndex((i) => i.type === "drive");
     expect(card).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(card);
-    expect(items[end]!.drive).toMatchObject({ id, why: "owner_took_over", words: "You touched the app, so it's yours now", task: "Run Chargebacks" });
+    expect(items[end]!.drive).toMatchObject({ id, why: "owner_took_over", words: "You took over, so Coach let you carry on", task: "Run Chargebacks" });
   });
 });

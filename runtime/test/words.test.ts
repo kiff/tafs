@@ -205,7 +205,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   });
 
   it("says why Coach stopped driving in the language, English as END_SAID", () => {
-    expect(endSaid("owner_took_over", "nl")).toBe("Je raakte de app aan, dus hij is nu van jou");
+    expect(endSaid("owner_took_over", "nl")).toBe("Je nam het over, dus Coach laat je verdergaan");
     expect(endSaid("idle", "pt")).toBe("Nada foi feito durante 15 minutos, por isso o Coach parou");
     for (const why of Object.keys(END_SAID) as Array<keyof typeof END_SAID>) expect(endSaid(why)).toBe(END_SAID[why]);
   });

@@ -629,7 +629,7 @@ export const en = {
   cts_app_act_does: "While a drive is on, tap, type and scroll in tafs on your phone, with a caption for each step. It can't approve anything: only you approve, on your phone.",
   cts_app_act_why: "It acts in the app as you.",
   // Why Coach stopped driving the app (drive.ts END_SAID), as the person reads it.
-  drive_end_owner_took_over: "You touched the app, so it's yours now",
+  drive_end_owner_took_over: "You took over, so Coach let you carry on",
   drive_end_left_app: "The app left the screen, so Coach stopped",
   drive_end_stopped: "You stopped Coach",
   drive_end_locked: "The phone locked, so Coach stopped",

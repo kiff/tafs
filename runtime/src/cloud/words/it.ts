@@ -582,7 +582,7 @@ export const it: Words = {
   cts_app_act: "Usare tafs mentre guida",
   cts_app_act_does: "Durante la guida, toccare, scrivere e scorrere in tafs sul tuo telefono, con una didascalia per ogni passo. Non può approvare nulla: approvi solo tu, sul tuo telefono.",
   cts_app_act_why: "Agisce nell'app al posto tuo.",
-  drive_end_owner_took_over: "Hai toccato l'app, quindi ora è tua",
+  drive_end_owner_took_over: "Hai preso il controllo, quindi Coach ti lascia continuare",
   drive_end_left_app: "L'app è uscita dallo schermo, quindi Coach si è fermato",
   drive_end_stopped: "Hai fermato Coach",
   drive_end_locked: "Il telefono si è bloccato, quindi Coach si è fermato",
