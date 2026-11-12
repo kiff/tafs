@@ -715,7 +715,7 @@ answers `key_and_cards`:
 - it signs `kiff.requests.v1`, the account, the time and both messages' SHA-256 sorted, once, with
   the approval key, behind the fingerprint (`AppModel.keyAndCards`);
 - it sends each request with that signature and the other's hash (`v3=…,with=sha256:…`): the key to
-  planque, in its header alone, then the confirm to KIFF;
+  planque, in its header alone, then, only once planque says `connected`, the confirm to KIFF;
 - it reports what came of them, as for any step. A key that went in with a Card that didn't is said
   by tafs cloud, and Coach's next card asks for the Card alone.
 

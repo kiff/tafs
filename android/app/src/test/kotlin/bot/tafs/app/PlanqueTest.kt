@@ -1079,6 +1079,21 @@ class PlanqueTest {
     assertFalse("the key is kept nowhere in the app's state", m.state.value.toString().contains("test-key-0001"))
   }
 
+  @Test fun aKeyThatDidntConnectNeverHasItsCardConfirmed() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    transport.answer(askRoute, 200, keyAndCards.replace("DIGEST", digestOf(keyRequest)))
+    transport.answer(key, 200, keyGrant("failed"))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"failed: the bank is not connected","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    assertFalse(m.approveCoachWithKey(approvalComponent().copy(draft = "dr_1"), digestOf(keyRequest), "v3", "test-key-0001"))
+    assertTrue("no confirm for a key that didn't connect", transport.requestsTo(confirmRoute).isEmpty())
+    val report = bodyOf(transport.requestsTo(reportRoute).single())
+    assertEquals("not_connected", report.getValue("result").jsonPrimitive.content)
+    assertEquals("failed", report.getValue("status").jsonPrimitive.content)
+  }
+
   @Test fun answeredWithTheTwoStepsNothingIsSignedForItAndTheKeyGoesAsBefore() = runTest {
     // tafs cloud with the step off answers the connect step: the phone signs none of it, gives the key, then asks again.
     reads()

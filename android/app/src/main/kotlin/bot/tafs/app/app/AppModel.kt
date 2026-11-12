@@ -4224,13 +4224,15 @@ class AppModel(
       note(noteKey, notSigned(e, Words.Common.notDoneUnconfirmed))
       return null
     }
-    try {
+    val given = try {
       planque.giveKeyTogether(grant, key, words, signedAt, signature, with = confirmHash)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       return Came.Of("failed", why = e.message ?: "the key didn't go in")
     }
+    // The key first, then the Card: a Card is never confirmed for a key that didn't connect.
+    if (given.status != "connected") return Came.Of("not_connected", status = given.status)
     return try {
       kiff.confirmDraftTogether(k.draft, k.version, signedAt, signature, with = keyHash)
       Came.Of("confirmed")
