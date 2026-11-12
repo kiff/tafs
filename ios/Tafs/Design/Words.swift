@@ -4054,6 +4054,18 @@ enum Words {
         /// Works under {count} KIFF Cards.
         static func worksUnderCards(count: Int) -> String { Words.count("taf.works_under_cards", count) }
     }
+    enum Update {
+        /// A new version of tafs is out.
+        static var available: String { Words.line("update.available") }
+        /// Downloading the update…
+        static var downloading: String { Words.line("update.downloading") }
+        /// The update is ready.
+        static var ready: String { Words.line("update.ready") }
+        /// Restart
+        static var restart: String { Words.line("update.restart") }
+        /// Update
+        static var update: String { Words.line("update.update") }
+    }
     enum Usage {
         /// {detail} An admin answers.
         static func adminAnswers(detail: String) -> String { Words.line("usage.admin_answers", detail) }

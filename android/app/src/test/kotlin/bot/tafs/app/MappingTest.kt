@@ -437,8 +437,9 @@ class MappingTest {
   @Test fun anAmountIsWrittenAsTheAppWritesMoneyAndALineKeepsWhatKiffSaid() {
     val p1 = line("p1")
     assertEquals(eur(15000).formatted, p1.amountText)
-    // "Refund a payment" with its amount reads as the verb and the money: the article is the mockup's cue.
-    assertEquals("Refund ${eur(15000).formatted}", p1.titleWithAmount)
+    // The title whole, with its amount after it: "Save a dispute response" cut to "Save US$800" read as saving the money.
+    assertEquals("Refund a payment · ${eur(15000).formatted}", p1.titleWithAmount)
+    assertEquals("Save a dispute response · US$800.00", p1.copy(title = "Save a dispute response", amountText = "US$800.00").titleWithAmount)
     assertEquals("Refund order · ${eur(15000).formatted}", p1.copy(title = "Refund order").titleWithAmount)
     assertEquals("Refund a payment", p1.copy(amountText = null).titleWithAmount)
     assertEquals("tc-1", p1.entityId)

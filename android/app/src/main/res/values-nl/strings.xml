@@ -2037,6 +2037,11 @@
         <item quantity="one">Werkt onder %1$s KIFF-Card.</item>
         <item quantity="other">Werkt onder %1$s KIFF-Cards.</item>
     </plurals>
+    <string name="update_available">Er is een nieuwe versie van tafs.</string>
+    <string name="update_downloading">Update downloaden…</string>
+    <string name="update_ready">De update is klaar.</string>
+    <string name="update_restart">Opnieuw starten</string>
+    <string name="update_update">Bijwerken</string>
     <string name="usage_admin_answers">%1$s Een beheerder antwoordt.</string>
     <string name="usage_balance">Saldo</string>
     <string name="usage_balance_not_read">Het saldo kon niet worden gelezen. %1$s</string>

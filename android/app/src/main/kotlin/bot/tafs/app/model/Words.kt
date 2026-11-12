@@ -2199,6 +2199,13 @@ object Words {
     val worksFromChat: String get() = Res.s(R.string.taf_works_from_chat)
     fun worksUnderCards(count: Int): String = Res.p(R.plurals.taf_works_under_cards, count, Res.number(count))
   }
+  object Update {
+    val available: String get() = Res.s(R.string.update_available)
+    val downloading: String get() = Res.s(R.string.update_downloading)
+    val ready: String get() = Res.s(R.string.update_ready)
+    val restart: String get() = Res.s(R.string.update_restart)
+    val update: String get() = Res.s(R.string.update_update)
+  }
   object Usage {
     fun adminAnswers(detail: String): String = Res.s(R.string.usage_admin_answers, detail)
     val balance: String get() = Res.s(R.string.usage_balance)

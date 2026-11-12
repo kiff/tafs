@@ -2155,6 +2155,11 @@
         <item quantity="many">Działa w ramach %1$s Card KIFF.</item>
         <item quantity="other">Działa w ramach %1$s Card KIFF.</item>
     </plurals>
+    <string name="update_available">Jest nowa wersja tafs.</string>
+    <string name="update_downloading">Pobieranie aktualizacji…</string>
+    <string name="update_ready">Aktualizacja jest gotowa.</string>
+    <string name="update_restart">Uruchom ponownie</string>
+    <string name="update_update">Aktualizuj</string>
     <string name="usage_admin_answers">%1$s Odpowiada administrator.</string>
     <string name="usage_balance">Saldo</string>
     <string name="usage_balance_not_read">Nie udało się odczytać salda. %1$s</string>

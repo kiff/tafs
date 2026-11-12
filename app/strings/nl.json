@@ -2034,6 +2034,11 @@
     "one": "Werkt onder {count} KIFF-Card.",
     "other": "Werkt onder {count} KIFF-Cards."
   },
+  "update.available": "Er is een nieuwe versie van tafs.",
+  "update.downloading": "Update downloaden…",
+  "update.ready": "De update is klaar.",
+  "update.restart": "Opnieuw starten",
+  "update.update": "Bijwerken",
   "usage.admin_answers": "{detail} Een beheerder antwoordt.",
   "usage.balance": "Saldo",
   "usage.balance_not_read": "Het saldo kon niet worden gelezen. {why}",

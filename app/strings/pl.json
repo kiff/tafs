@@ -2152,6 +2152,11 @@
     "many": "Działa w ramach {count} Card KIFF.",
     "other": "Działa w ramach {count} Card KIFF."
   },
+  "update.available": "Jest nowa wersja tafs.",
+  "update.downloading": "Pobieranie aktualizacji…",
+  "update.ready": "Aktualizacja jest gotowa.",
+  "update.restart": "Uruchom ponownie",
+  "update.update": "Aktualizuj",
   "usage.admin_answers": "{detail} Odpowiada administrator.",
   "usage.balance": "Saldo",
   "usage.balance_not_read": "Nie udało się odczytać salda. {why}",

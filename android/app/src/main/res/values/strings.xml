@@ -2037,6 +2037,11 @@
         <item quantity="one">Works under %1$s KIFF Card.</item>
         <item quantity="other">Works under %1$s KIFF Cards.</item>
     </plurals>
+    <string name="update_available">A new version of tafs is out.</string>
+    <string name="update_downloading">Downloading the update…</string>
+    <string name="update_ready">The update is ready.</string>
+    <string name="update_restart">Restart</string>
+    <string name="update_update">Update</string>
     <string name="usage_admin_answers">%1$s An admin answers.</string>
     <string name="usage_balance">Balance</string>
     <string name="usage_balance_not_read">The balance couldn\'t be read. %1$s</string>

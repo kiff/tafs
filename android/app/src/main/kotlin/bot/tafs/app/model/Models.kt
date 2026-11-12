@@ -417,6 +417,8 @@ data class Taf(
   val paused: Boolean = false,
   /** When its schedule runs it next, as tafs cloud says. */
   @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
+  /** tafs cloud's words for the next run ("Next run Mon 08:00"), drawn in place of the app's own format of [nextRun]. */
+  val nextRunWords: String? = null,
   /** It works from its chat: no schedule runs it, so there's nothing to run now or pause (kiff/tafs#138). */
   val worksFromChat: Boolean = false,
   /** Where its results go, of tafs' own places, as tafs cloud lists them; none listed, only its door's reply. */
@@ -441,13 +443,8 @@ data class Taf(
   /** The Cards its page draws: each KIFF Card, else its lines as one Card. */
   val shownCards: List<TafCard>
     get() {
-      // The live Cards first, and among them the one that counts money: for a taf that pays out,
-      // what's left to spend matters most. Otherwise as KIFF lists them.
-      if (!kiffCards.isNullOrEmpty()) {
-        return kiffCards.withIndex().sortedWith(
-          compareBy({ (if (it.value.live) 0 else 2) + (if (it.value.total != null) 0 else 1) }, { it.index }),
-        ).map { it.value }
-      }
+      // In tafs cloud's order: it puts first the Card that has used the most of its limit. The app sorts nothing itself.
+      if (!kiffCards.isNullOrEmpty()) return kiffCards
       return listOf(TafCard.merged("merged", name, card.rules, card.expires, !card.revoked, used, usageUnknown ?: emptySet(), counted))
     }
 }
@@ -707,12 +704,13 @@ data class RecordEntry(
     inTafs,
   }
 
-  /** "Refund €150.00": the action's verb with its amount, as the mockup has it. */
+  /**
+   * The action's title, whole, with its amount after it: "Save a dispute response · US$800". Never cut at an article, which made
+   * "Save US$800" read as saving the money.
+   */
   val titleWithAmount: String
     get() {
       val money = amountText ?: return title
-      val words = title.split(" ")
-      if (words.size > 1 && words[1].lowercase() in setOf("a", "an", "the")) return "${words[0]} $money"
       return "$title · $money"
     }
 }

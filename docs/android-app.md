@@ -371,6 +371,13 @@ app's own lines stand in only where tafs cloud sends none.
 
 ## A taf's work
 
+**Its row's line** is tafs cloud's: the next run as `next_run_words` ("Next run Mon 08:00", with its day when it isn't
+today; the app's own format only where an older tafs cloud sends none, and after a pause or resume until Home is read
+again), and, when its work's summary has `attention` (a failed check, an unhealthy taf, a run stopped at a cap or failed),
+that summary's `line` in place of "Working" (`KiffMapping.taf`). Its Cards keep tafs cloud's order, which puts first the
+one that has used the most of its limit; the app sorts none (`Taf.shownCards`). **Its runs** show the first page's
+`skipped` firings in their place by time (`Chat.runRows`), so a Run now whose check couldn't read shows there.
+
 The Activity tab of a taf on tafs cloud (`TafActivityList`) shows, for whoever manages it, its
 doors' knocks first (`KnocksPanel`: strangers' knocks with Do it, Pair them and Ignore, then paired
 senders), so a knock Needs you counts is on the taf's page too. Then come its held calls, then where its
@@ -541,6 +548,15 @@ the taf's name, what to do, and why. Needs you counts each once, as tafs cloud d
 - **The vector:** `YourStepTest` pins KIFF's `kiff.handoff.v1` message and its sha256, and checks
   KIFF's vector signature verifies with the key derived from its seed, and for no other answer,
   hand-off, account or version.
+
+## A newer version
+
+When Play's track has a newer tafs, Home says so in one line under the account's name, with one button
+(`push/AppUpdates.kt`, Play's flexible in-app update): **Update** opens Play's own confirmation and downloads it in the
+background, the line says it's downloading, then **Restart** installs it and opens tafs again. Play is asked each
+time the app comes to the front; it decides what's newer and installs it, and the app decides no version. A build Play
+didn't install (a debug build, an emulator without Play) is never offered one. Test it on the internal track: install an
+older build from the track, publish a newer one, open tafs.
 
 ## Alerts
 

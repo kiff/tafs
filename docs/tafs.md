@@ -211,9 +211,17 @@ On Android the page is `views/TafDetailView.kt`, with the same tabs and parts
 (`RunsPanel`, `RunReportPanel`, `MemoryPanel`), and no second column yet. Revoke asks KIFF
 to revoke each of the taf's Cards (`POST /v1/me/mandates/{id}/revoke`, unsigned, since it
 takes authority away) and shows the taf stopped only once KIFF has. Remove for good takes
-one confirmation, revokes its Cards, then asks tafs cloud to remove the rest
-(`DELETE /v1/tafs/{id}`). A removal left half way is finished on the next refresh, from
-the home list's `removing`.
+one confirmation and a fingerprint, every time, before anything is undone. The dialog removes
+the taf it named when it opened, by its id. It closes, removing nothing, if a refresh changes
+Home's list under it, and its button takes a tap only once it has been up half a second
+(`REMOVE_CONFIRM_DELAY_MS`). The approval key signs the DELETE itself (`kiff.request.v1` over
+`DELETE /v1/tafs/{id}` and its empty body, sent as `KIFF-Device-Signature`); a phone with no
+fingerprint set up can't remove a taf, even a debug build with no screen lock (`signCritical`).
+Then the app revokes its Cards and asks tafs cloud to remove the rest. tafs cloud asks KIFF
+whether this phone's approval key signed it. A removal left half way is finished on the next
+refresh, from the home list's `removing`, unsigned: tafs cloud takes that only for a taf it lists
+as removing. On a tablet with no taf picked, the pane beside the list stays on the taf being
+removed, rather than following the list's first.
 
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,

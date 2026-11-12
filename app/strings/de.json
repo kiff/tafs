@@ -2034,6 +2034,11 @@
     "one": "Arbeitet unter {count} KIFF-Card.",
     "other": "Arbeitet unter {count} KIFF-Cards."
   },
+  "update.available": "Eine neue Version von tafs ist da.",
+  "update.downloading": "Update wird geladen…",
+  "update.ready": "Das Update ist bereit.",
+  "update.restart": "Neu starten",
+  "update.update": "Aktualisieren",
   "usage.admin_answers": "{detail} Ein Admin antwortet.",
   "usage.balance": "Guthaben",
   "usage.balance_not_read": "Das Guthaben konnte nicht gelesen werden. {why}",
