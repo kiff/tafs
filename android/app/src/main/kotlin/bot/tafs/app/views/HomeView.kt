@@ -211,8 +211,8 @@ fun HomeView(
             }
           }
         }
-        // Stopping every taf at once is one row away, with where it stands.
-        if (state.canHalt(null) && state.tafs.isNotEmpty()) item { HaltRow(null, state.haltOf(null), onHaltAll) }
+        // Stopping every taf at once is one row away, with where it stands; and resuming an account halted with no taf left.
+        if (state.showsAccountHalt) item { HaltRow(null, state.haltOf(null), onHaltAll) }
         item { Text(Words.Home.footer, style = scaled(12, color = Theme.dim)) }
       }
     }

@@ -54,9 +54,16 @@ data class DriveRecap(
 @Serializable
 data class Touched(val words: String, val taf: String? = null)
 
-/** `POST /v1/coach/drive/resume`'s answer: on a halted account the drive ends instead, with tafs cloud's [ended]. */
+/**
+ * `POST /v1/coach/drive/resume`'s answer: on a halted account the drive ends instead, with tafs cloud's [ended]. [coach] is the
+ * turn that took Continue, the parked run or the one Continue started, for the chat to follow to its end.
+ */
 @Serializable
-data class DriveResumed(val resumed: Boolean = true, val ended: DriveEnd? = null)
+data class DriveResumed(val resumed: Boolean = true, val ended: DriveEnd? = null, val coach: DriveCoachTurn? = null)
+
+/** Coach's turn that goes on after Continue: its run, in its conversation. */
+@Serializable
+data class DriveCoachTurn(val run: String, val session: String? = null)
 
 /** `GET /v1/coach/drive`: the person's drive as it stands, and its steps for the "What I did" card. */
 @Serializable

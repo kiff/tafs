@@ -19,6 +19,7 @@ import bot.tafs.app.drive.DriveWords
 import bot.tafs.app.drive.Look
 import bot.tafs.app.drive.driveDismissal
 import bot.tafs.app.drive.driveTyped
+import bot.tafs.app.kiff.CloudError
 import bot.tafs.app.kiff.KiffClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -51,6 +52,11 @@ class DrivePauseTest {
     /** How many pause posts fail before one lands. */
     var pauseFails = 0
 
+    /** What a failing pause or resume throws: the network by default, or tafs cloud's refusal. */
+    var failure: () -> Exception = { java.io.IOException("The network dropped") }
+    var resumeFails = false
+    var read = DriveRead()
+
     override suspend fun driveStream(drive: String): Flow<DriveEvent> = events.receiveAsFlow()
 
     override suspend fun driveAnswer(drive: String, request: String, answer: DriveAnswer) {
@@ -61,17 +67,18 @@ class DrivePauseTest {
       stops += why
     }
 
-    override suspend fun readDrive(): DriveRead = DriveRead()
+    override suspend fun readDrive(): DriveRead = read
 
     override suspend fun pauseDrive(drive: String) {
       pauses += drive
-      if (pauses.size <= pauseFails) throw java.io.IOException("The network dropped")
+      if (pauses.size <= pauseFails) throw failure()
     }
 
     var resumeAnswer: DriveResumed? = null
 
     override suspend fun resumeDrive(drive: String): DriveResumed? {
       resumes += drive
+      if (resumeFails) throw failure()
       return resumeAnswer
     }
   }
@@ -184,6 +191,76 @@ class DrivePauseTest {
     advanceUntilIdle()
     assertEquals(DriveState.Over(drive, "halted", "The account is halted, so Coach stopped"), c.state.value)
     assertTrue("tafs cloud ended it: nothing is sent back", api.stops.isEmpty())
+  }
+
+  private fun gone() = CloudError(404, "not found")
+
+  @Test fun aPauseAnswered404EndsTheDriveInItsOwnEndsWords() = runTest {
+    val api = FakeApi().apply {
+      pauseFails = Int.MAX_VALUE
+      failure = { gone() }
+      read = DriveRead(DriveInfo("d_1", ended = DriveEnd("idle", words = "Nothing was done for 15 minutes, so Coach stopped")))
+    }
+    val c = DriveController(api, FakeHost(), driveScope()) { testScheduler.currentTime }
+    c.begin(drive)
+    c.pause()
+    advanceUntilIdle()
+    assertEquals(DriveState.Over(drive, "idle", "Nothing was done for 15 minutes, so Coach stopped"), c.state.value)
+    assertEquals("posted once: a 404 is never asked again", 1, api.pauses.size)
+    assertTrue("tafs cloud has no such drive: nothing is sent back", api.stops.isEmpty())
+  }
+
+  @Test fun aPauseAnswered404WhileAnotherDriveIsCurrentSaysAnotherStarted() = runTest {
+    val api = FakeApi().apply { pauseFails = Int.MAX_VALUE; failure = { gone() }; read = DriveRead(DriveInfo("d_2")) }
+    val c = DriveController(api, FakeHost(), driveScope()) { testScheduler.currentTime }
+    c.begin(drive)
+    c.pause()
+    advanceUntilIdle()
+    val over = c.state.value as DriveState.Over
+    assertEquals("replaced", over.why)
+    assertEquals(DriveWords.ended("replaced"), over.words)
+  }
+
+  @Test fun aPauseAnswered404WithNoDriveSaysCoachStoppedNeverTheyTookOver() = runTest {
+    val api = FakeApi().apply { pauseFails = Int.MAX_VALUE; failure = { gone() } }
+    val c = DriveController(api, FakeHost(), driveScope()) { testScheduler.currentTime }
+    c.begin(drive)
+    c.pause()
+    advanceUntilIdle()
+    val over = c.state.value as DriveState.Over
+    assertEquals("other", over.why)
+    assertEquals(DriveWords.ended("other"), over.words)
+  }
+
+  @Test fun aResumeAnswered404EndsTheDriveToo() = runTest {
+    val api = FakeApi().apply { resumeFails = true; failure = { gone() } }
+    val c = DriveController(api, FakeHost(), driveScope()) { testScheduler.currentTime }
+    c.begin(drive)
+    c.pause()
+    c.resume()
+    advanceUntilIdle()
+    assertEquals("other", (c.state.value as DriveState.Over).why)
+  }
+
+  @Test fun onlyTheNetworkA5xxA429OrA401IsAskedAgain() = runTest {
+    // A drive tafs cloud still has: asked again, and the third post lands.
+    for (status in listOf(503, 429, 401)) {
+      val busy = FakeApi().apply { pauseFails = 2; failure = { CloudError(status, "try again") } }
+      val c = DriveController(busy, FakeHost(), driveScope()) { testScheduler.currentTime }
+      c.begin(drive)
+      c.pause()
+      advanceUntilIdle()
+      assertEquals("$status", 3, busy.pauses.size)
+      assertTrue("$status", c.paused)
+    }
+    // Another refusal won't change by asking again: posted once, and the pause here stands.
+    val refused = FakeApi().apply { pauseFails = Int.MAX_VALUE; failure = { CloudError(400, "bad request") } }
+    val d = DriveController(refused, FakeHost(), driveScope()) { testScheduler.currentTime }
+    d.begin(drive)
+    d.pause()
+    advanceUntilIdle()
+    assertEquals(1, refused.pauses.size)
+    assertTrue(d.paused)
   }
 
   @Test fun aThirdTapOnAControlSinceThePauseIsAClearTakeover() = runTest {

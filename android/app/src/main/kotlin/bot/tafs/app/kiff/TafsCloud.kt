@@ -898,9 +898,11 @@ class TafsCloud(
     send("POST", "/v1/coach/drive/pause", jsonBody("drive" to drive))
   }
 
-  override suspend fun resumeDrive(drive: String): bot.tafs.app.drive.DriveResumed? =
-    runCatching { KiffClient.json.decodeFromString<bot.tafs.app.drive.DriveResumed>(String(send("POST", "/v1/coach/drive/resume", jsonBody("drive" to drive)))) }
-      .getOrNull()
+  override suspend fun resumeDrive(drive: String): bot.tafs.app.drive.DriveResumed? {
+    // A refusal is thrown (a 404 ends the drive); an answer that doesn't read is nothing of use.
+    val body = send("POST", "/v1/coach/drive/resume", jsonBody("drive" to drive))
+    return runCatching { KiffClient.json.decodeFromString<bot.tafs.app.drive.DriveResumed>(String(body)) }.getOrNull()
+  }
 
   override suspend fun readDrive(): bot.tafs.app.drive.DriveRead = get("/v1/coach/drive")
 

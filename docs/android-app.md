@@ -220,6 +220,9 @@ the other button.
 While it halts, the screen reads the halt again after half a second, a second, then every 2
 seconds, for about two minutes (`HALT_POLLS_MS`), and the home list is read beside it rather than
 before it, so Halted shows as soon as tafs cloud says so.
+Home's row for halting every taf shows with tafs to halt, or whenever the account isn't running
+(`showsAccountHalt`). With no taf, the home list carries no account halt, so each refresh reads
+`GET /v1/halt` on its own: an account halted with no taf left can still be resumed from Home.
 
 **Run now that finds nothing new is no failure** (`runNowQuiet`): a taf that checks first answers
 `session: null` with `outcome: "quiet"` and tafs cloud's `words`, shown as they are under Run now until

@@ -293,7 +293,10 @@ drive; only a clear takeover ends it.
   - The person uses the app as usual, and every touch of theirs is delivered.
 - **Continue** puts the keyboard away first: the field keeps its text and loses focus, so nothing
   the keyboard commits later reads as the person's typing. Then the app posts
-  `POST /v1/coach/drive/resume {drive}`, and the caption goes back to Coach's line. Coach's first
+  `POST /v1/coach/drive/resume {drive}`, and the caption goes back to Coach's line. On Android,
+  the chat follows the turn the answer names (`coach`) to its end, and again after the drive's
+  end. On iOS, Coach's chat opens again at the drive's end and reads the conversation while a run
+  is at work. Either way Coach's answer shows without reopening the chat. Coach's first
   step after it is a look: tafs cloud refuses an `app_act` until Coach has looked again, since
   the screen may have changed.
 - **Stop** ends the drive as `stopped`.

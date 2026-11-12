@@ -34,10 +34,13 @@ interface DriveApi {
   /** `POST /v1/coach/drive/stop {drive, why}`. */
   suspend fun stopDrive(drive: String, why: String)
 
-  /** `POST /v1/coach/drive/pause {drive}`: the person touched the app. A tafs cloud without the route answers 404, and the app's own pause stands. */
+  /**
+   * `POST /v1/coach/drive/pause {drive}`: the person touched the app. Throws [CloudError] for tafs cloud's refusal: a 404 means
+   * this isn't the person's current drive any more.
+   */
   suspend fun pauseDrive(drive: String) {}
 
-  /** `POST /v1/coach/drive/resume {drive}`: the person tapped Continue. Null when tafs cloud said nothing of use. */
+  /** `POST /v1/coach/drive/resume {drive}`: the person tapped Continue. Throws [CloudError] for tafs cloud's refusal, as [pauseDrive]. */
   suspend fun resumeDrive(drive: String): DriveResumed? = null
 
   /** `GET /v1/coach/drive`. */
@@ -171,6 +174,9 @@ class DriveController(
   /** The person's taps on a control since the drive paused, the pausing one included; a third ends it. */
   private var taps = 0
 
+  /** Continue went through: Coach's turn that goes on, as tafs cloud names it, for the chat to follow. */
+  var onResumed: (DriveCoachTurn?) -> Unit = {}
+
   /** The pause on its way to tafs cloud, posted again until it lands, Continue comes, or the drive ends. */
   private var pausing: Job? = null
 
@@ -216,7 +222,13 @@ class DriveController(
     pausing = scope.launch {
       var wait = PAUSE_RETRY_FIRST_MS
       while (stillPaused(on.drive)) {
-        if (runCatching { api.pauseDrive(on.drive.id) }.isSuccess) break
+        val failed = runCatching { api.pauseDrive(on.drive.id) }.exceptionOrNull() ?: break
+        // Posted again on a network error, tafs cloud's 5xx, a 429, or a sign-in that couldn't refresh (401): the drive is still
+        // there. A 404 means it isn't this person's current one any more, so it ends here; any other refusal won't change by
+        // asking again, and the pause here stands.
+        if (failed is CancellationException) throw failed
+        if (failed is CloudError && failed.status == 404) { goneAtTafsCloud(on.drive); break }
+        if (failed is CloudError && failed.status < 500 && failed.status !in RETRIED_REFUSALS) break
         delay(wait)
         wait = minOf(wait * 2, PAUSE_RETRY_MAX_MS)
       }
@@ -237,8 +249,31 @@ class DriveController(
     set(on.copy(paused = false))
     scope.launch(NonCancellable) {
       // On a halted account tafs cloud ends the drive instead: it's over, in tafs cloud's words, and nothing is sent back.
-      val answer = runCatching { api.resumeDrive(on.drive.id) }.getOrNull()
+      val answer = try {
+        api.resumeDrive(on.drive.id)
+      } catch (e: CloudError) {
+        if (e.status == 404) goneAtTafsCloud(on.drive)
+        null
+      } catch (_: Exception) {
+        null
+      }
       answer?.ended?.takeIf { !answer.resumed }?.let { end(on.drive, it.why, it.words) }
+      if (answer?.resumed == true) onResumed(answer.coach)
+    }
+  }
+
+  /**
+   * tafs cloud answered 404: this isn't the person's current drive any more, because it ended or was never theirs. It ends here
+   * at once, and nothing more is posted. Why, from `GET /v1/coach/drive`: its own end in tafs cloud's words; "Another drive
+   * started" when another is current; else the app's own "Coach stopped". Never `owner_took_over`, which is only the person's
+   * own takeover, so the Record never says they took over when they didn't.
+   */
+  private suspend fun goneAtTafsCloud(drive: DriveInfo) {
+    val current = runCatching { api.readDrive() }.getOrNull()?.drive
+    when {
+      current?.id == drive.id && current.ended != null -> end(drive, current.ended.why, current.ended.words)
+      current != null && current.id != drive.id -> end(drive, "replaced", null)
+      else -> end(drive, "other", null)
     }
   }
 
@@ -450,3 +485,6 @@ const val TAKEOVER_TAPS = 3
 /** A pause tafs cloud didn't take is posted again after this, doubling each time up to [PAUSE_RETRY_MAX_MS]. */
 const val PAUSE_RETRY_FIRST_MS = 500L
 const val PAUSE_RETRY_MAX_MS = 8_000L
+
+/** Refusals of a drive tafs cloud still has, so a pause is posted again: too many requests, and a sign-in that couldn't refresh. */
+val RETRIED_REFUSALS = setOf(401, 429)

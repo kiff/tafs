@@ -609,6 +609,12 @@ data class AppState(
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)
 
+  /**
+   * Home's row for halting every taf: with tafs to halt, or whenever the account isn't running, tafs or not, so an account
+   * halted with none left can still be resumed.
+   */
+  val showsAccountHalt: Boolean get() = canHalt(null) && (tafs.isNotEmpty() || !haltOf(null).running)
+
   /** A taf by the KIFF agent it acts as; the agent's id when the app doesn't know it. */
   fun tafName(agent: String): String = taf(agent)?.name ?: agent
 
@@ -1190,8 +1196,12 @@ class AppModel(
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
       nameRecordLines(generation)
-      // An account with no taf: Home lists the recipes, when tafs cloud says so (docs/android-app.md).
-      if (_state.value.tafs.isEmpty()) loadRecipes()
+      // An account with no taf: Home lists the recipes, when tafs cloud says so (docs/android-app.md). The list carries no
+      // account halt then, so it's read on its own: a halt that outlived every taf still shows on Home, to resume.
+      if (_state.value.tafs.isEmpty()) {
+        loadRecipes()
+        refreshHalt(null)
+      }
       // The jobs a taf can take, for + New and the strip under the list, read with each refresh.
       loadGallery()
     } catch (e: CancellationException) {
@@ -4325,6 +4335,7 @@ class AppModel(
   val drive: bot.tafs.app.drive.DriveController by lazy { bot.tafs.app.drive.DriveController(cloud, driveHost, scope).also { watchDrive(it) } }
 
   private fun watchDrive(d: bot.tafs.app.drive.DriveController) {
+    d.onResumed = { turn -> scope.launch { coachGoesOn(turn) } }
     scope.launch {
       d.state.collect { s ->
         when (s) {
@@ -4335,6 +4346,8 @@ class AppModel(
             // writes it from its record of the steps, not Coach's memory of them, once the end has reached it.
             d.settled()
             runCatching { readThread(COACH_CHAT) }
+            // Coach may still be at work after the drive's last step: the chat follows it to its end, as after Continue.
+            followChat(COACH_CHAT)
           }
           bot.tafs.app.drive.DriveState.Off -> bot.tafs.app.drive.DriveInput.turn(false)
         }
@@ -4388,6 +4401,20 @@ class AppModel(
   /** The person tapped Continue on a paused drive: the keyboard goes away, and Coach goes on with a look. */
   fun resumeDrive() {
     drive.resume()
+  }
+
+  /**
+   * Continue went through, and Coach's turn goes on: the run that was parked, or the turn Continue started, as tafs cloud names
+   * it. While a run is parked the chat may have stopped following it, so it's followed again here, to its end, which reads the
+   * thread, as an answered card's run is. Without a name, the thread is read, and a run at work in it is picked up.
+   */
+  private suspend fun coachGoesOn(turn: bot.tafs.app.drive.DriveCoachTurn?) {
+    val cloudId = _state.value.taf(COACH_CHAT)?.cloudId ?: return
+    if (turn == null) { readThread(COACH_CHAT); return }
+    // Another Coach conversation is on screen now: that one's run isn't followed into it.
+    val shown = _state.value.coachChat
+    if (turn.session != null && shown != null && turn.session != shown) return
+    resumeChat(COACH_CHAT, cloudId, turn.run, again = true)
   }
 
   /** A drive still on after the app restarted outlived it: it ends now, and never resumes (docs/drive.md). */
