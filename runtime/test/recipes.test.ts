@@ -106,6 +106,35 @@ Bezahle meine Rechnungen unter 100 EUR.
     bad(DE.replace("today: Rechnungen warten, bis jemand Zeit hat.\n", ""), "today is missing");
   });
 
+  it("reads what a recipe's proof run passed on, and what it reported, in every language or none", () => {
+    const PROVEN = FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nsample:\n  - Paid 2 bills.\n  - One waits for you.\n");
+    expect(parseRecipe(PROVEN, "pay-a-bill.md")).toMatchObject({ proved: "help_desk", sample: "Paid 2 bills.\n\nOne waits for you." });
+    // A list in a row stays one list; a paragraph after it starts after a blank line.
+    expect(parseRecipe(FILE.replace("  - wise\n", "  - wise\nproved: help_desk\nsample:\n  - Done.\n  - - T-1: paid.\n  - - T-2: held.\n  - Nothing else.\n"), "pay-a-bill.md").sample)
+      .toBe("Done.\n\n- T-1: paid.\n- T-2: held.\n\nNothing else.");
+    expect(parseRecipe(FILE, "pay-a-bill.md")).not.toHaveProperty("proved");
+    const bad = (text: string, why: string) => expect(() => parseRecipe(text, "pay-a-bill.md")).toThrow(`pay-a-bill.md: ${why}`);
+    bad(FILE.replace("  - wise\n", "  - wise\nproved: a laptop\n"), "proved is what its proof run passed on: one of help_desk");
+    bad(FILE.replace("  - wise\n", "  - wise\nsample:\n  - Paid 2 bills.\n"), "sample is what its proof run reported");
+    const en = parseRecipe(PROVEN, "pay-a-bill.md");
+    const DE_SAMPLE = DE.replace("card:", "sample:\n  - 2 Rechnungen bezahlt.\ncard:");
+    expect(parseRecipe(DE_SAMPLE, "de/pay-a-bill.md", en)).toMatchObject({ sample: "2 Rechnungen bezahlt." });
+    const badDe = (text: string, of: ReturnType<typeof parseRecipe>, why: string) => expect(() => parseRecipe(text, "de/pay-a-bill.md", of)).toThrow(`de/pay-a-bill.md: ${why}`);
+    badDe(DE, en, "sample is missing: English has one");
+    badDe(DE_SAMPLE, parseRecipe(FILE, "pay-a-bill.md"), "sample is given, and English has none");
+    badDe(DE.replace("card:", "proved: help_desk\ncard:"), en, "proved isn't a translated recipe's field");
+    // Served in the person's language: the proof line from tafs cloud's words, the sample as written.
+    const ticket = recipesFor(undefined, "fr").recipes.find((r) => r.id === "acknowledge-every-ticket")!;
+    expect(ticket.proved).toBe("Éprouvé sur un support de test.");
+    expect(ticket.sample).toMatch(/^Chaque ticket ouvert/);
+    // Every language keeps the ticket ids and labels as the taf wrote them, and its list stays one list.
+    for (const lang of LANGUAGES) {
+      const s = recipesFor(undefined, lang).recipes.find((r) => r.id === "acknowledge-every-ticket")!.sample!;
+      for (const kept of ["T-3001", "T-3099", "order-status", "wholesale"]) expect(s, `${lang} ${kept}`).toContain(kept);
+      expect(s, lang).toMatch(/\n- \*\*T-3001\*\*[^\n]*\n- \*\*T-3002\*\*/);
+    }
+  });
+
   it("has every recipe in every language the apps speak, each word translated", () => {
     expect(["en", ...LANGS].sort()).toEqual([...LANGUAGES].sort());
     for (const r of RECIPES) {
