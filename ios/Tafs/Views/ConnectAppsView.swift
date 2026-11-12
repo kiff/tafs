@@ -538,8 +538,13 @@ struct ConnectApprovalSheet: View {
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .accessibilityIdentifier("connect.sheet.card")
         }
-        // Connect sits right under the pasted key (and the Card it signs with it), never below
-        // the technical lines: after a paste, the next tap is in sight.
+        // What the tap agrees to, in sight before it: the one legal line, then Connect, right
+        // under the pasted key (and the Card it signs with it), never below the technical lines.
+        if let legal = sheet.legal {
+            Text(SecureKey.legal(legal)).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                .tint(Theme.amberText).fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("connect.sheet.legal")
+        }
         errorLine
         ApprovalGate {
             Button(busy ? Words.Approval.approving : sheet.button) { approve(grant) }
@@ -565,11 +570,6 @@ struct ConnectApprovalSheet: View {
             Text(sheet.details?.title ?? "").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
         }
         .accessibilityIdentifier("connect.sheet.details")
-        if let legal = sheet.legal {
-            Text(SecureKey.legal(legal)).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                .tint(Theme.amberText).fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("connect.sheet.legal")
-        }
     }
 
     /// The vendor's logo and name with a lock, and tafs cloud's title.

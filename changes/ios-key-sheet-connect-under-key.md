@@ -1,1 +1,1 @@
-- **iOS: Connect sits right under the key you pasted.** On the secure key sheet, the Connect button no longer hides below Details and the legal line, and the sheet can say what to do next once the key is pasted.
+- **iOS: Connect sits right under the key you pasted.** On the secure key sheet, the Connect button no longer hides below Details, and the sheet can say what to do next once the key is pasted.

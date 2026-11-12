@@ -65,7 +65,7 @@ final class SecureKeySheetTests: XCTestCase {
     }
 
     /// After a paste, the next tap is in sight: tafs cloud's line for it under the key, and
-    /// Connect right under the key (and the Card it signs with it), above Details and the legal line.
+    /// Connect right under the key (and the Card it signs with it) and the one legal line, above Details.
     func testConnectSitsRightUnderThePastedKeyWithTafsCloudsLineForIt() throws {
         let json = #"{"vendor":{"name":"Desk"},"title":"Secure connection to Desk","paste":{"button":"Paste","what":"Paste it","pasted":"Key …{last4}","cleared":"Cleared","next":"Key pasted. Tap Connect"},"button":"Connect"}"#
         let sheet = try KIFFClient.decoder.decode(TafsCloud.ConnectionSheet.self, from: Data(json.utf8))
@@ -81,8 +81,9 @@ final class SecureKeySheetTests: XCTestCase {
         let connect = try XCTUnwrap(body.range(of: "connect.sheet.connect"))
         let details = try XCTUnwrap(body.range(of: "DisclosureGroup(isExpanded: $detailsOpen)"))
         let legal = try XCTUnwrap(body.range(of: "connect.sheet.legal"))
-        XCTAssertTrue(paste.lowerBound < card.lowerBound && card.lowerBound < connect.lowerBound, "the key, the Card it signs with it, then Connect")
-        XCTAssertTrue(connect.lowerBound < details.lowerBound && details.lowerBound < legal.lowerBound, "Details and the legal line come after Connect")
+        XCTAssertTrue(paste.lowerBound < card.lowerBound && card.lowerBound < legal.lowerBound, "the key, then the Card it signs with it")
+        XCTAssertTrue(legal.lowerBound < connect.lowerBound, "what the tap agrees to is in sight before the tap")
+        XCTAssertTrue(connect.lowerBound < details.lowerBound, "Details comes after Connect")
         XCTAssertTrue(file.contains("@State private var detailsOpen = false"), "Details starts collapsed")
     }
 
