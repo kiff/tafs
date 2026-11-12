@@ -54,7 +54,8 @@ tafs cloud stores one agent definition per taf in kiff/agents
   model's short progress notes stream to the owner on the live line while it works
   (`thinking: "updates"`, docs/chat.md); its reasoning never does.
 - **Instructions:** the shared tafs instructions, the job's, the owner's notes, how its
-  notes work, how it makes a call under its Card (one request is one call, never split
+  notes work, that a run works from the items its check handed it (never paging the whole list
+  again), how it makes a call under its Card (one request is one call, never split
   to stay under a limit; a money call that doesn't name its customer carries who it's
   for in a field the customer doesn't see, such as metadata, so the hold says it), and two sections of KIFF's `kiff` skill ("Rules that always apply" and
   "Handle a KIFF result"). The skill is vendored at one commit; moving it is in the
