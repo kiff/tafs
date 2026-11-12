@@ -16,7 +16,7 @@ struct HomeView: View {
     /// A recipe's sheet, opened from Home with no taf, or from the strip under the tafs list.
     @State private var openRecipe: TafsCloud.Recipes.Recipe?
     /// + New's gallery of every ready-made job, and what was chosen in it: acted on once it closes.
-    @State private var showingGallery = false
+    @State private var showingGallery: GalleryMode?
     @State private var galleryChoice: GalleryChoice?
 
     private func openHalt(_ tafID: UUID) {
@@ -53,10 +53,16 @@ struct HomeView: View {
                     }
                 }
 
+                // The jobs, to browse with nothing created: with or without tafs, and whoever may
+                // or may not use Coach, once tafs cloud sends the row's words.
+                if model.mode == .kiff, let words = model.gallery?.explore {
+                    ExploreRow(words: words) { showingGallery = .browse }
+                }
+
                 // A few jobs the account doesn't run yet, where tafs cloud shows them: it picks
                 // and orders them; Home draws them.
                 if model.mode == .kiff, !model.tafs.isEmpty, let gallery = model.gallery {
-                    RecipeStrip(gallery: gallery, logo: { model.cloud.logoURL($0) }, open: { openRecipe = $0 }, seeAll: { showingGallery = true })
+                    RecipeStrip(gallery: gallery, logo: { model.cloud.logoURL($0) }, open: { openRecipe = $0 }, seeAll: { showingGallery = .browse })
                 }
 
                 if !model.otherAgents.isEmpty {
@@ -149,7 +155,8 @@ struct HomeView: View {
         .sheet(item: $openRecipe) { recipe in
             // A recipe no longer listed (the account has a taf now) shows no sheet's worth: the
             // sheet draws what was tapped, and handing it over closes it.
-            RecipeSheet(recipe: recipe, recipes: sheetRecipes(for: recipe), canHand: model.mayUseCoach) {
+            RecipeSheet(recipe: recipe, recipes: sheetRecipes(for: recipe), canHand: model.mayUseCoach,
+                        sampleLabel: model.gallery?.sampleLabel) {
                 openRecipe = nil
                 model.handRecipeToCoach(recipe)
             }
@@ -184,7 +191,7 @@ struct HomeView: View {
                     // + New opens every ready-made job, where tafs cloud sends the gallery; a new
                     // taf then starts in Coach mode, a conversation (kiff/tafs#138, item 59).
                     // Without the gallery, it opens Coach as before.
-                    Button { if model.gallery != nil { showingGallery = true } else { model.startNewTaf() } } label: {
+                    Button { if model.gallery != nil { showingGallery = .create } else { model.startNewTaf() } } label: {
                         Image(systemName: "plus")
                             .scaledFont(17, weight: .bold)
                             .foregroundColor(Theme.amberInk)
@@ -196,11 +203,11 @@ struct HomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingGallery, onDismiss: actOnGalleryChoice) {
+        .sheet(item: $showingGallery, onDismiss: actOnGalleryChoice) { mode in
             if let gallery = model.gallery {
-                RecipeGallerySheet(gallery: gallery, labels: model.recipes?.labels, logo: { model.cloud.logoURL($0) },
-                                   canHand: model.mayUseCoach, choose: { galleryChoice = $0; showingGallery = false },
-                                   close: { showingGallery = false })
+                RecipeGallerySheet(gallery: gallery, mode: mode, labels: model.recipes?.labels, logo: { model.cloud.logoURL($0) },
+                                   canHand: model.mayUseCoach, choose: { galleryChoice = $0; showingGallery = nil },
+                                   close: { showingGallery = nil })
             }
         }
         // The purchase screens, for their screenshots (Screenshots.screen).

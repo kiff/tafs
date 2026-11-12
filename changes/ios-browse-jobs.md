@@ -1,0 +1,1 @@
+- **iOS: explore the jobs without creating anything.** Home has an "Explore jobs" row, and "See all jobs" under the short list. Both open every job to read: what it does, what it asks you first, what it never does, and its apps. A job that passed a test run says so and shows what it reported. "Try it with Coach" is the only button, and nothing is set up until you tap it.
