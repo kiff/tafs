@@ -1,1 +1,1 @@
-- tafs cloud reads each run's credits alongside a taf's other reads for its work page, so the page waits on no extra round trip to KIFF.
+- **A taf's page doesn't wait longer for its credits line.** tafs cloud reads each run's credits from KIFF alongside the page's other reads, not after them, so `GET /v1/tafs/{id}/work` takes no extra round trip.
