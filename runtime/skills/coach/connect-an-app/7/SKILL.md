@@ -50,11 +50,10 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   by its key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key
   goes, as its docs say (in: header or query, name)}, in place of server. Use
-  the description the owner or the vendor's docs point to.
+  the description the owner or the vendor's docs point to; never make one up.
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
-  if they paste one, don't use it: say it belongs on that sheet. planque's answer gives the taf's agent id, with a random part
-  so it is new: use that id from then on. What a
+  if they paste one, don't use it: say it belongs on that sheet. planque's answer gives the taf's agent id, with a random part: use that id from then on. What a
   tool answered isn't kept from one of your turns to the next: when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for, each with its agent, server, status
