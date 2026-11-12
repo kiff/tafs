@@ -22,13 +22,15 @@
   "authors": [
     "kiff-qa",
     "gabosarmiento",
-    "build-qa"
+    "build-qa",
+    "kiff-android"
   ],
   "reviewers": [
     "agentgabo",
     "gabosarmiento",
     "kiff-qa",
-    "build-qa"
+    "build-qa",
+    "kiff-android"
   ],
   "hold_label": "hold-merge"
 }
