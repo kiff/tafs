@@ -20,11 +20,15 @@ final class KeyAndCardsTests: XCTestCase {
         return (kiff, PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session))
     }
 
-    private func keyGrant(status: String = "pending") throws -> PlanqueClient.Grant {
+    private func keyGrantJSON(status: String = "pending") throws -> String {
         let request = #"{"agent":"desk","grant":"g_2","kind":"api_key","server":"https://desk.example","tenant":"t_01","tools":[],"v":"planque.grant.v1"}"#
         let digest = SHA256.hash(data: try JCS.canonical(Data(request.utf8))).map { String(format: "%02x", $0) }.joined()
-        let json = #"{"id":"g_2","status":"\#(status)","text":"desk may read tickets at desk.example","digest":"\#(digest)","request":\#(request),"vendor":"Desk","events":[]}"#
-        return try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(json.utf8))
+        return #"{"id":"g_2","status":"\#(status)","text":"desk may read tickets at desk.example","digest":"\#(digest)","request":\#(request),"vendor":"Desk","events":[]}"#
+    }
+
+    /// The grant decoded alone: its digest isn't checked, as only a read from the connection server does that.
+    private func keyGrant(status: String = "pending") throws -> PlanqueClient.Grant {
+        try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(try keyGrantJSON(status: status).utf8))
     }
 
     private func ask(step: String = "key_and_cards", grant: String = "g_2", digest: String = "d1", draft: String = "dr_1", version: String = "v7") throws -> TafsCloud.ApprovalDecision.Ask {
@@ -71,10 +75,20 @@ final class KeyAndCardsTests: XCTestCase {
     /// body, and it's sent with `v3`, `with` and this device, the key in its header, and no signer.
     func testTheKeyRequestIsSentAsItWasSigned() async throws {
         let (_, planque) = clients()
-        let grant = try keyGrant()
-        XCTAssertThrowsError(try planque.prepareKey(grant, key: "desk_live_secret_123", signedAt: "T"), "no account, nothing to sign")
+        XCTAssertThrowsError(try planque.prepareKey(try keyGrant(), key: "desk_live_secret_123", signedAt: "T"), "no account, nothing to sign")
         planque.tenant = "t_01"
         planque.deviceID = "dev_phone01"
+        // The grant as this phone reads it from the connection server: only then is its digest checked.
+        XCTAssertThrowsError(try planque.prepareKey(try keyGrant(), key: "desk_live_secret_123", signedAt: "T"), "a grant whose digest this phone didn't check") {
+            XCTAssertEqual($0 as? PlanqueClient.PlanqueError, .digestMismatch)
+        }
+        planque.signer = { _ in "read" }
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(try keyGrantJSON())]}"#)
+        let read = try await planque.grants()
+        let grant = try XCTUnwrap(read.first)
+        XCTAssertTrue(grant.digestMatches)
+        // From here nothing may sign with the device's key: the one signature is made elsewhere.
+        planque.signer = nil
         let prepared = try planque.prepareKey(grant, key: " desk_live_secret_123\n", signedAt: "2026-11-12T19:00:00.000Z")
         XCTAssertEqual(prepared.key, "desk_live_secret_123", "trimmed")
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: prepared.body) as? [String: Any])
